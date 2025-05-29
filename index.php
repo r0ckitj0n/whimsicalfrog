@@ -241,6 +241,26 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
         }
+        /* Style for the header gradient and text readability */
+        nav.main-nav {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent); /* Even stronger gradient */
+            padding-top: 10px; 
+            padding-bottom: 10px; 
+        }
+        nav.main-nav a, /* Targets all links, including title and nav items */
+        nav.main-nav p,  /* Targets the tagline */
+        nav.main-nav span { /* Targets spans like cart count/total */
+            color: white !important; 
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7); /* Add a subtle shadow for better readability */
+        }
+        nav.main-nav a:hover { /* Styling for hover state */
+            color: #CBD5E0 !important; /* A lighter gray for hover to distinguish from normal state */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        /* Ensure SVGs within the nav also use white stroke */
+        nav.main-nav svg {
+            stroke: white !important; 
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -249,9 +269,10 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         <button onclick="document.getElementById('customAlertBox').style.display = 'none';" class="mt-2 px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600">OK</button>
     </div>
 
-    <nav>
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16 items-center">
+    <!-- Main Navigation -->
+    <nav class="main-nav sticky top-0 z-50 transition-all duration-300 ease-in-out">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
                         <a href="/" class="text-2xl font-merienda text-[#556B2F]">Whimsical Frog</a>
@@ -264,11 +285,9 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
                             <a href="/?page=admin" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</a>
                             <a href="/?page=admin_inventory" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Manage Inventory</a>
                         <?php endif; ?>
-                        <a href="/?page=main_room" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Rooms</a>
-                        <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
+                        <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">View All Items</a>
                     <?php else: ?>
-                        <a href="/?page=main_room" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Rooms</a>
-                        <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
+                        <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">View All Items</a>
                     <?php endif; ?>
                     <a href="/?page=cart" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center">
                         <div class="flex items-center space-x-2">

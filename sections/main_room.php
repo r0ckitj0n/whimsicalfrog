@@ -3,7 +3,7 @@
 ?>
 <style>
     .main-room-container {
-        background-image: url('images/webp/room_main.webp');
+        background-image: url('images/room_main.webp');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -51,11 +51,24 @@
     }
     
     /* Door positions - adjust these based on your room_main.png layout */
-    .door-tshirts { top: 20%; left: 15%; width: 12%; height: 25%; }
-    .door-tumblers { top: 25%; left: 35%; width: 10%; height: 20%; }
-    .door-artwork { top: 15%; left: 55%; width: 15%; height: 30%; }
-    .door-sublimation { top: 30%; left: 75%; width: 12%; height: 22%; }
-    .door-windowwraps { top: 45%; left: 25%; width: 14%; height: 18%; }
+    .door-tshirts { top: 34.8%; left: 8.7%; width: 13.0%; height: 47.1%; } /* Area 1 */
+    .door-tumblers { top: 55.5%; left: 34.5%; width: 7.2%; height: 18.5%; } /* Area 2 */
+    .door-artwork { top: 40.4%; left: 55.1%; width: 8.9%; height: 31.2%; } /* Area 3 */
+    .door-sublimation { top: 38.2%; left: 73.0%; width: 13.3%; height: 36.8%; } /* Area 4 */
+    .door-windowwraps { top: 19.6%; left: 53.2%; width: 6.5%; height: 10.2%; } /* Area 5 */
+
+    .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        position: relative; /* For absolute positioning of content inside */
+        background-image: url('images/room_main.webp?v=cb2');
+        background-size: cover;
+        background-position: center;
+    }
+
+    .no-webp .room-overlay-wrapper {
+        background-image: url('images/room_main.png?v=cb2');
+    }
 </style>
 
 <section id="mainRoomPage" class="p-2">

@@ -19,6 +19,31 @@ $config = [
 ];
 
 // Helper functions
+
+/**
+ * Generates an HTML <img> tag with WebP support and fallback to the original image format.
+ *
+ * @param string $originalPath The path to the original image (e.g., 'images/my_image.png').
+ * @param string $altText The alt text for the image.
+ * @param string $class Optional CSS classes for the image tag.
+ * @param string $style Optional inline styles for the image tag.
+ * @return string The HTML <img> tag.
+ */
+function getImageTag($originalPath, $altText, $class = '', $style = '') {
+    if (empty($originalPath)) {
+        $originalPath = 'images/placeholder.png'; // Default placeholder if path is empty
+    }
+    // $webpPath = str_replace(['images/', '.png', '.jpg', '.jpeg'], ['images/webp/', '.webp', '.webp', '.webp'], $originalPath);
+    // Corrected WebP path generation - assumes WebP is in the same directory as original but with .webp extension
+    $pathInfo = pathinfo($originalPath);
+    $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+    
+    $classAttr = !empty($class) ? " class='" . htmlspecialchars($class) . "'" : '';
+    $styleAttr = !empty($style) ? " style='" . htmlspecialchars($style) . "'" : '';
+
+    return "<img src='" . htmlspecialchars($webpPath) . "' alt='" . htmlspecialchars($altText) . "'" . $classAttr . $styleAttr . " onerror=\"this.onerror=null; this.src='" . htmlspecialchars($originalPath) . "';\">";
+}
+
 function fetchDataFromSheet($sheetName) {
     try {
         // Configuration
@@ -157,8 +182,8 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         }
         body {
             font-family: 'Merienda', cursive;
-            background-image: url('images/home_background.png'); /* Fallback for older browsers */
-            background-image: url('images/webp/home_background.webp');
+            background-image: url('images/home_background.png?v=cb2'); /* Fallback */
+            background-image: url('images/home_background.webp?v=cb2'); /* Main */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -167,10 +192,10 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         }
         /* WebP support detection */
         .webp body {
-            background-image: url('images/webp/home_background.webp');
+            background-image: url('images/home_background.webp?v=cb2');
         }
         .no-webp body {
-            background-image: url('images/home_background.png');
+            background-image: url('images/home_background.png?v=cb2');
         }
         .font-merienda {
             font-family: 'Merienda', cursive;
@@ -253,6 +278,12 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
             color: white !important; 
             text-shadow: 1px 1px 3px rgba(0,0,0,0.7); /* Add a subtle shadow for better readability */
         }
+        nav.main-nav p.tagline { /* Specific styling for the tagline */
+            color: white !important; 
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+            font-size: 0.875rem; /* Tailwind's text-sm */
+            margin-top: 0.25rem; /* Add a little space above the tagline */
+        }
         nav.main-nav a:hover { /* Styling for hover state */
             color: #CBD5E0 !important; /* A lighter gray for hover to distinguish from normal state */
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
@@ -272,14 +303,15 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
     <!-- Main Navigation -->
     <nav class="main-nav sticky top-0 z-50 transition-all duration-300 ease-in-out">
         <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+            <div class="flex flex-col items-center justify-between py-3 md:flex-row">
                 <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-2xl font-merienda text-[#556B2F]">Whimsical Frog</a>
-                    </div>
-                    <p class="text-lg text-gray-600 ml-6 hidden md:block">Discover unique custom crafts, made with love.</p>
+                    <a href="/?page=landing" class="flex items-center text-2xl font-bold font-merienda">
+                        <img src="images/sign_whimsicalfrog.webp" alt="Whimsical Frog" style="height: 80px; margin-right: 10px;"
+                             onerror="this.onerror=null; this.src='images/sign_whimsicalfrog.png';">
+                    </a>
+                    <p class="text-sm font-merienda ml-2" style="color: white !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
                 </div>
-                <div class="flex items-center">
+                <div class="flex items-center mt-4 md:mt-0">
                     <?php if (isset($_SESSION['user'])): ?>
                         <?php if ($user['role'] === 'Admin'): ?>
                             <a href="/?page=admin" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</a>
@@ -380,18 +412,10 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
     <!-- WebP Support Detection -->
     <script>
         // Detect WebP support
-        function supportsWebP() {
-            return new Promise(resolve => {
-                const webP = new Image();
-                webP.onload = webP.onerror = () => resolve(webP.height === 2);
-                webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
-            });
-        }
-        
-        // Add appropriate class to html element
-        supportsWebP().then(supported => {
-            document.documentElement.classList.add(supported ? 'webp' : 'no-webp');
-        });
+        (function(){
+            var d=document.createElement('div');
+            d.innerHTML='<img src="" onerror="document.documentElement.className += \' no-webp\';" onload="document.documentElement.className += \' webp\';">';
+        })();
     </script>
     
     <!-- Then load other scripts -->

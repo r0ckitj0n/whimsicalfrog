@@ -7,66 +7,95 @@ if (isset($categories['Tumblers'])) {
 ?>
 <style>
     .room-container {
-        background-image: url('images/webp/room_tumblers.webp');
+        /* Removed background-image, it will be on room-overlay-wrapper */
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        min-height: 80vh;
+        min-height: 80vh; /* This might be overridden by aspect ratio logic below */
         position: relative;
         border-radius: 15px;
         overflow: hidden;
+        /* max-width: 100%; */ /* Ensure it can shrink */
+        /* width: 100%; */ /* Take full available width up to its container's limit */
+        /* display: flex; */ /* To center the wrapper if it's smaller than container */
+        /* justify-content: center; */
+        /* align-items: center; */
     }
     
+    .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        position: relative; /* For absolute positioning of content inside */
+        background-image: url('images/room_tumblers.webp?v=cb2');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 15px; /* If you want rounded corners on the image itself */
+    }
+
+    .no-webp .room-overlay-wrapper {
+        background-image: url('images/room_tumblers.png?v=cb2');
+    }
+
     .room-overlay {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(0.5px);
-        min-height: 80vh;
+        /* min-height: 80vh; Removed, as parent now controls height via aspect ratio */
         padding: 10px;
-        position: relative;
+        position: absolute; /* Changed from relative */
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 15px; /* Match wrapper if needed */
     }
     
-    .shelf-area {
+    .shelf-area { /* This is now the direct container for product-icons */
         position: absolute;
         width: 100%;
         height: 100%;
         top: 0;
         left: 0;
+        /* The children (.product-icon) will be positioned relative to this */
     }
     
     .product-icon {
         position: absolute;
-        width: 40px;
-        height: 40px;
         cursor: pointer;
         transition: all 0.3s ease;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        background: white;
-        padding: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: rgba(0, 100, 255, 0.3); /* Temporary background for visualization */
     }
     
     .product-icon:hover {
-        transform: scale(1.2);
-        border-color: #6B8E23;
-        box-shadow: 0 4px 15px rgba(107, 142, 35, 0.5);
+        transform: scale(1.1);
         z-index: 100;
     }
     
     .product-icon img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
     }
     
-    /* Position icons on shelves - adjust based on your room_tumblers.png */
-    .icon-1 { top: 35%; left: 25%; }
-    .icon-2 { top: 40%; left: 45%; }
-    .icon-3 { top: 38%; left: 65%; }
-    .icon-4 { top: 55%; left: 30%; }
-    .icon-5 { top: 60%; left: 50%; }
-    .icon-6 { top: 58%; left: 70%; }
+    /* Tumblers Room Specific Areas (same as T-Shirts Room) */
+    .area-1 { top: 24.5%; left: 10.7%; width: 12.4%; height: 9.2%; }
+    .area-2 { top: 23.8%; left: 27.0%; width: 8.7%; height: 4.9%; }
+    .area-3 { top: 27.6%; left: 39.2%; width: 9.9%; height: 5.7%; }
+    .area-4 { top: 22.8%; left: 58.0%; width: 8.5%; height: 3.7%; }
+    .area-5 { top: 28.3%; left: 55.7%; width: 12.6%; height: 7.6%; }
+    .area-6 { top: 36.9%; left: 55.5%; width: 12.8%; height: 6.1%; }
+    .area-7 { top: 26.5%; left: 78.5%; width: 9.1%; height: 6.5%; }
+    .area-8 { top: 34.9%; left: 77.6%; width: 10.7%; height: 10.8%; }
+    .area-9 { top: 52.7%; left: 47.2%; width: 6.8%; height: 5.5%; }
+    .area-10 { top: 61.8%; left: 47.3%; width: 6.4%; height: 4.2%; }
+    .area-11 { top: 52.7%; left: 68.6%; width: 15.2%; height: 8.6%; }
+    .area-12 { top: 62.0%; left: 68.9%; width: 15.2%; height: 7.4%; }
     
     .product-popup {
         position: absolute;
@@ -192,35 +221,37 @@ if (isset($categories['Tumblers'])) {
 
 <section id="tumblersRoomPage" class="p-2">
     <div class="room-container mx-auto max-w-full">
-        <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
-        
-        <div class="room-overlay">
-            <div class="room-header">
-                <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🥤 Tumbler Collection</h1>
-                <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
-            </div>
+        <div class="room-overlay-wrapper"> 
+            <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
             
-            <?php if (empty($tumblerProducts)): ?>
-                <div class="text-center py-8">
-                    <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
-                        <p class="text-xl text-gray-600">No tumbler items available at the moment.</p>
-                        <p class="text-gray-500 mt-2">Check back soon for new drinkware!</p>
-                    </div>
+            <div class="room-overlay">
+                <div class="room-header">
+                    <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🥤 Tumbler Collection</h1>
+                    <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
                 </div>
-            <?php else: ?>
-                <div class="shelf-area">
-                    <?php foreach ($tumblerProducts as $index => $product): ?>
-                        <div class="product-icon icon-<?php echo $index + 1; ?>" 
-                             data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
-                             onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
-                             onmouseleave="hidePopup()">
-                            <img src="<?php echo htmlspecialchars($product[8] ?? 'images/placeholder.png'); ?>" 
-                                 alt="<?php echo htmlspecialchars($product[1]); ?>">
+                
+                <?php if (empty($tumblerProducts)): ?>
+                    <div class="text-center py-8">
+                        <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
+                            <p class="text-xl text-gray-600">No tumbler items available at the moment.</p>
+                            <p class="text-gray-500 mt-2">Check back soon for new drinkware!</p>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="shelf-area">
+                        <?php foreach ($tumblerProducts as $index => $product): ?>
+                            <?php $area_class = 'area-' . ($index + 1); ?>
+                            <div class="product-icon <?php echo $area_class; ?>" 
+                                 data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
+                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
+                                 onmouseleave="hidePopup()">
+                                <?php echo getImageTag($product[8] ?? 'images/placeholder.png', $product[1]); ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div> 
     </div>
     
     <!-- Product Popup -->

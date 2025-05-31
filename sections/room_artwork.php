@@ -7,26 +7,52 @@ if (isset($categories['Artwork'])) {
 ?>
 <style>
     .room-container {
-        background-image: url('images/webp/room_artwork.webp');
+        /* Removed background-image, it will be on room-overlay-wrapper */
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        min-height: 80vh;
+        min-height: 80vh; /* This might be overridden by aspect ratio logic below */
         position: relative;
         border-radius: 15px;
         overflow: hidden;
+        /* max-width: 100%; */ /* Ensure it can shrink */
+        /* width: 100%; */ /* Take full available width up to its container's limit */
+        /* display: flex; */ /* To center the wrapper if it's smaller than container */
+        /* justify-content: center; */
+        /* align-items: center; */
     }
     
-    .room-overlay {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(0.5px);
-        min-height: 80vh;
-        padding: 10px;
-        position: relative;
+    .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        position: relative; /* For absolute positioning of content inside */
+        background-image: url('images/room_artwork.webp?v=cb2');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 15px; /* If you want rounded corners on the image itself */
+    }
+
+    .no-webp .room-overlay-wrapper {
+        background-image: url('images/room_artwork.png?v=cb2');
+    }
+
+    .room-overlay-content { /* New content container */
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* background: rgba(255, 255, 255, 0.05); */ /* Optional: for slight overlay on image */
+        /* backdrop-filter: blur(0.5px); */
+        /* padding: 10px; */ /* Removed padding to allow full area for coordinates */
+        display: flex; /* Using flex to layer header, shelf-area, and back button */
+        flex-direction: column;
+        /* overflow: hidden; */ /* Let content scroll if it exceeds, though it shouldn't with proper scaling */
     }
     
     .shelf-area {
-        position: absolute;
+        position: absolute; /* Position relative to room-overlay-content */
         width: 100%;
         height: 100%;
         top: 0;
@@ -35,29 +61,26 @@ if (isset($categories['Artwork'])) {
     
     .product-icon {
         position: absolute;
-        width: 40px;
-        height: 40px;
         cursor: pointer;
         transition: all 0.3s ease;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        background: white;
-        padding: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: rgba(0, 100, 255, 0.3); /* Temporary background for visualization */
     }
     
     .product-icon:hover {
-        transform: scale(1.2);
-        border-color: #6B8E23;
-        box-shadow: 0 4px 15px rgba(107, 142, 35, 0.5);
+        transform: scale(1.1);
         z-index: 100;
     }
     
     .product-icon img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
     }
     
     /* Position icons on shelves - adjust based on your room_artwork.png */
@@ -68,6 +91,19 @@ if (isset($categories['Artwork'])) {
     .icon-5 { top: 55%; left: 45%; }
     .icon-6 { top: 52%; left: 65%; }
     
+    /* Artwork Room Specific Areas */
+    .area-1 { top: 30.7%; left: 38.7%; width: 12.6%; height: 7.2%; }
+    .area-2 { top: 51.1%; left: 39.2%; width: 14.0%; height: 8.2%; }
+    .area-3 { top: 60.7%; left: 39.3%; width: 14.0%; height: 8.6%; }
+    .area-4 { top: 27.9%; left: 56.1%; width: 12.2%; height: 7.5%; }
+    .area-5 { top: 33.6%; left: 74.8%; width: 13.7%; height: 5.0%; }
+    .area-6 { top: 25.1%; left: 75.0%; width: 13.5%; height: 6.0%; }
+    .area-7 { top: 52.1%; left: 74.5%; width: 15.6%; height: 9.3%; }
+    .area-8 { top: 56.5%; left: 58.5%; width: 6.9%; height: 6.3%; }
+    .area-9 { top: 64.7%; left: 58.5%; width: 6.4%; height: 5.1%; }
+    .area-10 { top: 42.7%; left: 38.9%; width: 12.8%; height: 5.6%; }
+    .area-11 { top: 54.0%; left: 27.2%; width: 6.4%; height: 7.2%; }
+
     .product-popup {
         position: absolute;
         background: white;
@@ -181,7 +217,7 @@ if (isset($categories['Artwork'])) {
         text-decoration: none;
         font-weight: bold;
         transition: all 0.3s ease;
-        z-index: 10;
+        z-index: 20; /* Ensure it's above product icons but below popup */
     }
     
     .back-button:hover {
@@ -192,35 +228,37 @@ if (isset($categories['Artwork'])) {
 
 <section id="artworkRoomPage" class="p-2">
     <div class="room-container mx-auto max-w-full">
-        <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
-        
-        <div class="room-overlay">
-            <div class="room-header">
-                <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🎨 Artwork Studio</h1>
-                <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
-            </div>
+        <div class="room-overlay-wrapper"> 
+            <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
             
-            <?php if (empty($artworkProducts)): ?>
-                <div class="text-center py-8">
-                    <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
-                        <p class="text-xl text-gray-600">No artwork items available at the moment.</p>
-                        <p class="text-gray-500 mt-2">Check back soon for new creative pieces!</p>
-                    </div>
+            <div class="room-overlay">
+                <div class="room-header">
+                    <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🎨 Artwork Studio</h1>
+                    <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
                 </div>
-            <?php else: ?>
-                <div class="shelf-area">
-                    <?php foreach ($artworkProducts as $index => $product): ?>
-                        <div class="product-icon icon-<?php echo $index + 1; ?>" 
-                             data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
-                             onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
-                             onmouseleave="hidePopup()">
-                            <img src="<?php echo htmlspecialchars($product[8] ?? 'images/placeholder.png'); ?>" 
-                                 alt="<?php echo htmlspecialchars($product[1]); ?>">
+                
+                <?php if (empty($artworkProducts)): ?>
+                    <div class="text-center py-8">
+                        <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
+                            <p class="text-xl text-gray-600">No artwork items available at the moment.</p>
+                            <p class="text-gray-500 mt-2">Check back soon for new creative pieces!</p>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="shelf-area">
+                        <?php foreach ($artworkProducts as $index => $product): ?>
+                            <?php $area_class = 'area-' . ($index + 1); ?>
+                            <div class="product-icon <?php echo $area_class; ?>" 
+                                 data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
+                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
+                                 onmouseleave="hidePopup()">
+                                <?php echo getImageTag($product[8] ?? 'images/placeholder.png', $product[1]); ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div> 
     </div>
     
     <!-- Product Popup -->

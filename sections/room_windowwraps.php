@@ -7,66 +7,81 @@ if (isset($categories['Window Wraps'])) {
 ?>
 <style>
     .room-container {
-        background-image: url('images/webp/room_windowwraps.webp');
+        /* Removed background-image, it will be on room-overlay-wrapper */
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        min-height: 80vh;
+        min-height: 80vh; /* This might be overridden by aspect ratio logic below */
         position: relative;
         border-radius: 15px;
         overflow: hidden;
+        /* max-width: 100%; */ /* Ensure it can shrink */
+        /* width: 100%; */ /* Take full available width up to its container's limit */
+        /* display: flex; */ /* To center the wrapper if it's smaller than container */
+        /* justify-content: center; */
+        /* align-items: center; */
     }
     
+    .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        position: relative; /* For absolute positioning of content inside */
+        background-image: url('images/room_windowwraps.webp?v=cb2');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 15px; /* If you want rounded corners on the image itself */
+    }
+
+    .no-webp .room-overlay-wrapper {
+        background-image: url('images/room_windowwraps.png?v=cb2');
+    }
+
     .room-overlay {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(0.5px);
-        min-height: 80vh;
+        /* min-height: 80vh; Removed, as parent now controls height via aspect ratio */
         padding: 10px;
-        position: relative;
+        position: absolute; /* Changed from relative */
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 15px; /* Match wrapper if needed */
     }
     
-    .shelf-area {
+    .shelf-area { /* This is now the direct container for product-icons */
         position: absolute;
         width: 100%;
         height: 100%;
         top: 0;
         left: 0;
+        /* The children (.product-icon) will be positioned relative to this */
     }
     
     .product-icon {
         position: absolute;
-        width: 40px;
-        height: 40px;
         cursor: pointer;
         transition: all 0.3s ease;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        background: white;
-        padding: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: rgba(0, 100, 255, 0.3); /* Temporary background for visualization */
     }
     
     .product-icon:hover {
-        transform: scale(1.2);
-        border-color: #6B8E23;
-        box-shadow: 0 4px 15px rgba(107, 142, 35, 0.5);
+        transform: scale(1.1);
         z-index: 100;
     }
     
     .product-icon img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
     }
-    
-    /* Position icons on shelves - adjust based on your room_windowwraps.png */
-    .icon-1 { top: 30%; left: 18%; }
-    .icon-2 { top: 35%; left: 38%; }
-    .icon-3 { top: 32%; left: 58%; }
-    .icon-4 { top: 50%; left: 22%; }
-    .icon-5 { top: 55%; left: 42%; }
-    .icon-6 { top: 52%; left: 62%; }
     
     .product-popup {
         position: absolute;
@@ -188,38 +203,48 @@ if (isset($categories['Window Wraps'])) {
         background: rgba(85, 107, 47, 0.9);
         transform: scale(1.05);
     }
+    
+    /* Window Wraps Room Specific Areas - Placeholder, to be updated by user */
+    .area-1 { top: 30%; left: 18%; width: 10%; height: 10%; }
+    .area-2 { top: 35%; left: 38%; width: 10%; height: 10%; }
+    .area-3 { top: 32%; left: 58%; width: 10%; height: 10%; }
+    .area-4 { top: 50%; left: 22%; width: 10%; height: 10%; }
+    .area-5 { top: 55%; left: 42%; width: 10%; height: 10%; }
+    .area-6 { top: 52%; left: 62%; width: 10%; height: 10%; }
 </style>
 
 <section id="windowwrapsRoomPage" class="p-2">
     <div class="room-container mx-auto max-w-full">
-        <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
-        
-        <div class="room-overlay">
-            <div class="room-header">
-                <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🪟 Window Wrap Studio</h1>
-                <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
-            </div>
+        <div class="room-overlay-wrapper">
+            <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
             
-            <?php if (empty($windowwrapProducts)): ?>
-                <div class="text-center py-8">
-                    <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
-                        <p class="text-xl text-gray-600">No window wrap items available at the moment.</p>
-                        <p class="text-gray-500 mt-2">Check back soon for new designs!</p>
-                    </div>
+            <div class="room-overlay">
+                <div class="room-header">
+                    <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🪟 Window Wrap Studio</h1>
+                    <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
                 </div>
-            <?php else: ?>
-                <div class="shelf-area">
-                    <?php foreach ($windowwrapProducts as $index => $product): ?>
-                        <div class="product-icon icon-<?php echo $index + 1; ?>" 
-                             data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
-                             onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
-                             onmouseleave="hidePopup()">
-                            <img src="<?php echo htmlspecialchars($product[8] ?? 'images/placeholder.png'); ?>" 
-                                 alt="<?php echo htmlspecialchars($product[1]); ?>">
+                
+                <?php if (empty($windowwrapProducts)): ?>
+                    <div class="text-center py-8">
+                        <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
+                            <p class="text-xl text-gray-600">No window wrap items available at the moment.</p>
+                            <p class="text-gray-500 mt-2">Check back soon for new designs!</p>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="shelf-area">
+                        <?php foreach ($windowwrapProducts as $index => $product): ?>
+                            <?php $area_class = 'area-' . ($index + 1); ?>
+                            <div class="product-icon <?php echo $area_class; ?>" 
+                                 data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
+                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
+                                 onmouseleave="hidePopup()">
+                                <?php echo getImageTag($product[8] ?? 'images/placeholder.png', $product[1]); ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
     

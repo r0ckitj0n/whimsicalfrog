@@ -76,7 +76,7 @@
         </div>
         
         <div class="room-display" id="roomDisplay">
-            <img id="roomImage" class="room-image" src="images/webp/room_main.webp" alt="Room">
+            <img id="roomImage" class="room-image" src="images/room_main.png" alt="Room">
         </div>
         
         <div class="coordinates" id="coordinates">
@@ -96,7 +96,7 @@
         const coordinates = document.getElementById('coordinates');
 
         roomSelect.addEventListener('change', function() {
-            roomImage.src = `images/webp/${this.value}.webp`;
+            roomImage.src = `images/${this.value}.png`;
             clearAreas();
         });
 
@@ -140,21 +140,18 @@
                 isDrawing = false;
                 areaCount++;
                 
-                const rect = roomImage.getBoundingClientRect();
-                const imageWidth = roomImage.offsetWidth;
-                const imageHeight = roomImage.offsetHeight;
-                
-                const leftPercent = (parseFloat(currentArea.style.left) / imageWidth * 100).toFixed(1);
-                const topPercent = (parseFloat(currentArea.style.top) / imageHeight * 100).toFixed(1);
-                const widthPercent = (parseFloat(currentArea.style.width) / imageWidth * 100).toFixed(1);
-                const heightPercent = (parseFloat(currentArea.style.height) / imageHeight * 100).toFixed(1);
+                const leftPx = parseFloat(currentArea.style.left).toFixed(0);
+                const topPx = parseFloat(currentArea.style.top).toFixed(0);
+                const widthPx = parseFloat(currentArea.style.width).toFixed(0);
+                const heightPx = parseFloat(currentArea.style.height).toFixed(0);
                 
                 const cssClass = `area-${areaCount}`;
                 currentArea.setAttribute('data-area', cssClass);
                 
-                const cssCode = `.${cssClass} { top: ${topPercent}%; left: ${leftPercent}%; width: ${widthPercent}%; height: ${heightPercent}%; }`;
+                const cssCode = `.${cssClass} { top: ${topPx}px; left: ${leftPx}px; width: ${widthPx}px; height: ${heightPx}px; }`;
                 
-                coordinates.innerHTML += `<div><strong>Area ${areaCount}:</strong><br>${cssCode}</div>`;
+                const selectedRoom = roomSelect.value;
+                coordinates.innerHTML += `<div><strong>Area ${areaCount} (${selectedRoom}):</strong><br>${cssCode}</div>`;
                 
                 currentArea = null;
             }

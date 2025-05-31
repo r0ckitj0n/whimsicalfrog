@@ -160,7 +160,10 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
     <style>
         body, html {
             color: #222 !important;
-            background: #fff;
+            background: #333; /* Dark grey background */
+            height: 100%; /* Ensure full height for viewport calculations */
+            overflow-y: auto; /* Only show vertical scrollbar if needed */
+            overflow-x: hidden; /* Prevent horizontal scrollbar */
         }
         label, input, select, textarea, button, p, h1, h2, h3, h4, h5, h6, span, div {
             color: #222 !important;

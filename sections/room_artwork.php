@@ -31,6 +31,7 @@ if (isset($categories['Artwork'])) {
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
+        overflow: hidden; /* Add this to prevent internal scrollbars */
     }
 
     .no-webp .room-overlay-wrapper {

@@ -4,13 +4,14 @@
 <style>
     .main-room-container {
         background-image: url('images/room_main.webp');
-        background-size: cover;
+        background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
-        min-height: 80vh;
+        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
         position: relative;
         border-radius: 15px;
         overflow: hidden;
+        opacity: 1;
     }
     
     .door-area {
@@ -50,23 +51,17 @@
         opacity: 1;
     }
     
-    /* Door positions - updated with pixel values */
-    .door-tshirts { top: 301px; left: 104px; width: 158px; height: 348px; } /* Area 1 */
-    .door-tumblers { top: 463px; left: 414px; width: 84px; height: 157px; } /* Area 2 */
-    .door-artwork { top: 168px; left: 640px; width: 77px; height: 124px; } /* Area 3 */
-    .door-sublimation { top: 344px; left: 663px; width: 103px; height: 258px; } /* Area 4 */
-    .door-windowwraps { top: 323px; left: 879px; width: 153px; height: 306px; } /* Area 5 */
+    /* Door positions - updated with pixel values - Now handled by JavaScript */
+    /* .door-tshirts { top: 301px; left: 104px; width: 158px; height: 348px; } */ /* Area 1 */
+    /* .door-tumblers { top: 463px; left: 414px; width: 84px; height: 157px; } */ /* Area 2 */
+    /* .door-artwork { top: 168px; left: 640px; width: 77px; height: 124px; } */ /* Area 3 */
+    /* .door-sublimation { top: 344px; left: 663px; width: 103px; height: 258px; } */ /* Area 4 */
+    /* .door-windowwraps { top: 323px; left: 879px; width: 153px; height: 306px; } */ /* Area 5 */
 
-    .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
-        width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
-        position: relative; /* For absolute positioning of content inside */
-        background-image: url('images/room_main.webp?v=cb2');
-        background-size: cover;
-        background-position: center;
-    }
+    /* .room-overlay-wrapper { ... } was here, removed as it seemed redundant with .main-room-container styles */
 
-    .no-webp .room-overlay-wrapper {
+    .no-webp .main-room-container {
+        /* Ensure PNG fallback for main-room-container if no-webp is active */
         background-image: url('images/room_main.png?v=cb2');
     }
 </style>
@@ -111,4 +106,68 @@ function enterRoom(category) {
     console.log('Entering room:', category);
     window.location.href = `/?page=room_${category}`;
 }
+
+// Script to dynamically scale door areas
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    const roomContainer = document.querySelector('#mainRoomPage .main-room-container');
+
+    const baseAreas = [
+        { selector: '.door-tshirts', top: 321, left: 124, width: 158, height: 348 },     // Orig: 301, 104
+        { selector: '.door-tumblers', top: 483, left: 434, width: 84, height: 157 },    // Orig: 463, 414
+        { selector: '.door-artwork', top: 188, left: 660, width: 77, height: 124 },      // Orig: 168, 640
+        { selector: '.door-sublimation', top: 364, left: 683, width: 103, height: 258 },// Orig: 344, 663
+        { selector: '.door-windowwraps', top: 343, left: 899, width: 153, height: 306 } // Orig: 323, 879
+    ];
+
+    function updateAreaCoordinates() {
+        if (!roomContainer) {
+            console.error('Main Room container not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomContainer.offsetWidth;
+        const wrapperHeight = roomContainer.offsetHeight;
+
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        baseAreas.forEach(areaData => {
+            const areaElement = roomContainer.querySelector(areaData.selector);
+            if (areaElement) {
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            } else {
+                // console.warn('Area element not found in Main room:', areaData.selector);
+            }
+        });
+    }
+
+    updateAreaCoordinates();
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
+    });
+});
 </script> 

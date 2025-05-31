@@ -24,10 +24,10 @@ if (isset($categories['Window Wraps'])) {
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
         position: relative; /* For absolute positioning of content inside */
         background-image: url('images/room_windowwraps.webp?v=cb2');
-        background-size: cover;
+        background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
@@ -204,11 +204,11 @@ if (isset($categories['Window Wraps'])) {
         transform: scale(1.05);
     }
     
-    /* Window Wraps Room Specific Areas */
-    .area-1 { top: 201px; left: 223px; width: 198px; height: 290px; }
-    .area-2 { top: 219px; left: 514px; width: 137px; height: 243px; }
-    .area-3 { top: 528px; left: 1037px; width: 43px; height: 42px; }
-    .area-4 { top: 537px; left: 990px; width: 29px; height: 42px; }
+    /* Window Wraps Room Specific Areas - Now handled by JavaScript */
+    /* .area-1 { top: 201px; left: 223px; width: 198px; height: 290px; } */
+    /* .area-2 { top: 219px; left: 514px; width: 137px; height: 243px; } */
+    /* .area-3 { top: 528px; left: 1037px; width: 43px; height: 42px; } */
+    /* .area-4 { top: 537px; left: 990px; width: 29px; height: 42px; } */
 </style>
 
 <section id="windowwrapsRoomPage" class="p-2">
@@ -336,5 +336,68 @@ document.getElementById('productPopup').addEventListener('mouseenter', () => {
 
 document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
+});
+
+// Script to dynamically scale product icon areas
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    const roomOverlayWrapper = document.querySelector('#windowwrapsRoomPage .room-overlay-wrapper');
+
+    const baseAreas = [
+        { selector: '.area-1', top: 221, left: 243, width: 198, height: 290 }, // Orig: 201, 223
+        { selector: '.area-2', top: 239, left: 534, width: 137, height: 243 }, // Orig: 219, 514
+        { selector: '.area-3', top: 548, left: 1057, width: 43, height: 42 }, // Orig: 528, 1037
+        { selector: '.area-4', top: 557, left: 1010, width: 29, height: 42 }  // Orig: 537, 990
+    ];
+
+    function updateAreaCoordinates() {
+        if (!roomOverlayWrapper) {
+            console.error('Window Wraps Room overlay wrapper not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomOverlayWrapper.offsetWidth;
+        const wrapperHeight = roomOverlayWrapper.offsetHeight;
+
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        baseAreas.forEach(areaData => {
+            const areaElement = roomOverlayWrapper.querySelector(areaData.selector);
+            if (areaElement) {
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            } else {
+                // console.warn('Area element not found in Window Wraps room:', areaData.selector);
+            }
+        });
+    }
+
+    updateAreaCoordinates();
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
+    });
 });
 </script> 

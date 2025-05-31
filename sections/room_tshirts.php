@@ -25,10 +25,10 @@ if (isset($categories['T-Shirts'])) {
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
         position: relative; /* For absolute positioning of content inside */
         background-image: url('images/room_tshirts.webp?v=cb2');
-        background-size: cover;
+        background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
@@ -87,14 +87,14 @@ if (isset($categories['T-Shirts'])) {
         object-fit: contain;
     }
     
-    /* T-Shirts Room Specific Areas */
-    .area-1 { top: 309px; left: 94px; width: 118px; height: 132px; }
-    .area-2 { top: 319px; left: 271px; width: 83px; height: 125px; }
-    .area-3 { top: 322px; left: 358px; width: 81px; height: 127px; }
-    .area-4 { top: 324px; left: 445px; width: 84px; height: 125px; }
-    .area-5 { top: 327px; left: 535px; width: 74px; height: 123px; }
-    .area-6 { top: 435px; left: 847px; width: 98px; height: 155px; }
-    .area-7 { top: 438px; left: 993px; width: 110px; height: 170px; }
+    /* T-Shirts Room Specific Areas - Now handled by JavaScript */
+    /* .area-1 { top: 309px; left: 94px; width: 118px; height: 132px; } */
+    /* .area-2 { top: 319px; left: 271px; width: 83px; height: 125px; } */
+    /* .area-3 { top: 322px; left: 358px; width: 81px; height: 127px; } */
+    /* .area-4 { top: 324px; left: 445px; width: 84px; height: 125px; } */
+    /* .area-5 { top: 327px; left: 535px; width: 74px; height: 123px; } */
+    /* .area-6 { top: 435px; left: 847px; width: 98px; height: 155px; } */
+    /* .area-7 { top: 438px; left: 993px; width: 110px; height: 170px; } */
     
     .product-popup {
         position: absolute;
@@ -343,5 +343,71 @@ document.getElementById('productPopup').addEventListener('mouseenter', () => {
 
 document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
+});
+
+// Script to dynamically scale product icon areas
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    const roomOverlayWrapper = document.querySelector('#tshirtsRoomPage .room-overlay-wrapper'); 
+
+    const baseAreas = [
+        { selector: '.area-1', top: 329, left: 114, width: 118, height: 132 }, // Orig: 309, 94
+        { selector: '.area-2', top: 339, left: 291, width: 83, height: 125 }, // Orig: 319, 271
+        { selector: '.area-3', top: 342, left: 378, width: 81, height: 127 }, // Orig: 322, 358
+        { selector: '.area-4', top: 344, left: 465, width: 84, height: 125 }, // Orig: 324, 445
+        { selector: '.area-5', top: 347, left: 555, width: 74, height: 123 }, // Orig: 327, 535
+        { selector: '.area-6', top: 455, left: 867, width: 98, height: 155 }, // Orig: 435, 847
+        { selector: '.area-7', top: 458, left: 1013, width: 110, height: 170 } // Orig: 438, 993
+    ];
+
+    function updateAreaCoordinates() {
+        if (!roomOverlayWrapper) {
+            console.error('T-Shirts Room overlay wrapper not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomOverlayWrapper.offsetWidth;
+        const wrapperHeight = roomOverlayWrapper.offsetHeight;
+
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        baseAreas.forEach(areaData => {
+            const areaElement = roomOverlayWrapper.querySelector(areaData.selector);
+            if (areaElement) {
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            } else {
+                // console.warn('Area element not found in T-Shirts room:', areaData.selector);
+            }
+        });
+    }
+
+    updateAreaCoordinates();
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
+    });
 });
 </script> 

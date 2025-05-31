@@ -24,10 +24,10 @@ if (isset($categories['Tumblers'])) {
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
         position: relative; /* For absolute positioning of content inside */
         background-image: url('images/room_tumblers.webp?v=cb2');
-        background-size: cover;
+        background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
@@ -83,22 +83,22 @@ if (isset($categories['Tumblers'])) {
         object-fit: contain;
     }
     
-    /* Tumblers Room Specific Areas */
-    .area-1 { top: 163px; left: 420px; width: 64px; height: 134px; }
-    .area-2 { top: 162px; left: 510px; width: 61px; height: 126px; }
-    .area-3 { top: 159px; left: 595px; width: 66px; height: 126px; }
-    .area-4 { top: 344px; left: 233px; width: 67px; height: 142px; }
-    .area-5 { top: 333px; left: 319px; width: 71px; height: 144px; }
-    .area-6 { top: 326px; left: 399px; width: 66px; height: 144px; }
-    .area-7 { top: 333px; left: 472px; width: 66px; height: 134px; }
-    .area-8 { top: 324px; left: 570px; width: 63px; height: 128px; }
-    .area-9 { top: 320px; left: 643px; width: 59px; height: 126px; }
-    .area-10 { top: 537px; left: 224px; width: 76px; height: 152px; }
-    .area-11 { top: 524px; left: 315px; width: 67px; height: 140px; }
-    .area-12 { top: 513px; left: 390px; width: 69px; height: 133px; }
-    .area-13 { top: 501px; left: 466px; width: 62px; height: 130px; }
-    .area-14 { top: 488px; left: 538px; width: 57px; height: 128px; }
-    .area-15 { top: 477px; left: 603px; width: 60px; height: 125px; }
+    /* Tumblers Room Specific Areas - Now handled by JavaScript */
+    /* .area-1 { top: 163px; left: 420px; width: 64px; height: 134px; } */
+    /* .area-2 { top: 162px; left: 510px; width: 61px; height: 126px; } */
+    /* .area-3 { top: 159px; left: 595px; width: 66px; height: 126px; } */
+    /* .area-4 { top: 344px; left: 233px; width: 67px; height: 142px; } */
+    /* .area-5 { top: 333px; left: 319px; width: 71px; height: 144px; } */
+    /* .area-6 { top: 326px; left: 399px; width: 66px; height: 144px; } */
+    /* .area-7 { top: 333px; left: 472px; width: 66px; height: 134px; } */
+    /* .area-8 { top: 324px; left: 570px; width: 63px; height: 128px; } */
+    /* .area-9 { top: 320px; left: 643px; width: 59px; height: 126px; } */
+    /* .area-10 { top: 537px; left: 224px; width: 76px; height: 152px; } */
+    /* .area-11 { top: 524px; left: 315px; width: 67px; height: 140px; } */
+    /* .area-12 { top: 513px; left: 390px; width: 69px; height: 133px; } */
+    /* .area-13 { top: 501px; left: 466px; width: 62px; height: 130px; } */
+    /* .area-14 { top: 488px; left: 538px; width: 57px; height: 128px; } */
+    /* .area-15 { top: 477px; left: 603px; width: 60px; height: 125px; } */
     
     .product-popup {
         position: absolute;
@@ -347,5 +347,79 @@ document.getElementById('productPopup').addEventListener('mouseenter', () => {
 
 document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
+});
+
+// Script to dynamically scale product icon areas
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    const roomOverlayWrapper = document.querySelector('#tumblersRoomPage .room-overlay-wrapper');
+
+    const baseAreas = [
+        { selector: '.area-1', top: 183, left: 440, width: 64, height: 134 },  // Orig: 163, 420
+        { selector: '.area-2', top: 182, left: 530, width: 61, height: 126 },  // Orig: 162, 510
+        { selector: '.area-3', top: 179, left: 615, width: 66, height: 126 },  // Orig: 159, 595
+        { selector: '.area-4', top: 364, left: 253, width: 67, height: 142 },  // Orig: 344, 233
+        { selector: '.area-5', top: 353, left: 339, width: 71, height: 144 },  // Orig: 333, 319
+        { selector: '.area-6', top: 346, left: 419, width: 66, height: 144 },  // Orig: 326, 399
+        { selector: '.area-7', top: 353, left: 492, width: 66, height: 134 },  // Orig: 333, 472
+        { selector: '.area-8', top: 344, left: 590, width: 63, height: 128 },  // Orig: 324, 570
+        { selector: '.area-9', top: 340, left: 663, width: 59, height: 126 },  // Orig: 320, 643
+        { selector: '.area-10', top: 557, left: 244, width: 76, height: 152 }, // Orig: 537, 224
+        { selector: '.area-11', top: 544, left: 335, width: 67, height: 140 }, // Orig: 524, 315
+        { selector: '.area-12', top: 533, left: 410, width: 69, height: 133 }, // Orig: 513, 390
+        { selector: '.area-13', top: 521, left: 486, width: 62, height: 130 }, // Orig: 501, 466
+        { selector: '.area-14', top: 508, left: 558, width: 57, height: 128 }, // Orig: 488, 538
+        { selector: '.area-15', top: 497, left: 623, width: 60, height: 125 }  // Orig: 477, 603
+    ];
+
+    function updateAreaCoordinates() {
+        if (!roomOverlayWrapper) {
+            console.error('Tumblers Room overlay wrapper not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomOverlayWrapper.offsetWidth;
+        const wrapperHeight = roomOverlayWrapper.offsetHeight;
+
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        baseAreas.forEach(areaData => {
+            const areaElement = roomOverlayWrapper.querySelector(areaData.selector);
+            if (areaElement) {
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            } else {
+                // console.warn('Area element not found in Tumblers room:', areaData.selector);
+            }
+        });
+    }
+
+    updateAreaCoordinates();
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
+    });
 });
 </script> 

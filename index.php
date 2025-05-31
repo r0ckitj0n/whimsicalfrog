@@ -158,12 +158,20 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box; /* Apply border-box to all elements */
+            margin: 0; /* Reset default margins */
+            padding: 0; /* Reset default padding */
+        }
         body, html {
             color: #222 !important;
             background: #333; /* Dark grey background */
+            width: 100%; /* Ensure html and body take full width */
             height: 100%; /* Ensure full height for viewport calculations */
-            overflow-y: auto; /* Only show vertical scrollbar if needed */
             overflow-x: hidden; /* Prevent horizontal scrollbar */
+            overflow-y: auto; /* HTML is the primary vertical scroll container */
         }
         label, input, select, textarea, button, p, h1, h2, h3, h4, h5, h6, span, div {
             color: #222 !important;
@@ -191,7 +199,9 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            min-height: 100vh;
+            min-height: 100%; /* Make body fill html height */
+            /* overflow-x: hidden; Already on html, body */
+            /* overflow-y: auto; Removed, html handles this */
         }
         /* WebP support detection */
         .webp body {

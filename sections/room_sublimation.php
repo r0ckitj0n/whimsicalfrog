@@ -24,10 +24,10 @@ if (isset($categories['Sublimation'])) {
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
         position: relative; /* For absolute positioning of content inside */
         background-image: url('images/room_sublimation.webp?v=cb2');
-        background-size: cover;
+        background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
@@ -83,15 +83,15 @@ if (isset($categories['Sublimation'])) {
         object-fit: contain;
     }
     
-    /* Sublimation Room Specific Areas */
-    .area-1 { top: 225px; left: 241px; width: 197px; height: 48px; }
-    .area-2 { top: 289px; left: 172px; width: 351px; height: 51px; }
-    .area-3 { top: 363px; left: 188px; width: 341px; height: 46px; }
-    .area-4 { top: 268px; left: 796px; width: 295px; height: 48px; }
-    .area-5 { top: 352px; left: 787px; width: 134px; height: 74px; }
-    .area-6 { top: 355px; left: 927px; width: 161px; height: 77px; }
-    .area-7 { top: 435px; left: 185px; width: 169px; height: 75px; }
-    .area-8 { top: 427px; left: 361px; width: 101px; height: 72px; }
+    /* Sublimation Room Specific Areas - Now handled by JavaScript */
+    /* .area-1 { top: 225px; left: 241px; width: 197px; height: 48px; } */
+    /* .area-2 { top: 289px; left: 172px; width: 351px; height: 51px; } */
+    /* .area-3 { top: 363px; left: 188px; width: 341px; height: 46px; } */
+    /* .area-4 { top: 268px; left: 796px; width: 295px; height: 48px; } */
+    /* .area-5 { top: 352px; left: 787px; width: 134px; height: 74px; } */
+    /* .area-6 { top: 355px; left: 927px; width: 161px; height: 77px; } */
+    /* .area-7 { top: 435px; left: 185px; width: 169px; height: 75px; } */
+    /* .area-8 { top: 427px; left: 361px; width: 101px; height: 72px; } */
     
     .product-popup {
         position: absolute;
@@ -340,5 +340,72 @@ document.getElementById('productPopup').addEventListener('mouseenter', () => {
 
 document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
+});
+
+// Script to dynamically scale product icon areas
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    const roomOverlayWrapper = document.querySelector('#sublimationRoomPage .room-overlay-wrapper');
+
+    const baseAreas = [
+        { selector: '.area-1', top: 245, left: 261, width: 197, height: 48 }, // Orig: 225, 241
+        { selector: '.area-2', top: 309, left: 192, width: 351, height: 51 }, // Orig: 289, 172
+        { selector: '.area-3', top: 383, left: 208, width: 341, height: 46 }, // Orig: 363, 188
+        { selector: '.area-4', top: 288, left: 816, width: 295, height: 48 }, // Orig: 268, 796
+        { selector: '.area-5', top: 372, left: 807, width: 134, height: 74 }, // Orig: 352, 787
+        { selector: '.area-6', top: 375, left: 947, width: 161, height: 77 }, // Orig: 355, 927
+        { selector: '.area-7', top: 455, left: 205, width: 169, height: 75 }, // Orig: 435, 185
+        { selector: '.area-8', top: 447, left: 381, width: 101, height: 72 }  // Orig: 427, 361
+    ];
+
+    function updateAreaCoordinates() {
+        if (!roomOverlayWrapper) {
+            console.error('Sublimation Room overlay wrapper not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomOverlayWrapper.offsetWidth;
+        const wrapperHeight = roomOverlayWrapper.offsetHeight;
+
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        baseAreas.forEach(areaData => {
+            const areaElement = roomOverlayWrapper.querySelector(areaData.selector);
+            if (areaElement) {
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            } else {
+                // console.warn('Area element not found in Sublimation room:', areaData.selector);
+            }
+        });
+    }
+
+    updateAreaCoordinates();
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
+    });
 });
 </script> 

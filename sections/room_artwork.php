@@ -11,7 +11,8 @@ if (isset($categories['Artwork'])) {
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        min-height: 80vh; /* This might be overridden by aspect ratio logic below */
+        /* min-height: 80vh; */ /* Temporarily remove/set to 0 to test height contribution */
+        min-height: 0;
         position: relative;
         border-radius: 15px;
         overflow: hidden;
@@ -24,10 +25,10 @@ if (isset($categories['Artwork'])) {
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
-        padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) - Adjust if your image aspect ratio is different */
+        padding-top: 70%; /* Adjusted for 1280x896 aspect ratio (896/1280 * 100) */
         position: relative; /* For absolute positioning of content inside */
         background-image: url('images/room_artwork.webp?v=cb2');
-        background-size: cover;
+        background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
@@ -49,7 +50,7 @@ if (isset($categories['Artwork'])) {
         /* padding: 10px; */ /* Removed padding to allow full area for coordinates */
         display: flex; /* Using flex to layer header, shelf-area, and back button */
         flex-direction: column;
-        /* overflow: hidden; */ /* Let content scroll if it exceeds, though it shouldn't with proper scaling */
+        overflow: hidden; /* Prevent content overflow issues */
     }
     
     .shelf-area {
@@ -93,17 +94,15 @@ if (isset($categories['Artwork'])) {
     .icon-6 { top: 52%; left: 65%; }
     
     /* Artwork Room Specific Areas */
-    .area-1 { top: 222px; left: 176px; width: 116px; height: 65px; }
-    .area-2 { top: 365px; left: 230px; width: 56px; height: 97px; }
-    .area-3 { top: 218px; left: 352px; width: 66px; height: 102px; }
-    .area-4 { top: 402px; left: 354px; width: 75px; height: 47px; }
-    .area-5 { top: 189px; left: 469px; width: 95px; height: 75px; }
-    .area-6 { top: 345px; left: 477px; width: 52px; height: 95px; }
-    .area-7 { top: 321px; left: 585px; width: 46px; height: 62px; }
-    .area-8 { top: 323px; left: 984px; width: 80px; height: 57px; }
-    .area-9 { top: 64.7%; left: 58.5%; width: 6.4%; height: 5.1%; }
-    .area-10 { top: 42.7%; left: 38.9%; width: 12.8%; height: 5.6%; }
-    .area-11 { top: 54.0%; left: 27.2%; width: 6.4%; height: 7.2%; }
+    .area-1 { /* Original: top: 222px; left: 176px; width: 116px; height: 65px; */ }
+    .area-2 { /* Original: top: 365px; left: 230px; width: 56px; height: 97px; */ }
+    .area-3 { /* Original: top: 218px; left: 352px; width: 66px; height: 102px; */ }
+    .area-4 { /* Original: top: 402px; left: 354px; width: 75px; height: 47px; */ }
+    .area-5 { /* Original: top: 189px; left: 469px; width: 95px; height: 75px; */ }
+    .area-6 { /* Original: top: 345px; left: 477px; width: 52px; height: 95px; */ }
+    .area-7 { /* Original: top: 321px; left: 585px; width: 46px; height: 62px; */ }
+    .area-8 { /* Original: top: 323px; left: 984px; width: 80px; height: 57px; */ }
+    /* Removed old .area-9, .area-10, .area-11 percentage styles */
 
     .product-popup {
         position: absolute;
@@ -227,7 +226,7 @@ if (isset($categories['Artwork'])) {
     }
 </style>
 
-<section id="artworkRoomPage" class="p-2">
+<section id="artworkRoomPage" class="">
     <div class="room-container mx-auto max-w-full">
         <div class="room-overlay-wrapper"> 
             <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
@@ -352,5 +351,80 @@ document.getElementById('productPopup').addEventListener('mouseenter', () => {
 
 document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
+});
+
+// Script to dynamically scale product icon areas
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    // Ensure we are targeting the correct wrapper for artwork room
+    const roomOverlayWrapper = document.querySelector('#artworkRoomPage .room-overlay-wrapper'); 
+
+    const baseAreas = [
+        { selector: '.area-1', top: 242, left: 196, width: 116, height: 65 },
+        { selector: '.area-2', top: 385, left: 250, width: 56, height: 97 },
+        { selector: '.area-3', top: 238, left: 372, width: 66, height: 102 },
+        { selector: '.area-4', top: 422, left: 374, width: 75, height: 47 },
+        { selector: '.area-5', top: 209, left: 489, width: 95, height: 75 },
+        { selector: '.area-6', top: 365, left: 497, width: 52, height: 95 },
+        { selector: '.area-7', top: 341, left: 605, width: 46, height: 62 },
+        { selector: '.area-8', top: 343, left: 1004, width: 80, height: 57 }
+    ];
+
+    function updateAreaCoordinates() {
+        if (!roomOverlayWrapper) {
+            console.error('Artwork Room overlay wrapper not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomOverlayWrapper.offsetWidth;
+        const wrapperHeight = roomOverlayWrapper.offsetHeight;
+
+        // Calculate the aspect ratio of the wrapper and the image
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        // Determine the rendered size of the image due to 'contain'
+        if (wrapperAspectRatio > imageAspectRatio) {
+            // Wrapper is wider than image, so image height is constrained by wrapper height
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2; // Centered horizontally
+        } else {
+            // Wrapper is taller (or same aspect ratio) than image, so image width is constrained by wrapper width
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2; // Centered vertically
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        baseAreas.forEach(areaData => {
+            const areaElement = roomOverlayWrapper.querySelector(areaData.selector);
+            if (areaElement) {
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            } else {
+                 // console.warn('Area element not found in Artwork room:', areaData.selector);
+            }
+        });
+    }
+
+    // Initial call
+    updateAreaCoordinates();
+
+    // Update on window resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100); // Debounce resize
+    });
 });
 </script> 

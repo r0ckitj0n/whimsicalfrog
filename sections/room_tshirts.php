@@ -88,18 +88,13 @@ if (isset($categories['T-Shirts'])) {
     }
     
     /* T-Shirts Room Specific Areas */
-    .area-1 { top: 24.5%; left: 10.7%; width: 12.4%; height: 9.2%; }
-    .area-2 { top: 23.8%; left: 27.0%; width: 8.7%; height: 4.9%; }
-    .area-3 { top: 27.6%; left: 39.2%; width: 9.9%; height: 5.7%; }
-    .area-4 { top: 22.8%; left: 58.0%; width: 8.5%; height: 3.7%; }
-    .area-5 { top: 28.3%; left: 55.7%; width: 12.6%; height: 7.6%; }
-    .area-6 { top: 36.9%; left: 55.5%; width: 12.8%; height: 6.1%; }
-    .area-7 { top: 26.5%; left: 78.5%; width: 9.1%; height: 6.5%; }
-    .area-8 { top: 34.9%; left: 77.6%; width: 10.7%; height: 10.8%; }
-    .area-9 { top: 52.7%; left: 47.2%; width: 6.8%; height: 5.5%; }
-    .area-10 { top: 61.8%; left: 47.3%; width: 6.4%; height: 4.2%; }
-    .area-11 { top: 52.7%; left: 68.6%; width: 15.2%; height: 8.6%; }
-    .area-12 { top: 62.0%; left: 68.9%; width: 15.2%; height: 7.4%; }
+    .area-1 { top: 309px; left: 94px; width: 118px; height: 132px; }
+    .area-2 { top: 319px; left: 271px; width: 83px; height: 125px; }
+    .area-3 { top: 322px; left: 358px; width: 81px; height: 127px; }
+    .area-4 { top: 324px; left: 445px; width: 84px; height: 125px; }
+    .area-5 { top: 327px; left: 535px; width: 74px; height: 123px; }
+    .area-6 { top: 435px; left: 847px; width: 98px; height: 155px; }
+    .area-7 { top: 438px; left: 993px; width: 110px; height: 170px; }
     
     .product-popup {
         position: absolute;

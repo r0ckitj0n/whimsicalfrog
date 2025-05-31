@@ -83,13 +83,15 @@ if (isset($categories['Sublimation'])) {
         object-fit: contain;
     }
     
-    /* Position icons on shelves - adjust based on your room_sublimation.png */
-    .area-1 { top: 40%; left: 20%; width: 10%; height: 10%; }
-    .area-2 { top: 45%; left: 40%; width: 10%; height: 10%; }
-    .area-3 { top: 42%; left: 60%; width: 10%; height: 10%; }
-    .area-4 { top: 60%; left: 25%; width: 10%; height: 10%; }
-    .area-5 { top: 65%; left: 45%; width: 10%; height: 10%; }
-    .area-6 { top: 62%; left: 65%; width: 10%; height: 10%; }
+    /* Sublimation Room Specific Areas */
+    .area-1 { top: 225px; left: 241px; width: 197px; height: 48px; }
+    .area-2 { top: 289px; left: 172px; width: 351px; height: 51px; }
+    .area-3 { top: 363px; left: 188px; width: 341px; height: 46px; }
+    .area-4 { top: 268px; left: 796px; width: 295px; height: 48px; }
+    .area-5 { top: 352px; left: 787px; width: 134px; height: 74px; }
+    .area-6 { top: 355px; left: 927px; width: 161px; height: 77px; }
+    .area-7 { top: 435px; left: 185px; width: 169px; height: 75px; }
+    .area-8 { top: 427px; left: 361px; width: 101px; height: 72px; }
     
     .product-popup {
         position: absolute;

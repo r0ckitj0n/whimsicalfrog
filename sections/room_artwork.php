@@ -93,14 +93,14 @@ if (isset($categories['Artwork'])) {
     .icon-6 { top: 52%; left: 65%; }
     
     /* Artwork Room Specific Areas */
-    .area-1 { top: 30.7%; left: 38.7%; width: 12.6%; height: 7.2%; }
-    .area-2 { top: 51.1%; left: 39.2%; width: 14.0%; height: 8.2%; }
-    .area-3 { top: 60.7%; left: 39.3%; width: 14.0%; height: 8.6%; }
-    .area-4 { top: 27.9%; left: 56.1%; width: 12.2%; height: 7.5%; }
-    .area-5 { top: 33.6%; left: 74.8%; width: 13.7%; height: 5.0%; }
-    .area-6 { top: 25.1%; left: 75.0%; width: 13.5%; height: 6.0%; }
-    .area-7 { top: 52.1%; left: 74.5%; width: 15.6%; height: 9.3%; }
-    .area-8 { top: 56.5%; left: 58.5%; width: 6.9%; height: 6.3%; }
+    .area-1 { top: 222px; left: 176px; width: 116px; height: 65px; }
+    .area-2 { top: 365px; left: 230px; width: 56px; height: 97px; }
+    .area-3 { top: 218px; left: 352px; width: 66px; height: 102px; }
+    .area-4 { top: 402px; left: 354px; width: 75px; height: 47px; }
+    .area-5 { top: 189px; left: 469px; width: 95px; height: 75px; }
+    .area-6 { top: 345px; left: 477px; width: 52px; height: 95px; }
+    .area-7 { top: 321px; left: 585px; width: 46px; height: 62px; }
+    .area-8 { top: 323px; left: 984px; width: 80px; height: 57px; }
     .area-9 { top: 64.7%; left: 58.5%; width: 6.4%; height: 5.1%; }
     .area-10 { top: 42.7%; left: 38.9%; width: 12.8%; height: 5.6%; }
     .area-11 { top: 54.0%; left: 27.2%; width: 6.4%; height: 7.2%; }

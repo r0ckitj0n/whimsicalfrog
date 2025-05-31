@@ -204,13 +204,11 @@ if (isset($categories['Window Wraps'])) {
         transform: scale(1.05);
     }
     
-    /* Window Wraps Room Specific Areas - Placeholder, to be updated by user */
-    .area-1 { top: 30%; left: 18%; width: 10%; height: 10%; }
-    .area-2 { top: 35%; left: 38%; width: 10%; height: 10%; }
-    .area-3 { top: 32%; left: 58%; width: 10%; height: 10%; }
-    .area-4 { top: 50%; left: 22%; width: 10%; height: 10%; }
-    .area-5 { top: 55%; left: 42%; width: 10%; height: 10%; }
-    .area-6 { top: 52%; left: 62%; width: 10%; height: 10%; }
+    /* Window Wraps Room Specific Areas */
+    .area-1 { top: 201px; left: 223px; width: 198px; height: 290px; }
+    .area-2 { top: 219px; left: 514px; width: 137px; height: 243px; }
+    .area-3 { top: 528px; left: 1037px; width: 43px; height: 42px; }
+    .area-4 { top: 537px; left: 990px; width: 29px; height: 42px; }
 </style>
 
 <section id="windowwrapsRoomPage" class="p-2">

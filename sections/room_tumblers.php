@@ -83,19 +83,22 @@ if (isset($categories['Tumblers'])) {
         object-fit: contain;
     }
     
-    /* Tumblers Room Specific Areas (same as T-Shirts Room) */
-    .area-1 { top: 24.5%; left: 10.7%; width: 12.4%; height: 9.2%; }
-    .area-2 { top: 23.8%; left: 27.0%; width: 8.7%; height: 4.9%; }
-    .area-3 { top: 27.6%; left: 39.2%; width: 9.9%; height: 5.7%; }
-    .area-4 { top: 22.8%; left: 58.0%; width: 8.5%; height: 3.7%; }
-    .area-5 { top: 28.3%; left: 55.7%; width: 12.6%; height: 7.6%; }
-    .area-6 { top: 36.9%; left: 55.5%; width: 12.8%; height: 6.1%; }
-    .area-7 { top: 26.5%; left: 78.5%; width: 9.1%; height: 6.5%; }
-    .area-8 { top: 34.9%; left: 77.6%; width: 10.7%; height: 10.8%; }
-    .area-9 { top: 52.7%; left: 47.2%; width: 6.8%; height: 5.5%; }
-    .area-10 { top: 61.8%; left: 47.3%; width: 6.4%; height: 4.2%; }
-    .area-11 { top: 52.7%; left: 68.6%; width: 15.2%; height: 8.6%; }
-    .area-12 { top: 62.0%; left: 68.9%; width: 15.2%; height: 7.4%; }
+    /* Tumblers Room Specific Areas */
+    .area-1 { top: 163px; left: 420px; width: 64px; height: 134px; }
+    .area-2 { top: 162px; left: 510px; width: 61px; height: 126px; }
+    .area-3 { top: 159px; left: 595px; width: 66px; height: 126px; }
+    .area-4 { top: 344px; left: 233px; width: 67px; height: 142px; }
+    .area-5 { top: 333px; left: 319px; width: 71px; height: 144px; }
+    .area-6 { top: 326px; left: 399px; width: 66px; height: 144px; }
+    .area-7 { top: 333px; left: 472px; width: 66px; height: 134px; }
+    .area-8 { top: 324px; left: 570px; width: 63px; height: 128px; }
+    .area-9 { top: 320px; left: 643px; width: 59px; height: 126px; }
+    .area-10 { top: 537px; left: 224px; width: 76px; height: 152px; }
+    .area-11 { top: 524px; left: 315px; width: 67px; height: 140px; }
+    .area-12 { top: 513px; left: 390px; width: 69px; height: 133px; }
+    .area-13 { top: 501px; left: 466px; width: 62px; height: 130px; }
+    .area-14 { top: 488px; left: 538px; width: 57px; height: 128px; }
+    .area-15 { top: 477px; left: 603px; width: 60px; height: 125px; }
     
     .product-popup {
         position: absolute;

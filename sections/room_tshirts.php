@@ -25,42 +25,37 @@ if (isset($categories['T-Shirts'])) {
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
-        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
+        padding-top: 70%; /* Adjusted for 1280x896 aspect ratio (896/1280 * 100) */
         position: relative; /* For absolute positioning of content inside */
         background-image: url('images/room_tshirts.webp?v=cb2');
         background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
-        /* border: 2px solid blue; */ /* DEBUG BORDER */
+        overflow: hidden; /* Add this to prevent internal scrollbars */
     }
 
     .no-webp .room-overlay-wrapper {
         background-image: url('images/room_tshirts.png?v=cb2');
     }
 
-    .room-overlay {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(0.5px);
-        /* min-height: 80vh; Removed, as parent now controls height via aspect ratio */
-        padding: 10px;
-        position: absolute; /* Changed from relative */
+    .room-overlay-content { /* New content container */
+        position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        border-radius: 15px; /* Match wrapper if needed */
-        /* border: 2px solid green; */ /* DEBUG BORDER */
+        display: flex; /* Using flex to layer header, shelf-area, and back button */
+        flex-direction: column;
+        overflow: hidden; /* Prevent content overflow issues */
     }
     
-    .shelf-area { /* This is now the direct container for product-icons */
-        position: absolute;
+    .shelf-area {
+        position: absolute; /* Position relative to room-overlay-content */
         width: 100%;
         height: 100%;
         top: 0;
         left: 0;
-        /* border: 2px solid yellow; */ /* DEBUG BORDER */
-        /* The children (.product-icon) will be positioned relative to this */
     }
     
     .product-icon {
@@ -87,14 +82,13 @@ if (isset($categories['T-Shirts'])) {
         object-fit: contain;
     }
     
-    /* T-Shirts Room Specific Areas - Now handled by JavaScript */
-    /* .area-1 { top: 309px; left: 94px; width: 118px; height: 132px; } */
-    /* .area-2 { top: 319px; left: 271px; width: 83px; height: 125px; } */
-    /* .area-3 { top: 322px; left: 358px; width: 81px; height: 127px; } */
-    /* .area-4 { top: 324px; left: 445px; width: 84px; height: 125px; } */
-    /* .area-5 { top: 327px; left: 535px; width: 74px; height: 123px; } */
-    /* .area-6 { top: 435px; left: 847px; width: 98px; height: 155px; } */
-    /* .area-7 { top: 438px; left: 993px; width: 110px; height: 170px; } */
+    /* T-Shirts Room Specific Areas */
+    .area-1 { top: 30%; left: 10%; }
+    .area-2 { top: 35%; left: 25%; }
+    .area-3 { top: 32%; left: 40%; }
+    .area-4 { top: 50%; left: 55%; }
+    .area-5 { top: 55%; left: 70%; }
+    .area-6 { top: 52%; left: 85%; }
     
     .product-popup {
         position: absolute;
@@ -166,10 +160,10 @@ if (isset($categories['T-Shirts'])) {
         text-align: center;
         background: transparent;
         padding: 10px;
-        border-radius: 15px;
+        /* border-radius: 15px; */ /* Match the container's rounding if needed */
         margin-bottom: 10px;
-        position: relative;
-        z-index: 10;
+        position: relative; /* Needed for z-index to work if other elements overlap */
+        z-index: 10; /* Ensure header is above other elements like product icons if they could overlap */
     }
     
     .room-header h1 {
@@ -218,15 +212,14 @@ if (isset($categories['T-Shirts'])) {
     }
 </style>
 
-<section id="tshirtsRoomPage">
-    <div class="room-container">
-        <div class="room-overlay-wrapper"> 
+<section id="tshirtsRoomPage" class="p-2">
+    <div class="room-container mx-auto max-w-full" data-room-name="T-Shirts">
+        <div class="room-overlay-wrapper">
             <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
-            
-            <div class="room-overlay">
+            <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">👕 T-Shirt Boutique</h1>
-                    <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
+                    <h1>The T-Shirt Boutique</h1>
+                    <p>Discover our collection of unique t-shirt designs.</p>
                 </div>
                 
                 <?php if (empty($tshirtProducts)): ?>

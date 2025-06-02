@@ -24,39 +24,37 @@ if (isset($categories['Sublimation'])) {
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
-        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
+        padding-top: 70%; /* Adjusted for 1280x896 aspect ratio (896/1280 * 100) */
         position: relative; /* For absolute positioning of content inside */
         background-image: url('images/room_sublimation.webp?v=cb2');
         background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
+        overflow: hidden; /* Add this to prevent internal scrollbars */
     }
 
     .no-webp .room-overlay-wrapper {
         background-image: url('images/room_sublimation.png?v=cb2');
     }
 
-    .room-overlay {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(0.5px);
-        /* min-height: 80vh; Removed, as parent now controls height via aspect ratio */
-        padding: 10px;
-        position: absolute; /* Changed from relative */
+    .room-overlay-content { /* New content container */
+        position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        border-radius: 15px; /* Match wrapper if needed */
+        display: flex; /* Using flex to layer header, shelf-area, and back button */
+        flex-direction: column;
+        overflow: hidden; /* Prevent content overflow issues */
     }
     
-    .shelf-area { /* This is now the direct container for product-icons */
-        position: absolute;
+    .shelf-area {
+        position: absolute; /* Position relative to room-overlay-content */
         width: 100%;
         height: 100%;
         top: 0;
         left: 0;
-        /* The children (.product-icon) will be positioned relative to this */
     }
     
     .product-icon {
@@ -83,15 +81,13 @@ if (isset($categories['Sublimation'])) {
         object-fit: contain;
     }
     
-    /* Sublimation Room Specific Areas - Now handled by JavaScript */
-    /* .area-1 { top: 225px; left: 241px; width: 197px; height: 48px; } */
-    /* .area-2 { top: 289px; left: 172px; width: 351px; height: 51px; } */
-    /* .area-3 { top: 363px; left: 188px; width: 341px; height: 46px; } */
-    /* .area-4 { top: 268px; left: 796px; width: 295px; height: 48px; } */
-    /* .area-5 { top: 352px; left: 787px; width: 134px; height: 74px; } */
-    /* .area-6 { top: 355px; left: 927px; width: 161px; height: 77px; } */
-    /* .area-7 { top: 435px; left: 185px; width: 169px; height: 75px; } */
-    /* .area-8 { top: 427px; left: 361px; width: 101px; height: 72px; } */
+    /* Sublimation Room Specific Areas */
+    .area-1 { top: 30%; left: 10%; }
+    .area-2 { top: 35%; left: 25%; }
+    .area-3 { top: 32%; left: 40%; }
+    .area-4 { top: 50%; left: 55%; }
+    .area-5 { top: 55%; left: 70%; }
+    .area-6 { top: 52%; left: 85%; }
     
     .product-popup {
         position: absolute;
@@ -163,10 +159,10 @@ if (isset($categories['Sublimation'])) {
         text-align: center;
         background: transparent;
         padding: 10px;
-        border-radius: 15px;
+        /* border-radius: 15px; */ /* Match the container's rounding if needed */
         margin-bottom: 10px;
-        position: relative;
-        z-index: 10;
+        position: relative; /* Needed for z-index to work if other elements overlap */
+        z-index: 10; /* Ensure header is above other elements like product icons if they could overlap */
     }
     
     .room-header h1 {
@@ -216,14 +212,14 @@ if (isset($categories['Sublimation'])) {
 </style>
 
 <section id="sublimationRoomPage" class="p-2">
-    <div class="room-container mx-auto max-w-full">
+    <div class="room-container mx-auto max-w-full" data-room-name="Sublimation">
         <div class="room-overlay-wrapper">
             <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
             
-            <div class="room-overlay">
+            <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🔥 Sublimation Workshop</h1>
-                    <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
+                    <h1>Sublimation Station</h1>
+                    <p>Explore a variety of sublimated items and gifts.</p>
                 </div>
                 
                 <?php if (empty($sublimationProducts)): ?>

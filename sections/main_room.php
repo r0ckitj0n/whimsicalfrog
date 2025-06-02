@@ -12,23 +12,23 @@
         border-radius: 15px;
         overflow: hidden;
         opacity: 1;
+        background-color: transparent;
+        mix-blend-mode: normal;
     }
     
     .door-area {
         position: absolute;
         cursor: pointer;
         transition: all 0.3s ease;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(2px);
-        border: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        overflow: hidden; /* Ensure content doesn't spill outside */
     }
     
     .door-area:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: #6B8E23;
         transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(107, 142, 35, 0.3);
     }
     
     .door-label {
@@ -51,6 +51,23 @@
         opacity: 1;
     }
     
+    .door-sign {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+        background: transparent;
+        mix-blend-mode: normal;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        image-rendering: -webkit-optimize-contrast; /* Improve image rendering */
+        image-rendering: crisp-edges;
+    }
+    
+    .door-area:hover .door-sign {
+        transform: scale(1.1);
+    }
+    
     /* Door positions - updated with pixel values - Now handled by JavaScript */
     /* .door-tshirts { top: 301px; left: 104px; width: 158px; height: 348px; } */ /* Area 1 */
     /* .door-tumblers { top: 463px; left: 414px; width: 84px; height: 157px; } */ /* Area 2 */
@@ -63,44 +80,96 @@
     .no-webp .main-room-container {
         /* Ensure PNG fallback for main-room-container if no-webp is active */
         background-image: url('images/room_main.png?v=cb2');
+        background-color: transparent;
+        mix-blend-mode: normal;
+    }
+
+    /* Additional transparency handling */
+    .main-room-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent;
+        pointer-events: none;
+    }
+
+    /* Welcome sign specific styles */
+    .flex-grow picture {
+        background: transparent;
+        display: block;
+        line-height: 0; /* Remove any extra space */
+    }
+
+    .flex-grow img {
+        background: transparent;
+        mix-blend-mode: normal;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        display: block; /* Remove any extra space */
+        line-height: 0; /* Remove any extra space */
     }
 </style>
 
 <section id="mainRoomPage" class="p-2">
-    <?php /* <div class="text-center mb-4">
-        <a href="/?page=landing" class="inline-block transform transition-transform duration-300 hover:scale-105">
-            <img src="images/webp/welcome_sign.webp" alt="Welcome to Whimsical Frog - Return to Landing Page" class="max-w-xs md:max-w-sm lg:max-w-md mx-auto rounded-lg shadow-lg" style="filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3)); max-height: 150px;">
-        </a>
-    </div> */ ?>
-    
     <div class="main-room-container mx-auto max-w-full">
         <!-- T-Shirts Door -->
         <div class="door-area door-tshirts" onclick="enterRoom('tshirts')">
+            <picture class="block">
+                <source srcset="images/sign_door_tshirts.webp" type="image/webp">
+                <img src="images/sign_door_tshirts.png" alt="T-Shirts & Apparel" class="door-sign">
+            </picture>
             <div class="door-label">T-Shirts & Apparel</div>
         </div>
         
         <!-- Tumblers Door -->
         <div class="door-area door-tumblers" onclick="enterRoom('tumblers')">
+            <picture class="block">
+                <source srcset="images/sign_door_tumblers.webp" type="image/webp">
+                <img src="images/sign_door_tumblers.png" alt="Tumblers & Drinkware" class="door-sign">
+            </picture>
             <div class="door-label">Tumblers & Drinkware</div>
         </div>
         
         <!-- Artwork Door -->
         <div class="door-area door-artwork" onclick="enterRoom('artwork')">
+            <picture class="block">
+                <source srcset="images/sign_door_artwork.webp" type="image/webp">
+                <img src="images/sign_door_artwork.png" alt="Custom Artwork" class="door-sign">
+            </picture>
             <div class="door-label">Custom Artwork</div>
         </div>
         
         <!-- Sublimation Door -->
         <div class="door-area door-sublimation" onclick="enterRoom('sublimation')">
+            <picture class="block">
+                <source srcset="images/sign_door_sublimation.webp" type="image/webp">
+                <img src="images/sign_door_sublimation.png" alt="Sublimation Items" class="door-sign">
+            </picture>
             <div class="door-label">Sublimation Items</div>
         </div>
         
         <!-- Window Wraps Door -->
         <div class="door-area door-windowwraps" onclick="enterRoom('windowwraps')">
+            <picture class="block">
+                <source srcset="images/sign_door_windowwraps.webp" type="image/webp">
+                <img src="images/sign_door_windowwraps.png" alt="Window Wraps" class="door-sign">
+            </picture>
             <div class="door-label">Window Wraps</div>
         </div>
     </div>
 </section>
 
+<!-- Center Section: Conditional Welcome Sign -->
+<div class="flex-grow flex justify-center items-center">
+    <a href="/?page=landing" class="inline-block transform transition-transform duration-300 hover:scale-105">
+        <picture class="block">
+            <source srcset="images/sign_main_transparent.webp" type="image/webp">
+            <img src="images/sign_main_transparent.png" alt="Return to Landing Page" style="max-height: 40px; display: block;">
 <script>
 function enterRoom(category) {
     console.log('Entering room:', category);

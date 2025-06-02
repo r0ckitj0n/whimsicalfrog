@@ -282,8 +282,8 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         /* Style for the header gradient and text readability */
         nav.main-nav {
             background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent); /* Even stronger gradient */
-            padding-top: 10px; 
-            padding-bottom: 10px; 
+            padding-top: 5px; /* Reduced padding */
+            padding-bottom: 5px; /* Reduced padding */
         }
         nav.main-nav a, /* Targets all links, including title and nav items */
         nav.main-nav p,  /* Targets the tagline */
@@ -305,9 +305,16 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         nav.main-nav svg {
             stroke: white !important; 
         }
+
+        /* Hide elements on landing page */
+        body.is-landing a[href="/?page=shop"],
+        body.is-landing a[href="/?page=cart"],
+        body.is-landing a[href="/?page=login"] {
+            display: none !important;
+        }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="flex flex-col min-h-screen <?php echo ($currentPage === 'landing') ? 'is-landing' : ''; ?>">
     <div id="customAlertBox" class="custom-alert">
         <p id="customAlertMessage"></p>
         <button onclick="document.getElementById('customAlertBox').style.display = 'none';" class="mt-2 px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600">OK</button>
@@ -316,44 +323,66 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
     <!-- Main Navigation -->
     <nav class="main-nav sticky top-0 z-50 transition-all duration-300 ease-in-out">
         <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center justify-between py-3 md:flex-row">
-                <div class="flex items-center">
-                    <a href="/?page=landing" class="flex items-center text-2xl font-bold font-merienda">
-                        <img src="images/sign_whimsicalfrog.webp" alt="Whimsical Frog" style="height: 80px; margin-right: 10px;"
-                             onerror="this.onerror=null; this.src='images/sign_whimsicalfrog.png';">
-                    </a>
-                    <p class="text-sm font-merienda ml-2" style="color: white !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
+            <div class="flex items-center justify-between w-full py-1"> <!-- Main flex row for 3 sections -->
+                
+                <!-- Left Section: Logo and Tagline -->
+                <div class="flex-none">
+                    <div id="nav-center-content" class="flex items-center">
+                        <a href="/?page=landing" class="flex items-center text-2xl font-bold font-merienda">
+                            <img src="images/sign_whimsicalfrog.webp" alt="Whimsical Frog" style="height: 60px; margin-right: 8px;" 
+                                 onerror="this.onerror=null; this.src='images/sign_whimsicalfrog.png';">
+                        </a>
+                        <p class="text-sm font-merienda ml-2 hidden md:block" style="color: white !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
+                    </div>
                 </div>
-                <div class="flex items-center mt-4 md:mt-0">
-                    <?php if (isset($_SESSION['user'])): ?>
-                        <?php if ($user['role'] === 'Admin'): ?>
-                            <a href="/?page=admin" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</a>
-                            <a href="/?page=admin_inventory" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Manage Inventory</a>
+
+                <!-- Center Section: Conditional Welcome Sign -->
+                <div class="flex-grow flex justify-center items-center">
+                    <?php if ($currentPage !== 'landing'): ?>
+                        <a href="/?page=landing" class="inline-block transform transition-transform duration-300 hover:scale-105">
+                            <picture>
+                                <source srcset="images/sign_main.webp" type="image/webp">
+                                <img src="images/sign_main.png" alt="Return to Landing Page" style="max-height: 40px; display: block;">
+                            </picture>
+                        </a>
+                    <?php else: ?>
+                        <div style="width: 40px; height: 40px;"></div> <!-- Invisible placeholder for when on landing -->
+                    <?php endif; ?>
+                </div>
+
+                <!-- Right Section: Navigation Links -->
+                <div class="flex-none">
+                    <div class="flex items-center">
+                        <?php if (isset($_SESSION['user'])): ?>
+                            <?php if ($user['role'] === 'Admin'): ?>
+                                <a href="/?page=admin" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Admin</a>
+                                <a href="/?page=admin_inventory" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Inventory</a>
+                            <?php endif; ?>
+                            <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
+                        <?php else: ?>
+                            <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
                         <?php endif; ?>
-                        <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">View All Items</a>
-                    <?php else: ?>
-                        <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">View All Items</a>
-                    <?php endif; ?>
-                    <a href="/?page=cart" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center">
-                        <div class="flex items-center space-x-2">
-                            <span id="cartCount" class="text-sm font-medium whitespace-nowrap">0 items</span>
-                            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <span id="cartTotal" class="text-sm font-medium whitespace-nowrap">$0.00</span>
-                        </div>
-                    </a>
-                    <?php if (isset($_SESSION['user'])): ?>
-                        <a href="#" onclick="logout()" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Logout</a>
-                    <?php else: ?>
-                        <a href="/?page=login" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Login</a>
-                    <?php endif; ?>
+                        <a href="/?page=cart" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center">
+                            <div class="flex items-center space-x-1 md:space-x-2">
+                                <span id="cartCount" class="text-sm font-medium whitespace-nowrap">0 items</span>
+                                <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <span id="cartTotal" class="text-sm font-medium whitespace-nowrap hidden md:inline">$0.00</span>
+                            </div>
+                        </a>
+                        <?php if (isset($_SESSION['user'])): ?>
+                            <a href="#" onclick="logout()" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Logout</a>
+                        <?php else: ?>
+                            <a href="/?page=login" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto py-2 sm:px-2 lg:px-4">
+    <main class="flex-grow container mx-auto p-2 md:p-4 lg:p-6 cottage-bg" id="mainContent">
         <?php
         switch ($currentPage) {
             case 'login':
@@ -420,7 +449,7 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
     </div>
 
     <!-- Load cart script first -->
-    <script src="/js/cart.js"></script>
+    <script src="cart.js?v=<?php echo filemtime('cart.js'); ?>"></script>
     
     <!-- WebP Support Detection -->
     <script>

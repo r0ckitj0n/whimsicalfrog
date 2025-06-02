@@ -24,39 +24,37 @@ if (isset($categories['Tumblers'])) {
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
-        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
+        padding-top: 70%; /* Adjusted for 1280x896 aspect ratio (896/1280 * 100) */
         position: relative; /* For absolute positioning of content inside */
         background-image: url('images/room_tumblers.webp?v=cb2');
         background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 15px; /* If you want rounded corners on the image itself */
+        overflow: hidden; /* Add this to prevent internal scrollbars */
     }
 
     .no-webp .room-overlay-wrapper {
         background-image: url('images/room_tumblers.png?v=cb2');
     }
 
-    .room-overlay {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(0.5px);
-        /* min-height: 80vh; Removed, as parent now controls height via aspect ratio */
-        padding: 10px;
-        position: absolute; /* Changed from relative */
+    .room-overlay-content { /* New content container */
+        position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        border-radius: 15px; /* Match wrapper if needed */
+        display: flex; /* Using flex to layer header, shelf-area, and back button */
+        flex-direction: column;
+        overflow: hidden; /* Prevent content overflow issues */
     }
     
-    .shelf-area { /* This is now the direct container for product-icons */
-        position: absolute;
+    .shelf-area {
+        position: absolute; /* Position relative to room-overlay-content */
         width: 100%;
         height: 100%;
         top: 0;
         left: 0;
-        /* The children (.product-icon) will be positioned relative to this */
     }
     
     .product-icon {
@@ -83,22 +81,13 @@ if (isset($categories['Tumblers'])) {
         object-fit: contain;
     }
     
-    /* Tumblers Room Specific Areas - Now handled by JavaScript */
-    /* .area-1 { top: 163px; left: 420px; width: 64px; height: 134px; } */
-    /* .area-2 { top: 162px; left: 510px; width: 61px; height: 126px; } */
-    /* .area-3 { top: 159px; left: 595px; width: 66px; height: 126px; } */
-    /* .area-4 { top: 344px; left: 233px; width: 67px; height: 142px; } */
-    /* .area-5 { top: 333px; left: 319px; width: 71px; height: 144px; } */
-    /* .area-6 { top: 326px; left: 399px; width: 66px; height: 144px; } */
-    /* .area-7 { top: 333px; left: 472px; width: 66px; height: 134px; } */
-    /* .area-8 { top: 324px; left: 570px; width: 63px; height: 128px; } */
-    /* .area-9 { top: 320px; left: 643px; width: 59px; height: 126px; } */
-    /* .area-10 { top: 537px; left: 224px; width: 76px; height: 152px; } */
-    /* .area-11 { top: 524px; left: 315px; width: 67px; height: 140px; } */
-    /* .area-12 { top: 513px; left: 390px; width: 69px; height: 133px; } */
-    /* .area-13 { top: 501px; left: 466px; width: 62px; height: 130px; } */
-    /* .area-14 { top: 488px; left: 538px; width: 57px; height: 128px; } */
-    /* .area-15 { top: 477px; left: 603px; width: 60px; height: 125px; } */
+    /* Tumblers Room Specific Areas */
+    .area-1 { top: 30%; left: 10%; }
+    .area-2 { top: 35%; left: 25%; }
+    .area-3 { top: 32%; left: 40%; }
+    .area-4 { top: 50%; left: 55%; }
+    .area-5 { top: 55%; left: 70%; }
+    .area-6 { top: 52%; left: 85%; }
     
     .product-popup {
         position: absolute;
@@ -170,10 +159,10 @@ if (isset($categories['Tumblers'])) {
         text-align: center;
         background: transparent;
         padding: 10px;
-        border-radius: 15px;
+        /* border-radius: 15px; */ /* Match the container's rounding if needed */
         margin-bottom: 10px;
-        position: relative;
-        z-index: 10;
+        position: relative; /* Needed for z-index to work if other elements overlap */
+        z-index: 10; /* Ensure header is above other elements like product icons if they could overlap */
     }
     
     .room-header h1 {
@@ -223,16 +212,15 @@ if (isset($categories['Tumblers'])) {
 </style>
 
 <section id="tumblersRoomPage" class="p-2">
-    <div class="room-container mx-auto max-w-full">
-        <div class="room-overlay-wrapper"> 
+    <div class="room-container mx-auto max-w-full" data-room-name="Tumblers">
+        <div class="room-overlay-wrapper">
             <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
-            
-            <div class="room-overlay">
+            <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🥤 Tumbler Collection</h1>
-                    <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
+                    <h1>The Tumbler Treasury</h1>
+                    <p>Find your next favorite tumbler or drinkware item here.</p>
                 </div>
-                
+
                 <?php if (empty($tumblerProducts)): ?>
                     <div class="text-center py-8">
                         <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">

@@ -226,15 +226,14 @@ if (isset($categories['Artwork'])) {
     }
 </style>
 
-<section id="artworkRoomPage" class="">
-    <div class="room-container mx-auto max-w-full">
-        <div class="room-overlay-wrapper"> 
+<section id="artworkRoomPage" class="p-2">
+    <div class="room-container mx-auto max-w-full" data-room-name="Artwork">
+        <div class="room-overlay-wrapper">
             <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
-            
-            <div class="room-overlay">
+            <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🎨 Artwork Studio</h1>
-                    <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
+                    <h1>The Artwork Studio</h1>
+                    <p>Browse our unique, custom-designed artwork pieces.</p>
                 </div>
                 
                 <?php if (empty($artworkProducts)): ?>

@@ -11,12 +11,10 @@
 </section>
 <style>
     #landingPage {
-        /* Styles previously here for background and clickable door hotspot are removed. */
-        /* The main background is handled globally or by inline styles on the body in index.php */
-        /* Ensure the section still allows for centering its content if needed */
+        /* Background image is handled by the body element in index.php */
         position: relative; /* Still useful for potential future absolute positioning within */
     }
     .cottage-bg { 
         /* This class is no longer used on the section, can be removed or kept if used elsewhere */
     }
-</style> 
+</style>

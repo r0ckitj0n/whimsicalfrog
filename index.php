@@ -7,6 +7,9 @@ require_once __DIR__ . '/config.php';
 // Include Google API client
 require_once __DIR__ . '/vendor/autoload.php';
 
+// Include shared functions
+require_once __DIR__ . '/includes/functions.php';
+
 // Configuration
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'];
@@ -17,32 +20,6 @@ $config = [
     'google_client_id' => getenv('GOOGLE_CLIENT_ID'),
     'api_url' => $baseUrl . '/api'
 ];
-
-// Helper functions
-
-/**
- * Generates an HTML <img> tag with WebP support and fallback to the original image format.
- *
- * @param string $originalPath The path to the original image (e.g., 'images/my_image.png').
- * @param string $altText The alt text for the image.
- * @param string $class Optional CSS classes for the image tag.
- * @param string $style Optional inline styles for the image tag.
- * @return string The HTML <img> tag.
- */
-function getImageTag($originalPath, $altText, $class = '', $style = '') {
-    if (empty($originalPath)) {
-        $originalPath = 'images/placeholder.png'; // Default placeholder if path is empty
-    }
-    // $webpPath = str_replace(['images/', '.png', '.jpg', '.jpeg'], ['images/webp/', '.webp', '.webp', '.webp'], $originalPath);
-    // Corrected WebP path generation - assumes WebP is in the same directory as original but with .webp extension
-    $pathInfo = pathinfo($originalPath);
-    $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
-    
-    $classAttr = !empty($class) ? " class='" . htmlspecialchars($class) . "'" : '';
-    $styleAttr = !empty($style) ? " style='" . htmlspecialchars($style) . "'" : '';
-
-    return "<img src='" . htmlspecialchars($webpPath) . "' alt='" . htmlspecialchars($altText) . "'" . $classAttr . $styleAttr . " onerror=\"this.onerror=null; this.src='" . htmlspecialchars($originalPath) . "';\">"; 
-}
 
 function fetchDataFromSheet($sheetName) {
     try {
@@ -194,7 +171,6 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         body {
             font-family: 'Merienda', cursive;
             background-image: url('images/home_background.png?v=cb2'); /* Fallback */
-            background-image: url('images/home_background.webp?v=cb2'); /* Main */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -213,7 +189,6 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         /* Non-landing pages background */
         body:not(.is-landing) {
             background-image: url('images/room_main.png?v=cb2'); /* Fallback */
-            background-image: url('images/room_main.webp?v=cb2'); /* Main */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -225,6 +200,7 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         .no-webp body:not(.is-landing) {
             background-image: url('images/room_main.png?v=cb2');
         }
+        
         .font-merienda {
             font-family: 'Merienda', cursive;
         }
@@ -326,6 +302,60 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         body.is-landing a[href="/?page=cart"],
         body.is-landing a[href="/?page=login"] {
             display: none !important;
+        }
+        
+        /* Hide "Back to Room" overlays */
+        .back-to-room-overlay {
+            display: none !important;
+        }
+        
+        /* Fix popup issues */
+        .popup {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        .popup.show, 
+        .product-popup.show {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* Room pages should have less spacing */
+        .room-section {
+            padding: 0.25rem !important;
+            margin-top: 0 !important;
+        }
+        
+        /* Main room specific spacing fixes */
+        .room-section .main-room-container {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        
+        /* Full-screen page styling */
+        .body-fullscreen-layout {
+            overflow: hidden; /* Handles structural full-screen behavior */
+        }
+        
+        /* This rule is a fallback in case #mainContent is somehow rendered on a fullscreen page */
+        .body-fullscreen-layout #mainContent {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: 100vh !important;
+        }
+        
+        .fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -464,14 +494,14 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
     </div>
 
     <!-- Load cart script first -->
-    <script src="cart.js?v=<?php echo filemtime('cart.js'); ?>"></script>
+    <script src="js/cart.js?v=<?php echo filemtime('js/cart.js'); ?>"></script>
     
     <!-- WebP Support Detection -->
     <script>
         // Detect WebP support
         (function(){
             var d=document.createElement('div');
-            d.innerHTML='<img src="" onerror="document.documentElement.className += \' no-webp\';" onload="document.documentElement.className += \' webp\';">';
+            d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==" onerror="document.documentElement.className += \' no-webp\';" onload="document.documentElement.className += \' webp\';">';
         })();
     </script>
     

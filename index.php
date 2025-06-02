@@ -41,7 +41,7 @@ function getImageTag($originalPath, $altText, $class = '', $style = '') {
     $classAttr = !empty($class) ? " class='" . htmlspecialchars($class) . "'" : '';
     $styleAttr = !empty($style) ? " style='" . htmlspecialchars($style) . "'" : '';
 
-    return "<img src='" . htmlspecialchars($webpPath) . "' alt='" . htmlspecialchars($altText) . "'" . $classAttr . $styleAttr . " onerror=\"this.onerror=null; this.src='" . htmlspecialchars($originalPath) . "';\">";
+    return "<img src='" . htmlspecialchars($webpPath) . "' alt='" . htmlspecialchars($altText) . "'" . $classAttr . $styleAttr . " onerror=\"this.onerror=null; this.src='" . htmlspecialchars($originalPath) . "';\">"; 
 }
 
 function fetchDataFromSheet($sheetName) {
@@ -209,6 +209,21 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
         }
         .no-webp body {
             background-image: url('images/home_background.png?v=cb2');
+        }
+        /* Non-landing pages background */
+        body:not(.is-landing) {
+            background-image: url('images/room_main.png?v=cb2'); /* Fallback */
+            background-image: url('images/room_main.webp?v=cb2'); /* Main */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .webp body:not(.is-landing) {
+            background-image: url('images/room_main.webp?v=cb2');
+        }
+        .no-webp body:not(.is-landing) {
+            background-image: url('images/room_main.png?v=cb2');
         }
         .font-merienda {
             font-family: 'Merienda', cursive;

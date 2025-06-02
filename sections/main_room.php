@@ -3,7 +3,7 @@
 ?>
 <style>
     .main-room-container {
-        background-image: url('images/room_main.webp');
+        /* background-image property removed as requested */
         background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
@@ -12,7 +12,7 @@
         border-radius: 15px;
         overflow: hidden;
         opacity: 1;
-        background-color: transparent;
+        background-color: transparent; /* Ensure background is transparent */
         mix-blend-mode: normal;
     }
     
@@ -77,12 +77,7 @@
 
     /* .room-overlay-wrapper { ... } was here, removed as it seemed redundant with .main-room-container styles */
 
-    .no-webp .main-room-container {
-        /* Ensure PNG fallback for main-room-container if no-webp is active */
-        background-image: url('images/room_main.png?v=cb2');
-        background-color: transparent;
-        mix-blend-mode: normal;
-    }
+    /* .no-webp .main-room-container rule removed as requested */
 
     /* Additional transparency handling */
     .main-room-container::before {

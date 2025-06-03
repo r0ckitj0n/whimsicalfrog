@@ -178,11 +178,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomContainer = document.querySelector('#mainRoomPage .main-room-container');
 
     const baseAreas = [
-        { selector: '.door-tshirts', top: 321, left: 124, width: 158, height: 348 },     // Orig: 301, 104
-        { selector: '.door-tumblers', top: 483, left: 434, width: 84, height: 157 },    // Orig: 463, 414
-        { selector: '.door-artwork', top: 188, left: 660, width: 77, height: 124 },      // Orig: 168, 640
-        { selector: '.door-sublimation', top: 364, left: 683, width: 103, height: 258 },// Orig: 344, 663
-        { selector: '.door-windowwraps', top: 343, left: 899, width: 153, height: 306 } // Orig: 323, 879
+        { selector: '.door-tshirts', top: 180, left: 48, width: 173, height: 140 },     // Area 1
+        { selector: '.door-tumblers', top: 338, left: 380, width: 93, height: 64 },    // Area 2
+        { selector: '.door-artwork', top: 220, left: 674, width: 125, height: 105 },      // Area 3
+        { selector: '.door-windowwraps', top: 202, left: 877, width: 171, height: 111 }, // Area 4
+        { selector: '.door-sublimation', top: 10, left: 575, width: 143, height: 85 } // Area 5
     ];
 
     function updateAreaCoordinates() {

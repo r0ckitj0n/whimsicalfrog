@@ -17,7 +17,8 @@
         }
         .room-display {
             position: relative;
-            display: inline-block;
+            width: 100%;
+            padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
             border: 2px solid #333;
             background: linear-gradient(45deg, #ccc 25%, transparent 25%), 
                         linear-gradient(-45deg, #ccc 25%, transparent 25%), 
@@ -25,11 +26,27 @@
                         linear-gradient(-45deg, transparent 75%, #ccc 75%);
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            overflow: hidden;
+        }
+        .room-image-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .room-image {
-            display: block;
             max-width: 100%;
-            height: auto;
+            max-height: 100%;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
         .clickable-area {
             position: absolute;
@@ -49,21 +66,31 @@
             background: white;
             border: 1px solid #ddd;
             font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
         }
         select, button {
             padding: 8px 12px;
             margin: 5px;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9f7ff;
+            border: 1px solid #c0e0ff;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Room Mapper - Clickable Area Helper</h1>
-        <p>This tool helps you map clickable areas on your room images with transparent backgrounds.</p>
+        <p>This tool helps you map clickable areas on your room images with the same scaling as your live site.</p>
         
         <div class="controls">
             <label for="roomSelect">Select Room:</label>
             <select id="roomSelect">
+                <option value="landing">Landing Page</option>
                 <option value="room_main">Main Room</option>
                 <option value="room_artwork">Artwork Room</option>
                 <option value="room_tshirts">T-Shirts Room</option>
@@ -76,7 +103,13 @@
         </div>
         
         <div class="room-display" id="roomDisplay">
-            <img id="roomImage" class="room-image" src="images/room_main.png" alt="Room">
+            <div class="room-image-container">
+                <img id="roomImage" class="room-image" src="images/home_background.png" alt="Room">
+            </div>
+        </div>
+        
+        <div class="info">
+            <p><strong>Note:</strong> This mapper now uses the same scaling system as your live site. The coordinates generated will match the full-screen layout.</p>
         </div>
         
         <div class="coordinates" id="coordinates">
@@ -89,6 +122,8 @@
         let startX, startY;
         let currentArea = null;
         let areaCount = 0;
+        const originalImageWidth = 1280;
+        const originalImageHeight = 896;
 
         const roomSelect = document.getElementById('roomSelect');
         const roomImage = document.getElementById('roomImage');
@@ -96,30 +131,34 @@
         const coordinates = document.getElementById('coordinates');
 
         roomSelect.addEventListener('change', function() {
-            roomImage.src = `images/${this.value}.png`;
+            // Special handling for landing page image
+            if (this.value === 'landing') {
+                roomImage.src = 'images/home_background.png';
+            } else {
+                roomImage.src = `images/${this.value}.png`;
+            }
             clearAreas();
         });
 
         roomDisplay.addEventListener('mousedown', function(e) {
-            if (e.target === roomImage) {
-                isDrawing = true;
-                const rect = roomImage.getBoundingClientRect();
-                startX = e.clientX - rect.left;
-                startY = e.clientY - rect.top;
-                
-                currentArea = document.createElement('div');
-                currentArea.className = 'clickable-area';
-                currentArea.style.left = startX + 'px';
-                currentArea.style.top = startY + 'px';
-                currentArea.style.width = '0px';
-                currentArea.style.height = '0px';
-                roomDisplay.appendChild(currentArea);
-            }
+            const rect = roomDisplay.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            
+            isDrawing = true;
+            
+            currentArea = document.createElement('div');
+            currentArea.className = 'clickable-area';
+            currentArea.style.left = startX + 'px';
+            currentArea.style.top = startY + 'px';
+            currentArea.style.width = '0px';
+            currentArea.style.height = '0px';
+            roomDisplay.appendChild(currentArea);
         });
 
         roomDisplay.addEventListener('mousemove', function(e) {
             if (isDrawing && currentArea) {
-                const rect = roomImage.getBoundingClientRect();
+                const rect = roomDisplay.getBoundingClientRect();
                 const currentX = e.clientX - rect.left;
                 const currentY = e.clientY - rect.top;
                 
@@ -140,18 +179,57 @@
                 isDrawing = false;
                 areaCount++;
                 
-                const leftPx = parseFloat(currentArea.style.left).toFixed(0);
-                const topPx = parseFloat(currentArea.style.top).toFixed(0);
-                const widthPx = parseFloat(currentArea.style.width).toFixed(0);
-                const heightPx = parseFloat(currentArea.style.height).toFixed(0);
+                // Get container dimensions
+                const wrapperWidth = roomDisplay.offsetWidth;
+                const wrapperHeight = roomDisplay.offsetHeight;
+                
+                // Calculate scaling factors
+                const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+                const imageAspectRatio = originalImageWidth / originalImageHeight;
+                
+                let renderedImageWidth, renderedImageHeight;
+                let offsetX = 0;
+                let offsetY = 0;
+                
+                // Calculate image rendering dimensions within container
+                if (wrapperAspectRatio > imageAspectRatio) {
+                    renderedImageHeight = wrapperHeight;
+                    renderedImageWidth = renderedImageHeight * imageAspectRatio;
+                    offsetX = (wrapperWidth - renderedImageWidth) / 2;
+                } else {
+                    renderedImageWidth = wrapperWidth;
+                    renderedImageHeight = renderedImageWidth / imageAspectRatio;
+                    offsetY = (wrapperHeight - renderedImageHeight) / 2;
+                }
+                
+                // Get the pixel values from the drawn area
+                const leftPx = parseFloat(currentArea.style.left);
+                const topPx = parseFloat(currentArea.style.top);
+                const widthPx = parseFloat(currentArea.style.width);
+                const heightPx = parseFloat(currentArea.style.height);
+                
+                // Convert to original image coordinates
+                const originalLeft = Math.round(((leftPx - offsetX) / renderedImageWidth) * originalImageWidth);
+                const originalTop = Math.round(((topPx - offsetY) / renderedImageHeight) * originalImageHeight);
+                const originalWidth = Math.round((widthPx / renderedImageWidth) * originalImageWidth);
+                const originalHeight = Math.round((heightPx / renderedImageHeight) * originalImageHeight);
                 
                 const cssClass = `area-${areaCount}`;
                 currentArea.setAttribute('data-area', cssClass);
                 
-                const cssCode = `.${cssClass} { top: ${topPx}px; left: ${leftPx}px; width: ${widthPx}px; height: ${heightPx}px; }`;
+                const cssCode = `.${cssClass} { top: ${originalTop}px; left: ${originalLeft}px; width: ${originalWidth}px; height: ${originalHeight}px; }`;
+                
+                // JavaScript array format for main_room.php
+                const jsArrayFormat = `{ selector: '.${cssClass}', top: ${originalTop}, left: ${originalLeft}, width: ${originalWidth}, height: ${originalHeight} }, // Area ${areaCount}`;
                 
                 const selectedRoom = roomSelect.value;
-                coordinates.innerHTML += `<div><strong>Area ${areaCount} (${selectedRoom}):</strong><br>${cssCode}</div>`;
+                coordinates.innerHTML += `
+                    <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                        <strong>Area ${areaCount} (${selectedRoom}):</strong><br>
+                        <div style="margin: 5px 0;">CSS: ${cssCode}</div>
+                        <div style="margin: 5px 0;">JS Array: ${jsArrayFormat}</div>
+                    </div>
+                `;
                 
                 currentArea = null;
             }
@@ -170,4 +248,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

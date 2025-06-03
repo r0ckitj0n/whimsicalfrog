@@ -28,4 +28,8 @@ lftp -f deploy_commands.txt
 # Clean up
 rm deploy_commands.txt
 
+# Restart Node.js server
+echo "Restarting Node.js server..."
+sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$HOST "cd $REMOTE_PATH && pm2 restart server.js || pm2 start server.js"
+
 echo "Deployment completed!" 

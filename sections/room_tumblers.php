@@ -81,13 +81,8 @@ if (isset($categories['Tumblers'])) {
         object-fit: contain;
     }
     
-    /* Tumblers Room Specific Areas */
-    .area-1 { top: 25%; left: 10%; }
-    .area-2 { top: 30%; left: 25%; }
-    .area-3 { top: 28%; left: 40%; }
-    .area-4 { top: 45%; left: 55%; }
-    .area-5 { top: 50%; left: 70%; }
-    .area-6 { top: 48%; left: 85%; }
+    /* Removed Tumblers Room Specific Areas CSS positioning to avoid conflict with JavaScript positioning */
+    /* JavaScript in the document.addEventListener('DOMContentLoaded') function below now handles all positioning */
     
     .product-popup {
         position: absolute;

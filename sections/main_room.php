@@ -3,7 +3,7 @@
 ?>
 <style>
     .main-room-container {
-        /* background-image property removed as requested */
+        background-image: url('images/room_main.png?v=cb2'); /* Restored background image */
         background-size: contain; /* Preserve aspect ratio, fit within container */
         background-position: center;
         background-repeat: no-repeat;
@@ -14,6 +14,15 @@
         opacity: 1;
         background-color: transparent; /* Ensure background is transparent */
         mix-blend-mode: normal;
+    }
+    
+    /* Add WebP support */
+    .webp .main-room-container {
+        background-image: url('images/room_main.webp?v=cb2');
+    }
+    
+    .no-webp .main-room-container {
+        background-image: url('images/room_main.png?v=cb2');
     }
     
     .door-area {
@@ -159,12 +168,6 @@
     </div>
 </section>
 
-<!-- Center Section: Conditional Welcome Sign -->
-<div class="flex-grow flex justify-center items-center">
-    <a href="/?page=landing" class="inline-block transform transition-transform duration-300 hover:scale-105">
-        <picture class="block">
-            <source srcset="images/sign_main_transparent.webp" type="image/webp">
-            <img src="images/sign_main_transparent.png" alt="Return to Landing Page" style="max-height: 40px; display: block;">
 <script>
 function enterRoom(category) {
     console.log('Entering room:', category);

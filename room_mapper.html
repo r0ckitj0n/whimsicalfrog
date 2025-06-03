@@ -15,44 +15,30 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-        .room-display {
+        .room-container {
             position: relative;
             width: 100%;
-            padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
-            border: 2px solid #333;
-            background: linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                        linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                        linear-gradient(45deg, transparent 75%, #ccc 75%), 
-                        linear-gradient(-45deg, transparent 75%, #ccc 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border-radius: 15px;
             overflow: hidden;
+            margin-bottom: 20px;
+            background: #333;
         }
-        .room-image-container {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .room-overlay-wrapper {
             width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .room-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
+            position: relative;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 15px;
+            overflow: hidden;
         }
         .clickable-area {
             position: absolute;
             border: 2px solid red;
             background: rgba(255, 0, 0, 0.2);
             cursor: pointer;
+            z-index: 100;
         }
         .clickable-area:hover {
             background: rgba(255, 0, 0, 0.4);
@@ -80,6 +66,21 @@
             border: 1px solid #c0e0ff;
             border-radius: 5px;
         }
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            display: none;
+        }
+        .grid-active .grid-overlay {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -102,14 +103,15 @@
             <button onclick="clearAreas()">Clear Areas</button>
         </div>
         
-        <div class="room-display" id="roomDisplay">
-            <div class="room-image-container">
-                <img id="roomImage" class="room-image" src="images/home_background.png" alt="Room">
+        <div class="room-container" id="roomContainer">
+            <div class="room-overlay-wrapper" id="roomDisplay">
+                <div class="grid-overlay" id="gridOverlay"></div>
+                <!-- Clickable areas will be added here -->
             </div>
         </div>
         
         <div class="info">
-            <p><strong>Note:</strong> This mapper now uses the same scaling system as your live site. The coordinates generated will match the full-screen layout.</p>
+            <p><strong>Note:</strong> This mapper uses the exact same scaling system as your live site. The coordinates generated will match the room page layout perfectly.</p>
         </div>
         
         <div class="coordinates" id="coordinates">
@@ -126,19 +128,26 @@
         const originalImageHeight = 896;
 
         const roomSelect = document.getElementById('roomSelect');
-        const roomImage = document.getElementById('roomImage');
         const roomDisplay = document.getElementById('roomDisplay');
+        const roomContainer = document.getElementById('roomContainer');
         const coordinates = document.getElementById('coordinates');
 
         roomSelect.addEventListener('change', function() {
             // Special handling for landing page image
             if (this.value === 'landing') {
-                roomImage.src = 'images/home_background.png';
+                roomDisplay.style.backgroundImage = `url('images/home_background.png')`;
             } else {
-                roomImage.src = `images/${this.value}.png`;
+                roomDisplay.style.backgroundImage = `url('images/${this.value}.png')`;
             }
             clearAreas();
         });
+
+        // Initialize with the selected room
+        if (roomSelect.value === 'landing') {
+            roomDisplay.style.backgroundImage = `url('images/home_background.png')`;
+        } else {
+            roomDisplay.style.backgroundImage = `url('images/${roomSelect.value}.png')`;
+        }
 
         roomDisplay.addEventListener('mousedown', function(e) {
             const rect = roomDisplay.getBoundingClientRect();
@@ -219,7 +228,7 @@
                 
                 const cssCode = `.${cssClass} { top: ${originalTop}px; left: ${originalLeft}px; width: ${originalWidth}px; height: ${originalHeight}px; }`;
                 
-                // JavaScript array format for main_room.php
+                // JavaScript array format for room pages
                 const jsArrayFormat = `{ selector: '.${cssClass}', top: ${originalTop}, left: ${originalLeft}, width: ${originalWidth}, height: ${originalHeight} }, // Area ${areaCount}`;
                 
                 const selectedRoom = roomSelect.value;
@@ -236,8 +245,7 @@
         });
 
         function toggleGrid() {
-            roomDisplay.style.backgroundImage = roomDisplay.style.backgroundImage ? '' : 
-                'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)';
+            roomContainer.classList.toggle('grid-active');
         }
 
         function clearAreas() {

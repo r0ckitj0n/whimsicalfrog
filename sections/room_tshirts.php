@@ -81,13 +81,8 @@ if (isset($categories['T-Shirts'])) {
         object-fit: contain;
     }
     
-    /* T-Shirts Room Specific Areas */
-    .area-1 { top: 30%; left: 10%; }
-    .area-2 { top: 35%; left: 25%; }
-    .area-3 { top: 32%; left: 40%; }
-    .area-4 { top: 50%; left: 55%; }
-    .area-5 { top: 55%; left: 70%; }
-    .area-6 { top: 52%; left: 85%; }
+    /* Removed T-Shirts Room Specific Areas CSS positioning to avoid conflict with JavaScript positioning */
+    /* JavaScript in the document.addEventListener('DOMContentLoaded') function below now handles all positioning */
     
     .product-popup {
         position: absolute;

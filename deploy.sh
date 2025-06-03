@@ -17,7 +17,7 @@ cat > deploy_commands.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 open sftp://$USER:$PASS@$HOST
-mirror --reverse --delete --exclude-glob .git/ --exclude-glob node_modules/ --exclude-glob vendor/ --exclude-glob .vscode/ --exclude-glob *.log --exclude-glob *.sh --exclude-glob *.plist --exclude-glob temp_cron.txt --exclude-glob SERVER_MANAGEMENT.md --exclude-glob factory-tutorial/ . $REMOTE_PATH
+mirror --reverse --delete --exclude-glob .git/ --exclude-glob node_modules/ --exclude-glob vendor/ --exclude-glob .vscode/ --exclude-glob *.log --exclude-glob *.sh --exclude-glob *.plist --exclude-glob temp_cron.txt --exclude-glob SERVER_MANAGEMENT.md --exclude-glob factory-tutorial/ --include-glob credentials.json . $REMOTE_PATH
 bye
 EOL
 

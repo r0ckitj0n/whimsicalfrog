@@ -57,7 +57,7 @@ $inventory = [];
 
 try {
     // Fetch products
-    $productsData = file_get_contents('http://localhost:3000/api/products');
+    $productsData = file_get_contents('https://whimsicalfrog.onrender.com/api/products');
     $products = json_decode($productsData, true);
     
     if ($products && is_array($products)) {
@@ -72,7 +72,7 @@ try {
     }
     
     // Fetch inventory
-    $inventoryData = file_get_contents('http://localhost:3000/api/inventory');
+    $inventoryData = file_get_contents('https://whimsicalfrog.onrender.com/api/inventory');
     $inventory = json_decode($inventoryData, true) ?: [];
 } catch (Exception $e) {
     // Handle API error
@@ -488,7 +488,7 @@ if ($isFullscreenPage) {
             const errorMessage = document.getElementById('errorMessage');
             
             try {
-                const response = await fetch('http://localhost:3000/api/login', {
+                const response = await fetch('https://whimsicalfrog.onrender.com/api/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -541,7 +541,7 @@ if ($isFullscreenPage) {
         })
         .then(() => {
             // Then clear Node.js session
-            return fetch('http://localhost:3000/api/logout', {
+            return fetch('https://whimsicalfrog.onrender.com/api/logout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

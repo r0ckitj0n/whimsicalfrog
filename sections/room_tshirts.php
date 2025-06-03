@@ -15,7 +15,6 @@ if (isset($categories['T-Shirts'])) {
         position: relative;
         border-radius: 15px;
         overflow: hidden;
-        /* border: 2px solid red; */ /* DEBUG BORDER */
         /* max-width: 100%; */ /* Ensure it can shrink */
         /* width: 100%; */ /* Take full available width up to its container's limit */
         /* display: flex; */ /* To center the wrapper if it's smaller than container */
@@ -203,7 +202,9 @@ if (isset($categories['T-Shirts'])) {
         text-decoration: none;
         font-weight: bold;
         transition: all 0.3s ease;
-        z-index: 10;
+        z-index: 1000; /* Increased z-index to ensure it's above everything */
+        cursor: pointer; /* Added to show hand cursor on hover */
+        pointer-events: auto !important; /* Ensure clicks are registered */
     }
     
     .back-button:hover {
@@ -215,7 +216,7 @@ if (isset($categories['T-Shirts'])) {
 <section id="tshirtsRoomPage" class="p-2">
     <div class="room-container mx-auto max-w-full" data-room-name="T-Shirts">
         <div class="room-overlay-wrapper">
-            <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
+            <a href="/?page=main_room" class="back-button" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
             <div class="room-overlay-content">
                 <div class="room-header">
                     <h1>The T-Shirt Boutique</h1>
@@ -261,10 +262,12 @@ if (isset($categories['T-Shirts'])) {
 <script>
 let currentProduct = null;
 let popupTimeout = null;
+let popupOpen = false;
 
 function showPopup(element, product) {
     clearTimeout(popupTimeout);
     currentProduct = product;
+    popupOpen = true;
     
     const popup = document.getElementById('productPopup');
     const rect = element.getBoundingClientRect();
@@ -300,6 +303,7 @@ function hidePopup() {
         const popup = document.getElementById('productPopup');
         popup.classList.remove('show');
         currentProduct = null;
+        popupOpen = false;
     }, 100);
 }
 
@@ -336,6 +340,71 @@ document.getElementById('productPopup').addEventListener('mouseenter', () => {
 
 document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
+});
+
+// Simple document click listener for popup closing
+document.addEventListener('click', function(e) {
+    console.log('Document clicked:', e.target);
+    const popup = document.getElementById('productPopup');
+    
+    // Close popup if it's open and click is outside it
+    if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
+        console.log('Closing popup');
+        hidePopup();
+    }
+});
+
+// Click-outside room functionality
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up click-outside functionality');
+    
+    // Handle clicks on document body for background detection
+    document.body.addEventListener('click', function(e) {
+        console.log('Body clicked:', e.target);
+        
+        // Skip if click is on or inside room container or any UI elements
+        const roomContainer = document.querySelector('#tshirtsRoomPage .room-container');
+        const backButton = document.querySelector('.back-button');
+        
+        // Debug what was clicked
+        console.log('Clicked on back button?', e.target === backButton || backButton.contains(e.target));
+        console.log('Clicked on room container?', roomContainer && roomContainer.contains(e.target));
+        
+        // If back button was clicked, let it handle navigation
+        if (e.target === backButton || (backButton && backButton.contains(e.target))) {
+            console.log('Back button clicked, allowing default navigation');
+            return true; // Let the link handle navigation
+        }
+        
+        // If popup is open, don't handle background clicks
+        const popup = document.getElementById('productPopup');
+        if (popup && popup.classList.contains('show')) {
+            console.log('Popup is open, not handling background click');
+            return;
+        }
+        
+        // If click is not on room container or its children, navigate to main room
+        if (roomContainer && !roomContainer.contains(e.target)) {
+            console.log('Click outside room container, navigating to main room');
+            window.location.href = '/?page=main_room';
+        }
+    });
+    
+    // Ensure back button works
+    const backButton = document.querySelector('.back-button');
+    if (backButton) {
+        console.log('Back button found, ensuring it works');
+        
+        // Remove any existing click listeners that might interfere
+        const newBackButton = backButton.cloneNode(true);
+        backButton.parentNode.replaceChild(newBackButton, backButton);
+        
+        // Add a clean click listener
+        newBackButton.addEventListener('click', function(e) {
+            console.log('Back button clicked via event listener');
+            // Let the default link behavior happen
+        });
+    }
 });
 
 // Script to dynamically scale product icon areas

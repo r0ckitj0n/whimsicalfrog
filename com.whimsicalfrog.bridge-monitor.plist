@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.whimsicalfrog.bridge-monitor</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>~/bridge_monitor.sh monitor</string>
+    </array>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <true/>
+    
+    <key>WorkingDirectory</key>
+    <string>~/</string>
+    
+    <key>StandardErrorPath</key>
+    <string>~/Library/Logs/bridge_monitor_error.log</string>
+    
+    <key>StandardOutPath</key>
+    <string>~/Library/Logs/bridge_monitor_output.log</string>
+    
+    <key>ThrottleInterval</key>
+    <integer>60</integer>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    
+    <key>ProcessType</key>
+    <string>Background</string>
+    
+    <key>Nice</key>
+    <integer>10</integer>
+    
+    <key>StartInterval</key>
+    <integer>300</integer>
+    
+    <key>ExitTimeOut</key>
+    <integer>60</integer>
+</dict>
+</plist>

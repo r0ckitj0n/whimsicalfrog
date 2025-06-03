@@ -11,7 +11,7 @@ if (isset($categories['Sublimation'])) {
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        min-height: 80vh; /* This might be overridden by aspect ratio logic below */
+        /* min-height: 80vh; */ /* This might be overridden by aspect ratio logic below */
         position: relative;
         border-radius: 15px;
         overflow: hidden;
@@ -82,12 +82,12 @@ if (isset($categories['Sublimation'])) {
     }
     
     /* Sublimation Room Specific Areas */
-    .area-1 { top: 30%; left: 10%; }
-    .area-2 { top: 35%; left: 25%; }
-    .area-3 { top: 32%; left: 40%; }
-    .area-4 { top: 50%; left: 55%; }
-    .area-5 { top: 55%; left: 70%; }
-    .area-6 { top: 52%; left: 85%; }
+    .area-1 { top: 25%; left: 10%; }
+    .area-2 { top: 30%; left: 25%; }
+    .area-3 { top: 28%; left: 40%; }
+    .area-4 { top: 45%; left: 55%; }
+    .area-5 { top: 50%; left: 70%; }
+    .area-6 { top: 48%; left: 85%; }
     
     .product-popup {
         position: absolute;
@@ -202,7 +202,9 @@ if (isset($categories['Sublimation'])) {
         text-decoration: none;
         font-weight: bold;
         transition: all 0.3s ease;
-        z-index: 10;
+        z-index: 1000; /* Increased z-index to ensure it's above everything */
+        cursor: pointer; /* Added to show hand cursor on hover */
+        pointer-events: auto !important; /* Ensure clicks are registered */
     }
     
     .back-button:hover {
@@ -214,19 +216,19 @@ if (isset($categories['Sublimation'])) {
 <section id="sublimationRoomPage" class="p-2">
     <div class="room-container mx-auto max-w-full" data-room-name="Sublimation">
         <div class="room-overlay-wrapper">
-            <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
+            <a href="/?page=main_room" class="back-button" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
             
             <div class="room-overlay-content">
                 <div class="room-header">
                     <h1>Sublimation Station</h1>
-                    <p>Explore a variety of sublimated items and gifts.</p>
+                    <p>Discover our custom sublimation products.</p>
                 </div>
                 
                 <?php if (empty($sublimationProducts)): ?>
                     <div class="text-center py-8">
                         <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
                             <p class="text-xl text-gray-600">No sublimation items available at the moment.</p>
-                            <p class="text-gray-500 mt-2">Check back soon for new blanks!</p>
+                            <p class="text-gray-500 mt-2">Check back soon for new designs!</p>
                         </div>
                     </div>
                 <?php else: ?>
@@ -261,10 +263,12 @@ if (isset($categories['Sublimation'])) {
 <script>
 let currentProduct = null;
 let popupTimeout = null;
+let popupOpen = false;
 
 function showPopup(element, product) {
     clearTimeout(popupTimeout);
     currentProduct = product;
+    popupOpen = true;
     
     const popup = document.getElementById('productPopup');
     const rect = element.getBoundingClientRect();
@@ -300,6 +304,7 @@ function hidePopup() {
         const popup = document.getElementById('productPopup');
         popup.classList.remove('show');
         currentProduct = null;
+        popupOpen = false;
     }, 100);
 }
 
@@ -338,6 +343,71 @@ document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
 });
 
+// Simple document click listener for popup closing
+document.addEventListener('click', function(e) {
+    console.log('Document clicked:', e.target);
+    const popup = document.getElementById('productPopup');
+    
+    // Close popup if it's open and click is outside it
+    if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
+        console.log('Closing popup');
+        hidePopup();
+    }
+});
+
+// Click-outside room functionality
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up click-outside functionality');
+    
+    // Handle clicks on document body for background detection
+    document.body.addEventListener('click', function(e) {
+        console.log('Body clicked:', e.target);
+        
+        // Skip if click is on or inside room container or any UI elements
+        const roomContainer = document.querySelector('#sublimationRoomPage .room-container');
+        const backButton = document.querySelector('.back-button');
+        
+        // Debug what was clicked
+        console.log('Clicked on back button?', e.target === backButton || backButton.contains(e.target));
+        console.log('Clicked on room container?', roomContainer && roomContainer.contains(e.target));
+        
+        // If back button was clicked, let it handle navigation
+        if (e.target === backButton || (backButton && backButton.contains(e.target))) {
+            console.log('Back button clicked, allowing default navigation');
+            return true; // Let the link handle navigation
+        }
+        
+        // If popup is open, don't handle background clicks
+        const popup = document.getElementById('productPopup');
+        if (popup && popup.classList.contains('show')) {
+            console.log('Popup is open, not handling background click');
+            return;
+        }
+        
+        // If click is not on room container or its children, navigate to main room
+        if (roomContainer && !roomContainer.contains(e.target)) {
+            console.log('Click outside room container, navigating to main room');
+            window.location.href = '/?page=main_room';
+        }
+    });
+    
+    // Ensure back button works
+    const backButton = document.querySelector('.back-button');
+    if (backButton) {
+        console.log('Back button found, ensuring it works');
+        
+        // Remove any existing click listeners that might interfere
+        const newBackButton = backButton.cloneNode(true);
+        backButton.parentNode.replaceChild(newBackButton, backButton);
+        
+        // Add a clean click listener
+        newBackButton.addEventListener('click', function(e) {
+            console.log('Back button clicked via event listener');
+            // Let the default link behavior happen
+        });
+    }
+});
+
 // Script to dynamically scale product icon areas
 document.addEventListener('DOMContentLoaded', function() {
     const originalImageWidth = 1280;
@@ -345,14 +415,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomOverlayWrapper = document.querySelector('#sublimationRoomPage .room-overlay-wrapper');
 
     const baseAreas = [
-        { selector: '.area-1', top: 245, left: 261, width: 197, height: 48 }, // Orig: 225, 241
-        { selector: '.area-2', top: 309, left: 192, width: 351, height: 51 }, // Orig: 289, 172
-        { selector: '.area-3', top: 383, left: 208, width: 341, height: 46 }, // Orig: 363, 188
-        { selector: '.area-4', top: 288, left: 816, width: 295, height: 48 }, // Orig: 268, 796
-        { selector: '.area-5', top: 372, left: 807, width: 134, height: 74 }, // Orig: 352, 787
-        { selector: '.area-6', top: 375, left: 947, width: 161, height: 77 }, // Orig: 355, 927
-        { selector: '.area-7', top: 455, left: 205, width: 169, height: 75 }, // Orig: 435, 185
-        { selector: '.area-8', top: 447, left: 381, width: 101, height: 72 }  // Orig: 427, 361
+        { selector: '.area-1', top: 329, left: 114, width: 118, height: 132 }, // Orig: 309, 94
+        { selector: '.area-2', top: 339, left: 291, width: 83, height: 125 }, // Orig: 319, 271
+        { selector: '.area-3', top: 342, left: 378, width: 81, height: 127 }, // Orig: 322, 358
+        { selector: '.area-4', top: 344, left: 465, width: 84, height: 125 }, // Orig: 324, 445
+        { selector: '.area-5', top: 347, left: 555, width: 74, height: 123 }, // Orig: 327, 535
+        { selector: '.area-6', top: 455, left: 867, width: 98, height: 155 }, // Orig: 435, 847
     ];
 
     function updateAreaCoordinates() {

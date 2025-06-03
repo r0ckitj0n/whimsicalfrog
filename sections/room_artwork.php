@@ -11,8 +11,7 @@ if (isset($categories['Artwork'])) {
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        /* min-height: 80vh; */ /* Temporarily remove/set to 0 to test height contribution */
-        min-height: 0;
+        /* min-height: 80vh; */ /* This might be overridden by aspect ratio logic below */
         position: relative;
         border-radius: 15px;
         overflow: hidden;
@@ -45,9 +44,6 @@ if (isset($categories['Artwork'])) {
         left: 0;
         right: 0;
         bottom: 0;
-        /* background: rgba(255, 255, 255, 0.05); */ /* Optional: for slight overlay on image */
-        /* backdrop-filter: blur(0.5px); */
-        /* padding: 10px; */ /* Removed padding to allow full area for coordinates */
         display: flex; /* Using flex to layer header, shelf-area, and back button */
         flex-direction: column;
         overflow: hidden; /* Prevent content overflow issues */
@@ -85,25 +81,14 @@ if (isset($categories['Artwork'])) {
         object-fit: contain;
     }
     
-    /* Position icons on shelves - adjust based on your room_artwork.png */
-    .icon-1 { top: 30%; left: 20%; }
-    .icon-2 { top: 35%; left: 40%; }
-    .icon-3 { top: 32%; left: 60%; }
-    .icon-4 { top: 50%; left: 25%; }
-    .icon-5 { top: 55%; left: 45%; }
-    .icon-6 { top: 52%; left: 65%; }
-    
     /* Artwork Room Specific Areas */
-    .area-1 { /* Original: top: 222px; left: 176px; width: 116px; height: 65px; */ }
-    .area-2 { /* Original: top: 365px; left: 230px; width: 56px; height: 97px; */ }
-    .area-3 { /* Original: top: 218px; left: 352px; width: 66px; height: 102px; */ }
-    .area-4 { /* Original: top: 402px; left: 354px; width: 75px; height: 47px; */ }
-    .area-5 { /* Original: top: 189px; left: 469px; width: 95px; height: 75px; */ }
-    .area-6 { /* Original: top: 345px; left: 477px; width: 52px; height: 95px; */ }
-    .area-7 { /* Original: top: 321px; left: 585px; width: 46px; height: 62px; */ }
-    .area-8 { /* Original: top: 323px; left: 984px; width: 80px; height: 57px; */ }
-    /* Removed old .area-9, .area-10, .area-11 percentage styles */
-
+    .area-1 { top: 25%; left: 10%; }
+    .area-2 { top: 30%; left: 25%; }
+    .area-3 { top: 28%; left: 40%; }
+    .area-4 { top: 45%; left: 55%; }
+    .area-5 { top: 50%; left: 70%; }
+    .area-6 { top: 48%; left: 85%; }
+    
     .product-popup {
         position: absolute;
         background: white;
@@ -174,10 +159,10 @@ if (isset($categories['Artwork'])) {
         text-align: center;
         background: transparent;
         padding: 10px;
-        border-radius: 15px;
+        /* border-radius: 15px; */ /* Match the container's rounding if needed */
         margin-bottom: 10px;
-        position: relative;
-        z-index: 10;
+        position: relative; /* Needed for z-index to work if other elements overlap */
+        z-index: 10; /* Ensure header is above other elements like product icons if they could overlap */
     }
     
     .room-header h1 {
@@ -217,7 +202,9 @@ if (isset($categories['Artwork'])) {
         text-decoration: none;
         font-weight: bold;
         transition: all 0.3s ease;
-        z-index: 20; /* Ensure it's above product icons but below popup */
+        z-index: 1000; /* Increased z-index to ensure it's above everything */
+        cursor: pointer; /* Added to show hand cursor on hover */
+        pointer-events: auto !important; /* Ensure clicks are registered */
     }
     
     .back-button:hover {
@@ -229,18 +216,18 @@ if (isset($categories['Artwork'])) {
 <section id="artworkRoomPage" class="p-2">
     <div class="room-container mx-auto max-w-full" data-room-name="Artwork">
         <div class="room-overlay-wrapper">
-            <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
+            <a href="/?page=main_room" class="back-button" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
             <div class="room-overlay-content">
                 <div class="room-header">
                     <h1>The Artwork Studio</h1>
-                    <p>Browse our unique, custom-designed artwork pieces.</p>
+                    <p>Explore our custom artwork and prints.</p>
                 </div>
                 
                 <?php if (empty($artworkProducts)): ?>
                     <div class="text-center py-8">
                         <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
                             <p class="text-xl text-gray-600">No artwork items available at the moment.</p>
-                            <p class="text-gray-500 mt-2">Check back soon for new creative pieces!</p>
+                            <p class="text-gray-500 mt-2">Check back soon for new creations!</p>
                         </div>
                     </div>
                 <?php else: ?>
@@ -257,7 +244,7 @@ if (isset($categories['Artwork'])) {
                     </div>
                 <?php endif; ?>
             </div>
-        </div> 
+        </div>
     </div>
     
     <!-- Product Popup -->
@@ -275,10 +262,12 @@ if (isset($categories['Artwork'])) {
 <script>
 let currentProduct = null;
 let popupTimeout = null;
+let popupOpen = false;
 
 function showPopup(element, product) {
     clearTimeout(popupTimeout);
     currentProduct = product;
+    popupOpen = true;
     
     const popup = document.getElementById('productPopup');
     const rect = element.getBoundingClientRect();
@@ -314,6 +303,7 @@ function hidePopup() {
         const popup = document.getElementById('productPopup');
         popup.classList.remove('show');
         currentProduct = null;
+        popupOpen = false;
     }, 100);
 }
 
@@ -352,22 +342,84 @@ document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
 });
 
+// Simple document click listener for popup closing
+document.addEventListener('click', function(e) {
+    console.log('Document clicked:', e.target);
+    const popup = document.getElementById('productPopup');
+    
+    // Close popup if it's open and click is outside it
+    if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
+        console.log('Closing popup');
+        hidePopup();
+    }
+});
+
+// Click-outside room functionality
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up click-outside functionality');
+    
+    // Handle clicks on document body for background detection
+    document.body.addEventListener('click', function(e) {
+        console.log('Body clicked:', e.target);
+        
+        // Skip if click is on or inside room container or any UI elements
+        const roomContainer = document.querySelector('#artworkRoomPage .room-container');
+        const backButton = document.querySelector('.back-button');
+        
+        // Debug what was clicked
+        console.log('Clicked on back button?', e.target === backButton || backButton.contains(e.target));
+        console.log('Clicked on room container?', roomContainer && roomContainer.contains(e.target));
+        
+        // If back button was clicked, let it handle navigation
+        if (e.target === backButton || (backButton && backButton.contains(e.target))) {
+            console.log('Back button clicked, allowing default navigation');
+            return true; // Let the link handle navigation
+        }
+        
+        // If popup is open, don't handle background clicks
+        const popup = document.getElementById('productPopup');
+        if (popup && popup.classList.contains('show')) {
+            console.log('Popup is open, not handling background click');
+            return;
+        }
+        
+        // If click is not on room container or its children, navigate to main room
+        if (roomContainer && !roomContainer.contains(e.target)) {
+            console.log('Click outside room container, navigating to main room');
+            window.location.href = '/?page=main_room';
+        }
+    });
+    
+    // Ensure back button works
+    const backButton = document.querySelector('.back-button');
+    if (backButton) {
+        console.log('Back button found, ensuring it works');
+        
+        // Remove any existing click listeners that might interfere
+        const newBackButton = backButton.cloneNode(true);
+        backButton.parentNode.replaceChild(newBackButton, backButton);
+        
+        // Add a clean click listener
+        newBackButton.addEventListener('click', function(e) {
+            console.log('Back button clicked via event listener');
+            // Let the default link behavior happen
+        });
+    }
+});
+
 // Script to dynamically scale product icon areas
 document.addEventListener('DOMContentLoaded', function() {
     const originalImageWidth = 1280;
     const originalImageHeight = 896;
-    // Ensure we are targeting the correct wrapper for artwork room
-    const roomOverlayWrapper = document.querySelector('#artworkRoomPage .room-overlay-wrapper'); 
+    const roomOverlayWrapper = document.querySelector('#artworkRoomPage .room-overlay-wrapper');
 
     const baseAreas = [
-        { selector: '.area-1', top: 242, left: 196, width: 116, height: 65 },
-        { selector: '.area-2', top: 385, left: 250, width: 56, height: 97 },
-        { selector: '.area-3', top: 238, left: 372, width: 66, height: 102 },
-        { selector: '.area-4', top: 422, left: 374, width: 75, height: 47 },
-        { selector: '.area-5', top: 209, left: 489, width: 95, height: 75 },
-        { selector: '.area-6', top: 365, left: 497, width: 52, height: 95 },
-        { selector: '.area-7', top: 341, left: 605, width: 46, height: 62 },
-        { selector: '.area-8', top: 343, left: 1004, width: 80, height: 57 }
+        { selector: '.area-1', top: 329, left: 114, width: 118, height: 132 }, // Orig: 309, 94
+        { selector: '.area-2', top: 339, left: 291, width: 83, height: 125 }, // Orig: 319, 271
+        { selector: '.area-3', top: 342, left: 378, width: 81, height: 127 }, // Orig: 322, 358
+        { selector: '.area-4', top: 344, left: 465, width: 84, height: 125 }, // Orig: 324, 445
+        { selector: '.area-5', top: 347, left: 555, width: 74, height: 123 }, // Orig: 327, 535
+        { selector: '.area-6', top: 455, left: 867, width: 98, height: 155 }, // Orig: 435, 847
     ];
 
     function updateAreaCoordinates() {
@@ -379,7 +431,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const wrapperWidth = roomOverlayWrapper.offsetWidth;
         const wrapperHeight = roomOverlayWrapper.offsetHeight;
 
-        // Calculate the aspect ratio of the wrapper and the image
         const wrapperAspectRatio = wrapperWidth / wrapperHeight;
         const imageAspectRatio = originalImageWidth / originalImageHeight;
 
@@ -387,17 +438,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let offsetX = 0;
         let offsetY = 0;
 
-        // Determine the rendered size of the image due to 'contain'
         if (wrapperAspectRatio > imageAspectRatio) {
-            // Wrapper is wider than image, so image height is constrained by wrapper height
             renderedImageHeight = wrapperHeight;
             renderedImageWidth = renderedImageHeight * imageAspectRatio;
-            offsetX = (wrapperWidth - renderedImageWidth) / 2; // Centered horizontally
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
         } else {
-            // Wrapper is taller (or same aspect ratio) than image, so image width is constrained by wrapper width
             renderedImageWidth = wrapperWidth;
             renderedImageHeight = renderedImageWidth / imageAspectRatio;
-            offsetY = (wrapperHeight - renderedImageHeight) / 2; // Centered vertically
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
         }
 
         const scaleX = renderedImageWidth / originalImageWidth;
@@ -411,19 +459,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 areaElement.style.width = (areaData.width * scaleX) + 'px';
                 areaElement.style.height = (areaData.height * scaleY) + 'px';
             } else {
-                 // console.warn('Area element not found in Artwork room:', areaData.selector);
+                // console.warn('Area element not found in Artwork room:', areaData.selector);
             }
         });
     }
 
-    // Initial call
     updateAreaCoordinates();
-
-    // Update on window resize
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(updateAreaCoordinates, 100); // Debounce resize
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
     });
 });
 </script> 

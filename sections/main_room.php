@@ -107,15 +107,6 @@
         <div class="door-label">Custom Artwork</div>
     </div>
     
-    <!-- Sublimation Door -->
-    <div class="door-area door-sublimation" onclick="enterRoom('sublimation')">
-        <picture class="block">
-            <source srcset="images/sign_door_sublimation.webp" type="image/webp">
-            <img src="images/sign_door_sublimation.png" alt="Sublimation Items" class="door-sign">
-        </picture>
-        <div class="door-label">Sublimation Items</div>
-    </div>
-    
     <!-- Window Wraps Door -->
     <div class="door-area door-windowwraps" onclick="enterRoom('windowwraps')">
         <picture class="block">
@@ -125,17 +116,9 @@
         <div class="door-label">Window Wraps</div>
     </div>
     
-    <!-- Extra clickable areas (if needed) -->
-    <div class="door-area door-area-6" onclick="enterRoom('tshirts')">
-        <div class="door-label">T-Shirts & Apparel</div>
-    </div>
-    
-    <div class="door-area door-area-7" onclick="enterRoom('tumblers')">
-        <div class="door-label">Tumblers & Drinkware</div>
-    </div>
-    
-    <div class="door-area door-area-8" onclick="enterRoom('windowwraps')">
-        <div class="door-label">Window Wraps</div>
+    <!-- New Area 5 (formerly Area 6) -->
+    <div class="door-area door-area-5" onclick="enterRoom('sublimation')">
+        <div class="door-label">Sublimation Items</div>
     </div>
 </section>
 
@@ -153,12 +136,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Door coordinates from user
     const doorCoordinates = [
-        { selector: '.door-tshirts', top: 269, left: 58, width: 211, height: 195 }, // Area 1
-        { selector: '.door-tumblers', top: 424, left: 407, width: 183, height: 186 }, // Area 2
-        { selector: '.door-artwork', top: 323, left: 743, width: 100, height: 80 }, // Area 3 (added clickable dimensions)
-        { selector: '.door-windowwraps', top: 324, left: 743, width: 163, height: 194 }, // Area 4
-        { selector: '.door-sublimation', top: 490, left: 1172, width: 100, height: 80 }, // Area 5 (added clickable dimensions)
-        { selector: '.door-area-6', top: 622, left: 593, width: 244, height: 162 } // Area 6
+        { selector: '.door-tshirts', top: 269, left: 58, width: 211, height: 293 }, // Area 1 (height increased by 50%)
+        { selector: '.door-tumblers', top: 424, left: 407, width: 183, height: 279 }, // Area 2 (height increased by 50%)
+        { selector: '.door-artwork', top: 323, left: 743, width: 100, height: 120 }, // Area 3 (height increased by 50%)
+        { selector: '.door-windowwraps', top: 324, left: 743, width: 163, height: 291 }, // Area 4 (height increased by 50%)
+        { selector: '.door-area-5', top: 622, left: 593, width: 244, height: 243 } // Area 5 (formerly Area 6, height increased by 50%)
     ];
 
     function positionDoors() {

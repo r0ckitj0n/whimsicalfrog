@@ -64,12 +64,30 @@ try {
         // Skip the first row (headers) and group products by category
         $productRows = array_slice($products, 1); // Skip header row
         
+        // Debug: Log raw product data
+        error_log('Raw product data: ' . print_r($products, true));
+        
+        $productCount = 0;
         foreach ($productRows as $product) {
+            $productCount++;
             $category = $product[2]; // Category is at index 2
             if (!isset($categories[$category])) {
                 $categories[$category] = [];
             }
             $categories[$category][] = $product;
+        }
+        
+        // Debug: Log processed product data
+        error_log('Processed ' . $productCount . ' products');
+        error_log('Categories created: ' . implode(', ', array_keys($categories)));
+        error_log('Category counts: ' . print_r(array_map('count', $categories), true));
+        error_log('Total categories: ' . count($categories));
+        error_log('First category products: ' . print_r(reset($categories), true));
+    } else {
+        // Debug: Log issue with products data
+        error_log('Products data issue: ' . ($products ? 'Array with ' . count($products) . ' items' : 'Not an array or empty'));
+        if ($products) {
+            error_log('First item in products: ' . print_r($products[0], true));
         }
     }
     
@@ -77,9 +95,13 @@ try {
     $inventoryData = file_get_contents('api/inventory.php');
     $inventory = json_decode($inventoryData, true) ?: [];
     
+    // Debug: Log inventory data
+    error_log('Inventory data: ' . ($inventory ? count($inventory) . ' items' : 'Empty or invalid'));
+    
     // Skip the first row (headers) in inventory data if it exists
     if (count($inventory) > 1) {
         $inventory = array_slice($inventory, 1);
+        error_log('Processed inventory items: ' . count($inventory));
     }
 } catch (Exception $e) {
     // Handle API error

@@ -3,17 +3,20 @@
 ?>
 <style>
     .main-room-container {
-        /* Removed background-image as it's now handled by the body in index.php */
+        /* Full viewport positioning for doors */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         background-color: transparent; /* Ensure background is transparent */
-        position: relative;
-        border-radius: 15px;
+        border-radius: 0;
         overflow: hidden;
-        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
         opacity: 1;
         mix-blend-mode: normal;
+        z-index: 10; /* Above body background but below other UI elements */
+        pointer-events: none; /* Allow clicks to pass through to body background */
     }
-    
-    /* Removed WebP support rules for .main-room-container as background is now on body */
     
     .door-area {
         position: absolute;
@@ -24,6 +27,7 @@
         justify-content: center;
         background: transparent;
         overflow: hidden; /* Ensure content doesn't spill outside */
+        pointer-events: auto; /* Make door areas clickable */
     }
     
     .door-area:hover {
@@ -67,15 +71,6 @@
         transform: scale(1.1);
     }
     
-    /* Door positions - updated with pixel values - Now handled by JavaScript */
-    /* .door-tshirts { top: 301px; left: 104px; width: 158px; height: 348px; } */ /* Area 1 */
-    /* .door-tumblers { top: 463px; left: 414px; width: 84px; height: 157px; } */ /* Area 2 */
-    /* .door-artwork { top: 168px; left: 640px; width: 77px; height: 124px; } */ /* Area 3 */
-    /* .door-sublimation { top: 344px; left: 663px; width: 103px; height: 258px; } */ /* Area 4 */
-    /* .door-windowwraps { top: 323px; left: 879px; width: 153px; height: 306px; } */ /* Area 5 */
-
-    /* .room-overlay-wrapper { ... } was here, removed as it seemed redundant with .main-room-container styles */
-
     /* Additional transparency handling */
     .main-room-container::before {
         content: '';
@@ -175,13 +170,14 @@ function enterRoom(category) {
     window.location.href = `/?page=room_${category}`;
 }
 
-// Script to dynamically scale door areas
+// Direct positioning script for main room doors
 document.addEventListener('DOMContentLoaded', function() {
+    // Original image dimensions
     const originalImageWidth = 1280;
     const originalImageHeight = 896;
-    const roomContainer = document.querySelector('#mainRoomPage .main-room-container');
-
-    const baseAreas = [
+    
+    // Door coordinates from user
+    const doorCoordinates = [
         { selector: '.door-tshirts', top: 477, left: 246, width: 100, height: 80 }, // Area 1
         { selector: '.door-tumblers', top: 611, left: 564, width: 100, height: 80 }, // Area 2
         { selector: '.door-artwork', top: 278, left: 747, width: 100, height: 80 }, // Area 3
@@ -192,53 +188,46 @@ document.addEventListener('DOMContentLoaded', function() {
         { selector: '.door-area-8', top: 537, left: 1164, width: 100, height: 80 } // Area 8
     ];
 
-    function updateAreaCoordinates() {
-        if (!roomContainer) {
-            console.error('Main Room container not found for scaling.');
-            return;
-        }
-
-        const wrapperWidth = roomContainer.offsetWidth;
-        const wrapperHeight = roomContainer.offsetHeight;
-
-        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
-        const imageAspectRatio = originalImageWidth / originalImageHeight;
-
-        let renderedImageWidth, renderedImageHeight;
-        let offsetX = 0;
-        let offsetY = 0;
-
-        if (wrapperAspectRatio > imageAspectRatio) {
-            renderedImageHeight = wrapperHeight;
-            renderedImageWidth = renderedImageHeight * imageAspectRatio;
-            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+    function positionDoors() {
+        // Get viewport dimensions
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Calculate the scale factor for the full-screen background
+        // This assumes the background image is centered and covers the viewport
+        const viewportRatio = viewportWidth / viewportHeight;
+        const imageRatio = originalImageWidth / originalImageHeight;
+        
+        let scale, offsetX, offsetY;
+        
+        // Calculate how the background image is displayed (cover)
+        if (viewportRatio > imageRatio) {
+            // Viewport is wider than image ratio, image height matches viewport
+            scale = viewportWidth / originalImageWidth;
+            offsetY = (viewportHeight - (originalImageHeight * scale)) / 2;
+            offsetX = 0;
         } else {
-            renderedImageWidth = wrapperWidth;
-            renderedImageHeight = renderedImageWidth / imageAspectRatio;
-            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+            // Viewport is taller than image ratio, image width matches viewport
+            scale = viewportHeight / originalImageHeight;
+            offsetX = (viewportWidth - (originalImageWidth * scale)) / 2;
+            offsetY = 0;
         }
-
-        const scaleX = renderedImageWidth / originalImageWidth;
-        const scaleY = renderedImageHeight / originalImageHeight;
-
-        baseAreas.forEach(areaData => {
-            const areaElement = roomContainer.querySelector(areaData.selector);
-            if (areaElement) {
-                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
-                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
-                areaElement.style.width = (areaData.width * scaleX) + 'px';
-                areaElement.style.height = (areaData.height * scaleY) + 'px';
-            } else {
-                // console.warn('Area element not found in Main room:', areaData.selector);
+        
+        // Position each door
+        doorCoordinates.forEach(door => {
+            const element = document.querySelector(door.selector);
+            if (element) {
+                // Apply scaled coordinates
+                element.style.top = `${(door.top * scale) + offsetY}px`;
+                element.style.left = `${(door.left * scale) + offsetX}px`;
+                element.style.width = `${door.width * scale}px`;
+                element.style.height = `${door.height * scale}px`;
             }
         });
     }
 
-    updateAreaCoordinates();
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
-    });
+    // Position doors initially and on resize
+    positionDoors();
+    window.addEventListener('resize', positionDoors);
 });
-</script> 
+</script>

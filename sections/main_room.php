@@ -2,24 +2,11 @@
 // Main room page with clickable doors for each category
 ?>
 <style>
-    .main-room-container {
-        /* Full viewport positioning for doors */
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: transparent; /* Ensure background is transparent */
-        border-radius: 0;
-        overflow: hidden;
-        opacity: 1;
-        mix-blend-mode: normal;
-        z-index: 10; /* Above body background but below other UI elements */
-        pointer-events: none; /* Allow clicks to pass through to body background */
-    }
+    /* Removed .main-room-container styles as it's no longer a primary positioning container */
+    /* The background is now handled by the body in index.php */
     
     .door-area {
-        position: absolute;
+        position: absolute; /* Position relative to the nearest positioned ancestor (which will be body/html) */
         cursor: pointer;
         transition: all 0.3s ease;
         display: flex;
@@ -71,17 +58,7 @@
         transform: scale(1.1);
     }
     
-    /* Additional transparency handling */
-    .main-room-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: transparent;
-        pointer-events: none;
-    }
+    /* Additional transparency handling - removed as it was for the old container */
 
     /* Welcome sign specific styles */
     .flex-grow picture {
@@ -103,64 +80,62 @@
 </style>
 
 <section id="mainRoomPage" class="p-2">
-    <div class="main-room-container mx-auto max-w-full">
-        <!-- T-Shirts Door -->
-        <div class="door-area door-tshirts" onclick="enterRoom('tshirts')">
-            <picture class="block">
-                <source srcset="images/sign_door_tshirts.webp" type="image/webp">
-                <img src="images/sign_door_tshirts.png" alt="T-Shirts & Apparel" class="door-sign">
-            </picture>
-            <div class="door-label">T-Shirts & Apparel</div>
-        </div>
-        
-        <!-- Tumblers Door -->
-        <div class="door-area door-tumblers" onclick="enterRoom('tumblers')">
-            <picture class="block">
-                <source srcset="images/sign_door_tumblers.webp" type="image/webp">
-                <img src="images/sign_door_tumblers.png" alt="Tumblers & Drinkware" class="door-sign">
-            </picture>
-            <div class="door-label">Tumblers & Drinkware</div>
-        </div>
-        
-        <!-- Artwork Door -->
-        <div class="door-area door-artwork" onclick="enterRoom('artwork')">
-            <picture class="block">
-                <source srcset="images/sign_door_artwork.webp" type="image/webp">
-                <img src="images/sign_door_artwork.png" alt="Custom Artwork" class="door-sign">
-            </picture>
-            <div class="door-label">Custom Artwork</div>
-        </div>
-        
-        <!-- Sublimation Door -->
-        <div class="door-area door-sublimation" onclick="enterRoom('sublimation')">
-            <picture class="block">
-                <source srcset="images/sign_door_sublimation.webp" type="image/webp">
-                <img src="images/sign_door_sublimation.png" alt="Sublimation Items" class="door-sign">
-            </picture>
-            <div class="door-label">Sublimation Items</div>
-        </div>
-        
-        <!-- Window Wraps Door -->
-        <div class="door-area door-windowwraps" onclick="enterRoom('windowwraps')">
-            <picture class="block">
-                <source srcset="images/sign_door_windowwraps.webp" type="image/webp">
-                <img src="images/sign_door_windowwraps.png" alt="Window Wraps" class="door-sign">
-            </picture>
-            <div class="door-label">Window Wraps</div>
-        </div>
-        
-        <!-- Extra clickable areas (if needed) -->
-        <div class="door-area door-area-6" onclick="enterRoom('tshirts')">
-            <div class="door-label">T-Shirts & Apparel</div>
-        </div>
-        
-        <div class="door-area door-area-7" onclick="enterRoom('tumblers')">
-            <div class="door-label">Tumblers & Drinkware</div>
-        </div>
-        
-        <div class="door-area door-area-8" onclick="enterRoom('windowwraps')">
-            <div class="door-label">Window Wraps</div>
-        </div>
+    <!-- T-Shirts Door -->
+    <div class="door-area door-tshirts" onclick="enterRoom('tshirts')">
+        <picture class="block">
+            <source srcset="images/sign_door_tshirts.webp" type="image/webp">
+            <img src="images/sign_door_tshirts.png" alt="T-Shirts & Apparel" class="door-sign">
+        </picture>
+        <div class="door-label">T-Shirts & Apparel</div>
+    </div>
+    
+    <!-- Tumblers Door -->
+    <div class="door-area door-tumblers" onclick="enterRoom('tumblers')">
+        <picture class="block">
+            <source srcset="images/sign_door_tumblers.webp" type="image/webp">
+            <img src="images/sign_door_tumblers.png" alt="Tumblers & Drinkware" class="door-sign">
+        </picture>
+        <div class="door-label">Tumblers & Drinkware</div>
+    </div>
+    
+    <!-- Artwork Door -->
+    <div class="door-area door-artwork" onclick="enterRoom('artwork')">
+        <picture class="block">
+            <source srcset="images/sign_door_artwork.webp" type="image/webp">
+            <img src="images/sign_door_artwork.png" alt="Custom Artwork" class="door-sign">
+        </picture>
+        <div class="door-label">Custom Artwork</div>
+    </div>
+    
+    <!-- Sublimation Door -->
+    <div class="door-area door-sublimation" onclick="enterRoom('sublimation')">
+        <picture class="block">
+            <source srcset="images/sign_door_sublimation.webp" type="image/webp">
+            <img src="images/sign_door_sublimation.png" alt="Sublimation Items" class="door-sign">
+        </picture>
+        <div class="door-label">Sublimation Items</div>
+    </div>
+    
+    <!-- Window Wraps Door -->
+    <div class="door-area door-windowwraps" onclick="enterRoom('windowwraps')">
+        <picture class="block">
+            <source srcset="images/sign_door_windowwraps.webp" type="image/webp">
+            <img src="images/sign_door_windowwraps.png" alt="Window Wraps" class="door-sign">
+        </picture>
+        <div class="door-label">Window Wraps</div>
+    </div>
+    
+    <!-- Extra clickable areas (if needed) -->
+    <div class="door-area door-area-6" onclick="enterRoom('tshirts')">
+        <div class="door-label">T-Shirts & Apparel</div>
+    </div>
+    
+    <div class="door-area door-area-7" onclick="enterRoom('tumblers')">
+        <div class="door-label">Tumblers & Drinkware</div>
+    </div>
+    
+    <div class="door-area door-area-8" onclick="enterRoom('windowwraps')">
+        <div class="door-label">Window Wraps</div>
     </div>
 </section>
 

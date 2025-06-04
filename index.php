@@ -60,9 +60,11 @@ try {
     $productsData = file_get_contents('api/products.php');
     $products = json_decode($productsData, true);
     
-    if ($products && is_array($products)) {
-        // Group products by category
-        foreach ($products as $product) {
+    if ($products && is_array($products) && count($products) > 1) {
+        // Skip the first row (headers) and group products by category
+        $productRows = array_slice($products, 1); // Skip header row
+        
+        foreach ($productRows as $product) {
             $category = $product[2]; // Category is at index 2
             if (!isset($categories[$category])) {
                 $categories[$category] = [];
@@ -74,6 +76,11 @@ try {
     // Fetch inventory
     $inventoryData = file_get_contents('api/inventory.php');
     $inventory = json_decode($inventoryData, true) ?: [];
+    
+    // Skip the first row (headers) in inventory data if it exists
+    if (count($inventory) > 1) {
+        $inventory = array_slice($inventory, 1);
+    }
 } catch (Exception $e) {
     // Handle API error
     error_log('API Error: ' . $e->getMessage());

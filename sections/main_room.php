@@ -153,6 +153,19 @@
             </picture>
             <div class="door-label">Window Wraps</div>
         </div>
+        
+        <!-- Extra clickable areas (if needed) -->
+        <div class="door-area door-area-6" onclick="enterRoom('tshirts')">
+            <div class="door-label">T-Shirts & Apparel</div>
+        </div>
+        
+        <div class="door-area door-area-7" onclick="enterRoom('tumblers')">
+            <div class="door-label">Tumblers & Drinkware</div>
+        </div>
+        
+        <div class="door-area door-area-8" onclick="enterRoom('windowwraps')">
+            <div class="door-label">Window Wraps</div>
+        </div>
     </div>
 </section>
 
@@ -169,11 +182,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomContainer = document.querySelector('#mainRoomPage .main-room-container');
 
     const baseAreas = [
-        { selector: '.door-tshirts', top: 180, left: 48, width: 173, height: 140 },     // Area 1
-        { selector: '.door-tumblers', top: 338, left: 380, width: 93, height: 64 },    // Area 2
-        { selector: '.door-artwork', top: 220, left: 674, width: 125, height: 105 },      // Area 3
-        { selector: '.door-windowwraps', top: 202, left: 877, width: 171, height: 111 }, // Area 4
-        { selector: '.door-sublimation', top: 10, left: 575, width: 143, height: 85 } // Area 5
+        { selector: '.door-tshirts', top: 477, left: 246, width: 100, height: 80 }, // Area 1
+        { selector: '.door-tumblers', top: 611, left: 564, width: 100, height: 80 }, // Area 2
+        { selector: '.door-artwork', top: 278, left: 747, width: 100, height: 80 }, // Area 3
+        { selector: '.door-windowwraps', top: 467, left: 892, width: 100, height: 80 }, // Area 4
+        { selector: '.door-sublimation', top: 319, left: 998, width: 100, height: 80 }, // Area 5
+        { selector: '.door-area-6', top: 323, left: 1003, width: 100, height: 80 }, // Area 6
+        { selector: '.door-area-7', top: 323, left: 1003, width: 100, height: 80 }, // Area 7
+        { selector: '.door-area-8', top: 537, left: 1164, width: 100, height: 80 } // Area 8
     ];
 
     function updateAreaCoordinates() {

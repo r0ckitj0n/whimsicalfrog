@@ -56,8 +56,22 @@ $categories = [];
 $inventory = [];
 
 try {
-    // Fetch products
-    $productsData = file_get_contents('api/products.php');
+    // Fetch products with full URL path
+    $productsUrl = 'https://whimsicalfrog.us/api/products.php';
+    $productsData = @file_get_contents($productsUrl);
+    
+    // Check for HTTP errors
+    if ($productsData === false) {
+        $error = error_get_last();
+        error_log('Products API Error: ' . ($error ? $error['message'] : 'Unknown error'));
+        
+        if (isset($http_response_header)) {
+            error_log('Products API HTTP Response: ' . implode(', ', $http_response_header));
+        }
+        
+        throw new Exception('Failed to fetch products data from API');
+    }
+    
     $products = json_decode($productsData, true);
     
     if ($products && is_array($products) && count($products) > 1) {
@@ -91,8 +105,22 @@ try {
         }
     }
     
-    // Fetch inventory
-    $inventoryData = file_get_contents('api/inventory.php');
+    // Fetch inventory with full URL path
+    $inventoryUrl = 'https://whimsicalfrog.us/api/inventory.php';
+    $inventoryData = @file_get_contents($inventoryUrl);
+    
+    // Check for HTTP errors
+    if ($inventoryData === false) {
+        $error = error_get_last();
+        error_log('Inventory API Error: ' . ($error ? $error['message'] : 'Unknown error'));
+        
+        if (isset($http_response_header)) {
+            error_log('Inventory API HTTP Response: ' . implode(', ', $http_response_header));
+        }
+        
+        throw new Exception('Failed to fetch inventory data from API');
+    }
+    
     $inventory = json_decode($inventoryData, true) ?: [];
     
     // Debug: Log inventory data

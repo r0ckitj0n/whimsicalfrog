@@ -409,12 +409,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomOverlayWrapper = document.querySelector('#tumblersRoomPage .room-overlay-wrapper');
 
     const baseAreas = [
-        { selector: '.area-1', top: 329, left: 114, width: 118, height: 132 }, // Orig: 309, 94
-        { selector: '.area-2', top: 339, left: 291, width: 83, height: 125 }, // Orig: 319, 271
-        { selector: '.area-3', top: 342, left: 378, width: 81, height: 127 }, // Orig: 322, 358
-        { selector: '.area-4', top: 344, left: 465, width: 84, height: 125 }, // Orig: 324, 445
-        { selector: '.area-5', top: 347, left: 555, width: 74, height: 123 }, // Orig: 327, 535
-        { selector: '.area-6', top: 455, left: 867, width: 98, height: 155 }, // Orig: 435, 847
+        { selector: '.area-1', top: 230, left: 200, width: 150, height: 180 },
+        { selector: '.area-2', top: 230, left: 440, width: 150, height: 180 },
+        { selector: '.area-3', top: 230, left: 680, width: 150, height: 180 },
+        { selector: '.area-4', top: 500, left: 200, width: 150, height: 180 },
+        { selector: '.area-5', top: 500, left: 440, width: 150, height: 180 },
+        { selector: '.area-6', top: 500, left: 680, width: 150, height: 180 }
     ];
 
     function updateAreaCoordinates() {

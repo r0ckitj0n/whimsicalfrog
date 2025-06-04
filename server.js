@@ -10,10 +10,9 @@ const port = 3000;
 // reCAPTCHA configuration
 const RECAPTCHA_SECRET_KEY = '6LdqsUUrAAAAABI48QuguVOtB3PqD4uiCQT36MZ9';
 
-// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.')); // Serve static files from current directory
+app.use(express.static('.')); 
 
 // Google Sheets setup
 const auth = new google.auth.GoogleAuth({
@@ -26,19 +25,15 @@ const auth = new google.auth.GoogleAuth({
 
 // Test data for each tab
 const testData = [
-    // Headers
     ['ProductID', 'ProductName', 'ProductType', 'BasePrice', 'Description', 'DefaultSKU_Base', 'Supplier', 'Notes', 'Image'],
-    // Products
     ['P001', 'Custom T-Shirt', 'T-Shirts', '24.99', 'High-quality cotton t-shirt for customization', 'TS-BASE', 'Supplier A', 'Available sizes: S, M, L, XL, XXL; Various colors', 'images/frog_tshirt_1.png'],
     ['P002', 'Custom Tumbler (20oz)', 'Tumblers', '19.99', 'Insulated 20oz tumbler for sublimation', 'TUM20-BASE', 'Supplier B', 'Stainless steel, includes lid and straw', 'images/frog_tumbler_1.png'],
     ['P003', 'Custom Tumbler (30oz)', 'Tumblers', '24.99', 'Insulated 30oz tumbler for sublimation', 'TUM30-BASE', 'Supplier B', 'Stainless steel, includes lid and straw', 'images/frog_tumbler_2.png'],
     ['P004', 'Custom Artwork Print', 'Artwork', '49.99', 'Prints of custom digital or hand-drawn artwork', 'ART-PRNT-BASE', 'Supplier C', 'Sizes: 8x10, 11x14, 16x20; Paper/Canvas', 'images/frog_painter_1.png'],
     ['P005', 'Sublimation Blank Item (e.g., Mug)', 'Sublimation', '14.99', 'Blank items ready for sublimation transfer', 'SUB-MUG-BASE', 'Supplier B', 'Specify blank type in description', 'images/frog_mug.png'],
     ['P006', 'Custom Window Wrap', 'Window Wraps', '39.99', 'Vinyl window wraps, custom sizes and designs', 'WW-BASE', 'Supplier D', 'Per sq ft pricing may apply', 'images/frog_windowwrap_1.png'],
-    // Users
-    ['U001', 'admin', 'admin123', 'admin@whimsicalfrog.com', 'Admin', 'Admin'],
-    ['U002', 'customer', 'customer123', 'customer@example.com', 'Customer', 'Customer'],
-    // Inventory
+    ['U001', 'admin', 'admin123', 'admin@whimsicalfrog.com', 'Admin', 'Admin', 'Admin', 'User'],
+    ['U002', 'customer', 'customer123', 'customer@example.com', 'Customer', 'Customer', 'Customer', 'User'],
     ['I001', 'P001', 'T-Shirt, White, S', 'T-Shirts', 'Color: White, Size: S', 'TS-WHT-S', '50', '10', 'images/frog_tshirt_2.png'],
     ['I002', 'P002', 'Tumbler, 20oz, White', 'Tumblers', 'Color: White (for sublimation)', 'TUM20-WHT', '30', '5', 'images/frog_tumbler_3.png'],
     ['I003', 'P004', 'Artwork Print Blank Canvas 8x10', 'Artwork', 'Material: Canvas, Size: 8x10', 'ART-CAN-810', '20', '5', 'images/frog_painter_2.png'],
@@ -84,7 +79,7 @@ async function populateSpreadsheet() {
             valueInputOption: 'RAW',
             resource: {
                 values: [
-                    ['UserID', 'Username', 'Password', 'Email', 'Role', 'RoleType'],
+                    ['UserID', 'Username', 'Password', 'Email', 'Role', 'RoleType', 'FirstName', 'LastName'],
                     ...testData.slice(7, 9) // Users data
                 ]
             }
@@ -249,7 +244,9 @@ app.post('/api/login', async (req, res) => {
             username: user[1],
             email: user[3],
             role: user[4],
-            roleType: user[5]
+            roleType: user[5],
+            firstName: user[6] || '',
+            lastName: user[7] || ''
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -268,11 +265,9 @@ app.post('/api/add-inventory', async (req, res) => {
 
         const sheets = google.sheets({ version: 'v4', auth });
         
-        // Get the current inventory to determine the next ID
         const inventory = await fetchSheet('Inventory');
         const nextId = `I${String(inventory.length).padStart(3, '0')}`;
         
-        // Get the product to determine the category
         const products = await fetchSheet('Products');
         const product = products.find(p => p[0] === productId);
         if (!product) {
@@ -644,4 +639,4 @@ app.listen(port, () => {
         SPREADSHEET_ID: process.env.SPREADSHEET_ID ? 'Set' : 'Not set',
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set'
     });
-}); 
+});

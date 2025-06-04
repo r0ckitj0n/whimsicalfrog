@@ -19,9 +19,11 @@ if (!in_array($page, $allowed_pages)) {
     $page = 'landing'; // Default to landing if invalid
 }
 
-// Check if user is logged in
-$isLoggedIn = isset($_SESSION['user']);
-$isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin';
+// Properly decode user data from session
+$userData = isset($_SESSION['user']) ? json_decode($_SESSION['user'], true) : null;
+$isLoggedIn = isset($userData);
+$isAdmin = $isLoggedIn && isset($userData['role']) && $userData['role'] === 'Admin';
+$userFullName = $isLoggedIn ? trim(($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '')) : '';
 
 // Redirect if trying to access admin pages without admin privileges
 if (strpos($page, 'admin') === 0 && !$isAdmin) {
@@ -113,6 +115,19 @@ if ($page === 'landing') {
 $isFullscreenPage = in_array($page, ['landing']);
 if ($isFullscreenPage) {
     $bodyClass .= ' body-fullscreen-layout';
+}
+
+// Function to fetch data from API
+function fetchData($type) {
+    $apiUrl = "https://whimsicalfrog.us/api/{$type}.php";
+    $data = @file_get_contents($apiUrl);
+    
+    if ($data === false) {
+        error_log("Failed to fetch {$type} data from API");
+        return [];
+    }
+    
+    return json_decode($data, true) ?: [];
 }
 ?>
 <!DOCTYPE html>
@@ -367,9 +382,14 @@ if ($isFullscreenPage) {
             overflow: hidden;
         }
         
-        /* Hide the center welcome sign in the header navigation */
-        nav.main-nav .flex-grow.flex.justify-center.items-center {
-            display: none; /* Hide the center section */
+        /* User greeting styles */
+        .user-greeting {
+            color: white !important;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 0 10px;
+            border-left: 1px solid rgba(255,255,255,0.3);
         }
     </style>
 </head>
@@ -391,6 +411,9 @@ if ($isFullscreenPage) {
                         <img src="images/sign_whimsicalfrog.webp" alt="Whimsical Frog" style="height: 60px; margin-right: 8px;" onerror="this.onerror=null; this.src='images/sign_whimsicalfrog.png';">
                     </a>
                     <p class="text-sm font-merienda ml-2 hidden md:block" style="color: white !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
+                    <?php if ($isLoggedIn && !empty($userFullName)): ?>
+                        <span class="user-greeting ml-4">Welcome, <?php echo htmlspecialchars($userFullName); ?></span>
+                    <?php endif; ?>
                 </div>
             </div>
             
@@ -407,8 +430,11 @@ if ($isFullscreenPage) {
             <!-- Right Section: Navigation Links -->
             <div class="flex-none">
                 <div class="flex items-center">
-                    <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
-                    <a href="/?page=cart" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center">
+                    <?php if ($isAdmin): ?>
+                        <a href="/?page=admin" class="px-3 py-2 rounded-md text-sm font-medium hover:text-[#CBD5E0]">Manage</a>
+                    <?php endif; ?>
+                    <a href="/?page=shop" class="px-3 py-2 rounded-md text-sm font-medium hover:text-[#CBD5E0]">Shop</a>
+                    <a href="/?page=cart" class="px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center hover:text-[#CBD5E0]">
                         <div class="flex items-center space-x-1 md:space-x-2">
                             <span id="cartCount" class="text-sm font-medium whitespace-nowrap">0 items</span>
                             <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,9 +444,9 @@ if ($isFullscreenPage) {
                         </div>
                     </a>
                     <?php if ($isLoggedIn): ?>
-                        <a href="/logout.php" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium" onclick="logout(); return false;">Logout</a>
+                        <a href="/logout.php" class="px-3 py-2 rounded-md text-sm font-medium hover:text-[#CBD5E0]" onclick="logout(); return false;">Logout</a>
                     <?php else: ?>
-                        <a href="/?page=login" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="/?page=login" class="px-3 py-2 rounded-md text-sm font-medium hover:text-[#CBD5E0]">Login</a>
                     <?php endif; ?>
                 </div>
             </div>

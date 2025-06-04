@@ -4,12 +4,23 @@
 // Check if user is logged in and is an admin
 $user = json_decode($_SESSION['user'] ?? '{}', true);
 if (!isset($user['role']) || $user['role'] !== 'Admin') {
-    header('Location: /login.php');
+    header('Location: /?page=login');
     exit;
 }
 
-$inventory = fetchData('inventory');
-$orders = fetchData('sales_orders');
+// Fetch inventory data directly from the Node.js API
+$inventory = [];
+$inventoryData = @file_get_contents('http://localhost:3000/api/inventory');
+if ($inventoryData !== false) {
+    $inventory = json_decode($inventoryData, true);
+}
+
+// Fetch orders data directly from the Node.js API
+$orders = [];
+$ordersData = @file_get_contents('http://localhost:3000/api/sales_orders');
+if ($ordersData !== false) {
+    $orders = json_decode($ordersData, true);
+}
 ?>
 <section id="adminPage" class="p-6 bg-white rounded-lg shadow-lg">
     <div class="flex justify-between items-center mb-8">
@@ -24,7 +35,7 @@ $orders = fetchData('sales_orders');
         <div class="bg-gray-100 p-4 rounded-lg shadow">
             <h3 class="text-xl font-semibold text-[#556B2F] mb-2">Orders</h3>
             <ul id="mockOrdersList" class="list-disc list-inside text-gray-700">
-                <?php if ($orders): ?>
+                <?php if ($orders && count($orders) > 1): ?>
                     <?php foreach (array_slice($orders, 1) as $order): ?>
                         <li>Order #<?php echo htmlspecialchars($order[0]); ?> - <?php echo htmlspecialchars($order[4]); ?> - <?php echo htmlspecialchars($order[3]); ?></li>
                     <?php endforeach; ?>
@@ -35,7 +46,7 @@ $orders = fetchData('sales_orders');
         </div>
         <div class="bg-gray-100 p-4 rounded-lg shadow">
             <h3 class="text-xl font-semibold text-[#556B2F] mb-2">Inventory Management</h3>
-            <?php if ($inventory): ?>
+            <?php if ($inventory && count($inventory) > 1): ?>
                 <?php foreach (array_slice($inventory, 1) as $item): ?>
                     <p class="text-gray-700"><?php echo htmlspecialchars($item[2]); ?> (<?php echo htmlspecialchars($item[4]); ?>): <?php echo htmlspecialchars($item[6]); ?> in stock</p>
                 <?php endforeach; ?>
@@ -178,8 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <style>
-    /* ... existing styles ... */
-
     .product-groups-list {
         margin: 20px 0;
     }
@@ -228,4 +237,4 @@ document.addEventListener('DOMContentLoaded', () => {
         border-radius: 4px;
         flex: 1;
     }
-</style> 
+</style>

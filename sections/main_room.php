@@ -2,19 +2,16 @@
 // Main room page with clickable doors for each category
 ?>
 <style>
-    /* Removed .main-room-container styles as it's no longer a primary positioning container */
-    /* The background is now handled by the body in index.php */
-    
     .door-area {
-        position: absolute; /* Position relative to the nearest positioned ancestor (which will be body/html) */
+        position: absolute;
         cursor: pointer;
         transition: all 0.3s ease;
         display: flex;
         align-items: center;
         justify-content: center;
         background: transparent;
-        overflow: hidden; /* Ensure content doesn't spill outside */
-        pointer-events: auto; /* Make door areas clickable */
+        overflow: hidden;
+        pointer-events: auto;
     }
     
     .door-area:hover {
@@ -50,21 +47,19 @@
         mix-blend-mode: normal;
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
-        image-rendering: -webkit-optimize-contrast; /* Improve image rendering */
+        image-rendering: -webkit-optimize-contrast;
         image-rendering: crisp-edges;
     }
     
     .door-area:hover .door-sign {
         transform: scale(1.1);
     }
-    
-    /* Additional transparency handling - removed as it was for the old container */
 
     /* Welcome sign specific styles */
     .flex-grow picture {
         background: transparent;
         display: block;
-        line-height: 0; /* Remove any extra space */
+        line-height: 0;
     }
 
     .flex-grow img {
@@ -74,8 +69,8 @@
         backface-visibility: hidden;
         image-rendering: -webkit-optimize-contrast;
         image-rendering: crisp-edges;
-        display: block; /* Remove any extra space */
-        line-height: 0; /* Remove any extra space */
+        display: block;
+        line-height: 0;
     }
 </style>
 

@@ -189,37 +189,30 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     function positionDoors() {
-        // Get navigation bar height
-        const navBar = document.querySelector('nav.main-nav');
-        const navHeight = navBar ? navBar.offsetHeight : 0;
+        // Get viewport dimensions - use full viewport
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
         
-        // Get content area dimensions (viewport minus nav height)
-        const contentWidth = window.innerWidth;
-        const contentHeight = window.innerHeight - navHeight;
-        
-        // Calculate the scale factor for the background image
-        const contentRatio = contentWidth / contentHeight;
+        // Calculate the scale factor for the full-screen background
+        const viewportRatio = viewportWidth / viewportHeight;
         const imageRatio = originalImageWidth / originalImageHeight;
         
         let scale, offsetX, offsetY;
         
         // Calculate how the background image is displayed (cover)
-        if (contentRatio > imageRatio) {
-            // Content area is wider than image ratio, image height matches content height
-            scale = contentWidth / originalImageWidth;
-            offsetY = (contentHeight - (originalImageHeight * scale)) / 2;
-            offsetX = 0;
-        } else {
-            // Content area is taller than image ratio, image width matches content width
-            scale = contentHeight / originalImageHeight;
-            offsetX = (contentWidth - (originalImageWidth * scale)) / 2;
+        if (viewportRatio > imageRatio) {
+            // Viewport is wider than image ratio, image height matches viewport
+            scale = viewportHeight / originalImageHeight;
+            offsetX = (viewportWidth - (originalImageWidth * scale)) / 2;
             offsetY = 0;
+        } else {
+            // Viewport is taller than image ratio, image width matches viewport
+            scale = viewportWidth / originalImageWidth;
+            offsetY = (viewportHeight - (originalImageHeight * scale)) / 2;
+            offsetX = 0;
         }
         
-        // Add the nav height to offsetY to position relative to viewport top
-        offsetY += navHeight;
-        
-        console.log('Nav height:', navHeight, 'Content dimensions:', contentWidth, 'x', contentHeight);
+        console.log('Viewport dimensions:', viewportWidth, 'x', viewportHeight);
         console.log('Scale:', scale, 'Offsets:', offsetX, offsetY);
         
         // Position each door

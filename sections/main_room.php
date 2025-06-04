@@ -201,15 +201,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Calculate how the background image is displayed (cover)
         if (viewportRatio > imageRatio) {
-            // Viewport is wider than image ratio, image height matches viewport
-            scale = viewportHeight / originalImageHeight;
-            offsetX = (viewportWidth - (originalImageWidth * scale)) / 2;
-            offsetY = 0;
-        } else {
-            // Viewport is taller than image ratio, image width matches viewport
+            // Viewport is wider than image ratio, image width matches viewport width
             scale = viewportWidth / originalImageWidth;
             offsetY = (viewportHeight - (originalImageHeight * scale)) / 2;
             offsetX = 0;
+        } else {
+            // Viewport is taller than image ratio, image height matches viewport height
+            scale = viewportHeight / originalImageHeight;
+            offsetX = (viewportWidth - (originalImageWidth * scale)) / 2;
+            offsetY = 0;
         }
         
         console.log('Viewport dimensions:', viewportWidth, 'x', viewportHeight);

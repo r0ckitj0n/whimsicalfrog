@@ -57,7 +57,7 @@ $inventory = [];
 
 try {
     // Fetch products
-    $productsData = file_get_contents('https://whimsicalfrog.onrender.com/api/products');
+    $productsData = file_get_contents('api/products.php');
     $products = json_decode($productsData, true);
     
     if ($products && is_array($products)) {
@@ -72,7 +72,7 @@ try {
     }
     
     // Fetch inventory
-    $inventoryData = file_get_contents('https://whimsicalfrog.onrender.com/api/inventory');
+    $inventoryData = file_get_contents('api/inventory.php');
     $inventory = json_decode($inventoryData, true) ?: [];
 } catch (Exception $e) {
     // Handle API error

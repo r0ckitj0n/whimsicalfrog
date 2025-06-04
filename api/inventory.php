@@ -1,56 +1,93 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// api/inventory.php - Returns inventory data from MySQL in the same format as Google Sheets API
 
-// Handle preflight requests
+// Set CORS headers to allow cross-origin requests
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json; charset=UTF-8");
+
+// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+    http_response_code(200);
+    exit();
 }
 
-// Load configuration and environment variables
-require_once __DIR__ . '/../config.php';
+// Database connection configuration
+$host_name = 'db5017975223.hosting-data.io';
+$database = 'dbs14295502';
+$user_name = 'dbu2826619';
+$password = 'Palz2516!';
+$port = 3306;
 
-// Include Google API client (you'll need to install this via Composer)
-require_once __DIR__ . '/../vendor/autoload.php';
+// Initialize response array
+$response = [];
 
 try {
-    // Configuration
-    $spreadsheetId = getenv('SPREADSHEET_ID');
-    $credentialsPath = __DIR__ . '/../credentials.json';
+    // Create database connection
+    $conn = new mysqli($host_name, $user_name, $password, $database, $port);
     
-    if (!$spreadsheetId) {
-        throw new Exception('SPREADSHEET_ID environment variable not set');
+    // Check connection
+    if ($conn->connect_error) {
+        throw new Exception("Database connection failed: " . $conn->connect_error);
     }
     
-    if (!file_exists($credentialsPath)) {
-        throw new Exception('credentials.json file not found');
+    // Get column names to match the Google Sheets format
+    $columnsQuery = "SELECT COLUMN_NAME 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = '$database' 
+                    AND TABLE_NAME = 'inventory'
+                    AND COLUMN_NAME NOT IN ('CreatedAt', 'UpdatedAt')
+                    ORDER BY ORDINAL_POSITION";
+    
+    $columnsResult = $conn->query($columnsQuery);
+    
+    if (!$columnsResult) {
+        throw new Exception("Error fetching column names: " . $conn->error);
     }
     
-    // Initialize Google Sheets client
-    $client = new Google_Client();
-    $client->setAuthConfig($credentialsPath);
-    $client->addScope(Google_Service_Sheets::SPREADSHEETS_READONLY);
-    
-    $service = new Google_Service_Sheets($client);
-    
-    // Fetch data from Inventory sheet
-    $range = 'Inventory!A1:Z1000';
-    $response = $service->spreadsheets_values->get($spreadsheetId, $range);
-    $values = $response->getValues();
-    
-    if (empty($values)) {
-        echo json_encode([]);
-    } else {
-        echo json_encode($values);
+    // Extract column names as array
+    $headers = [];
+    while ($column = $columnsResult->fetch_assoc()) {
+        $headers[] = $column['COLUMN_NAME'];
     }
+    
+    // First row of response is headers
+    $response[] = $headers;
+    
+    // Get all inventory items
+    $inventoryQuery = "SELECT " . implode(", ", $headers) . " FROM inventory";
+    $inventoryResult = $conn->query($inventoryQuery);
+    
+    if (!$inventoryResult) {
+        throw new Exception("Error fetching inventory: " . $conn->error);
+    }
+    
+    // Add inventory rows to response
+    while ($row = $inventoryResult->fetch_assoc()) {
+        $inventoryRow = [];
+        foreach ($headers as $header) {
+            // Convert null values to empty strings to match Google Sheets format
+            $inventoryRow[] = $row[$header] !== null ? $row[$header] : '';
+        }
+        $response[] = $inventoryRow;
+    }
+    
+    // Close connection
+    $conn->close();
+    
+    // Return JSON response
+    echo json_encode($response);
     
 } catch (Exception $e) {
+    // Log error (to server error log)
+    error_log("Inventory API Error: " . $e->getMessage());
+    
+    // Return error response
     http_response_code(500);
     echo json_encode([
-        'error' => 'Failed to fetch data from Google Sheets',
-        'details' => $e->getMessage()
+        "error" => "Failed to fetch inventory",
+        "message" => $e->getMessage()
     ]);
 }
-?> 
+?>

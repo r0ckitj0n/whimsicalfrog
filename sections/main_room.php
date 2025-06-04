@@ -3,27 +3,17 @@
 ?>
 <style>
     .main-room-container {
-        background-image: url('images/room_main.png?v=cb2'); /* Restored background image */
-        background-size: contain; /* Preserve aspect ratio, fit within container */
-        background-position: center;
-        background-repeat: no-repeat;
-        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
+        /* Removed background-image as it's now handled by the body in index.php */
+        background-color: transparent; /* Ensure background is transparent */
         position: relative;
         border-radius: 15px;
         overflow: hidden;
+        padding-top: 70%; /* 1280x896 Aspect Ratio (896/1280 * 100) */
         opacity: 1;
-        background-color: transparent; /* Ensure background is transparent */
         mix-blend-mode: normal;
     }
     
-    /* Add WebP support */
-    .webp .main-room-container {
-        background-image: url('images/room_main.webp?v=cb2');
-    }
-    
-    .no-webp .main-room-container {
-        background-image: url('images/room_main.png?v=cb2');
-    }
+    /* Removed WebP support rules for .main-room-container as background is now on body */
     
     .door-area {
         position: absolute;
@@ -85,8 +75,6 @@
     /* .door-windowwraps { top: 323px; left: 879px; width: 153px; height: 306px; } */ /* Area 5 */
 
     /* .room-overlay-wrapper { ... } was here, removed as it seemed redundant with .main-room-container styles */
-
-    /* .no-webp .main-room-container rule removed as requested */
 
     /* Additional transparency handling */
     .main-room-container::before {

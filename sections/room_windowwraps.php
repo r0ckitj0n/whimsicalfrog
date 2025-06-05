@@ -65,7 +65,9 @@ if (isset($categories['Window Wraps'])) {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background-color: rgba(0, 100, 255, 0.3); /* Temporary background for visualization */
+        background-color: rgba(255, 255, 255, 0.7); /* White background with transparency */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     }
     
     .product-icon:hover {
@@ -212,11 +214,10 @@ if (isset($categories['Window Wraps'])) {
     <div class="room-container mx-auto max-w-full" data-room-name="Window Wraps">
         <div class="room-overlay-wrapper">
             <a href="/?page=main_room" class="back-button" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
-            
             <div class="room-overlay-content">
                 <div class="room-header">
                     <h1>Window Wraps Gallery</h1>
-                    <p>Explore our custom window wraps and decals.</p>
+                    <p>Discover our unique window wrap designs.</p>
                 </div>
                 
                 <?php if (empty($windowWrapsProducts)): ?>
@@ -410,12 +411,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomOverlayWrapper = document.querySelector('#windowWrapsRoomPage .room-overlay-wrapper');
 
     const baseAreas = [
-        { selector: '.area-1', top: 210, left: 190, width: 170, height: 190 },
-        { selector: '.area-2', top: 210, left: 440, width: 170, height: 190 },
-        { selector: '.area-3', top: 210, left: 690, width: 170, height: 190 },
-        { selector: '.area-4', top: 490, left: 190, width: 170, height: 190 },
-        { selector: '.area-5', top: 490, left: 440, width: 170, height: 190 },
-        { selector: '.area-6', top: 490, left: 690, width: 170, height: 190 }
+        { selector: '.area-1', top: 215, left: 238, width: 213, height: 317 },
+        { selector: '.area-2', top: 235, left: 550, width: 148, height: 265 },
+        { selector: '.area-3', top: 567, left: 1109, width: 43, height: 44 },
+        { selector: '.area-4', top: 276, left: 1026, width: 189, height: 198 }
     ];
 
     function updateAreaCoordinates() {

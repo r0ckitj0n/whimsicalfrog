@@ -76,7 +76,7 @@
 
 <section id="mainRoomPage" class="p-2">
     <!-- T-Shirts Door -->
-    <div class="door-area door-tshirts" onclick="enterRoom('tshirts')">
+    <div class="door-area area-1" onclick="enterRoom('tshirts')">
         <picture class="block">
             <source srcset="images/sign_door_tshirts.webp" type="image/webp">
             <img src="images/sign_door_tshirts.png" alt="T-Shirts & Apparel" class="door-sign">
@@ -85,7 +85,7 @@
     </div>
     
     <!-- Tumblers Door -->
-    <div class="door-area door-tumblers" onclick="enterRoom('tumblers')">
+    <div class="door-area area-2" onclick="enterRoom('tumblers')">
         <picture class="block">
             <source srcset="images/sign_door_tumblers.webp" type="image/webp">
             <img src="images/sign_door_tumblers.png" alt="Tumblers & Drinkware" class="door-sign">
@@ -94,7 +94,7 @@
     </div>
     
     <!-- Artwork Door -->
-    <div class="door-area door-artwork" onclick="enterRoom('artwork')">
+    <div class="door-area area-3" onclick="enterRoom('artwork')">
         <picture class="block">
             <source srcset="images/sign_door_artwork.webp" type="image/webp">
             <img src="images/sign_door_artwork.png" alt="Custom Artwork" class="door-sign">
@@ -103,7 +103,7 @@
     </div>
     
     <!-- Window Wraps Door -->
-    <div class="door-area door-windowwraps" onclick="enterRoom('windowwraps')">
+    <div class="door-area area-4" onclick="enterRoom('windowwraps')">
         <picture class="block">
             <source srcset="images/sign_door_windowwraps.webp" type="image/webp">
             <img src="images/sign_door_windowwraps.png" alt="Window Wraps" class="door-sign">
@@ -111,8 +111,8 @@
         <div class="door-label">Window Wraps</div>
     </div>
     
-    <!-- New Area 5 (formerly Area 6) -->
-    <div class="door-area door-area-5" onclick="enterRoom('sublimation')">
+    <!-- Sublimation Items Door -->
+    <div class="door-area area-5" onclick="enterRoom('sublimation')">
         <div class="door-label">Sublimation Items</div>
     </div>
 </section>
@@ -131,11 +131,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Door coordinates from user
     const doorCoordinates = [
-        { selector: '.door-tshirts', top: 269, left: 58, width: 211, height: 293 }, // Area 1 (height increased by 50%)
-        { selector: '.door-tumblers', top: 424, left: 407, width: 183, height: 279 }, // Area 2 (height increased by 50%)
-        { selector: '.door-artwork', top: 323, left: 743, width: 100, height: 120 }, // Area 3 (height increased by 50%)
-        { selector: '.door-windowwraps', top: 324, left: 743, width: 163, height: 291 }, // Area 4 (height increased by 50%)
-        { selector: '.door-area-5', top: 622, left: 593, width: 244, height: 243 } // Area 5 (formerly Area 6, height increased by 50%)
+        { selector: '.area-1', top: 243, left: 30, width: 234, height: 233 }, // Area 1 (T-Shirts)
+        { selector: '.area-2', top: 403, left: 390, width: 202, height: 241 }, // Area 2 (Tumblers)
+        { selector: '.area-3', top: 271, left: 753, width: 170, height: 235 }, // Area 3 (Artwork)
+        { selector: '.area-4', top: 291, left: 1001, width: 197, height: 255 }, // Area 4 (Window Wraps)
+        { selector: '.area-5', top: 157, left: 486, width: 190, height: 230 } // Area 5 (Sublimation)
     ];
 
     function positionDoors() {

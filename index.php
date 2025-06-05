@@ -5,13 +5,25 @@ require_once __DIR__ . '/config.php';
 // Start or resume session
 session_start();
 
+// Function to fetch data from the Node.js API
+function fetchData($endpoint) {
+    $url = "http://localhost:3000/api/" . $endpoint;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return json_decode($response, true);
+}
+
 // Check if a page is specified in the URL
 $page = isset($_GET['page']) ? $_GET['page'] : 'landing';
 
 // Define allowed pages
 $allowed_pages = [
     'landing', 'main_room', 'shop', 'cart', 'login', 'register', 'admin', 'admin_inventory',
-    'room_tshirts', 'room_tumblers', 'room_artwork', 'room_sublimation', 'room_windowwraps'
+    'room_tshirts', 'room_tumblers', 'room_artwork', 'room_sublimation', 'room_windowwraps',
+    'admin_customers', 'admin_orders', 'admin_reports', 'admin_marketing', 'admin_settings'
 ];
 
 // Validate page parameter
@@ -19,17 +31,36 @@ if (!in_array($page, $allowed_pages)) {
     $page = 'landing'; // Default to landing if invalid
 }
 
-// Properly decode user data from session
-$userData = isset($_SESSION['user']) ? json_decode($_SESSION['user'], true) : null;
-$isLoggedIn = isset($userData);
-$isAdmin = $isLoggedIn && isset($userData['role']) && $userData['role'] === 'Admin';
-$userFullName = $isLoggedIn ? trim(($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '')) : '';
+// Check if user is logged in
+$isLoggedIn = isset($_SESSION['user']);
+$isAdmin = false;
+$userData = [];
+$welcomeMessage = "";
+
+if ($isLoggedIn) {
+    // Handle both JSON string and array formats for backward compatibility
+    if (is_string($_SESSION['user'])) {
+        $userData = json_decode($_SESSION['user'], true);
+    } else {
+        $userData = $_SESSION['user'];
+    }
+    
+    $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
+    
+    // Welcome message with user's name if available
+    if (isset($userData['firstName']) || isset($userData['lastName'])) {
+        $welcomeMessage = "Welcome, " . ($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '');
+    }
+}
 
 // Redirect if trying to access admin pages without admin privileges
 if (strpos($page, 'admin') === 0 && !$isAdmin) {
     header('Location: /?page=login');
     exit;
 }
+
+// Define flag for files included from index.php
+define('INCLUDED_FROM_INDEX', true);
 
 // Function to get image tag with WebP and fallback
 function getImageTag($imagePath, $altText = '') {
@@ -117,18 +148,21 @@ if ($isFullscreenPage) {
     $bodyClass .= ' body-fullscreen-layout';
 }
 
-// Function to fetch data from API
-function fetchData($type) {
-    $apiUrl = "https://whimsicalfrog.us/api/{$type}.php";
-    $data = @file_get_contents($apiUrl);
-    
-    if ($data === false) {
-        error_log("Failed to fetch {$type} data from API");
-        return [];
-    }
-    
-    return json_decode($data, true) ?: [];
+// Handle cart data
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
 }
+
+$cartCount = 0;
+$cartTotal = 0;
+
+foreach ($_SESSION['cart'] as $item) {
+    $cartCount += $item['quantity'];
+    $cartTotal += $item['price'] * $item['quantity'];
+}
+
+// Format cart total
+$formattedCartTotal = '$' . number_format($cartTotal, 2);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -300,25 +334,25 @@ function fetchData($type) {
         nav.main-nav a, /* Targets all links, including title and nav items */
         nav.main-nav p, /* Targets the tagline */
         nav.main-nav span { /* Targets spans like cart count/total */
-            color: white !important;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.7); /* Add a subtle shadow for better readability */
+            color: #87ac3a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7); /* Adjusted shadow for green text */
         }
         
         nav.main-nav p.tagline { /* Specific styling for the tagline */
-            color: white !important;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+            color: #87ac3a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
             font-size: 0.875rem; /* Tailwind's text-sm */
             margin-top: 0.25rem; /* Add a little space above the tagline */
         }
         
         nav.main-nav a:hover { /* Styling for hover state */
-            color: #CBD5E0 !important; /* A lighter gray for hover to distinguish from normal state */
+            color: #a3cc4a !important; /* A lighter green for hover */
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
         
-        /* Ensure SVGs within the nav also use white stroke */
+        /* Ensure SVGs within the nav also use green stroke */
         nav.main-nav svg {
-            stroke: white !important;
+            stroke: #87ac3a !important;
         }
         
         /* Hide elements on landing page */
@@ -382,14 +416,12 @@ function fetchData($type) {
             overflow: hidden;
         }
         
-        /* User greeting styles */
-        .user-greeting {
-            color: white !important;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-            font-size: 0.95rem;
-            font-weight: 500;
-            padding: 0 10px;
-            border-left: 1px solid rgba(255,255,255,0.3);
+        /* User welcome message styling */
+        .welcome-message {
+            color: #87ac3a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
         }
     </style>
 </head>
@@ -410,43 +442,38 @@ function fetchData($type) {
                     <a href="/?page=landing" class="flex items-center text-2xl font-bold font-merienda">
                         <img src="images/sign_whimsicalfrog.webp" alt="Whimsical Frog" style="height: 60px; margin-right: 8px;" onerror="this.onerror=null; this.src='images/sign_whimsicalfrog.png';">
                     </a>
-                    <p class="text-sm font-merienda ml-2 hidden md:block" style="color: white !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
-                    <?php if ($isLoggedIn && !empty($userFullName)): ?>
-                        <span class="user-greeting ml-4">Welcome, <?php echo htmlspecialchars($userFullName); ?></span>
-                    <?php endif; ?>
+                    <div>
+                        <p class="text-sm font-merienda ml-2 hidden md:block" style="color: #87ac3a !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
+                        <?php if ($isLoggedIn && !empty($welcomeMessage)): ?>
+                            <p class="welcome-message"><?php echo htmlspecialchars($welcomeMessage); ?></p>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
             
-            <!-- Center Section: Conditional Welcome Sign -->
-            <div class="flex-grow flex justify-center items-center">
-                <a href="/?page=landing" class="inline-block transform transition-transform duration-300 hover:scale-105">
-                    <picture>
-                        <source srcset="images/sign_main.webp" type="image/webp">
-                        <img src="images/sign_main.png" alt="Return to Landing Page" style="max-height: 40px; display: block;">
-                    </picture>
-                </a>
-            </div>
+            <!-- Center Section: Empty space (welcome sign removed) -->
+            <div class="flex-grow"></div>
             
             <!-- Right Section: Navigation Links -->
             <div class="flex-none">
                 <div class="flex items-center">
                     <?php if ($isAdmin): ?>
-                        <a href="/?page=admin" class="px-3 py-2 rounded-md text-sm font-medium hover:text-[#CBD5E0]">Manage</a>
+                    <a href="/?page=admin" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Manage</a>
                     <?php endif; ?>
-                    <a href="/?page=shop" class="px-3 py-2 rounded-md text-sm font-medium hover:text-[#CBD5E0]">Shop</a>
-                    <a href="/?page=cart" class="px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center hover:text-[#CBD5E0]">
+                    <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
+                    <a href="/?page=cart" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center">
                         <div class="flex items-center space-x-1 md:space-x-2">
-                            <span id="cartCount" class="text-sm font-medium whitespace-nowrap">0 items</span>
+                            <span id="cartCount" class="text-sm font-medium whitespace-nowrap"><?php echo $cartCount; ?> items</span>
                             <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <span id="cartTotal" class="text-sm font-medium whitespace-nowrap hidden md:inline">$0.00</span>
+                            <span id="cartTotal" class="text-sm font-medium whitespace-nowrap hidden md:inline"><?php echo $formattedCartTotal; ?></span>
                         </div>
                     </a>
                     <?php if ($isLoggedIn): ?>
-                        <a href="/logout.php" class="px-3 py-2 rounded-md text-sm font-medium hover:text-[#CBD5E0]" onclick="logout(); return false;">Logout</a>
+                        <a href="/logout.php" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium" onclick="logout(); return false;">Logout</a>
                     <?php else: ?>
-                        <a href="/?page=login" class="px-3 py-2 rounded-md text-sm font-medium hover:text-[#CBD5E0]">Login</a>
+                        <a href="/?page=login" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Login</a>
                     <?php endif; ?>
                 </div>
             </div>
@@ -460,7 +487,28 @@ function fetchData($type) {
     </div>
 <?php else: ?>
     <main class="flex-grow container mx-auto p-2 md:p-4 lg:p-6 cottage-bg" id="mainContent">
-        <?php include "sections/{$page}.php"; ?>
+        <?php 
+        // Include the appropriate page content
+        $pageFile = 'sections/' . $page . '.php';
+        
+        // Handle admin section parameter for the main admin page
+        if ($page === 'admin' && isset($_GET['section'])) {
+            $section = $_GET['section'];
+            $sectionFile = 'sections/admin_' . $section . '.php';
+            
+            // Check if the section file exists
+            if (file_exists($sectionFile)) {
+                include $pageFile; // Include the main admin page first
+                // The admin.php page will handle including the section file
+            } else {
+                include $pageFile; // Just include the main admin dashboard
+            }
+        } else if (file_exists($pageFile)) {
+            include $pageFile;
+        } else {
+            echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Page not found</h1></div>';
+        }
+        ?>
     </main>
 <?php endif; ?>
 

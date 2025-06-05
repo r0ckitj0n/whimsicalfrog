@@ -65,7 +65,9 @@ if (isset($categories['Sublimation'])) {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background-color: rgba(0, 100, 255, 0.3); /* Temporary background for visualization */
+        background-color: rgba(255, 255, 255, 0.7); /* White background with transparency */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     }
     
     .product-icon:hover {
@@ -212,11 +214,10 @@ if (isset($categories['Sublimation'])) {
     <div class="room-container mx-auto max-w-full" data-room-name="Sublimation">
         <div class="room-overlay-wrapper">
             <a href="/?page=main_room" class="back-button" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
-            
             <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1>Sublimation Station</h1>
-                    <p>Discover our custom sublimation products.</p>
+                    <h1>Sublimation Studio</h1>
+                    <p>Discover our unique sublimation designs.</p>
                 </div>
                 
                 <?php if (empty($sublimationProducts)): ?>
@@ -410,12 +411,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomOverlayWrapper = document.querySelector('#sublimationRoomPage .room-overlay-wrapper');
 
     const baseAreas = [
-        { selector: '.area-1', top: 200, left: 200, width: 150, height: 170 },
-        { selector: '.area-2', top: 200, left: 450, width: 150, height: 170 },
-        { selector: '.area-3', top: 200, left: 700, width: 150, height: 170 },
-        { selector: '.area-4', top: 450, left: 200, width: 150, height: 170 },
-        { selector: '.area-5', top: 450, left: 450, width: 150, height: 170 },
-        { selector: '.area-6', top: 450, left: 700, width: 150, height: 170 }
+        { selector: '.area-1', top: 242, left: 261, width: 108, height: 47 },
+        { selector: '.area-2', top: 241, left: 375, width: 89, height: 48 },
+        { selector: '.area-3', top: 258, left: 486, width: 65, height: 38 },
+        { selector: '.area-4', top: 303, left: 184, width: 102, height: 60 },
+        { selector: '.area-5', top: 306, left: 293, width: 110, height: 57 },
+        { selector: '.area-6', top: 309, left: 409, width: 160, height: 53 },
+        { selector: '.area-7', top: 385, left: 203, width: 137, height: 54 },
+        { selector: '.area-8', top: 388, left: 346, width: 111, height: 42 },
+        { selector: '.area-9', top: 388, left: 461, width: 105, height: 39 },
+        { selector: '.area-10', top: 300, left: 855, width: 124, height: 35 },
+        { selector: '.area-11', top: 289, left: 990, width: 173, height: 42 },
+        { selector: '.area-12', top: 364, left: 842, width: 140, height: 85 },
+        { selector: '.area-13', top: 367, left: 990, width: 170, height: 91 }
     ];
 
     function updateAreaCoordinates() {
@@ -467,4 +475,4 @@ document.addEventListener('DOMContentLoaded', function() {
         resizeTimeout = setTimeout(updateAreaCoordinates, 100);
     });
 });
-</script> 
+</script>

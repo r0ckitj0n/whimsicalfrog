@@ -65,7 +65,9 @@ if (isset($categories['Artwork'])) {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background-color: rgba(0, 100, 255, 0.3); /* Temporary background for visualization */
+        background-color: rgba(255, 255, 255, 0.7); /* White background with transparency */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     }
     
     .product-icon:hover {
@@ -214,15 +216,15 @@ if (isset($categories['Artwork'])) {
             <a href="/?page=main_room" class="back-button" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
             <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1>The Artwork Studio</h1>
-                    <p>Explore our custom artwork and prints.</p>
+                    <h1>Artwork Gallery</h1>
+                    <p>Discover our unique artistic creations.</p>
                 </div>
                 
                 <?php if (empty($artworkProducts)): ?>
                     <div class="text-center py-8">
                         <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
                             <p class="text-xl text-gray-600">No artwork items available at the moment.</p>
-                            <p class="text-gray-500 mt-2">Check back soon for new creations!</p>
+                            <p class="text-gray-500 mt-2">Check back soon for new designs!</p>
                         </div>
                     </div>
                 <?php else: ?>
@@ -409,12 +411,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomOverlayWrapper = document.querySelector('#artworkRoomPage .room-overlay-wrapper');
 
     const baseAreas = [
-        { selector: '.area-1', top: 180, left: 220, width: 160, height: 180 },
-        { selector: '.area-2', top: 180, left: 460, width: 160, height: 180 },
-        { selector: '.area-3', top: 180, left: 700, width: 160, height: 180 },
-        { selector: '.area-4', top: 450, left: 220, width: 160, height: 180 },
-        { selector: '.area-5', top: 450, left: 460, width: 160, height: 180 },
-        { selector: '.area-6', top: 450, left: 700, width: 160, height: 180 }
+        { selector: '.area-1', top: 235, left: 193, width: 115, height: 77 },
+        { selector: '.area-2', top: 235, left: 378, width: 67, height: 114 },
+        { selector: '.area-3', top: 205, left: 499, width: 103, height: 81 },
+        { selector: '.area-4', top: 399, left: 242, width: 68, height: 97 },
+        { selector: '.area-5', top: 426, left: 375, width: 89, height: 61 },
+        { selector: '.area-6', top: 371, left: 511, width: 54, height: 105 },
+        { selector: '.area-7', top: 339, left: 621, width: 58, height: 77 },
+        { selector: '.area-8', top: 346, left: 1051, width: 90, height: 73 }
     ];
 
     function updateAreaCoordinates() {
@@ -466,4 +470,4 @@ document.addEventListener('DOMContentLoaded', function() {
         resizeTimeout = setTimeout(updateAreaCoordinates, 100);
     });
 });
-</script> 
+</script>

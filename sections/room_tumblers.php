@@ -1,8 +1,8 @@
 <?php
 // Tumblers room page
-$tumblersProducts = [];
+$tumblerProducts = [];
 if (isset($categories['Tumblers'])) {
-    $tumblersProducts = $categories['Tumblers'];
+    $tumblerProducts = $categories['Tumblers'];
 }
 ?>
 <style>
@@ -65,7 +65,9 @@ if (isset($categories['Tumblers'])) {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background-color: rgba(0, 100, 255, 0.3); /* Temporary background for visualization */
+        background-color: rgba(255, 255, 255, 0.7); /* White background with transparency */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     }
     
     .product-icon:hover {
@@ -214,11 +216,11 @@ if (isset($categories['Tumblers'])) {
             <a href="/?page=main_room" class="back-button" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
             <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1>Tumbler Workshop</h1>
-                    <p>Explore our custom tumblers and drinkware.</p>
+                    <h1>Tumbler Collection</h1>
+                    <p>Discover our unique tumbler designs.</p>
                 </div>
                 
-                <?php if (empty($tumblersProducts)): ?>
+                <?php if (empty($tumblerProducts)): ?>
                     <div class="text-center py-8">
                         <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
                             <p class="text-xl text-gray-600">No tumbler items available at the moment.</p>
@@ -227,7 +229,7 @@ if (isset($categories['Tumblers'])) {
                     </div>
                 <?php else: ?>
                     <div class="shelf-area">
-                        <?php foreach ($tumblersProducts as $index => $product): ?>
+                        <?php foreach ($tumblerProducts as $index => $product): ?>
                             <?php $area_class = 'area-' . ($index + 1); ?>
                             <div class="product-icon <?php echo $area_class; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
@@ -409,12 +411,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomOverlayWrapper = document.querySelector('#tumblersRoomPage .room-overlay-wrapper');
 
     const baseAreas = [
-        { selector: '.area-1', top: 230, left: 200, width: 150, height: 180 },
-        { selector: '.area-2', top: 230, left: 440, width: 150, height: 180 },
-        { selector: '.area-3', top: 230, left: 680, width: 150, height: 180 },
-        { selector: '.area-4', top: 500, left: 200, width: 150, height: 180 },
-        { selector: '.area-5', top: 500, left: 440, width: 150, height: 180 },
-        { selector: '.area-6', top: 500, left: 680, width: 150, height: 180 }
+        { selector: '.area-1', top: 176, left: 447, width: 74, height: 146 },
+        { selector: '.area-2', top: 170, left: 543, width: 74, height: 144 },
+        { selector: '.area-3', top: 162, left: 634, width: 76, height: 148 },
+        { selector: '.area-4', top: 355, left: 241, width: 82, height: 175 },
+        { selector: '.area-5', top: 352, left: 333, width: 86, height: 164 },
+        { selector: '.area-6', top: 352, left: 426, width: 77, height: 156 },
+        { selector: '.area-7', top: 355, left: 508, width: 68, height: 143 },
+        { selector: '.area-8', top: 348, left: 611, width: 70, height: 138 },
+        { selector: '.area-9', top: 345, left: 691, width: 64, height: 126 },
+        { selector: '.area-10', top: 572, left: 241, width: 83, height: 162 },
+        { selector: '.area-11', top: 564, left: 333, width: 79, height: 154 },
+        { selector: '.area-12', top: 546, left: 420, width: 74, height: 153 },
+        { selector: '.area-13', top: 533, left: 502, width: 64, height: 143 },
+        { selector: '.area-14', top: 523, left: 575, width: 64, height: 139 },
+        { selector: '.area-15', top: 511, left: 647, width: 64, height: 127 }
     ];
 
     function updateAreaCoordinates() {
@@ -466,4 +477,4 @@ document.addEventListener('DOMContentLoaded', function() {
         resizeTimeout = setTimeout(updateAreaCoordinates, 100);
     });
 });
-</script> 
+</script>

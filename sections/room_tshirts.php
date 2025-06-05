@@ -65,7 +65,9 @@ if (isset($categories['T-Shirts'])) {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background-color: rgba(0, 100, 255, 0.3); /* Temporary background for visualization */
+        background-color: rgba(255, 255, 255, 0.7); /* White background with transparency */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     }
     
     .product-icon:hover {
@@ -409,12 +411,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const roomOverlayWrapper = document.querySelector('#tshirtsRoomPage .room-overlay-wrapper');
 
     const baseAreas = [
-        { selector: '.area-1', top: 248, left: 162, width: 150, height: 170 },
-        { selector: '.area-2', top: 285, left: 375, width: 140, height: 160 },
-        { selector: '.area-3', top: 240, left: 580, width: 160, height: 180 },
-        { selector: '.area-4', top: 520, left: 180, width: 130, height: 150 },
-        { selector: '.area-5', top: 510, left: 390, width: 140, height: 160 },
-        { selector: '.area-6', top: 490, left: 600, width: 150, height: 180 }
+        { selector: '.area-1', top: 332, left: 104, width: 121, height: 137 },
+        { selector: '.area-2', top: 345, left: 289, width: 92, height: 122 },
+        { selector: '.area-3', top: 347, left: 385, width: 83, height: 122 },
+        { selector: '.area-4', top: 344, left: 474, width: 90, height: 125 },
+        { selector: '.area-5', top: 345, left: 569, width: 83, height: 124 },
+        { selector: '.area-6', top: 466, left: 911, width: 96, height: 133 },
+        { selector: '.area-7', top: 469, left: 1067, width: 107, height: 149 }
     ];
 
     function updateAreaCoordinates() {

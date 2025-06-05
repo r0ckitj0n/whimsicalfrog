@@ -65,7 +65,7 @@ if (isset($categories['Sublimation'])) {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background-color: rgba(255, 255, 255, 0.7); /* White background with transparency */
+        background-color: #fff; /* White background, fully opaque */
         border-radius: 8px; /* Rounded corners */
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     }

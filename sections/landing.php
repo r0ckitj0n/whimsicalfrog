@@ -38,7 +38,7 @@
         left: 601px; 
         width: 125px; 
         height: 77px; 
-        background-color: rgba(255, 255, 255, 0.3); /* White background for product areas */
+        background-color: #fff; /* White background for product areas, fully opaque */
         border-radius: 8px;
     }
 </style>

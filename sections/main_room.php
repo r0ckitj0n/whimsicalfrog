@@ -10,7 +10,7 @@
         align-items: center;
         justify-content: center;
         background: transparent;
-        overflow: hidden;
+        /* overflow: hidden; */
         pointer-events: auto;
     }
     
@@ -72,6 +72,10 @@
         display: block;
         line-height: 0;
     }
+
+    /* Remove special overflow and debug borders for Sublimation */
+    #mainRoomPage { overflow: visible !important; }
+    .door-area.area-5, .door-area.area-5 .door-sign { border: none !important; overflow: unset !important; }
 </style>
 
 <section id="mainRoomPage" class="p-2">
@@ -113,6 +117,10 @@
     
     <!-- Sublimation Items Door -->
     <div class="door-area area-5" onclick="enterRoom('sublimation')">
+        <picture class="block">
+            <source srcset="images/sign_door_sublimation.webp" type="image/webp">
+            <img src="images/sign_door_sublimation.png" alt="Sublimation Items" class="door-sign">
+        </picture>
         <div class="door-label">Sublimation Items</div>
     </div>
 </section>

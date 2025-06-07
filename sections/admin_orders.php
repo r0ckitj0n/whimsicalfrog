@@ -7,10 +7,14 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
-// Fetch orders data
-$ordersData = fetchData('sales_orders') ?? [];
-$customersData = fetchData('users') ?? [];
-$inventoryData = fetchData('inventory') ?? [];
+// Fetch orders, users, and inventory data from Node API (MySQL)
+$apiBase = 'https://whimsicalfrog.us';
+$ordersJson = @file_get_contents($apiBase . '/api/sales_orders');
+$ordersData = $ordersJson ? json_decode($ordersJson, true) : [];
+$customersJson = @file_get_contents($apiBase . '/api/users');
+$customersData = $customersJson ? json_decode($customersJson, true) : [];
+$inventoryJson = @file_get_contents($apiBase . '/api/inventory');
+$inventoryData = $inventoryJson ? json_decode($inventoryJson, true) : [];
 
 // Handle search/filter
 $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
@@ -28,9 +32,9 @@ if (!empty($searchTerm)) {
         $customerName = '';
         $customerEmail = '';
         foreach ($GLOBALS['customersData'] as $customer) {
-            if (($customer[0] ?? '') == $customerId) {
-                $customerName = ($customer[6] ?? '') . ' ' . ($customer[7] ?? '');
-                $customerEmail = $customer[3] ?? '';
+            if (($customer['id'] ?? '') == $customerId) {
+                $customerName = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
+                $customerEmail = $customer['email'] ?? '';
                 break;
             }
         }
@@ -90,11 +94,11 @@ usort($ordersData, function($a, $b) use ($sortBy, $sortDir) {
             $customerNameB = '';
             
             foreach ($GLOBALS['customersData'] as $customer) {
-                if (($customer[0] ?? '') == $customerIdA) {
-                    $customerNameA = ($customer[6] ?? '') . ' ' . ($customer[7] ?? '');
+                if (($customer['id'] ?? '') == $customerIdA) {
+                    $customerNameA = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
                 }
-                if (($customer[0] ?? '') == $customerIdB) {
-                    $customerNameB = ($customer[6] ?? '') . ' ' . ($customer[7] ?? '');
+                if (($customer['id'] ?? '') == $customerIdB) {
+                    $customerNameB = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
                 }
             }
             
@@ -151,8 +155,8 @@ function getSortIndicator($column, $currentSort, $currentDir) {
 // Helper function to get customer name from ID
 function getCustomerName($customerId, $customersData) {
     foreach ($customersData as $customer) {
-        if (($customer[0] ?? '') == $customerId) {
-            return ($customer[6] ?? '') . ' ' . ($customer[7] ?? '');
+        if (($customer['id'] ?? '') == $customerId) {
+            return ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
         }
     }
     return 'Unknown Customer';
@@ -179,6 +183,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
     $updateSuccess = true;
 }
 ?>
+
+<style>
+  .admin-data-label {
+    color: #222 !important;
+  }
+  .admin-data-value {
+    color: #c00 !important;
+    font-weight: bold;
+  }
+</style>
 
 <!-- Back to Dashboard Navigation -->
 <div class="mb-6">
@@ -279,6 +293,129 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
     </form>
 </div>
 
+<!-- Add New Order Button and Modal -->
+<button id="addOrderBtn" class="mb-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Add New Order</button>
+<div id="addOrderModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+        <button id="closeAddOrderModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
+        <h2 class="text-lg font-bold mb-4">Add New Order</h2>
+        <form id="addOrderForm">
+            <div class="mb-4">
+                <label for="orderCustomer" class="block text-sm font-medium text-gray-700">Customer</label>
+                <select id="orderCustomer" name="customerId" required class="mt-1 block w-full border-gray-300 rounded-md">
+                    <option value="">Select a customer</option>
+                    <?php foreach ($customersData as $customer): ?>
+                        <option value="<?php echo htmlspecialchars($customer['id']); ?>">
+                            <?php echo htmlspecialchars(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '') . ' (' . $customer['email'] . ')'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Products</label>
+                <div id="orderProducts">
+                    <div class="flex gap-2 mb-2">
+                        <select name="productIds[]" class="border-gray-300 rounded-md flex-1" required>
+                            <option value="">Select product</option>
+                            <?php foreach ($inventoryData as $item): ?>
+                                <option value="<?php echo htmlspecialchars($item['id'] ?? $item['id']); ?>">
+                                    <?php echo htmlspecialchars($item['name'] ?? $item['name'] ?? 'Unknown'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="number" name="quantities[]" min="1" value="1" class="border-gray-300 rounded-md w-20" required>
+                        <button type="button" class="removeProductBtn text-red-500">&times;</button>
+                    </div>
+                </div>
+                <button type="button" id="addProductBtn" class="mt-2 px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs">+ Add Product</button>
+            </div>
+            <div class="mb-4">
+                <label for="orderStatus" class="block text-sm font-medium text-gray-700">Status</label>
+                <select id="orderStatus" name="status" class="mt-1 block w-full border-gray-300 rounded-md">
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="orderDate" class="block text-sm font-medium text-gray-700">Order Date</label>
+                <input type="date" id="orderDate" name="date" class="mt-1 block w-full border-gray-300 rounded-md" value="<?php echo date('Y-m-d'); ?>">
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Create Order</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+// Modal logic
+const addOrderBtn = document.getElementById('addOrderBtn');
+const addOrderModal = document.getElementById('addOrderModal');
+const closeAddOrderModal = document.getElementById('closeAddOrderModal');
+addOrderBtn.onclick = () => addOrderModal.classList.remove('hidden');
+closeAddOrderModal.onclick = () => addOrderModal.classList.add('hidden');
+window.onclick = (e) => { if (e.target === addOrderModal) addOrderModal.classList.add('hidden'); };
+// Add/remove product rows
+const orderProducts = document.getElementById('orderProducts');
+document.getElementById('addProductBtn').onclick = () => {
+    const row = orderProducts.firstElementChild.cloneNode(true);
+    row.querySelector('select').selectedIndex = 0;
+    row.querySelector('input').value = 1;
+    orderProducts.appendChild(row);
+    row.querySelector('.removeProductBtn').onclick = function() { row.remove(); };
+};
+orderProducts.querySelector('.removeProductBtn').onclick = function() { this.parentElement.remove(); };
+// Handle form submit
+const addOrderForm = document.getElementById('addOrderForm');
+addOrderForm.onsubmit = async function(e) {
+    e.preventDefault();
+    const formData = new FormData(addOrderForm);
+    const customerId = formData.get('customerId');
+    const productIds = formData.getAll('productIds[]').filter(Boolean);
+    const quantities = formData.getAll('quantities[]').filter(Boolean);
+    const status = formData.get('status');
+    const date = formData.get('date');
+    const errorMessage = document.getElementById('addOrderErrorMessage');
+    if (productIds.length === 0 || quantities.length === 0 || productIds.length !== quantities.length) {
+        if (errorMessage) {
+            errorMessage.textContent = 'Please select at least one product and quantity.';
+            errorMessage.classList.remove('hidden');
+        } else {
+            alert('Please select at least one product and quantity.');
+        }
+        return;
+    }
+    const apiBase = 'https://whimsicalfrog.us';
+    const response = await fetch(apiBase + '/api/add-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId, productIds, quantities, status, date })
+    });
+    const data = await response.json();
+    if (data.success) {
+        alert('Order created!');
+        location.reload();
+    } else {
+        const msg = data.error || 'Unknown error';
+        if (errorMessage) {
+            errorMessage.textContent = 'Error: ' + msg;
+            errorMessage.classList.remove('hidden');
+        }
+        alert('Order creation failed: ' + msg);
+    }
+};
+// Add an error message div to the modal if not present
+if (!document.getElementById('addOrderErrorMessage')) {
+    const form = document.getElementById('addOrderForm');
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'addOrderErrorMessage';
+    errorDiv.className = 'hidden text-red-500 text-sm mb-2';
+    form.insertBefore(errorDiv, form.firstChild);
+}
+</script>
+
 <!-- Order List -->
 <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
     <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
@@ -301,31 +438,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="<?php echo getSortUrl('id', $sortBy, $sortDir); ?>" class="flex items-center">
-                                Order ID <?php echo getSortIndicator('id', $sortBy, $sortDir); ?>
+                                <span class="admin-data-label">Order ID</span> <?php echo getSortIndicator('id', $sortBy, $sortDir); ?>
                             </a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="<?php echo getSortUrl('date', $sortBy, $sortDir); ?>" class="flex items-center">
-                                Date <?php echo getSortIndicator('date', $sortBy, $sortDir); ?>
+                                <span class="admin-data-label">Date</span> <?php echo getSortIndicator('date', $sortBy, $sortDir); ?>
                             </a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="<?php echo getSortUrl('customer', $sortBy, $sortDir); ?>" class="flex items-center">
-                                Customer <?php echo getSortIndicator('customer', $sortBy, $sortDir); ?>
+                                <span class="admin-data-label">Customer</span> <?php echo getSortIndicator('customer', $sortBy, $sortDir); ?>
                             </a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="<?php echo getSortUrl('total', $sortBy, $sortDir); ?>" class="flex items-center">
-                                Total <?php echo getSortIndicator('total', $sortBy, $sortDir); ?>
+                                <span class="admin-data-label">Total</span> <?php echo getSortIndicator('total', $sortBy, $sortDir); ?>
                             </a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="<?php echo getSortUrl('status', $sortBy, $sortDir); ?>" class="flex items-center">
-                                Status <?php echo getSortIndicator('status', $sortBy, $sortDir); ?>
+                                <span class="admin-data-label">Status</span> <?php echo getSortIndicator('status', $sortBy, $sortDir); ?>
                             </a>
                         </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <span class="admin-data-label">Payment Status</span>
+                        </th>
                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
+                            <span class="admin-data-label">Actions</span>
                         </th>
                     </tr>
                 </thead>
@@ -336,23 +476,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
                         $customerId = $order['customerId'] ?? '';
                         $total = $order['total'] ?? 0;
                         $status = $order['status'] ?? 'Pending';
+                        $paymentStatus = $order['paymentStatus'] ?? $order['payment_status'] ?? 'Pending';
                         
                         // Get customer name
                         $customerName = getCustomerName($customerId, $customersData);
                     ?>
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                #<?php echo htmlspecialchars($orderId); ?>
+                                <span class="admin-data-value">#<?php echo htmlspecialchars($orderId); ?></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <?php echo htmlspecialchars($orderDate); ?>
+                                <span class="admin-data-value"><?php echo htmlspecialchars($orderDate); ?></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($customerName); ?></div>
-                                <div class="text-sm text-gray-500">ID: <?php echo htmlspecialchars($customerId); ?></div>
+                                <div class="text-sm text-gray-500">ID: <span class="admin-data-value"><?php echo htmlspecialchars($customerId); ?></span></div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                $<?php echo number_format(floatval($total), 2); ?>
+                                <span class="admin-data-value">$<?php echo number_format(floatval($total), 2); ?></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <?php 
@@ -379,7 +520,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
                                 }
                                 ?>
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-<?php echo $statusColor; ?>-100 text-<?php echo $statusColor; ?>-800">
-                                    <?php echo htmlspecialchars($status); ?>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($status); ?></span>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-<?php echo $paymentStatus === 'Received' ? 'green' : 'yellow'; ?>-100 text-<?php echo $paymentStatus === 'Received' ? 'green' : 'yellow'; ?>-800">
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($paymentStatus); ?></span>
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -487,8 +633,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
         $customerName = getCustomerName($customerId, $customersData);
         $customerEmail = '';
         foreach ($customersData as $customer) {
-            if (($customer[0] ?? '') == $customerId) {
-                $customerEmail = $customer[3] ?? '';
+            if (($customer['id'] ?? '') == $customerId) {
+                $customerEmail = $customer['email'] ?? '';
                 break;
             }
         }
@@ -497,10 +643,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
     <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
         <div>
             <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Order #<?php echo htmlspecialchars($orderId); ?>
+                Order #<span class="admin-data-value"><?php echo htmlspecialchars($orderId); ?></span>
             </h3>
             <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                Placed on <?php echo htmlspecialchars($orderDate); ?>
+                Placed on <span class="admin-data-value"><?php echo htmlspecialchars($orderDate); ?></span>
             </p>
         </div>
         <div>
@@ -542,11 +688,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                 }
                 ?>
                 <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-<?php echo $statusColor; ?>-100 text-<?php echo $statusColor; ?>-800">
-                    <?php echo htmlspecialchars($orderStatus); ?>
+                    <span class="admin-data-value"><?php echo htmlspecialchars($orderStatus); ?></span>
                 </span>
                 <?php if (!empty($trackingNumber)): ?>
                 <div class="mt-2 text-sm text-gray-500">
-                    Tracking #: <?php echo htmlspecialchars($trackingNumber); ?>
+                    Tracking #: <span class="admin-data-value"><?php echo htmlspecialchars($trackingNumber); ?></span>
                 </div>
                 <?php endif; ?>
             </div>
@@ -584,15 +730,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                 </div>
                 <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">
-                        <?php echo htmlspecialchars($customerName); ?>
+                        <span class="admin-data-label">Customer Name</span>
+                        <span class="admin-data-value"><?php echo htmlspecialchars($customerName); ?></span>
                     </div>
                     <div class="text-sm text-gray-500">
-                        <?php echo htmlspecialchars($customerEmail); ?>
+                        <span class="admin-data-label">Customer Email</span>
+                        <span class="admin-data-value"><?php echo htmlspecialchars($customerEmail); ?></span>
                     </div>
                 </div>
             </div>
             <a href="/?page=admin&section=customers&action=view&id=<?php echo $customerId; ?>" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                View Customer Profile →
+                <span class="admin-data-label">View Customer Profile</span> →
             </a>
         </div>
         
@@ -601,15 +749,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <span class="block text-sm font-medium text-gray-500">Order Date</span>
-                    <span class="block text-gray-900"><?php echo htmlspecialchars($orderDate); ?></span>
+                    <span class="block text-gray-900"><span class="admin-data-label">Order Date</span> <?php echo htmlspecialchars($orderDate); ?></span>
                 </div>
                 <div>
                     <span class="block text-sm font-medium text-gray-500">Payment Method</span>
-                    <span class="block text-gray-900"><?php echo htmlspecialchars($paymentMethod); ?></span>
+                    <span class="block text-gray-900"><span class="admin-data-label">Payment Method</span> <?php echo htmlspecialchars($paymentMethod); ?></span>
                 </div>
                 <div>
                     <span class="block text-sm font-medium text-gray-500">Total Amount</span>
-                    <span class="block text-gray-900 font-bold">$<?php echo number_format(floatval($orderTotal), 2); ?></span>
+                    <span class="block text-gray-900 font-bold"><span class="admin-data-label">Total Amount</span> $<?php echo number_format(floatval($orderTotal), 2); ?></span>
                 </div>
             </div>
         </div>
@@ -619,12 +767,43 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-b border-gray-200">
         <div>
             <h4 class="text-lg font-medium text-gray-900 mb-4">Shipping Address</h4>
-            <p class="text-gray-700 whitespace-pre-line"><?php echo htmlspecialchars($shippingAddress); ?></p>
+            <p class="text-gray-700 whitespace-pre-line"><span class="admin-data-label">Shipping Address</span> <?php echo htmlspecialchars($shippingAddress); ?></p>
         </div>
         
         <div>
             <h4 class="text-lg font-medium text-gray-900 mb-4">Billing Address</h4>
-            <p class="text-gray-700 whitespace-pre-line"><?php echo htmlspecialchars($billingAddress); ?></p>
+            <p class="text-gray-700 whitespace-pre-line"><span class="admin-data-label">Billing Address</span> <?php echo htmlspecialchars($billingAddress); ?></p>
+        </div>
+    </div>
+    
+    <!-- Payment Status Section in Order Detail View -->
+    <div class="p-6 border-b border-gray-200">
+        <h4 class="text-lg font-medium text-gray-900 mb-2">Payment Status</h4>
+        <div class="flex items-center gap-4">
+            <span id="paymentStatusLabel" class="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-<?php echo ($orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending') === 'Received' ? 'green' : 'yellow'; ?>-100 text-<?php echo ($orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending') === 'Received' ? 'green' : 'yellow'; ?>-800">
+                <span class="admin-data-value"><?php echo htmlspecialchars($orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending'); ?></span>
+            </span>
+            <?php if ((($orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending') === 'Pending') && (($_SESSION['user']['role'] ?? '') === 'Admin')) : ?>
+                <button id="markPaymentReceivedBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Mark as Received</button>
+                <script>
+                document.getElementById('markPaymentReceivedBtn').onclick = async function() {
+                    if (!confirm('Mark payment as received for this order?')) return;
+                    const apiBase = 'https://whimsicalfrog.us';
+                    const response = await fetch(apiBase + '/api/update-payment-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId: <?php echo json_encode($orderId); ?>, newStatus: 'Received' })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Payment marked as received!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Unknown error'));
+                    }
+                };
+                </script>
+            <?php endif; ?>
         </div>
     </div>
     
@@ -660,19 +839,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($productName); ?></div>
-                                            <div class="text-sm text-gray-500">SKU: <?php echo htmlspecialchars($productId); ?></div>
+                                            <div class="text-sm font-medium text-gray-900"><span class="admin-data-label">Product</span> <?php echo htmlspecialchars($productName); ?></div>
+                                            <div class="text-sm text-gray-500"><span class="admin-data-label">SKU</span> <?php echo htmlspecialchars($productId); ?></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    $<?php echo number_format($price, 2); ?>
+                                    <span class="admin-data-value">$<?php echo number_format($price, 2); ?></span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php echo $quantity; ?>
+                                    <span class="admin-data-value"><?php echo $quantity; ?></span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                    $<?php echo number_format($itemTotal, 2); ?>
+                                    <span class="admin-data-value">$<?php echo number_format($itemTotal, 2); ?></span>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -680,15 +859,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                     <tfoot>
                         <tr>
                             <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">Subtotal:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">$<?php echo number_format($subtotal, 2); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                                <span class="admin-data-value">$<?php echo number_format($subtotal, 2); ?></span>
+                            </td>
                         </tr>
                         <tr>
                             <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">Shipping:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">$<?php echo number_format(floatval($orderTotal) - $subtotal, 2); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                                <span class="admin-data-value">$<?php echo number_format(floatval($orderTotal) - $subtotal, 2); ?></span>
+                            </td>
                         </tr>
                         <tr>
                             <td colspan="3" class="px-6 py-4 whitespace-nowrap text-base font-bold text-gray-900 text-right">Total:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-base font-bold text-gray-900 text-right">$<?php echo number_format(floatval($orderTotal), 2); ?></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-base font-bold text-gray-900 text-right">
+                                <span class="admin-data-value">$<?php echo number_format(floatval($orderTotal), 2); ?></span>
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
@@ -720,6 +905,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     if ($orderData) {
         $orderStatus = $orderData['status'] ?? 'Pending';
         $trackingNumber = $orderData['trackingNumber'] ?? '';
+        $paymentStatus = $orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending';
 ?>
 <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
     <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
@@ -728,7 +914,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                 Update Order Status
             </h3>
             <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                Order #<?php echo htmlspecialchars($orderId); ?>
+                Order #<span class="admin-data-value"><?php echo htmlspecialchars($orderId); ?></span>
             </p>
         </div>
         <div>
@@ -751,11 +937,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
                     <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
                         <option value="Pending" <?php echo $orderStatus === 'Pending' ? 'selected' : ''; ?>>Pending</option>
                         <option value="Processing" <?php echo $orderStatus === 'Processing' ? 'selected' : ''; ?>>Processing</option>
-                        <option value="Shipped" <?php echo $orderStatus === 'Shipped' ? 'selected' : ''; ?>>Shipped</option>
+                        <option value="Shipped" <?php echo $orderStatus === 'Shipped' ? 'selected' : ''; ?> <?php echo $paymentStatus !== 'Received' ? 'disabled' : ''; ?>>Shipped<?php echo $paymentStatus !== 'Received' ? ' (Payment not received)' : ''; ?></option>
                         <option value="Delivered" <?php echo $orderStatus === 'Delivered' ? 'selected' : ''; ?>>Delivered</option>
                         <option value="Completed" <?php echo $orderStatus === 'Completed' ? 'selected' : ''; ?>>Completed</option>
                         <option value="Cancelled" <?php echo $orderStatus === 'Cancelled' ? 'selected' : ''; ?>>Cancelled</option>
                     </select>
+                    <?php if ($paymentStatus !== 'Received') : ?>
+                        <div class="text-yellow-700 text-xs mt-1">You must mark payment as received before shipping.</div>
+                    <?php endif; ?>
                 </div>
                 
                 <div>
@@ -774,9 +963,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
             
             <div class="pt-5 border-t border-gray-200">
                 <div class="flex justify-end">
-                    <a href="/?page=admin&section=orders&action=view&id=<?php echo $orderId; ?>" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mr-3">
-                        Cancel
-                    </a>
+                    <a href="/?page=admin&section=orders&action=view&id=<?php echo $orderId; ?>" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mr-3">Cancel</a>
                     <button type="submit" name="update_order_status" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                         Update Order Status
                     </button>
@@ -791,3 +978,29 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
     }
 }
 ?>
+
+<!-- Square Payment Configuration Placeholder (Admin Only) -->
+<?php if (isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Admin') : ?>
+<div class="bg-white shadow rounded-lg p-6 mb-6">
+    <h2 class="text-xl font-bold text-gray-800 mb-2">Payment Integration Settings</h2>
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Square Payment Integration</label>
+        <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded">
+            <strong>Coming Soon:</strong> You will be able to connect your Square account here to accept credit card payments online.<br>
+            When available, paste your Square Application ID and Access Token below.<br>
+            <em>(This section is a placeholder. No credentials are stored yet.)</em>
+        </div>
+    </div>
+    <form>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Square Application ID</label>
+            <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Paste Square Application ID here" disabled>
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Square Access Token</label>
+            <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Paste Square Access Token here" disabled>
+        </div>
+        <button type="button" class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>Save (Coming Soon)</button>
+    </form>
+</div>
+<?php endif; ?>

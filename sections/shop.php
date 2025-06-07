@@ -1,17 +1,10 @@
 <?php
 // Shop page section - now displays all items
 
-// Flatten all products from all categories into a single array
-$allProducts = [];
-if (isset($categories) && is_array($categories)) {
-    foreach ($categories as $categoryProducts) {
-        if (is_array($categoryProducts)) {
-            foreach ($categoryProducts as $product) {
-                $allProducts[] = $product;
-            }
-        }
-    }
-}
+// Fetch all products from Node API (MySQL)
+$apiBase = 'https://whimsicalfrog.us';
+$productsJson = @file_get_contents($apiBase . '/api/products');
+$allProducts = $productsJson ? json_decode($productsJson, true) : [];
 ?>
 <section id="shopPage" class="p-2 bg-white rounded-lg shadow-lg">
     <h2 class="text-4xl font-merienda text-center text-[#556B2F] mb-8">All Our Whimsical Wares</h2>
@@ -20,14 +13,14 @@ if (isset($categories) && is_array($categories)) {
             <?php foreach ($allProducts as $product): ?>
                 <?php
                 // Ensure product data is valid and has necessary keys
-                $productId = htmlspecialchars($product[0] ?? 'N/A');
-                $productName = htmlspecialchars($product[1] ?? 'Unnamed Product');
-                $productPrice = floatval($product[3] ?? 0.00);
-                $productDescription = htmlspecialchars($product[4] ?? 'No description available.');
-                $productImage = htmlspecialchars($product[8] ?? 'images/placeholder.png');
+                $productId = htmlspecialchars($product['id'] ?? 'N/A');
+                $productName = htmlspecialchars($product['name'] ?? 'Unnamed Product');
+                $productPrice = floatval($product['price'] ?? 0.00);
+                $productDescription = htmlspecialchars($product['description'] ?? 'No description available.');
+                $productImage = htmlspecialchars($product['image'] ?? 'images/placeholder.png');
                 
                 // Escape product name for JavaScript function if needed
-                $escapedNameJS = htmlspecialchars($product[1] ?? 'Unnamed Product', ENT_QUOTES, 'UTF-8');
+                $escapedNameJS = htmlspecialchars($product['name'] ?? 'Unnamed Product', ENT_QUOTES, 'UTF-8');
                 ?>
                 <div class="product-item bg-white p-3 rounded-lg shadow-md flex flex-col">
                     <img src="<?php echo $productImage; ?>" 

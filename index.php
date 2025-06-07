@@ -1,13 +1,15 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 // Load environment variables
 require_once __DIR__ . '/config.php';
-
 // Start or resume session
 session_start();
 
 // Function to fetch data from the Node.js API
 function fetchData($endpoint) {
-    $url = "http://localhost:3000/api/" . $endpoint;
+    $url = "https://whimsicalfrog.us/api/" . $endpoint;
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -445,7 +447,9 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
                     <div>
                         <p class="text-sm font-merienda ml-2 hidden md:block" style="color: #87ac3a !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
                         <?php if ($isLoggedIn && !empty($welcomeMessage)): ?>
-                            <p class="welcome-message"><?php echo htmlspecialchars($welcomeMessage); ?></p>
+                            <p class="welcome-message">
+                                <a href="/?page=account_settings" class="hover:underline text-[#87ac3a]" title="Edit your account settings"><?php echo htmlspecialchars($welcomeMessage); ?></a>
+                            </p>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -582,8 +586,11 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
             
+            // Use correct API base depending on environment
+            const apiBase = 'https://whimsicalfrog.us';
+            const loginUrl = apiBase + '/api/login';
             try {
-                const response = await fetch('https://whimsicalfrog.onrender.com/api/login', {
+                const response = await fetch(loginUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -606,6 +613,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify(data)
                 });
                 
@@ -632,6 +640,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ clear: true })
         })
         .then(() => {

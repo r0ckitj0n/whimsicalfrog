@@ -127,8 +127,8 @@ foreach ($filteredOrders as $order) {
         
         // Get customer name
         foreach ($customersData as $customer) {
-            if (($customer[0] ?? '') == $customerId) {
-                $customerSales[$customerId]['name'] = ($customer[6] ?? '') . ' ' . ($customer[7] ?? '');
+            if (($customer['first_name'] ?? '') == $customerId) {
+                $customerSales[$customerId]['name'] = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
                 break;
             }
         }
@@ -284,7 +284,8 @@ $regionRevenues = array_map(function($item) {
             </div>
             <div>
                 <p class="text-gray-500 text-sm">Total Revenue</p>
-                <p class="text-2xl font-bold text-gray-800">$<?php echo number_format($totalRevenue, 2); ?></p>
+                <span class="admin-data-label">Total Revenue</span>
+                <span class="admin-data-value">$<?php echo number_format($totalRevenue, 2); ?></span>
             </div>
         </div>
     </div>
@@ -299,7 +300,8 @@ $regionRevenues = array_map(function($item) {
             </div>
             <div>
                 <p class="text-gray-500 text-sm">Total Orders</p>
-                <p class="text-2xl font-bold text-gray-800"><?php echo $totalOrders; ?></p>
+                <span class="admin-data-label">Total Orders</span>
+                <span class="admin-data-value"><?php echo $totalOrders; ?></span>
             </div>
         </div>
     </div>
@@ -314,7 +316,8 @@ $regionRevenues = array_map(function($item) {
             </div>
             <div>
                 <p class="text-gray-500 text-sm">Average Order Value</p>
-                <p class="text-2xl font-bold text-gray-800">$<?php echo number_format($averageOrderValue, 2); ?></p>
+                <span class="admin-data-label">Average Order Value</span>
+                <span class="admin-data-value">$<?php echo number_format($averageOrderValue, 2); ?></span>
             </div>
         </div>
     </div>
@@ -329,7 +332,8 @@ $regionRevenues = array_map(function($item) {
             </div>
             <div>
                 <p class="text-gray-500 text-sm">Products Sold</p>
-                <p class="text-2xl font-bold text-gray-800"><?php echo $totalProductsSold; ?></p>
+                <span class="admin-data-label">Products Sold</span>
+                <span class="admin-data-value"><?php echo $totalProductsSold; ?></span>
             </div>
         </div>
     </div>
@@ -665,5 +669,13 @@ $regionRevenues = array_map(function($item) {
         .mb-6 {
             margin-bottom: 1rem !important;
         }
+    }
+    
+    .admin-data-label {
+        color: #222 !important;
+    }
+    .admin-data-value {
+        color: #c00 !important;
+        font-weight: bold;
     }
 </style>

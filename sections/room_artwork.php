@@ -213,7 +213,7 @@ if (isset($categories['Artwork'])) {
 <section id="artworkRoomPage" class="p-2">
     <div class="room-container mx-auto max-w-full" data-room-name="Artwork">
         <div class="room-overlay-wrapper">
-            <a href="/?page=main_room" class="back-button" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
+            <a href="/?page=main_room" class="back-button text-[#556B2F]" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
             <div class="room-overlay-content">
                 <div class="room-header">
                     <h1>Artwork Gallery</h1>

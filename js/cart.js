@@ -168,21 +168,82 @@ class ShoppingCart {
     }
 
     async checkout() {
+        // Show payment method modal
+        if (!document.getElementById('paymentMethodModal')) {
+            this.createPaymentMethodModal();
+        }
+        document.getElementById('paymentMethodModal').classList.remove('hidden');
+    }
+
+    createPaymentMethodModal() {
+        const modal = document.createElement('div');
+        modal.id = 'paymentMethodModal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative">
+                <button id="closePaymentMethodModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
+                <h2 class="text-lg font-bold mb-4">Select Payment Method</h2>
+                <form id="paymentMethodForm">
+                    <div class="mb-4">
+                        <label class="block mb-2 font-medium">Payment Method</label>
+                        <select id="paymentMethodSelect" class="w-full border-gray-300 rounded-md">
+                            <option value="Cash">Cash</option>
+                            <option value="Check">Check</option>
+                            <option value="Credit Card" disabled>Credit Card (Coming Soon)</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Continue</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('closePaymentMethodModal').onclick = () => modal.classList.add('hidden');
+        document.getElementById('paymentMethodForm').onsubmit = (e) => {
+            e.preventDefault();
+            const paymentMethod = document.getElementById('paymentMethodSelect').value;
+            modal.classList.add('hidden');
+            this.submitCheckout(paymentMethod);
+        };
+    }
+
+    async submitCheckout(paymentMethod) {
         console.log('Proceeding to checkout...');
-        
-        // Check if user is logged in
         const user = JSON.parse(sessionStorage.getItem('user'));
         if (!user) {
-            // Save current cart state
             localStorage.setItem('pendingCheckout', 'true');
-            // Redirect to login page
             window.location.href = '/?page=login';
             return;
         }
-        
-        // If logged in, proceed with checkout
-        // This will be implemented when we integrate with Square
-        this.showNotification('Checkout functionality coming soon!');
+        if (this.items.length === 0) {
+            this.showNotification('Your cart is empty!');
+            return;
+        }
+        const customerId = user.id;
+        const productIds = this.items.map(item => item.id);
+        const quantities = this.items.map(item => item.quantity);
+        const status = 'Pending';
+        const date = new Date().toISOString().slice(0, 10);
+        const apiBase = 'https://whimsicalfrog.us';
+        try {
+            const response = await fetch(apiBase + '/api/add-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId, productIds, quantities, status, date, paymentMethod })
+            });
+            const data = await response.json();
+            if (data.success) {
+                this.showNotification('Order placed successfully!');
+                this.clearCart();
+                setTimeout(() => { window.location.href = '/?page=orders'; }, 1500);
+            } else {
+                const msg = data.error || 'Unknown error';
+                this.showNotification('Order creation failed: ' + msg);
+            }
+        } catch (error) {
+            this.showNotification('Checkout failed: ' + error.message);
+        }
     }
 }
 

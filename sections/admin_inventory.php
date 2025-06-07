@@ -8,16 +8,20 @@ if (!isset($user['role']) || $user['role'] !== 'Admin') {
     exit;
 }
 
-$products = fetchData('products');
-$inventory = fetchData('inventory');
+// Fetch products and inventory data from Node API (MySQL)
+$apiBase = 'https://whimsicalfrog.us';
+$productsJson = @file_get_contents($apiBase . '/api/products');
+$products = $productsJson ? json_decode($productsJson, true) : [];
+$inventoryJson = @file_get_contents($apiBase . '/api/inventory');
+$inventory = $inventoryJson ? json_decode($inventoryJson, true) : [];
 
 // Get unique product types for dropdown
 $productTypes = [];
 if ($products) {
     $productData = array_slice($products, 1); // Skip header row
     foreach ($productData as $product) {
-        if (!in_array($product[2], $productTypes)) {
-            $productTypes[] = $product[2];
+        if (!in_array($product['productType'], $productTypes)) {
+            $productTypes[] = $product['productType'];
         }
     }
 }
@@ -28,7 +32,7 @@ $inventoryByProduct = [];
 if ($inventory) {
     $inventoryData = array_slice($inventory, 1); // Skip header row
     foreach ($inventoryData as $item) {
-        $productId = $item[1];
+        $productId = $item['productId'];
         if (!isset($inventoryByProduct[$productId])) {
             $inventoryByProduct[$productId] = [];
         }
@@ -36,6 +40,15 @@ if ($inventory) {
     }
 }
 ?>
+<style>
+  .admin-data-label {
+    color: #222 !important;
+  }
+  .admin-data-value {
+    color: #c00 !important;
+    font-weight: bold;
+  }
+</style>
 <section id="adminInventoryPage" class="p-6 bg-white rounded-lg shadow-lg">
     <div class="flex justify-between items-center mb-8">
         <h2 class="text-4xl font-merienda text-[#556B2F]">Inventory Management</h2>
@@ -48,63 +61,43 @@ if ($inventory) {
     <div class="grid grid-cols-1 gap-8">
         <?php if ($products): ?>
             <?php foreach (array_slice($products, 1) as $product): ?>
-                <div class="bg-gray-100 p-6 rounded-lg shadow" data-product-id="<?php echo htmlspecialchars($product[0]); ?>">
+                <div class="bg-gray-100 p-6 rounded-lg shadow" data-product-id="<?php echo htmlspecialchars($product['id']); ?>">
                     <div class="flex flex-col md:flex-row gap-6">
                         <!-- Product Image -->
                         <div class="w-full md:w-1/3">
                             <div class="relative">
-                                <img src="<?php echo htmlspecialchars($product[8] ?? 'images/placeholder.png'); ?>" 
-                                     alt="<?php echo htmlspecialchars($product[1]); ?>" 
+                                <img src="<?php echo htmlspecialchars($product['image'] ?? 'images/placeholder.png'); ?>" 
+                                     alt="<?php echo htmlspecialchars($product['name']); ?>" 
                                      class="w-full h-48 object-cover rounded-md">
-                                <button onclick="updateProductImage('<?php echo htmlspecialchars($product[0]); ?>')" 
-                                        class="absolute bottom-2 right-2 bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-1 px-3 rounded-md text-sm">
-                                    Change Image
-                                </button>
                             </div>
+                            <button onclick="updateProductImage('<?php echo htmlspecialchars($product['id']); ?>')" 
+                                    class="mt-2 bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-1 px-3 rounded-md text-sm">
+                                Change Image
+                            </button>
                         </div>
 
                         <!-- Product Details -->
                         <div class="w-full md:w-2/3">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Product Name</label>
-                                    <input type="text" 
-                                           value="<?php echo htmlspecialchars($product[1]); ?>" 
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                           onchange="updateProductField('<?php echo htmlspecialchars($product[0]); ?>', 'ProductName', this.value)">
+                                    <span class="admin-data-label">Product Name</span>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['name']); ?></span>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Base Price</label>
-                                    <input type="number" 
-                                           value="<?php echo htmlspecialchars($product[3]); ?>" 
-                                           step="0.01"
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                           onchange="updateProductField('<?php echo htmlspecialchars($product[0]); ?>', 'BasePrice', this.value)">
+                                    <span class="admin-data-label">Base Price</span>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['basePrice']); ?></span>
                                 </div>
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">Description</label>
-                                    <textarea class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                              rows="2"
-                                              onchange="updateProductField('<?php echo htmlspecialchars($product[0]); ?>', 'Description', this.value)"><?php echo htmlspecialchars($product[4]); ?></textarea>
+                                    <span class="admin-data-label">Description</span>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['description']); ?></span>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">Product Type</label>
-                                    <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                            onchange="updateProductField('<?php echo htmlspecialchars($product[0]); ?>', 'ProductType', this.value)">
-                                        <?php foreach ($productTypes as $type): ?>
-                                            <option value="<?php echo htmlspecialchars($type); ?>" 
-                                                    <?php echo $product[2] === $type ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($type); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <span class="admin-data-label">Product Type</span>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['productType']); ?></span>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">SKU Base</label>
-                                    <input type="text" 
-                                           value="<?php echo htmlspecialchars($product[5]); ?>" 
-                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                           onchange="updateProductField('<?php echo htmlspecialchars($product[0]); ?>', 'DefaultSKU_Base', this.value)">
+                                    <span class="admin-data-label">SKU Base</span>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['defaultSKU_Base']); ?></span>
                                 </div>
                             </div>
                         </div>
@@ -115,56 +108,41 @@ if ($inventory) {
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-medium">Inventory Items</h3>
                             <form class="add-inventory-form">
-                                <input type="hidden" name="productId" value="<?php echo $product[0]; ?>">
-                                <input type="hidden" name="productName" value="<?php echo $product[1]; ?>">
+                                <input type="hidden" name="productId" value="<?php echo $product['id']; ?>">
+                                <input type="hidden" name="productName" value="<?php echo $product['name']; ?>">
                                 <button type="submit" class="bg-[#6B8E23] text-white px-4 py-2 rounded hover:bg-[#556B2F]">
                                     Add Inventory Item
                                 </button>
                             </form>
                         </div>
                         <div class="grid grid-cols-1 gap-4">
-                            <?php if (isset($inventoryByProduct[$product[0]])): ?>
-                                <?php foreach ($inventoryByProduct[$product[0]] as $item): ?>
-                                    <div class="bg-white p-4 rounded-md shadow" data-inventory-id="<?php echo htmlspecialchars($item[0]); ?>">
+                            <?php if (isset($inventoryByProduct[$product['id']])): ?>
+                                <?php foreach ($inventoryByProduct[$product['id']] as $item): ?>
+                                    <div class="bg-white p-4 rounded-md shadow" data-inventory-id="<?php echo htmlspecialchars($item['id']); ?>">
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700">Item Name</label>
-                                                <input type="text" 
-                                                       value="<?php echo htmlspecialchars($item[2]); ?>" 
-                                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                                       onchange="updateInventoryField('<?php echo htmlspecialchars($item[0]); ?>', 'ProductName', this.value)">
+                                                <span class="admin-data-label">Item Name</span>
+                                                <span class="admin-data-value"><?php echo htmlspecialchars($item['name']); ?></span>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700">Stock Level</label>
-                                                <input type="number" 
-                                                       value="<?php echo htmlspecialchars($item[6]); ?>" 
-                                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                                       onchange="updateInventoryField('<?php echo htmlspecialchars($item[0]); ?>', 'StockLevel', this.value)">
+                                                <span class="admin-data-label">Stock Level</span>
+                                                <span class="admin-data-value"><?php echo htmlspecialchars($item['stockLevel']); ?></span>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700">Reorder Point</label>
-                                                <input type="number" 
-                                                       value="<?php echo htmlspecialchars($item[7]); ?>" 
-                                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                                       onchange="updateInventoryField('<?php echo htmlspecialchars($item[0]); ?>', 'ReorderPoint', this.value)">
+                                                <span class="admin-data-label">Reorder Point</span>
+                                                <span class="admin-data-value"><?php echo htmlspecialchars($item['reorderPoint']); ?></span>
                                             </div>
                                             <div class="md:col-span-2">
-                                                <label class="block text-sm font-medium text-gray-700">Description</label>
-                                                <input type="text" 
-                                                       value="<?php echo htmlspecialchars($item[4]); ?>" 
-                                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                                       onchange="updateInventoryField('<?php echo htmlspecialchars($item[0]); ?>', 'Description', this.value)">
+                                                <span class="admin-data-label">Description</span>
+                                                <span class="admin-data-value"><?php echo htmlspecialchars($item['description']); ?></span>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700">SKU</label>
-                                                <input type="text" 
-                                                       value="<?php echo htmlspecialchars($item[5]); ?>" 
-                                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#6B8E23] focus:ring-[#6B8E23]"
-                                                       onchange="updateInventoryField('<?php echo htmlspecialchars($item[0]); ?>', 'SKU', this.value)">
+                                                <span class="admin-data-label">SKU</span>
+                                                <span class="admin-data-value"><?php echo htmlspecialchars($item['sku']); ?></span>
                                             </div>
                                         </div>
                                         <div class="mt-4 flex justify-end">
-                                            <button onclick="deleteInventoryItem('<?php echo htmlspecialchars($item[0]); ?>')" 
+                                            <button onclick="deleteInventoryItem('<?php echo htmlspecialchars($item['id']); ?>')" 
                                                     class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-md text-sm">
                                                 Delete Item
                                             </button>
@@ -201,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Product management functions
 async function updateProductField(productId, field, value) {
     try {
-        const response = await fetch('http://localhost:3000/api/update-product', {
+        const response = await fetch('https://whimsicalfrog.us/api/update-product', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -235,9 +213,10 @@ async function updateProductImage(productId) {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('productId', productId);
+        formData.append('category', 'products');
         
         try {
-            const response = await fetch('http://localhost:3000/api/upload-image', {
+            const response = await fetch('https://whimsicalfrog.us/api/upload-image', {
                 method: 'POST',
                 body: formData
             });
@@ -247,9 +226,11 @@ async function updateProductImage(productId) {
             }
             
             const data = await response.json();
-            const imgElement = document.querySelector(`[data-product-id="${productId}"] img`);
-            imgElement.src = data.imageUrl;
-            
+            setTimeout(() => {
+                document.querySelectorAll(`[data-product-id=\"${productId}\"] img`).forEach(img => {
+                    img.src = data.image + '?v=' + Date.now();
+                });
+            }, 2000);
             showAlert('Image updated successfully', false);
         } catch (error) {
             showAlert(error.message);
@@ -262,7 +243,7 @@ async function updateProductImage(productId) {
 // Inventory management functions
 async function updateInventoryField(inventoryId, field, value) {
     try {
-        const response = await fetch('http://localhost:3000/api/update-inventory', {
+        const response = await fetch('https://whimsicalfrog.us/api/update-inventory', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -286,7 +267,7 @@ async function updateInventoryField(inventoryId, field, value) {
 
 async function addInventoryItem(productId, productName) {
     try {
-        const response = await fetch('http://localhost:3000/api/add-inventory', {
+        const response = await fetch('https://whimsicalfrog.us/api/add-inventory', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -326,7 +307,7 @@ async function deleteInventoryItem(inventoryId) {
     }
     
     try {
-        const response = await fetch('http://localhost:3000/api/delete-inventory', {
+        const response = await fetch('https://whimsicalfrog.us/api/delete-inventory', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

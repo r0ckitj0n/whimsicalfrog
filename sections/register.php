@@ -148,9 +148,9 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('registerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const firstName = document.getElementById('firstName').value;
-    const lastName = document.getElementById('lastName').value;
-    const username = document.getElementById('username').value;
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const username = document.getElementById('username').value.trim();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
@@ -178,8 +178,11 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         return;
     }
     
+    // Use correct API base depending on environment
+    const apiBase = 'https://whimsicalfrog.us';
+    const registerUrl = apiBase + '/api/register';
     try {
-        const response = await fetch('http://localhost:3000/api/register', {
+        const response = await fetch(registerUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

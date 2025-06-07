@@ -54,7 +54,7 @@
     .door-area:hover .door-sign {
         transform: scale(1.1);
     }
-
+    
     /* Welcome sign specific styles */
     .flex-grow picture {
         background: transparent;
@@ -79,41 +79,41 @@
 </style>
 
 <section id="mainRoomPage" class="p-2">
-    <!-- T-Shirts Door -->
+        <!-- T-Shirts Door -->
     <div class="door-area area-1" onclick="enterRoom('tshirts')">
         <picture class="block">
             <source srcset="images/sign_door_tshirts.webp" type="image/webp">
             <img src="images/sign_door_tshirts.png" alt="T-Shirts & Apparel" class="door-sign">
         </picture>
-        <div class="door-label">T-Shirts & Apparel</div>
-    </div>
-    
-    <!-- Tumblers Door -->
+            <div class="door-label">T-Shirts & Apparel</div>
+        </div>
+        
+        <!-- Tumblers Door -->
     <div class="door-area area-2" onclick="enterRoom('tumblers')">
         <picture class="block">
             <source srcset="images/sign_door_tumblers.webp" type="image/webp">
             <img src="images/sign_door_tumblers.png" alt="Tumblers & Drinkware" class="door-sign">
         </picture>
-        <div class="door-label">Tumblers & Drinkware</div>
-    </div>
-    
-    <!-- Artwork Door -->
+            <div class="door-label">Tumblers & Drinkware</div>
+        </div>
+        
+        <!-- Artwork Door -->
     <div class="door-area area-3" onclick="enterRoom('artwork')">
         <picture class="block">
             <source srcset="images/sign_door_artwork.webp" type="image/webp">
             <img src="images/sign_door_artwork.png" alt="Custom Artwork" class="door-sign">
         </picture>
-        <div class="door-label">Custom Artwork</div>
-    </div>
-    
-    <!-- Window Wraps Door -->
+            <div class="door-label">Custom Artwork</div>
+        </div>
+        
+        <!-- Window Wraps Door -->
     <div class="door-area area-4" onclick="enterRoom('windowwraps')">
         <picture class="block">
             <source srcset="images/sign_door_windowwraps.webp" type="image/webp">
             <img src="images/sign_door_windowwraps.png" alt="Window Wraps" class="door-sign">
         </picture>
-        <div class="door-label">Window Wraps</div>
-    </div>
+            <div class="door-label">Window Wraps</div>
+        </div>
     
     <!-- Sublimation Items Door -->
     <div class="door-area area-5" onclick="enterRoom('sublimation')">
@@ -150,11 +150,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get viewport dimensions - use full viewport
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        
+
         // Calculate the scale factor for the full-screen background
         const viewportRatio = viewportWidth / viewportHeight;
         const imageRatio = originalImageWidth / originalImageHeight;
-        
+
         let scale, offsetX, offsetY;
         
         // Calculate how the background image is displayed (cover)
@@ -191,4 +191,4 @@ document.addEventListener('DOMContentLoaded', function() {
     positionDoors();
     window.addEventListener('resize', positionDoors);
 });
-</script>
+</script> 

@@ -1,0 +1,8 @@
+ProductID,ProductName,ProductType,BasePrice,Description,DefaultSKU_Base,Supplier,Notes,Image
+P001,Test Product,T-Shirts,24.99,High-quality cotton t-shirt for customization,TS-BASE,Supplier A,"Available sizes: S, M, L, XL, XXL; Various colors",images/frog_tshirt_1.png
+P002,Custom Tumbler (20oz),Tumblers,19.99,Insulated 20oz tumbler for sublimation,TUM20-BASE,Supplier B,"Stainless steel, includes lid and straw",images/frog_tumbler_1.png
+P003,Custom Tumbler (30oz),Tumblers,24.99,Insulated 30oz tumbler for sublimation,TUM30-BASE,Supplier B,"Stainless steel, includes lid and straw",images/frog_tumbler_2.png
+P004,Custom Artwork Print,Artwork,49.99,Prints of custom digital or hand-drawn artwork,ART-PRNT-BASE,Supplier C,"Sizes: 8x10, 11x14, 16x20; Paper/Canvas",images/frog_painter_1.png
+P005,"Sublimation Blank Item (e.g., Mug)",Sublimation,14.99,Blank items ready for sublimation transfer,SUB-MUG-BASE,Supplier B,Specify blank type in description,images/frog_mug.png
+P006,Custom Window Wrap,Window Wraps,39.99,"Vinyl window wraps, custom sizes and designs",WW-BASE,Supplier D,Per sq ft pricing may apply,images/frog_windowwrap_1.png
+P007,New Test Thumbs,Test,500.00,Description pending,TEST-BASE,TBD,New product group,images/placeholder.png

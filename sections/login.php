@@ -36,8 +36,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const password = document.getElementById('password').value;
     const errorMessage = document.getElementById('errorMessage');
     
+    // Use correct API base depending on environment
+    const apiBase = 'https://whimsicalfrog.us';
+    const loginUrl = apiBase + '/api/login';
     try {
-        const response = await fetch('http://localhost:3000/api/login', {
+        const response = await fetch(loginUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -60,6 +63,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'same-origin',
             body: JSON.stringify(data)
         });
         

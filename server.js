@@ -1,8 +1,11 @@
 const express = require('express');
-const { google } = require('googleapis');
 const cors = require('cors');
 const axios = require('axios');
 require('dotenv').config();
+const mysql = require('mysql2/promise');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const port = 3000;
@@ -10,243 +13,99 @@ const port = 3000;
 // reCAPTCHA configuration
 const RECAPTCHA_SECRET_KEY = '6LdqsUUrAAAAABI48QuguVOtB3PqD4uiCQT36MZ9';
 
+// MySQL connection config
+const isProduction = process.env.NODE_ENV === 'production' || process.env.HOSTNAME === 'whimsicalfrog.us';
+
+const dbConfig = isProduction ? {
+  host: process.env.MYSQL_HOST_REMOTE || 'db5017975223.hosting-data.io',
+  user: process.env.MYSQL_USER_REMOTE || 'dbu2826619',
+  password: process.env.MYSQL_PASS_REMOTE || 'Palz2516',
+  database: process.env.MYSQL_DB_REMOTE || 'dbs14295502',
+  port: 3306
+} : {
+  host: process.env.MYSQL_HOST_LOCAL || 'localhost',
+  user: process.env.MYSQL_USER_LOCAL || 'root',
+  password: process.env.MYSQL_PASS_LOCAL || 'Palz2516',
+  database: process.env.MYSQL_DB_LOCAL || 'whimsicalfrog',
+  port: 3306
+};
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.')); 
 
-// Google Sheets setup
-const auth = new google.auth.GoogleAuth({
-    keyFile: 'credentials.json',
-    scopes: [
-        'https://www.googleapis.com/auth/spreadsheets.readonly',
-        'https://www.googleapis.com/auth/spreadsheets'
-    ],
-});
-
-// Test data for each tab
-const testData = [
-    ['ProductID', 'ProductName', 'ProductType', 'BasePrice', 'Description', 'DefaultSKU_Base', 'Supplier', 'Notes', 'Image'],
-    ['P001', 'Custom T-Shirt', 'T-Shirts', '24.99', 'High-quality cotton t-shirt for customization', 'TS-BASE', 'Supplier A', 'Available sizes: S, M, L, XL, XXL; Various colors', 'images/frog_tshirt_1.png'],
-    ['P002', 'Custom Tumbler (20oz)', 'Tumblers', '19.99', 'Insulated 20oz tumbler for sublimation', 'TUM20-BASE', 'Supplier B', 'Stainless steel, includes lid and straw', 'images/frog_tumbler_1.png'],
-    ['P003', 'Custom Tumbler (30oz)', 'Tumblers', '24.99', 'Insulated 30oz tumbler for sublimation', 'TUM30-BASE', 'Supplier B', 'Stainless steel, includes lid and straw', 'images/frog_tumbler_2.png'],
-    ['P004', 'Custom Artwork Print', 'Artwork', '49.99', 'Prints of custom digital or hand-drawn artwork', 'ART-PRNT-BASE', 'Supplier C', 'Sizes: 8x10, 11x14, 16x20; Paper/Canvas', 'images/frog_painter_1.png'],
-    ['P005', 'Sublimation Blank Item (e.g., Mug)', 'Sublimation', '14.99', 'Blank items ready for sublimation transfer', 'SUB-MUG-BASE', 'Supplier B', 'Specify blank type in description', 'images/frog_mug.png'],
-    ['P006', 'Custom Window Wrap', 'Window Wraps', '39.99', 'Vinyl window wraps, custom sizes and designs', 'WW-BASE', 'Supplier D', 'Per sq ft pricing may apply', 'images/frog_windowwrap_1.png'],
-    ['U001', 'admin', 'admin123', 'admin@whimsicalfrog.com', 'Admin', 'Admin', 'Admin', 'User'],
-    ['U002', 'customer', 'customer123', 'customer@example.com', 'Customer', 'Customer', 'Customer', 'User'],
-    ['I001', 'P001', 'T-Shirt, White, S', 'T-Shirts', 'Color: White, Size: S', 'TS-WHT-S', '50', '10', 'images/frog_tshirt_2.png'],
-    ['I002', 'P002', 'Tumbler, 20oz, White', 'Tumblers', 'Color: White (for sublimation)', 'TUM20-WHT', '30', '5', 'images/frog_tumbler_3.png'],
-    ['I003', 'P004', 'Artwork Print Blank Canvas 8x10', 'Artwork', 'Material: Canvas, Size: 8x10', 'ART-CAN-810', '20', '5', 'images/frog_painter_2.png'],
-    ['I004', 'P006', 'Window Wrap, Small Business', 'Window Wraps', 'Size: 3x4 ft', 'WW-SB-34', '15', '3', 'images/frog_windowwrap_2.png']
-];
-
-// Function to populate spreadsheet with test data
-async function populateSpreadsheet() {
-    try {
-        console.log('Starting spreadsheet population...');
-        
-        const sheets = google.sheets({ version: 'v4', auth });
-        
-        // Clear existing data from all sheets
-        const sheetNames = ['Products', 'Users', 'Inventory', 'Sales_Orders', 'Customer_Information', 'Order_Items'];
-        for (const sheet of sheetNames) {
-            try {
-                await sheets.spreadsheets.values.clear({
-                    spreadsheetId: process.env.SPREADSHEET_ID,
-                    range: `${sheet}!A1:Z1000`
-                });
-                console.log(`Cleared data from ${sheet} sheet`);
-            } catch (error) {
-                console.error(`Error clearing ${sheet} sheet:`, error);
+// Multer setup for image uploads (store in images/<category>)
+const allowedCategories = ['products', 'artwork', 'tumblers', 'tshirts', 'sublimation', 'windowwraps', 'avatars', 'misc'];
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: function (req, file, cb) {
+            // Always save to a temp folder first
+            const dir = path.join(__dirname, 'images', 'temp');
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
             }
+            cb(null, dir);
+        },
+        filename: function (req, file, cb) {
+            // Use a unique temp name
+            const ext = path.extname(file.originalname);
+            cb(null, `${Date.now()}_${Math.round(Math.random() * 1E9)}${ext}`);
         }
-
-        // Update Products sheet
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'Products!A1',
-            valueInputOption: 'RAW',
-            resource: {
-                values: testData.slice(0, 7) // Headers + Products
-            }
-        });
-        console.log('Updated Products sheet');
-
-        // Update Users sheet
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'Users!A1',
-            valueInputOption: 'RAW',
-            resource: {
-                values: [
-                    ['UserID', 'Username', 'Password', 'Email', 'Role', 'RoleType', 'FirstName', 'LastName'],
-                    ...testData.slice(7, 9) // Users data
-                ]
-            }
-        });
-        console.log('Updated Users sheet');
-
-        // Update Inventory sheet
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'Inventory!A1',
-            valueInputOption: 'RAW',
-            resource: {
-                values: [
-                    ['InventoryID', 'ProductID', 'ProductName', 'Category', 'Description', 'SKU', 'StockLevel', 'ReorderPoint', 'ImageURL'],
-                    ...testData.slice(9) // Inventory data
-                ]
-            }
-        });
-        console.log('Updated Inventory sheet');
-
-        console.log('Spreadsheet population completed successfully');
-    } catch (error) {
-        console.error('Error populating spreadsheet:', error);
-        throw error;
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
     }
+});
+
+function categoryPrefix(body) {
+    if (body.category === 'products') return 'product_';
+    if (body.category === 'artwork') return 'artwork_';
+    if (body.category === 'tumblers') return 'tumbler_';
+    if (body.category === 'tshirts') return 'tshirt_';
+    if (body.category === 'sublimation') return 'sublimation_';
+    if (body.category === 'windowwraps') return 'windowwrap_';
+    if (body.category === 'avatars') return 'avatar_';
+    return 'misc_';
 }
 
-// Helper function to fetch data from a specific sheet
-async function fetchSheet(tabName) {
-    const sheets = google.sheets({ version: 'v4', auth });
-    const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.SPREADSHEET_ID,
-        range: `${tabName}!A1:Z1000`,
-    });
-    return response.data.values;
+// --- Simple admin authentication middleware (replace with real auth as needed) ---
+function isAdminAuthenticated(req, res, next) {
+    // Placeholder: check for a custom header (replace with real session/JWT check)
+    if (req.headers['x-admin-auth'] === 'secret-admin-key') {
+        return next();
+    }
+    return res.status(401).json({ error: 'Unauthorized: Admin access required' });
 }
 
-// Route to fetch spreadsheet data
-app.get('/api/sheet-data', async (req, res) => {
-    try {
-        console.log('Attempting to fetch spreadsheet data...');
-        console.log('Using spreadsheet ID:', process.env.SPREADSHEET_ID);
-        
-        const sheets = google.sheets({ version: 'v4', auth });
-        console.log('Google Sheets client created successfully');
-        
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'A1:Z1000', // Adjust range as needed
-        });
-        
-        console.log('Data fetched successfully:', response.data.values ? 'Data received' : 'No data');
-        res.json(response.data.values);
-    } catch (error) {
-        console.error('Detailed error:', error);
-        console.error('Error stack:', error.stack);
-        res.status(500).json({ 
-            error: 'Failed to fetch sheet data',
-            details: error.message 
-        });
-    }
-});
-
-// Route to populate spreadsheet with test data
-app.post('/api/populate-test-data', async (req, res) => {
-    try {
-        await populateSpreadsheet();
-        res.json({ message: 'Test data added successfully' });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to add test data' });
-    }
-});
-
-// Endpoint for each tab
-app.get('/api/users', async (req, res) => {
-    try {
-        const data = await fetchSheet('Users');
-        res.json(data);
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to fetch Users', details: error.message });
-    }
-});
-
-app.get('/api/products', async (req, res) => {
-    try {
-        const data = await fetchSheet('Products');
-        res.json(data);
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to fetch Products', details: error.message });
-    }
-});
-
-app.get('/api/inventory', async (req, res) => {
-    try {
-        const data = await fetchSheet('Inventory');
-        res.json(data);
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to fetch Inventory', details: error.message });
-    }
-});
-
-app.get('/api/sales_orders', async (req, res) => {
-    try {
-        const data = await fetchSheet('Sales_Orders');
-        res.json(data);
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to fetch Sales_Orders', details: error.message });
-    }
-});
-
-app.get('/api/customer_information', async (req, res) => {
-    try {
-        const data = await fetchSheet('Customer_Information');
-        res.json(data);
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to fetch Customer_Information', details: error.message });
-    }
-});
-
-app.get('/api/order_items', async (req, res) => {
-    try {
-        const data = await fetchSheet('Order_Items');
-        res.json(data);
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to fetch Order_Items', details: error.message });
-    }
-});
-
-// Login endpoint
+// Example: Login endpoint (MySQL version)
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
         if (!username || !password) {
             return res.status(400).json({ error: 'Username and password are required' });
         }
-
-        const users = await fetchSheet('Users');
-        if (!users || users.length < 2) { // Check if we have at least headers and one user
-            return res.status(500).json({ error: 'No users found in database' });
-        }
-
-        // Skip header row and find matching user
-        const user = users.slice(1).find(user => 
-            user[1] === username && user[2] === password
+        const connection = await mysql.createConnection(dbConfig);
+        const [rows] = await connection.execute(
+            'SELECT * FROM users WHERE username = ? AND password = ?',
+            [username, password]
         );
-
-        if (!user) {
+        await connection.end();
+        if (rows.length === 0) {
             return res.status(401).json({ error: 'Invalid username or password' });
         }
-
-        // Return user data (excluding password)
+        const user = rows[0];
         res.json({
-            userId: user[0],
-            username: user[1],
-            email: user[3],
-            role: user[4],
-            roleType: user[5],
-            firstName: user[6] || '',
-            lastName: user[7] || ''
+            userId: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            roleType: user.roleType,
+            firstName: user.firstName || '',
+            lastName: user.lastName || ''
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -254,378 +113,57 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Add inventory item endpoint
-app.post('/api/add-inventory', async (req, res) => {
-    try {
-        const { productId, productName, description, sku, stockLevel, reorderPoint } = req.body;
-        
-        if (!productId) {
-            return res.status(400).json({ error: 'Product ID is required' });
-        }
-
-        const sheets = google.sheets({ version: 'v4', auth });
-        
-        const inventory = await fetchSheet('Inventory');
-        const nextId = `I${String(inventory.length).padStart(3, '0')}`;
-        
-        const products = await fetchSheet('Products');
-        const product = products.find(p => p[0] === productId);
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
-        // Prepare the new inventory item
-        const newItem = [
-            nextId,                    // InventoryID
-            productId,                 // ProductID
-            productName,               // ProductName
-            product[2],                // Category (from product)
-            description,               // Description
-            sku,                       // SKU
-            stockLevel.toString(),     // StockLevel
-            reorderPoint.toString(),   // ReorderPoint
-            product[8]                 // ImageURL (from product)
-        ];
-
-        // Append the new item to the Inventory sheet
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'Inventory!A1',
-            valueInputOption: 'RAW',
-            resource: {
-                values: [newItem]
-            }
-        });
-
-        res.json({ message: 'Inventory item added successfully', item: newItem });
-    } catch (error) {
-        console.error('Error adding inventory item:', error);
-        res.status(500).json({ error: 'Failed to add inventory item', details: error.message });
-    }
-});
-
-app.post('/api/update-inventory', async (req, res) => {
-    try {
-        const { inventoryId, field, value } = req.body;
-        
-        if (!inventoryId || !field || value === undefined) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-
-        const sheets = google.sheets({ version: 'v4', auth });
-        const inventory = await fetchSheet('Inventory');
-        
-        // Find the row index for the inventory item
-        const rowIndex = inventory.findIndex(row => row[0] === inventoryId);
-        if (rowIndex === -1) {
-            return res.status(404).json({ error: 'Inventory item not found' });
-        }
-
-        // Map field names to column indices
-        const fieldMap = {
-            'ProductName': 2,
-            'Category': 3,
-            'Description': 4,
-            'SKU': 5,
-            'StockLevel': 6,
-            'ReorderPoint': 7,
-            'ImageURL': 8
-        };
-
-        const columnIndex = fieldMap[field];
-        if (columnIndex === undefined) {
-            return res.status(400).json({ error: 'Invalid field name' });
-        }
-
-        // Update the value in the spreadsheet
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: `Inventory!${String.fromCharCode(65 + columnIndex)}${rowIndex + 1}`,
-            valueInputOption: 'RAW',
-            resource: {
-                values: [[value]]
-            }
-        });
-
-        res.json({ message: 'Inventory updated successfully' });
-    } catch (error) {
-        console.error('Error updating inventory:', error);
-        res.status(500).json({ error: 'Failed to update inventory', details: error.message });
-    }
-});
-
-// Get all product groups (categories)
-app.get('/api/product-groups', async (req, res) => {
-    try {
-        const products = await fetchSheet('Products');
-        if (!products || products.length < 2) {
-            return res.json([]);
-        }
-
-        // Skip header row and get unique categories
-        const categories = [...new Set(products.slice(1).map(row => row[2]))];
-        res.json(categories);
-    } catch (error) {
-        console.error('Error fetching product groups:', error);
-        res.status(500).json({ error: 'Failed to fetch product groups', details: error.message });
-    }
-});
-
-// Add new product group
-app.post('/api/product-groups', async (req, res) => {
-    try {
-        const { name } = req.body;
-        if (!name) {
-            return res.status(400).json({ error: 'Group name is required' });
-        }
-
-        const products = await fetchSheet('Products');
-        if (!products || products.length < 2) {
-            return res.status(500).json({ error: 'No products found' });
-        }
-
-        // Check if group already exists
-        const categories = products.slice(1).map(row => row[2]);
-        if (categories.includes(name)) {
-            return res.status(400).json({ error: 'Product group already exists' });
-        }
-
-        // Add a placeholder product for the new group
-        const sheets = google.sheets({ version: 'v4', auth });
-        const nextId = `P${String(products.length).padStart(3, '0')}`;
-        
-        const newProduct = [
-            nextId,                    // ProductID
-            `New ${name} Product`,     // ProductName
-            name,                      // ProductType
-            '0.00',                    // BasePrice
-            'Description pending',      // Description
-            `${name.toUpperCase()}-BASE`, // DefaultSKU_Base
-            'TBD',                     // Supplier
-            'New product group',        // Notes
-            'images/placeholder.png'    // Image
-        ];
-
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'Products!A1',
-            valueInputOption: 'RAW',
-            resource: {
-                values: [newProduct]
-            }
-        });
-
-        res.json({ message: 'Product group added successfully', group: name });
-    } catch (error) {
-        console.error('Error adding product group:', error);
-        res.status(500).json({ error: 'Failed to add product group', details: error.message });
-    }
-});
-
-// Delete product group
-app.delete('/api/product-groups/:name', async (req, res) => {
-    try {
-        const { name } = req.params;
-        const products = await fetchSheet('Products');
-        
-        if (!products || products.length < 2) {
-            return res.status(500).json({ error: 'No products found' });
-        }
-
-        // Find all products in this group
-        const productsToDelete = products.slice(1).filter(row => row[2] === name);
-        if (productsToDelete.length === 0) {
-            return res.status(404).json({ error: 'Product group not found' });
-        }
-
-        // Delete all products in this group
-        const sheets = google.sheets({ version: 'v4', auth });
-        for (const product of productsToDelete) {
-            await sheets.spreadsheets.values.clear({
-                spreadsheetId: process.env.SPREADSHEET_ID,
-                range: `Products!A${products.indexOf(product) + 1}:I${products.indexOf(product) + 1}`
-            });
-        }
-
-        res.json({ message: 'Product group deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting product group:', error);
-        res.status(500).json({ error: 'Failed to delete product group', details: error.message });
-    }
-});
-
-// Update product group name
-app.put('/api/product-groups/:oldName', async (req, res) => {
-    try {
-        const { oldName } = req.params;
-        const { newName } = req.body;
-
-        if (!newName) {
-            return res.status(400).json({ error: 'New group name is required' });
-        }
-
-        const products = await fetchSheet('Products');
-        if (!products || products.length < 2) {
-            return res.status(500).json({ error: 'No products found' });
-        }
-
-        // Find all products in this group
-        const productsToUpdate = products.slice(1).filter(row => row[2] === oldName);
-        if (productsToUpdate.length === 0) {
-            return res.status(404).json({ error: 'Product group not found' });
-        }
-
-        // Update all products in this group
-        const sheets = google.sheets({ version: 'v4', auth });
-        for (const product of productsToUpdate) {
-            await sheets.spreadsheets.values.update({
-                spreadsheetId: process.env.SPREADSHEET_ID,
-                range: `Products!C${products.indexOf(product) + 1}`,
-                valueInputOption: 'RAW',
-                resource: {
-                    values: [[newName]]
-                }
-            });
-        }
-
-        res.json({ message: 'Product group updated successfully' });
-    } catch (error) {
-        console.error('Error updating product group:', error);
-        res.status(500).json({ error: 'Failed to update product group', details: error.message });
-    }
-});
-
-// Update product field
-app.post('/api/update-product', async (req, res) => {
-    try {
-        const { productId, field, value } = req.body;
-        
-        if (!productId || !field || value === undefined) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
-
-        const sheets = google.sheets({ version: 'v4', auth });
-        const products = await fetchSheet('Products');
-        
-        // Find the row index for the product
-        const rowIndex = products.findIndex(row => row[0] === productId);
-        if (rowIndex === -1) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
-        // Map field names to column indices
-        const fieldMap = {
-            'ProductName': 1,
-            'ProductType': 2,
-            'BasePrice': 3,
-            'Description': 4,
-            'DefaultSKU_Base': 5,
-            'Supplier': 6,
-            'Notes': 7,
-            'Image': 8
-        };
-
-        const columnIndex = fieldMap[field];
-        if (columnIndex === undefined) {
-            return res.status(400).json({ error: 'Invalid field name' });
-        }
-
-        // Update the value in the spreadsheet
-        await sheets.spreadsheets.values.update({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: `Products!${String.fromCharCode(65 + columnIndex)}${rowIndex + 1}`,
-            valueInputOption: 'RAW',
-            resource: {
-                values: [[value]]
-            }
-        });
-
-        res.json({ message: 'Product updated successfully' });
-    } catch (error) {
-        console.error('Error updating product:', error);
-        res.status(500).json({ error: 'Failed to update product', details: error.message });
-    }
-});
-
-// Registration endpoint with reCAPTCHA verification
+// Registration endpoint (MySQL version)
 app.post('/api/register', async (req, res) => {
     try {
-        const { 
-            firstName, 
-            lastName, 
-            username, 
-            email, 
-            password, 
+        const {
+            firstName,
+            lastName,
+            username,
+            email,
+            password,
             phoneNumber,
             addressLine1,
             addressLine2,
+            city,
             state,
-            zipCode,
-            recaptchaToken 
+            zipCode
         } = req.body;
-
-        // Verify reCAPTCHA
-        const recaptchaVerification = await axios.post(
-            'https://www.google.com/recaptcha/api/siteverify',
-            null,
-            {
-                params: {
-                    secret: RECAPTCHA_SECRET_KEY,
-                    response: recaptchaToken
-                }
-            }
-        );
-
-        if (!recaptchaVerification.data.success) {
-            console.error('reCAPTCHA verification failed:', recaptchaVerification.data);
-            return res.status(400).json({ error: 'reCAPTCHA verification failed' });
+        // Only require username, password, firstName, lastName
+        if (!username || !password || !firstName || !lastName) {
+            return res.status(400).json({ error: 'Missing required fields' });
         }
-
-        // Get the Users sheet
-        const sheets = google.sheets({ version: 'v4', auth });
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'Users!A1:Z1000',
-        });
-
-        const users = response.data.values || [];
-        
+        const connection = await mysql.createConnection(dbConfig);
         // Check if username or email already exists
-        const existingUser = users.find(user => 
-            user[1] === username || user[3] === email
+        const [existing] = await connection.execute(
+            'SELECT * FROM users WHERE username = ? OR email = ?',
+            [username, email]
         );
-
-        if (existingUser) {
+        if (existing.length > 0) {
+            await connection.end();
             return res.status(400).json({ error: 'Username or email already exists' });
         }
-
-        // Generate new user ID
-        const newUserId = `U${String(users.length).padStart(3, '0')}`;
-
-        // Add new user
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: 'Users!A1',
-            valueInputOption: 'RAW',
-            resource: {
-                values: [[
-                    newUserId, 
-                    username, 
-                    password, 
-                    email, 
-                    'Customer', 
-                    'Customer',
-                    firstName,
-                    lastName,
-                    phoneNumber,
-                    addressLine1,
-                    addressLine2 || '',
-                    state,
-                    zipCode
-                ]]
-            }
-        });
-
+        // Insert new user
+        await connection.execute(
+            'INSERT INTO users (id, username, password, email, role, roleType, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                'U' + Math.random().toString(36).substr(2, 8),
+                username,
+                password,
+                email || '',
+                'Customer',
+                'Customer',
+                firstName,
+                lastName,
+                phoneNumber || '',
+                addressLine1 || '',
+                addressLine2 || '',
+                city || '',
+                state || '',
+                zipCode || ''
+            ]
+        );
+        await connection.end();
         res.json({ message: 'Registration successful' });
     } catch (error) {
         console.error('Registration error:', error);
@@ -633,10 +171,182 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+// Get all users (customers and admins) with snake_case fields for PHP compatibility
+app.get('/api/users', async (req, res) => {
+    try {
+        const connection = await mysql.createConnection(dbConfig);
+        const [rows] = await connection.execute('SELECT * FROM users');
+        await connection.end();
+        // Map camelCase to snake_case for PHP compatibility
+        const users = rows.map(user => ({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            roleType: user.roleType,
+            first_name: user.firstName || '',
+            last_name: user.lastName || '',
+            phone_number: user.phoneNumber || '',
+            address_line1: user.addressLine1 || '',
+            address_line2: user.addressLine2 || '',
+            city: user.city || '',
+            state: user.state || '',
+            zip_code: user.zipCode || ''
+        }));
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Failed to fetch users', details: error.message });
+    }
+});
+
+// Improved Update user details endpoint
+app.post('/api/update-user', async (req, res) => {
+    try {
+        // Accept both camelCase and snake_case
+        const body = req.body;
+        const userId = body.userId || body.id;
+        console.log('Update user request body:', body);
+        if (!userId) {
+            return res.status(400).json({ error: 'Missing userId' });
+        }
+        // Build update query dynamically for only provided fields
+        const fieldMap = {
+            firstName: body.firstName ?? body.first_name,
+            lastName: body.lastName ?? body.last_name,
+            email: body.email,
+            username: body.username,
+            password: body.password,
+            phoneNumber: body.phoneNumber ?? body.phone_number,
+            addressLine1: body.addressLine1 ?? body.address_line1,
+            addressLine2: body.addressLine2 ?? body.address_line2,
+            city: body.city,
+            state: body.state,
+            zipCode: body.zipCode ?? body.zip_code,
+            role: body.role
+        };
+        let fields = [];
+        let values = [];
+        for (const [key, value] of Object.entries(fieldMap)) {
+            if (typeof value !== 'undefined' && value !== null) {
+                fields.push(`${key} = ?`);
+                values.push(value);
+            }
+        }
+        console.log('Fields to update:', fields);
+        console.log('Values:', values);
+        if (fields.length === 0) {
+            return res.status(400).json({ error: 'No fields to update' });
+        }
+        values.push(userId);
+        const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
+        console.log('SQL:', sql);
+        const connection = await mysql.createConnection(dbConfig);
+        const [result] = await connection.execute(sql, values);
+        await connection.end();
+        if (result.affectedRows > 0) {
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ error: 'User not found or no changes made' });
+        }
+    } catch (error) {
+        console.error('Update user error:', error);
+        res.status(500).json({ error: 'Failed to update user', details: error.message });
+    }
+});
+
+// --- GET all products endpoint ---
+app.get('/api/products', async (req, res) => {
+    try {
+        const connection = await mysql.createConnection(dbConfig);
+        const [rows] = await connection.execute('SELECT * FROM products');
+        await connection.end();
+        // Add a 'price' field for frontend compatibility (alias for basePrice)
+        const products = rows.map(product => ({
+            ...product,
+            price: product.basePrice
+        }));
+        res.json(products);
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ error: 'Failed to fetch products', details: error.message });
+    }
+});
+
+// --- Upload image endpoint (category-based, secure file type/size, no auth) ---
+app.post('/api/upload-image', upload.single('image'), async (req, res) => {
+    console.log('--- /api/upload-image called ---');
+    console.log('req.body:', req.body);
+    console.log('req.file:', req.file);
+    let category = (req.body.category || 'misc').toLowerCase().trim();
+    const bodyKeys = Object.keys(req.body);
+    console.log('req.body keys:', bodyKeys);
+    // Robust productId check (case-insensitive, all variants)
+    let productId = req.body.productId || req.body.ProductId || req.body.PRODUCTID || req.body['productid'] || req.body['PRODUCTID'] || null;
+    let id = productId || req.body.artworkId || req.body.tumblerId || req.body.tshirtId || req.body.sublimationId || req.body.windowwrapId || req.body.userId || req.body.miscId || 'unknown';
+    console.log('Category:', category, 'ID:', id);
+    try {
+        if (!id) {
+            console.error('Missing ID for category:', category);
+            return res.status(400).json({ error: 'Missing ID for category' });
+        }
+        if (!req.file) {
+            console.error('Missing image file');
+            return res.status(400).json({ error: 'Missing image file' });
+        }
+        const ext = path.extname(req.file.originalname);
+        const destDir = path.join(__dirname, 'images', category);
+        if (!fs.existsSync(destDir)) {
+            fs.mkdirSync(destDir, { recursive: true });
+        }
+        let destFilename;
+        if (productId) {
+            // Fetch product name from DB for filename
+            const connection = await mysql.createConnection(dbConfig);
+            const [rows] = await connection.execute('SELECT name FROM products WHERE id = ?', [id]);
+            let productName = rows.length > 0 ? rows[0].name : 'unknown';
+            await connection.end();
+            // Sanitize product name for filename
+            const sanitizedProductName = productName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            destFilename = `product_${sanitizedProductName}${ext}`;
+            console.log('Product name for image:', productName);
+            console.log('Sanitized filename:', destFilename);
+        } else {
+            destFilename = `product_unknown${ext}`;
+            console.error('No productId found in req.body, fallback filename used:', destFilename);
+        }
+        console.log('Final destFilename:', destFilename);
+        const destPath = path.join(destDir, destFilename);
+        fs.renameSync(req.file.path, destPath);
+        const imagePath = `images/${category}/${destFilename}`;
+        console.log('Final imagePath for DB:', imagePath);
+        // Update the correct table/field in DB based on category
+        const connection = await mysql.createConnection(dbConfig);
+        if (category === 'products' && productId) {
+            await connection.execute('UPDATE products SET image = ? WHERE id = ?', [imagePath, id]);
+        } else if (category === 'artwork' && req.body.artworkId) {
+            await connection.execute('UPDATE artwork SET image = ? WHERE id = ?', [imagePath, id]);
+        } // Add more categories as needed
+        await connection.end();
+        console.log('Image uploaded and DB updated:', imagePath);
+        res.json({ success: true, image: imagePath });
+    } catch (error) {
+        let msg = error.message || 'Failed to upload image';
+        console.error('Image upload error:', msg, error);
+        if (msg.includes('Only image files are allowed')) {
+            return res.status(400).json({ error: msg });
+        }
+        if (msg.includes('File too large')) {
+            return res.status(400).json({ error: 'File too large (max 5MB)' });
+        }
+        res.status(500).json({ error: 'Failed to upload image', details: msg });
+    }
+});
+
+// ...
+// Add other endpoints here, all using MySQL only
+// ...
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
-    console.log('Environment variables loaded:', {
-        SPREADSHEET_ID: process.env.SPREADSHEET_ID ? 'Set' : 'Not set',
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set'
-    });
 });

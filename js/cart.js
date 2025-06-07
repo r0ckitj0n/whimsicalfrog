@@ -125,6 +125,10 @@ class ShoppingCart {
             return;
         }
 
+        const subtotal = this.getTotal();
+        const salesTax = +(subtotal * 0.08).toFixed(2);
+        const total = +(subtotal + salesTax).toFixed(2);
+
         let html = `
             <div class="space-y-4">
                 ${this.items.map(item => `
@@ -154,8 +158,16 @@ class ShoppingCart {
             </div>
             <div class="mt-6 p-4 bg-gray-50 rounded-lg">
                 <div class="flex justify-between text-lg font-semibold">
+                    <span>Subtotal:</span>
+                    <span>$${subtotal.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between text-lg font-semibold">
+                    <span>Sales Tax (8%):</span>
+                    <span>$${salesTax.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between text-lg font-semibold">
                     <span>Total:</span>
-                    <span>$${this.getTotal().toFixed(2)}</span>
+                    <span>$${total.toFixed(2)}</span>
                 </div>
                 <button onclick="cart.checkout()" 
                         class="w-full mt-4 bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded">
@@ -180,7 +192,10 @@ class ShoppingCart {
         modal.id = 'paymentMethodModal';
         modal.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50';
         modal.innerHTML = `
-            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative" style="padding-top: 60px;">
+                <a href="/?page=main_room" class="back-button text-[#556B2F]" style="position:absolute;top:16px;left:16px;background:rgba(107,142,35,0.9);color:white;padding:8px 14px;border-radius:25px;text-decoration:none;font-weight:bold;transition:all 0.3s ease;z-index:1000;cursor:pointer;pointer-events:auto;">
+                    ← Back to Main Room
+                </a>
                 <button id="closePaymentMethodModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
                 <h2 class="text-lg font-bold mb-4">Select Payment Method</h2>
                 <form id="paymentMethodForm">
@@ -226,11 +241,14 @@ class ShoppingCart {
         const status = 'Pending';
         const date = new Date().toISOString().slice(0, 10);
         const apiBase = 'https://whimsicalfrog.us';
+        const subtotal = this.getTotal();
+        const salesTax = +(subtotal * 0.08).toFixed(2);
+        const total = +(subtotal + salesTax).toFixed(2);
         try {
             const response = await fetch(apiBase + '/api/add-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ customerId, productIds, quantities, status, date, paymentMethod })
+                body: JSON.stringify({ customerId, productIds, quantities, status, date, paymentMethod, subtotal, salesTax, total })
             });
             const data = await response.json();
             if (data.success) {

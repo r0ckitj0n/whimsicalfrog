@@ -29,6 +29,7 @@
 </section>
 
 <script>
+const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://whimsicalfrog.us';
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -36,8 +37,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const password = document.getElementById('password').value;
     const errorMessage = document.getElementById('errorMessage');
     
-    // Use correct API base depending on environment
-    const apiBase = 'https://whimsicalfrog.us';
     const loginUrl = apiBase + '/api/login';
     try {
         const response = await fetch(loginUrl, {
@@ -80,7 +79,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 window.location.href = '/?page=shop';
             }
         }
-        
     } catch (error) {
         errorMessage.textContent = error.message;
         errorMessage.classList.remove('hidden');

@@ -109,7 +109,7 @@ import_csv(
     function($row) {
         if (count($row) < 9) return null;
         return [
-            'id' => $row[0],
+            'id' => $row[4],
             'name' => $row[1],
             'productType' => $row[2],
             'basePrice' => $row[3],

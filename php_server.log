@@ -1,0 +1,229 @@
+[Sat Jun  7 19:06:44 2025] Failed to listen on localhost:8000 (reason: Address already i[Sat Jun  7 19:07:06 2025] [::1]:50351 Accepted
+[Sat Jun  7 19:07:06 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:06 2025] [::1]:50351 [200]: GET /
+[Sat Jun  7 19:07:06 2025] [::1]:50351 Closing
+[Sat Jun  7 19:07:06 2025] [::1]:50354 Accepted
+[Sat Jun  7 19:07:06 2025] [::1]:50355 Accepted
+[Sat Jun  7 19:07:06 2025] [::1]:50356 Accepted
+[Sat Jun  7 19:07:06 2025] [::1]:50354 [200]: GET /images/sign_whimsicalfrog.webp
+[Sat Jun  7 19:07:06 2025] [::1]:50355 [200]: GET /images/sign_welcome.webp
+[Sat Jun  7 19:07:06 2025] [::1]:50356 [200]: GET /js/cart.js?v=1749337626
+[Sat Jun  7 19:07:06 2025] [::1]:50356 Closing
+[Sat Jun  7 19:07:06 2025] [::1]:50354 Closing
+[Sat Jun  7 19:07:06 2025] [::1]:50355 Closing
+[Sat Jun  7 19:07:06 2025] [::1]:50359 Accepted
+[Sat Jun  7 19:07:06 2025] [::1]:50359 [200]: GET /images/home_background.png?v=cb2
+[Sat Jun  7 19:07:06 2025] [::1]:50359 Closing
+[Sat Jun  7 19:07:06 2025] [::1]:50360 Accepted
+[Sat Jun  7 19:07:06 2025] [::1]:50360 [200]: GET /images/home_background.webp?v=cb2
+[Sat Jun  7 19:07:06 2025] [::1]:50360 Closing
+[Sat Jun  7 19:07:06 2025] [::1]:50362 Accepted
+[Sat Jun  7 19:07:07 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:07 2025] [::1]:50362 [200]: GET /favicon.ico
+[Sat Jun  7 19:07:07 2025] [::1]:50362 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50365 Accepted
+[Sat Jun  7 19:07:09 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:09 2025] [::1]:50365 [200]: GET /?page=main_room
+[Sat Jun  7 19:07:09 2025] [::1]:50365 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50368 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50369 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50370 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50371 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50372 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50373 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50368 [200]: GET /images/sign_whimsicalfrog.webp
+[Sat Jun  7 19:07:09 2025] [::1]:50369 [200]: GET /images/sign_door_tshirts.webp
+[Sat Jun  7 19:07:09 2025] [::1]:50370 [200]: GET /images/sign_door_tumblers.webp
+[Sat Jun  7 19:07:09 2025] [::1]:50371 [200]: GET /images/sign_door_artwork.webp
+[Sat Jun  7 19:07:09 2025] [::1]:50372 [200]: GET /images/sign_door_windowwraps.webp
+[Sat Jun  7 19:07:09 2025] [::1]:50373 [200]: GET /js/cart.js?v=1749337629
+[Sat Jun  7 19:07:09 2025] [::1]:50368 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50369 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50373 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50374 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50370 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50371 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50372 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50374 [200]: GET /images/sign_door_sublimation.webp
+[Sat Jun  7 19:07:09 2025] [::1]:50375 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50374 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50375 [200]: GET /images/room_main.png?v=cb2
+[Sat Jun  7 19:07:09 2025] [::1]:50376 Accepted
+[Sat Jun  7 19:07:09 2025] [::1]:50375 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50376 [200]: GET /images/room_main.webp?v=cb2
+[Sat Jun  7 19:07:09 2025] [::1]:50376 Closing
+[Sat Jun  7 19:07:09 2025] [::1]:50377 Accepted
+[Sat Jun  7 19:07:10 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:10 2025] [::1]:50377 [200]: GET /favicon.ico
+[Sat Jun  7 19:07:10 2025] [::1]:50377 Closing
+[Sat Jun  7 19:07:13 2025] [::1]:50380 Accepted
+[Sat Jun  7 19:07:13 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:13 2025] [::1]:50380 [200]: GET /?page=login
+[Sat Jun  7 19:07:13 2025] [::1]:50380 Closing
+[Sat Jun  7 19:07:13 2025] [::1]:50383 Accepted
+[Sat Jun  7 19:07:13 2025] [::1]:50384 Accepted
+[Sat Jun  7 19:07:13 2025] [::1]:50385 Accepted
+[Sat Jun  7 19:07:13 2025] [::1]:50383 [200]: GET /images/sign_whimsicalfrog.webp
+[Sat Jun  7 19:07:13 2025] [::1]:50384 [200]: GET /js/cart.js?v=1749337633
+[Sat Jun  7 19:07:13 2025] [::1]:50385 [200]: GET /images/room_main.png?v=cb2
+[Sat Jun  7 19:07:13 2025] [::1]:50384 Closing
+[Sat Jun  7 19:07:13 2025] [::1]:50383 Closing
+[Sat Jun  7 19:07:13 2025] [::1]:50385 Closing
+[Sat Jun  7 19:07:13 2025] [::1]:50386 Accepted
+[Sat Jun  7 19:07:13 2025] [::1]:50386 [200]: GET /images/room_main.webp?v=cb2
+[Sat Jun  7 19:07:13 2025] [::1]:50386 Closing
+[Sat Jun  7 19:07:13 2025] [::1]:50387 Accepted
+[Sat Jun  7 19:07:14 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:14 2025] [::1]:50387 [200]: GET /favicon.ico
+[Sat Jun  7 19:07:14 2025] [::1]:50387 Closing
+[Sat Jun  7 19:07:23 2025] [::1]:50394 Accepted
+[Sat Jun  7 19:07:23 2025] [::1]:50394 [200]: POST /set_session.php
+[Sat Jun  7 19:07:23 2025] [::1]:50394 Closing
+[Sat Jun  7 19:07:23 2025] [::1]:50395 Accepted
+[Sat Jun  7 19:07:24 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:25 2025] [::1]:50395 [200]: GET /?page=admin
+[Sat Jun  7 19:07:25 2025] [::1]:50395 Closing
+[Sat Jun  7 19:07:25 2025] [::1]:50401 Accepted
+[Sat Jun  7 19:07:25 2025] [::1]:50402 Accepted
+[Sat Jun  7 19:07:25 2025] [::1]:50401 [200]: GET /js/cart.js?v=1749337645
+[Sat Jun  7 19:07:25 2025] [::1]:50402 [200]: GET /images/sign_whimsicalfrog.webp
+[Sat Jun  7 19:07:25 2025] [::1]:50401 Closing
+[Sat Jun  7 19:07:25 2025] [::1]:50402 Closing
+[Sat Jun  7 19:07:25 2025] [::1]:50403 Accepted
+[Sat Jun  7 19:07:25 2025] [::1]:50403 [200]: GET /images/room_main.png?v=cb2
+[Sat Jun  7 19:07:25 2025] [::1]:50403 Closing
+[Sat Jun  7 19:07:25 2025] [::1]:50404 Accepted
+[Sat Jun  7 19:07:25 2025] [::1]:50404 [200]: GET /images/room_main.webp?v=cb2
+[Sat Jun  7 19:07:25 2025] [::1]:50404 Closing
+[Sat Jun  7 19:07:25 2025] [::1]:50405 Accepted
+[Sat Jun  7 19:07:25 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:25 2025] [::1]:50405 [200]: GET /favicon.ico
+[Sat Jun  7 19:07:25 2025] [::1]:50405 Closing
+[Sat Jun  7 19:07:35 2025] [::1]:50408 Accepted
+[Sat Jun  7 19:07:36 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:37 2025] [::1]:50408 [200]: GET /?page=admin&section=inventory
+[Sat Jun  7 19:07:37 2025] [::1]:50408 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50414 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50416 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50414 [200]: GET /images/sign_whimsicalfrog.webp
+[Sat Jun  7 19:07:37 2025] [::1]:50416 [200]: GET /images/room_main.png?v=cb2
+[Sat Jun  7 19:07:37 2025] [::1]:50420 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50414 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50421 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50422 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50423 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50416 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50420 [200]: GET /images/frog_tshirt_1.png
+[Sat Jun  7 19:07:37 2025] [::1]:50421 [200]: GET /images/products/product_custom-tumbler-20oz.png
+[Sat Jun  7 19:07:37 2025] [::1]:50422 [200]: GET /images/products/product_custom-tumbler-30oz.png
+[Sat Jun  7 19:07:37 2025] [::1]:50423 [200]: GET /images/frog_painter_1.png
+[Sat Jun  7 19:07:37 2025] [::1]:50420 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50424 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50421 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50424 [200]: GET /js/cart.js?v=1749337657
+[Sat Jun  7 19:07:37 2025] [::1]:50424 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50425 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50426 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50425 [200]: GET /images/products/product_sublimation-blank-item-e-g-mug.png
+[Sat Jun  7 19:07:37 2025] [::1]:50426 [200]: GET /images/products/product_custom-window-wrap.png
+[Sat Jun  7 19:07:37 2025] [::1]:50427 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50427 [200]: GET /images/products/product_new-test-thumbs.png
+[Sat Jun  7 19:07:37 2025] [::1]:50425 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50426 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50427 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50423 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50422 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50428 Accepted
+[Sat Jun  7 19:07:37 2025] [::1]:50428 [200]: GET /images/room_main.webp?v=cb2
+[Sat Jun  7 19:07:37 2025] [::1]:50428 Closing
+[Sat Jun  7 19:07:37 2025] [::1]:50429 Accepted
+[Sat Jun  7 19:07:37 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:07:37 2025] [::1]:50429 [200]: GET /favicon.ico
+[Sat Jun  7 19:07:37 2025] [::1]:50429 Closing
+[Sat Jun  7 19:07:40 2025] [::1]:50433 Accepted
+[Sat Jun  7 19:07:40 2025] [::1]:50433 [200]: GET /api/inventory-costs.php?inventoryId=I001
+[Sat Jun  7 19:07:40 2025] [::1]:50433 Closing
+[Sat Jun  7 19:07:52 2025] [::1]:50434 Accepted
+[Sat Jun  7 19:07:52 2025] [::1]:50434 [200]: POST /api/update-inventory-stock.php
+[Sat Jun  7 19:07:52 2025] [::1]:50434 Closing
+[Sat Jun  7 19:08:00 2025] [::1]:50435 Accepted
+[Sat Jun  7 19:08:01 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:08:02 2025] [::1]:50435 [200]: GET /?page=admin&section=orders
+[Sat Jun  7 19:08:02 2025] [::1]:50435 Closing
+[Sat Jun  7 19:08:02 2025] [::1]:50441 Accepted
+[Sat Jun  7 19:08:02 2025] [::1]:50442 Accepted
+[Sat Jun  7 19:08:02 2025] [::1]:50441 [200]: GET /images/sign_whimsicalfrog.webp
+[Sat Jun  7 19:08:02 2025] [::1]:50442 [200]: GET /images/room_main.png?v=cb2
+[Sat Jun  7 19:08:02 2025] [::1]:50441 Closing
+[Sat Jun  7 19:08:02 2025] [::1]:50446 Accepted
+[Sat Jun  7 19:08:02 2025] [::1]:50442 Closing
+[Sat Jun  7 19:08:02 2025] [::1]:50446 [200]: GET /js/cart.js?v=1749337682
+[Sat Jun  7 19:08:02 2025] [::1]:50446 Closing
+[Sat Jun  7 19:08:02 2025] [::1]:50447 Accepted
+[Sat Jun  7 19:08:02 2025] [::1]:50447 [200]: GET /images/room_main.webp?v=cb2
+[Sat Jun  7 19:08:02 2025] [::1]:50447 Closing
+[Sat Jun  7 19:08:02 2025] [::1]:50448 Accepted
+[Sat Jun  7 19:08:02 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:08:02 2025] [::1]:50448 [200]: GET /favicon.ico
+[Sat Jun  7 19:08:02 2025] [::1]:50448 Closing
+[Sat Jun  7 19:08:04 2025] [::1]:50451 Accepted
+[Sat Jun  7 19:08:05 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:08:06 2025] [::1]:50451 [200]: GET /?page=admin&section=customers
+[Sat Jun  7 19:08:06 2025] [::1]:50451 Closing
+[Sat Jun  7 19:08:06 2025] [::1]:50457 Accepted
+[Sat Jun  7 19:08:06 2025] [::1]:50458 Accepted
+[Sat Jun  7 19:08:06 2025] [::1]:50457 [200]: GET /images/sign_whimsicalfrog.webp
+[Sat Jun  7 19:08:06 2025] [::1]:50458 [200]: GET /images/room_main.png?v=cb2
+[Sat Jun  7 19:08:06 2025] [::1]:50457 Closing
+[Sat Jun  7 19:08:06 2025] [::1]:50458 Closing
+[Sat Jun  7 19:08:06 2025] [::1]:50462 Accepted
+[Sat Jun  7 19:08:06 2025] [::1]:50462 [200]: GET /js/cart.js?v=1749337686
+[Sat Jun  7 19:08:06 2025] [::1]:50462 Closing
+[Sat Jun  7 19:08:06 2025] [::1]:50463 Accepted
+[Sat Jun  7 19:08:06 2025] [::1]:50463 [200]: GET /images/room_main.webp?v=cb2
+[Sat Jun  7 19:08:06 2025] [::1]:50463 Closing
+[Sat Jun  7 19:08:06 2025] [::1]:50464 Accepted
+[Sat Jun  7 19:08:06 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:08:06 2025] [::1]:50464 [200]: GET /favicon.ico
+[Sat Jun  7 19:08:06 2025] [::1]:50464 Closing
+[Sat Jun  7 19:11:38 2025] [::1]:50596 Accepted
+[Sat Jun  7 19:11:38 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:11:39 2025] [::1]:50596 [200]: GET /?page=admin&section=inventory
+[Sat Jun  7 19:11:39 2025] [::1]:50596 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50606 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50607 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50606 [200]: GET /images/sign_whimsicalfrog.webp
+[Sat Jun  7 19:11:39 2025] [::1]:50611 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50607 [200]: GET /images/room_main.png?v=cb2
+[Sat Jun  7 19:11:39 2025] [::1]:50612 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50611 [200]: GET /images/frog_tshirt_1.png
+[Sat Jun  7 19:11:39 2025] [::1]:50613 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50612 [200]: GET /images/products/product_custom-tumbler-20oz.png
+[Sat Jun  7 19:11:39 2025] [::1]:50614 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50613 [200]: GET /images/products/product_custom-tumbler-30oz.png
+[Sat Jun  7 19:11:39 2025] [::1]:50606 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50607 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50611 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50612 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50614 [200]: GET /images/frog_painter_1.png
+[Sat Jun  7 19:11:39 2025] [::1]:50615 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50615 [200]: GET /js/cart.js?v=1749337899
+[Sat Jun  7 19:11:39 2025] [::1]:50615 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50616 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50617 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50618 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50616 [200]: GET /images/products/product_sublimation-blank-item-e-g-mug.png
+[Sat Jun  7 19:11:39 2025] [::1]:50617 [200]: GET /images/products/product_custom-window-wrap.png
+[Sat Jun  7 19:11:39 2025] [::1]:50618 [200]: GET /images/products/product_new-test-thumbs.png
+[Sat Jun  7 19:11:39 2025] [::1]:50618 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50616 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50614 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50617 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50619 Accepted
+[Sat Jun  7 19:11:39 2025] [::1]:50619 [200]: GET /images/room_main.webp?v=cb2
+[Sat Jun  7 19:11:39 2025] [::1]:50619 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50613 Closing
+[Sat Jun  7 19:11:39 2025] [::1]:50620 Accepted
+[Sat Jun  7 19:11:40 2025] API Error: Failed to fetch inventory data from API
+[Sat Jun  7 19:11:40 2025] [::1]:50620 [200]: GET /favicon.ico
+[Sat Jun  7 19:11:40 2025] [::1]:50620 Closing

@@ -102,14 +102,18 @@ try {
     
     $products = json_decode($productsData, true);
     
-    if ($products && is_array($products) && count($products) > 1) {
-        // Skip the first row (headers) and group products by category
-        $productRows = array_slice($products, 1); // Skip header row
-        
-        foreach ($productRows as $product) {
-            $category = $product[2]; // Category is at index 2
+    if ($products && is_array($products)) {
+        foreach ($products as $product) {
+            if (!isset($product['productType'])) {
+                continue; // Skip rows without a category
+            }
+            $category = $product['productType'];
             if (!isset($categories[$category])) {
                 $categories[$category] = [];
+            }
+            // Ensure price is available as 'price' for compatibility
+            if (isset($product['basePrice'])) {
+                $product['price'] = $product['basePrice'];
             }
             $categories[$category][] = $product;
         }

@@ -194,32 +194,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
   }
 </style>
 
-<!-- Back to Dashboard Navigation -->
-<div class="mb-6">
+<!-- Top bar: Back to Dashboard | Search/Filters | Add New Order (if applicable) -->
+<div class="mb-4 flex flex-row justify-between items-center gap-2">
     <a href="/?page=admin" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Back to Dashboard
     </a>
-</div>
-
-<!-- Order Management Header -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <div class="flex flex-col md:flex-row justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Order Management</h1>
-            <p class="text-gray-600">Process and manage customer orders</p>
-        </div>
-        <div class="mt-4 md:mt-0">
-            <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export Orders
-            </button>
-        </div>
-    </div>
+    <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0" style="flex:1;max-width:600px;justify-content:center;">
+        <input type="hidden" name="page" value="admin">
+        <input type="hidden" name="section" value="orders">
+        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm); ?>" class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500" placeholder="Search..." style="max-width:140px;">
+        <select id="status" name="status" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:100px;">
+            <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All</option>
+            <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active</option>
+            <option value="processing" <?php echo $filterStatus === 'processing' ? 'selected' : ''; ?>>Processing</option>
+            <option value="completed" <?php echo $filterStatus === 'completed' ? 'selected' : ''; ?>>Completed</option>
+            <option value="cancelled" <?php echo $filterStatus === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+        </select>
+        <select id="date_range" name="date_range" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:100px;">
+            <option value="all" <?php echo $dateRange === 'all' ? 'selected' : ''; ?>>All Dates</option>
+            <option value="today" <?php echo $dateRange === 'today' ? 'selected' : ''; ?>>Today</option>
+            <option value="week" <?php echo $dateRange === 'week' ? 'selected' : ''; ?>>This Week</option>
+            <option value="month" <?php echo $dateRange === 'month' ? 'selected' : ''; ?>>This Month</option>
+        </select>
+        <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </button>
+    </form>
+    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="window.location.href='/?page=admin&section=orders&export=1'">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Export Orders
+    </button>
 </div>
 
 <!-- Status Update Success Message -->
@@ -239,182 +250,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
     </div>
 </div>
 <?php endif; ?>
-
-<!-- Search and Filters -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <form action="" method="GET" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-        <input type="hidden" name="page" value="admin">
-        <input type="hidden" name="section" value="orders">
-        
-        <div class="flex-grow">
-            <label for="search" class="block text-sm font-medium text-gray-700">Search Orders</label>
-            <div class="mt-1 relative rounded-md shadow-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-                <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm); ?>" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="Search by order ID or customer">
-            </div>
-        </div>
-        
-        <div class="w-full md:w-48">
-            <label for="status" class="block text-sm font-medium text-gray-700">Order Status</label>
-            <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
-                <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Statuses</option>
-                <option value="Pending" <?php echo $filterStatus === 'Pending' ? 'selected' : ''; ?>>Pending</option>
-                <option value="Processing" <?php echo $filterStatus === 'Processing' ? 'selected' : ''; ?>>Processing</option>
-                <option value="Shipped" <?php echo $filterStatus === 'Shipped' ? 'selected' : ''; ?>>Shipped</option>
-                <option value="Delivered" <?php echo $filterStatus === 'Delivered' ? 'selected' : ''; ?>>Delivered</option>
-                <option value="Completed" <?php echo $filterStatus === 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                <option value="Cancelled" <?php echo $filterStatus === 'Cancelled' ? 'selected' : ''; ?>>Cancelled</option>
-            </select>
-        </div>
-        
-        <div class="w-full md:w-48">
-            <label for="date_range" class="block text-sm font-medium text-gray-700">Date Range</label>
-            <select id="date_range" name="date_range" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
-                <option value="all" <?php echo $dateRange === 'all' ? 'selected' : ''; ?>>All Time</option>
-                <option value="today" <?php echo $dateRange === 'today' ? 'selected' : ''; ?>>Today</option>
-                <option value="yesterday" <?php echo $dateRange === 'yesterday' ? 'selected' : ''; ?>>Yesterday</option>
-                <option value="week" <?php echo $dateRange === 'week' ? 'selected' : ''; ?>>Last 7 Days</option>
-                <option value="month" <?php echo $dateRange === 'month' ? 'selected' : ''; ?>>Last 30 Days</option>
-            </select>
-        </div>
-        
-        <div class="flex items-end">
-            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filter
-            </button>
-        </div>
-    </form>
-</div>
-
-<!-- Add New Order Button and Modal -->
-<button id="addOrderBtn" class="mb-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-semibold">Add New Order</button>
-<div id="addOrderModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
-        <button id="closeAddOrderModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
-        <h2 class="text-lg font-bold mb-4">Add New Order</h2>
-        <form id="addOrderForm">
-            <div class="mb-4">
-                <label for="orderCustomer" class="block text-sm font-medium text-gray-700">Customer</label>
-                <select id="orderCustomer" name="customerId" required class="mt-1 block w-full border-gray-300 rounded-md">
-                    <option value="">Select a customer</option>
-                    <?php foreach ($customersData as $customer): ?>
-                        <option value="<?php echo htmlspecialchars($customer['id']); ?>">
-                            <?php echo htmlspecialchars(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '') . ' (' . $customer['email'] . ')'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Products</label>
-                <div id="orderProducts">
-                    <div class="flex gap-2 mb-2">
-                        <select name="productIds[]" class="border-gray-300 rounded-md flex-1" required>
-                            <option value="">Select product</option>
-                            <?php foreach ($inventoryData as $item): ?>
-                                <option value="<?php echo htmlspecialchars($item['id'] ?? $item['id']); ?>">
-                                    <?php echo htmlspecialchars($item['name'] ?? $item['name'] ?? 'Unknown'); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <input type="number" name="quantities[]" min="1" value="1" class="border-gray-300 rounded-md w-20" required>
-                        <button type="button" class="removeProductBtn text-red-500">&times;</button>
-                    </div>
-                </div>
-                <button type="button" id="addProductBtn" class="mt-2 px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs">+ Add Product</button>
-            </div>
-            <div class="mb-4">
-                <label for="orderStatus" class="block text-sm font-medium text-gray-700">Status</label>
-                <select id="orderStatus" name="status" class="mt-1 block w-full border-gray-300 rounded-md">
-                    <option value="Pending">Pending</option>
-                    <option value="Processing">Processing</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select>
-            </div>
-            <div class="mb-4">
-                <label for="orderDate" class="block text-sm font-medium text-gray-700">Order Date</label>
-                <input type="date" id="orderDate" name="date" class="mt-1 block w-full border-gray-300 rounded-md" value="<?php echo date('Y-m-d'); ?>">
-            </div>
-            <div class="flex justify-end">
-                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Create Order</button>
-            </div>
-        </form>
-    </div>
-</div>
-<script>
-// Modal logic
-const addOrderBtn = document.getElementById('addOrderBtn');
-const addOrderModal = document.getElementById('addOrderModal');
-const closeAddOrderModal = document.getElementById('closeAddOrderModal');
-addOrderBtn.onclick = () => addOrderModal.classList.remove('hidden');
-closeAddOrderModal.onclick = () => addOrderModal.classList.add('hidden');
-window.onclick = (e) => { if (e.target === addOrderModal) addOrderModal.classList.add('hidden'); };
-// Add/remove product rows
-const orderProducts = document.getElementById('orderProducts');
-document.getElementById('addProductBtn').onclick = () => {
-    const row = orderProducts.firstElementChild.cloneNode(true);
-    row.querySelector('select').selectedIndex = 0;
-    row.querySelector('input').value = 1;
-    orderProducts.appendChild(row);
-    row.querySelector('.removeProductBtn').onclick = function() { row.remove(); };
-};
-orderProducts.querySelector('.removeProductBtn').onclick = function() { this.parentElement.remove(); };
-// Handle form submit
-const addOrderForm = document.getElementById('addOrderForm');
-addOrderForm.onsubmit = async function(e) {
-    e.preventDefault();
-    const formData = new FormData(addOrderForm);
-    const customerId = formData.get('customerId');
-    const productIds = formData.getAll('productIds[]').filter(Boolean);
-    const quantities = formData.getAll('quantities[]').filter(Boolean);
-    const status = formData.get('status');
-    const date = formData.get('date');
-    const errorMessage = document.getElementById('addOrderErrorMessage');
-    if (productIds.length === 0 || quantities.length === 0 || productIds.length !== quantities.length) {
-        if (errorMessage) {
-            errorMessage.textContent = 'Please select at least one product and quantity.';
-            errorMessage.classList.remove('hidden');
-        } else {
-            alert('Please select at least one product and quantity.');
-        }
-        return;
-    }
-    const apiBase = 'https://whimsicalfrog.us';
-    const response = await fetch(apiBase + '/api/add-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId, productIds, quantities, status, date })
-    });
-    const data = await response.json();
-    if (data.success) {
-        alert('Order created!');
-        location.reload();
-    } else {
-        const msg = data.error || 'Unknown error';
-        if (errorMessage) {
-            errorMessage.textContent = 'Error: ' + msg;
-            errorMessage.classList.remove('hidden');
-        }
-        alert('Order creation failed: ' + msg);
-    }
-};
-// Add an error message div to the modal if not present
-if (!document.getElementById('addOrderErrorMessage')) {
-    const form = document.getElementById('addOrderForm');
-    const errorDiv = document.createElement('div');
-    errorDiv.id = 'addOrderErrorMessage';
-    errorDiv.className = 'hidden text-red-500 text-sm mb-2';
-    form.insertBefore(errorDiv, form.firstChild);
-}
-</script>
 
 <!-- Order List -->
 <div class="bg-white shadow rounded-lg overflow-hidden mb-6">

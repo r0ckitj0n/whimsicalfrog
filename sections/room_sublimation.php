@@ -232,10 +232,10 @@ if (isset($categories['Sublimation'])) {
                         <?php foreach ($sublimationProducts as $index => $product): ?>
                             <?php $area_class = 'area-' . ($index + 1); ?>
                             <div class="product-icon <?php echo $area_class; ?>" 
-                                 data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
+                                 data-product-id="<?php echo htmlspecialchars($product['id']); ?>"
                                  onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
                                  onmouseleave="hidePopup()">
-                                <?php echo getImageTag($product[8] ?? 'images/placeholder.png', $product[1]); ?>
+                                <?php echo getImageTag($product['image'] ?? 'images/placeholder.png', $product['name']); ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -270,10 +270,10 @@ function showPopup(element, product) {
     const rect = element.getBoundingClientRect();
     
     // Update popup content
-    document.getElementById('popupImage').src = product[8] || 'images/placeholder.png';
-    document.getElementById('popupTitle').textContent = product[1];
-    document.getElementById('popupDescription').textContent = product[4] || 'No description available';
-    document.getElementById('popupPrice').textContent = '$' + parseFloat(product[3] || 0).toFixed(2);
+    document.getElementById('popupImage').src = product['image'] || 'images/placeholder.png';
+    document.getElementById('popupTitle').textContent = product['name'];
+    document.getElementById('popupDescription').textContent = product['description'] || 'No description available';
+    document.getElementById('popupPrice').textContent = '$' + parseFloat(product['basePrice'] || product['price'] || 0).toFixed(2);
     
     // Position popup
     const roomContainer = element.closest('.room-container');
@@ -307,10 +307,10 @@ function hidePopup() {
 function addToCartFromPopup() {
     if (!currentProduct) return;
     
-    const id = currentProduct[0];
-    const name = currentProduct[1];
-    const price = parseFloat(currentProduct[3] || 0);
-    const image = currentProduct[8] || 'images/placeholder.png';
+    const id = currentProduct['id'];
+    const name = currentProduct['name'];
+    const price = parseFloat(currentProduct['basePrice'] || currentProduct['price'] || 0);
+    const image = currentProduct['image'] || 'images/placeholder.png';
     
     console.log('Adding to cart:', { id, name, price, image });
     try {

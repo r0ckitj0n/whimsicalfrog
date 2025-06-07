@@ -255,6 +255,99 @@ app.post('/api/update-user', async (req, res) => {
     }
 });
 
+// --- Add Order Endpoint ---
+app.post('/api/add-order', async (req, res) => {
+    const connection = await mysql.createConnection(dbConfig);
+    try {
+        console.log('Received new order request:', req.body);
+        const {
+            userId,
+            items,
+            total,
+            paymentMethod,
+            shippingAddress
+        } = req.body;
+
+        // 1. Basic Validation
+        if (!userId || !items || !Array.isArray(items) || items.length === 0 || !total || !paymentMethod) {
+            console.error('Validation Error: Missing required order fields.');
+            return res.status(400).json({
+                error: 'Missing required fields. Required: userId, items, total, paymentMethod.'
+            });
+        }
+
+        await connection.beginTransaction();
+        console.log('Database transaction started.');
+
+        // 2. Insert into `orders` table
+        const orderId = 'O' + Date.now().toString().slice(-8);
+        const orderSql = `
+            INSERT INTO orders (id, userId, total, paymentMethod, shippingAddress, status)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        const orderValues = [
+            orderId,
+            userId,
+            total,
+            paymentMethod,
+            JSON.stringify(shippingAddress || {}),
+            'Pending'
+        ];
+        console.log('Inserting into orders:', orderValues);
+        await connection.execute(orderSql, orderValues);
+
+        // 3. Insert into `order_items` table
+        const itemSql = `
+            INSERT INTO order_items (id, orderId, productId, quantity, price)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        for (const item of items) {
+            if (!item.id || !item.quantity || !item.price) {
+                console.error('Validation Error: Invalid item in order.', item);
+                throw new Error('Invalid item data. Each item must have id, quantity, and price.');
+            }
+            const itemId = 'OI' + Math.random().toString(36).substr(2, 8);
+            const itemValues = [itemId, orderId, item.id, item.quantity, item.price];
+            console.log('Inserting into order_items:', itemValues);
+            await connection.execute(itemSql, itemValues);
+        }
+
+        // 4. (Optional) Update inventory - Throws error if any item fails
+        const inventorySql = 'UPDATE inventory SET stockLevel = stockLevel - ? WHERE productId = ? AND stockLevel >= ?';
+        for (const item of items) {
+            console.log(`Updating inventory for productId: ${item.id}, reducing by ${item.quantity}`);
+            const [result] = await connection.execute(inventorySql, [item.quantity, item.id, item.quantity]);
+            if (result.affectedRows === 0) {
+                console.error(`Inventory update failed for productId: ${item.id}. Not enough stock.`);
+                throw new Error(`Insufficient stock for product ID ${item.id}.`);
+            }
+        }
+
+        await connection.commit();
+        console.log('Transaction committed successfully.');
+
+        res.status(201).json({
+            success: true,
+            orderId: orderId,
+            message: 'Order placed successfully'
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error adding order:', error.message);
+        console.error('Stack Trace:', error.stack);
+        res.status(500).json({
+            error: 'Failed to add order',
+            details: error.message
+        });
+    } finally {
+        if (connection) {
+            await connection.end();
+            console.log('Database connection closed.');
+        }
+    }
+});
+
 // --- GET all products endpoint ---
 app.get('/api/products', async (req, res) => {
     try {
@@ -270,6 +363,19 @@ app.get('/api/products', async (req, res) => {
     } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).json({ error: 'Failed to fetch products', details: error.message });
+    }
+});
+
+// --- GET all inventory endpoint ---
+app.get('/api/inventory', async (req, res) => {
+    try {
+        const connection = await mysql.createConnection(dbConfig);
+        const [rows] = await connection.execute('SELECT * FROM inventory');
+        await connection.end();
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching inventory:', error);
+        res.status(500).json({ error: 'Failed to fetch inventory', details: error.message });
     }
 });
 

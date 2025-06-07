@@ -8,7 +8,11 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 }
 
 // Fetch customers data from Node API (MySQL)
-$apiBase = 'https://whimsicalfrog.us';
+if ($_SERVER['SERVER_NAME'] === 'localhost') {
+    $apiBase = 'http://localhost:3000';
+} else {
+    $apiBase = 'https://whimsicalfrog.us';
+}
 $usersJson = @file_get_contents($apiBase . '/api/users');
 $customersData = $usersJson ? json_decode($usersJson, true) : [];
 $customers = $customersData;
@@ -21,14 +25,23 @@ $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
 $filterStatus = isset($_GET['status']) ? $_GET['status'] : 'all';
 $filterRole = isset($_GET['role']) ? $_GET['role'] : 'all';
 
+// Robust filter: if no customers match, show all users
+$filtered = false;
 if ($filterRole === 'customer') {
     $customers = array_filter($customers, function($user) {
         return isset($user['role']) && strtolower($user['role']) === 'customer';
     });
+    $filtered = true;
 } elseif ($filterRole === 'admin') {
     $customers = array_filter($customers, function($user) {
         return isset($user['role']) && strtolower($user['role']) === 'admin';
     });
+    $filtered = true;
+}
+// If filter applied and no results, show all users
+if ($filtered && empty($customers)) {
+    $customers = $customersData;
+    $filterRole = 'all';
 }
 
 if (!empty($searchTerm)) {
@@ -137,13 +150,13 @@ function getSortIndicator($column, $currentSort, $currentDir) {
 
 // Handle customer update form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_customer'])) {
-    $apiBase = 'https://whimsicalfrog.us';
+    $apiBase = ($_SERVER['SERVER_NAME'] === 'localhost') ? 'http://localhost:3000' : 'https://whimsicalfrog.us';
     $payload = [
         'userId' => $_POST['customer_id'] ?? '',
         'firstName' => $_POST['firstName'] ?? '',
         'lastName' => $_POST['lastName'] ?? '',
         'email' => $_POST['email'] ?? '',
-        'address_line1' => $_POST['addressLine1'] ?? '',
+        'addressLine1' => $_POST['addressLine1'] ?? '',
         'addressLine2' => $_POST['addressLine2'] ?? '',
         'city' => $_POST['city'] ?? '',
         'state' => $_POST['state'] ?? '',
@@ -195,32 +208,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_customer'])) {
   /* Remove the green heading override */
 </style>
 
-<!-- Back to Dashboard Navigation -->
-<div class="mb-6">
+<!-- Top bar: Back to Dashboard | Search | Add New Customer -->
+<div class="mb-4 flex flex-row justify-between items-center gap-2">
     <a href="/?page=admin" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Back to Dashboard
     </a>
-</div>
-
-<!-- Customer Management Header -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <div class="flex flex-col md:flex-row justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Customer Management</h1>
-            <p class="text-gray-600">Manage and view customer accounts and information</p>
-        </div>
-        <div class="mt-4 md:mt-0">
-            <button id="addCustomerBtn" type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add New Customer
-            </button>
-        </div>
-    </div>
+    <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0" style="flex:1;max-width:600px;justify-content:center;">
+        <input type="hidden" name="page" value="admin">
+        <input type="hidden" name="section" value="customers">
+        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm); ?>" class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500" placeholder="Search..." style="max-width:140px;">
+        <select id="role" name="role" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:100px;">
+            <option value="all" <?php echo $filterRole === 'all' ? 'selected' : ''; ?>>All</option>
+            <option value="customer" <?php echo $filterRole === 'customer' ? 'selected' : ''; ?>>Customers</option>
+            <option value="admin" <?php echo $filterRole === 'admin' ? 'selected' : ''; ?>>Admins</option>
+        </select>
+        <select id="status" name="status" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:100px;">
+            <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All</option>
+            <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active</option>
+            <option value="inactive" <?php echo $filterStatus === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+            <option value="new" <?php echo $filterStatus === 'new' ? 'selected' : ''; ?>>New</option>
+        </select>
+        <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </button>
+    </form>
+    <button id="addCustomerBtn" type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Add New Customer
+    </button>
 </div>
 
 <!-- Add Customer Modal -->
@@ -261,11 +283,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_customer'])) {
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Address Line 1</label>
-                <input type="text" name="address_line1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                <input type="text" name="addressLine1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Address Line 2</label>
-                <input type="text" name="address_line2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                <input type="text" name="addressLine2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">City</label>
@@ -290,54 +312,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_customer'])) {
     </div>
 </div>
 
-<!-- Search and Filters -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <form action="" method="GET" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-        <input type="hidden" name="page" value="admin">
-        <input type="hidden" name="section" value="customers">
-        
-        <div class="flex-grow">
-            <label for="search" class="block text-sm font-medium text-gray-700">Search Customers</label>
-            <div class="mt-1 relative rounded-md shadow-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-                <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm); ?>" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="Search by name, email, or ID">
-            </div>
-        </div>
-        
-        <div class="w-full md:w-48">
-            <label for="role" class="block text-sm font-medium text-gray-700">User Type</label>
-            <select id="role" name="role" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
-                <option value="all" <?php echo $filterRole === 'all' ? 'selected' : ''; ?>>All</option>
-                <option value="customer" <?php echo $filterRole === 'customer' ? 'selected' : ''; ?>>Customers Only</option>
-                <option value="admin" <?php echo $filterRole === 'admin' ? 'selected' : ''; ?>>Admins Only</option>
-            </select>
-        </div>
-        
-        <div class="w-full md:w-48">
-            <label for="status" class="block text-sm font-medium text-gray-700">Customer Status</label>
-            <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
-                <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All Customers</option>
-                <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active</option>
-                <option value="inactive" <?php echo $filterStatus === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
-                <option value="new" <?php echo $filterStatus === 'new' ? 'selected' : ''; ?>>New (Last 30 days)</option>
-            </select>
-        </div>
-        
-        <div class="flex items-end">
-            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filter
-            </button>
-        </div>
-    </form>
-</div>
-
 <!-- Customer List -->
 <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
     <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
@@ -358,11 +332,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_customer'])) {
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="<?php echo getSortUrl('id', $sortBy, $sortDir); ?>" class="flex items-center">
                                 ID <?php echo getSortIndicator('id', $sortBy, $sortDir); ?>
                             </a>
-                        </th>
+                        </th> -->
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <a href="<?php echo getSortUrl('name', $sortBy, $sortDir); ?>" class="flex items-center">
                                 Customer Name <?php echo getSortIndicator('name', $sortBy, $sortDir); ?>
@@ -404,9 +378,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_customer'])) {
                         $stats = getCustomerStats($customerId, $ordersData);
                     ?>
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 #<?php echo htmlspecialchars($customerId); ?>
-                            </td>
+                            </td> -->
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10">
@@ -425,9 +399,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_customer'])) {
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900">
                                             <?php echo !empty($fullName) ? htmlspecialchars($fullName) : htmlspecialchars($username); ?>
-                                        </div>
-                                        <div class="text-sm text-gray-500">
-                                            @<?php echo htmlspecialchars($username); ?>
                                         </div>
                                     </div>
                                 </div>
@@ -593,7 +564,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                 </div>
                 <div class="flex flex-col">
                     <span class="text-sm font-medium admin-data-label">Username</span>
-                    <span class="admin-data-value">@<?php echo htmlspecialchars($username); ?></span>
+                    <span class="admin-data-value"><?php echo htmlspecialchars($username); ?></span>
                 </div>
                 <div class="flex flex-col">
                     <span class="text-sm font-medium admin-data-label">Email Address</span>
@@ -640,19 +611,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <span class="block text-sm font-medium text-gray-500">Total Orders</span>
-                    <span class="block text-2xl font-bold text-gray-900"><?php echo $stats['totalOrders']; ?></span>
+                    <span class="block text-2xl font-bold admin-data-value"><?php echo $stats['totalOrders']; ?></span>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <span class="block text-sm font-medium text-gray-500">Total Spent</span>
-                    <span class="block text-2xl font-bold text-gray-900">$<?php echo number_format($stats['totalSpent'], 2); ?></span>
+                    <span class="block text-2xl font-bold admin-data-value">$<?php echo number_format($stats['totalSpent'], 2); ?></span>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <span class="block text-sm font-medium text-gray-500">Average Order</span>
-                    <span class="block text-2xl font-bold text-gray-900">$<?php echo number_format($stats['averageOrderValue'], 2); ?></span>
+                    <span class="block text-2xl font-bold admin-data-value">$<?php echo number_format($stats['averageOrderValue'], 2); ?></span>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <span class="block text-sm font-medium text-gray-500">Last Order</span>
-                    <span class="block text-lg font-bold text-gray-900"><?php echo $stats['lastOrderDate'] !== 'Never' ? htmlspecialchars($stats['lastOrderDate']) : 'Never'; ?></span>
+                    <span class="block text-lg font-bold admin-data-value"><?php echo $stats['lastOrderDate'] !== 'Never' ? htmlspecialchars($stats['lastOrderDate']) : 'Never'; ?></span>
                 </div>
             </div>
         </div>
@@ -780,62 +751,62 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
-                    <input type="text" name="firstName" id="firstName" value="<?php echo htmlspecialchars($firstName); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="text" name="firstName" id="firstName" value="<?php echo htmlspecialchars($firstName); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
-                    <input type="text" name="lastName" id="lastName" value="<?php echo htmlspecialchars($lastName); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="text" name="lastName" id="lastName" value="<?php echo htmlspecialchars($lastName); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input type="email" name="email" id="email" value="<?php echo htmlspecialchars($email); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="email" name="email" id="email" value="<?php echo htmlspecialchars($email); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
-                    <label for="address_line1" class="block text-sm font-medium text-gray-700">Address Line 1</label>
-                    <input type="text" name="address_line1" id="address_line1" value="<?php echo htmlspecialchars($customerData['address_line1'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <label for="addressLine1" class="block text-sm font-medium text-gray-700">Address Line 1</label>
+                    <input type="text" name="addressLine1" id="addressLine1" value="<?php echo htmlspecialchars($customerData['address_line1'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="addressLine2" class="block text-sm font-medium text-gray-700">Address Line 2</label>
-                    <input type="text" name="addressLine2" id="addressLine2" value="<?php echo htmlspecialchars($customerData['address_line2'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="text" name="addressLine2" id="addressLine2" value="<?php echo htmlspecialchars($customerData['address_line2'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="city" class="block text-sm font-medium text-gray-700">City</label>
-                    <input type="text" name="city" id="city" value="<?php echo htmlspecialchars($customerData['city'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="text" name="city" id="city" value="<?php echo htmlspecialchars($customerData['city'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="state" class="block text-sm font-medium text-gray-700">State</label>
-                    <input type="text" name="state" id="state" value="<?php echo htmlspecialchars($customerData['state'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="text" name="state" id="state" value="<?php echo htmlspecialchars($customerData['state'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="zipCode" class="block text-sm font-medium text-gray-700">Zip Code</label>
-                    <input type="text" name="zipCode" id="zipCode" value="<?php echo htmlspecialchars($customerData['zip_code'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="text" name="zipCode" id="zipCode" value="<?php echo htmlspecialchars($customerData['zip_code'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="text" name="phoneNumber" id="phoneNumber" value="<?php echo htmlspecialchars($customerData['phone_number'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="text" name="phoneNumber" id="phoneNumber" value="<?php echo htmlspecialchars($customerData['phone_number'] ?? ''); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                    <input type="text" name="username" id="username" value="<?php echo htmlspecialchars($username); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="text" name="username" id="username" value="<?php echo htmlspecialchars($username); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">New Password (leave blank to keep current)</label>
-                    <input type="password" name="password" id="password" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <input type="password" name="password" id="password" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md admin-data-value">
                 </div>
                 
                 <div>
                     <label for="editRole" class="block text-sm font-medium text-gray-700">Role</label>
-                    <select id="editRole" name="role" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                    <select id="editRole" name="role" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md admin-data-value">
                         <option value="Customer" <?php echo $role === 'Customer' ? 'selected' : ''; ?>>Customer</option>
                         <option value="Admin" <?php echo $role === 'Admin' ? 'selected' : ''; ?>>Admin</option>
                     </select>

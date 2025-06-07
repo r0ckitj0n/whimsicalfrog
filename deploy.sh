@@ -41,7 +41,11 @@ rm deploy_commands.txt
 
 # Restart Node.js server
 echo "Restarting Node.js server..."
-sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$HOST "cd $REMOTE_PATH && pm2 restart server.js || pm2 start server.js"
+echo "The SSH command has been disabled because the user account is restricted."
+echo "Please restart the Node.js application manually via your hosting control panel."
+# The following command is commented out because the SSH user is restricted and cannot execute remote commands.
+# You will need to restart the server manually via your hosting provider's control panel.
+# sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no $USER@$HOST "cd $REMOTE_PATH && pm2 restart server.js || pm2 start server.js"
 
 # Export local MySQL database (backup stored locally only)
 echo "Exporting local MySQL database..."

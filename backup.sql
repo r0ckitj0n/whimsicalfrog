@@ -47,6 +47,90 @@ INSERT INTO `inventory` VALUES ('I001','P001','T-Shirt, White, S','T-Shirts','Co
 UNLOCK TABLES;
 
 --
+-- Table structure for table `inventory_energy`
+--
+
+DROP TABLE IF EXISTS `inventory_energy`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `inventory_energy` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `inventoryId` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cost` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `inventoryId` (`inventoryId`),
+  CONSTRAINT `inventory_energy_ibfk_1` FOREIGN KEY (`inventoryId`) REFERENCES `inventory` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `inventory_energy`
+--
+
+LOCK TABLES `inventory_energy` WRITE;
+/*!40000 ALTER TABLE `inventory_energy` DISABLE KEYS */;
+INSERT INTO `inventory_energy` VALUES (1,'I001','light while sewing',1.00),(2,'I001','sewing machine power',2.00);
+/*!40000 ALTER TABLE `inventory_energy` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `inventory_labor`
+--
+
+DROP TABLE IF EXISTS `inventory_labor`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `inventory_labor` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `inventoryId` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cost` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `inventoryId` (`inventoryId`),
+  CONSTRAINT `inventory_labor_ibfk_1` FOREIGN KEY (`inventoryId`) REFERENCES `inventory` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `inventory_labor`
+--
+
+LOCK TABLES `inventory_labor` WRITE;
+/*!40000 ALTER TABLE `inventory_labor` DISABLE KEYS */;
+INSERT INTO `inventory_labor` VALUES (1,'I001','sewing a dress',80.00);
+/*!40000 ALTER TABLE `inventory_labor` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `inventory_materials`
+--
+
+DROP TABLE IF EXISTS `inventory_materials`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `inventory_materials` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `inventoryId` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `name` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cost` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `inventoryId` (`inventoryId`),
+  CONSTRAINT `inventory_materials_ibfk_1` FOREIGN KEY (`inventoryId`) REFERENCES `inventory` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `inventory_materials`
+--
+
+LOCK TABLES `inventory_materials` WRITE;
+/*!40000 ALTER TABLE `inventory_materials` DISABLE KEYS */;
+INSERT INTO `inventory_materials` VALUES (1,'I001','cotton sheet',1.32);
+/*!40000 ALTER TABLE `inventory_materials` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `products`
 --
 
@@ -109,7 +193,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES ('U001','admin','pass.123','admin@whimsicalfrog.com','Admin','Admin',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),('U002','customer','pass.123','customer@example.com','Customer','Customer',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),('Uwc8nl7kg','sarah','pass.123','sarah@catn8.us','Customer','Customer','Sarah','Graves','6788979763','4765 Fourth Rail Ln','addy dos','Cumming','GA','30040');
+INSERT INTO `users` VALUES ('U001','admin','pass.123','admin@whimsicalfrog.com','Admin','Admin','Admin4','WhimsicalFrog','4047878900','91 Singletree Lane','nothing','Dawsonville','GA','30534'),('U002','customer','pass.123','customer@example.com','Customer','Customer',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),('Uwc8nl7kg','sarah','pass.123','sarah@catn8.us','Customer','Customer','Sarah','Graves','6788979763','4765 Fourth Rail Ln','the end','Cumming','GA','30041');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -122,4 +206,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-07 11:45:58
+-- Dump completed on 2025-06-07 19:13:04

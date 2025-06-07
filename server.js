@@ -355,9 +355,10 @@ app.get('/api/products', async (req, res) => {
         const [rows] = await connection.execute('SELECT * FROM products');
         await connection.end();
         // Add a 'price' field for frontend compatibility (alias for basePrice)
+        // and ensure the price is always a number, defaulting to 0 if null.
         const products = rows.map(product => ({
             ...product,
-            price: product.basePrice
+            price: Number(product.basePrice) || 0
         }));
         res.json(products);
     } catch (error) {

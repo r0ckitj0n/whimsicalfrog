@@ -356,6 +356,7 @@ app.get('/api/products', async (req, res) => {
         await connection.end();
         // Add a 'price' field for frontend compatibility (alias for basePrice)
         // and ensure the price is always a number, defaulting to 0 if null.
+        // This triggers a redeploy on IONOS.
         const products = rows.map(product => ({
             ...product,
             price: Number(product.basePrice) || 0

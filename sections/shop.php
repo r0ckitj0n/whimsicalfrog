@@ -9,47 +9,65 @@ $allProducts = $productsJson ? json_decode($productsJson, true) : [];
 <section id="shopPage" class="p-2 bg-white rounded-lg shadow-lg">
     <h2 class="text-4xl font-merienda text-center text-[#556B2F] mb-8">All Our Whimsical Wares</h2>
     <div id="allProductsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <?php if (!empty($allProducts)): ?>
-            <?php foreach ($allProducts as $product): ?>
-                <?php
-                // Ensure product data is valid and has necessary keys
-                $productId = htmlspecialchars($product['id'] ?? 'N/A');
-                $productName = htmlspecialchars($product['name'] ?? 'Unnamed Product');
-                $productPrice = floatval($product['price'] ?? 0.00);
-                $productDescription = htmlspecialchars($product['description'] ?? 'No description available.');
-                $productImage = htmlspecialchars($product['image'] ?? 'images/placeholder.png');
-                
-                // Escape product name for JavaScript function if needed
-                $escapedNameJS = htmlspecialchars($product['name'] ?? 'Unnamed Product', ENT_QUOTES, 'UTF-8');
-                ?>
-                <div class="product-item bg-white p-3 rounded-lg shadow-md flex flex-col">
-                    <img src="<?php echo $productImage; ?>" 
-                         alt="<?php echo $productName; ?>" 
-                         class="w-full h-40 object-cover rounded-md mb-3">
-                    <h3 class="text-lg font-merienda text-[#556B2F] mb-1 truncate" title="<?php echo $productName; ?>"><?php echo $productName; ?></h3>
-                    <p class="text-gray-600 text-xs mb-2 flex-grow clamp-3-lines"><?php echo $productDescription; ?></p>
-                    <div class="flex justify-between items-center mt-auto">
-                        <span class="text-md font-semibold text-[#6B8E23]">$<?php echo number_format($productPrice, 2); ?></span>
-                        <button onclick="addToCart('<?php echo $productId; ?>', '<?php echo $escapedNameJS; ?>', <?php echo $productPrice; ?>, '<?php echo $productImage; ?>')" 
-                                class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-semibold py-1 px-2 text-sm rounded-md transition duration-150 cursor-pointer">
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p class="text-center text-gray-700 col-span-full">No products found. Please check back later or ensure your Google Sheets data is correctly configured and accessible.</p>
-            <?php 
-                // Log the error if products are empty but categories were set (implies JWT/data fetch issue)
-                if (isset($categories)) { // $categories might be set but empty from index.php due to fetch error
-                    error_log("shop.php: allProducts is empty: " . print_r($allProducts, true) . ". Original categories: " . print_r($categories, true));
-                }
-            ?>
-        <?php endif; ?>
+        <!-- Products will be loaded here by JavaScript -->
+        <p id="loadingMessage" class="text-center text-gray-700 col-span-full">Loading products...</p>
     </div>
 </section>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const apiBase = 'https://whimsicalfrog.us';
+    const productsGrid = document.getElementById('allProductsGrid');
+    const loadingMessage = document.getElementById('loadingMessage');
+
+    fetch(`${apiBase}/api/products`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(products => {
+            loadingMessage.style.display = 'none'; // Hide loading message
+            if (products && products.length > 0) {
+                products.forEach(product => {
+                    const productId = product.id || 'N/A';
+                    const productName = product.name || 'Unnamed Product';
+                    const productPrice = parseFloat(product.price || 0.00);
+                    const productDescription = product.description || 'No description available.';
+                    const productImage = product.image || 'images/placeholder.png';
+                    
+                    const escapedNameJS = productName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                    const productElement = document.createElement('div');
+                    productElement.className = 'product-item bg-white p-3 rounded-lg shadow-md flex flex-col';
+                    productElement.innerHTML = `
+                        <img src="${productImage}" 
+                             alt="${productName}" 
+                             class="w-full h-40 object-cover rounded-md mb-3">
+                        <h3 class="text-lg font-merienda text-[#556B2F] mb-1 truncate" title="${productName}">${productName}</h3>
+                        <p class="text-gray-600 text-xs mb-2 flex-grow clamp-3-lines">${productDescription}</p>
+                        <div class="flex justify-between items-center mt-auto">
+                            <span class="text-md font-semibold text-[#6B8E23]">$${productPrice.toFixed(2)}</span>
+                            <button onclick="addToCart('${productId}', '${escapedNameJS}', ${productPrice}, '${productImage}')" 
+                                    class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-semibold py-1 px-2 text-sm rounded-md transition duration-150 cursor-pointer">
+                                Add to Cart
+                            </button>
+                        </div>
+                    `;
+                    productsGrid.appendChild(productElement);
+                });
+            } else {
+                productsGrid.innerHTML = '<p class="text-center text-gray-700 col-span-full">No products found. Please check back later.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching products:', error);
+            loadingMessage.style.display = 'none';
+            productsGrid.innerHTML = `<p class="text-center text-red-500 col-span-full">Failed to load products. ${error.message}</p>`;
+        });
+});
+
 // Add to cart function (ensure cart.js is loaded and window.cart is available)
 function addToCart(id, name, price, image) {
     console.log('Adding to cart from shop.php:', { id, name, price, image });

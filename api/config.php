@@ -16,11 +16,11 @@ if ($isLocalhost) {
     $user = 'root';
     $pass = 'Palz2516';
 } else {
-    // Production database credentials - update these with your IONOS values
-    $host = 'db5015604734.hosting-data.io'; // Replace with your actual IONOS database host
-    $db   = 'dbs12871252';                  // Replace with your actual IONOS database name
-    $user = 'dbu2757104';                   // Replace with your actual IONOS database user
-    $pass = 'Palz2516!';                    // Replace with your actual IONOS database password
+    // Production database credentials - updated with actual IONOS values
+    $host = 'db5017975223.hosting-data.io'; // Real IONOS database host
+    $db   = 'dbs14295502';                  // Real IONOS database name
+    $user = 'dbu2826619';                   // Real IONOS database user
+    $pass = 'Palz2516!';                    // IONOS database password
 }
 
 // Common database settings

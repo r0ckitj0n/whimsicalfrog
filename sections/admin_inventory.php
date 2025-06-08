@@ -6,6 +6,9 @@ if (!isset($user['role']) || $user['role'] !== 'Admin') {
     exit;
 }
 
+// Include the configuration file for database access
+require_once 'api/config.php';
+
 // Helper function to calculate sum of costs
 function sumCost($items) {
     $total = 0;
@@ -47,28 +50,26 @@ function fetchInventoryCosts($pdo, $inventoryId) {
     ];
 }
 
-// Fetch products
-$productsUrl = 'https://whimsicalfrog.us/api/products.php';
-$ch = curl_init($productsUrl);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-curl_close($ch);
-
+// Fetch products using local API path
 $products = [];
-if ($response) {
-    $products = json_decode($response, true) ?? [];
+try {
+    $productsJson = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/api/products.php');
+    if ($productsJson) {
+        $products = json_decode($productsJson, true) ?? [];
+    }
+} catch (Exception $e) {
+    // Handle error silently
 }
 
-// Fetch inventory
-$inventoryUrl = 'https://whimsicalfrog.us/api/inventory.php';
-$ch = curl_init($inventoryUrl);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$response = curl_exec($ch);
-curl_close($ch);
-
+// Fetch inventory using local API path
 $inventory = [];
-if ($response) {
-    $inventory = json_decode($response, true) ?? [];
+try {
+    $inventoryJson = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/api/inventory.php');
+    if ($inventoryJson) {
+        $inventory = json_decode($inventoryJson, true) ?? [];
+    }
+} catch (Exception $e) {
+    // Handle error silently
 }
 
 // Organize inventory by product
@@ -84,7 +85,7 @@ foreach ($inventory as $item) {
 // Database connection for cost calculations
 $pdo = null;
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=whimsicalfrog', 'root', 'Palz2516');
+    $pdo = new PDO($dsn, $user, $pass, $options);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     // Handle error silently
@@ -428,14 +429,8 @@ try {
 </style>
 
 <script>
-// Determine if we're in a local environment
-const isLocalhost = window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1' ||
-                    window.location.hostname.includes('localhost') ||
-                    window.location.hostname.includes('127.0.0.1');
-
-// Set API base URL based on environment
-const apiBase = isLocalhost ? `http://${window.location.hostname}:3000` : 'https://whimsicalfrog.us';
+// Use the current domain for API calls in both local and production environments
+const apiBase = window.location.origin;
 
 // Toast notification system
 function showToast(message, isError = false, duration = 3000) {
@@ -503,7 +498,7 @@ function updateProduct(productId) {
 
     showToast('Updating product...', false, 1000);
 
-    fetch(`${apiBase}/api/update-product`, {
+    fetch(`${apiBase}/api/update-product.php`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -558,7 +553,7 @@ function uploadImage(productId) {
     
     showToast('Uploading image...', false, 2000);
     
-    fetch(`${apiBase}/api/upload-image`, {
+    fetch(`${apiBase}/api/upload-image.php`, {
         method: 'POST',
         body: formData,
     })
@@ -610,7 +605,7 @@ function updateStockLevel(input) {
     
     // Get current stock levels to calculate proportions
     const promises = inventoryIds.map(id => 
-        fetch(`${apiBase}/api/inventory/${id}`)
+        fetch(`${apiBase}/api/inventory.php?id=${id}`)
             .then(response => response.json())
     );
     
@@ -646,7 +641,7 @@ function updateStockLevel(input) {
             
             // Update each inventory item
             const updatePromises = inventoryIds.map((id, index) => 
-                fetch(`${apiBase}/api/update-inventory-stock`, {
+                fetch(`${apiBase}/api/update-inventory-stock.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -706,7 +701,7 @@ function closeCostModal() {
 function loadCosts(itemId) {
     showToast('Loading cost data...', false, 1000);
     
-    fetch(`${apiBase}/api/inventory-costs/${itemId}`)
+    fetch(`${apiBase}/api/inventory-costs.php?id=${itemId}`)
         .then(response => response.json())
         .then(data => {
             // Materials
@@ -834,7 +829,7 @@ function addMaterial() {
 // Edit material
 function editMaterial(id, name, cost) {
     const materialsList = document.getElementById('materialsList');
-    const materialItem = materialsList.querySelector(`li:has(button[onclick*="editMaterial(${id})"])`);
+    const materialItem = materialsList.querySelector(`li:has(button[onclick*="editMaterial(${id})")`);
     
     if (materialItem) {
         materialItem.innerHTML = `
@@ -941,7 +936,7 @@ function addLabor() {
 // Edit labor
 function editLabor(id, description, cost) {
     const laborList = document.getElementById('laborList');
-    const laborItem = laborList.querySelector(`li:has(button[onclick*="editLabor(${id})"])`);
+    const laborItem = laborList.querySelector(`li:has(button[onclick*="editLabor(${id})")`);
     
     if (laborItem) {
         laborItem.innerHTML = `
@@ -1048,7 +1043,7 @@ function addEnergy() {
 // Edit energy
 function editEnergy(id, description, cost) {
     const energyList = document.getElementById('energyList');
-    const energyItem = energyList.querySelector(`li:has(button[onclick*="editEnergy(${id})"])`);
+    const energyItem = energyList.querySelector(`li:has(button[onclick*="editEnergy(${id})")`);
     
     if (energyItem) {
         energyItem.innerHTML = `
@@ -1146,7 +1141,7 @@ async function refreshProductData() {
     
     try {
         // Fetch updated cost data for the product
-        const response = await fetch(`${apiBase}/api/inventory-costs/${currentCostItemId}`);
+        const response = await fetch(`${apiBase}/api/inventory-costs.php?id=${currentCostItemId}`);
         const data = await response.json();
         
         if (!data) return;

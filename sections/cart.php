@@ -37,31 +37,3 @@
     // Start initialization when DOM is loaded
     document.addEventListener('DOMContentLoaded', initializeCart);
 </script>
-
-<?php
-// Calculate cart totals
-$subtotal = 0;
-foreach ($cartItems as $item) {
-    $subtotal += $item['price'] * $item['quantity'];
-}
-$salesTax = round($subtotal * 0.08, 2);
-$total = $subtotal + $salesTax;
-?>
-
-<div class="cart-summary">
-    <div class="flex justify-between text-lg font-semibold">
-        <span>Subtotal:</span>
-        <span>$<?php echo number_format($subtotal, 2); ?></span>
-    </div>
-    <div class="flex justify-between text-lg font-semibold">
-        <span>Sales Tax (8%):</span>
-        <span>$<?php echo number_format($salesTax, 2); ?></span>
-    </div>
-    <div class="flex justify-between text-lg font-semibold">
-        <span>Total:</span>
-        <span>$<?php echo number_format($total, 2); ?></span>
-    </div>
-    <button onclick="cart.checkout()" class="w-full mt-4 bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded">
-        Proceed to Checkout
-    </button>
-</div> 

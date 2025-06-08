@@ -131,6 +131,67 @@ INSERT INTO `inventory_materials` VALUES (1,'I001','cotton sheet',1.32),(3,'I002
 UNLOCK TABLES;
 
 --
+-- Table structure for table `order_items`
+--
+
+DROP TABLE IF EXISTS `order_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `order_items` (
+  `id` varchar(16) NOT NULL,
+  `orderId` varchar(16) NOT NULL,
+  `productId` varchar(16) NOT NULL,
+  `quantity` int NOT NULL DEFAULT '1',
+  `price` decimal(10,2) NOT NULL DEFAULT '0.00',
+  PRIMARY KEY (`id`),
+  KEY `orderId` (`orderId`),
+  KEY `productId` (`productId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `order_items`
+--
+
+LOCK TABLES `order_items` WRITE;
+/*!40000 ALTER TABLE `order_items` DISABLE KEYS */;
+INSERT INTO `order_items` VALUES ('OI12345','O12345','P001',2,19.99),('OI23456','O12345','P002',1,19.99),('OI34567','O23456','P005',1,24.99),('OI45678','O34567','P004',3,49.99);
+/*!40000 ALTER TABLE `order_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `orders`
+--
+
+DROP TABLE IF EXISTS `orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `orders` (
+  `id` varchar(16) NOT NULL,
+  `userId` varchar(16) NOT NULL,
+  `total` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `paymentMethod` varchar(50) NOT NULL DEFAULT 'Credit Card',
+  `shippingAddress` text,
+  `status` varchar(20) NOT NULL DEFAULT 'Pending',
+  `date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `trackingNumber` varchar(100) DEFAULT NULL,
+  `paymentStatus` varchar(20) NOT NULL DEFAULT 'Pending',
+  PRIMARY KEY (`id`),
+  KEY `userId` (`userId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `orders`
+--
+
+LOCK TABLES `orders` WRITE;
+/*!40000 ALTER TABLE `orders` DISABLE KEYS */;
+INSERT INTO `orders` VALUES ('O12345','U001',59.97,'Credit Card','{\"name\":\"Admin User\",\"street\":\"123 Main St\",\"city\":\"Dawsonville\",\"state\":\"GA\",\"zip\":\"30534\"}','Processing','2025-06-08 14:25:15',NULL,'Received'),('O23456','U002',24.99,'PayPal','{\"name\":\"Test Customer\",\"street\":\"456 Oak Ave\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zip\":\"30303\"}','Shipped','2025-06-06 14:25:15',NULL,'Received'),('O34567','U002',149.95,'Credit Card','{\"name\":\"Test Customer\",\"street\":\"456 Oak Ave\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zip\":\"30303\"}','Delivered','2025-06-01 14:25:15',NULL,'Received');
+/*!40000 ALTER TABLE `orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `products`
 --
 
@@ -206,4 +267,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-08  9:39:22
+-- Dump completed on 2025-06-08 11:25:27

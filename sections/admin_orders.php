@@ -212,6 +212,53 @@ function getProductName($productId, $inventoryData) {
     return 'Unknown Product';
 }
 
+// Helper function to format address for display
+function formatAddress($address) {
+    if (is_array($address)) {
+        // Format the address array into a readable string
+        $formattedAddress = '';
+        
+        if (!empty($address['name'])) {
+            $formattedAddress .= $address['name'] . "\n";
+        }
+        
+        if (!empty($address['line1'])) {
+            $formattedAddress .= $address['line1'] . "\n";
+        }
+        
+        if (!empty($address['line2'])) {
+            $formattedAddress .= $address['line2'] . "\n";
+        }
+        
+        $cityStateZip = '';
+        if (!empty($address['city'])) {
+            $cityStateZip .= $address['city'];
+        }
+        
+        if (!empty($address['state'])) {
+            $cityStateZip .= !empty($cityStateZip) ? ', ' . $address['state'] : $address['state'];
+        }
+        
+        if (!empty($address['zip'])) {
+            $cityStateZip .= !empty($cityStateZip) ? ' ' . $address['zip'] : $address['zip'];
+        }
+        
+        if (!empty($cityStateZip)) {
+            $formattedAddress .= $cityStateZip . "\n";
+        }
+        
+        if (!empty($address['country'])) {
+            $formattedAddress .= $address['country'];
+        }
+        
+        return $formattedAddress;
+    } else if (is_string($address)) {
+        return $address;
+    }
+    
+    return '';
+}
+
 // Process order status update if form submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status'])) {
     $orderId = $_POST['order_id'] ?? '';
@@ -669,12 +716,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-b border-gray-200">
         <div>
             <h4 class="text-lg font-medium text-gray-900 mb-4">Shipping Address</h4>
-            <p class="text-gray-700 whitespace-pre-line"><span class="admin-data-label">Shipping Address</span> <?php echo htmlspecialchars($shippingAddress); ?></p>
+            <p class="text-gray-700 whitespace-pre-line"><span class="admin-data-label">Shipping Address</span> <?php echo htmlspecialchars(formatAddress($shippingAddress)); ?></p>
         </div>
         
         <div>
             <h4 class="text-lg font-medium text-gray-900 mb-4">Billing Address</h4>
-            <p class="text-gray-700 whitespace-pre-line"><span class="admin-data-label">Billing Address</span> <?php echo htmlspecialchars($billingAddress); ?></p>
+            <p class="text-gray-700 whitespace-pre-line"><span class="admin-data-label">Billing Address</span> <?php echo htmlspecialchars(formatAddress($billingAddress)); ?></p>
         </div>
     </div>
     

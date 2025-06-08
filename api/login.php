@@ -1,15 +1,9 @@
 <?php
-// Set headers for CORS and JSON response
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
+// Include the configuration file
+require_once 'config.php';
 
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+// Set API headers
+setApiHeaders();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -29,8 +23,7 @@ if (!isset($data['username']) || !isset($data['password'])) {
 
 // Database connection
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=whimsicalfrog', 'root', 'Palz2516');
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = getConnection();
 } catch (PDOException $e) {
     echo json_encode(['error' => 'Database connection failed', 'details' => $e->getMessage()]);
     exit();

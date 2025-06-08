@@ -48,7 +48,6 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Product ID</th>
                     <th>Name</th>
                     <th>Category</th>
                     <th>SKU</th>
@@ -154,6 +153,15 @@
     </div>
 </div>
 
+<!-- Toast Notification -->
+<div id="toast" class="toast-notification">
+    <div class="toast-content">
+        <i id="toast-icon" class="fas"></i>
+        <span id="toast-message"></span>
+    </div>
+    <div id="toast-progress" class="toast-progress"></div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // DOM elements
@@ -168,6 +176,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalRetailValueElement = document.getElementById('totalRetailValue');
     const categoryFilter = document.getElementById('categoryFilter');
     const searchInput = document.getElementById('inventorySearch');
+    
+    // Toast notification elements
+    const toast = document.getElementById('toast');
+    const toastIcon = document.getElementById('toast-icon');
+    const toastMessage = document.getElementById('toast-message');
+    const toastProgress = document.getElementById('toast-progress');
     
     // Modal elements
     const inventoryModal = document.getElementById('inventoryModal');
@@ -189,6 +203,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteModal = document.getElementById('deleteModal');
     const confirmDeleteButton = document.getElementById('confirmDelete');
     let itemToDelete = null;
+    
+    // Store original inventory data for comparison
+    let inventoryData = [];
     
     // Buttons
     const addInventoryBtn = document.getElementById('addInventoryBtn');
@@ -256,13 +273,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
+                // Store the inventory data
+                inventoryData = data;
                 displayInventory(data);
                 updateStats(data);
                 populateCategories(data);
             })
             .catch(error => {
                 console.error('Error fetching inventory:', error);
-                showError('Failed to load inventory. Please try again.');
+                showToast('error', 'Failed to load inventory. Please try again.');
             })
             .finally(() => {
                 showLoading(false);
@@ -286,6 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add rows for each inventory item
         data.forEach(item => {
             const row = document.createElement('tr');
+            row.dataset.id = item.id;
             
             // Highlight low stock items
             if (item.stockLevel <= item.reorderPoint) {
@@ -294,19 +314,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             row.innerHTML = `
                 <td>${item.id}</td>
-                <td>${item.productId}</td>
-                <td>${item.name}</td>
-                <td>${item.category}</td>
-                <td>${item.sku}</td>
-                <td>${item.stockLevel}</td>
-                <td>${item.reorderPoint}</td>
-                <td>$${parseFloat(item.costPrice || 0).toFixed(2)}</td>
-                <td>$${parseFloat(item.retailPrice || 0).toFixed(2)}</td>
+                <td class="editable" data-field="name" contenteditable="true">${item.name}</td>
+                <td class="editable" data-field="category" contenteditable="true">${item.category}</td>
+                <td class="editable" data-field="sku" contenteditable="true">${item.sku}</td>
+                <td class="editable" data-field="stockLevel" contenteditable="true">${item.stockLevel}</td>
+                <td class="editable" data-field="reorderPoint" contenteditable="true">${item.reorderPoint}</td>
+                <td class="editable" data-field="costPrice" contenteditable="true">$${parseFloat(item.costPrice || 0).toFixed(2)}</td>
+                <td class="editable" data-field="retailPrice" contenteditable="true">$${parseFloat(item.retailPrice || 0).toFixed(2)}</td>
                 <td class="actions">
-                    <button class="edit-button" data-id="${item.id}">
+                    <button class="edit-button" data-id="${item.id}" title="Edit All Fields">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="delete-button" data-id="${item.id}">
+                    <button class="delete-button" data-id="${item.id}" title="Delete Item">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -328,6 +347,192 @@ document.addEventListener('DOMContentLoaded', function() {
                 const id = this.getAttribute('data-id');
                 showDeleteConfirmation(id);
             });
+        });
+        
+        // Add event listeners for inline editing
+        document.querySelectorAll('.editable').forEach(cell => {
+            // Save original value for comparison
+            cell.dataset.originalValue = cell.innerText;
+            
+            // Add focus indicator
+            cell.addEventListener('focus', function() {
+                this.classList.add('editing');
+                
+                // For price fields, remove the $ sign when editing
+                if (this.dataset.field === 'costPrice' || this.dataset.field === 'retailPrice') {
+                    this.innerText = this.innerText.replace('$', '');
+                }
+            });
+            
+            // Remove focus indicator and save if changed
+            cell.addEventListener('blur', function() {
+                this.classList.remove('editing');
+                
+                // Get the field and row ID
+                const field = this.dataset.field;
+                const rowId = this.parentNode.dataset.id;
+                let newValue = this.innerText.trim();
+                
+                // Format price fields
+                if (field === 'costPrice' || field === 'retailPrice') {
+                    // Remove $ if present and convert to number
+                    newValue = newValue.replace('$', '');
+                    
+                    // Validate as a number
+                    if (!isNaN(newValue) && newValue !== '') {
+                        const numValue = parseFloat(newValue);
+                        if (numValue < 0) {
+                            showToast('error', 'Price cannot be negative');
+                            this.innerText = '$' + parseFloat(this.dataset.originalValue.replace('$', '')).toFixed(2);
+                            return;
+                        }
+                        // Format with $ and 2 decimal places
+                        this.innerText = '$' + numValue.toFixed(2);
+                        newValue = numValue;
+                    } else {
+                        showToast('error', 'Please enter a valid price');
+                        this.innerText = this.dataset.originalValue;
+                        return;
+                    }
+                }
+                
+                // Validate numeric fields
+                if (field === 'stockLevel' || field === 'reorderPoint') {
+                    if (!isNaN(newValue) && newValue !== '') {
+                        const numValue = parseInt(newValue);
+                        if (numValue < 0) {
+                            showToast('error', 'Value cannot be negative');
+                            this.innerText = this.dataset.originalValue;
+                            return;
+                        }
+                        newValue = numValue;
+                    } else {
+                        showToast('error', 'Please enter a valid number');
+                        this.innerText = this.dataset.originalValue;
+                        return;
+                    }
+                }
+                
+                // Check if value has changed
+                let originalValue = this.dataset.originalValue;
+                if (field === 'costPrice' || field === 'retailPrice') {
+                    originalValue = parseFloat(originalValue.replace('$', '')).toString();
+                }
+                
+                if (newValue.toString() !== originalValue.toString()) {
+                    // Save the change
+                    saveInlineEdit(rowId, field, newValue, this);
+                }
+            });
+            
+            // Handle key presses
+            cell.addEventListener('keydown', function(e) {
+                // Enter key saves and removes focus
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.blur();
+                }
+                
+                // Escape key cancels edit
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    this.innerText = this.dataset.originalValue;
+                    this.blur();
+                }
+                
+                // Allow only numbers and decimal point for price and quantity fields
+                if ((this.dataset.field === 'costPrice' || 
+                     this.dataset.field === 'retailPrice' || 
+                     this.dataset.field === 'stockLevel' || 
+                     this.dataset.field === 'reorderPoint') && 
+                    !(e.key === 'Backspace' || 
+                      e.key === 'Delete' || 
+                      e.key === 'ArrowLeft' || 
+                      e.key === 'ArrowRight' || 
+                      e.key === 'Tab' || 
+                      e.key === '.' || 
+                      e.key === '-' || 
+                      (e.key >= '0' && e.key <= '9') || 
+                      e.ctrlKey)) {
+                    e.preventDefault();
+                }
+            });
+        });
+    }
+    
+    // Save inline edits
+    function saveInlineEdit(id, field, value, cellElement) {
+        // Add saving indicator
+        cellElement.classList.add('saving');
+        
+        // Prepare data for update
+        const updateData = {
+            id: id,
+            [field]: value
+        };
+        
+        // Send update to server
+        fetch('/api/update-inventory.php', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Update was successful
+                cellElement.classList.remove('saving');
+                cellElement.classList.add('save-success');
+                
+                // Update the original value
+                if (field === 'costPrice' || field === 'retailPrice') {
+                    cellElement.dataset.originalValue = '$' + parseFloat(value).toFixed(2);
+                } else {
+                    cellElement.dataset.originalValue = value;
+                }
+                
+                // Update the inventory data
+                const itemIndex = inventoryData.findIndex(item => item.id === id);
+                if (itemIndex !== -1) {
+                    inventoryData[itemIndex][field] = value;
+                }
+                
+                // Update stats
+                updateStats(inventoryData);
+                
+                // Show success message
+                showToast('success', 'Updated successfully');
+                
+                // Remove success indicator after a delay
+                setTimeout(() => {
+                    cellElement.classList.remove('save-success');
+                }, 1500);
+            } else {
+                throw new Error(data.message || 'Update failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving change:', error);
+            
+            // Show error state
+            cellElement.classList.remove('saving');
+            cellElement.classList.add('save-error');
+            
+            // Revert to original value after a delay
+            setTimeout(() => {
+                cellElement.classList.remove('save-error');
+                cellElement.innerText = cellElement.dataset.originalValue;
+            }, 1500);
+            
+            // Show error message
+            showToast('error', error.message || 'Failed to save change');
         });
     }
     
@@ -459,16 +664,16 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if (data.success) {
-                showSuccess(isNewItem ? 'Inventory item added successfully!' : 'Inventory item updated successfully!');
+                showToast('success', isNewItem ? 'Inventory item added successfully!' : 'Inventory item updated successfully!');
                 closeInventoryModal();
                 loadInventory(); // Reload inventory
             } else {
-                showError(data.message || 'Failed to save inventory item.');
+                showToast('error', data.message || 'Failed to save inventory item.');
             }
         })
         .catch(error => {
             console.error('Error saving inventory item:', error);
-            showError('Failed to save inventory item. Please try again.');
+            showToast('error', 'Failed to save inventory item. Please try again.');
         });
     }
     
@@ -489,15 +694,15 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if (data.success) {
-                showSuccess('Inventory item deleted successfully!');
+                showToast('success', 'Inventory item deleted successfully!');
                 loadInventory(); // Reload inventory
             } else {
-                showError(data.message || 'Failed to delete inventory item.');
+                showToast('error', data.message || 'Failed to delete inventory item.');
             }
         })
         .catch(error => {
             console.error('Error deleting inventory item:', error);
-            showError('Failed to delete inventory item. Please try again.');
+            showToast('error', 'Failed to delete inventory item. Please try again.');
         });
     }
     
@@ -523,16 +728,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Show success message
-    function showSuccess(message) {
-        // Implement your success notification here
-        alert(message); // Placeholder - replace with your notification system
-    }
-    
-    // Show error message
-    function showError(message) {
-        // Implement your error notification here
-        alert(message); // Placeholder - replace with your notification system
+    // Show toast notification
+    function showToast(type, message, duration = 3000) {
+        // Set icon and class based on type
+        if (type === 'success') {
+            toastIcon.className = 'fas fa-check-circle';
+            toast.className = 'toast-notification toast-success show';
+        } else if (type === 'error') {
+            toastIcon.className = 'fas fa-exclamation-circle';
+            toast.className = 'toast-notification toast-error show';
+        } else if (type === 'info') {
+            toastIcon.className = 'fas fa-info-circle';
+            toast.className = 'toast-notification toast-info show';
+        }
+        
+        // Set message
+        toastMessage.textContent = message;
+        
+        // Show toast
+        toast.classList.add('show');
+        
+        // Start progress bar
+        toastProgress.style.width = '100%';
+        toastProgress.style.transition = `width ${duration}ms linear`;
+        setTimeout(() => {
+            toastProgress.style.width = '0%';
+        }, 10);
+        
+        // Hide toast after duration
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, duration);
     }
     
     // Filter functionality
@@ -692,6 +918,58 @@ document.addEventListener('DOMContentLoaded', function() {
     justify-content: flex-end;
 }
 
+/* Editable cells styling */
+.data-table td.editable {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.data-table td.editable:hover {
+    background-color: #f0f8e5;
+}
+
+.data-table td.editable:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px #87ac3a;
+    background-color: #f0f8e5;
+}
+
+/* Saving state */
+.data-table td.saving {
+    background-color: #fff8e1 !important;
+    position: relative;
+}
+
+.data-table td.saving::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(90deg, #87ac3a, transparent, #87ac3a);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+/* Success state */
+.data-table td.save-success {
+    background-color: #e8f5e9 !important;
+    transition: background-color 0.5s ease;
+}
+
+/* Error state */
+.data-table td.save-error {
+    background-color: #ffebee !important;
+    transition: background-color 0.5s ease;
+}
+
+@keyframes loading {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .edit-button,
 .delete-button {
     background: none;
@@ -737,6 +1015,69 @@ document.addEventListener('DOMContentLoaded', function() {
 .loading-message i {
     margin-right: 10px;
     color: #87ac3a;
+}
+
+/* Toast notification */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 250px;
+    max-width: 350px;
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    padding: 0;
+    z-index: 1000;
+    overflow: hidden;
+    transform: translateX(120%);
+    transition: transform 0.3s ease-out;
+}
+
+.toast-notification.show {
+    transform: translateX(0);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+}
+
+.toast-notification i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+.toast-progress {
+    height: 3px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    transition: width linear;
+}
+
+.toast-success {
+    border-left: 4px solid #4caf50;
+}
+
+.toast-success i {
+    color: #4caf50;
+}
+
+.toast-error {
+    border-left: 4px solid #f44336;
+}
+
+.toast-error i {
+    color: #f44336;
+}
+
+.toast-info {
+    border-left: 4px solid #2196f3;
+}
+
+.toast-info i {
+    color: #2196f3;
 }
 
 /* Modal styles */

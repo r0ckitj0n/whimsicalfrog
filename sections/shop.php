@@ -9,7 +9,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 ?>
 
 <section id="shopPage" class="py-6">
-    <h1 class="text-3xl font-merienda text-center text-[#556B2F] mb-6">Welcome to Our Shop</h1>
+    <h1 class="text-3xl font-merienda text-center text-[#87ac3a] mb-6">Welcome to Our Shop</h1>
     
     <!-- Category Navigation -->
     <div class="flex flex-wrap justify-center mb-8 gap-2">
@@ -51,10 +51,10 @@ if (!defined('INCLUDED_FROM_INDEX')) {
                 <img src="<?php echo $imageUrl; ?>" alt="<?php echo $productName; ?>" class="w-full h-48 object-cover" 
                      onerror="this.onerror=null; this.src='images/product-placeholder.png';">
                 <div class="p-4">
-                    <h3 class="font-merienda text-lg text-[#556B2F] mb-2"><?php echo $productName; ?></h3>
+                    <h3 class="font-merienda text-lg text-[#87ac3a] mb-2"><?php echo $productName; ?></h3>
                     <p class="text-gray-600 mb-2 text-sm line-clamp-2"><?php echo $description; ?></p>
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-[#6B8E23]"><?php echo $formattedPrice; ?></span>
+                        <span class="font-bold text-[#87ac3a]"><?php echo $formattedPrice; ?></span>
                         <button class="add-to-cart-btn bg-[#87ac3a] hover:bg-[#a3cc4a] text-white px-3 py-1 rounded-md text-sm transition-colors"
                                 data-product-id="<?php echo $productId; ?>"
                                 data-product-name="<?php echo $productName; ?>"

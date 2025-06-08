@@ -4,9 +4,41 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Detect environment
-$isLocalhost = strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false || 
-               strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false;
+// Improved environment detection with multiple checks
+$isLocalhost = false;
+
+// Check 1: Check if running from command line
+if (PHP_SAPI === 'cli') {
+    $isLocalhost = true;
+}
+
+// Check 2: Check HTTP_HOST for localhost indicators
+if (isset($_SERVER['HTTP_HOST'])) {
+    if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
+        strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false) {
+        $isLocalhost = true;
+    }
+}
+
+// Check 3: Check SERVER_NAME for localhost indicators
+if (isset($_SERVER['SERVER_NAME'])) {
+    if (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || 
+        strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false) {
+        $isLocalhost = true;
+    }
+}
+
+// Check 4: Check if running on a local IP address
+if (isset($_SERVER['REMOTE_ADDR'])) {
+    if (strpos($_SERVER['REMOTE_ADDR'], '127.0.0.1') !== false || 
+        strpos($_SERVER['REMOTE_ADDR'], '::1') !== false) {
+        $isLocalhost = true;
+    }
+}
+
+// Force local environment for development if needed
+// Uncomment the line below to force local environment
+// $isLocalhost = true;
 
 // Database configuration based on environment
 if ($isLocalhost) {

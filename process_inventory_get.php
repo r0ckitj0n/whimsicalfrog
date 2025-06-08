@@ -49,57 +49,29 @@ try {
     // Add sorting (using correct column name 'name' instead of 'itemName')
     $query .= " ORDER BY name ASC";
     
-    // Debug information
-    $debugInfo = [
-        'query' => $query,
-        'params' => $params,
-        'server' => $_SERVER['SERVER_NAME'],
-        'isLocalhost' => $isLocalhost ? 'true' : 'false',
-        'path' => __DIR__,
-        'configPath' => realpath(__DIR__ . '/api/config.php')
-    ];
-    
     // Prepare and execute query
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Output inventory data
-    echo json_encode([
-        'success' => true,
-        'data' => $inventory,
-        'debug' => $debugInfo
-    ]);
+    // Output inventory data directly as an array (not wrapped in a success/debug object)
+    // This change makes it compatible with the JavaScript frontend code
+    echo json_encode($inventory);
     
 } catch (PDOException $e) {
     // Handle database errors with detailed information
     http_response_code(500);
     echo json_encode([
-        'success' => false,
         'error' => 'Database error',
-        'message' => $e->getMessage(),
-        'code' => $e->getCode(),
-        'trace' => $e->getTraceAsString(),
-        'debug' => [
-            'server' => $_SERVER['SERVER_NAME'] ?? 'unknown',
-            'isLocalhost' => isset($isLocalhost) ? ($isLocalhost ? 'true' : 'false') : 'unknown',
-            'path' => __DIR__,
-            'configPath' => realpath(__DIR__ . '/api/config.php') ?: 'not found',
-            'configExists' => file_exists(__DIR__ . '/api/config.php') ? 'true' : 'false',
-            'dsn' => isset($dsn) ? preg_replace('/password=([^;]*)/', 'password=***', $dsn) : 'not set',
-            'user' => $user ?? 'not set'
-        ]
+        'message' => $e->getMessage()
     ]);
     exit;
 } catch (Exception $e) {
     // Handle general errors
     http_response_code(500);
     echo json_encode([
-        'success' => false,
         'error' => 'General error',
-        'message' => $e->getMessage(),
-        'code' => $e->getCode(),
-        'trace' => $e->getTraceAsString()
+        'message' => $e->getMessage()
     ]);
     exit;
 }

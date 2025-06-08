@@ -33,6 +33,17 @@ try {
         if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
             $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
         }
+        
+        // Ensure date is properly formatted
+        if (isset($order['date']) && !empty($order['date'])) {
+            // Store the original timestamp for sorting
+            $order['date_timestamp'] = strtotime($order['date']);
+            // Format the date for display
+            $order['date_formatted'] = date('M d, Y', strtotime($order['date']));
+        } else {
+            $order['date_timestamp'] = 0;
+            $order['date_formatted'] = 'Unknown Date';
+        }
     }
     
     // Fetch customers/users data directly from database
@@ -155,8 +166,9 @@ usort($ordersData, function($a, $b) use ($sortBy, $sortDir) {
             break;
         case 'date':
         default:
-            $valA = strtotime($a['date'] ?? '');
-            $valB = strtotime($b['date'] ?? '');
+            // Use the pre-calculated timestamp for more reliable sorting
+            $valA = $a['date_timestamp'] ?? 0;
+            $valB = $b['date_timestamp'] ?? 0;
     }
     
     if ($sortDir === 'asc') {
@@ -421,7 +433,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
                 <tbody class="bg-white divide-y divide-gray-200">
                     <?php foreach ($paginatedOrders as $order): 
                         $orderId = $order['id'] ?? '';
-                        $orderDate = $order['date'] ?? '';
+                        $orderDate = $order['date_formatted'] ?? 'Unknown Date';
                         $userId = $order['userId'] ?? '';
                         $total = $order['total'] ?? 0;
                         $status = $order['status'] ?? 'Pending';
@@ -569,7 +581,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
     
     if ($orderData) {
         $userId = $orderData['userId'] ?? '';
-        $orderDate = $orderData['date'] ?? '';
+        $orderDate = $orderData['date_formatted'] ?? 'Unknown Date';
         $orderStatus = $orderData['status'] ?? 'Pending';
         $orderTotal = $orderData['total'] ?? 0;
         $orderItems = $orderData['items'] ?? [];

@@ -9,7 +9,10 @@ require_once __DIR__ . '/config.php';
 
 // Function to fetch data from the Node.js API
 function fetchData($endpoint) {
-    $url = "https://whimsicalfrog.us/api/" . $endpoint;
+    $isLocalhost = strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false;
+    $apiBase = $isLocalhost ? 'http://localhost:3000/api' : 'https://whimsicalfrog.us/api';
+    $url = $apiBase . '/' . $endpoint;
+    
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -91,8 +94,12 @@ $categories = [];
 $inventory = [];
 
 try {
-    // Fetch products with full URL path
-    $productsUrl = 'https://whimsicalfrog.us/api/products.php';
+    // Detect if we're running locally
+    $isLocalhost = strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false;
+    $apiBase = $isLocalhost ? 'http://localhost:3000' : 'https://whimsicalfrog.us';
+    
+    // Fetch products with environment-aware URL path
+    $productsUrl = $apiBase . '/api/products';
     $productsData = @file_get_contents($productsUrl);
     
     // Check for HTTP errors
@@ -119,8 +126,8 @@ try {
         }
     }
     
-    // Fetch inventory with full URL path
-    $inventoryUrl = 'https://whimsicalfrog.us/api/inventory.php';
+    // Fetch inventory with environment-aware URL path
+    $inventoryUrl = $apiBase . '/api/inventory';
     $inventoryData = @file_get_contents($inventoryUrl);
     
     // Check for HTTP errors
@@ -590,9 +597,13 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
             
+            // Detect if we're running locally
+            const isLocalhost = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+            
             // Use correct API base depending on environment
-            const apiBase = 'https://whimsicalfrog.us';
+            const apiBase = isLocalhost ? 'http://localhost:3000' : 'https://whimsicalfrog.us';
             const loginUrl = apiBase + '/api/login';
+            
             try {
                 const response = await fetch(loginUrl, {
                     method: 'POST',
@@ -638,6 +649,12 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
         // Clear client-side session storage
         sessionStorage.removeItem('user');
         
+        // Detect if we're running locally
+        const isLocalhost = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+        
+        // Use correct API base depending on environment
+        const apiBase = isLocalhost ? 'http://localhost:3000' : 'https://whimsicalfrog.us';
+        
         // First clear PHP session
         fetch('/set_session.php', {
             method: 'POST',
@@ -649,7 +666,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
         })
         .then(() => {
             // Then clear Node.js session
-            return fetch('https://whimsicalfrog.onrender.com/api/logout', {
+            return fetch(apiBase + '/api/logout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

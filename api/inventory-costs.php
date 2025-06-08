@@ -1,70 +1,169 @@
 <?php
-header('Content-Type: application/json');
-$pdo = new PDO('mysql:host=localhost;dbname=whimsicalfrog', 'root', 'Palz2516');
-$typeMap = [
-    'material' => 'inventory_materials',
-    'labor' => 'inventory_labor',
-    'energy' => 'inventory_energy'
-];
-$action = $_GET['action'] ?? '';
-$type = $_GET['type'] ?? '';
+// Set CORS headers to allow cross-origin requests
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json");
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['inventoryId'])) {
-    $inventoryId = $_GET['inventoryId'];
-    $materials = $pdo->query("SELECT * FROM inventory_materials WHERE inventoryId = '" . addslashes($inventoryId) . "'")->fetchAll(PDO::FETCH_ASSOC);
-    $labor = $pdo->query("SELECT * FROM inventory_labor WHERE inventoryId = '" . addslashes($inventoryId) . "'")->fetchAll(PDO::FETCH_ASSOC);
-    $energy = $pdo->query("SELECT * FROM inventory_energy WHERE inventoryId = '" . addslashes($inventoryId) . "'")->fetchAll(PDO::FETCH_ASSOC);
-    $result = [
-        'materials' => $materials,
-        'labor' => $labor,
-        'energy' => $energy
-    ];
-    // Debug output
-    if (isset($_GET['debug'])) {
-        echo "<pre>DEBUG: inventoryId = ".$inventoryId."\n";
-        print_r($result);
-        echo "</pre>";
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Determine if we're in production or development
+$isLocalhost = strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false;
+$nodeServerUrl = $isLocalhost ? 'http://localhost:3000' : 'https://whimsicalfrog.us';
+
+// Handle GET requests to fetch inventory costs
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $inventoryId = $_GET['inventoryId'] ?? null;
+    
+    if (!$inventoryId) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Inventory ID is required']);
+        exit();
     }
-    echo json_encode($result);
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'add' && isset($typeMap[$type])) {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $table = $typeMap[$type];
-    if ($type === 'material') {
-        $stmt = $pdo->prepare("INSERT INTO $table (inventoryId, name, cost) VALUES (?, ?, ?)");
-        $stmt->execute([$data['inventoryId'], $data['name'], $data['cost']]);
-    } elseif ($type === 'labor' || $type === 'energy') {
-        $stmt = $pdo->prepare("INSERT INTO $table (inventoryId, description, cost) VALUES (?, ?, ?)");
-        $stmt->execute([$data['inventoryId'], $data['description'], $data['cost']]);
+    
+    // Forward request to Node.js server
+    $apiUrl = $nodeServerUrl . '/api/inventory-costs/' . urlencode($inventoryId);
+    
+    // Initialize cURL session
+    $ch = curl_init($apiUrl);
+    
+    // Set cURL options
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json'
+    ]);
+    
+    // Execute the cURL request
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+    // Check for cURL errors
+    if (curl_errno($ch)) {
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'Failed to connect to inventory costs server',
+            'details' => curl_error($ch)
+        ]);
+        curl_close($ch);
+        exit();
     }
-    echo json_encode(['success' => true]);
-    exit;
+    
+    // Close cURL session
+    curl_close($ch);
+    
+    // Set the HTTP status code from the Node.js response
+    http_response_code($httpCode);
+    
+    // Output the response from the Node.js server
+    echo $response;
+    exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete' && isset($typeMap[$type]) && isset($_GET['id'])) {
-    $table = $typeMap[$type];
-    $id = intval($_GET['id']);
-    $stmt = $pdo->prepare("DELETE FROM $table WHERE id = ?");
-    $stmt->execute([$id]);
-    echo json_encode(['success' => true]);
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'update' && isset($typeMap[$type]) && isset($_GET['id'])) {
-    $table = $typeMap[$type];
-    $id = intval($_GET['id']);
-    $data = json_decode(file_get_contents('php://input'), true);
-    if ($type === 'material') {
-        $stmt = $pdo->prepare("UPDATE $table SET name = ?, cost = ? WHERE id = ?");
-        $stmt->execute([$data['name'], $data['cost'], $id]);
-    } elseif ($type === 'labor' || $type === 'energy') {
-        $stmt = $pdo->prepare("UPDATE $table SET description = ?, cost = ? WHERE id = ?");
-        $stmt->execute([$data['description'], $data['cost'], $id]);
+// Handle POST requests for add/update/delete operations
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_GET['action'] ?? null;
+    $type = $_GET['type'] ?? null;
+    $id = $_GET['id'] ?? null;
+    
+    if (!$action) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Action parameter is required']);
+        exit();
     }
-    echo json_encode(['success' => true]);
-    exit;
+    
+    if (!in_array($action, ['add', 'update', 'delete'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid action. Must be add, update, or delete']);
+        exit();
+    }
+    
+    if ($action !== 'add' && !$id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'ID parameter is required for update and delete operations']);
+        exit();
+    }
+    
+    if (!$type && $action !== 'delete') {
+        http_response_code(400);
+        echo json_encode(['error' => 'Type parameter is required']);
+        exit();
+    }
+    
+    // Get the raw POST data
+    $jsonInput = file_get_contents('php://input');
+    $data = json_decode($jsonInput, true);
+    
+    // Determine the API endpoint based on the action
+    switch ($action) {
+        case 'add':
+            $apiUrl = $nodeServerUrl . '/api/add-cost';
+            $postData = json_encode([
+                'type' => $type,
+                'inventoryId' => $data['inventoryId'] ?? null,
+                'data' => $data
+            ]);
+            break;
+            
+        case 'update':
+            $apiUrl = $nodeServerUrl . '/api/update-cost';
+            $postData = json_encode([
+                'type' => $type,
+                'id' => $id,
+                'data' => $data
+            ]);
+            break;
+            
+        case 'delete':
+            $apiUrl = $nodeServerUrl . '/api/delete-cost';
+            $postData = json_encode([
+                'type' => $type,
+                'id' => $id
+            ]);
+            break;
+    }
+    
+    // Initialize cURL session
+    $ch = curl_init($apiUrl);
+    
+    // Set cURL options
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Content-Length: ' . strlen($postData)
+    ]);
+    
+    // Execute the cURL request
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+    // Check for cURL errors
+    if (curl_errno($ch)) {
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'Failed to connect to inventory costs server',
+            'details' => curl_error($ch)
+        ]);
+        curl_close($ch);
+        exit();
+    }
+    
+    // Close cURL session
+    curl_close($ch);
+    
+    // Set the HTTP status code from the Node.js response
+    http_response_code($httpCode);
+    
+    // Output the response from the Node.js server
+    echo $response;
+    exit();
 }
 
-echo json_encode(['error' => 'Invalid request']); 
+// If we get here, the request method is not supported
+http_response_code(405);
+echo json_encode(['error' => 'Method not allowed']);

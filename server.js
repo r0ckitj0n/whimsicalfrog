@@ -451,9 +451,462 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
     }
 });
 
-// ...
-// Add other endpoints here, all using MySQL only
-// ...
+app.post('/api/update-product', async (req, res) => {
+    try {
+        const { id, name, basePrice, description, productType, defaultSKU_Base } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ error: 'Product ID is required' });
+        }
+
+        const connection = await mysql.createConnection(dbConfig);
+
+        await connection.execute(
+            'UPDATE products SET name = ?, basePrice = ?, description = ?, productType = ?, defaultSKU_Base = ? WHERE id = ?',
+            [name, basePrice, description, productType, defaultSKU_Base, id]
+        );
+
+        await connection.end();
+
+        res.json({ success: true, message: 'Product updated successfully' });
+    } catch (error) {
+        console.error('Error updating product:', error);
+        res.status(500).json({ error: 'Failed to update product', details: error.message });
+    }
+});
+
+// --- Update inventory endpoint ---
+app.post('/api/update-inventory', async (req, res) => {
+    try {
+        const { inventoryId, field, value } = req.body;
+
+        if (!inventoryId) {
+            return res.status(400).json({ error: 'Inventory ID is required' });
+        }
+
+        if (!field || value === undefined) {
+            return res.status(400).json({ error: 'Field and value are required' });
+        }
+
+        // Validate field name to prevent SQL injection
+        const allowedFields = ['productId', 'sku', 'stockLevel', 'reorderPoint', 'description'];
+        if (!allowedFields.includes(field)) {
+            return res.status(400).json({ error: 'Invalid field name' });
+        }
+
+        const connection = await mysql.createConnection(dbConfig);
+
+        const sql = `UPDATE inventory SET ${field} = ? WHERE id = ?`;
+        const [result] = await connection.execute(sql, [value, inventoryId]);
+
+        await connection.end();
+
+        if (result.affectedRows > 0) {
+            res.json({ success: true, message: 'Inventory updated successfully' });
+        } else {
+            res.status(404).json({ error: 'Inventory item not found or no changes made' });
+        }
+    } catch (error) {
+        console.error('Error updating inventory:', error);
+        res.status(500).json({ error: 'Failed to update inventory', details: error.message });
+    }
+});
+
+// --- Add inventory endpoint ---
+app.post('/api/add-inventory', async (req, res) => {
+    try {
+        const { productId, productName, description, sku, stockLevel, reorderPoint } = req.body;
+
+        if (!productId) {
+            return res.status(400).json({ error: 'Product ID is required' });
+        }
+
+        const connection = await mysql.createConnection(dbConfig);
+
+        // Check if product exists
+        const [products] = await connection.execute('SELECT id FROM products WHERE id = ?', [productId]);
+        if (products.length === 0) {
+            await connection.end();
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        // Generate a unique inventory ID
+        const inventoryId = 'INV' + Math.random().toString(36).substr(2, 8);
+
+        // Insert new inventory item
+        await connection.execute(
+            'INSERT INTO inventory (id, productId, sku, stockLevel, reorderPoint, description) VALUES (?, ?, ?, ?, ?, ?)',
+            [
+                inventoryId,
+                productId,
+                sku || `SKU-${productId}`,
+                stockLevel || 0,
+                reorderPoint || 5,
+                description || `Inventory for ${productName || productId}`
+            ]
+        );
+
+        await connection.end();
+
+        res.status(201).json({
+            success: true,
+            inventoryId: inventoryId,
+            message: 'Inventory item added successfully'
+        });
+    } catch (error) {
+        console.error('Error adding inventory:', error);
+        res.status(500).json({ error: 'Failed to add inventory', details: error.message });
+    }
+});
+
+// --- Delete inventory endpoint ---
+app.post('/api/delete-inventory', async (req, res) => {
+    try {
+        const { inventoryId } = req.body;
+
+        if (!inventoryId) {
+            return res.status(400).json({ error: 'Inventory ID is required' });
+        }
+
+        const connection = await mysql.createConnection(dbConfig);
+
+        // Delete inventory item
+        const [result] = await connection.execute('DELETE FROM inventory WHERE id = ?', [inventoryId]);
+
+        await connection.end();
+
+        if (result.affectedRows > 0) {
+            res.json({ success: true, message: 'Inventory item deleted successfully' });
+        } else {
+            res.status(404).json({ error: 'Inventory item not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting inventory:', error);
+        res.status(500).json({ error: 'Failed to delete inventory', details: error.message });
+    }
+});
+
+// --- Get inventory costs endpoint ---
+app.get('/api/inventory-costs/:inventoryId', async (req, res) => {
+    try {
+        const { inventoryId } = req.params;
+        
+        if (!inventoryId) {
+            return res.status(400).json({ error: 'Inventory ID is required' });
+        }
+        
+        const connection = await mysql.createConnection(dbConfig);
+        
+        // Get materials costs
+        const [materials] = await connection.execute(
+            'SELECT * FROM inventory_materials WHERE inventoryId = ?',
+            [inventoryId]
+        );
+        
+        // Get labor costs
+        const [labor] = await connection.execute(
+            'SELECT * FROM inventory_labor WHERE inventoryId = ?',
+            [inventoryId]
+        );
+        
+        // Get energy costs
+        const [energy] = await connection.execute(
+            'SELECT * FROM inventory_energy WHERE inventoryId = ?',
+            [inventoryId]
+        );
+        
+        await connection.end();
+        
+        // Calculate totals
+        const materialsTotal = materials.reduce((sum, item) => sum + parseFloat(item.cost), 0);
+        const laborTotal = labor.reduce((sum, item) => sum + parseFloat(item.cost), 0);
+        const energyTotal = energy.reduce((sum, item) => sum + parseFloat(item.cost), 0);
+        const grandTotal = materialsTotal + laborTotal + energyTotal;
+        
+        res.json({
+            materials,
+            labor,
+            energy,
+            totals: {
+                materials: materialsTotal,
+                labor: laborTotal,
+                energy: energyTotal,
+                grand: grandTotal
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching inventory costs:', error);
+        res.status(500).json({ error: 'Failed to fetch inventory costs', details: error.message });
+    }
+});
+
+// --- Add cost item endpoint ---
+app.post('/api/add-cost', async (req, res) => {
+    try {
+        const { type, inventoryId, data } = req.body;
+        
+        if (!type || !inventoryId || !data) {
+            return res.status(400).json({ error: 'Type, inventoryId, and data are required' });
+        }
+        
+        // Validate cost type
+        if (!['material', 'labor', 'energy'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid cost type. Must be material, labor, or energy' });
+        }
+        
+        const connection = await mysql.createConnection(dbConfig);
+        
+        let result;
+        
+        // Insert based on cost type - simplified to match actual schema
+        switch (type) {
+            case 'material':
+                // Validate required fields
+                if (!data.name || data.cost === undefined) {
+                    await connection.end();
+                    return res.status(400).json({ error: 'Material name and cost are required' });
+                }
+                
+                // Insert material cost with only the fields that exist in the schema
+                [result] = await connection.execute(
+                    'INSERT INTO inventory_materials (inventoryId, name, cost) VALUES (?, ?, ?)',
+                    [
+                        inventoryId,
+                        data.name,
+                        parseFloat(data.cost)
+                    ]
+                );
+                break;
+                
+            case 'labor':
+                // Validate required fields
+                if (!data.description || data.cost === undefined) {
+                    await connection.end();
+                    return res.status(400).json({ error: 'Labor description and cost are required' });
+                }
+                
+                // Insert labor cost with only the fields that exist in the schema
+                [result] = await connection.execute(
+                    'INSERT INTO inventory_labor (inventoryId, description, cost) VALUES (?, ?, ?)',
+                    [
+                        inventoryId,
+                        data.description,
+                        parseFloat(data.cost)
+                    ]
+                );
+                break;
+                
+            case 'energy':
+                // Validate required fields
+                if (!data.description || data.cost === undefined) {
+                    await connection.end();
+                    return res.status(400).json({ error: 'Energy description and cost are required' });
+                }
+                
+                // Insert energy cost with only the fields that exist in the schema
+                [result] = await connection.execute(
+                    'INSERT INTO inventory_energy (inventoryId, description, cost) VALUES (?, ?, ?)',
+                    [
+                        inventoryId,
+                        data.description,
+                        parseFloat(data.cost)
+                    ]
+                );
+                break;
+        }
+        
+        await connection.end();
+        
+        res.status(201).json({
+            success: true,
+            id: result.insertId,
+            message: `${type} cost added successfully`
+        });
+    } catch (error) {
+        console.error(`Error adding ${req.body.type} cost:`, error);
+        res.status(500).json({ error: `Failed to add ${req.body.type} cost`, details: error.message });
+    }
+});
+
+// --- Update cost item endpoint ---
+app.post('/api/update-cost', async (req, res) => {
+    try {
+        const { type, id, data } = req.body;
+        
+        if (!type || !id || !data) {
+            return res.status(400).json({ error: 'Type, id, and data are required' });
+        }
+        
+        // Validate cost type
+        if (!['material', 'labor', 'energy'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid cost type. Must be material, labor, or energy' });
+        }
+        
+        const connection = await mysql.createConnection(dbConfig);
+        
+        let result;
+        
+        // Update based on cost type - simplified to match actual schema
+        switch (type) {
+            case 'material':
+                // Build update query dynamically for the fields that exist in the schema
+                const materialFields = [];
+                const materialValues = [];
+                
+                if (data.name !== undefined) {
+                    materialFields.push('name = ?');
+                    materialValues.push(data.name);
+                }
+                
+                if (data.cost !== undefined) {
+                    materialFields.push('cost = ?');
+                    materialValues.push(parseFloat(data.cost));
+                }
+                
+                if (materialFields.length === 0) {
+                    await connection.end();
+                    return res.status(400).json({ error: 'No fields to update' });
+                }
+                
+                // Add ID to values array
+                materialValues.push(id);
+                
+                // Execute update query
+                [result] = await connection.execute(
+                    `UPDATE inventory_materials SET ${materialFields.join(', ')} WHERE id = ?`,
+                    materialValues
+                );
+                break;
+                
+            case 'labor':
+                // Build update query dynamically for the fields that exist in the schema
+                const laborFields = [];
+                const laborValues = [];
+                
+                if (data.description !== undefined) {
+                    laborFields.push('description = ?');
+                    laborValues.push(data.description);
+                }
+                
+                if (data.cost !== undefined) {
+                    laborFields.push('cost = ?');
+                    laborValues.push(parseFloat(data.cost));
+                }
+                
+                if (laborFields.length === 0) {
+                    await connection.end();
+                    return res.status(400).json({ error: 'No fields to update' });
+                }
+                
+                // Add ID to values array
+                laborValues.push(id);
+                
+                // Execute update query
+                [result] = await connection.execute(
+                    `UPDATE inventory_labor SET ${laborFields.join(', ')} WHERE id = ?`,
+                    laborValues
+                );
+                break;
+                
+            case 'energy':
+                // Build update query dynamically for the fields that exist in the schema
+                const energyFields = [];
+                const energyValues = [];
+                
+                if (data.description !== undefined) {
+                    energyFields.push('description = ?');
+                    energyValues.push(data.description);
+                }
+                
+                if (data.cost !== undefined) {
+                    energyFields.push('cost = ?');
+                    energyValues.push(parseFloat(data.cost));
+                }
+                
+                if (energyFields.length === 0) {
+                    await connection.end();
+                    return res.status(400).json({ error: 'No fields to update' });
+                }
+                
+                // Add ID to values array
+                energyValues.push(id);
+                
+                // Execute update query
+                [result] = await connection.execute(
+                    `UPDATE inventory_energy SET ${energyFields.join(', ')} WHERE id = ?`,
+                    energyValues
+                );
+                break;
+        }
+        
+        await connection.end();
+        
+        if (result.affectedRows > 0) {
+            res.json({
+                success: true,
+                message: `${type} cost updated successfully`
+            });
+        } else {
+            res.status(404).json({ error: `${type} cost not found or no changes made` });
+        }
+    } catch (error) {
+        console.error(`Error updating ${req.body.type} cost:`, error);
+        res.status(500).json({ error: `Failed to update ${req.body.type} cost`, details: error.message });
+    }
+});
+
+// --- Delete cost item endpoint ---
+app.post('/api/delete-cost', async (req, res) => {
+    try {
+        const { type, id } = req.body;
+        
+        if (!type || !id) {
+            return res.status(400).json({ error: 'Type and id are required' });
+        }
+        
+        // Validate cost type
+        if (!['material', 'labor', 'energy'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid cost type. Must be material, labor, or energy' });
+        }
+        
+        const connection = await mysql.createConnection(dbConfig);
+        
+        let tableName;
+        
+        // Determine table name based on cost type
+        switch (type) {
+            case 'material':
+                tableName = 'inventory_materials';
+                break;
+            case 'labor':
+                tableName = 'inventory_labor';
+                break;
+            case 'energy':
+                tableName = 'inventory_energy';
+                break;
+        }
+        
+        // Execute delete query
+        const [result] = await connection.execute(
+            `DELETE FROM ${tableName} WHERE id = ?`,
+            [id]
+        );
+        
+        await connection.end();
+        
+        if (result.affectedRows > 0) {
+            res.json({
+                success: true,
+                message: `${type} cost deleted successfully`
+            });
+        } else {
+            res.status(404).json({ error: `${type} cost not found` });
+        }
+    } catch (error) {
+        console.error(`Error deleting ${req.body.type} cost:`, error);
+        res.status(500).json({ error: `Failed to delete ${req.body.type} cost`, details: error.message });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

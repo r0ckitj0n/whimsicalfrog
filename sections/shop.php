@@ -14,12 +14,12 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     <!-- Category Navigation -->
     <div class="flex flex-wrap justify-center mb-8 gap-2">
         <?php foreach (array_keys($categories) as $category): ?>
-            <button class="category-btn px-4 py-2 rounded-full bg-[#6B8E23] text-white hover:bg-[#556B2F] transition-colors"
+            <button class="category-btn px-4 py-2 rounded-full bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition-colors"
                     data-category="<?php echo htmlspecialchars($category); ?>">
                 <?php echo htmlspecialchars($category); ?>
             </button>
         <?php endforeach; ?>
-        <button class="category-btn px-4 py-2 rounded-full bg-[#6B8E23] text-white hover:bg-[#556B2F] transition-colors active"
+        <button class="category-btn px-4 py-2 rounded-full bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition-colors active"
                 data-category="all">
             All Products
         </button>
@@ -55,7 +55,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
                     <p class="text-gray-600 mb-2 text-sm line-clamp-2"><?php echo $description; ?></p>
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-[#6B8E23]"><?php echo $formattedPrice; ?></span>
-                        <button class="add-to-cart-btn bg-[#6B8E23] hover:bg-[#556B2F] text-white px-3 py-1 rounded-md text-sm transition-colors"
+                        <button class="add-to-cart-btn bg-[#87ac3a] hover:bg-[#a3cc4a] text-white px-3 py-1 rounded-md text-sm transition-colors"
                                 data-product-id="<?php echo $productId; ?>"
                                 data-product-name="<?php echo $productName; ?>"
                                 data-product-price="<?php echo $price; ?>"
@@ -84,8 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const category = this.getAttribute('data-category');
             
             // Update active button
-            categoryButtons.forEach(btn => btn.classList.remove('active', 'bg-[#556B2F]'));
-            this.classList.add('active', 'bg-[#556B2F]');
+            categoryButtons.forEach(btn => btn.classList.remove('active', 'bg-[#a3cc4a]'));
+            this.classList.add('active', 'bg-[#a3cc4a]');
             
             // Filter products
             productCards.forEach(card => {

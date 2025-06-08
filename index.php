@@ -83,8 +83,8 @@ try {
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Fetch products with direct SQL query
-    $stmt = $pdo->query('SELECT * FROM products');
+    // Fetch products with direct SQL query - map database column names to expected names
+    $stmt = $pdo->query('SELECT id AS productId, name AS productName, productType, basePrice AS price, description, image AS imageUrl FROM products');
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if ($products && is_array($products)) {

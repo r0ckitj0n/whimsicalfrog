@@ -1,6 +1,6 @@
 <?php
 // Include database configuration
-require_once '../api/config.php'; // Corrected path: from sections/admin_marketing.php to api/config.php
+require_once 'api/config.php'; // Changed from '../api/config.php' to match other section files
 
 // Initialize all variables to prevent undefined variable errors
 $customerCount = 0;

@@ -1,10 +1,12 @@
 <?php
+/*
 // Shop page section - now displays all items
 
 // Fetch all products from Node API (MySQL)
 $apiBase = 'https://whimsicalfrog.us';
 $productsJson = @file_get_contents($apiBase . '/api/products');
 $allProducts = $productsJson ? json_decode($productsJson, true) : [];
+*/
 ?>
 <section id="shopPage" class="p-2 bg-white rounded-lg shadow-lg">
     <h2 class="text-4xl font-merienda text-center text-[#556B2F] mb-8">All Our Whimsical Wares</h2>
@@ -16,7 +18,10 @@ $allProducts = $productsJson ? json_decode($productsJson, true) : [];
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const apiBase = 'https://whimsicalfrog.us';
+    // Determine the API base URL dynamically.
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const apiBase = isLocal ? 'http://localhost:3000' : 'https://whimsicalfrog.us';
+
     const productsGrid = document.getElementById('allProductsGrid');
     const loadingMessage = document.getElementById('loadingMessage');
 

@@ -913,3 +913,11 @@
 /bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
 /bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
 /bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+2025-06-07 20:10:28 - [0;34mStarting all WhimsicalFrog servers...[0m
+2025-06-07 20:10:28 - [0;34mStarting Node.js API server on port 3000...[0m
+2025-06-07 20:10:31 - [0;32mNode.js API server started successfully[0m
+2025-06-07 20:10:31 - [0;34mStarting PHP web server on port 8000...[0m
+2025-06-07 20:10:33 - [0;32mPHP web server started successfully[0m
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted

@@ -1,11 +1,11 @@
 <?php
+session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // Load environment variables
 require_once __DIR__ . '/config.php';
 // Start or resume session
-session_start();
 
 // Function to fetch data from the Node.js API
 function fetchData($endpoint) {

@@ -43,7 +43,7 @@ if (!isset($isAdmin) || !$isAdmin) {
                 <input type="number" id="quantity" name="quantity" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
             </div>
             <div>
-                <label for="unit" class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                <label for="unit" class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
                 <input type="text" id="unit" name="unit" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
             </div>
             <div>
@@ -111,7 +111,7 @@ if (!isset($isAdmin) || !$isAdmin) {
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Unit</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Cost</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
@@ -160,7 +160,7 @@ if (!isset($isAdmin) || !$isAdmin) {
                 <input type="number" id="editQuantity" name="quantity" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
             </div>
             <div>
-                <label for="editUnit" class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                <label for="editUnit" class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
                 <input type="text" id="editUnit" name="unit" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
             </div>
             <div>
@@ -260,17 +260,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-50';
             
-            // Format total cost for display
-            const totalCost = parseFloat(item.totalCost || (item.quantity * item.costPerUnit)).toFixed(2);
+            // Map database column names to display names
+            const name = item.name || '';
+            const category = item.category || '';
+            const quantity = item.stockLevel || 0;
+            const sku = item.sku || '';
+            const costPerUnit = 0; // Not in database, placeholder
+            const totalCost = 0; // Not in database, placeholder
+            const notes = item.description || '';
             
             row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap">${item.itemName}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${item.category}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${item.quantity}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${item.unit}</td>
-                <td class="px-6 py-4 whitespace-nowrap">$${parseFloat(item.costPerUnit).toFixed(2)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">$${totalCost}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${item.notes || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${name}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${category}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${quantity}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${sku}</td>
+                <td class="px-6 py-4 whitespace-nowrap">$${parseFloat(costPerUnit).toFixed(2)}</td>
+                <td class="px-6 py-4 whitespace-nowrap">$${parseFloat(totalCost).toFixed(2)}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${notes || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <button class="edit-btn text-blue-600 hover:text-blue-800" data-id="${item.id}">
                         Edit
@@ -294,7 +300,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let energyCost = 0;
         
         inventoryData.forEach(item => {
-            const itemCost = parseFloat(item.totalCost || (item.quantity * item.costPerUnit)) || 0;
+            // Since we don't have totalCost in the database, we'll use a placeholder value
+            const itemCost = 0; // Placeholder
             totalValue += itemCost;
             
             if (item.category === 'Material') {
@@ -315,12 +322,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Open edit modal with item data
     function openEditModal(item) {
         document.getElementById('editItemId').value = item.id;
-        document.getElementById('editItemName').value = item.itemName;
-        document.getElementById('editCategory').value = item.category;
-        document.getElementById('editQuantity').value = item.quantity;
-        document.getElementById('editUnit').value = item.unit;
-        document.getElementById('editCostPerUnit').value = item.costPerUnit;
-        document.getElementById('editNotes').value = item.notes || '';
+        document.getElementById('editItemName').value = item.name || '';
+        document.getElementById('editCategory').value = item.category || 'Other';
+        document.getElementById('editQuantity').value = item.stockLevel || 0;
+        document.getElementById('editUnit').value = item.sku || '';
+        document.getElementById('editCostPerUnit').value = 0; // Placeholder
+        document.getElementById('editNotes').value = item.description || '';
         
         // Calculate total cost
         calculateTotalCost(editQuantityInput, editCostPerUnitInput, editTotalCostInput);
@@ -402,13 +409,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const formData = {
             id: document.getElementById('editItemId').value,
-            itemName: document.getElementById('editItemName').value,
+            name: document.getElementById('editItemName').value,
             category: document.getElementById('editCategory').value,
-            quantity: parseFloat(document.getElementById('editQuantity').value),
-            unit: document.getElementById('editUnit').value,
-            costPerUnit: parseFloat(document.getElementById('editCostPerUnit').value),
-            totalCost: parseFloat(document.getElementById('editTotalCost').value),
-            notes: document.getElementById('editNotes').value
+            stockLevel: parseFloat(document.getElementById('editQuantity').value),
+            sku: document.getElementById('editUnit').value,
+            description: document.getElementById('editNotes').value
         };
         
         // Use direct SQL query through PHP file instead of API endpoint

@@ -32,25 +32,13 @@ try {
         exit;
     }
     
-    // Validate required fields
-    $requiredFields = ['itemName', 'category', 'quantity', 'unit', 'costPerUnit'];
-    foreach ($requiredFields as $field) {
-        if (!isset($data[$field]) || empty($data[$field])) {
-            http_response_code(400);
-            echo json_encode(['error' => "Field '$field' is required"]);
-            exit;
-        }
-    }
-    
-    // Extract data
+    // Extract data using the correct field names
     $id = $data['id'];
-    $itemName = $data['itemName'];
-    $category = $data['category'];
-    $quantity = floatval($data['quantity']);
-    $unit = $data['unit'];
-    $costPerUnit = floatval($data['costPerUnit']);
-    $totalCost = floatval($data['totalCost'] ?? ($quantity * $costPerUnit));
-    $notes = $data['notes'] ?? '';
+    $name = $data['name'] ?? '';
+    $category = $data['category'] ?? '';
+    $stockLevel = isset($data['stockLevel']) ? floatval($data['stockLevel']) : 0;
+    $sku = $data['sku'] ?? '';
+    $description = $data['description'] ?? '';
     
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
@@ -64,9 +52,9 @@ try {
         exit;
     }
     
-    // Update inventory item
-    $stmt = $pdo->prepare('UPDATE inventory SET itemName = ?, category = ?, quantity = ?, unit = ?, costPerUnit = ?, totalCost = ?, notes = ? WHERE id = ?');
-    $result = $stmt->execute([$itemName, $category, $quantity, $unit, $costPerUnit, $totalCost, $notes, $id]);
+    // Update inventory item using the correct column names
+    $stmt = $pdo->prepare('UPDATE inventory SET name = ?, category = ?, stockLevel = ?, sku = ?, description = ? WHERE id = ?');
+    $result = $stmt->execute([$name, $category, $stockLevel, $sku, $description, $id]);
     
     if ($result) {
         // Return success response

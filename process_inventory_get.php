@@ -14,10 +14,10 @@ try {
     
     // Prepare SQL query based on category filter
     if ($category) {
-        $stmt = $pdo->prepare('SELECT * FROM inventory WHERE category = ? ORDER BY itemName');
+        $stmt = $pdo->prepare('SELECT * FROM inventory WHERE category = ? ORDER BY name');
         $stmt->execute([$category]);
     } else {
-        $stmt = $pdo->query('SELECT * FROM inventory ORDER BY itemName');
+        $stmt = $pdo->query('SELECT * FROM inventory ORDER BY name');
     }
     
     // Fetch all inventory items

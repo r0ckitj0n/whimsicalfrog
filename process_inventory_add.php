@@ -35,21 +35,31 @@ try {
         }
     }
     
-    // Extract data
-    $itemName = $data['itemName'];
+    // Extract data and map to database columns
+    $name = $data['itemName'];
     $category = $data['category'];
-    $quantity = floatval($data['quantity']);
-    $unit = $data['unit'];
-    $costPerUnit = floatval($data['costPerUnit']);
-    $totalCost = floatval($data['totalCost'] ?? ($quantity * $costPerUnit));
-    $notes = $data['notes'] ?? '';
+    $stockLevel = floatval($data['quantity']);
+    $sku = $data['unit']; // Using unit as SKU
+    $description = $data['notes'] ?? '';
+    
+    // Generate a unique ID if needed
+    $id = 'I' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+    
+    // Generate a product ID if needed
+    $productId = 'P' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+    
+    // Set reorder point to half of stock level or 5, whichever is lower
+    $reorderPoint = min(floor($stockLevel / 2), 5);
+    
+    // Default image URL
+    $imageUrl = 'images/placeholder.png';
     
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Insert new inventory item
-    $stmt = $pdo->prepare('INSERT INTO inventory (itemName, category, quantity, unit, costPerUnit, totalCost, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    $result = $stmt->execute([$itemName, $category, $quantity, $unit, $costPerUnit, $totalCost, $notes]);
+    // Insert new inventory item using the correct column names
+    $stmt = $pdo->prepare('INSERT INTO inventory (id, productId, name, category, description, sku, stockLevel, reorderPoint, imageUrl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $result = $stmt->execute([$id, $productId, $name, $category, $description, $sku, $stockLevel, $reorderPoint, $imageUrl]);
     
     if ($result) {
         // Return success response
@@ -57,7 +67,7 @@ try {
         echo json_encode([
             'success' => true,
             'message' => 'Inventory item added successfully',
-            'id' => $pdo->lastInsertId()
+            'id' => $id
         ]);
     } else {
         throw new Exception('Failed to add inventory item');

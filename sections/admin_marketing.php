@@ -201,28 +201,28 @@ try {
             <div class="dashboard-card">
                 <h3>Marketing Tools</h3>
                 <div class="marketing-tools">
-                    <a href="#" class="tool-card">
+                    <a href="javascript:void(0)" onclick="showMarketingModal('email-campaigns')" class="tool-card">
                         <div class="tool-icon"><i class="fas fa-envelope"></i></div>
                         <div class="tool-info">
                             <h4>Email Campaigns</h4>
                             <p>Create and manage email marketing campaigns</p>
                         </div>
                     </a>
-                    <a href="#" class="tool-card">
+                    <a href="javascript:void(0)" onclick="showMarketingModal('discount-codes')" class="tool-card">
                         <div class="tool-icon"><i class="fas fa-tag"></i></div>
                         <div class="tool-info">
                             <h4>Discount Codes</h4>
                             <p>Generate promotional codes for customers</p>
                         </div>
                     </a>
-                    <a href="#" class="tool-card">
+                    <a href="javascript:void(0)" onclick="showMarketingModal('social-media')" class="tool-card">
                         <div class="tool-icon"><i class="fas fa-share-alt"></i></div>
                         <div class="tool-info">
                             <h4>Social Media</h4>
                             <p>Manage social media integrations</p>
                         </div>
                     </a>
-                    <a href="#" class="tool-card">
+                    <a href="/?page=admin&section=reports" class="tool-card">
                         <div class="tool-icon"><i class="fas fa-chart-line"></i></div>
                         <div class="tool-info">
                             <h4>Analytics</h4>
@@ -231,6 +231,53 @@ try {
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Marketing Tool Modal -->
+<div id="marketingModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeMarketingModal()">&times;</span>
+        <h2 id="modalTitle">Marketing Tool</h2>
+        <div id="modalContent">
+            <p>This feature is coming soon!</p>
+            <div id="email-campaigns-content" style="display: none;">
+                <p>Our email campaign feature will allow you to:</p>
+                <ul>
+                    <li>Create targeted email campaigns</li>
+                    <li>Design beautiful email templates</li>
+                    <li>Track open rates and click-through rates</li>
+                    <li>Segment your customer base</li>
+                    <li>Schedule automated email sequences</li>
+                </ul>
+                <p>We're working hard to bring this feature to you soon!</p>
+            </div>
+            <div id="discount-codes-content" style="display: none;">
+                <p>Our discount code generator will allow you to:</p>
+                <ul>
+                    <li>Create unique promo codes</li>
+                    <li>Set expiration dates</li>
+                    <li>Limit usage per customer</li>
+                    <li>Track redemption rates</li>
+                    <li>Create percentage or fixed amount discounts</li>
+                </ul>
+                <p>We're working hard to bring this feature to you soon!</p>
+            </div>
+            <div id="social-media-content" style="display: none;">
+                <p>Our social media integration will allow you to:</p>
+                <ul>
+                    <li>Connect your store to Facebook, Instagram, and Twitter</li>
+                    <li>Automatically post new products</li>
+                    <li>Schedule social media content</li>
+                    <li>Track engagement metrics</li>
+                    <li>Run integrated social media campaigns</li>
+                </ul>
+                <p>We're working hard to bring this feature to you soon!</p>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button onclick="closeMarketingModal()" class="button primary">Close</button>
         </div>
     </div>
 </div>
@@ -275,6 +322,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+});
+
+// Marketing modal functions
+function showMarketingModal(toolType) {
+    const modal = document.getElementById('marketingModal');
+    const modalTitle = document.getElementById('modalTitle');
+    
+    // Hide all content divs first
+    document.getElementById('email-campaigns-content').style.display = 'none';
+    document.getElementById('discount-codes-content').style.display = 'none';
+    document.getElementById('social-media-content').style.display = 'none';
+    
+    // Set title and show specific content based on tool type
+    switch(toolType) {
+        case 'email-campaigns':
+            modalTitle.textContent = 'Email Campaigns';
+            document.getElementById('email-campaigns-content').style.display = 'block';
+            break;
+        case 'discount-codes':
+            modalTitle.textContent = 'Discount Codes';
+            document.getElementById('discount-codes-content').style.display = 'block';
+            break;
+        case 'social-media':
+            modalTitle.textContent = 'Social Media Integration';
+            document.getElementById('social-media-content').style.display = 'block';
+            break;
+        default:
+            modalTitle.textContent = 'Marketing Tool';
+    }
+    
+    modal.style.display = 'block';
+}
+
+function closeMarketingModal() {
+    document.getElementById('marketingModal').style.display = 'none';
+}
+
+// Close modal when clicking outside of it
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('marketingModal');
+    if (event.target === modal) {
+        closeMarketingModal();
+    }
 });
 </script>
 
@@ -437,6 +527,63 @@ document.addEventListener('DOMContentLoaded', function() {
     font-style: italic;
     text-align: center;
     padding: 20px 0;
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-button:hover {
+    color: #000;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.button.primary {
+    background-color: #87ac3a;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.button.primary:hover {
+    background-color: #a3cc4a;
 }
 
 @media (max-width: 992px) {

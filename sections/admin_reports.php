@@ -7,31 +7,38 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
-// Include database configuration
-require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
+// Include database configuration - using relative path
+require_once 'api/config.php';
 
 // Initialize arrays to prevent null values
 $ordersData = [];
 $customersData = [];
 $inventoryData = [];
+$productsData = [];
 
 try {
     // Create a PDO connection
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Fetch orders data directly from database
-    $ordersStmt = $pdo->query('SELECT * FROM orders');
-    $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
+    // Check if orders table exists
+    $tableCheckStmt = $pdo->query("SHOW TABLES LIKE 'orders'");
+    $ordersTableExists = $tableCheckStmt->rowCount() > 0;
     
-    // For each order, get its items
-    foreach ($ordersData as &$order) {
-        $itemsStmt = $pdo->prepare('SELECT * FROM order_items WHERE orderId = ?');
-        $itemsStmt->execute([$order['id']]);
-        $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+    if ($ordersTableExists) {
+        // Fetch orders data directly from database
+        $ordersStmt = $pdo->query('SELECT * FROM orders');
+        $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Convert shippingAddress from JSON string to array if it exists
-        if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
-            $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
+        // For each order, get its items
+        foreach ($ordersData as &$order) {
+            $itemsStmt = $pdo->prepare('SELECT * FROM order_items WHERE orderId = ?');
+            $itemsStmt->execute([$order['id']]);
+            $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Convert shippingAddress from JSON string to array if it exists
+            if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
+                $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
+            }
         }
     }
     
@@ -42,6 +49,10 @@ try {
     // Fetch inventory data directly from database
     $inventoryStmt = $pdo->query('SELECT * FROM inventory');
     $inventoryData = $inventoryStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch products data directly from database
+    $productsStmt = $pdo->query('SELECT * FROM products');
+    $productsData = $productsStmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Close the connection
     $pdo = null;
@@ -55,32 +66,34 @@ try {
 $ordersData = is_array($ordersData) ? $ordersData : [];
 $customersData = is_array($customersData) ? $customersData : [];
 $inventoryData = is_array($inventoryData) ? $inventoryData : [];
+$productsData = is_array($productsData) ? $productsData : [];
 
 // Calculate metrics for reports
 $totalRevenue = 0;
 $totalOrders = count($ordersData);
 $totalCustomers = count($customersData);
-$totalProducts = count($inventoryData);
+$totalProducts = count($productsData);
 
-// Calculate revenue
+// Calculate revenue - using totalAmount instead of total
 foreach ($ordersData as $order) {
-    $totalRevenue += floatval($order['total'] ?? 0);
+    $totalRevenue += floatval($order['totalAmount'] ?? $order['total'] ?? 0);
 }
 
 // Get date range for filtering
 $startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-d', strtotime('-30 days'));
 $endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 
-// Filter orders by date range
+// Filter orders by date range - using orderDate instead of date
 $filteredOrders = array_filter($ordersData, function($order) use ($startDate, $endDate) {
-    $orderDate = isset($order['date']) ? date('Y-m-d', strtotime($order['date'])) : '';
+    $orderDate = isset($order['orderDate']) ? date('Y-m-d', strtotime($order['orderDate'])) : 
+                (isset($order['date']) ? date('Y-m-d', strtotime($order['date'])) : '');
     return $orderDate >= $startDate && $orderDate <= $endDate;
 });
 
 // Calculate metrics for filtered orders
 $filteredRevenue = 0;
 foreach ($filteredOrders as $order) {
-    $filteredRevenue += floatval($order['total'] ?? 0);
+    $filteredRevenue += floatval($order['totalAmount'] ?? $order['total'] ?? 0);
 }
 
 // Calculate average order value
@@ -89,7 +102,8 @@ $averageOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
 // Group orders by date for chart data
 $ordersByDate = [];
 foreach ($filteredOrders as $order) {
-    $orderDate = isset($order['date']) ? date('Y-m-d', strtotime($order['date'])) : '';
+    $orderDate = isset($order['orderDate']) ? date('Y-m-d', strtotime($order['orderDate'])) : 
+                (isset($order['date']) ? date('Y-m-d', strtotime($order['date'])) : '');
     if (!isset($ordersByDate[$orderDate])) {
         $ordersByDate[$orderDate] = [
             'count' => 0,
@@ -97,7 +111,7 @@ foreach ($filteredOrders as $order) {
         ];
     }
     $ordersByDate[$orderDate]['count']++;
-    $ordersByDate[$orderDate]['revenue'] += floatval($order['total'] ?? 0);
+    $ordersByDate[$orderDate]['revenue'] += floatval($order['totalAmount'] ?? $order['total'] ?? 0);
 }
 
 // Sort by date
@@ -145,8 +159,8 @@ $topProducts = array_slice($productSales, 0, 5, true);
 
 // Get product names
 $productNames = [];
-foreach ($inventoryData as $product) {
-    $productId = $product['productId'] ?? '';
+foreach ($productsData as $product) {
+    $productId = $product['id'] ?? '';
     $productNames[$productId] = $product['name'] ?? 'Unknown Product';
 }
 
@@ -166,24 +180,55 @@ $lowStockProducts = array_filter($inventoryData, function($product) {
     font-weight: bold;
   }
   .report-card {
-    @apply bg-white rounded-lg shadow p-6 mb-6;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
   }
   .report-card-title {
-    @apply text-lg font-medium text-gray-900 mb-4;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #111827;
+    margin-bottom: 1rem;
   }
   .metric-card {
-    @apply bg-white rounded-lg shadow p-4;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    padding: 1rem;
   }
   .metric-value {
-    @apply text-2xl font-bold text-gray-900;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
   }
   .metric-label {
-    @apply text-sm text-gray-500;
+    font-size: 0.875rem;
+    color: #6B7280;
   }
   .chart-container {
     position: relative;
     height: 300px;
     width: 100%;
+  }
+  
+  /* Stats section with explicit white background */
+  .stats-section {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+  
+  @media (min-width: 768px) {
+    .stats-section {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 </style>
 
@@ -218,8 +263,8 @@ $lowStockProducts = array_filter($inventoryData, function($product) {
     </button>
 </div>
 
-<!-- Key Metrics Cards -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+<!-- Key Metrics Cards - Using the new stats-section class for white background -->
+<div class="stats-section">
     <div class="metric-card">
         <div class="metric-label">Total Revenue</div>
         <div class="metric-value text-green-600">$<?php echo number_format($filteredRevenue, 2); ?></div>

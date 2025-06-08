@@ -1,322 +1,374 @@
 <?php
-// Orders Table Setup Script for Whimsical Frog
-// This script creates the necessary tables for order management
-// IMPORTANT: Delete this file after successful execution for security!
-
-// Set error reporting for debugging
+// Set error reporting for maximum debugging information
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Include the database configuration
+// Include database configuration
 require_once 'api/config.php';
 
 // Security token to prevent accidental execution
 $securityToken = md5('whimsicalfrog_setup_' . date('Ymd'));
 
-// Check if form is submitted with correct token
-$isConfirmed = isset($_POST['confirm']) && isset($_POST['token']) && $_POST['token'] === $securityToken;
-$isExecuted = false;
-$errorMessage = '';
-$successMessage = '';
-$sqlErrors = [];
-
-// Execute SQL when confirmed
-if ($isConfirmed) {
+// Function to check if a table exists
+function tableExists($pdo, $tableName) {
     try {
-        // Create database connection using config
-        $pdo = new PDO($dsn, $user, $pass, $options);
-        
-        // SQL commands to create tables - each as a separate statement
-        $sqlStatements = [
-            // Create orders table
-            "CREATE TABLE IF NOT EXISTS `orders` (
-              `id` VARCHAR(16) NOT NULL PRIMARY KEY,
-              `userId` VARCHAR(16) NOT NULL,
-              `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-              `status` VARCHAR(32) NOT NULL DEFAULT 'Pending',
-              `total` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-              `shippingAddress` TEXT,
-              `billingAddress` TEXT,
-              `trackingNumber` VARCHAR(64),
-              `paymentMethod` VARCHAR(32) DEFAULT 'Credit Card',
-              `paymentStatus` VARCHAR(32) DEFAULT 'Pending',
-              `notes` TEXT,
-              FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-            
-            // Create order_items table
-            "CREATE TABLE IF NOT EXISTS `order_items` (
-              `id` VARCHAR(16) NOT NULL PRIMARY KEY,
-              `orderId` VARCHAR(16) NOT NULL,
-              `productId` VARCHAR(16) NOT NULL,
-              `quantity` INT NOT NULL DEFAULT 1,
-              `price` DECIMAL(10,2) NOT NULL,
-              FOREIGN KEY (`orderId`) REFERENCES `orders`(`id`) ON DELETE CASCADE,
-              FOREIGN KEY (`productId`) REFERENCES `products`(`id`) ON DELETE RESTRICT
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
-            
-            // Create indexes for better performance
-            "CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders(userId)",
-            "CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)",
-            "CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(date)",
-            "CREATE INDEX IF NOT EXISTS idx_order_items_orderId ON order_items(orderId)",
-            "CREATE INDEX IF NOT EXISTS idx_order_items_productId ON order_items(productId)",
-            
-            // Add alias columns for compatibility - these might fail on older MySQL versions, so we'll handle errors
-            "ALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `order_id` VARCHAR(16) GENERATED ALWAYS AS (id) STORED",
-            "ALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `order_date` DATETIME GENERATED ALWAYS AS (date) STORED",
-            "ALTER TABLE `orders` ADD COLUMN IF NOT EXISTS `payment_status` VARCHAR(32) GENERATED ALWAYS AS (paymentStatus) STORED",
-            
-            // Sample order for testing (optional)
-            "INSERT INTO `orders` (`id`, `userId`, `date`, `status`, `total`, `shippingAddress`, `billingAddress`, `paymentMethod`, `paymentStatus`)
-            VALUES ('ORD001', 'U001', NOW(), 'Processing', 124.99, 
-              '{\"name\":\"John Doe\",\"line1\":\"123 Main St\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zip\":\"30303\",\"country\":\"USA\"}',
-              '{\"name\":\"John Doe\",\"line1\":\"123 Main St\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zip\":\"30303\",\"country\":\"USA\"}',
-              'Credit Card', 'Received')",
-              
-            "INSERT INTO `order_items` (`id`, `orderId`, `productId`, `quantity`, `price`)
-            VALUES ('OI001', 'ORD001', 'P001', 2, 24.99)",
-            
-            "INSERT INTO `order_items` (`id`, `orderId`, `productId`, `quantity`, `price`)
-            VALUES ('OI002', 'ORD001', 'P003', 3, 24.99)"
-        ];
-        
-        // Execute each SQL statement separately and track errors
-        $successCount = 0;
-        foreach ($sqlStatements as $index => $statement) {
-            try {
-                $pdo->exec($statement);
-                $successCount++;
-            } catch (PDOException $e) {
-                // Store the error but continue with other statements
-                $sqlErrors[] = [
-                    'statement' => $index + 1,
-                    'sql' => $statement,
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
-        
-        // Set success or partial success message
-        if (empty($sqlErrors)) {
-            $isExecuted = true;
-            $successMessage = "All orders tables and data created successfully! Please delete this file now.";
-        } else {
-            // Some statements failed but others might have succeeded
-            $isExecuted = true;
-            $successMessage = "$successCount of " . count($sqlStatements) . " SQL statements executed successfully.";
-            $errorMessage = "Some SQL statements failed. See details below.";
-        }
-        
+        $result = $pdo->query("SHOW TABLES LIKE '{$tableName}'");
+        return $result->rowCount() > 0;
     } catch (PDOException $e) {
-        $errorMessage = "Database Connection Error: " . $e->getMessage();
-    } catch (Exception $e) {
-        $errorMessage = "Error: " . $e->getMessage();
+        return false;
     }
 }
+
+// Function to execute SQL safely and return status
+function executeSqlSafely($pdo, $sql, $description) {
+    try {
+        $result = $pdo->exec($sql);
+        return [
+            'success' => true,
+            'message' => "✓ {$description} successfully.",
+            'details' => "Affected rows: {$result}"
+        ];
+    } catch (PDOException $e) {
+        return [
+            'success' => false,
+            'message' => "✗ Failed to {$description}.",
+            'details' => $e->getMessage()
+        ];
+    }
+}
+
+// Function to insert sample data safely
+function insertSampleData($pdo) {
+    $results = [];
+    
+    // Sample users (if needed)
+    if (tableExists($pdo, 'users')) {
+        $checkUsers = $pdo->query("SELECT COUNT(*) FROM users");
+        $userCount = $checkUsers->fetchColumn();
+        
+        if ($userCount < 3) {
+            $userSql = "INSERT IGNORE INTO users (id, username, password, email, role, roleType) VALUES 
+                ('U001', 'admin', 'pass.123', 'admin@whimsicalfrog.com', 'Admin', 'Admin'),
+                ('U002', 'customer', 'pass.123', 'customer@example.com', 'Customer', 'Customer'),
+                ('U003', 'testuser', 'pass.123', 'test@example.com', 'Customer', 'Customer')";
+                
+            $results[] = executeSqlSafely($pdo, $userSql, "insert sample users");
+        }
+    }
+    
+    // Sample orders
+    if (tableExists($pdo, 'orders') && tableExists($pdo, 'order_items')) {
+        $checkOrders = $pdo->query("SELECT COUNT(*) FROM orders");
+        $orderCount = $checkOrders->fetchColumn();
+        
+        if ($orderCount == 0) {
+            // Insert sample orders
+            $ordersSql = "INSERT INTO orders (id, userId, orderDate, totalAmount, status, paymentStatus, shippingAddress, billingAddress) VALUES 
+                ('O001', 'U002', '2025-05-15 10:30:00', 49.99, 'Completed', 'Paid', '{\"street\":\"123 Main St\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zipCode\":\"30301\"}', '{\"street\":\"123 Main St\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zipCode\":\"30301\"}'),
+                ('O002', 'U003', '2025-05-28 14:45:00', 34.98, 'Processing', 'Paid', '{\"street\":\"456 Oak Ave\",\"city\":\"Chicago\",\"state\":\"IL\",\"zipCode\":\"60601\"}', '{\"street\":\"456 Oak Ave\",\"city\":\"Chicago\",\"state\":\"IL\",\"zipCode\":\"60601\"}'),
+                ('O003', 'U002', '2025-06-05 09:15:00', 24.98, 'Shipped', 'Paid', '{\"street\":\"789 Pine Blvd\",\"city\":\"New York\",\"state\":\"NY\",\"zipCode\":\"10001\"}', '{\"street\":\"789 Pine Blvd\",\"city\":\"New York\",\"state\":\"NY\",\"zipCode\":\"10001\"}')";
+                
+            $results[] = executeSqlSafely($pdo, $ordersSql, "insert sample orders");
+            
+            // Insert sample order items
+            $orderItemsSql = "INSERT INTO order_items (id, orderId, productId, quantity, price) VALUES 
+                ('OI001', 'O001', 'P001', 1, 24.99),
+                ('OI002', 'O001', 'P004', 1, 24.99),
+                ('OI003', 'O002', 'P002', 1, 19.99),
+                ('OI004', 'O002', 'P005', 1, 14.99),
+                ('OI005', 'O003', 'P003', 1, 24.98)";
+                
+            $results[] = executeSqlSafely($pdo, $orderItemsSql, "insert sample order items");
+        }
+    }
+    
+    return $results;
+}
+
+// Process the form submission
+$results = [];
+$tablesExist = false;
+$pdo = null;
+
+try {
+    // Create database connection
+    $pdo = new PDO($dsn, $user, $pass, $options);
+    
+    // Check if tables already exist
+    $ordersExists = tableExists($pdo, 'orders');
+    $orderItemsExists = tableExists($pdo, 'order_items');
+    $tablesExist = $ordersExists && $orderItemsExists;
+    
+    // Process form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['setup_token']) && $_POST['setup_token'] === $securityToken) {
+        
+        // If tables don't exist, create them
+        if (!$ordersExists) {
+            // Create orders table
+            $createOrdersTable = "CREATE TABLE orders (
+                id VARCHAR(16) PRIMARY KEY,
+                userId VARCHAR(16) NOT NULL,
+                orderDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                totalAmount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                status VARCHAR(32) NOT NULL DEFAULT 'Pending',
+                paymentStatus VARCHAR(32) NOT NULL DEFAULT 'Pending',
+                shippingAddress JSON,
+                billingAddress JSON,
+                notes TEXT,
+                INDEX (userId),
+                INDEX (orderDate),
+                INDEX (status)
+            )";
+            
+            $results[] = executeSqlSafely($pdo, $createOrdersTable, "create orders table");
+        } else {
+            $results[] = [
+                'success' => true,
+                'message' => "ℹ️ Orders table already exists.",
+                'details' => "Skipping creation."
+            ];
+        }
+        
+        if (!$orderItemsExists) {
+            // Create order_items table
+            $createOrderItemsTable = "CREATE TABLE order_items (
+                id VARCHAR(16) PRIMARY KEY,
+                orderId VARCHAR(16) NOT NULL,
+                productId VARCHAR(16) NOT NULL,
+                quantity INT NOT NULL DEFAULT 1,
+                price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                INDEX (orderId),
+                INDEX (productId)
+            )";
+            
+            $results[] = executeSqlSafely($pdo, $createOrderItemsTable, "create order_items table");
+        } else {
+            $results[] = [
+                'success' => true,
+                'message' => "ℹ️ Order items table already exists.",
+                'details' => "Skipping creation."
+            ];
+        }
+        
+        // Insert sample data if tables were created successfully
+        if ((isset($results[0]['success']) && $results[0]['success']) || 
+            (isset($results[1]['success']) && $results[1]['success']) || 
+            $tablesExist) {
+            
+            $sampleDataResults = insertSampleData($pdo);
+            $results = array_merge($results, $sampleDataResults);
+        }
+    }
+    
+} catch (PDOException $e) {
+    $results[] = [
+        'success' => false,
+        'message' => "✗ Database connection failed.",
+        'details' => $e->getMessage()
+    ];
+} catch (Exception $e) {
+    $results[] = [
+        'success' => false,
+        'message' => "✗ An unexpected error occurred.",
+        'details' => $e->getMessage()
+    ];
+}
+
+// Count successes and failures
+$successCount = 0;
+$failureCount = 0;
+
+foreach ($results as $result) {
+    if ($result['success']) {
+        $successCount++;
+    } else {
+        $failureCount++;
+    }
+}
+
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>Whimsical Frog - Orders Database Setup</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whimsical Frog - Orders Table Setup</title>
     <style>
-        /* Basic styling without relying on Tailwind */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f3f4f6;
-            margin: 0;
-            padding: 20px;
             line-height: 1.6;
             color: #333;
-        }
-        .container {
             max-width: 800px;
-            margin: 20px auto;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 30px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
         h1 {
-            font-family: 'Merienda', cursive, Arial, sans-serif;
-            color: #556B2F;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 28px;
+            color: #87ac3a;
+            border-bottom: 2px solid #87ac3a;
+            padding-bottom: 10px;
         }
-        .alert {
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .info-box {
+            background-color: #e8f4fd;
+            border-left: 4px solid #2196F3;
             padding: 15px;
             margin-bottom: 20px;
-            border-left: 4px solid #ccc;
             border-radius: 4px;
         }
-        .alert-success {
-            background-color: #d4edda;
-            border-color: #28a745;
-            color: #155724;
+        .warning-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
         }
-        .alert-warning {
-            background-color: #fff3cd;
-            border-color: #ffc107;
-            color: #856404;
+        .success-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
         }
-        .alert-danger {
-            background-color: #f8d7da;
-            border-color: #dc3545;
-            color: #721c24;
+        .error-box {
+            background-color: #fdecea;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
         }
-        .alert-info {
-            background-color: #d1ecf1;
-            border-color: #17a2b8;
-            color: #0c5460;
-        }
-        .btn {
+        .button {
             display: inline-block;
-            font-weight: bold;
-            text-align: center;
-            vertical-align: middle;
-            cursor: pointer;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 4px;
-            text-decoration: none;
-            margin: 5px;
-            border: none;
-        }
-        .btn-primary {
-            background-color: #6B8E23;
+            background-color: #87ac3a;
             color: white;
-        }
-        .btn-primary:hover {
-            background-color: #556B2F;
-        }
-        .text-center {
+            padding: 12px 20px;
             text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
         }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 14px;
-            color: #777;
+        .button:hover {
+            background-color: #a3cc4a;
+        }
+        .button.delete {
+            background-color: #f44336;
+        }
+        .button.delete:hover {
+            background-color: #e53935;
+        }
+        .result-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .result-item.success {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+        .result-item.error {
+            background-color: #fdecea;
+            border-left: 4px solid #f44336;
+        }
+        .result-item.info {
+            background-color: #e8f4fd;
+            border-left: 4px solid #2196F3;
+        }
+        .details {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
         }
         code {
-            background-color: #f7f7f9;
-            padding: 3px 5px;
+            background-color: #f5f5f5;
+            padding: 2px 4px;
             border-radius: 3px;
             font-family: monospace;
-            display: block;
-            padding: 10px;
-            margin: 10px 0;
-            white-space: pre-wrap;
-            word-break: break-all;
         }
-        ul {
-            list-style-type: disc;
-            margin-left: 20px;
-        }
-        .error-details {
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            padding: 15px;
+        .summary {
             margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
             border-radius: 4px;
-        }
-        .error-item {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        .error-item:last-child {
-            border-bottom: none;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Orders Table Setup</h1>
+        <h1>Orders Database Setup</h1>
         
-        <?php if ($isExecuted): ?>
-            <?php if (!empty($successMessage)): ?>
-                <div class="alert alert-success">
-                    <p><strong>Success!</strong></p>
-                    <p><?php echo $successMessage; ?></p>
-                </div>
-                
-                <?php if (!empty($errorMessage)): ?>
-                    <div class="alert alert-warning">
-                        <p><strong>Warning:</strong></p>
-                        <p><?php echo $errorMessage; ?></p>
-                    </div>
-                    
-                    <?php if (!empty($sqlErrors)): ?>
-                        <div class="error-details">
-                            <h3>SQL Error Details:</h3>
-                            <?php foreach ($sqlErrors as $error): ?>
-                                <div class="error-item">
-                                    <p><strong>Statement #<?php echo $error['statement']; ?>:</strong></p>
-                                    <code><?php echo htmlspecialchars($error['sql']); ?></code>
-                                    <p><strong>Error:</strong> <?php echo htmlspecialchars($error['error']); ?></p>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                <?php endif; ?>
-                
-                <div class="alert alert-warning">
-                    <p><strong>Important Security Notice</strong></p>
-                    <p>For security reasons, please delete this file immediately:</p>
-                    <code><?php echo __FILE__; ?></code>
-                </div>
-                <div class="text-center">
-                    <a href="/?page=admin" class="btn btn-primary">
-                        Go to Admin Dashboard
-                    </a>
-                </div>
-            <?php else: ?>
-                <div class="alert alert-danger">
-                    <p><strong>Error!</strong></p>
-                    <p><?php echo $errorMessage; ?></p>
-                </div>
-                <form method="post" class="text-center">
-                    <input type="hidden" name="token" value="<?php echo $securityToken; ?>">
-                    <button type="submit" name="confirm" value="1" class="btn btn-primary">
-                        Try Again
-                    </button>
-                </form>
-            <?php endif; ?>
+        <div class="info-box">
+            <h3>Database Information</h3>
+            <p><strong>Environment:</strong> <?php echo $isLocalhost ? 'LOCAL' : 'PRODUCTION'; ?></p>
+            <p><strong>Database Host:</strong> <?php echo htmlspecialchars($host); ?></p>
+            <p><strong>Database Name:</strong> <?php echo htmlspecialchars($db); ?></p>
+        </div>
+        
+        <?php if ($tablesExist): ?>
+            <div class="success-box">
+                <h3>✓ Tables Already Exist</h3>
+                <p>The orders and order_items tables already exist in your database.</p>
+                <p>You can still run the setup to add sample data if needed.</p>
+            </div>
         <?php else: ?>
-            <div class="alert alert-info">
-                <p><strong>Information</strong></p>
-                <p>This script will create the necessary tables for order management in your database.</p>
-                <p><strong>Environment:</strong> <?php echo $isLocalhost ? 'LOCAL' : 'PRODUCTION'; ?></p>
-                <p><strong>Database:</strong> <?php echo $db; ?> on <?php echo $host; ?></p>
-            </div>
-            
-            <div class="alert alert-warning">
-                <p><strong>Warning!</strong></p>
-                <p>This script will create the following tables:</p>
+            <div class="warning-box">
+                <h3>⚠️ Tables Need to be Created</h3>
+                <p>The following tables will be created:</p>
                 <ul>
-                    <li><code>orders</code> - For storing order information</li>
-                    <li><code>order_items</code> - For storing order line items</li>
+                    <?php if (!$ordersExists): ?><li><code>orders</code> - Stores order information</li><?php endif; ?>
+                    <?php if (!$orderItemsExists): ?><li><code>order_items</code> - Stores items within each order</li><?php endif; ?>
                 </ul>
-                <p>If these tables already exist, they will not be modified.</p>
             </div>
-            
-            <form method="post" class="text-center">
-                <input type="hidden" name="token" value="<?php echo $securityToken; ?>">
-                <button type="submit" name="confirm" value="1" class="btn btn-primary">
-                    Create Orders Tables
-                </button>
+        <?php endif; ?>
+        
+        <?php if (!empty($results)): ?>
+            <div class="<?php echo $failureCount > 0 ? 'error-box' : 'success-box'; ?>">
+                <h3>Setup Results</h3>
+                
+                <?php foreach ($results as $result): ?>
+                    <div class="result-item <?php echo $result['success'] ? 'success' : 'error'; ?>">
+                        <p><?php echo $result['message']; ?></p>
+                        <p class="details"><?php echo htmlspecialchars($result['details']); ?></p>
+                    </div>
+                <?php endforeach; ?>
+                
+                <div class="summary">
+                    <p>
+                        <strong>Summary:</strong> 
+                        <?php echo $successCount; ?> operation(s) succeeded, 
+                        <?php echo $failureCount; ?> operation(s) failed
+                    </p>
+                </div>
+                
+                <?php if ($failureCount === 0): ?>
+                    <div class="warning-box">
+                        <h3>🔒 Security Warning</h3>
+                        <p>Setup completed successfully. For security reasons, please delete this file now.</p>
+                        <p>You can safely delete <code>setup_orders_table.php</code> from your server.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if (empty($results) || $failureCount > 0): ?>
+            <form method="post" action="">
+                <input type="hidden" name="setup_token" value="<?php echo $securityToken; ?>">
+                <button type="submit" class="button">Create Orders Tables</button>
             </form>
         <?php endif; ?>
-    </div>
-    
-    <div class="footer">
-        <p>Whimsical Frog E-commerce - <?php echo date('Y'); ?></p>
-        <p>For security, delete this file after use.</p>
+        
+        <p style="margin-top: 20px; text-align: center;">
+            <a href="/" class="button">Return to Homepage</a>
+        </p>
     </div>
 </body>
 </html>

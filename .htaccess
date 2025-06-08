@@ -1,11 +1,12 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   
-  # API requests passed to Node.js server
-  RewriteRule ^api/(.*)$ http://localhost:3000/api/$1 [P,L]
-
+  # Allow direct access to PHP files in the /api/ directory
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^api/.*\.php$ - [L]
+  
   # All other requests go to index.php
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.*)$ /index.php [L]
-</IfModule> 
+</IfModule>

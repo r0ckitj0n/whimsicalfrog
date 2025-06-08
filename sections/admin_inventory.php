@@ -1,12 +1,3 @@
-<?php
-// Check if user is logged in and is admin
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: /?page=login");
-    exit();
-}
-?>
-
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6 text-green-700">Inventory Management</h1>
     

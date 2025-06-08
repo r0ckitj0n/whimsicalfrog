@@ -1,48 +1,85 @@
+<!-- MAGIC-TEST-COMMENT-20240607 -->
 <?php
+// Admin inventory management page
+
 // Check if user is logged in and is an admin
 $user = json_decode($_SESSION['user'] ?? '{}', true);
 if (!isset($user['role']) || $user['role'] !== 'Admin') {
-    header('Location: /?page=login');
+    header('Location: /login.php');
     exit;
 }
 
-// Include the configuration file for database access
-require_once 'api/config.php';
+// Fetch products and inventory data from Node API (MySQL)
+$productsJson = @file_get_contents('https://whimsicalfrog.us/api/products.php');
+$products = $productsJson ? json_decode($productsJson, true) : [];
+$inventoryJson = @file_get_contents('https://whimsicalfrog.us/api/inventory.php');
+$inventory = $inventoryJson ? json_decode($inventoryJson, true) : [];
 
-// Helper function to calculate sum of costs
-function sumCost($items) {
-    $total = 0;
-    foreach ($items as $item) {
-        $total += floatval($item['cost']);
+// Get unique product types for dropdown
+$productTypes = [];
+if ($products) {
+    foreach ($products as $product) {
+        if (!in_array($product['productType'], $productTypes)) {
+            $productTypes[] = $product['productType'];
+        }
     }
-    return $total;
+}
+sort($productTypes); // Sort alphabetically
+
+// Group inventory items by product
+$inventoryByProduct = [];
+if ($inventory) {
+    foreach ($inventory as $item) {
+        $productId = $item['productId'];
+        if (!isset($inventoryByProduct[$productId])) {
+            $inventoryByProduct[$productId] = [];
+        }
+        $inventoryByProduct[$productId][] = $item;
+    }
 }
 
-// Function to fetch inventory costs from database
-function fetchInventoryCosts($pdo, $inventoryId) {
-    $materials = [];
-    $labor = [];
-    $energy = [];
-    
-    try {
-        // Fetch materials
-        $stmt = $pdo->prepare('SELECT * FROM inventory_materials WHERE inventoryId = ?');
-        $stmt->execute([$inventoryId]);
-        $materials = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Fetch labor
-        $stmt = $pdo->prepare('SELECT * FROM inventory_labor WHERE inventoryId = ?');
-        $stmt->execute([$inventoryId]);
-        $labor = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Fetch energy
-        $stmt = $pdo->prepare('SELECT * FROM inventory_energy WHERE inventoryId = ?');
-        $stmt->execute([$inventoryId]);
-        $energy = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        // Handle error silently
+// Get unique product types for category dropdown
+$categories = [];
+if ($products) {
+    foreach ($products as $product) {
+        if (!empty($product['productType']) && !in_array($product['productType'], $categories)) {
+            $categories[] = $product['productType'];
+        }
     }
-    
+}
+sort($categories);
+
+// Get filter/search values
+$searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filterCategory = isset($_GET['category']) ? $_GET['category'] : 'all';
+
+// Filter products by search and productType (category)
+$filteredProducts = $products;
+if ($searchTerm !== '' || ($filterCategory !== 'all' && $filterCategory !== '')) {
+    $filteredProducts = array_filter($products, function($product) use ($searchTerm, $filterCategory) {
+        $matchesSearch = true;
+        $matchesCategory = true;
+        // Search in product name, description, or SKU base
+        if ($searchTerm !== '') {
+            $matchesSearch = (
+                stripos($product['name'], $searchTerm) !== false ||
+                stripos($product['description'], $searchTerm) !== false ||
+                stripos($product['defaultSKU_Base'], $searchTerm) !== false
+            );
+        }
+        // Category filter: match productType
+        if ($filterCategory !== 'all' && $filterCategory !== '') {
+            $matchesCategory = ($product['productType'] === $filterCategory);
+        }
+        return $matchesSearch && $matchesCategory;
+    });
+}
+
+// Fetch cost breakdowns for all inventory items
+function fetchInventoryCosts($pdo, $inventoryId) {
+    $materials = $pdo->query("SELECT * FROM inventory_materials WHERE inventoryId = '" . addslashes($inventoryId) . "';")->fetchAll(PDO::FETCH_ASSOC);
+    $labor = $pdo->query("SELECT * FROM inventory_labor WHERE inventoryId = '" . addslashes($inventoryId) . "';")->fetchAll(PDO::FETCH_ASSOC);
+    $energy = $pdo->query("SELECT * FROM inventory_energy WHERE inventoryId = '" . addslashes($inventoryId) . "';")->fetchAll(PDO::FETCH_ASSOC);
     return [
         'materials' => $materials,
         'labor' => $labor,
@@ -50,220 +87,148 @@ function fetchInventoryCosts($pdo, $inventoryId) {
     ];
 }
 
-// Fetch products using local API path
-$products = [];
-try {
-    $productsJson = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/api/products.php');
-    if ($productsJson) {
-        $products = json_decode($productsJson, true) ?? [];
+// Move sumCost function definition to the top, after fetchInventoryCosts
+function sumCost($arr) {
+    $sum = 0;
+    if (is_array($arr)) {
+        foreach ($arr as $row) {
+            $sum += floatval($row['cost']);
+        }
     }
-} catch (Exception $e) {
-    // Handle error silently
-}
-
-// Fetch inventory using local API path
-$inventory = [];
-try {
-    $inventoryJson = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/api/inventory.php');
-    if ($inventoryJson) {
-        $inventory = json_decode($inventoryJson, true) ?? [];
-    }
-} catch (Exception $e) {
-    // Handle error silently
-}
-
-// Organize inventory by product
-$inventoryByProduct = [];
-foreach ($inventory as $item) {
-    $productId = $item['productId'];
-    if (!isset($inventoryByProduct[$productId])) {
-        $inventoryByProduct[$productId] = [];
-    }
-    $inventoryByProduct[$productId][] = $item;
-}
-
-// Database connection for cost calculations
-$pdo = null;
-try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    // Handle error silently
+    return $sum;
 }
 ?>
-
-<section class="admin-section p-6">
-    <h2 class="text-2xl font-bold mb-6">Inventory Management</h2>
-    
-    <div class="flex justify-between items-center mb-6">
-        <button id="addProductBtn" class="px-4 py-2 bg-blue-600 text-white rounded">
-            Add New Product
-        </button>
-        <button id="exportInventoryBtn" class="px-4 py-2 bg-green-600 text-white rounded">
+<style>
+  .admin-data-label {
+    color: #222 !important;
+  }
+  .admin-data-value {
+    color: #c00 !important;
+    font-weight: bold;
+  }
+</style>
+<section id="adminInventoryPage" class="p-6 bg-white rounded-lg shadow-lg">
+    <!-- Top bar: Back to Dashboard | Search/Filters | Export Inventory -->
+    <div class="mb-4 flex flex-row justify-between items-center gap-2">
+        <a href="/?page=admin" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Dashboard
+        </a>
+        <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0" style="flex:1;max-width:600px;justify-content:center;">
+            <input type="hidden" name="page" value="admin">
+            <input type="hidden" name="section" value="inventory">
+            <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm ?? ''); ?>" class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500" placeholder="Search..." style="max-width:140px;">
+            <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </button>
+            <select id="category" name="category" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:120px;" onchange="this.form.submit()">
+                <option value="all" <?php echo (empty($filterCategory) || $filterCategory === 'all') ? 'selected' : ''; ?>>All Products</option>
+                <?php foreach ($categories as $cat): ?>
+                    <option value="<?php echo htmlspecialchars($cat); ?>" <?php echo ($filterCategory === $cat) ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($cat)); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </form>
+        <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="window.location.href='/?page=admin&section=inventory&export=1'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
             Export Inventory
         </button>
     </div>
 
     <div class="grid grid-cols-1 gap-8">
-        <?php if (count($products) > 0): ?>
-            <?php foreach ($products as $product): ?>
-                <div class="bg-white p-6 rounded-lg shadow-md">
+        <?php if ($filteredProducts): ?>
+            <?php foreach ($filteredProducts as $product): ?>
+                <?php
+                $pdo = new PDO('mysql:host=localhost;dbname=whimsicalfrog', 'root', 'Palz2516');
+                $costs = fetchInventoryCosts($pdo, $product['id']);
+                $totalCost = sumCost($costs['materials'] ?? []) + sumCost($costs['labor'] ?? []) + sumCost($costs['energy'] ?? []);
+                ?>
+                <div class="bg-gray-100 p-6 rounded-lg shadow" data-product-id="<?php echo htmlspecialchars($product['id']); ?>">
                     <div class="flex flex-col md:flex-row gap-6">
-                        <!-- Image Preview -->
-                        <div class="flex flex-col items-center">
-                            <div class="h-64 w-64 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-                                <?php if (!empty($product['image'])): ?>
-                                    <img src="<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="max-h-full max-w-full object-contain">
-                                <?php else: ?>
-                                    <span class="text-gray-400">No Image</span>
-                                <?php endif; ?>
+                        <!-- Product Image -->
+                        <div class="w-full md:w-1/3">
+                            <div class="relative">
+                                <img src="<?php echo htmlspecialchars($product['image'] ?? 'images/placeholder.png'); ?>" 
+                                     alt="<?php echo htmlspecialchars($product['name']); ?>" 
+                                     class="w-full h-48 object-cover rounded-md">
                             </div>
-                            <div class="mt-2 w-full">
-                                <form id="imageForm_<?php echo htmlspecialchars($product['id']); ?>" class="flex flex-col items-center">
-                                    <input type="file" id="imageUpload_<?php echo htmlspecialchars($product['id']); ?>" class="w-full text-sm" accept="image/*">
-                                    <button type="button" onclick="uploadImage('<?php echo htmlspecialchars($product['id']); ?>')" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm w-full">Upload Image</button>
-                                </form>
-                            </div>
+                            <button onclick="updateProductImage('<?php echo htmlspecialchars($product['id']); ?>')" 
+                                    class="mt-2 bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-1 px-3 rounded-md text-sm">
+                                Change Image
+                            </button>
                         </div>
-                        
+
                         <!-- Product Details -->
-                        <div class="flex-1">
+                        <div class="w-full md:w-2/3">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <span class="admin-data-label">Product Name</span>
-                                    <input type="text" id="productName_<?php echo htmlspecialchars($product['id']); ?>" value="<?php echo htmlspecialchars($product['name']); ?>" class="admin-data-value w-full border rounded px-2 py-1">
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['name']); ?></span>
                                 </div>
                                 <div>
                                     <span class="admin-data-label">Base Price</span>
-                                    <div class="flex items-center">
-                                        <input type="number" step="0.01" id="basePrice_<?php echo htmlspecialchars($product['id']); ?>" value="<?php echo htmlspecialchars($product['basePrice']); ?>" class="admin-data-value w-full border rounded px-2 py-1">
-                                        <?php
-                                        // Calculate suggested retail price (2x the total cost or base price if no costs)
-                                        $totalCost = 0;
-                                        if (!empty($inventoryByProduct[$product['id']])) {
-                                            foreach ($inventoryByProduct[$product['id']] as $item) {
-                                                $costs = fetchInventoryCosts($pdo, $item['id']);
-                                                $totalCost += sumCost($costs['materials'] ?? []) + sumCost($costs['labor'] ?? []) + sumCost($costs['energy'] ?? []);
-                                            }
-                                        }
-                                        $suggestedPrice = $totalCost > 0 ? $totalCost * 2 : floatval($product['basePrice']) * 2;
-                                        ?>
-                                        <span class="ml-2 text-gray-600">(Suggested: $<?php echo number_format($suggestedPrice, 2); ?>)</span>
-                                    </div>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['basePrice']); ?></span>
                                 </div>
-                                <div>
+                                <div class="md:col-span-2">
                                     <span class="admin-data-label">Description</span>
-                                    <textarea id="description_<?php echo htmlspecialchars($product['id']); ?>" class="admin-data-value w-full border rounded px-2 py-1"><?php echo htmlspecialchars($product['description']); ?></textarea>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['description']); ?></span>
                                 </div>
                                 <div>
                                     <span class="admin-data-label">Product Type</span>
-                                    <input type="text" id="productType_<?php echo htmlspecialchars($product['id']); ?>" value="<?php echo htmlspecialchars($product['productType']); ?>" class="admin-data-value w-full border rounded px-2 py-1">
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['productType']); ?></span>
                                 </div>
                                 <div>
                                     <span class="admin-data-label">SKU Base</span>
-                                    <input type="text" id="defaultSKU_Base_<?php echo htmlspecialchars($product['id']); ?>" value="<?php echo htmlspecialchars($product['defaultSKU_Base']); ?>" class="admin-data-value w-full border rounded px-2 py-1">
-                                </div>
-                                <div>
-                                    <button onclick="updateProduct('<?php echo htmlspecialchars($product['id']); ?>')" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Update Product</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Inventory Section -->
-                            <div class="mt-6">
-                                <?php
-                                // Calculate total stock across all inventory items for this product
-                                $totalStock = 0;
-                                if (!empty($inventoryByProduct[$product['id']])) {
-                                    foreach ($inventoryByProduct[$product['id']] as $item) {
-                                        $totalStock += intval($item['stockLevel']);
-                                    }
-                                }
-                                
-                                // Get first inventory item ID for cost management
-                                $firstInventoryId = !empty($inventoryByProduct[$product['id']][0]) ? $inventoryByProduct[$product['id']][0]['id'] : '';
-                                $itemDescription = $product['name'];
-                                
-                                // Get all inventory IDs for this product
-                                $inventoryIds = [];
-                                if (!empty($inventoryByProduct[$product['id']])) {
-                                    foreach ($inventoryByProduct[$product['id']] as $item) {
-                                        $inventoryIds[] = $item['id'];
-                                    }
-                                }
-                                
-                                // Fetch all costs for this product's inventory items
-                                $allMaterials = [];
-                                $allLabor = [];
-                                $allEnergy = [];
-                                $totalCost = 0;
-                                
-                                if (!empty($inventoryByProduct[$product['id']])) {
-                                    foreach ($inventoryByProduct[$product['id']] as $item) {
-                                        $costs = fetchInventoryCosts($pdo, $item['id']);
-                                        $allMaterials = array_merge($allMaterials, $costs['materials'] ?? []);
-                                        $allLabor = array_merge($allLabor, $costs['labor'] ?? []);
-                                        $allEnergy = array_merge($allEnergy, $costs['energy'] ?? []);
-                                        $totalCost += sumCost($costs['materials'] ?? []) + sumCost($costs['labor'] ?? []) + sumCost($costs['energy'] ?? []);
-                                    }
-                                }
-                                ?>
-                                <div class="flex flex-col md:flex-row md:items-center gap-4">
-                                    <div>
-                                        <span class="admin-data-label">Total Stock</span>
-                                        <input type="number" value="<?php echo htmlspecialchars($totalStock); ?>" min="0" class="total-stock-input admin-data-value border rounded px-2 py-1 text-sm w-20" 
-                                               data-product-id="<?php echo htmlspecialchars($product['id']); ?>"
-                                               data-inventory-ids="<?php echo htmlspecialchars(json_encode($inventoryIds)); ?>">
-                                    </div>
-                                    <div>
-                                        <button class="ml-2 px-3 py-2 bg-green-600 text-white rounded text-sm" onclick="openCostModal('<?php echo $firstInventoryId; ?>', '<?php echo htmlspecialchars($itemDescription); ?>')">Manage Costs</button>
-                                    </div>
-                                </div>
-                                
-                                <!-- Cost Summary -->
-                                <div class="mt-4 p-4 bg-gray-50 rounded">
-                                    <h4 class="font-semibold">Total Cost: $<span id="product_<?php echo htmlspecialchars($product['id']); ?>_total_cost"><?php echo number_format($totalCost, 2); ?></span></h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                                        <div>
-                                            <h5 class="font-medium">Materials:</h5>
-                                            <ul id="product_<?php echo htmlspecialchars($product['id']); ?>_materials" class="text-sm mt-1">
-                                                <?php if (empty($allMaterials)): ?>
-                                                    <li>- </li>
-                                                <?php else: ?>
-                                                    <?php foreach ($allMaterials as $material): ?>
-                                                        <li>- <?php echo htmlspecialchars($material['name']); ?>: $<?php echo htmlspecialchars($material['cost']); ?></li>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
-                                            </ul>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-medium">Labor:</h5>
-                                            <ul id="product_<?php echo htmlspecialchars($product['id']); ?>_labor" class="text-sm mt-1">
-                                                <?php if (empty($allLabor)): ?>
-                                                    <li>- </li>
-                                                <?php else: ?>
-                                                    <?php foreach ($allLabor as $labor): ?>
-                                                        <li>- <?php echo htmlspecialchars($labor['description']); ?>: $<?php echo htmlspecialchars($labor['cost']); ?></li>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
-                                            </ul>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-medium">Energy:</h5>
-                                            <ul id="product_<?php echo htmlspecialchars($product['id']); ?>_energy" class="text-sm mt-1">
-                                                <?php if (empty($allEnergy)): ?>
-                                                    <li>- </li>
-                                                <?php else: ?>
-                                                    <?php foreach ($allEnergy as $energy): ?>
-                                                        <li>- <?php echo htmlspecialchars($energy['description']); ?>: $<?php echo htmlspecialchars($energy['cost']); ?></li>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
-                                            </ul>
-                                        </div>
-                                    </div>
+                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['defaultSKU_Base']); ?></span>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Inventory Items -->
+                    <?php if (!empty($inventoryByProduct[$product['id']])): ?>
+                        <?php foreach ($inventoryByProduct[$product['id']] as $item): ?>
+                            <div class="mt-6">
+                                <div class="flex flex-col md:flex-row md:items-center gap-4">
+                                    <div>
+                                        <span class="admin-data-label">Number in Stock</span>
+                                        <input type="number" value="<?php echo htmlspecialchars($item['stockLevel']); ?>" min="0" class="stock-input admin-data-value border rounded px-2 py-1 text-sm w-20" data-inventory-id="<?php echo htmlspecialchars($item['id']); ?>">
+                                    </div>
+                                    <div>
+                                        <button class="ml-2 px-3 py-2 bg-green-600 text-white rounded text-sm" onclick="openCostModal('<?php echo $item['id']; ?>')">Manage Costs</button>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-xs">
+                                    <strong>Total Cost:</strong> $<?php echo number_format($totalCost, 2); ?><br>
+                                    <strong>Materials:</strong>
+                                    <ul>
+                                        <?php if (!empty($costs['materials'])): foreach ($costs['materials'] as $mat): ?>
+                                            <li><?php echo htmlspecialchars($mat['name']); ?>: $<?php echo number_format($mat['cost'], 2); ?></li>
+                                        <?php endforeach; endif; ?>
+                                    </ul>
+                                    <strong>Labor:</strong>
+                                    <ul>
+                                        <?php if (!empty($costs['labor'])): foreach ($costs['labor'] as $lab): ?>
+                                            <li><?php echo htmlspecialchars($lab['description']); ?>: $<?php echo number_format($lab['cost'], 2); ?></li>
+                                        <?php endforeach; endif; ?>
+                                    </ul>
+                                    <strong>Energy:</strong>
+                                    <ul>
+                                        <?php if (!empty($costs['energy'])): foreach ($costs['energy'] as $en): ?>
+                                            <li><?php echo htmlspecialchars($en['description']); ?>: $<?php echo number_format($en['cost'], 2); ?></li>
+                                        <?php endforeach; endif; ?>
+                                    </ul>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="mt-6 text-gray-500 text-sm">No inventory items for this product.</div>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
@@ -274,955 +239,353 @@ try {
 
 <!-- Cost Management Modal -->
 <div id="costModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
-    <div class="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold" id="costModalTitle">Manage Costs for <span id="costModalItemDesc"></span></h3>
-            <button onclick="closeCostModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-        </div>
-        
-        <input type="hidden" id="costModalItemId">
-        
-        <!-- Materials Section -->
-        <div class="mb-6">
-            <h4 class="font-semibold mb-2">Materials</h4>
-            <ul id="materialsList" class="mb-4 space-y-2"></ul>
-            
-            <form id="addMaterialForm" class="bg-gray-50 p-4 rounded">
-                <h5 class="font-medium mb-2">Add Material</h5>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm mb-1">Name</label>
-                        <input type="text" id="materialName" class="w-full border rounded px-2 py-1 text-sm" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-1">Cost ($)</label>
-                        <input type="number" step="0.01" id="materialCost" class="w-full border rounded px-2 py-1 text-sm" required>
-                    </div>
-                </div>
-                <button type="button" onclick="addMaterial()" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm">Add Material</button>
-            </form>
-        </div>
-        
-        <!-- Labor Section -->
-        <div class="mb-6">
-            <h4 class="font-semibold mb-2">Labor</h4>
-            <ul id="laborList" class="mb-4 space-y-2"></ul>
-            
-            <form id="addLaborForm" class="bg-gray-50 p-4 rounded">
-                <h5 class="font-medium mb-2">Add Labor</h5>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm mb-1">Description</label>
-                        <input type="text" id="laborDescription" class="w-full border rounded px-2 py-1 text-sm" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-1">Cost ($)</label>
-                        <input type="number" step="0.01" id="laborCost" class="w-full border rounded px-2 py-1 text-sm" required>
-                    </div>
-                </div>
-                <button type="button" onclick="addLabor()" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm">Add Labor</button>
-            </form>
-        </div>
-        
-        <!-- Energy Section -->
-        <div class="mb-6">
-            <h4 class="font-semibold mb-2">Energy</h4>
-            <ul id="energyList" class="mb-4 space-y-2"></ul>
-            
-            <form id="addEnergyForm" class="bg-gray-50 p-4 rounded">
-                <h5 class="font-medium mb-2">Add Energy</h5>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm mb-1">Description</label>
-                        <input type="text" id="energyDescription" class="w-full border rounded px-2 py-1 text-sm" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm mb-1">Cost ($)</label>
-                        <input type="number" step="0.01" id="energyCost" class="w-full border rounded px-2 py-1 text-sm" required>
-                    </div>
-                </div>
-                <button type="button" onclick="addEnergy()" class="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm">Add Energy</button>
-            </form>
-        </div>
-        
-        <div class="mt-4 p-4 bg-gray-100 rounded">
-            <h4 class="font-semibold mb-2">Cost Summary</h4>
-            <div class="text-sm">
-                <div>Materials: <span id="materialsTotalCost">$0.00</span></div>
-                <div>Labor: <span id="laborTotalCost">$0.00</span></div>
-                <div>Energy: <span id="energyTotalCost">$0.00</span></div>
-                <div class="font-bold border-t mt-2 pt-2">Total: <span id="grandTotalCost">$0.00</span></div>
-            </div>
-        </div>
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
+    <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onclick="closeCostModal()">&times;</button>
+    <h2 class="text-xl font-bold mb-4">Manage Costs for Inventory Item <span id="costModalItemId"></span></h2>
+    <div id="costModalContent">
+      <div class="mb-4">
+        <h3 class="font-semibold">Materials</h3>
+        <ul id="materialsList" class="mb-2"></ul>
+        <form id="addMaterialForm" class="flex gap-2 mb-2">
+          <input type="text" name="name" placeholder="Material Name" class="border rounded px-2 py-1 text-sm" required>
+          <input type="number" name="cost" placeholder="Cost" step="0.01" class="border rounded px-2 py-1 text-sm" required>
+          <button type="submit" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Add</button>
+        </form>
+      </div>
+      <div class="mb-4">
+        <h3 class="font-semibold">Labor</h3>
+        <ul id="laborList" class="mb-2"></ul>
+        <form id="addLaborForm" class="flex gap-2 mb-2">
+          <input type="text" name="description" placeholder="Labor Description" class="border rounded px-2 py-1 text-sm" required>
+          <input type="number" name="cost" placeholder="Cost" step="0.01" class="border rounded px-2 py-1 text-sm" required>
+          <button type="submit" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Add</button>
+        </form>
+      </div>
+      <div class="mb-4">
+        <h3 class="font-semibold">Energy</h3>
+        <ul id="energyList" class="mb-2"></ul>
+        <form id="addEnergyForm" class="flex gap-2 mb-2">
+          <input type="text" name="description" placeholder="Energy Description" class="border rounded px-2 py-1 text-sm" required>
+          <input type="number" name="cost" placeholder="Cost" step="0.01" class="border rounded px-2 py-1 text-sm" required>
+          <button type="submit" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Add</button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
-
-<!-- Toast Container -->
-<div id="toast-container" class="toast-container"></div>
-
-<style>
-.admin-data-label {
-    display: block;
-    font-size: 0.875rem;
-    color: #4b5563;
-    margin-bottom: 0.25rem;
-}
-
-.admin-data-value {
-    font-size: 1rem;
-}
-
-.toast-container {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.toast {
-    padding: 12px 16px;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    transform: translateX(120%);
-    transition: transform 0.3s ease-in-out;
-    max-width: 350px;
-    position: relative;
-}
-
-.toast.show {
-    transform: translateX(0);
-}
-
-.toast-success {
-    background-color: #d1e7dd;
-    border-left: 4px solid #0f5132;
-    color: #0f5132;
-}
-
-.toast-error {
-    background-color: #f8d7da;
-    border-left: 4px solid #842029;
-    color: #842029;
-}
-
-.toast-icon {
-    margin-right: 12px;
-    font-size: 18px;
-}
-
-.toast-message {
-    flex-grow: 1;
-}
-
-.toast-progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    background-color: rgba(255, 255, 255, 0.7);
-}
-</style>
-
 <script>
-// Use the current domain for API calls in both local and production environments
-const apiBase = window.location.origin;
-
-// Toast notification system
-function showToast(message, isError = false, duration = 3000) {
-    const toastContainer = document.getElementById('toast-container');
-    
-    const toast = document.createElement('div');
-    toast.className = `toast ${isError ? 'toast-error' : 'toast-success'}`;
-    
-    const icon = document.createElement('div');
-    icon.className = 'toast-icon';
-    icon.innerHTML = isError ? '❌' : '✅';
-    
-    const messageEl = document.createElement('div');
-    messageEl.className = 'toast-message';
-    messageEl.textContent = message;
-    
-    const progressBar = document.createElement('div');
-    progressBar.className = 'toast-progress';
-    progressBar.style.width = '100%';
-    
-    toast.appendChild(icon);
-    toast.appendChild(messageEl);
-    toast.appendChild(progressBar);
-    toastContainer.appendChild(toast);
-    
-    let width = 100;
-    const interval = 10;
-    const step = 100 / (duration / interval);
-    const timer = setInterval(() => {
-        width -= step;
-        progressBar.style.width = `${width}%`;
-        if (width <= 0) {
-            clearInterval(timer);
-        }
-    }, interval);
-    
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, duration);
-}
-
-// Update product data
-function updateProduct(productId) {
-    const name = document.getElementById(`productName_${productId}`).value;
-    const basePrice = document.getElementById(`basePrice_${productId}`).value;
-    const description = document.getElementById(`description_${productId}`).value;
-    const productType = document.getElementById(`productType_${productId}`).value;
-    const defaultSKU_Base = document.getElementById(`defaultSKU_Base_${productId}`).value;
-
-    const productData = {
-        id: productId,
-        name,
-        basePrice,
-        description,
-        productType,
-        defaultSKU_Base
-    };
-
-    showToast('Updating product...', false, 1000);
-
-    fetch(`${apiBase}/api/update-product.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(`${name} updated successfully!`, false);
-            // Highlight updated fields
-            const fields = [
-                `productName_${productId}`,
-                `basePrice_${productId}`,
-                `description_${productId}`,
-                `productType_${productId}`,
-                `defaultSKU_Base_${productId}`
-            ];
-            
-            fields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (field) {
-                    field.classList.add('bg-green-100');
-                    setTimeout(() => {
-                        field.classList.remove('bg-green-100');
-                    }, 1000);
-                }
-            });
-        } else {
-            showToast(`Error updating product: ${data.error}`, true);
-        }
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred', true);
-    });
-}
-
-// Upload product image
-function uploadImage(productId) {
-    const fileInput = document.getElementById(`imageUpload_${productId}`);
-    const file = fileInput.files[0];
-    
-    if (!file) {
-        showToast('Please select an image to upload', true);
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('productId', productId);
-    
-    showToast('Uploading image...', false, 2000);
-    
-    fetch(`${apiBase}/api/upload-image.php`, {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Image uploaded successfully!', false);
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            showToast(`Error uploading image: ${data.error}`, true);
-        }
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred during upload', true);
-    });
-}
-
-// Stock level update
-document.querySelectorAll('.total-stock-input').forEach(input => {
-    input.addEventListener('change', function() {
-        updateStockLevel(this);
-    });
-    input.addEventListener('keyup', function(e) {
-        if (e.key === 'Enter') {
-            updateStockLevel(this);
-        }
+// Add event listeners when the document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle add inventory form submissions
+    document.querySelectorAll('.add-inventory-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const productId = this.querySelector('input[name="productId"]').value;
+            const productName = this.querySelector('input[name="productName"]').value;
+            addInventoryItem(productId, productName);
+        });
     });
 });
 
-function updateStockLevel(input) {
-    const newTotalStock = parseInt(input.value, 10);
-    if (isNaN(newTotalStock) || newTotalStock < 0) {
-        showToast('Please enter a valid stock quantity', true);
-        return;
-    }
-    
-    const productId = input.dataset.productId;
-    const inventoryIds = JSON.parse(input.dataset.inventoryIds || '[]');
-    
-    if (inventoryIds.length === 0) {
-        showToast('No inventory items found for this product', true);
-        return;
-    }
-    
-    showToast('Updating stock levels...', false, 1000);
-    
-    // Get current stock levels to calculate proportions
-    const promises = inventoryIds.map(id => 
-        fetch(`${apiBase}/api/inventory.php?id=${id}`)
-            .then(response => response.json())
-    );
-    
-    Promise.all(promises)
-        .then(inventoryItems => {
-            const currentStockLevels = inventoryItems.map(item => parseInt(item.stockLevel, 10) || 0);
-            const currentTotal = currentStockLevels.reduce((sum, level) => sum + level, 0);
-            
-            // Calculate new stock levels
-            let newStockLevels;
-            if (currentTotal === 0) {
-                // If all current stock is 0, distribute evenly
-                const baseValue = Math.floor(newTotalStock / inventoryIds.length);
-                const remainder = newTotalStock % inventoryIds.length;
-                newStockLevels = inventoryIds.map((_, index) => 
-                    baseValue + (index < remainder ? 1 : 0)
-                );
-            } else {
-                // Distribute proportionally based on current levels
-                newStockLevels = currentStockLevels.map(level => 
-                    Math.round((level / currentTotal) * newTotalStock)
-                );
-                
-                // Adjust for rounding errors
-                const newTotal = newStockLevels.reduce((sum, level) => sum + level, 0);
-                if (newTotal !== newTotalStock) {
-                    const diff = newTotalStock - newTotal;
-                    // Add or subtract the difference from the first non-zero item or the first item if all are zero
-                    const indexToAdjust = newStockLevels.findIndex(level => level > 0) || 0;
-                    newStockLevels[indexToAdjust] += diff;
-                }
-            }
-            
-            // Update each inventory item
-            const updatePromises = inventoryIds.map((id, index) => 
-                fetch(`${apiBase}/api/update-inventory-stock.php`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        id: id,
-                        stockLevel: newStockLevels[index]
-                    }),
-                }).then(response => response.json())
-            );
-            
-            return Promise.all(updatePromises);
-        })
-        .then(results => {
-            const allSuccess = results.every(result => result.success);
-            if (allSuccess) {
-                showToast('Stock levels updated successfully!', false);
-                input.classList.add('bg-green-100');
-                setTimeout(() => {
-                    input.classList.remove('bg-green-100');
-                }, 1000);
-            } else {
-                const errors = results.filter(result => !result.success).map(result => result.error).join(', ');
-                showToast(`Error updating some stock levels: ${errors}`, true);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('An unexpected error occurred', true);
+// Product management functions
+async function updateProductField(productId, field, value) {
+    try {
+        const response = await fetch('https://whimsicalfrog.us/api/update-product.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                productId,
+                field,
+                value
+            })
         });
-}
-
-// Cost management functionality
-let currentCostItemId = null;
-let currentProductId = null;
-
-function openCostModal(itemId, itemDescription) {
-    currentCostItemId = itemId;
-    document.getElementById('costModal').classList.remove('hidden');
-    document.getElementById('costModalItemId').value = itemId;
-    document.getElementById('costModalItemDesc').textContent = itemDescription;
-    
-    // Extract product ID from the item description or data attribute
-    const productElement = document.querySelector(`[data-inventory-ids*="${itemId}"]`);
-    if (productElement) {
-        currentProductId = productElement.dataset.productId;
+        
+        if (!response.ok) {
+            throw new Error('Failed to update product');
+        }
+        
+        showAlert('Product updated successfully', false);
+    } catch (error) {
+        showAlert(error.message);
     }
-    
-    loadCosts(itemId);
 }
 
-function closeCostModal() {
-    document.getElementById('costModal').classList.add('hidden');
-    currentCostItemId = null;
+async function updateProductImage(productId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('productId', productId);
+        formData.append('category', 'products');
+        
+        try {
+            const response = await fetch('https://whimsicalfrog.us/api/upload-image.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to upload image');
+            }
+            
+            const data = await response.json();
+            setTimeout(() => {
+                document.querySelectorAll(`[data-product-id=\"${productId}\"] img`).forEach(img => {
+                    img.src = data.image + '?v=' + Date.now();
+                });
+            }, 2000);
+            showAlert('Image updated successfully', false);
+        } catch (error) {
+            showAlert(error.message);
+        }
+    };
+    
+    input.click();
 }
 
-function loadCosts(itemId) {
-    showToast('Loading cost data...', false, 1000);
-    
-    fetch(`${apiBase}/api/inventory-costs.php?id=${itemId}`)
-        .then(response => response.json())
-        .then(data => {
-            // Materials
-            const materialsList = document.getElementById('materialsList');
-            materialsList.innerHTML = '';
-            if (data.materials && data.materials.length > 0) {
-                data.materials.forEach(material => {
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-white p-2 rounded border';
-                    li.innerHTML = `
-                        <span class="material-name">${material.name}</span>
-                        <span class="material-cost">$${parseFloat(material.cost).toFixed(2)}</span>
-                        <div class="flex space-x-2">
-                            <button onclick="editMaterial(${material.id}, '${material.name}', ${material.cost})" class="text-blue-600 hover:text-blue-800">Edit</button>
-                            <button onclick="deleteCost('material', ${material.id})" class="text-red-600 hover:text-red-800">Delete</button>
-                        </div>
-                    `;
-                    materialsList.appendChild(li);
-                });
-            } else {
-                materialsList.innerHTML = '<li class="text-gray-500">No material costs added yet.</li>';
-            }
-            
-            // Labor
-            const laborList = document.getElementById('laborList');
-            laborList.innerHTML = '';
-            if (data.labor && data.labor.length > 0) {
-                data.labor.forEach(labor => {
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-white p-2 rounded border';
-                    li.innerHTML = `
-                        <span class="labor-description">${labor.description}</span>
-                        <span class="labor-cost">$${parseFloat(labor.cost).toFixed(2)}</span>
-                        <div class="flex space-x-2">
-                            <button onclick="editLabor(${labor.id}, '${labor.description}', ${labor.cost})" class="text-blue-600 hover:text-blue-800">Edit</button>
-                            <button onclick="deleteCost('labor', ${labor.id})" class="text-red-600 hover:text-red-800">Delete</button>
-                        </div>
-                    `;
-                    laborList.appendChild(li);
-                });
-            } else {
-                laborList.innerHTML = '<li class="text-gray-500">No labor costs added yet.</li>';
-            }
-            
-            // Energy
-            const energyList = document.getElementById('energyList');
-            energyList.innerHTML = '';
-            if (data.energy && data.energy.length > 0) {
-                data.energy.forEach(energy => {
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-white p-2 rounded border';
-                    li.innerHTML = `
-                        <span class="energy-description">${energy.description}</span>
-                        <span class="energy-cost">$${parseFloat(energy.cost).toFixed(2)}</span>
-                        <div class="flex space-x-2">
-                            <button onclick="editEnergy(${energy.id}, '${energy.description}', ${energy.cost})" class="text-blue-600 hover:text-blue-800">Edit</button>
-                            <button onclick="deleteCost('energy', ${energy.id})" class="text-red-600 hover:text-red-800">Delete</button>
-                        </div>
-                    `;
-                    energyList.appendChild(li);
-                });
-            } else {
-                energyList.innerHTML = '<li class="text-gray-500">No energy costs added yet.</li>';
-            }
-            
-            // Update totals
-            document.getElementById('materialsTotalCost').textContent = `$${data.totals.materials.toFixed(2)}`;
-            document.getElementById('laborTotalCost').textContent = `$${data.totals.labor.toFixed(2)}`;
-            document.getElementById('energyTotalCost').textContent = `$${data.totals.energy.toFixed(2)}`;
-            document.getElementById('grandTotalCost').textContent = `$${data.totals.grand.toFixed(2)}`;
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error loading cost data', true);
+// Inventory management functions
+async function updateInventoryField(inventoryId, field, value) {
+    try {
+        const response = await fetch('https://whimsicalfrog.us/api/update-inventory.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                inventoryId,
+                field,
+                value
+            })
         });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update inventory');
+        }
+        
+        showAlert('Inventory updated successfully', false);
+    } catch (error) {
+        showAlert(error.message);
+    }
 }
 
-// Add material cost
-function addMaterial() {
-    const name = document.getElementById('materialName').value.trim();
-    const cost = parseFloat(document.getElementById('materialCost').value);
-    
-    if (!name || isNaN(cost) || cost < 0) {
-        showToast('Please enter a valid name and cost', true);
+async function addInventoryItem(productId, productName) {
+    try {
+        const response = await fetch('https://whimsicalfrog.us/api/add-inventory.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                productId: productId,
+                productName: productName,
+                description: 'New item description',
+                sku: 'NEW-SKU',
+                stockLevel: 0,
+                reorderPoint: 5
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to add inventory item');
+        }
+
+        const result = await response.json();
+        console.log('Inventory item added:', result);
+        
+        // Show success message
+        alert('Inventory item added successfully!');
+        
+        // Reload the page to show the new item
+        window.location.reload();
+    } catch (error) {
+        console.error('Error adding inventory item:', error);
+        alert('Error adding inventory item: ' + error.message);
+    }
+}
+
+async function deleteInventoryItem(inventoryId) {
+    if (!confirm('Are you sure you want to delete this inventory item?')) {
         return;
     }
-    
-    const itemId = document.getElementById('costModalItemId').value;
-    
-    showToast('Adding material cost...', false, 1000);
-    
-    fetch(`${apiBase}/api/inventory-costs.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'add-cost',
-            type: 'material',
-            inventoryId: itemId,
-            data: {
-                name: name,
-                cost: cost
-            }
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Material cost added successfully!', false);
-            document.getElementById('materialName').value = '';
-            document.getElementById('materialCost').value = '';
-            loadCosts(itemId);
-            refreshProductData();
-        } else {
-            showToast(`Error adding material cost: ${data.error}`, true);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred', true);
-    });
-}
-
-// Edit material
-function editMaterial(id, name, cost) {
-    const materialsList = document.getElementById('materialsList');
-    const materialItem = materialsList.querySelector(`li:has(button[onclick*="editMaterial(${id})")`);
-    
-    if (materialItem) {
-        materialItem.innerHTML = `
-            <div class="flex w-full space-x-2">
-                <input type="text" value="${name}" class="edit-material-name border rounded px-2 py-1 text-sm flex-grow" />
-                <input type="number" step="0.01" value="${cost}" class="edit-material-cost border rounded px-2 py-1 text-sm w-24" />
-                <button onclick="saveMaterial(${id})" class="bg-green-600 text-white px-2 py-1 rounded text-sm">Save</button>
-                <button onclick="loadCosts('${currentCostItemId}')" class="bg-gray-500 text-white px-2 py-1 rounded text-sm">Cancel</button>
-            </div>
-        `;
-    }
-}
-
-// Save edited material
-function saveMaterial(id) {
-    const name = document.querySelector('.edit-material-name').value.trim();
-    const cost = parseFloat(document.querySelector('.edit-material-cost').value);
-    
-    if (!name || isNaN(cost) || cost < 0) {
-        showToast('Please enter a valid name and cost', true);
-        return;
-    }
-    
-    showToast('Updating material cost...', false, 1000);
-    
-    fetch(`${apiBase}/api/inventory-costs.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'update-cost',
-            type: 'material',
-            id: id,
-            data: {
-                name: name,
-                cost: cost
-            }
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Material cost updated successfully!', false);
-            loadCosts(currentCostItemId);
-            refreshProductData();
-        } else {
-            showToast(`Error updating material cost: ${data.error}`, true);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred', true);
-    });
-}
-
-// Add labor cost
-function addLabor() {
-    const description = document.getElementById('laborDescription').value.trim();
-    const cost = parseFloat(document.getElementById('laborCost').value);
-    
-    if (!description || isNaN(cost) || cost < 0) {
-        showToast('Please enter a valid description and cost', true);
-        return;
-    }
-    
-    const itemId = document.getElementById('costModalItemId').value;
-    
-    showToast('Adding labor cost...', false, 1000);
-    
-    fetch(`${apiBase}/api/inventory-costs.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'add-cost',
-            type: 'labor',
-            inventoryId: itemId,
-            data: {
-                description: description,
-                cost: cost
-            }
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Labor cost added successfully!', false);
-            document.getElementById('laborDescription').value = '';
-            document.getElementById('laborCost').value = '';
-            loadCosts(itemId);
-            refreshProductData();
-        } else {
-            showToast(`Error adding labor cost: ${data.error}`, true);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred', true);
-    });
-}
-
-// Edit labor
-function editLabor(id, description, cost) {
-    const laborList = document.getElementById('laborList');
-    const laborItem = laborList.querySelector(`li:has(button[onclick*="editLabor(${id})")`);
-    
-    if (laborItem) {
-        laborItem.innerHTML = `
-            <div class="flex w-full space-x-2">
-                <input type="text" value="${description}" class="edit-labor-description border rounded px-2 py-1 text-sm flex-grow" />
-                <input type="number" step="0.01" value="${cost}" class="edit-labor-cost border rounded px-2 py-1 text-sm w-24" />
-                <button onclick="saveLabor(${id})" class="bg-green-600 text-white px-2 py-1 rounded text-sm">Save</button>
-                <button onclick="loadCosts('${currentCostItemId}')" class="bg-gray-500 text-white px-2 py-1 rounded text-sm">Cancel</button>
-            </div>
-        `;
-    }
-}
-
-// Save edited labor
-function saveLabor(id) {
-    const description = document.querySelector('.edit-labor-description').value.trim();
-    const cost = parseFloat(document.querySelector('.edit-labor-cost').value);
-    
-    if (!description || isNaN(cost) || cost < 0) {
-        showToast('Please enter a valid description and cost', true);
-        return;
-    }
-    
-    showToast('Updating labor cost...', false, 1000);
-    
-    fetch(`${apiBase}/api/inventory-costs.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'update-cost',
-            type: 'labor',
-            id: id,
-            data: {
-                description: description,
-                cost: cost
-            }
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Labor cost updated successfully!', false);
-            loadCosts(currentCostItemId);
-            refreshProductData();
-        } else {
-            showToast(`Error updating labor cost: ${data.error}`, true);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred', true);
-    });
-}
-
-// Add energy cost
-function addEnergy() {
-    const description = document.getElementById('energyDescription').value.trim();
-    const cost = parseFloat(document.getElementById('energyCost').value);
-    
-    if (!description || isNaN(cost) || cost < 0) {
-        showToast('Please enter a valid description and cost', true);
-        return;
-    }
-    
-    const itemId = document.getElementById('costModalItemId').value;
-    
-    showToast('Adding energy cost...', false, 1000);
-    
-    fetch(`${apiBase}/api/inventory-costs.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'add-cost',
-            type: 'energy',
-            inventoryId: itemId,
-            data: {
-                description: description,
-                cost: cost
-            }
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Energy cost added successfully!', false);
-            document.getElementById('energyDescription').value = '';
-            document.getElementById('energyCost').value = '';
-            loadCosts(itemId);
-            refreshProductData();
-        } else {
-            showToast(`Error adding energy cost: ${data.error}`, true);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred', true);
-    });
-}
-
-// Edit energy
-function editEnergy(id, description, cost) {
-    const energyList = document.getElementById('energyList');
-    const energyItem = energyList.querySelector(`li:has(button[onclick*="editEnergy(${id})")`);
-    
-    if (energyItem) {
-        energyItem.innerHTML = `
-            <div class="flex w-full space-x-2">
-                <input type="text" value="${description}" class="edit-energy-description border rounded px-2 py-1 text-sm flex-grow" />
-                <input type="number" step="0.01" value="${cost}" class="edit-energy-cost border rounded px-2 py-1 text-sm w-24" />
-                <button onclick="saveEnergy(${id})" class="bg-green-600 text-white px-2 py-1 rounded text-sm">Save</button>
-                <button onclick="loadCosts('${currentCostItemId}')" class="bg-gray-500 text-white px-2 py-1 rounded text-sm">Cancel</button>
-            </div>
-        `;
-    }
-}
-
-// Save edited energy
-function saveEnergy(id) {
-    const description = document.querySelector('.edit-energy-description').value.trim();
-    const cost = parseFloat(document.querySelector('.edit-energy-cost').value);
-    
-    if (!description || isNaN(cost) || cost < 0) {
-        showToast('Please enter a valid description and cost', true);
-        return;
-    }
-    
-    showToast('Updating energy cost...', false, 1000);
-    
-    fetch(`${apiBase}/api/inventory-costs.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'update-cost',
-            type: 'energy',
-            id: id,
-            data: {
-                description: description,
-                cost: cost
-            }
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Energy cost updated successfully!', false);
-            loadCosts(currentCostItemId);
-            refreshProductData();
-        } else {
-            showToast(`Error updating energy cost: ${data.error}`, true);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred', true);
-    });
-}
-
-// Delete cost
-function deleteCost(type, id) {
-    if (!confirm(`Are you sure you want to delete this ${type} cost?`)) {
-        return;
-    }
-    
-    showToast(`Deleting ${type} cost...`, false, 1000);
-    
-    fetch(`${apiBase}/api/inventory-costs.php`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'delete-cost',
-            type: type,
-            id: id
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(`${type} cost deleted successfully!`, false);
-            loadCosts(currentCostItemId);
-            refreshProductData();
-        } else {
-            showToast(`Error deleting ${type} cost: ${data.error}`, true);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('An unexpected error occurred', true);
-    });
-}
-
-// Refresh product data in background without closing modal
-async function refreshProductData() {
-    if (!currentProductId) return;
     
     try {
-        // Fetch updated cost data for the product
-        const response = await fetch(`${apiBase}/api/inventory-costs.php?id=${currentCostItemId}`);
-        const data = await response.json();
+        const response = await fetch('https://whimsicalfrog.us/api/delete-inventory.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                inventoryId
+            })
+        });
         
-        if (!data) return;
-        
-        // Update the materials list
-        const materialsListElement = document.getElementById(`product_${currentProductId}_materials`);
-        if (materialsListElement) {
-            materialsListElement.innerHTML = '';
-            if (data.materials && data.materials.length > 0) {
-                data.materials.forEach(material => {
-                    const li = document.createElement('li');
-                    li.textContent = `- ${material.name}: $${parseFloat(material.cost).toFixed(2)}`;
-                    materialsListElement.appendChild(li);
-                });
-            } else {
-                materialsListElement.innerHTML = '<li>- </li>';
-            }
+        if (!response.ok) {
+            throw new Error('Failed to delete inventory item');
         }
         
-        // Update the labor list
-        const laborListElement = document.getElementById(`product_${currentProductId}_labor`);
-        if (laborListElement) {
-            laborListElement.innerHTML = '';
-            if (data.labor && data.labor.length > 0) {
-                data.labor.forEach(labor => {
-                    const li = document.createElement('li');
-                    li.textContent = `- ${labor.description}: $${parseFloat(labor.cost).toFixed(2)}`;
-                    laborListElement.appendChild(li);
-                });
-            } else {
-                laborListElement.innerHTML = '<li>- </li>';
-            }
-        }
+        // Remove the item from the DOM
+        const itemElement = document.querySelector(`[data-inventory-id="${inventoryId}"]`);
+        itemElement.remove();
         
-        // Update the energy list
-        const energyListElement = document.getElementById(`product_${currentProductId}_energy`);
-        if (energyListElement) {
-            energyListElement.innerHTML = '';
-            if (data.energy && data.energy.length > 0) {
-                data.energy.forEach(energy => {
-                    const li = document.createElement('li');
-                    li.textContent = `- ${energy.description}: $${parseFloat(energy.cost).toFixed(2)}`;
-                    energyListElement.appendChild(li);
-                });
-            } else {
-                energyListElement.innerHTML = '<li>- </li>';
-            }
-        }
-        
-        // Update the total cost
-        const totalCostElement = document.getElementById(`product_${currentProductId}_total_cost`);
-        if (totalCostElement) {
-            totalCostElement.textContent = parseFloat(data.totals.grand).toFixed(2);
-        }
-        
-        // Update suggested retail price
-        const basePriceElement = document.getElementById(`basePrice_${currentProductId}`);
-        if (basePriceElement) {
-            const basePrice = parseFloat(basePriceElement.value);
-            const suggestedPrice = data.totals.grand > 0 ? data.totals.grand * 2 : basePrice * 2;
-            const suggestedPriceElement = basePriceElement.nextElementSibling;
-            if (suggestedPriceElement) {
-                suggestedPriceElement.textContent = `(Suggested: $${suggestedPrice.toFixed(2)})`;
-            }
-        }
-        
-        showToast('Product costs on page refreshed', false, 1000);
+        showAlert('Inventory item deleted successfully', false);
     } catch (error) {
-        console.error('Error refreshing product data:', error);
+        showAlert(error.message);
     }
 }
 
-// Export inventory data
-document.getElementById('exportInventoryBtn').addEventListener('click', function() {
-    // Implementation for export functionality
-    showToast('Export functionality coming soon!', false);
-});
+function showAlert(message, isError = true) {
+    const alertBox = document.getElementById('customAlertBox');
+    const alertMessage = document.getElementById('customAlertMessage');
+    
+    alertMessage.textContent = message;
+    alertBox.style.backgroundColor = isError ? '#f8d7da' : '#d4edda';
+    alertBox.style.color = isError ? '#721c24' : '#155724';
+    alertBox.style.borderColor = isError ? '#f5c6cb' : '#c3e6cb';
+    alertBox.style.display = 'block';
+    
+    setTimeout(() => {
+        alertBox.style.display = 'none';
+    }, 3000);
+}
 
-// Add new product functionality
-document.getElementById('addProductBtn').addEventListener('click', function() {
-    // Implementation for adding new products
-    showToast('Add product functionality coming soon!', false);
+function logout() {
+    sessionStorage.removeItem('user');
+    window.location.href = '/login.php';
+}
+
+let currentCostItemId = null;
+function openCostModal(itemId) {
+  currentCostItemId = itemId;
+  document.getElementById('costModal').classList.remove('hidden');
+  document.getElementById('costModalItemId').textContent = itemId;
+  loadCostLists(itemId);
+}
+function closeCostModal() {
+  document.getElementById('costModal').classList.add('hidden');
+  currentCostItemId = null;
+}
+async function loadCostLists(itemId) {
+  // Fetch costs via AJAX
+  const res = await fetch(`/api/inventory-costs.php?inventoryId=${encodeURIComponent(itemId)}`);
+  const data = await res.json();
+  renderCostList('materialsList', data.materials, 'material');
+  renderCostList('laborList', data.labor, 'labor');
+  renderCostList('energyList', data.energy, 'energy');
+}
+function renderCostList(listId, items, type) {
+  const ul = document.getElementById(listId);
+  ul.innerHTML = '';
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'flex items-center gap-2';
+    let label = '';
+    let editFields = '';
+    if (type === 'material') {
+      label = `${item.name}: $${parseFloat(item.cost).toFixed(2)}`;
+      editFields = `<input type='text' value='${item.name}' class='edit-name border rounded px-1 text-xs' style='width:90px;'> <input type='number' value='${item.cost}' step='0.01' class='edit-cost border rounded px-1 text-xs' style='width:60px;'>`;
+    }
+    if (type === 'labor' || type === 'energy') {
+      label = `${item.description}: $${parseFloat(item.cost).toFixed(2)}`;
+      editFields = `<input type='text' value='${item.description}' class='edit-desc border rounded px-1 text-xs' style='width:110px;'> <input type='number' value='${item.cost}' step='0.01' class='edit-cost border rounded px-1 text-xs' style='width:60px;'>`;
+    }
+    li.innerHTML = `
+      <span class='view-mode'>${label}</span>
+      <span class='edit-mode hidden'>${editFields}</span>
+      <button onclick="editCost(this)" class="text-blue-600 text-xs ml-2 view-mode">Edit</button>
+      <button onclick="saveCost('${type}', ${item.id}, this)" class="text-green-600 text-xs ml-2 edit-mode hidden">Save</button>
+      <button onclick="cancelEdit(this)" class="text-gray-600 text-xs ml-1 edit-mode hidden">Cancel</button>
+      <button onclick="deleteCost('${type}', ${item.id})" class="text-red-600 text-xs ml-2 view-mode">Delete</button>
+    `;
+    ul.appendChild(li);
+  });
+}
+function editCost(btn) {
+  const li = btn.closest('li');
+  li.querySelectorAll('.view-mode').forEach(e => e.classList.add('hidden'));
+  li.querySelectorAll('.edit-mode').forEach(e => e.classList.remove('hidden'));
+}
+function cancelEdit(btn) {
+  const li = btn.closest('li');
+  li.querySelectorAll('.edit-mode').forEach(e => e.classList.add('hidden'));
+  li.querySelectorAll('.view-mode').forEach(e => e.classList.remove('hidden'));
+}
+async function saveCost(type, id, btn) {
+  const li = btn.closest('li');
+  let data = {};
+  if (type === 'material') {
+    data.name = li.querySelector('.edit-name').value;
+    data.cost = li.querySelector('.edit-cost').value;
+  } else {
+    data.description = li.querySelector('.edit-desc').value;
+    data.cost = li.querySelector('.edit-cost').value;
+  }
+  await fetch(`/api/inventory-costs.php?action=update&type=${type}&id=${id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  loadCostLists(currentCostItemId);
+}
+document.getElementById('addMaterialForm').onsubmit = async function(e) {
+  e.preventDefault();
+  const form = e.target;
+  await addCost('material', { name: form.name.value, cost: form.cost.value });
+  form.reset();
+};
+document.getElementById('addLaborForm').onsubmit = async function(e) {
+  e.preventDefault();
+  const form = e.target;
+  await addCost('labor', { description: form.description.value, cost: form.cost.value });
+  form.reset();
+};
+document.getElementById('addEnergyForm').onsubmit = async function(e) {
+  e.preventDefault();
+  const form = e.target;
+  await addCost('energy', { description: form.description.value, cost: form.cost.value });
+  form.reset();
+};
+async function addCost(type, data) {
+  data.inventoryId = currentCostItemId;
+  await fetch(`/api/inventory-costs.php?action=add&type=${type}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  await loadCostLists(currentCostItemId);
+}
+async function deleteCost(type, id) {
+  await fetch(`/api/inventory-costs.php?action=delete&type=${type}&id=${id}`, { method: 'POST' });
+  loadCostLists(currentCostItemId);
+}
+document.querySelectorAll('.stock-input').forEach(input => {
+  input.addEventListener('change', updateStockLevel);
+  input.addEventListener('blur', updateStockLevel);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      updateStockLevel.call(this);
+    }
+  });
 });
+async function updateStockLevel(e) {
+  const input = this;
+  const inventoryId = input.getAttribute('data-inventory-id');
+  const newValue = input.value;
+  await fetch('/api/update-inventory-stock.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ inventoryId, stockLevel: newValue })
+  });
+  input.classList.add('bg-green-100');
+  setTimeout(() => input.classList.remove('bg-green-100'), 800);
+}
 </script>

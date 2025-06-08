@@ -1,176 +1,676 @@
 <?php
-// Start session if not already started
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+// Load environment variables
+require_once __DIR__ . '/config.php';
+// Start or resume session
+
+// Function to fetch data from the Node.js API
+function fetchData($endpoint) {
+    $url = "https://whimsicalfrog.us/api/" . $endpoint;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return json_decode($response, true);
 }
 
-// Function to check if user is logged in
-function isLoggedIn() {
-    return isset($_SESSION['user']);
+// Check if a page is specified in the URL
+$page = isset($_GET['page']) ? $_GET['page'] : 'landing';
+
+// Define allowed pages
+$allowed_pages = [
+    'landing', 'main_room', 'shop', 'cart', 'login', 'register', 'admin', 'admin_inventory',
+    'room_tshirts', 'room_tumblers', 'room_artwork', 'room_sublimation', 'room_windowwraps',
+    'admin_customers', 'admin_orders', 'admin_reports', 'admin_marketing', 'admin_settings'
+];
+
+// Validate page parameter
+if (!in_array($page, $allowed_pages)) {
+    $page = 'landing'; // Default to landing if invalid
 }
 
-// Function to check if user is admin
-function isAdmin() {
-    if (!isLoggedIn()) return false;
-    $user = json_decode($_SESSION['user'], true);
-    return isset($user['role']) && $user['role'] === 'Admin';
-}
+// Check if user is logged in
+$isLoggedIn = isset($_SESSION['user']);
+$isAdmin = false;
+$userData = [];
+$welcomeMessage = "";
 
-// Get the requested page
-$page = $_GET['page'] ?? 'home';
-
-// Define a whitelist of allowed pages
-$allowedPages = ['home', 'login', 'register', 'main_room', 'products_room', 'checkout', 'admin', 'admin_inventory', 'admin_customers', 'admin_orders'];
-
-// Validate the page
-if (!in_array($page, $allowedPages)) {
-    $page = 'home';
-}
-
-// Check if user is trying to access admin pages without admin privileges
-if (strpos($page, 'admin') === 0 && !isAdmin()) {
-    $page = 'login';
-}
-
-// Helper function to fetch data from an API endpoint
-function fetchFromAPI($endpoint, $method = 'GET', $data = null) {
-    $url = "/api/" . $endpoint . ".php";
-    
-    $options = [
-        'http' => [
-            'method' => $method,
-            'header' => 'Content-Type: application/json',
-        ]
-    ];
-    
-    if ($data !== null) {
-        $options['http']['content'] = json_encode($data);
+if ($isLoggedIn) {
+    // Handle both JSON string and array formats for backward compatibility
+    if (is_string($_SESSION['user'])) {
+        $userData = json_decode($_SESSION['user'], true);
+    } else {
+        $userData = $_SESSION['user'];
     }
     
-    $context = stream_context_create($options);
-    $result = file_get_contents($url, false, $context);
+    $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
     
-    return json_decode($result, true);
+    // Welcome message with user's name if available
+    if (isset($userData['firstName']) || isset($userData['lastName'])) {
+        $welcomeMessage = "Welcome, " . ($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '');
+    }
 }
 
-// Load the appropriate page content
-$content = '';
-switch ($page) {
-    case 'login':
-        include 'sections/login.php';
-        break;
-    case 'register':
-        include 'sections/register.php';
-        break;
-    case 'main_room':
-        include 'sections/main_room.php';
-        break;
-    case 'products_room':
-        include 'sections/products_room.php';
-        break;
-    case 'checkout':
-        include 'sections/checkout.php';
-        break;
-    case 'admin':
-        include 'sections/admin.php';
-        break;
-    case 'admin_inventory':
-        include 'sections/admin_inventory.php';
-        break;
-    case 'admin_customers':
-        include 'sections/admin_customers.php';
-        break;
-    case 'admin_orders':
-        include 'sections/admin_orders.php';
-        break;
-    default:
-        include 'sections/home.php';
-        break;
+// Redirect if trying to access admin pages without admin privileges
+if (strpos($page, 'admin') === 0 && !$isAdmin) {
+    header('Location: /?page=login');
+    exit;
 }
 
-// Get user data if logged in
-$userData = null;
-if (isLoggedIn()) {
-    $userData = json_decode($_SESSION['user'], true);
+// Define flag for files included from index.php
+define('INCLUDED_FROM_INDEX', true);
+
+// Function to get image tag with WebP and fallback
+function getImageTag($imagePath, $altText = '') {
+    // Check if the path ends with .png, .jpg, etc.
+    $pathInfo = pathinfo($imagePath);
+    $extension = isset($pathInfo['extension']) ? $pathInfo['extension'] : '';
+    $basePath = isset($pathInfo['dirname']) && $pathInfo['dirname'] !== '.' 
+        ? $pathInfo['dirname'] . '/' . $pathInfo['filename']
+        : $pathInfo['filename'];
+    
+    // If it's already a WebP image, just return the img tag
+    if (strtolower($extension) === 'webp') {
+        return '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '">';
+    }
+    
+    // Otherwise, try to use WebP with fallback
+    $webpPath = $basePath . '.webp';
+    $fallbackPath = $imagePath; // Original path as fallback
+    
+    return '<img src="' . htmlspecialchars($webpPath) . '" alt="' . htmlspecialchars($altText) . '" '
+         . 'onerror="this.onerror=null; this.src=\'' . htmlspecialchars($fallbackPath) . '\';">';
 }
+
+// Fetch product data from API
+$categories = [];
+$inventory = [];
+
+try {
+    // Fetch products with full URL path
+    $productsUrl = 'https://whimsicalfrog.us/api/products.php';
+    $productsData = @file_get_contents($productsUrl);
+    
+    // Check for HTTP errors
+    if ($productsData === false) {
+        throw new Exception('Failed to fetch products data from API');
+    }
+    
+    $products = json_decode($productsData, true);
+    
+    if ($products && is_array($products)) {
+        foreach ($products as $product) {
+            if (!isset($product['productType'])) {
+                continue; // Skip rows without a category
+            }
+            $category = $product['productType'];
+            if (!isset($categories[$category])) {
+                $categories[$category] = [];
+            }
+            // Ensure price is available as 'price' for compatibility
+            if (isset($product['basePrice'])) {
+                $product['price'] = $product['basePrice'];
+            }
+            $categories[$category][] = $product;
+        }
+    }
+    
+    // Fetch inventory with full URL path
+    $inventoryUrl = 'https://whimsicalfrog.us/api/inventory.php';
+    $inventoryData = @file_get_contents($inventoryUrl);
+    
+    // Check for HTTP errors
+    if ($inventoryData === false) {
+        throw new Exception('Failed to fetch inventory data from API');
+    }
+    
+    $inventory = json_decode($inventoryData, true) ?: [];
+    
+    // Skip the first row (headers) in inventory data if it exists
+    if (count($inventory) > 1) {
+        $inventory = array_slice($inventory, 1);
+    }
+} catch (Exception $e) {
+    // Handle API error
+    error_log('API Error: ' . $e->getMessage());
+    // You might want to show an error message to the user
+}
+
+// Set body class based on page
+$bodyClass = '';
+if ($page === 'landing') {
+    $bodyClass = 'is-landing';
+} elseif (strpos($page, 'admin') === 0) {
+    $bodyClass = 'is-admin';
+}
+
+// Determine if this is a fullscreen layout page
+$isFullscreenPage = in_array($page, ['landing']);
+if ($isFullscreenPage) {
+    $bodyClass .= ' body-fullscreen-layout';
+}
+
+// Handle cart data
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+$cartCount = 0;
+$cartTotal = 0;
+
+foreach ($_SESSION['cart'] as $item) {
+    $cartCount += $item['quantity'];
+    $cartTotal += $item['price'] * $item['quantity'];
+}
+
+// Format cart total
+$formattedCartTotal = '$' . number_format($cartTotal, 2);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whimsical Frog</title>
+    <title>Whimsical Frog - Custom Crafts</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
-    <script>
-        // Use the current domain for API calls in both local and production environments
-        const apiBase = window.location.origin;
-        
-        // Function to handle API requests
-        async function apiRequest(endpoint, method = 'GET', data = null) {
-            const url = `${apiBase}/api/${endpoint}.php`;
-            const options = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-            
-            if (data) {
-                options.body = JSON.stringify(data);
-            }
-            
-            const response = await fetch(url, options);
-            return response.json();
+    <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box; /* Apply border-box to all elements */
+            margin: 0; /* Reset default margins */
+            padding: 0; /* Reset default padding */
         }
-    </script>
+        
+        body, html {
+            color: #222 !important;
+            background: #333; /* Dark grey background */
+            width: 100%; /* Ensure html and body take full width */
+            height: 100%; /* Ensure full height for viewport calculations */
+            overflow-x: hidden; /* Prevent horizontal scrollbar */
+            overflow-y: auto; /* HTML is the primary vertical scroll container */
+        }
+        
+        label, input, select, textarea, button, p, h1, h2, h3, h4, h5, h6, span, div {
+            color: #222 !important;
+        }
+        
+        .bg-white, .bg-gray-100, .bg-gray-200, .bg-gray-50 {
+            color: #222 !important;
+        }
+        
+        /* Remove forced white text except on dark backgrounds */
+        .text-white:not([class*='bg-']) {
+            color: #222 !important;
+        }
+        
+        /* Keep white text on dark backgrounds */
+        .bg-[#6B8E23] .text-white, .bg-[#556B2F] .text-white, .bg-green-700 .text-white, .bg-green-800 .text-white, .bg-black .text-white {
+            color: #fff !important;
+        }
+        
+        body {
+            font-family: 'Merienda', cursive;
+            background-image: url('images/home_background.png?v=cb2'); /* Fallback */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100%; /* Make body fill html height */
+            /* overflow-x: hidden; Already on html, body */
+            /* overflow-y: auto; Removed, html handles this */
+        }
+        
+        /* WebP support detection */
+        .webp body {
+            background-image: url('images/home_background.webp?v=cb2');
+        }
+        
+        .no-webp body {
+            background-image: url('images/home_background.png?v=cb2');
+        }
+        
+        /* Non-landing pages background */
+        body:not(.is-landing) {
+            background-image: url('images/room_main.png?v=cb2'); /* Fallback */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        
+        .webp body:not(.is-landing) {
+            background-image: url('images/room_main.webp?v=cb2');
+        }
+        
+        .no-webp body:not(.is-landing) {
+            background-image: url('images/room_main.png?v=cb2');
+        }
+        
+        .font-merienda {
+            font-family: 'Merienda', cursive;
+        }
+        
+        .cottage-bg {
+            background: transparent;
+        }
+        
+        .shelf {
+            background-color: #D2B48C;
+            border: 2px solid #8B4513;
+        }
+        
+        .door {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .door:hover {
+            transform: scale(1.05);
+        }
+        
+        .shelf:hover {
+            transform: translateY(-5px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1200px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .close-button {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            color: #556B2F;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-button:hover {
+            color: #6B8E23;
+        }
+        
+        .custom-alert {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            z-index: 200;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        /* Style for the header gradient and text readability */
+        nav.main-nav {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent); /* Even stronger gradient */
+            padding-top: 5px; /* Reduced padding */
+            padding-bottom: 5px; /* Reduced padding */
+        }
+        
+        nav.main-nav a, /* Targets all links, including title and nav items */
+        nav.main-nav p, /* Targets the tagline */
+        nav.main-nav span { /* Targets spans like cart count/total */
+            color: #87ac3a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7); /* Adjusted shadow for green text */
+        }
+        
+        nav.main-nav p.tagline { /* Specific styling for the tagline */
+            color: #87ac3a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            font-size: 0.875rem; /* Tailwind's text-sm */
+            margin-top: 0.25rem; /* Add a little space above the tagline */
+        }
+        
+        nav.main-nav a:hover { /* Styling for hover state */
+            color: #a3cc4a !important; /* A lighter green for hover */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        /* Ensure SVGs within the nav also use green stroke */
+        nav.main-nav svg {
+            stroke: #87ac3a !important;
+        }
+        
+        /* Hide elements on landing page */
+        body.is-landing a[href="/?page=shop"],
+        body.is-landing a[href="/?page=cart"],
+        body.is-landing a[href="/?page=login"] {
+            display: none !important;
+        }
+        
+        /* Hide "Back to Room" overlays */
+        .back-to-room-overlay {
+            display: none !important;
+        }
+        
+        /* Fix popup issues */
+        .popup {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        .popup.show, .product-popup.show {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* Room pages should have less spacing */
+        .room-section {
+            padding: 0.25rem !important;
+            margin-top: 0 !important;
+        }
+        
+        /* Main room specific spacing fixes */
+        .room-section .main-room-container {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        
+        /* Full-screen page styling */
+        .body-fullscreen-layout {
+            overflow: hidden; /* Handles structural full-screen behavior */
+        }
+        
+        /* This rule is a fallback in case #mainContent is somehow rendered on a fullscreen page */
+        .body-fullscreen-layout #mainContent {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: 100vh !important;
+        }
+        
+        .fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        /* User welcome message styling */
+        .welcome-message {
+            color: #87ac3a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="bg-green-600 text-white p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold">Whimsical Frog</a>
-            <nav>
-                <ul class="flex space-x-4">
-                    <li><a href="/?page=main_room" class="hover:underline">Shop</a></li>
-                    <?php if (isLoggedIn()): ?>
-                        <?php if (isAdmin()): ?>
-                            <li><a href="/?page=admin" class="hover:underline">Manage</a></li>
+<body class="flex flex-col min-h-screen <?php echo $bodyClass; ?>">
+
+<div id="customAlertBox" class="custom-alert">
+    <p id="customAlertMessage"></p>
+    <button onclick="document.getElementById('customAlertBox').style.display = 'none';" class="mt-2 px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600">OK</button>
+</div>
+
+<!-- Main Navigation -->
+<nav class="main-nav sticky top-0 z-50 transition-all duration-300 ease-in-out">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between w-full py-1"> <!-- Main flex row for 3 sections -->
+            <!-- Left Section: Logo and Tagline -->
+            <div class="flex-none">
+                <div id="nav-center-content" class="flex items-center">
+                    <a href="/?page=landing" class="flex items-center text-2xl font-bold font-merienda">
+                        <img src="images/sign_whimsicalfrog.webp" alt="Whimsical Frog" style="height: 60px; margin-right: 8px;" onerror="this.onerror=null; this.src='images/sign_whimsicalfrog.png';">
+                    </a>
+                    <div>
+                        <p class="text-sm font-merienda ml-2 hidden md:block" style="color: #87ac3a !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
+                        <?php if ($isLoggedIn && !empty($welcomeMessage)): ?>
+                            <p class="welcome-message">
+                                <a href="/?page=account_settings" class="hover:underline text-[#87ac3a]" title="Edit your account settings"><?php echo htmlspecialchars($welcomeMessage); ?></a>
+                            </p>
                         <?php endif; ?>
-                        <li>
-                            <span class="mr-2">Hello, <?php echo htmlspecialchars($userData['firstName'] ?? $userData['username']); ?></span>
-                            <a href="/logout.php" class="hover:underline">Logout</a>
-                        </li>
-                    <?php else: ?>
-                        <li><a href="/?page=login" class="hover:underline">Login</a></li>
-                        <li><a href="/?page=register" class="hover:underline">Register</a></li>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Center Section: Empty space (welcome sign removed) -->
+            <div class="flex-grow"></div>
+            
+            <!-- Right Section: Navigation Links -->
+            <div class="flex-none">
+                <div class="flex items-center">
+                    <?php if ($isAdmin): ?>
+                    <a href="/?page=admin" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Manage</a>
                     <?php endif; ?>
-                    <li>
-                        <a href="/?page=checkout" class="hover:underline flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
+                    <a href="/?page=cart" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center">
+                        <div class="flex items-center space-x-1 md:space-x-2">
+                            <span id="cartCount" class="text-sm font-medium whitespace-nowrap"><?php echo $cartCount; ?> items</span>
+                            <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <span id="cart-count">0</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+                            <span id="cartTotal" class="text-sm font-medium whitespace-nowrap hidden md:inline"><?php echo $formattedCartTotal; ?></span>
+                        </div>
+                    </a>
+                    <?php if ($isLoggedIn): ?>
+                        <a href="/logout.php" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium" onclick="logout(); return false;">Logout</a>
+                    <?php else: ?>
+                        <a href="/?page=login" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
-    </header>
+    </div>
+</nav>
 
-    <!-- Main Content -->
-    <main class="flex-grow container mx-auto p-4">
-        <?php echo $content; ?>
+<?php if ($isFullscreenPage): ?>
+    <div class="fullscreen-container">
+        <?php include "sections/{$page}.php"; ?>
+    </div>
+<?php else: ?>
+    <main class="flex-grow container mx-auto p-2 md:p-4 lg:p-6 cottage-bg" id="mainContent">
+        <?php 
+        // Include the appropriate page content
+        $pageFile = 'sections/' . $page . '.php';
+        
+        // Handle admin section parameter for the main admin page
+        if ($page === 'admin' && isset($_GET['section'])) {
+            $section = $_GET['section'];
+            $sectionFile = 'sections/admin_' . $section . '.php';
+            
+            // Check if the section file exists
+            if (file_exists($sectionFile)) {
+                include $pageFile; // Include the main admin page first
+                // The admin.php page will handle including the section file
+            } else {
+                include $pageFile; // Just include the main admin dashboard
+            }
+        } else if (file_exists($pageFile)) {
+            include $pageFile;
+        } else {
+            echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Page not found</h1></div>';
+        }
+        ?>
     </main>
+<?php endif; ?>
 
-    <!-- Footer -->
-    <footer class="bg-green-800 text-white p-4">
-        <div class="container mx-auto text-center">
-            <p>&copy; <?php echo date('Y'); ?> Whimsical Frog. All rights reserved.</p>
+<!-- Product Modal -->
+<div id="productModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeProductModal()">&times;</span>
+        <div id="modalContent" class="p-4">
+            <!-- Content will be dynamically inserted here -->
         </div>
-    </footer>
+    </div>
+</div>
 
-    <!-- Cart Script -->
-    <script src="js/cart.js"></script>
+<!-- Load cart script first -->
+<script src="js/cart.js?v=<?php echo time(); ?>"></script>
+
+<!-- WebP Support Detection -->
+<script>
+    // Detect WebP support
+    (function(){
+        var d=document.createElement('div');
+        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==" onerror="document.documentElement.className += \' no-webp\';" onload="document.documentElement.className += \' webp\';">';
+    })();
+</script>
+
+<!-- Then load other scripts -->
+<script>
+    // --- DOM Elements ---
+    const enterShopDoor = document.getElementById('enterShopDoor');
+    const loginForm = document.getElementById('loginForm');
+    const cartCount = document.getElementById('cartCount');
+    const mainContent = document.getElementById('mainContent');
+
+    // Update cart count when cart changes
+    function updateCartCount() {
+        if (typeof window.cart !== 'undefined') {
+            const count = window.cart.items.reduce((total, item) => total + item.quantity, 0);
+            cartCount.textContent = count + ' items';
+            cartCount.style.display = count > 0 ? 'flex' : 'none';
+        }
+    }
+
+    // Listen for cart updates
+    window.addEventListener('cartUpdated', updateCartCount);
+
+    // Initial cart count update
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, checking cart initialization...');
+        if (typeof window.cart === 'undefined') {
+            console.error('Cart not initialized properly');
+        } else {
+            console.log('Cart is initialized and ready');
+            updateCartCount();
+        }
+        
+        // Removed document-level click handler to avoid interference with back button
+    });
+
+    // --- Event Listeners ---
+    if (enterShopDoor) {
+        enterShopDoor.addEventListener('click', () => {
+            console.log('Enter shop door clicked');
+            window.location.href = '/?page=shop';
+        });
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Use correct API base depending on environment
+            const apiBase = 'https://whimsicalfrog.us';
+            const loginUrl = apiBase + '/api/login.php';
+            try {
+                const response = await fetch(loginUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Login failed');
+                }
+                
+                // Store user data in both session storage and PHP session
+                sessionStorage.setItem('user', JSON.stringify(data));
+                
+                // Store in PHP session via AJAX
+                await fetch('/set_session.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(data)
+                });
+                
+                // Redirect based on role
+                if (data.role === 'Admin') {
+                    window.location.href = '/?page=admin';
+                } else {
+                    window.location.href = '/?page=shop';
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    }
+
+    function logout() {
+        // Clear client-side session storage
+        sessionStorage.removeItem('user');
+        
+        // First clear PHP session
+        fetch('/set_session.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ clear: true })
+        })
+        .then(() => {
+            // Then clear Node.js session
+            return fetch('https://whimsicalfrog.onrender.com/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Logout failed');
+            }
+            
+            // Force reload the page to clear any cached state
+            window.location.href = '/?page=login';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Still redirect to login even if there's an error
+            window.location.href = '/?page=login';
+        });
+    }
+</script>
 </body>
 </html>

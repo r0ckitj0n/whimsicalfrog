@@ -1,9 +1,9 @@
 <?php
-// Set CORS headers to allow cross-origin requests
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Content-Type: application/json");
+// Set headers for CORS and JSON response
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -13,54 +13,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode(['error' => 'Only POST requests are allowed']);
+    echo json_encode(['error' => 'Method not allowed']);
     exit();
 }
 
-// Determine if we're in production or development
-$isProduction = (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] === 'whimsicalfrog.us');
+// Get JSON data from request body
+$json = file_get_contents('php://input');
+$data = json_decode($json, true);
 
-// Set the Node.js server URL based on environment
-$nodeServerUrl = $isProduction 
-    ? 'http://localhost:3000/api/login'  // Production: Node.js runs on the same server
-    : 'http://localhost:3000/api/login'; // Development: Node.js runs locally
-
-// Get the raw POST data
-$jsonInput = file_get_contents('php://input');
-
-// Initialize cURL session
-$ch = curl_init($nodeServerUrl);
-
-// Set cURL options
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonInput);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-    'Content-Length: ' . strlen($jsonInput)
-]);
-
-// Execute the cURL request
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-// Check for cURL errors
-if (curl_errno($ch)) {
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'Failed to connect to authentication server',
-        'details' => curl_error($ch)
-    ]);
-    curl_close($ch);
+// Validate required fields
+if (!isset($data['username']) || !isset($data['password'])) {
+    echo json_encode(['error' => 'Username and password are required']);
     exit();
 }
 
-// Close cURL session
-curl_close($ch);
+// Database connection
+try {
+    $pdo = new PDO('mysql:host=localhost;dbname=whimsicalfrog', 'root', 'Palz2516');
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo json_encode(['error' => 'Database connection failed', 'details' => $e->getMessage()]);
+    exit();
+}
 
-// Set the HTTP status code from the Node.js response
-http_response_code($httpCode);
+// Sanitize inputs
+$username = $data['username'];
+$password = $data['password'];
 
-// Output the response from the Node.js server
-echo $response;
+try {
+    // Query to find user
+    $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ?');
+    $stmt->execute([$username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Check if user exists and password matches
+    if ($user && $user['password'] === $password) {
+        // Return user data in the expected format
+        echo json_encode([
+            'userId' => $user['id'],
+            'username' => $user['username'],
+            'email' => $user['email'],
+            'role' => $user['role'],
+            'roleType' => $user['roleType'],
+            'firstName' => $user['first_name'],
+            'lastName' => $user['last_name']
+        ]);
+    } else {
+        // Invalid credentials
+        echo json_encode(['error' => 'Invalid username or password']);
+    }
+} catch (PDOException $e) {
+    // Database error
+    echo json_encode(['error' => 'Authentication failed', 'details' => $e->getMessage()]);
+}
+?>

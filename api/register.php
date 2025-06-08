@@ -1,9 +1,9 @@
 <?php
-// Set CORS headers to allow cross-origin requests
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Content-Type: application/json");
+// Set headers for CORS and JSON response
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -13,54 +13,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode(['error' => 'Only POST requests are allowed']);
+    echo json_encode(['error' => 'Method not allowed']);
     exit();
 }
 
-// Determine if we're in production or development
-$isProduction = (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] === 'whimsicalfrog.us');
+// Get JSON data from request body
+$json = file_get_contents('php://input');
+$data = json_decode($json, true);
 
-// Set the Node.js server URL based on environment
-$nodeServerUrl = $isProduction 
-    ? 'http://localhost:3000/api/register'  // Production: Node.js runs on the same server
-    : 'http://localhost:3000/api/register'; // Development: Node.js runs locally
+// Validate required fields
+if (!isset($data['username']) || !isset($data['password']) || !isset($data['email'])) {
+    echo json_encode(['error' => 'Username, password, and email are required']);
+    exit();
+}
 
-// Get the raw POST data
-$jsonInput = file_get_contents('php://input');
+// Database connection
+try {
+    $pdo = new PDO('mysql:host=localhost;dbname=whimsicalfrog', 'root', 'Palz2516');
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo json_encode(['error' => 'Database connection failed', 'details' => $e->getMessage()]);
+    exit();
+}
 
-// Initialize cURL session
-$ch = curl_init($nodeServerUrl);
+// Sanitize inputs
+$username = $data['username'];
+$password = $data['password'];
+$email = $data['email'];
+$role = isset($data['role']) ? $data['role'] : 'Customer';
+$roleType = isset($data['roleType']) ? $data['roleType'] : 'Customer';
+$firstName = isset($data['firstName']) ? $data['firstName'] : '';
+$lastName = isset($data['lastName']) ? $data['lastName'] : '';
+$phoneNumber = isset($data['phoneNumber']) ? $data['phoneNumber'] : '';
+$addressLine1 = isset($data['addressLine1']) ? $data['addressLine1'] : '';
+$addressLine2 = isset($data['addressLine2']) ? $data['addressLine2'] : '';
+$city = isset($data['city']) ? $data['city'] : '';
+$state = isset($data['state']) ? $data['state'] : '';
+$zipCode = isset($data['zipCode']) ? $data['zipCode'] : '';
 
-// Set cURL options
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonInput);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-    'Content-Length: ' . strlen($jsonInput)
-]);
-
-// Execute the cURL request
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-// Check for cURL errors
-if (curl_errno($ch)) {
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'Failed to connect to registration server',
-        'details' => curl_error($ch)
+try {
+    // Check if username already exists
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = ?');
+    $stmt->execute([$username]);
+    if ($stmt->fetchColumn() > 0) {
+        echo json_encode(['error' => 'Username already exists']);
+        exit();
+    }
+    
+    // Check if email already exists
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ?');
+    $stmt->execute([$email]);
+    if ($stmt->fetchColumn() > 0) {
+        echo json_encode(['error' => 'Email already exists']);
+        exit();
+    }
+    
+    // Generate a unique user ID
+    $userId = 'U' . substr(uniqid(), -8);
+    
+    // Insert new user
+    $stmt = $pdo->prepare('INSERT INTO users (id, username, password, email, role, roleType, first_name, last_name, phone_number, address_line1, address_line2, city, state, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt->execute([
+        $userId,
+        $username,
+        $password,
+        $email,
+        $role,
+        $roleType,
+        $firstName,
+        $lastName,
+        $phoneNumber,
+        $addressLine1,
+        $addressLine2,
+        $city,
+        $state,
+        $zipCode
     ]);
-    curl_close($ch);
-    exit();
+    
+    // Return success response with user data
+    echo json_encode([
+        'success' => true,
+        'userId' => $userId,
+        'username' => $username,
+        'email' => $email,
+        'role' => $role,
+        'roleType' => $roleType,
+        'firstName' => $firstName,
+        'lastName' => $lastName
+    ]);
+    
+} catch (PDOException $e) {
+    // Database error
+    echo json_encode(['error' => 'Registration failed', 'details' => $e->getMessage()]);
 }
-
-// Close cURL session
-curl_close($ch);
-
-// Set the HTTP status code from the Node.js response
-http_response_code($httpCode);
-
-// Output the response from the Node.js server
-echo $response;
+?>

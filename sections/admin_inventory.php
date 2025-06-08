@@ -34,8 +34,12 @@
             <p id="categoryCount">0</p>
         </div>
         <div class="stat-card">
-            <h3>Total Value</h3>
-            <p id="totalValue">$0.00</p>
+            <h3>Total Cost Value</h3>
+            <p id="totalCostValue">$0.00</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Retail Value</h3>
+            <p id="totalRetailValue">$0.00</p>
         </div>
     </div>
 
@@ -50,6 +54,8 @@
                     <th>SKU</th>
                     <th>Stock</th>
                     <th>Reorder Point</th>
+                    <th>Cost Price</th>
+                    <th>Retail Price</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -111,6 +117,18 @@
                 </div>
             </div>
             
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="costPrice">Cost Price ($):</label>
+                    <input type="number" id="costPrice" min="0" step="0.01" required>
+                </div>
+                
+                <div class="form-group half">
+                    <label for="retailPrice">Retail Price ($):</label>
+                    <input type="number" id="retailPrice" min="0" step="0.01" required>
+                </div>
+            </div>
+            
             <div class="form-group">
                 <label for="imageUrl">Image URL:</label>
                 <input type="text" id="imageUrl">
@@ -146,7 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalItemsElement = document.getElementById('totalItems');
     const lowStockCountElement = document.getElementById('lowStockCount');
     const categoryCountElement = document.getElementById('categoryCount');
-    const totalValueElement = document.getElementById('totalValue');
+    const totalCostValueElement = document.getElementById('totalCostValue');
+    const totalRetailValueElement = document.getElementById('totalRetailValue');
     const categoryFilter = document.getElementById('categoryFilter');
     const searchInput = document.getElementById('inventorySearch');
     
@@ -162,6 +181,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const skuInput = document.getElementById('sku');
     const stockLevelInput = document.getElementById('stockLevel');
     const reorderPointInput = document.getElementById('reorderPoint');
+    const costPriceInput = document.getElementById('costPrice');
+    const retailPriceInput = document.getElementById('retailPrice');
     const imageUrlInput = document.getElementById('imageUrl');
     
     // Delete modal elements
@@ -279,6 +300,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${item.sku}</td>
                 <td>${item.stockLevel}</td>
                 <td>${item.reorderPoint}</td>
+                <td>$${parseFloat(item.costPrice || 0).toFixed(2)}</td>
+                <td>$${parseFloat(item.retailPrice || 0).toFixed(2)}</td>
                 <td class="actions">
                     <button class="edit-button" data-id="${item.id}">
                         <i class="fas fa-edit"></i>
@@ -321,9 +344,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const categories = new Set(data.map(item => item.category));
         categoryCountElement.textContent = categories.size;
         
-        // Calculate total value (assuming we have price data)
-        // This is a placeholder - you may need to adjust based on your actual data structure
-        totalValueElement.textContent = '$0.00'; // Placeholder
+        // Calculate total cost value (costPrice * stockLevel)
+        let totalCostValue = 0;
+        let totalRetailValue = 0;
+        
+        data.forEach(item => {
+            const costPrice = parseFloat(item.costPrice || 0);
+            const retailPrice = parseFloat(item.retailPrice || 0);
+            const stockLevel = parseInt(item.stockLevel || 0);
+            
+            totalCostValue += costPrice * stockLevel;
+            totalRetailValue += retailPrice * stockLevel;
+        });
+        
+        // Format and display the totals
+        totalCostValueElement.textContent = '$' + totalCostValue.toFixed(2);
+        totalRetailValueElement.textContent = '$' + totalRetailValue.toFixed(2);
     }
     
     // Populate category filter
@@ -367,6 +403,8 @@ document.addEventListener('DOMContentLoaded', function() {
         skuInput.value = item.sku;
         stockLevelInput.value = item.stockLevel;
         reorderPointInput.value = item.reorderPoint;
+        costPriceInput.value = parseFloat(item.costPrice || 0).toFixed(2);
+        retailPriceInput.value = parseFloat(item.retailPrice || 0).toFixed(2);
         imageUrlInput.value = item.imageUrl || '';
         
         // Update modal title and show
@@ -397,6 +435,8 @@ document.addEventListener('DOMContentLoaded', function() {
             sku: skuInput.value,
             stockLevel: parseInt(stockLevelInput.value),
             reorderPoint: parseInt(reorderPointInput.value),
+            costPrice: parseFloat(costPriceInput.value),
+            retailPrice: parseFloat(retailPriceInput.value),
             imageUrl: imageUrlInput.value
         };
         
@@ -465,6 +505,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function resetForm() {
         inventoryForm.reset();
         inventoryIdInput.value = '';
+        costPriceInput.value = '0.00';
+        retailPriceInput.value = '0.00';
     }
     
     // Close inventory modal
@@ -585,28 +627,28 @@ document.addEventListener('DOMContentLoaded', function() {
 .inventory-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    gap: 15px;
     margin-bottom: 20px;
 }
 
 .stat-card {
     background-color: white;
     border-radius: 8px;
-    padding: 20px;
+    padding: 12px; /* Reduced padding to make more compact */
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     text-align: center;
 }
 
 .stat-card h3 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.9rem; /* Smaller font size */
     color: #666;
-    margin-bottom: 10px;
+    margin-bottom: 5px; /* Reduced margin */
 }
 
 .stat-card p {
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 1.5rem; /* Slightly smaller font size */
     font-weight: bold;
     color: #87ac3a;
 }
@@ -822,6 +864,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .button.danger:hover {
     background-color: #c62828;
+}
+
+/* Admin header buttons - make bigger like Add New Item button */
+.admin-nav-item {
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+/* Admin tab navigation styling - make tabs bigger and more button-like */
+.admin-dashboard a[href^="/?page=admin"] {
+    padding: 10px 18px !important; /* Increased padding */
+    font-size: 14px !important; /* Larger font size */
+    font-weight: 600 !important; /* Bolder text */
+    border-radius: 6px !important; /* More rounded corners */
+    margin-right: 8px !important; /* Add spacing between tabs */
+    margin-bottom: 8px !important; /* Add spacing for wrapping */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* Add subtle shadow */
+    display: inline-block !important; /* Ensure proper block display */
+    text-align: center !important; /* Center text */
+    min-width: 100px !important; /* Minimum width */
+    transition: all 0.3s ease !important; /* Smooth transitions */
+    border: none !important; /* Remove any borders */
+    text-decoration: none !important; /* Remove underlines */
+}
+
+/* Style for active tab */
+.admin-dashboard a[href^="/?page=admin"].ring-2 {
+    background-color: #87ac3a !important; /* Same green as Add button */
+    color: white !important; /* White text */
+    box-shadow: 0 3px 6px rgba(135, 172, 58, 0.3) !important; /* Enhanced shadow */
+    transform: translateY(-1px) !important; /* Slight lift effect */
+}
+
+/* Hover effect for inactive tabs */
+.admin-dashboard a[href^="/?page=admin"]:not(.ring-2):hover {
+    background-color: #f0f8e5 !important; /* Light green background */
+    color: #87ac3a !important; /* Green text */
+    transform: translateY(-1px) !important; /* Slight lift effect */
 }
 
 /* Responsive styles */

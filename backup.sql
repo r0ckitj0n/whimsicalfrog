@@ -16,6 +16,98 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `discount_codes`
+--
+
+DROP TABLE IF EXISTS `discount_codes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `discount_codes` (
+  `id` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'percentage',
+  `value` decimal(10,2) NOT NULL,
+  `min_order_amount` decimal(10,2) DEFAULT '0.00',
+  `max_uses` int DEFAULT '0',
+  `current_uses` int DEFAULT '0',
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `discount_codes`
+--
+
+LOCK TABLES `discount_codes` WRITE;
+/*!40000 ALTER TABLE `discount_codes` DISABLE KEYS */;
+INSERT INTO `discount_codes` VALUES ('DC001','SUMMER20','percentage',20.00,50.00,100,12,'2025-05-29','2025-06-28','active'),('DC002','WELCOME10','percentage',10.00,0.00,0,45,'2025-04-09','2026-04-09','active'),('DC003','FREESHIP','fixed',5.99,25.00,200,87,'2025-05-09','2025-06-23','active');
+/*!40000 ALTER TABLE `discount_codes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `email_campaigns`
+--
+
+DROP TABLE IF EXISTS `email_campaigns`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `email_campaigns` (
+  `id` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target_audience` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'all',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `created_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `sent_date` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `email_campaigns`
+--
+
+LOCK TABLES `email_campaigns` WRITE;
+/*!40000 ALTER TABLE `email_campaigns` DISABLE KEYS */;
+INSERT INTO `email_campaigns` VALUES ('EC001','Summer Sale Announcement','🌞 Summer Sale - 20% Off All Products!','<h1>Summer Sale!</h1><p>Enjoy 20% off all products this summer. Use code SUMMER20 at checkout.</p>','all','draft','2025-06-08 23:54:10',NULL),('EC002','New Product Launch','Introducing Our New Custom Tumblers!','<h1>New Products Alert!</h1><p>Check out our new line of custom tumblers with unique designs.</p>','customers','scheduled','2025-06-06 23:54:10','2025-06-11 23:54:10'),('EC003','Customer Feedback Request','We Value Your Feedback!','<h1>How Did We Do?</h1><p>Please take a moment to share your experience with our products and service.</p>','customers','sent','2025-05-29 23:54:10','2025-06-01 23:54:10');
+/*!40000 ALTER TABLE `email_campaigns` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `email_subscribers`
+--
+
+DROP TABLE IF EXISTS `email_subscribers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `email_subscribers` (
+  `id` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `first_name` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_name` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `source` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `subscribe_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_email_date` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `email_subscribers`
+--
+
+LOCK TABLES `email_subscribers` WRITE;
+/*!40000 ALTER TABLE `email_subscribers` DISABLE KEYS */;
+INSERT INTO `email_subscribers` VALUES ('ES001','customer@example.com','Test','Customer','active','website','2025-05-09 23:54:10','2025-06-01 23:54:10'),('ES002','jane.doe@example.com','Jane','Doe','active','checkout','2025-05-24 23:54:10','2025-06-01 23:54:10'),('ES003','john.smith@example.com','John','Smith','active','website','2025-06-03 23:54:10',NULL);
+/*!40000 ALTER TABLE `email_subscribers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `inventory`
 --
 
@@ -223,6 +315,66 @@ INSERT INTO `products` VALUES ('P001','Test Product','test',19.98,'Test','TEST',
 UNLOCK TABLES;
 
 --
+-- Table structure for table `social_accounts`
+--
+
+DROP TABLE IF EXISTS `social_accounts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `social_accounts` (
+  `id` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `platform` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `account_name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `connected` tinyint(1) DEFAULT '0',
+  `auth_token` text COLLATE utf8mb4_unicode_ci,
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `social_accounts`
+--
+
+LOCK TABLES `social_accounts` WRITE;
+/*!40000 ALTER TABLE `social_accounts` DISABLE KEYS */;
+INSERT INTO `social_accounts` VALUES ('SA001','facebook','Whimsical Frog Crafts',1,NULL,'2025-06-08 23:54:10'),('SA002','instagram','@whimsicalfrog',1,NULL,'2025-06-08 23:54:10');
+/*!40000 ALTER TABLE `social_accounts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `social_posts`
+--
+
+DROP TABLE IF EXISTS `social_posts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `social_posts` (
+  `id` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `platform` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `image_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `scheduled_date` timestamp NULL DEFAULT NULL,
+  `posted_date` timestamp NULL DEFAULT NULL,
+  `account_id` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `account_id` (`account_id`),
+  CONSTRAINT `social_posts_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `social_accounts` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `social_posts`
+--
+
+LOCK TABLES `social_posts` WRITE;
+/*!40000 ALTER TABLE `social_posts` DISABLE KEYS */;
+INSERT INTO `social_posts` VALUES ('SP001','facebook','Check out our new summer collection! Perfect for those hot days. #WhimsicalFrog #SummerVibes','images/products/product_custom-tumbler-20oz.png','scheduled','2025-06-10 23:54:10',NULL,'SA001'),('SP002','instagram','Our new tumblers keep your drinks cold for 24 hours! Perfect for summer adventures. #WhimsicalFrog #StayHydrated','images/products/product_custom-tumbler-30oz.png','posted','2025-06-05 23:54:10','2025-06-05 23:54:10','SA002'),('SP003','facebook','Use code SUMMER20 for 20% off all products this week only! #WhimsicalFrog #SummerSale',NULL,'draft',NULL,NULL,'SA001');
+/*!40000 ALTER TABLE `social_posts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `users`
 --
 
@@ -267,4 +419,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-08 15:26:59
+-- Dump completed on 2025-06-08 16:47:25

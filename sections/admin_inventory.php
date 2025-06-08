@@ -249,7 +249,6 @@ if (isset($_GET['message']) && isset($_GET['type'])) {
 ?>
 
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-green-700">Inventory Management</h1>
     
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">

@@ -8,7 +8,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 }
 
 // Include database configuration
-require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
+require_once 'api/config.php';
 
 // Initialize arrays to prevent null values
 $customersData = [];

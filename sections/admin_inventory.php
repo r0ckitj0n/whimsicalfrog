@@ -1,235 +1,233 @@
-<?php
-// Admin inventory management page
-if (!defined('INCLUDED_FROM_INDEX')) {
-    header('Location: /?page=admin');
-    exit;
-}
+<div class="admin-section-header" style="display: none;">
+    <h2>Inventory Management</h2>
+    <a href="/?page=admin" class="back-button">← Back to Admin</a>
+</div>
 
-// Verify admin privileges
-if (!isset($isAdmin) || !$isAdmin) {
-    echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1></div>';
-    exit;
-}
-?>
-
-<section id="adminInventoryPage" class="py-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-merienda text-[#556B2F]">Inventory Management</h1>
-        <a href="/?page=admin" class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md transition-colors">
-            ← Back to Admin
-        </a>
-    </div>
-
-    <!-- Add Inventory Form -->
-    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 class="text-2xl font-merienda text-[#556B2F] mb-4">Add New Inventory Item</h2>
-        <form id="addInventoryForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-                <label for="itemName" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                <input type="text" id="itemName" name="itemName" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
-            </div>
-            <div>
-                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select id="category" name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
-                    <option value="">Select Category</option>
-                    <option value="Material">Material</option>
-                    <option value="Labor">Labor</option>
-                    <option value="Energy">Energy</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-            <div>
-                <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                <input type="number" id="quantity" name="quantity" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
-            </div>
-            <div>
-                <label for="unit" class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                <input type="text" id="unit" name="unit" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
-            </div>
-            <div>
-                <label for="costPerUnit" class="block text-sm font-medium text-gray-700 mb-1">Cost Per Unit ($)</label>
-                <input type="number" id="costPerUnit" name="costPerUnit" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
-            </div>
-            <div>
-                <label for="totalCost" class="block text-sm font-medium text-gray-700 mb-1">Total Cost ($)</label>
-                <input type="number" id="totalCost" name="totalCost" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50">
-            </div>
-            <div>
-                <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea id="notes" name="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]"></textarea>
-            </div>
-            <div class="md:col-span-2 lg:col-span-3 mt-4">
-                <button type="submit" class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md transition-colors">
-                    Add Inventory Item
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Inventory List -->
-    <div class="bg-white p-6 rounded-lg shadow-md">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-merienda text-[#556B2F]">Current Inventory</h2>
-            <div class="flex gap-2">
-                <select id="filterCategory" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
-                    <option value="All">All Categories</option>
-                    <option value="Material">Material</option>
-                    <option value="Labor">Labor</option>
-                    <option value="Energy">Energy</option>
-                    <option value="Other">Other</option>
-                </select>
-                <button id="refreshInventoryBtn" class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md transition-colors">
-                    Refresh
-                </button>
-            </div>
-        </div>
-        
-        <!-- Inventory Totals -->
-        <div id="inventoryTotals" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                <h3 class="text-lg font-semibold text-green-800">Total Inventory Value</h3>
-                <p id="totalInventoryValue" class="text-2xl font-bold text-green-600">$0.00</p>
-            </div>
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <h3 class="text-lg font-semibold text-blue-800">Materials</h3>
-                <p id="materialsCost" class="text-2xl font-bold text-blue-600">$0.00</p>
-            </div>
-            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                <h3 class="text-lg font-semibold text-purple-800">Labor</h3>
-                <p id="laborCost" class="text-2xl font-bold text-purple-600">$0.00</p>
-            </div>
-            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <h3 class="text-lg font-semibold text-yellow-800">Energy</h3>
-                <p id="energyCost" class="text-2xl font-bold text-yellow-600">$0.00</p>
-            </div>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <table id="inventoryTable" class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Unit</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Cost</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200" id="inventoryTableBody">
-                    <!-- Inventory items will be loaded here -->
-                    <tr>
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">Loading inventory...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-
-<!-- Edit Inventory Modal -->
-<div id="editInventoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-merienda text-[#556B2F]">Edit Inventory Item</h3>
-            <button id="closeEditModal" class="text-gray-500 hover:text-gray-700">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+<div class="admin-content">
+    <div class="inventory-controls">
+        <div class="search-filter-container">
+            <input type="text" id="inventorySearch" placeholder="Search inventory..." class="search-input">
+            <select id="categoryFilter" class="filter-select">
+                <option value="">All Categories</option>
+                <!-- Categories will be populated dynamically -->
+            </select>
+            <button id="refreshInventory" class="action-button refresh-button">
+                <i class="fas fa-sync-alt"></i> Refresh
             </button>
         </div>
-        <form id="editInventoryForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="hidden" id="editItemId" name="itemId">
-            <div>
-                <label for="editItemName" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                <input type="text" id="editItemName" name="itemName" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+        <button id="addInventoryBtn" class="action-button add-button">
+            <i class="fas fa-plus"></i> Add New Item
+        </button>
+    </div>
+
+    <div class="inventory-stats">
+        <div class="stat-card">
+            <h3>Total Items</h3>
+            <p id="totalItems">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Low Stock</h3>
+            <p id="lowStockCount">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Categories</h3>
+            <p id="categoryCount">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Value</h3>
+            <p id="totalValue">$0.00</p>
+        </div>
+    </div>
+
+    <div class="inventory-table-container">
+        <table id="inventoryTable" class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Product ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>SKU</th>
+                    <th>Stock</th>
+                    <th>Reorder Point</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Inventory items will be loaded here -->
+            </tbody>
+        </table>
+        <div id="noInventory" class="no-data-message" style="display: none;">
+            No inventory items found. Add some items to get started!
+        </div>
+        <div id="loadingInventory" class="loading-message">
+            <i class="fas fa-spinner fa-spin"></i> Loading inventory...
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Inventory Modal -->
+<div id="inventoryModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2 id="modalTitle">Add New Inventory Item</h2>
+        <form id="inventoryForm">
+            <input type="hidden" id="inventoryId">
+            
+            <div class="form-group">
+                <label for="productId">Product ID:</label>
+                <input type="text" id="productId" required>
             </div>
-            <div>
-                <label for="editCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select id="editCategory" name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
-                    <option value="Material">Material</option>
-                    <option value="Labor">Labor</option>
-                    <option value="Energy">Energy</option>
-                    <option value="Other">Other</option>
-                </select>
+            
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required>
             </div>
-            <div>
-                <label for="editQuantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                <input type="number" id="editQuantity" name="quantity" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <input type="text" id="category" required>
             </div>
-            <div>
-                <label for="editUnit" class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                <input type="text" id="editUnit" name="unit" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description"></textarea>
             </div>
-            <div>
-                <label for="editCostPerUnit" class="block text-sm font-medium text-gray-700 mb-1">Cost Per Unit ($)</label>
-                <input type="number" id="editCostPerUnit" name="costPerUnit" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            
+            <div class="form-group">
+                <label for="sku">SKU:</label>
+                <input type="text" id="sku" required>
             </div>
-            <div>
-                <label for="editTotalCost" class="block text-sm font-medium text-gray-700 mb-1">Total Cost ($)</label>
-                <input type="number" id="editTotalCost" name="totalCost" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50">
+            
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="stockLevel">Stock Level:</label>
+                    <input type="number" id="stockLevel" min="0" required>
+                </div>
+                
+                <div class="form-group half">
+                    <label for="reorderPoint">Reorder Point:</label>
+                    <input type="number" id="reorderPoint" min="0" required>
+                </div>
             </div>
-            <div class="md:col-span-2">
-                <label for="editNotes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea id="editNotes" name="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]"></textarea>
+            
+            <div class="form-group">
+                <label for="imageUrl">Image URL:</label>
+                <input type="text" id="imageUrl">
             </div>
-            <div class="md:col-span-2 mt-4 flex justify-between">
-                <button type="submit" class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md transition-colors">
-                    Update Item
-                </button>
-                <button type="button" id="deleteInventoryBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition-colors">
-                    Delete Item
-                </button>
+            
+            <div class="form-actions">
+                <button type="button" id="cancelInventory" class="button secondary">Cancel</button>
+                <button type="submit" id="saveInventory" class="button primary">Save Item</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content delete-modal">
+        <h2>Confirm Deletion</h2>
+        <p>Are you sure you want to delete this inventory item? This action cannot be undone.</p>
+        <div class="form-actions">
+            <button id="cancelDelete" class="button secondary">Cancel</button>
+            <button id="confirmDelete" class="button danger">Delete</button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // DOM Elements
-    const addInventoryForm = document.getElementById('addInventoryForm');
-    const editInventoryForm = document.getElementById('editInventoryForm');
-    const editInventoryModal = document.getElementById('editInventoryModal');
-    const closeEditModal = document.getElementById('closeEditModal');
-    const deleteInventoryBtn = document.getElementById('deleteInventoryBtn');
-    const refreshInventoryBtn = document.getElementById('refreshInventoryBtn');
-    const filterCategory = document.getElementById('filterCategory');
+    // DOM elements
+    const inventoryTable = document.getElementById('inventoryTable');
+    const inventoryTableBody = inventoryTable.querySelector('tbody');
+    const noInventoryMessage = document.getElementById('noInventory');
+    const loadingMessage = document.getElementById('loadingInventory');
+    const totalItemsElement = document.getElementById('totalItems');
+    const lowStockCountElement = document.getElementById('lowStockCount');
+    const categoryCountElement = document.getElementById('categoryCount');
+    const totalValueElement = document.getElementById('totalValue');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const searchInput = document.getElementById('inventorySearch');
     
-    // Calculate total cost when quantity or cost per unit changes
-    function calculateTotalCost(quantityInput, costPerUnitInput, totalCostInput) {
-        const quantity = parseFloat(quantityInput.value) || 0;
-        const costPerUnit = parseFloat(costPerUnitInput.value) || 0;
-        const totalCost = (quantity * costPerUnit).toFixed(2);
-        totalCostInput.value = totalCost;
-    }
+    // Modal elements
+    const inventoryModal = document.getElementById('inventoryModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const inventoryForm = document.getElementById('inventoryForm');
+    const inventoryIdInput = document.getElementById('inventoryId');
+    const productIdInput = document.getElementById('productId');
+    const nameInput = document.getElementById('name');
+    const categoryInput = document.getElementById('category');
+    const descriptionInput = document.getElementById('description');
+    const skuInput = document.getElementById('sku');
+    const stockLevelInput = document.getElementById('stockLevel');
+    const reorderPointInput = document.getElementById('reorderPoint');
+    const imageUrlInput = document.getElementById('imageUrl');
     
-    // Add event listeners for calculation on add form
-    const quantityInput = document.getElementById('quantity');
-    const costPerUnitInput = document.getElementById('costPerUnit');
-    const totalCostInput = document.getElementById('totalCost');
+    // Delete modal elements
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteButton = document.getElementById('confirmDelete');
+    let itemToDelete = null;
     
-    quantityInput.addEventListener('input', () => calculateTotalCost(quantityInput, costPerUnitInput, totalCostInput));
-    costPerUnitInput.addEventListener('input', () => calculateTotalCost(quantityInput, costPerUnitInput, totalCostInput));
+    // Buttons
+    const addInventoryBtn = document.getElementById('addInventoryBtn');
+    const refreshInventoryBtn = document.getElementById('refreshInventory');
+    const cancelInventoryBtn = document.getElementById('cancelInventory');
+    const cancelDeleteBtn = document.getElementById('cancelDelete');
     
-    // Add event listeners for calculation on edit form
-    const editQuantityInput = document.getElementById('editQuantity');
-    const editCostPerUnitInput = document.getElementById('editCostPerUnit');
-    const editTotalCostInput = document.getElementById('editTotalCost');
+    // Close modal when clicking the close button or outside the modal
+    document.querySelectorAll('.close-button, #cancelInventory').forEach(element => {
+        element.addEventListener('click', closeInventoryModal);
+    });
     
-    editQuantityInput.addEventListener('input', () => calculateTotalCost(editQuantityInput, editCostPerUnitInput, editTotalCostInput));
-    editCostPerUnitInput.addEventListener('input', () => calculateTotalCost(editQuantityInput, editCostPerUnitInput, editTotalCostInput));
+    document.getElementById('cancelDelete').addEventListener('click', function() {
+        deleteModal.style.display = 'none';
+    });
     
-    // Load inventory data
+    // Close modal when clicking outside of it
+    window.addEventListener('click', function(event) {
+        if (event.target === inventoryModal) {
+            closeInventoryModal();
+        }
+        if (event.target === deleteModal) {
+            deleteModal.style.display = 'none';
+        }
+    });
+    
+    // Add new inventory item
+    addInventoryBtn.addEventListener('click', function() {
+        resetForm();
+        modalTitle.textContent = 'Add New Inventory Item';
+        inventoryModal.style.display = 'block';
+    });
+    
+    // Refresh inventory
+    refreshInventoryBtn.addEventListener('click', loadInventory);
+    
+    // Form submission
+    inventoryForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveInventoryItem();
+    });
+    
+    // Load inventory on page load
+    loadInventory();
+    
+    // Load inventory function
     function loadInventory() {
-        const category = filterCategory.value;
-        const tableBody = document.getElementById('inventoryTableBody');
-        tableBody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">Loading inventory...</td></tr>';
+        showLoading(true);
         
-        // Use direct SQL query through PHP file instead of API endpoint
-        fetch('/process_inventory_get.php' + (category !== 'All' ? '?category=' + category : ''))
+        // Get filter values
+        const searchTerm = searchInput.value.trim();
+        const categoryValue = categoryFilter.value;
+        
+        // Build query parameters
+        let queryParams = new URLSearchParams();
+        if (searchTerm) queryParams.append('search', searchTerm);
+        if (categoryValue) queryParams.append('category', categoryValue);
+        
+        // Make API call to get inventory
+        fetch('process_inventory_get.php?' + queryParams.toString())
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -237,129 +235,179 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                updateInventoryTable(data);
-                updateInventoryTotals(data);
+                displayInventory(data);
+                updateStats(data);
+                populateCategories(data);
             })
             .catch(error => {
-                console.error('Error loading inventory:', error);
-                tableBody.innerHTML = `<tr><td colspan="8" class="px-6 py-4 text-center text-red-500">Error loading inventory: ${error.message}</td></tr>`;
+                console.error('Error fetching inventory:', error);
+                showError('Failed to load inventory. Please try again.');
+            })
+            .finally(() => {
+                showLoading(false);
             });
     }
     
-    // Update inventory table with data
-    function updateInventoryTable(inventoryData) {
-        const tableBody = document.getElementById('inventoryTableBody');
-        tableBody.innerHTML = '';
+    // Display inventory data
+    function displayInventory(data) {
+        // Clear existing rows
+        inventoryTableBody.innerHTML = '';
         
-        if (!inventoryData || inventoryData.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">No inventory items found</td></tr>';
+        if (data.length === 0) {
+            noInventoryMessage.style.display = 'block';
+            inventoryTable.style.display = 'none';
             return;
         }
         
-        inventoryData.forEach(item => {
+        noInventoryMessage.style.display = 'none';
+        inventoryTable.style.display = 'table';
+        
+        // Add rows for each inventory item
+        data.forEach(item => {
             const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50';
             
-            // Map database column names to display names
-            const name = item.name || '';
-            const category = item.category || '';
-            const quantity = item.stockLevel || 0;
-            const sku = item.sku || '';
-            const costPerUnit = 0; // Not in database, placeholder
-            const totalCost = 0; // Not in database, placeholder
-            const notes = item.description || '';
+            // Highlight low stock items
+            if (item.stockLevel <= item.reorderPoint) {
+                row.classList.add('low-stock');
+            }
             
             row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap">${name}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${category}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${quantity}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${sku}</td>
-                <td class="px-6 py-4 whitespace-nowrap">$${parseFloat(costPerUnit).toFixed(2)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">$${parseFloat(totalCost).toFixed(2)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${notes || ''}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <button class="edit-btn text-blue-600 hover:text-blue-800" data-id="${item.id}">
-                        Edit
+                <td>${item.id}</td>
+                <td>${item.productId}</td>
+                <td>${item.name}</td>
+                <td>${item.category}</td>
+                <td>${item.sku}</td>
+                <td>${item.stockLevel}</td>
+                <td>${item.reorderPoint}</td>
+                <td class="actions">
+                    <button class="edit-button" data-id="${item.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-button" data-id="${item.id}">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;
             
-            tableBody.appendChild(row);
-            
-            // Add event listener to edit button
-            const editBtn = row.querySelector('.edit-btn');
-            editBtn.addEventListener('click', () => openEditModal(item));
+            inventoryTableBody.appendChild(row);
+        });
+        
+        // Add event listeners to edit and delete buttons
+        document.querySelectorAll('.edit-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                editInventoryItem(id, data);
+            });
+        });
+        
+        document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                showDeleteConfirmation(id);
+            });
         });
     }
     
-    // Update inventory totals
-    function updateInventoryTotals(inventoryData) {
-        let totalValue = 0;
-        let materialsCost = 0;
-        let laborCost = 0;
-        let energyCost = 0;
+    // Update inventory statistics
+    function updateStats(data) {
+        // Total items
+        totalItemsElement.textContent = data.length;
         
-        inventoryData.forEach(item => {
-            // Since we don't have totalCost in the database, we'll use a placeholder value
-            const itemCost = 0; // Placeholder
-            totalValue += itemCost;
-            
-            if (item.category === 'Material') {
-                materialsCost += itemCost;
-            } else if (item.category === 'Labor') {
-                laborCost += itemCost;
-            } else if (item.category === 'Energy') {
-                energyCost += itemCost;
-            }
+        // Low stock count
+        const lowStockCount = data.filter(item => item.stockLevel <= item.reorderPoint).length;
+        lowStockCountElement.textContent = lowStockCount;
+        
+        // Category count
+        const categories = new Set(data.map(item => item.category));
+        categoryCountElement.textContent = categories.size;
+        
+        // Calculate total value (assuming we have price data)
+        // This is a placeholder - you may need to adjust based on your actual data structure
+        totalValueElement.textContent = '$0.00'; // Placeholder
+    }
+    
+    // Populate category filter
+    function populateCategories(data) {
+        // Get unique categories
+        const categories = [...new Set(data.map(item => item.category))];
+        
+        // Save current selection
+        const currentSelection = categoryFilter.value;
+        
+        // Clear existing options (except the first one)
+        while (categoryFilter.options.length > 1) {
+            categoryFilter.remove(1);
+        }
+        
+        // Add category options
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categoryFilter.appendChild(option);
         });
         
-        document.getElementById('totalInventoryValue').textContent = `$${totalValue.toFixed(2)}`;
-        document.getElementById('materialsCost').textContent = `$${materialsCost.toFixed(2)}`;
-        document.getElementById('laborCost').textContent = `$${laborCost.toFixed(2)}`;
-        document.getElementById('energyCost').textContent = `$${energyCost.toFixed(2)}`;
+        // Restore selection if possible
+        if (currentSelection && categories.includes(currentSelection)) {
+            categoryFilter.value = currentSelection;
+        }
     }
     
-    // Open edit modal with item data
-    function openEditModal(item) {
-        document.getElementById('editItemId').value = item.id;
-        document.getElementById('editItemName').value = item.name || '';
-        document.getElementById('editCategory').value = item.category || 'Other';
-        document.getElementById('editQuantity').value = item.stockLevel || 0;
-        document.getElementById('editUnit').value = item.sku || '';
-        document.getElementById('editCostPerUnit').value = 0; // Placeholder
-        document.getElementById('editNotes').value = item.description || '';
+    // Edit inventory item
+    function editInventoryItem(id, data) {
+        const item = data.find(item => item.id === id);
+        if (!item) return;
         
-        // Calculate total cost
-        calculateTotalCost(editQuantityInput, editCostPerUnitInput, editTotalCostInput);
+        // Populate form
+        inventoryIdInput.value = item.id;
+        productIdInput.value = item.productId;
+        nameInput.value = item.name;
+        categoryInput.value = item.category;
+        descriptionInput.value = item.description || '';
+        skuInput.value = item.sku;
+        stockLevelInput.value = item.stockLevel;
+        reorderPointInput.value = item.reorderPoint;
+        imageUrlInput.value = item.imageUrl || '';
         
-        // Show modal
-        editInventoryModal.classList.remove('hidden');
+        // Update modal title and show
+        modalTitle.textContent = 'Edit Inventory Item';
+        inventoryModal.style.display = 'block';
     }
     
-    // Close edit modal
-    function closeEditModal() {
-        editInventoryModal.classList.add('hidden');
+    // Show delete confirmation
+    function showDeleteConfirmation(id) {
+        itemToDelete = id;
+        deleteModal.style.display = 'block';
+        
+        // Set up confirm delete button
+        confirmDeleteButton.onclick = function() {
+            deleteInventoryItem(itemToDelete);
+            deleteModal.style.display = 'none';
+        };
     }
     
-    // Add inventory item
-    addInventoryForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
+    // Save inventory item (create or update)
+    function saveInventoryItem() {
         const formData = {
-            itemName: document.getElementById('itemName').value,
-            category: document.getElementById('category').value,
-            quantity: parseFloat(document.getElementById('quantity').value),
-            unit: document.getElementById('unit').value,
-            costPerUnit: parseFloat(document.getElementById('costPerUnit').value),
-            totalCost: parseFloat(document.getElementById('totalCost').value),
-            notes: document.getElementById('notes').value
+            id: inventoryIdInput.value,
+            productId: productIdInput.value,
+            name: nameInput.value,
+            category: categoryInput.value,
+            description: descriptionInput.value,
+            sku: skuInput.value,
+            stockLevel: parseInt(stockLevelInput.value),
+            reorderPoint: parseInt(reorderPointInput.value),
+            imageUrl: imageUrlInput.value
         };
         
-        // Use direct SQL query through PHP file instead of API endpoint
-        fetch('/process_inventory_add.php', {
-            method: 'POST',
+        const isNewItem = !formData.id;
+        const url = isNewItem ? 'process_inventory_add.php' : 'process_inventory_update.php';
+        const method = isNewItem ? 'POST' : 'PUT';
+        
+        fetch(url, {
+            method: method,
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(formData)
         })
@@ -370,160 +418,94 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            // Show success message
-            const customAlert = document.getElementById('customAlertBox');
-            const customAlertMessage = document.getElementById('customAlertMessage');
-            customAlertMessage.textContent = 'Inventory item added successfully!';
-            customAlertMessage.className = 'text-green-700';
-            customAlert.style.display = 'block';
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                customAlert.style.display = 'none';
-            }, 3000);
-            
-            // Reset form and reload inventory
-            addInventoryForm.reset();
-            loadInventory();
-        })
-        .catch(error => {
-            console.error('Error adding inventory item:', error);
-            
-            // Show error message
-            const customAlert = document.getElementById('customAlertBox');
-            const customAlertMessage = document.getElementById('customAlertMessage');
-            customAlertMessage.textContent = 'Error adding inventory item: ' + error.message;
-            customAlertMessage.className = 'text-red-700';
-            customAlert.style.display = 'block';
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                customAlert.style.display = 'none';
-            }, 5000);
-        });
-    });
-    
-    // Update inventory item
-    editInventoryForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = {
-            id: document.getElementById('editItemId').value,
-            name: document.getElementById('editItemName').value,
-            category: document.getElementById('editCategory').value,
-            stockLevel: parseFloat(document.getElementById('editQuantity').value),
-            sku: document.getElementById('editUnit').value,
-            description: document.getElementById('editNotes').value
-        };
-        
-        // Use direct SQL query through PHP file instead of API endpoint
-        fetch('/process_inventory_update.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            if (data.success) {
+                showSuccess(isNewItem ? 'Inventory item added successfully!' : 'Inventory item updated successfully!');
+                closeInventoryModal();
+                loadInventory(); // Reload inventory
+            } else {
+                showError(data.message || 'Failed to save inventory item.');
             }
-            return response.json();
-        })
-        .then(data => {
-            // Show success message
-            const customAlert = document.getElementById('customAlertBox');
-            const customAlertMessage = document.getElementById('customAlertMessage');
-            customAlertMessage.textContent = 'Inventory item updated successfully!';
-            customAlertMessage.className = 'text-green-700';
-            customAlert.style.display = 'block';
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                customAlert.style.display = 'none';
-            }, 3000);
-            
-            // Close modal and reload inventory
-            closeEditModal();
-            loadInventory();
         })
         .catch(error => {
-            console.error('Error updating inventory item:', error);
-            
-            // Show error message
-            const customAlert = document.getElementById('customAlertBox');
-            const customAlertMessage = document.getElementById('customAlertMessage');
-            customAlertMessage.textContent = 'Error updating inventory item: ' + error.message;
-            customAlertMessage.className = 'text-red-700';
-            customAlert.style.display = 'block';
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                customAlert.style.display = 'none';
-            }, 5000);
+            console.error('Error saving inventory item:', error);
+            showError('Failed to save inventory item. Please try again.');
         });
-    });
+    }
     
     // Delete inventory item
-    deleteInventoryBtn.addEventListener('click', function() {
-        const itemId = document.getElementById('editItemId').value;
-        
-        if (confirm('Are you sure you want to delete this inventory item?')) {
-            // Use direct SQL query through PHP file instead of API endpoint
-            fetch('/process_inventory_delete.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id: itemId })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Show success message
-                const customAlert = document.getElementById('customAlertBox');
-                const customAlertMessage = document.getElementById('customAlertMessage');
-                customAlertMessage.textContent = 'Inventory item deleted successfully!';
-                customAlertMessage.className = 'text-green-700';
-                customAlert.style.display = 'block';
-                
-                // Auto-hide after 3 seconds
-                setTimeout(() => {
-                    customAlert.style.display = 'none';
-                }, 3000);
-                
-                // Close modal and reload inventory
-                closeEditModal();
-                loadInventory();
-            })
-            .catch(error => {
-                console.error('Error deleting inventory item:', error);
-                
-                // Show error message
-                const customAlert = document.getElementById('customAlertBox');
-                const customAlertMessage = document.getElementById('customAlertMessage');
-                customAlertMessage.textContent = 'Error deleting inventory item: ' + error.message;
-                customAlertMessage.className = 'text-red-700';
-                customAlert.style.display = 'block';
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    customAlert.style.display = 'none';
-                }, 5000);
-            });
+    function deleteInventoryItem(id) {
+        fetch('process_inventory_delete.php', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: id })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showSuccess('Inventory item deleted successfully!');
+                loadInventory(); // Reload inventory
+            } else {
+                showError(data.message || 'Failed to delete inventory item.');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting inventory item:', error);
+            showError('Failed to delete inventory item. Please try again.');
+        });
+    }
+    
+    // Reset form fields
+    function resetForm() {
+        inventoryForm.reset();
+        inventoryIdInput.value = '';
+    }
+    
+    // Close inventory modal
+    function closeInventoryModal() {
+        inventoryModal.style.display = 'none';
+        resetForm();
+    }
+    
+    // Show/hide loading message
+    function showLoading(show) {
+        loadingMessage.style.display = show ? 'block' : 'none';
+        if (show) {
+            noInventoryMessage.style.display = 'none';
         }
-    });
+    }
     
-    // Event listeners
-    closeEditModal.addEventListener('click', closeEditModal);
-    refreshInventoryBtn.addEventListener('click', loadInventory);
-    filterCategory.addEventListener('change', loadInventory);
+    // Show success message
+    function showSuccess(message) {
+        // Implement your success notification here
+        alert(message); // Placeholder - replace with your notification system
+    }
     
-    // Initial load
-    loadInventory();
+    // Show error message
+    function showError(message) {
+        // Implement your error notification here
+        alert(message); // Placeholder - replace with your notification system
+    }
+    
+    // Filter functionality
+    searchInput.addEventListener('input', debounce(loadInventory, 300));
+    categoryFilter.addEventListener('change', loadInventory);
+    
+    // Debounce function to limit API calls
+    function debounce(func, delay) {
+        let timeout;
+        return function() {
+            const context = this;
+            const args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
 });
 </script>

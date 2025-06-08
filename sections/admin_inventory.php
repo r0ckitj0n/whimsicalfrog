@@ -1,53 +1,277 @@
-<div class="admin-section-header" style="display: none;">
-    <h2>Inventory Management</h2>
-    <a href="/?page=admin" class="back-button">← Back to Admin</a>
-</div>
+<?php
+// Check if user is logged in and is admin
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: /?page=login");
+    exit();
+}
+?>
 
-<div class="admin-content">
-    <div class="inventory-controls">
-        <div class="search-filter-container">
-            <input type="text" id="inventorySearch" placeholder="Search inventory..." class="search-input">
-            <select id="categoryFilter" class="filter-select">
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6 text-green-700">Inventory Management</h1>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white p-3 rounded-lg shadow-md text-center">
+            <h3 class="text-sm font-semibold text-gray-500 mb-1">Total Items</h3>
+            <p id="totalItems" class="text-2xl font-bold text-green-700">0</p>
+        </div>
+        <div class="bg-white p-3 rounded-lg shadow-md text-center">
+            <h3 class="text-sm font-semibold text-gray-500 mb-1">Low Stock</h3>
+            <p id="lowStockCount" class="text-2xl font-bold text-orange-500">0</p>
+        </div>
+        <div class="bg-white p-3 rounded-lg shadow-md text-center">
+            <h3 class="text-sm font-semibold text-gray-500 mb-1">Categories</h3>
+            <p id="categoryCount" class="text-2xl font-bold text-blue-500">0</p>
+        </div>
+        <div class="bg-white p-3 rounded-lg shadow-md text-center">
+            <h3 class="text-sm font-semibold text-gray-500 mb-1">Total Cost Value</h3>
+            <p id="totalCostValue" class="text-2xl font-bold text-purple-700">$0.00</p>
+        </div>
+        <div class="bg-white p-3 rounded-lg shadow-md text-center">
+            <h3 class="text-sm font-semibold text-gray-500 mb-1">Total Retail Value</h3>
+            <p id="totalRetailValue" class="text-2xl font-bold text-indigo-700">$0.00</p>
+        </div>
+    </div>
+    
+    <!-- Admin Navigation Tabs -->
+    <style>
+        .admin-nav {
+            display: flex;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .admin-nav a {
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #4a5568;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .admin-nav a:hover {
+            color: #2d3748;
+            border-bottom-color: #cbd5e0;
+        }
+        .admin-nav a.active {
+            color: #87ac3a;
+            border-bottom-color: #87ac3a;
+        }
+        
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .toast-notification.success {
+            background-color: #48bb78;
+        }
+        .toast-notification.error {
+            background-color: #f56565;
+        }
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Editable Table Cells */
+        .editable {
+            position: relative;
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.2s;
+        }
+        .editable:hover {
+            background-color: rgba(135, 172, 58, 0.1);
+        }
+        .editable:hover::after {
+            content: '✏️';
+            font-size: 12px;
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            opacity: 0.5;
+        }
+        .editable.editing {
+            padding: 0;
+            border: 2px solid #87ac3a;
+        }
+        .editable.editing:hover::after {
+            content: '';
+        }
+        .editable input {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            background: white;
+            outline: none;
+        }
+        .editable.saving {
+            background-color: rgba(255, 193, 7, 0.2);
+        }
+        .editable.success {
+            background-color: rgba(72, 187, 120, 0.2);
+        }
+        .editable.error {
+            background-color: rgba(245, 101, 101, 0.2);
+        }
+        
+        /* Enhanced Inventory Table */
+        .inventory-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 20px;
+        }
+        .inventory-table th {
+            background-color: #87ac3a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .inventory-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        .inventory-table tr:hover {
+            background-color: #f7fafc;
+        }
+        .inventory-table th:first-child {
+            border-top-left-radius: 8px;
+        }
+        .inventory-table th:last-child {
+            border-top-right-radius: 8px;
+        }
+        
+        /* Action Buttons */
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .edit-btn {
+            background-color: #4299e1;
+            color: white;
+        }
+        .edit-btn:hover {
+            background-color: #3182ce;
+        }
+        .delete-btn {
+            background-color: #f56565;
+            color: white;
+        }
+        .delete-btn:hover {
+            background-color: #e53e3e;
+        }
+        
+        /* Cost Breakdown Styles */
+        .cost-breakdown {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .cost-breakdown h3 {
+            color: #4a5568;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        .cost-breakdown-section {
+            margin-bottom: 16px;
+        }
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .cost-item:last-child {
+            border-bottom: none;
+        }
+        .cost-item-name {
+            font-weight: 500;
+        }
+        .cost-item-value {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .cost-totals {
+            background-color: #edf2f7;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+        .cost-total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        .suggested-cost {
+            color: #805ad5;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .cost-label {
+            font-size: 14px;
+            color: #718096;
+        }
+    </style>
+    
+    <!-- Search and Filter Controls -->
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <div class="flex-1">
+            <input type="text" id="searchInput" placeholder="Search inventory..." class="w-full p-2 border border-gray-300 rounded">
+        </div>
+        <div class="flex-1">
+            <select id="categoryFilter" class="w-full p-2 border border-gray-300 rounded">
                 <option value="">All Categories</option>
-                <!-- Categories will be populated dynamically -->
             </select>
-            <button id="refreshInventory" class="action-button refresh-button">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
         </div>
-        <button id="addInventoryBtn" class="action-button add-button">
-            <i class="fas fa-plus"></i> Add New Item
-        </button>
-    </div>
-
-    <div class="inventory-stats">
-        <div class="stat-card">
-            <h3>Total Items</h3>
-            <p id="totalItems">0</p>
+        <div class="flex-1">
+            <select id="stockFilter" class="w-full p-2 border border-gray-300 rounded">
+                <option value="">All Stock Levels</option>
+                <option value="low">Low Stock</option>
+                <option value="out">Out of Stock</option>
+                <option value="in">In Stock</option>
+            </select>
         </div>
-        <div class="stat-card">
-            <h3>Low Stock</h3>
-            <p id="lowStockCount">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Categories</h3>
-            <p id="categoryCount">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Total Cost Value</h3>
-            <p id="totalCostValue">$0.00</p>
-        </div>
-        <div class="stat-card">
-            <h3>Total Retail Value</h3>
-            <p id="totalRetailValue">$0.00</p>
+        <div>
+            <button id="addItemBtn" class="bg-green-600 hover:bg-green-700 text-white p-2 rounded">Add New Item</button>
         </div>
     </div>
-
-    <div class="inventory-table-container">
-        <table id="inventoryTable" class="data-table">
+    
+    <!-- Inventory Table -->
+    <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+        <table id="inventoryTable" class="inventory-table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Name</th>
                     <th>Category</th>
                     <th>SKU</th>
@@ -58,1233 +282,817 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Inventory items will be loaded here -->
+            <tbody id="inventoryTableBody">
+                <tr>
+                    <td colspan="8" class="text-center py-4">Loading inventory data...</td>
+                </tr>
             </tbody>
         </table>
-        <div id="noInventory" class="no-data-message" style="display: none;">
-            No inventory items found. Add some items to get started!
-        </div>
-        <div id="loadingInventory" class="loading-message">
-            <i class="fas fa-spinner fa-spin"></i> Loading inventory...
-        </div>
     </div>
-</div>
-
-<!-- Add/Edit Inventory Modal -->
-<div id="inventoryModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2 id="modalTitle">Add New Inventory Item</h2>
-        <form id="inventoryForm">
-            <input type="hidden" id="inventoryId">
-            
-            <div class="form-group">
-                <label for="productId">Product ID:</label>
-                <input type="text" id="productId" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" id="name" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="category">Category:</label>
-                <input type="text" id="category" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea id="description"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="sku">SKU:</label>
-                <input type="text" id="sku" required>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group half">
-                    <label for="stockLevel">Stock Level:</label>
-                    <input type="number" id="stockLevel" min="0" required>
-                </div>
-                
-                <div class="form-group half">
-                    <label for="reorderPoint">Reorder Point:</label>
-                    <input type="number" id="reorderPoint" min="0" required>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group half">
-                    <label for="costPrice">Cost Price ($):</label>
-                    <input type="number" id="costPrice" min="0" step="0.01" required>
-                </div>
-                
-                <div class="form-group half">
-                    <label for="retailPrice">Retail Price ($):</label>
-                    <input type="number" id="retailPrice" min="0" step="0.01" required>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="imageUrl">Image URL:</label>
-                <input type="text" id="imageUrl">
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" id="cancelInventory" class="button secondary">Cancel</button>
-                <button type="submit" id="saveInventory" class="button primary">Save Item</button>
-            </div>
-        </form>
+    
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="toast-notification">
+        <span id="toastMessage"></span>
     </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="modal">
-    <div class="modal-content delete-modal">
-        <h2>Confirm Deletion</h2>
-        <p>Are you sure you want to delete this inventory item? This action cannot be undone.</p>
-        <div class="form-actions">
-            <button id="cancelDelete" class="button secondary">Cancel</button>
-            <button id="confirmDelete" class="button danger">Delete</button>
-        </div>
-    </div>
-</div>
-
-<!-- Toast Notification -->
-<div id="toast" class="toast-notification">
-    <div class="toast-content">
-        <i id="toast-icon" class="fas"></i>
-        <span id="toast-message"></span>
-    </div>
-    <div id="toast-progress" class="toast-progress"></div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // DOM elements
-    const inventoryTable = document.getElementById('inventoryTable');
-    const inventoryTableBody = inventoryTable.querySelector('tbody');
-    const noInventoryMessage = document.getElementById('noInventory');
-    const loadingMessage = document.getElementById('loadingInventory');
-    const totalItemsElement = document.getElementById('totalItems');
-    const lowStockCountElement = document.getElementById('lowStockCount');
-    const categoryCountElement = document.getElementById('categoryCount');
-    const totalCostValueElement = document.getElementById('totalCostValue');
-    const totalRetailValueElement = document.getElementById('totalRetailValue');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const searchInput = document.getElementById('inventorySearch');
     
-    // Toast notification elements
-    const toast = document.getElementById('toast');
-    const toastIcon = document.getElementById('toast-icon');
-    const toastMessage = document.getElementById('toast-message');
-    const toastProgress = document.getElementById('toast-progress');
-    
-    // Modal elements
-    const inventoryModal = document.getElementById('inventoryModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const inventoryForm = document.getElementById('inventoryForm');
-    const inventoryIdInput = document.getElementById('inventoryId');
-    const productIdInput = document.getElementById('productId');
-    const nameInput = document.getElementById('name');
-    const categoryInput = document.getElementById('category');
-    const descriptionInput = document.getElementById('description');
-    const skuInput = document.getElementById('sku');
-    const stockLevelInput = document.getElementById('stockLevel');
-    const reorderPointInput = document.getElementById('reorderPoint');
-    const costPriceInput = document.getElementById('costPrice');
-    const retailPriceInput = document.getElementById('retailPrice');
-    const imageUrlInput = document.getElementById('imageUrl');
-    
-    // Delete modal elements
-    const deleteModal = document.getElementById('deleteModal');
-    const confirmDeleteButton = document.getElementById('confirmDelete');
-    let itemToDelete = null;
-    
-    // Store original inventory data for comparison
-    let inventoryData = [];
-    
-    // Buttons
-    const addInventoryBtn = document.getElementById('addInventoryBtn');
-    const refreshInventoryBtn = document.getElementById('refreshInventory');
-    const cancelInventoryBtn = document.getElementById('cancelInventory');
-    const cancelDeleteBtn = document.getElementById('cancelDelete');
-    
-    // Close modal when clicking the close button or outside the modal
-    document.querySelectorAll('.close-button, #cancelInventory').forEach(element => {
-        element.addEventListener('click', closeInventoryModal);
-    });
-    
-    document.getElementById('cancelDelete').addEventListener('click', function() {
-        deleteModal.style.display = 'none';
-    });
-    
-    // Close modal when clicking outside of it
-    window.addEventListener('click', function(event) {
-        if (event.target === inventoryModal) {
-            closeInventoryModal();
-        }
-        if (event.target === deleteModal) {
-            deleteModal.style.display = 'none';
-        }
-    });
-    
-    // Add new inventory item
-    addInventoryBtn.addEventListener('click', function() {
-        resetForm();
-        modalTitle.textContent = 'Add New Inventory Item';
-        inventoryModal.style.display = 'block';
-    });
-    
-    // Refresh inventory
-    refreshInventoryBtn.addEventListener('click', loadInventory);
-    
-    // Form submission
-    inventoryForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        saveInventoryItem();
-    });
-    
-    // Load inventory on page load
-    loadInventory();
-    
-    // Load inventory function
-    function loadInventory() {
-        showLoading(true);
-        
-        // Get filter values
-        const searchTerm = searchInput.value.trim();
-        const categoryValue = categoryFilter.value;
-        
-        // Build query parameters
-        let queryParams = new URLSearchParams();
-        if (searchTerm) queryParams.append('search', searchTerm);
-        if (categoryValue) queryParams.append('category', categoryValue);
-        
-        // Make API call to get inventory - Using the correct API path in /api/ directory
-        fetch('/api/inventory.php?' + queryParams.toString())
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Store the inventory data
-                inventoryData = data;
-                displayInventory(data);
-                updateStats(data);
-                populateCategories(data);
-            })
-            .catch(error => {
-                console.error('Error fetching inventory:', error);
-                showToast('error', 'Failed to load inventory. Please try again.');
-            })
-            .finally(() => {
-                showLoading(false);
-            });
-    }
-    
-    // Display inventory data
-    function displayInventory(data) {
-        // Clear existing rows
-        inventoryTableBody.innerHTML = '';
-        
-        if (data.length === 0) {
-            noInventoryMessage.style.display = 'block';
-            inventoryTable.style.display = 'none';
-            return;
-        }
-        
-        noInventoryMessage.style.display = 'none';
-        inventoryTable.style.display = 'table';
-        
-        // Add rows for each inventory item
-        data.forEach(item => {
-            const row = document.createElement('tr');
-            row.dataset.id = item.id;
+    <!-- Add/Edit Item Modal -->
+    <div id="itemModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modalTitle" class="text-xl font-bold text-green-700">Add New Item</h2>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
             
-            // Highlight low stock items
-            if (item.stockLevel <= item.reorderPoint) {
-                row.classList.add('low-stock');
-            }
-            
-            row.innerHTML = `
-                <td>${item.id}</td>
-                <td class="editable" data-field="name" contenteditable="true">${item.name}</td>
-                <td class="editable" data-field="category" contenteditable="true">${item.category}</td>
-                <td class="editable" data-field="sku" contenteditable="true">${item.sku}</td>
-                <td class="editable" data-field="stockLevel" contenteditable="true">${item.stockLevel}</td>
-                <td class="editable" data-field="reorderPoint" contenteditable="true">${item.reorderPoint}</td>
-                <td class="editable" data-field="costPrice" contenteditable="true">$${parseFloat(item.costPrice || 0).toFixed(2)}</td>
-                <td class="editable" data-field="retailPrice" contenteditable="true">$${parseFloat(item.retailPrice || 0).toFixed(2)}</td>
-                <td class="actions">
-                    <button class="edit-button" data-id="${item.id}" title="Edit All Fields">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="delete-button" data-id="${item.id}" title="Delete Item">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            
-            inventoryTableBody.appendChild(row);
-        });
-        
-        // Add event listeners to edit and delete buttons
-        document.querySelectorAll('.edit-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                editInventoryItem(id, data);
-            });
-        });
-        
-        document.querySelectorAll('.delete-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                showDeleteConfirmation(id);
-            });
-        });
-        
-        // Add event listeners for inline editing
-        document.querySelectorAll('.editable').forEach(cell => {
-            // Save original value for comparison
-            cell.dataset.originalValue = cell.innerText;
-            
-            // Add focus indicator
-            cell.addEventListener('focus', function() {
-                this.classList.add('editing');
+            <form id="itemForm" class="space-y-4">
+                <input type="hidden" id="itemId">
                 
-                // For price fields, remove the $ sign when editing
-                if (this.dataset.field === 'costPrice' || this.dataset.field === 'retailPrice') {
-                    this.innerText = this.innerText.replace('$', '');
-                }
-            });
-            
-            // Remove focus indicator and save if changed
-            cell.addEventListener('blur', function() {
-                this.classList.remove('editing');
-                
-                // Get the field and row ID
-                const field = this.dataset.field;
-                const rowId = this.parentNode.dataset.id;
-                let newValue = this.innerText.trim();
-                
-                // Format price fields
-                if (field === 'costPrice' || field === 'retailPrice') {
-                    // Remove $ if present and convert to number
-                    newValue = newValue.replace('$', '');
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="productId" class="block text-sm font-medium text-gray-700">Product ID</label>
+                        <input type="text" id="productId" class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                    </div>
                     
-                    // Validate as a number
-                    if (!isNaN(newValue) && newValue !== '') {
-                        const numValue = parseFloat(newValue);
-                        if (numValue < 0) {
-                            showToast('error', 'Price cannot be negative');
-                            this.innerText = '$' + parseFloat(this.dataset.originalValue.replace('$', '')).toFixed(2);
-                            return;
-                        }
-                        // Format with $ and 2 decimal places
-                        this.innerText = '$' + numValue.toFixed(2);
-                        newValue = numValue;
-                    } else {
-                        showToast('error', 'Please enter a valid price');
-                        this.innerText = this.dataset.originalValue;
-                        return;
-                    }
-                }
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                        <input type="text" id="name" class="mt-1 block w-full p-2 border border-gray-300 rounded" required>
+                    </div>
+                </div>
                 
-                // Validate numeric fields
-                if (field === 'stockLevel' || field === 'reorderPoint') {
-                    if (!isNaN(newValue) && newValue !== '') {
-                        const numValue = parseInt(newValue);
-                        if (numValue < 0) {
-                            showToast('error', 'Value cannot be negative');
-                            this.innerText = this.dataset.originalValue;
-                            return;
-                        }
-                        newValue = numValue;
-                    } else {
-                        showToast('error', 'Please enter a valid number');
-                        this.innerText = this.dataset.originalValue;
-                        return;
-                    }
-                }
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                        <input type="text" id="category" class="mt-1 block w-full p-2 border border-gray-300 rounded" required>
+                    </div>
+                    
+                    <div>
+                        <label for="sku" class="block text-sm font-medium text-gray-700">SKU</label>
+                        <input type="text" id="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded" required>
+                    </div>
+                </div>
                 
-                // Check if value has changed
-                let originalValue = this.dataset.originalValue;
-                if (field === 'costPrice' || field === 'retailPrice') {
-                    originalValue = parseFloat(originalValue.replace('$', '')).toString();
-                }
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="stockLevel" class="block text-sm font-medium text-gray-700">Stock Level</label>
+                        <input type="number" id="stockLevel" class="mt-1 block w-full p-2 border border-gray-300 rounded" min="0" required>
+                    </div>
+                    
+                    <div>
+                        <label for="reorderPoint" class="block text-sm font-medium text-gray-700">Reorder Point</label>
+                        <input type="number" id="reorderPoint" class="mt-1 block w-full p-2 border border-gray-300 rounded" min="0" required>
+                    </div>
+                </div>
                 
-                if (newValue.toString() !== originalValue.toString()) {
-                    // Save the change
-                    saveInlineEdit(rowId, field, newValue, this);
-                }
-            });
-            
-            // Handle key presses
-            cell.addEventListener('keydown', function(e) {
-                // Enter key saves and removes focus
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.blur();
-                }
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="costPrice" class="block text-sm font-medium text-gray-700">Cost Price ($)</label>
+                        <div class="flex items-center">
+                            <input type="number" id="costPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded" min="0" step="0.01" required>
+                            <span id="suggestedCostLabel" class="suggested-cost ml-2 hidden">(Suggested: $0.00)</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="retailPrice" class="block text-sm font-medium text-gray-700">Retail Price ($)</label>
+                        <input type="number" id="retailPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded" min="0" step="0.01" required>
+                    </div>
+                </div>
                 
-                // Escape key cancels edit
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    this.innerText = this.dataset.originalValue;
-                    this.blur();
-                }
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="description" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded"></textarea>
+                </div>
                 
-                // Allow only numbers and decimal point for price and quantity fields
-                if ((this.dataset.field === 'costPrice' || 
-                     this.dataset.field === 'retailPrice' || 
-                     this.dataset.field === 'stockLevel' || 
-                     this.dataset.field === 'reorderPoint') && 
-                    !(e.key === 'Backspace' || 
-                      e.key === 'Delete' || 
-                      e.key === 'ArrowLeft' || 
-                      e.key === 'ArrowRight' || 
-                      e.key === 'Tab' || 
-                      e.key === '.' || 
-                      e.key === '-' || 
-                      (e.key >= '0' && e.key <= '9') || 
-                      e.ctrlKey)) {
-                    e.preventDefault();
-                }
-            });
-        });
-    }
+                <div>
+                    <label for="imageUrl" class="block text-sm font-medium text-gray-700">Image URL</label>
+                    <input type="text" id="imageUrl" class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                </div>
+                
+                <!-- Cost Breakdown Section -->
+                <div id="costBreakdownContainer" class="cost-breakdown hidden">
+                    <h3>Cost Breakdown</h3>
+                    
+                    <!-- Materials Section -->
+                    <div class="cost-breakdown-section">
+                        <h4 class="font-semibold text-gray-700 mb-2">Materials</h4>
+                        <div id="materialsList" class="mb-2">
+                            <div class="text-gray-500 text-sm italic">No materials data available</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Labor Section -->
+                    <div class="cost-breakdown-section">
+                        <h4 class="font-semibold text-gray-700 mb-2">Labor</h4>
+                        <div id="laborList" class="mb-2">
+                            <div class="text-gray-500 text-sm italic">No labor data available</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Energy Section -->
+                    <div class="cost-breakdown-section">
+                        <h4 class="font-semibold text-gray-700 mb-2">Energy</h4>
+                        <div id="energyList" class="mb-2">
+                            <div class="text-gray-500 text-sm italic">No energy data available</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Totals Section -->
+                    <div class="cost-totals">
+                        <div class="cost-total-row">
+                            <span class="cost-label">Materials Total:</span>
+                            <span id="materialsTotalValue" class="cost-item-value">$0.00</span>
+                        </div>
+                        <div class="cost-total-row">
+                            <span class="cost-label">Labor Total:</span>
+                            <span id="laborTotalValue" class="cost-item-value">$0.00</span>
+                        </div>
+                        <div class="cost-total-row">
+                            <span class="cost-label">Energy Total:</span>
+                            <span id="energyTotalValue" class="cost-item-value">$0.00</span>
+                        </div>
+                        <div class="cost-total-row border-t border-gray-300 pt-2 mt-2">
+                            <span class="font-semibold">Suggested Cost:</span>
+                            <span id="suggestedCostValue" class="font-bold text-purple-700">$0.00</span>
+                        </div>
+                        <div class="mt-2 text-sm text-gray-600">
+                            <button type="button" id="useSuggestedCostBtn" class="text-blue-600 hover:text-blue-800 underline">Use suggested cost</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
+                    <button type="submit" id="saveBtn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
-    // Save inline edits
-    function saveInlineEdit(id, field, value, cellElement) {
-        // Add saving indicator
-        cellElement.classList.add('saving');
-        
-        // Prepare data for update
-        const updateData = {
-            id: id,
-            [field]: value
-        };
-        
-        // Send update to server
-        fetch('/api/update-inventory.php', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updateData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to update');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Update was successful
-                cellElement.classList.remove('saving');
-                cellElement.classList.add('save-success');
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4 text-red-600">Confirm Delete</h2>
+            <p class="mb-4">Are you sure you want to delete this item? This action cannot be undone.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelDeleteBtn" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
+                <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global variables
+            let allInventory = [];
+            let currentItemId = null;
+            let originalValue = null;
+            let currentCostBreakdown = null;
+            
+            // DOM Elements
+            const searchInput = document.getElementById('searchInput');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const stockFilter = document.getElementById('stockFilter');
+            const inventoryTableBody = document.getElementById('inventoryTableBody');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const itemModal = document.getElementById('itemModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const itemForm = document.getElementById('itemForm');
+            const closeModal = document.getElementById('closeModal');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const deleteModal = document.getElementById('deleteModal');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const toastNotification = document.getElementById('toastNotification');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // Stats Elements
+            const totalItemsEl = document.getElementById('totalItems');
+            const lowStockCountEl = document.getElementById('lowStockCount');
+            const categoryCountEl = document.getElementById('categoryCount');
+            const totalCostValueEl = document.getElementById('totalCostValue');
+            const totalRetailValueEl = document.getElementById('totalRetailValue');
+            
+            // Form Fields
+            const itemIdInput = document.getElementById('itemId');
+            const productIdInput = document.getElementById('productId');
+            const nameInput = document.getElementById('name');
+            const categoryInput = document.getElementById('category');
+            const skuInput = document.getElementById('sku');
+            const stockLevelInput = document.getElementById('stockLevel');
+            const reorderPointInput = document.getElementById('reorderPoint');
+            const costPriceInput = document.getElementById('costPrice');
+            const retailPriceInput = document.getElementById('retailPrice');
+            const descriptionInput = document.getElementById('description');
+            const imageUrlInput = document.getElementById('imageUrl');
+            
+            // Cost Breakdown Elements
+            const costBreakdownContainer = document.getElementById('costBreakdownContainer');
+            const materialsList = document.getElementById('materialsList');
+            const laborList = document.getElementById('laborList');
+            const energyList = document.getElementById('energyList');
+            const materialsTotalValue = document.getElementById('materialsTotalValue');
+            const laborTotalValue = document.getElementById('laborTotalValue');
+            const energyTotalValue = document.getElementById('energyTotalValue');
+            const suggestedCostValue = document.getElementById('suggestedCostValue');
+            const suggestedCostLabel = document.getElementById('suggestedCostLabel');
+            const useSuggestedCostBtn = document.getElementById('useSuggestedCostBtn');
+            
+            // Fetch inventory data
+            function fetchInventory() {
+                const queryParams = new URLSearchParams();
+                if (searchInput.value) queryParams.append('search', searchInput.value);
+                if (categoryFilter.value) queryParams.append('category', categoryFilter.value);
+                if (stockFilter.value) queryParams.append('stock', stockFilter.value);
                 
-                // Update the original value
-                if (field === 'costPrice' || field === 'retailPrice') {
-                    cellElement.dataset.originalValue = '$' + parseFloat(value).toFixed(2);
+                fetch('/api/inventory.php?' + queryParams.toString())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        allInventory = data;
+                        displayInventory(data);
+                        updateStats(data);
+                        populateCategories(data);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching inventory:', error);
+                        showError('Failed to load inventory. Please try again.');
+                    });
+            }
+            
+            // Display inventory in table
+            function displayInventory(items) {
+                if (items.length === 0) {
+                    inventoryTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-4">No inventory items found.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                inventoryTableBody.innerHTML = '';
+                
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    // Name column (editable)
+                    const nameCell = document.createElement('td');
+                    nameCell.className = 'editable';
+                    nameCell.dataset.field = 'name';
+                    nameCell.dataset.id = item.id;
+                    nameCell.textContent = item.name;
+                    nameCell.addEventListener('click', startEditing);
+                    
+                    // Category column (editable)
+                    const categoryCell = document.createElement('td');
+                    categoryCell.className = 'editable';
+                    categoryCell.dataset.field = 'category';
+                    categoryCell.dataset.id = item.id;
+                    categoryCell.textContent = item.category;
+                    categoryCell.addEventListener('click', startEditing);
+                    
+                    // SKU column (editable)
+                    const skuCell = document.createElement('td');
+                    skuCell.className = 'editable';
+                    skuCell.dataset.field = 'sku';
+                    skuCell.dataset.id = item.id;
+                    skuCell.textContent = item.sku;
+                    skuCell.addEventListener('click', startEditing);
+                    
+                    // Stock Level column (editable)
+                    const stockCell = document.createElement('td');
+                    stockCell.className = 'editable';
+                    stockCell.dataset.field = 'stockLevel';
+                    stockCell.dataset.id = item.id;
+                    stockCell.dataset.type = 'number';
+                    stockCell.textContent = item.stockLevel;
+                    stockCell.addEventListener('click', startEditing);
+                    
+                    // Reorder Point column (editable)
+                    const reorderCell = document.createElement('td');
+                    reorderCell.className = 'editable';
+                    reorderCell.dataset.field = 'reorderPoint';
+                    reorderCell.dataset.id = item.id;
+                    reorderCell.dataset.type = 'number';
+                    reorderCell.textContent = item.reorderPoint;
+                    reorderCell.addEventListener('click', startEditing);
+                    
+                    // Cost Price column (editable)
+                    const costCell = document.createElement('td');
+                    costCell.className = 'editable';
+                    costCell.dataset.field = 'costPrice';
+                    costCell.dataset.id = item.id;
+                    costCell.dataset.type = 'price';
+                    costCell.textContent = `$${parseFloat(item.costPrice).toFixed(2)}`;
+                    costCell.addEventListener('click', startEditing);
+                    
+                    // Retail Price column (editable)
+                    const retailCell = document.createElement('td');
+                    retailCell.className = 'editable';
+                    retailCell.dataset.field = 'retailPrice';
+                    retailCell.dataset.id = item.id;
+                    retailCell.dataset.type = 'price';
+                    retailCell.textContent = `$${parseFloat(item.retailPrice).toFixed(2)}`;
+                    retailCell.addEventListener('click', startEditing);
+                    
+                    // Actions column
+                    const actionsCell = document.createElement('td');
+                    
+                    // Edit button with icon
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'action-btn edit-btn';
+                    editBtn.innerHTML = '✏️';
+                    editBtn.title = 'Edit Item';
+                    editBtn.addEventListener('click', () => openEditModal(item));
+                    
+                    // Delete button with icon
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'action-btn delete-btn';
+                    deleteBtn.innerHTML = '🗑️';
+                    deleteBtn.title = 'Delete Item';
+                    deleteBtn.addEventListener('click', () => openDeleteModal(item.id));
+                    
+                    actionsCell.appendChild(editBtn);
+                    actionsCell.appendChild(deleteBtn);
+                    
+                    // Append all cells to the row
+                    row.appendChild(nameCell);
+                    row.appendChild(categoryCell);
+                    row.appendChild(skuCell);
+                    row.appendChild(stockCell);
+                    row.appendChild(reorderCell);
+                    row.appendChild(costCell);
+                    row.appendChild(retailCell);
+                    row.appendChild(actionsCell);
+                    
+                    inventoryTableBody.appendChild(row);
+                });
+            }
+            
+            // Update stats
+            function updateStats(items) {
+                // Total items
+                totalItemsEl.textContent = items.length;
+                
+                // Low stock count
+                const lowStockItems = items.filter(item => 
+                    parseInt(item.stockLevel) <= parseInt(item.reorderPoint) && parseInt(item.stockLevel) > 0
+                );
+                lowStockCountEl.textContent = lowStockItems.length;
+                
+                // Category count
+                const categories = new Set(items.map(item => item.category));
+                categoryCountEl.textContent = categories.size;
+                
+                // Total cost value
+                const totalCost = items.reduce((sum, item) => {
+                    return sum + (parseFloat(item.costPrice) * parseInt(item.stockLevel));
+                }, 0);
+                totalCostValueEl.textContent = `$${totalCost.toFixed(2)}`;
+                
+                // Total retail value
+                const totalRetail = items.reduce((sum, item) => {
+                    return sum + (parseFloat(item.retailPrice) * parseInt(item.stockLevel));
+                }, 0);
+                totalRetailValueEl.textContent = `$${totalRetail.toFixed(2)}`;
+            }
+            
+            // Populate category filter
+            function populateCategories(items) {
+                const categories = [...new Set(items.map(item => item.category))];
+                
+                // Clear existing options except the first one
+                while (categoryFilter.options.length > 1) {
+                    categoryFilter.remove(1);
+                }
+                
+                // Add new options
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categoryFilter.appendChild(option);
+                });
+            }
+            
+            // Fetch cost breakdown data
+            function fetchCostBreakdown(inventoryId) {
+                costBreakdownContainer.classList.add('hidden');
+                
+                fetch(`/api/inventory-costs.php?inventoryId=${inventoryId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(response => {
+                        if (response.success) {
+                            currentCostBreakdown = response.data;
+                            displayCostBreakdown(response.data);
+                            
+                            // Show suggested cost label next to cost price input
+                            const suggestedCost = response.data.totals.suggestedCost;
+                            suggestedCostLabel.textContent = `(Suggested: $${suggestedCost.toFixed(2)} based on breakdown)`;
+                            suggestedCostLabel.classList.remove('hidden');
+                            
+                            // Auto-populate cost price if it's 0.00
+                            if (parseFloat(costPriceInput.value) === 0) {
+                                costPriceInput.value = suggestedCost.toFixed(2);
+                            }
+                        } else {
+                            // Hide cost breakdown if there's an error
+                            costBreakdownContainer.classList.add('hidden');
+                            suggestedCostLabel.classList.add('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching cost breakdown:', error);
+                        costBreakdownContainer.classList.add('hidden');
+                        suggestedCostLabel.classList.add('hidden');
+                    });
+            }
+            
+            // Display cost breakdown data
+            function displayCostBreakdown(data) {
+                // Display materials
+                if (data.materials && data.materials.length > 0) {
+                    let materialsHtml = '';
+                    data.materials.forEach(material => {
+                        materialsHtml += `
+                            <div class="cost-item">
+                                <span class="cost-item-name">${material.name}</span>
+                                <span class="cost-item-value">$${parseFloat(material.cost).toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+                    materialsList.innerHTML = materialsHtml;
                 } else {
-                    cellElement.dataset.originalValue = value;
+                    materialsList.innerHTML = '<div class="text-gray-500 text-sm italic">No materials data available</div>';
                 }
                 
-                // Update the inventory data
-                const itemIndex = inventoryData.findIndex(item => item.id === id);
-                if (itemIndex !== -1) {
-                    inventoryData[itemIndex][field] = value;
+                // Display labor
+                if (data.labor && data.labor.length > 0) {
+                    let laborHtml = '';
+                    data.labor.forEach(labor => {
+                        laborHtml += `
+                            <div class="cost-item">
+                                <span class="cost-item-name">${labor.description}</span>
+                                <span class="cost-item-value">$${parseFloat(labor.cost).toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+                    laborList.innerHTML = laborHtml;
+                } else {
+                    laborList.innerHTML = '<div class="text-gray-500 text-sm italic">No labor data available</div>';
                 }
                 
-                // Update stats
-                updateStats(inventoryData);
+                // Display energy
+                if (data.energy && data.energy.length > 0) {
+                    let energyHtml = '';
+                    data.energy.forEach(energy => {
+                        energyHtml += `
+                            <div class="cost-item">
+                                <span class="cost-item-name">${energy.description}</span>
+                                <span class="cost-item-value">$${parseFloat(energy.cost).toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+                    energyList.innerHTML = energyHtml;
+                } else {
+                    energyList.innerHTML = '<div class="text-gray-500 text-sm italic">No energy data available</div>';
+                }
                 
-                // Show success message
-                showToast('success', 'Updated successfully');
+                // Update totals
+                materialsTotalValue.textContent = `$${data.totals.materialTotal.toFixed(2)}`;
+                laborTotalValue.textContent = `$${data.totals.laborTotal.toFixed(2)}`;
+                energyTotalValue.textContent = `$${data.totals.energyTotal.toFixed(2)}`;
+                suggestedCostValue.textContent = `$${data.totals.suggestedCost.toFixed(2)}`;
                 
-                // Remove success indicator after a delay
+                // Show the cost breakdown container
+                costBreakdownContainer.classList.remove('hidden');
+            }
+            
+            // Open add item modal
+            function openAddModal() {
+                modalTitle.textContent = 'Add New Item';
+                itemForm.reset();
+                itemIdInput.value = '';
+                suggestedCostLabel.classList.add('hidden');
+                costBreakdownContainer.classList.add('hidden');
+                itemModal.classList.remove('hidden');
+            }
+            
+            // Open edit item modal
+            function openEditModal(item) {
+                modalTitle.textContent = 'Edit Item';
+                
+                // Populate form fields
+                itemIdInput.value = item.id;
+                productIdInput.value = item.productId || '';
+                nameInput.value = item.name || '';
+                categoryInput.value = item.category || '';
+                skuInput.value = item.sku || '';
+                stockLevelInput.value = item.stockLevel || 0;
+                reorderPointInput.value = item.reorderPoint || 0;
+                costPriceInput.value = item.costPrice || 0;
+                retailPriceInput.value = item.retailPrice || 0;
+                descriptionInput.value = item.description || '';
+                imageUrlInput.value = item.imageUrl || '';
+                
+                // Fetch and display cost breakdown
+                fetchCostBreakdown(item.id);
+                
+                itemModal.classList.remove('hidden');
+            }
+            
+            // Close modal
+            function closeModal() {
+                itemModal.classList.add('hidden');
+                deleteModal.classList.add('hidden');
+            }
+            
+            // Open delete confirmation modal
+            function openDeleteModal(id) {
+                currentItemId = id;
+                deleteModal.classList.remove('hidden');
+            }
+            
+            // Save item (add or update)
+            function saveItem(event) {
+                event.preventDefault();
+                
+                const isEditing = itemIdInput.value !== '';
+                const endpoint = isEditing ? '/api/update-inventory.php' : '/api/add-inventory.php';
+                const method = isEditing ? 'PUT' : 'POST';
+                
+                const formData = {
+                    id: itemIdInput.value,
+                    productId: productIdInput.value,
+                    name: nameInput.value,
+                    category: categoryInput.value,
+                    sku: skuInput.value,
+                    stockLevel: stockLevelInput.value,
+                    reorderPoint: reorderPointInput.value,
+                    costPrice: costPriceInput.value,
+                    retailPrice: retailPriceInput.value,
+                    description: descriptionInput.value,
+                    imageUrl: imageUrlInput.value
+                };
+                
+                fetch(endpoint, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showSuccess(isEditing ? 'Item updated successfully' : 'Item added successfully');
+                        closeModal();
+                        fetchInventory();
+                    } else {
+                        showError(data.error || 'Failed to save item');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving item:', error);
+                    showError('Failed to save item. Please try again.');
+                });
+            }
+            
+            // Delete item
+            function deleteItem() {
+                fetch('/api/delete-inventory.php', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: currentItemId })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showSuccess('Item deleted successfully');
+                        closeModal();
+                        fetchInventory();
+                    } else {
+                        showError(data.error || 'Failed to delete item');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting item:', error);
+                    showError('Failed to delete item. Please try again.');
+                });
+            }
+            
+            // Use suggested cost
+            function useSuggestedCost() {
+                if (currentCostBreakdown && currentCostBreakdown.totals) {
+                    costPriceInput.value = currentCostBreakdown.totals.suggestedCost.toFixed(2);
+                    costPriceInput.classList.add('bg-green-100');
+                    setTimeout(() => {
+                        costPriceInput.classList.remove('bg-green-100');
+                    }, 1000);
+                }
+            }
+            
+            // Inline editing functions
+            function startEditing(event) {
+                const cell = event.currentTarget;
+                
+                // Don't start editing if already editing
+                if (cell.classList.contains('editing')) return;
+                
+                // Save original value for cancel
+                originalValue = cell.textContent;
+                
+                // Create input element
+                const input = document.createElement('input');
+                
+                // Set input type and value based on data type
+                if (cell.dataset.type === 'number') {
+                    input.type = 'number';
+                    input.min = '0';
+                    input.value = originalValue;
+                } else if (cell.dataset.type === 'price') {
+                    input.type = 'number';
+                    input.min = '0';
+                    input.step = '0.01';
+                    input.value = originalValue.replace('$', '');
+                } else {
+                    input.type = 'text';
+                    input.value = originalValue;
+                }
+                
+                // Set up event listeners
+                input.addEventListener('blur', saveEditing);
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    } else if (e.key === 'Escape') {
+                        cancelEditing(cell);
+                    }
+                });
+                
+                // Clear cell and add input
+                cell.textContent = '';
+                cell.appendChild(input);
+                cell.classList.add('editing');
+                
+                // Focus input
+                input.focus();
+            }
+            
+            function saveEditing(event) {
+                const input = event.target;
+                const cell = input.parentElement;
+                
+                // Get field info
+                const field = cell.dataset.field;
+                const id = cell.dataset.id;
+                const type = cell.dataset.type;
+                
+                // Validate input
+                let value = input.value.trim();
+                
+                if (type === 'number' && (isNaN(value) || value === '')) {
+                    value = '0';
+                } else if (type === 'price' && (isNaN(value) || value === '')) {
+                    value = '0.00';
+                }
+                
+                // Show saving state
+                cell.classList.add('saving');
+                
+                // Prepare data for API
+                const updateData = {
+                    id: id,
+                    field: field,
+                    value: value
+                };
+                
+                // Send update to API
+                fetch('/api/update-inventory.php', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Update cell with formatted value
+                        if (type === 'price') {
+                            cell.textContent = `$${parseFloat(value).toFixed(2)}`;
+                        } else {
+                            cell.textContent = value;
+                        }
+                        
+                        // Update local data
+                        const itemIndex = allInventory.findIndex(item => item.id === id);
+                        if (itemIndex !== -1) {
+                            allInventory[itemIndex][field] = value;
+                            updateStats(allInventory);
+                        }
+                        
+                        // Show success state briefly
+                        cell.classList.remove('saving', 'editing');
+                        cell.classList.add('success');
+                        setTimeout(() => {
+                            cell.classList.remove('success');
+                        }, 1000);
+                        
+                        showSuccess(`Updated ${field} successfully`);
+                    } else {
+                        // Revert to original value on error
+                        cell.textContent = originalValue;
+                        cell.classList.remove('saving', 'editing');
+                        cell.classList.add('error');
+                        setTimeout(() => {
+                            cell.classList.remove('error');
+                        }, 1000);
+                        
+                        showError(data.error || `Failed to update ${field}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating field:', error);
+                    
+                    // Revert to original value on error
+                    cell.textContent = originalValue;
+                    cell.classList.remove('saving', 'editing');
+                    cell.classList.add('error');
+                    setTimeout(() => {
+                        cell.classList.remove('error');
+                    }, 1000);
+                    
+                    showError(`Failed to update ${field}. Please try again.`);
+                });
+            }
+            
+            function cancelEditing(cell) {
+                cell.textContent = originalValue;
+                cell.classList.remove('editing');
+            }
+            
+            // Toast notification functions
+            function showSuccess(message) {
+                toastMessage.textContent = message;
+                toastNotification.className = 'toast-notification success';
+                toastNotification.classList.add('show');
+                
                 setTimeout(() => {
-                    cellElement.classList.remove('save-success');
-                }, 1500);
-            } else {
-                throw new Error(data.message || 'Update failed');
+                    toastNotification.classList.remove('show');
+                }, 3000);
             }
-        })
-        .catch(error => {
-            console.error('Error saving change:', error);
             
-            // Show error state
-            cellElement.classList.remove('saving');
-            cellElement.classList.add('save-error');
+            function showError(message) {
+                toastMessage.textContent = message;
+                toastNotification.className = 'toast-notification error';
+                toastNotification.classList.add('show');
+                
+                setTimeout(() => {
+                    toastNotification.classList.remove('show');
+                }, 3000);
+            }
             
-            // Revert to original value after a delay
-            setTimeout(() => {
-                cellElement.classList.remove('save-error');
-                cellElement.innerText = cellElement.dataset.originalValue;
-            }, 1500);
+            // Event listeners
+            addItemBtn.addEventListener('click', openAddModal);
+            closeModal.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            itemForm.addEventListener('submit', saveItem);
+            cancelDeleteBtn.addEventListener('click', closeModal);
+            confirmDeleteBtn.addEventListener('click', deleteItem);
+            useSuggestedCostBtn.addEventListener('click', useSuggestedCost);
             
-            // Show error message
-            showToast('error', error.message || 'Failed to save change');
-        });
-    }
-    
-    // Update inventory statistics
-    function updateStats(data) {
-        // Total items
-        totalItemsElement.textContent = data.length;
-        
-        // Low stock count
-        const lowStockCount = data.filter(item => item.stockLevel <= item.reorderPoint).length;
-        lowStockCountElement.textContent = lowStockCount;
-        
-        // Category count
-        const categories = new Set(data.map(item => item.category));
-        categoryCountElement.textContent = categories.size;
-        
-        // Calculate total cost value (costPrice * stockLevel)
-        let totalCostValue = 0;
-        let totalRetailValue = 0;
-        
-        data.forEach(item => {
-            const costPrice = parseFloat(item.costPrice || 0);
-            const retailPrice = parseFloat(item.retailPrice || 0);
-            const stockLevel = parseInt(item.stockLevel || 0);
+            searchInput.addEventListener('input', fetchInventory);
+            categoryFilter.addEventListener('change', fetchInventory);
+            stockFilter.addEventListener('change', fetchInventory);
             
-            totalCostValue += costPrice * stockLevel;
-            totalRetailValue += retailPrice * stockLevel;
+            // Initial data load
+            fetchInventory();
         });
-        
-        // Format and display the totals
-        totalCostValueElement.textContent = '$' + totalCostValue.toFixed(2);
-        totalRetailValueElement.textContent = '$' + totalRetailValue.toFixed(2);
-    }
-    
-    // Populate category filter
-    function populateCategories(data) {
-        // Get unique categories
-        const categories = [...new Set(data.map(item => item.category))];
-        
-        // Save current selection
-        const currentSelection = categoryFilter.value;
-        
-        // Clear existing options (except the first one)
-        while (categoryFilter.options.length > 1) {
-            categoryFilter.remove(1);
-        }
-        
-        // Add category options
-        categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categoryFilter.appendChild(option);
-        });
-        
-        // Restore selection if possible
-        if (currentSelection && categories.includes(currentSelection)) {
-            categoryFilter.value = currentSelection;
-        }
-    }
-    
-    // Edit inventory item
-    function editInventoryItem(id, data) {
-        const item = data.find(item => item.id === id);
-        if (!item) return;
-        
-        // Populate form
-        inventoryIdInput.value = item.id;
-        productIdInput.value = item.productId;
-        nameInput.value = item.name;
-        categoryInput.value = item.category;
-        descriptionInput.value = item.description || '';
-        skuInput.value = item.sku;
-        stockLevelInput.value = item.stockLevel;
-        reorderPointInput.value = item.reorderPoint;
-        costPriceInput.value = parseFloat(item.costPrice || 0).toFixed(2);
-        retailPriceInput.value = parseFloat(item.retailPrice || 0).toFixed(2);
-        imageUrlInput.value = item.imageUrl || '';
-        
-        // Update modal title and show
-        modalTitle.textContent = 'Edit Inventory Item';
-        inventoryModal.style.display = 'block';
-    }
-    
-    // Show delete confirmation
-    function showDeleteConfirmation(id) {
-        itemToDelete = id;
-        deleteModal.style.display = 'block';
-        
-        // Set up confirm delete button
-        confirmDeleteButton.onclick = function() {
-            deleteInventoryItem(itemToDelete);
-            deleteModal.style.display = 'none';
-        };
-    }
-    
-    // Save inventory item (create or update)
-    function saveInventoryItem() {
-        const formData = {
-            id: inventoryIdInput.value,
-            productId: productIdInput.value,
-            name: nameInput.value,
-            category: categoryInput.value,
-            description: descriptionInput.value,
-            sku: skuInput.value,
-            stockLevel: parseInt(stockLevelInput.value),
-            reorderPoint: parseInt(reorderPointInput.value),
-            costPrice: parseFloat(costPriceInput.value),
-            retailPrice: parseFloat(retailPriceInput.value),
-            imageUrl: imageUrlInput.value
-        };
-        
-        const isNewItem = !formData.id;
-        const url = isNewItem ? '/api/add-inventory.php' : '/api/update-inventory.php';
-        const method = isNewItem ? 'POST' : 'PUT';
-        
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                showToast('success', isNewItem ? 'Inventory item added successfully!' : 'Inventory item updated successfully!');
-                closeInventoryModal();
-                loadInventory(); // Reload inventory
-            } else {
-                showToast('error', data.message || 'Failed to save inventory item.');
-            }
-        })
-        .catch(error => {
-            console.error('Error saving inventory item:', error);
-            showToast('error', 'Failed to save inventory item. Please try again.');
-        });
-    }
-    
-    // Delete inventory item
-    function deleteInventoryItem(id) {
-        fetch('/api/delete-inventory.php', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id: id })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                showToast('success', 'Inventory item deleted successfully!');
-                loadInventory(); // Reload inventory
-            } else {
-                showToast('error', data.message || 'Failed to delete inventory item.');
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting inventory item:', error);
-            showToast('error', 'Failed to delete inventory item. Please try again.');
-        });
-    }
-    
-    // Reset form fields
-    function resetForm() {
-        inventoryForm.reset();
-        inventoryIdInput.value = '';
-        costPriceInput.value = '0.00';
-        retailPriceInput.value = '0.00';
-    }
-    
-    // Close inventory modal
-    function closeInventoryModal() {
-        inventoryModal.style.display = 'none';
-        resetForm();
-    }
-    
-    // Show/hide loading message
-    function showLoading(show) {
-        loadingMessage.style.display = show ? 'block' : 'none';
-        if (show) {
-            noInventoryMessage.style.display = 'none';
-        }
-    }
-    
-    // Show toast notification
-    function showToast(type, message, duration = 3000) {
-        // Set icon and class based on type
-        if (type === 'success') {
-            toastIcon.className = 'fas fa-check-circle';
-            toast.className = 'toast-notification toast-success show';
-        } else if (type === 'error') {
-            toastIcon.className = 'fas fa-exclamation-circle';
-            toast.className = 'toast-notification toast-error show';
-        } else if (type === 'info') {
-            toastIcon.className = 'fas fa-info-circle';
-            toast.className = 'toast-notification toast-info show';
-        }
-        
-        // Set message
-        toastMessage.textContent = message;
-        
-        // Show toast
-        toast.classList.add('show');
-        
-        // Start progress bar
-        toastProgress.style.width = '100%';
-        toastProgress.style.transition = `width ${duration}ms linear`;
-        setTimeout(() => {
-            toastProgress.style.width = '0%';
-        }, 10);
-        
-        // Hide toast after duration
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, duration);
-    }
-    
-    // Filter functionality
-    searchInput.addEventListener('input', debounce(loadInventory, 300));
-    categoryFilter.addEventListener('change', loadInventory);
-    
-    // Debounce function to limit API calls
-    function debounce(func, delay) {
-        let timeout;
-        return function() {
-            const context = this;
-            const args = arguments;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(context, args), delay);
-        };
-    }
-});
-</script>
-
-<style>
-/* Admin inventory page specific styles */
-.admin-content {
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Inventory controls */
-.inventory-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.search-filter-container {
-    display: flex;
-    gap: 10px;
-    flex: 1;
-    flex-wrap: wrap;
-}
-
-.search-input {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    flex: 1;
-    min-width: 200px;
-}
-
-.filter-select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: white;
-}
-
-.action-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.refresh-button {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-.refresh-button:hover {
-    background-color: #e0e0e0;
-}
-
-.add-button {
-    background-color: #87ac3a;
-    color: white;
-}
-
-.add-button:hover {
-    background-color: #76953a;
-}
-
-/* Inventory stats */
-.inventory-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.stat-card {
-    background-color: white;
-    border-radius: 8px;
-    padding: 12px; /* Reduced padding to make more compact */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    text-align: center;
-}
-
-.stat-card h3 {
-    margin: 0;
-    font-size: 0.9rem; /* Smaller font size */
-    color: #666;
-    margin-bottom: 5px; /* Reduced margin */
-}
-
-.stat-card p {
-    margin: 0;
-    font-size: 1.5rem; /* Slightly smaller font size */
-    font-weight: bold;
-    color: #87ac3a;
-}
-
-/* Inventory table */
-.inventory-table-container {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    overflow: hidden;
-    margin-bottom: 20px;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.data-table th,
-.data-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.data-table th {
-    background-color: #87ac3a;
-    color: white;
-    font-weight: 500;
-    position: sticky;
-    top: 0;
-}
-
-.data-table tbody tr:hover {
-    background-color: #f5f5f5;
-}
-
-.data-table .actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-}
-
-/* Editable cells styling */
-.data-table td.editable {
-    position: relative;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.data-table td.editable:hover {
-    background-color: #f0f8e5;
-}
-
-.data-table td.editable:focus {
-    outline: none;
-    box-shadow: inset 0 0 0 2px #87ac3a;
-    background-color: #f0f8e5;
-}
-
-/* Saving state */
-.data-table td.saving {
-    background-color: #fff8e1 !important;
-    position: relative;
-}
-
-.data-table td.saving::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 2px;
-    width: 100%;
-    background: linear-gradient(90deg, #87ac3a, transparent, #87ac3a);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-}
-
-/* Success state */
-.data-table td.save-success {
-    background-color: #e8f5e9 !important;
-    transition: background-color 0.5s ease;
-}
-
-/* Error state */
-.data-table td.save-error {
-    background-color: #ffebee !important;
-    transition: background-color 0.5s ease;
-}
-
-@keyframes loading {
-    0% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.edit-button,
-.delete-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.edit-button {
-    color: #4a90e2;
-}
-
-.edit-button:hover {
-    background-color: rgba(74, 144, 226, 0.1);
-}
-
-.delete-button {
-    color: #e53935;
-}
-
-.delete-button:hover {
-    background-color: rgba(229, 57, 53, 0.1);
-}
-
-.low-stock {
-    background-color: #fff8e1;
-}
-
-.low-stock td {
-    color: #ff8f00;
-}
-
-/* Loading and no data messages */
-.loading-message,
-.no-data-message {
-    padding: 20px;
-    text-align: center;
-    color: #666;
-}
-
-.loading-message i {
-    margin-right: 10px;
-    color: #87ac3a;
-}
-
-/* Toast notification */
-.toast-notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    min-width: 250px;
-    max-width: 350px;
-    background-color: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-radius: 4px;
-    padding: 0;
-    z-index: 1000;
-    overflow: hidden;
-    transform: translateX(120%);
-    transition: transform 0.3s ease-out;
-}
-
-.toast-notification.show {
-    transform: translateX(0);
-}
-
-.toast-content {
-    display: flex;
-    align-items: center;
-    padding: 12px 15px;
-}
-
-.toast-notification i {
-    margin-right: 10px;
-    font-size: 18px;
-}
-
-.toast-progress {
-    height: 3px;
-    width: 100%;
-    background-color: rgba(255, 255, 255, 0.7);
-    transition: width linear;
-}
-
-.toast-success {
-    border-left: 4px solid #4caf50;
-}
-
-.toast-success i {
-    color: #4caf50;
-}
-
-.toast-error {
-    border-left: 4px solid #f44336;
-}
-
-.toast-error i {
-    color: #f44336;
-}
-
-.toast-info {
-    border-left: 4px solid #2196f3;
-}
-
-.toast-info i {
-    color: #2196f3;
-}
-
-/* Modal styles */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    overflow-y: auto;
-    padding: 20px;
-}
-
-.modal-content {
-    background-color: white;
-    border-radius: 8px;
-    padding: 30px;
-    width: 100%;
-    max-width: 600px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.close-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 24px;
-    cursor: pointer;
-    color: #999;
-    transition: color 0.2s ease;
-}
-
-.close-button:hover {
-    color: #333;
-}
-
-.delete-modal {
-    max-width: 400px;
-    text-align: center;
-}
-
-/* Form styles */
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: #555;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.form-group textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-.form-row {
-    display: flex;
-    gap: 20px;
-}
-
-.form-group.half {
-    flex: 1;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-/* Button styles */
-.button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.button.primary {
-    background-color: #87ac3a;
-    color: white;
-}
-
-.button.primary:hover {
-    background-color: #76953a;
-}
-
-.button.secondary {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-.button.secondary:hover {
-    background-color: #e0e0e0;
-}
-
-.button.danger {
-    background-color: #e53935;
-    color: white;
-}
-
-.button.danger:hover {
-    background-color: #c62828;
-}
-
-/* Admin header buttons - make bigger like Add New Item button */
-.admin-nav-item {
-    padding: 8px 16px !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
-}
-
-/* Admin tab navigation styling - make tabs bigger and more button-like */
-.admin-dashboard a[href^="/?page=admin"] {
-    padding: 10px 18px !important; /* Increased padding */
-    font-size: 14px !important; /* Larger font size */
-    font-weight: 600 !important; /* Bolder text */
-    border-radius: 6px !important; /* More rounded corners */
-    margin-right: 8px !important; /* Add spacing between tabs */
-    margin-bottom: 8px !important; /* Add spacing for wrapping */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* Add subtle shadow */
-    display: inline-block !important; /* Ensure proper block display */
-    text-align: center !important; /* Center text */
-    min-width: 100px !important; /* Minimum width */
-    transition: all 0.3s ease !important; /* Smooth transitions */
-    border: none !important; /* Remove any borders */
-    text-decoration: none !important; /* Remove underlines */
-}
-
-/* Style for active tab */
-.admin-dashboard a[href^="/?page=admin"].ring-2 {
-    background-color: #87ac3a !important; /* Same green as Add button */
-    color: white !important; /* White text */
-    box-shadow: 0 3px 6px rgba(135, 172, 58, 0.3) !important; /* Enhanced shadow */
-    transform: translateY(-1px) !important; /* Slight lift effect */
-}
-
-/* Hover effect for inactive tabs */
-.admin-dashboard a[href^="/?page=admin"]:not(.ring-2):hover {
-    background-color: #f0f8e5 !important; /* Light green background */
-    color: #87ac3a !important; /* Green text */
-    transform: translateY(-1px) !important; /* Slight lift effect */
-}
-
-/* Responsive styles */
-@media (max-width: 768px) {
-    .inventory-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .form-row {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .data-table {
-        display: block;
-        overflow-x: auto;
-    }
-    
-    .search-filter-container {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .inventory-controls {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .action-button {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .inventory-stats {
-        grid-template-columns: 1fr;
-    }
-    
-    .modal-content {
-        padding: 20px;
-    }
-}
-</style>
+    </script>
+</div>

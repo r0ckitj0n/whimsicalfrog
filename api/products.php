@@ -18,12 +18,19 @@ try {
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Query to get all inventory items
-    $stmt = $pdo->query('SELECT * FROM inventory');
-    $inventory = $stmt->fetchAll();
+    // Query to get all products
+    $stmt = $pdo->query('SELECT * FROM products');
+    $products = $stmt->fetchAll();
     
-    // Return inventory as JSON
-    echo json_encode($inventory);
+    // Format prices as numbers instead of strings
+    foreach ($products as &$product) {
+        if (isset($product['basePrice'])) {
+            $product['price'] = floatval($product['basePrice']);
+        }
+    }
+    
+    // Return products as JSON
+    echo json_encode($products);
     
 } catch (PDOException $e) {
     // Handle database errors

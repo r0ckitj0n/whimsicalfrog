@@ -4,19 +4,8 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // Load environment variables
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/api/config.php';
 // Start or resume session
-
-// Function to fetch data from the Node.js API
-function fetchData($endpoint) {
-    $url = "https://whimsicalfrog.us/api/" . $endpoint;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $response = curl_exec($ch);
-    curl_close($ch);
-    return json_decode($response, true);
-}
 
 // Check if a page is specified in the URL
 $page = isset($_GET['page']) ? $_GET['page'] : 'landing';
@@ -86,21 +75,17 @@ function getImageTag($imagePath, $altText = '') {
          . 'onerror="this.onerror=null; this.src=\'' . htmlspecialchars($fallbackPath) . '\';">';
 }
 
-// Fetch product data from API
+// Fetch product data using direct SQL queries
 $categories = [];
 $inventory = [];
 
 try {
-    // Fetch products with full URL path
-    $productsUrl = 'https://whimsicalfrog.us/api/products.php';
-    $productsData = @file_get_contents($productsUrl);
+    // Create database connection using config
+    $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Check for HTTP errors
-    if ($productsData === false) {
-        throw new Exception('Failed to fetch products data from API');
-    }
-    
-    $products = json_decode($productsData, true);
+    // Fetch products with direct SQL query
+    $stmt = $pdo->query('SELECT * FROM products');
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if ($products && is_array($products)) {
         foreach ($products as $product) {
@@ -119,24 +104,16 @@ try {
         }
     }
     
-    // Fetch inventory with full URL path
-    $inventoryUrl = 'https://whimsicalfrog.us/api/inventory.php';
-    $inventoryData = @file_get_contents($inventoryUrl);
+    // Fetch inventory with direct SQL query
+    $stmt = $pdo->query('SELECT * FROM inventory');
+    $inventoryItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Check for HTTP errors
-    if ($inventoryData === false) {
-        throw new Exception('Failed to fetch inventory data from API');
-    }
+    // Format inventory data to match the expected structure
+    $inventory = $inventoryItems;
     
-    $inventory = json_decode($inventoryData, true) ?: [];
-    
-    // Skip the first row (headers) in inventory data if it exists
-    if (count($inventory) > 1) {
-        $inventory = array_slice($inventory, 1);
-    }
-} catch (Exception $e) {
-    // Handle API error
-    error_log('API Error: ' . $e->getMessage());
+} catch (PDOException $e) {
+    // Handle database errors
+    error_log('Database Error: ' . $e->getMessage());
     // You might want to show an error message to the user
 }
 
@@ -538,7 +515,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
     // Detect WebP support
     (function(){
         var d=document.createElement('div');
-        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==" onerror="document.documentElement.className += \' no-webp\';" onload="document.documentElement.className += \' webp\';">';
+        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==\" onerror=\"document.documentElement.className += \\' no-webp\\';\" onload=\"document.documentElement.className += \\' webp\\';\">';
     })();
 </script>
 
@@ -590,11 +567,9 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
             
-            // Use correct API base depending on environment
-            const apiBase = 'https://whimsicalfrog.us';
-            const loginUrl = apiBase + '/api/login.php';
             try {
-                const response = await fetch(loginUrl, {
+                // Direct SQL query handled by server-side code
+                const response = await fetch('/process_login.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -638,7 +613,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
         // Clear client-side session storage
         sessionStorage.removeItem('user');
         
-        // First clear PHP session
+        // Clear PHP session
         fetch('/set_session.php', {
             method: 'POST',
             headers: {
@@ -646,16 +621,6 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             },
             credentials: 'same-origin',
             body: JSON.stringify({ clear: true })
-        })
-        .then(() => {
-            // Then clear Node.js session
-            return fetch('https://whimsicalfrog.onrender.com/api/logout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
         })
         .then(response => {
             if (!response.ok) {

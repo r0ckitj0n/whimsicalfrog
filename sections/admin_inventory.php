@@ -1,591 +1,524 @@
-<!-- MAGIC-TEST-COMMENT-20240607 -->
 <?php
 // Admin inventory management page
-
-// Check if user is logged in and is an admin
-$user = json_decode($_SESSION['user'] ?? '{}', true);
-if (!isset($user['role']) || $user['role'] !== 'Admin') {
-    header('Location: /login.php');
+if (!defined('INCLUDED_FROM_INDEX')) {
+    header('Location: /?page=admin');
     exit;
 }
 
-// Fetch products and inventory data from Node API (MySQL)
-$productsJson = @file_get_contents('https://whimsicalfrog.us/api/products.php');
-$products = $productsJson ? json_decode($productsJson, true) : [];
-$inventoryJson = @file_get_contents('https://whimsicalfrog.us/api/inventory.php');
-$inventory = $inventoryJson ? json_decode($inventoryJson, true) : [];
-
-// Get unique product types for dropdown
-$productTypes = [];
-if ($products) {
-    foreach ($products as $product) {
-        if (!in_array($product['productType'], $productTypes)) {
-            $productTypes[] = $product['productType'];
-        }
-    }
-}
-sort($productTypes); // Sort alphabetically
-
-// Group inventory items by product
-$inventoryByProduct = [];
-if ($inventory) {
-    foreach ($inventory as $item) {
-        $productId = $item['productId'];
-        if (!isset($inventoryByProduct[$productId])) {
-            $inventoryByProduct[$productId] = [];
-        }
-        $inventoryByProduct[$productId][] = $item;
-    }
-}
-
-// Get unique product types for category dropdown
-$categories = [];
-if ($products) {
-    foreach ($products as $product) {
-        if (!empty($product['productType']) && !in_array($product['productType'], $categories)) {
-            $categories[] = $product['productType'];
-        }
-    }
-}
-sort($categories);
-
-// Get filter/search values
-$searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
-$filterCategory = isset($_GET['category']) ? $_GET['category'] : 'all';
-
-// Filter products by search and productType (category)
-$filteredProducts = $products;
-if ($searchTerm !== '' || ($filterCategory !== 'all' && $filterCategory !== '')) {
-    $filteredProducts = array_filter($products, function($product) use ($searchTerm, $filterCategory) {
-        $matchesSearch = true;
-        $matchesCategory = true;
-        // Search in product name, description, or SKU base
-        if ($searchTerm !== '') {
-            $matchesSearch = (
-                stripos($product['name'], $searchTerm) !== false ||
-                stripos($product['description'], $searchTerm) !== false ||
-                stripos($product['defaultSKU_Base'], $searchTerm) !== false
-            );
-        }
-        // Category filter: match productType
-        if ($filterCategory !== 'all' && $filterCategory !== '') {
-            $matchesCategory = ($product['productType'] === $filterCategory);
-        }
-        return $matchesSearch && $matchesCategory;
-    });
-}
-
-// Fetch cost breakdowns for all inventory items
-function fetchInventoryCosts($pdo, $inventoryId) {
-    $materials = $pdo->query("SELECT * FROM inventory_materials WHERE inventoryId = '" . addslashes($inventoryId) . "';")->fetchAll(PDO::FETCH_ASSOC);
-    $labor = $pdo->query("SELECT * FROM inventory_labor WHERE inventoryId = '" . addslashes($inventoryId) . "';")->fetchAll(PDO::FETCH_ASSOC);
-    $energy = $pdo->query("SELECT * FROM inventory_energy WHERE inventoryId = '" . addslashes($inventoryId) . "';")->fetchAll(PDO::FETCH_ASSOC);
-    return [
-        'materials' => $materials,
-        'labor' => $labor,
-        'energy' => $energy
-    ];
-}
-
-// Move sumCost function definition to the top, after fetchInventoryCosts
-function sumCost($arr) {
-    $sum = 0;
-    if (is_array($arr)) {
-        foreach ($arr as $row) {
-            $sum += floatval($row['cost']);
-        }
-    }
-    return $sum;
+// Verify admin privileges
+if (!isset($isAdmin) || !$isAdmin) {
+    echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Access Denied</h1></div>';
+    exit;
 }
 ?>
-<style>
-  .admin-data-label {
-    color: #222 !important;
-  }
-  .admin-data-value {
-    color: #c00 !important;
-    font-weight: bold;
-  }
-</style>
-<section id="adminInventoryPage" class="p-6 bg-white rounded-lg shadow-lg">
-    <!-- Top bar: Back to Dashboard | Search/Filters | Export Inventory -->
-    <div class="mb-4 flex flex-row justify-between items-center gap-2">
-        <a href="/?page=admin" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Dashboard
+
+<section id="adminInventoryPage" class="py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-merienda text-[#556B2F]">Inventory Management</h1>
+        <a href="/?page=admin" class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md transition-colors">
+            ← Back to Admin
         </a>
-        <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0" style="flex:1;max-width:600px;justify-content:center;">
-            <input type="hidden" name="page" value="admin">
-            <input type="hidden" name="section" value="inventory">
-            <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm ?? ''); ?>" class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500" placeholder="Search..." style="max-width:140px;">
-            <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-            </button>
-            <select id="category" name="category" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:120px;" onchange="this.form.submit()">
-                <option value="all" <?php echo (empty($filterCategory) || $filterCategory === 'all') ? 'selected' : ''; ?>>All Products</option>
-                <?php foreach ($categories as $cat): ?>
-                    <option value="<?php echo htmlspecialchars($cat); ?>" <?php echo ($filterCategory === $cat) ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($cat)); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </form>
-        <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="window.location.href='/?page=admin&section=inventory&export=1'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Export Inventory
-        </button>
     </div>
 
-    <div class="grid grid-cols-1 gap-8">
-        <?php if ($filteredProducts): ?>
-            <?php foreach ($filteredProducts as $product): ?>
-                <?php
-                $pdo = new PDO('mysql:host=localhost;dbname=whimsicalfrog', 'root', 'Palz2516');
-                $costs = fetchInventoryCosts($pdo, $product['id']);
-                $totalCost = sumCost($costs['materials'] ?? []) + sumCost($costs['labor'] ?? []) + sumCost($costs['energy'] ?? []);
-                ?>
-                <div class="bg-gray-100 p-6 rounded-lg shadow" data-product-id="<?php echo htmlspecialchars($product['id']); ?>">
-                    <div class="flex flex-col md:flex-row gap-6">
-                        <!-- Product Image -->
-                        <div class="w-full md:w-1/3">
-                            <div class="relative">
-                                <img src="<?php echo htmlspecialchars($product['image'] ?? 'images/placeholder.png'); ?>" 
-                                     alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                                     class="w-full h-48 object-cover rounded-md">
-                            </div>
-                            <button onclick="updateProductImage('<?php echo htmlspecialchars($product['id']); ?>')" 
-                                    class="mt-2 bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-1 px-3 rounded-md text-sm">
-                                Change Image
-                            </button>
-                        </div>
+    <!-- Add Inventory Form -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-2xl font-merienda text-[#556B2F] mb-4">Add New Inventory Item</h2>
+        <form id="addInventoryForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+                <label for="itemName" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                <input type="text" id="itemName" name="itemName" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            </div>
+            <div>
+                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select id="category" name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+                    <option value="">Select Category</option>
+                    <option value="Material">Material</option>
+                    <option value="Labor">Labor</option>
+                    <option value="Energy">Energy</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <input type="number" id="quantity" name="quantity" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            </div>
+            <div>
+                <label for="unit" class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                <input type="text" id="unit" name="unit" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            </div>
+            <div>
+                <label for="costPerUnit" class="block text-sm font-medium text-gray-700 mb-1">Cost Per Unit ($)</label>
+                <input type="number" id="costPerUnit" name="costPerUnit" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            </div>
+            <div>
+                <label for="totalCost" class="block text-sm font-medium text-gray-700 mb-1">Total Cost ($)</label>
+                <input type="number" id="totalCost" name="totalCost" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50">
+            </div>
+            <div>
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea id="notes" name="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]"></textarea>
+            </div>
+            <div class="md:col-span-2 lg:col-span-3 mt-4">
+                <button type="submit" class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md transition-colors">
+                    Add Inventory Item
+                </button>
+            </div>
+        </form>
+    </div>
 
-                        <!-- Product Details -->
-                        <div class="w-full md:w-2/3">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <span class="admin-data-label">Product Name</span>
-                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['name']); ?></span>
-                                </div>
-                                <div>
-                                    <span class="admin-data-label">Base Price</span>
-                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['basePrice']); ?></span>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <span class="admin-data-label">Description</span>
-                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['description']); ?></span>
-                                </div>
-                                <div>
-                                    <span class="admin-data-label">Product Type</span>
-                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['productType']); ?></span>
-                                </div>
-                                <div>
-                                    <span class="admin-data-label">SKU Base</span>
-                                    <span class="admin-data-value"><?php echo htmlspecialchars($product['defaultSKU_Base']); ?></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Inventory Items -->
-                    <?php if (!empty($inventoryByProduct[$product['id']])): ?>
-                        <?php foreach ($inventoryByProduct[$product['id']] as $item): ?>
-                            <div class="mt-6">
-                                <div class="flex flex-col md:flex-row md:items-center gap-4">
-                                    <div>
-                                        <span class="admin-data-label">Number in Stock</span>
-                                        <input type="number" value="<?php echo htmlspecialchars($item['stockLevel']); ?>" min="0" class="stock-input admin-data-value border rounded px-2 py-1 text-sm w-20" data-inventory-id="<?php echo htmlspecialchars($item['id']); ?>">
-                                    </div>
-                                    <div>
-                                        <button class="ml-2 px-3 py-2 bg-green-600 text-white rounded text-sm" onclick="openCostModal('<?php echo $item['id']; ?>')">Manage Costs</button>
-                                    </div>
-                                </div>
-                                <div class="mt-2 text-xs">
-                                    <strong>Total Cost:</strong> $<?php echo number_format($totalCost, 2); ?><br>
-                                    <strong>Materials:</strong>
-                                    <ul>
-                                        <?php if (!empty($costs['materials'])): foreach ($costs['materials'] as $mat): ?>
-                                            <li><?php echo htmlspecialchars($mat['name']); ?>: $<?php echo number_format($mat['cost'], 2); ?></li>
-                                        <?php endforeach; endif; ?>
-                                    </ul>
-                                    <strong>Labor:</strong>
-                                    <ul>
-                                        <?php if (!empty($costs['labor'])): foreach ($costs['labor'] as $lab): ?>
-                                            <li><?php echo htmlspecialchars($lab['description']); ?>: $<?php echo number_format($lab['cost'], 2); ?></li>
-                                        <?php endforeach; endif; ?>
-                                    </ul>
-                                    <strong>Energy:</strong>
-                                    <ul>
-                                        <?php if (!empty($costs['energy'])): foreach ($costs['energy'] as $en): ?>
-                                            <li><?php echo htmlspecialchars($en['description']); ?>: $<?php echo number_format($en['cost'], 2); ?></li>
-                                        <?php endforeach; endif; ?>
-                                    </ul>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="mt-6 text-gray-500 text-sm">No inventory items for this product.</div>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p class="text-gray-700">No products found</p>
-        <?php endif; ?>
+    <!-- Inventory List -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-merienda text-[#556B2F]">Current Inventory</h2>
+            <div class="flex gap-2">
+                <select id="filterCategory" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+                    <option value="All">All Categories</option>
+                    <option value="Material">Material</option>
+                    <option value="Labor">Labor</option>
+                    <option value="Energy">Energy</option>
+                    <option value="Other">Other</option>
+                </select>
+                <button id="refreshInventoryBtn" class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md transition-colors">
+                    Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- Inventory Totals -->
+        <div id="inventoryTotals" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h3 class="text-lg font-semibold text-green-800">Total Inventory Value</h3>
+                <p id="totalInventoryValue" class="text-2xl font-bold text-green-600">$0.00</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 class="text-lg font-semibold text-blue-800">Materials</h3>
+                <p id="materialsCost" class="text-2xl font-bold text-blue-600">$0.00</p>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <h3 class="text-lg font-semibold text-purple-800">Labor</h3>
+                <p id="laborCost" class="text-2xl font-bold text-purple-600">$0.00</p>
+            </div>
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <h3 class="text-lg font-semibold text-yellow-800">Energy</h3>
+                <p id="energyCost" class="text-2xl font-bold text-yellow-600">$0.00</p>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table id="inventoryTable" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Unit</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Cost</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="inventoryTableBody">
+                    <!-- Inventory items will be loaded here -->
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">Loading inventory...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </section>
 
-<!-- Cost Management Modal -->
-<div id="costModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
-  <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
-    <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onclick="closeCostModal()">&times;</button>
-    <h2 class="text-xl font-bold mb-4">Manage Costs for Inventory Item <span id="costModalItemId"></span></h2>
-    <div id="costModalContent">
-      <div class="mb-4">
-        <h3 class="font-semibold">Materials</h3>
-        <ul id="materialsList" class="mb-2"></ul>
-        <form id="addMaterialForm" class="flex gap-2 mb-2">
-          <input type="text" name="name" placeholder="Material Name" class="border rounded px-2 py-1 text-sm" required>
-          <input type="number" name="cost" placeholder="Cost" step="0.01" class="border rounded px-2 py-1 text-sm" required>
-          <button type="submit" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Add</button>
+<!-- Edit Inventory Modal -->
+<div id="editInventoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-merienda text-[#556B2F]">Edit Inventory Item</h3>
+            <button id="closeEditModal" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="editInventoryForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="hidden" id="editItemId" name="itemId">
+            <div>
+                <label for="editItemName" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                <input type="text" id="editItemName" name="itemName" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            </div>
+            <div>
+                <label for="editCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select id="editCategory" name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+                    <option value="Material">Material</option>
+                    <option value="Labor">Labor</option>
+                    <option value="Energy">Energy</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label for="editQuantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <input type="number" id="editQuantity" name="quantity" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            </div>
+            <div>
+                <label for="editUnit" class="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                <input type="text" id="editUnit" name="unit" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            </div>
+            <div>
+                <label for="editCostPerUnit" class="block text-sm font-medium text-gray-700 mb-1">Cost Per Unit ($)</label>
+                <input type="number" id="editCostPerUnit" name="costPerUnit" min="0" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]">
+            </div>
+            <div>
+                <label for="editTotalCost" class="block text-sm font-medium text-gray-700 mb-1">Total Cost ($)</label>
+                <input type="number" id="editTotalCost" name="totalCost" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50">
+            </div>
+            <div class="md:col-span-2">
+                <label for="editNotes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea id="editNotes" name="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23]"></textarea>
+            </div>
+            <div class="md:col-span-2 mt-4 flex justify-between">
+                <button type="submit" class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md transition-colors">
+                    Update Item
+                </button>
+                <button type="button" id="deleteInventoryBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition-colors">
+                    Delete Item
+                </button>
+            </div>
         </form>
-      </div>
-      <div class="mb-4">
-        <h3 class="font-semibold">Labor</h3>
-        <ul id="laborList" class="mb-2"></ul>
-        <form id="addLaborForm" class="flex gap-2 mb-2">
-          <input type="text" name="description" placeholder="Labor Description" class="border rounded px-2 py-1 text-sm" required>
-          <input type="number" name="cost" placeholder="Cost" step="0.01" class="border rounded px-2 py-1 text-sm" required>
-          <button type="submit" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Add</button>
-        </form>
-      </div>
-      <div class="mb-4">
-        <h3 class="font-semibold">Energy</h3>
-        <ul id="energyList" class="mb-2"></ul>
-        <form id="addEnergyForm" class="flex gap-2 mb-2">
-          <input type="text" name="description" placeholder="Energy Description" class="border rounded px-2 py-1 text-sm" required>
-          <input type="number" name="cost" placeholder="Cost" step="0.01" class="border rounded px-2 py-1 text-sm" required>
-          <button type="submit" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Add</button>
-        </form>
-      </div>
     </div>
-  </div>
 </div>
+
 <script>
-// Add event listeners when the document is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle add inventory form submissions
-    document.querySelectorAll('.add-inventory-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const productId = this.querySelector('input[name="productId"]').value;
-            const productName = this.querySelector('input[name="productName"]').value;
-            addInventoryItem(productId, productName);
+    // DOM Elements
+    const addInventoryForm = document.getElementById('addInventoryForm');
+    const editInventoryForm = document.getElementById('editInventoryForm');
+    const editInventoryModal = document.getElementById('editInventoryModal');
+    const closeEditModal = document.getElementById('closeEditModal');
+    const deleteInventoryBtn = document.getElementById('deleteInventoryBtn');
+    const refreshInventoryBtn = document.getElementById('refreshInventoryBtn');
+    const filterCategory = document.getElementById('filterCategory');
+    
+    // Calculate total cost when quantity or cost per unit changes
+    function calculateTotalCost(quantityInput, costPerUnitInput, totalCostInput) {
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const costPerUnit = parseFloat(costPerUnitInput.value) || 0;
+        const totalCost = (quantity * costPerUnit).toFixed(2);
+        totalCostInput.value = totalCost;
+    }
+    
+    // Add event listeners for calculation on add form
+    const quantityInput = document.getElementById('quantity');
+    const costPerUnitInput = document.getElementById('costPerUnit');
+    const totalCostInput = document.getElementById('totalCost');
+    
+    quantityInput.addEventListener('input', () => calculateTotalCost(quantityInput, costPerUnitInput, totalCostInput));
+    costPerUnitInput.addEventListener('input', () => calculateTotalCost(quantityInput, costPerUnitInput, totalCostInput));
+    
+    // Add event listeners for calculation on edit form
+    const editQuantityInput = document.getElementById('editQuantity');
+    const editCostPerUnitInput = document.getElementById('editCostPerUnit');
+    const editTotalCostInput = document.getElementById('editTotalCost');
+    
+    editQuantityInput.addEventListener('input', () => calculateTotalCost(editQuantityInput, editCostPerUnitInput, editTotalCostInput));
+    editCostPerUnitInput.addEventListener('input', () => calculateTotalCost(editQuantityInput, editCostPerUnitInput, editTotalCostInput));
+    
+    // Load inventory data
+    function loadInventory() {
+        const category = filterCategory.value;
+        const tableBody = document.getElementById('inventoryTableBody');
+        tableBody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">Loading inventory...</td></tr>';
+        
+        // Use direct SQL query through PHP file instead of API endpoint
+        fetch('/process_inventory_get.php' + (category !== 'All' ? '?category=' + category : ''))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateInventoryTable(data);
+                updateInventoryTotals(data);
+            })
+            .catch(error => {
+                console.error('Error loading inventory:', error);
+                tableBody.innerHTML = `<tr><td colspan="8" class="px-6 py-4 text-center text-red-500">Error loading inventory: ${error.message}</td></tr>`;
+            });
+    }
+    
+    // Update inventory table with data
+    function updateInventoryTable(inventoryData) {
+        const tableBody = document.getElementById('inventoryTableBody');
+        tableBody.innerHTML = '';
+        
+        if (!inventoryData || inventoryData.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="px-6 py-4 text-center text-gray-500">No inventory items found</td></tr>';
+            return;
+        }
+        
+        inventoryData.forEach(item => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            
+            // Format total cost for display
+            const totalCost = parseFloat(item.totalCost || (item.quantity * item.costPerUnit)).toFixed(2);
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">${item.itemName}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${item.category}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${item.quantity}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${item.unit}</td>
+                <td class="px-6 py-4 whitespace-nowrap">$${parseFloat(item.costPerUnit).toFixed(2)}</td>
+                <td class="px-6 py-4 whitespace-nowrap">$${totalCost}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${item.notes || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <button class="edit-btn text-blue-600 hover:text-blue-800" data-id="${item.id}">
+                        Edit
+                    </button>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+            
+            // Add event listener to edit button
+            const editBtn = row.querySelector('.edit-btn');
+            editBtn.addEventListener('click', () => openEditModal(item));
+        });
+    }
+    
+    // Update inventory totals
+    function updateInventoryTotals(inventoryData) {
+        let totalValue = 0;
+        let materialsCost = 0;
+        let laborCost = 0;
+        let energyCost = 0;
+        
+        inventoryData.forEach(item => {
+            const itemCost = parseFloat(item.totalCost || (item.quantity * item.costPerUnit)) || 0;
+            totalValue += itemCost;
+            
+            if (item.category === 'Material') {
+                materialsCost += itemCost;
+            } else if (item.category === 'Labor') {
+                laborCost += itemCost;
+            } else if (item.category === 'Energy') {
+                energyCost += itemCost;
+            }
+        });
+        
+        document.getElementById('totalInventoryValue').textContent = `$${totalValue.toFixed(2)}`;
+        document.getElementById('materialsCost').textContent = `$${materialsCost.toFixed(2)}`;
+        document.getElementById('laborCost').textContent = `$${laborCost.toFixed(2)}`;
+        document.getElementById('energyCost').textContent = `$${energyCost.toFixed(2)}`;
+    }
+    
+    // Open edit modal with item data
+    function openEditModal(item) {
+        document.getElementById('editItemId').value = item.id;
+        document.getElementById('editItemName').value = item.itemName;
+        document.getElementById('editCategory').value = item.category;
+        document.getElementById('editQuantity').value = item.quantity;
+        document.getElementById('editUnit').value = item.unit;
+        document.getElementById('editCostPerUnit').value = item.costPerUnit;
+        document.getElementById('editNotes').value = item.notes || '';
+        
+        // Calculate total cost
+        calculateTotalCost(editQuantityInput, editCostPerUnitInput, editTotalCostInput);
+        
+        // Show modal
+        editInventoryModal.classList.remove('hidden');
+    }
+    
+    // Close edit modal
+    function closeEditModal() {
+        editInventoryModal.classList.add('hidden');
+    }
+    
+    // Add inventory item
+    addInventoryForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            itemName: document.getElementById('itemName').value,
+            category: document.getElementById('category').value,
+            quantity: parseFloat(document.getElementById('quantity').value),
+            unit: document.getElementById('unit').value,
+            costPerUnit: parseFloat(document.getElementById('costPerUnit').value),
+            totalCost: parseFloat(document.getElementById('totalCost').value),
+            notes: document.getElementById('notes').value
+        };
+        
+        // Use direct SQL query through PHP file instead of API endpoint
+        fetch('/process_inventory_add.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Show success message
+            const customAlert = document.getElementById('customAlertBox');
+            const customAlertMessage = document.getElementById('customAlertMessage');
+            customAlertMessage.textContent = 'Inventory item added successfully!';
+            customAlertMessage.className = 'text-green-700';
+            customAlert.style.display = 'block';
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                customAlert.style.display = 'none';
+            }, 3000);
+            
+            // Reset form and reload inventory
+            addInventoryForm.reset();
+            loadInventory();
+        })
+        .catch(error => {
+            console.error('Error adding inventory item:', error);
+            
+            // Show error message
+            const customAlert = document.getElementById('customAlertBox');
+            const customAlertMessage = document.getElementById('customAlertMessage');
+            customAlertMessage.textContent = 'Error adding inventory item: ' + error.message;
+            customAlertMessage.className = 'text-red-700';
+            customAlert.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                customAlert.style.display = 'none';
+            }, 5000);
         });
     });
-});
-
-// Product management functions
-async function updateProductField(productId, field, value) {
-    try {
-        const response = await fetch('https://whimsicalfrog.us/api/update-product.php', {
+    
+    // Update inventory item
+    editInventoryForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            id: document.getElementById('editItemId').value,
+            itemName: document.getElementById('editItemName').value,
+            category: document.getElementById('editCategory').value,
+            quantity: parseFloat(document.getElementById('editQuantity').value),
+            unit: document.getElementById('editUnit').value,
+            costPerUnit: parseFloat(document.getElementById('editCostPerUnit').value),
+            totalCost: parseFloat(document.getElementById('editTotalCost').value),
+            notes: document.getElementById('editNotes').value
+        };
+        
+        // Use direct SQL query through PHP file instead of API endpoint
+        fetch('/process_inventory_update.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                productId,
-                field,
-                value
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to update product');
-        }
-        
-        showAlert('Product updated successfully', false);
-    } catch (error) {
-        showAlert(error.message);
-    }
-}
-
-async function updateProductImage(productId) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('productId', productId);
-        formData.append('category', 'products');
-        
-        try {
-            const response = await fetch('https://whimsicalfrog.us/api/upload-image.php', {
-                method: 'POST',
-                body: formData
-            });
-            
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
             if (!response.ok) {
-                throw new Error('Failed to upload image');
+                throw new Error('Network response was not ok');
             }
+            return response.json();
+        })
+        .then(data => {
+            // Show success message
+            const customAlert = document.getElementById('customAlertBox');
+            const customAlertMessage = document.getElementById('customAlertMessage');
+            customAlertMessage.textContent = 'Inventory item updated successfully!';
+            customAlertMessage.className = 'text-green-700';
+            customAlert.style.display = 'block';
             
-            const data = await response.json();
+            // Auto-hide after 3 seconds
             setTimeout(() => {
-                document.querySelectorAll(`[data-product-id=\"${productId}\"] img`).forEach(img => {
-                    img.src = data.image + '?v=' + Date.now();
-                });
-            }, 2000);
-            showAlert('Image updated successfully', false);
-        } catch (error) {
-            showAlert(error.message);
-        }
-    };
-    
-    input.click();
-}
-
-// Inventory management functions
-async function updateInventoryField(inventoryId, field, value) {
-    try {
-        const response = await fetch('https://whimsicalfrog.us/api/update-inventory.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inventoryId,
-                field,
-                value
-            })
+                customAlert.style.display = 'none';
+            }, 3000);
+            
+            // Close modal and reload inventory
+            closeEditModal();
+            loadInventory();
+        })
+        .catch(error => {
+            console.error('Error updating inventory item:', error);
+            
+            // Show error message
+            const customAlert = document.getElementById('customAlertBox');
+            const customAlertMessage = document.getElementById('customAlertMessage');
+            customAlertMessage.textContent = 'Error updating inventory item: ' + error.message;
+            customAlertMessage.className = 'text-red-700';
+            customAlert.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                customAlert.style.display = 'none';
+            }, 5000);
         });
+    });
+    
+    // Delete inventory item
+    deleteInventoryBtn.addEventListener('click', function() {
+        const itemId = document.getElementById('editItemId').value;
         
-        if (!response.ok) {
-            throw new Error('Failed to update inventory');
-        }
-        
-        showAlert('Inventory updated successfully', false);
-    } catch (error) {
-        showAlert(error.message);
-    }
-}
-
-async function addInventoryItem(productId, productName) {
-    try {
-        const response = await fetch('https://whimsicalfrog.us/api/add-inventory.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                productId: productId,
-                productName: productName,
-                description: 'New item description',
-                sku: 'NEW-SKU',
-                stockLevel: 0,
-                reorderPoint: 5
+        if (confirm('Are you sure you want to delete this inventory item?')) {
+            // Use direct SQL query through PHP file instead of API endpoint
+            fetch('/process_inventory_delete.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: itemId })
             })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to add inventory item');
-        }
-
-        const result = await response.json();
-        console.log('Inventory item added:', result);
-        
-        // Show success message
-        alert('Inventory item added successfully!');
-        
-        // Reload the page to show the new item
-        window.location.reload();
-    } catch (error) {
-        console.error('Error adding inventory item:', error);
-        alert('Error adding inventory item: ' + error.message);
-    }
-}
-
-async function deleteInventoryItem(inventoryId) {
-    if (!confirm('Are you sure you want to delete this inventory item?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('https://whimsicalfrog.us/api/delete-inventory.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inventoryId
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
             })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to delete inventory item');
+            .then(data => {
+                // Show success message
+                const customAlert = document.getElementById('customAlertBox');
+                const customAlertMessage = document.getElementById('customAlertMessage');
+                customAlertMessage.textContent = 'Inventory item deleted successfully!';
+                customAlertMessage.className = 'text-green-700';
+                customAlert.style.display = 'block';
+                
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    customAlert.style.display = 'none';
+                }, 3000);
+                
+                // Close modal and reload inventory
+                closeEditModal();
+                loadInventory();
+            })
+            .catch(error => {
+                console.error('Error deleting inventory item:', error);
+                
+                // Show error message
+                const customAlert = document.getElementById('customAlertBox');
+                const customAlertMessage = document.getElementById('customAlertMessage');
+                customAlertMessage.textContent = 'Error deleting inventory item: ' + error.message;
+                customAlertMessage.className = 'text-red-700';
+                customAlert.style.display = 'block';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    customAlert.style.display = 'none';
+                }, 5000);
+            });
         }
-        
-        // Remove the item from the DOM
-        const itemElement = document.querySelector(`[data-inventory-id="${inventoryId}"]`);
-        itemElement.remove();
-        
-        showAlert('Inventory item deleted successfully', false);
-    } catch (error) {
-        showAlert(error.message);
-    }
-}
-
-function showAlert(message, isError = true) {
-    const alertBox = document.getElementById('customAlertBox');
-    const alertMessage = document.getElementById('customAlertMessage');
+    });
     
-    alertMessage.textContent = message;
-    alertBox.style.backgroundColor = isError ? '#f8d7da' : '#d4edda';
-    alertBox.style.color = isError ? '#721c24' : '#155724';
-    alertBox.style.borderColor = isError ? '#f5c6cb' : '#c3e6cb';
-    alertBox.style.display = 'block';
+    // Event listeners
+    closeEditModal.addEventListener('click', closeEditModal);
+    refreshInventoryBtn.addEventListener('click', loadInventory);
+    filterCategory.addEventListener('change', loadInventory);
     
-    setTimeout(() => {
-        alertBox.style.display = 'none';
-    }, 3000);
-}
-
-function logout() {
-    sessionStorage.removeItem('user');
-    window.location.href = '/login.php';
-}
-
-let currentCostItemId = null;
-function openCostModal(itemId) {
-  currentCostItemId = itemId;
-  document.getElementById('costModal').classList.remove('hidden');
-  document.getElementById('costModalItemId').textContent = itemId;
-  loadCostLists(itemId);
-}
-function closeCostModal() {
-  document.getElementById('costModal').classList.add('hidden');
-  currentCostItemId = null;
-}
-async function loadCostLists(itemId) {
-  // Fetch costs via AJAX
-  const res = await fetch(`/api/inventory-costs.php?inventoryId=${encodeURIComponent(itemId)}`);
-  const data = await res.json();
-  renderCostList('materialsList', data.materials, 'material');
-  renderCostList('laborList', data.labor, 'labor');
-  renderCostList('energyList', data.energy, 'energy');
-}
-function renderCostList(listId, items, type) {
-  const ul = document.getElementById(listId);
-  ul.innerHTML = '';
-  items.forEach(item => {
-    const li = document.createElement('li');
-    li.className = 'flex items-center gap-2';
-    let label = '';
-    let editFields = '';
-    if (type === 'material') {
-      label = `${item.name}: $${parseFloat(item.cost).toFixed(2)}`;
-      editFields = `<input type='text' value='${item.name}' class='edit-name border rounded px-1 text-xs' style='width:90px;'> <input type='number' value='${item.cost}' step='0.01' class='edit-cost border rounded px-1 text-xs' style='width:60px;'>`;
-    }
-    if (type === 'labor' || type === 'energy') {
-      label = `${item.description}: $${parseFloat(item.cost).toFixed(2)}`;
-      editFields = `<input type='text' value='${item.description}' class='edit-desc border rounded px-1 text-xs' style='width:110px;'> <input type='number' value='${item.cost}' step='0.01' class='edit-cost border rounded px-1 text-xs' style='width:60px;'>`;
-    }
-    li.innerHTML = `
-      <span class='view-mode'>${label}</span>
-      <span class='edit-mode hidden'>${editFields}</span>
-      <button onclick="editCost(this)" class="text-blue-600 text-xs ml-2 view-mode">Edit</button>
-      <button onclick="saveCost('${type}', ${item.id}, this)" class="text-green-600 text-xs ml-2 edit-mode hidden">Save</button>
-      <button onclick="cancelEdit(this)" class="text-gray-600 text-xs ml-1 edit-mode hidden">Cancel</button>
-      <button onclick="deleteCost('${type}', ${item.id})" class="text-red-600 text-xs ml-2 view-mode">Delete</button>
-    `;
-    ul.appendChild(li);
-  });
-}
-function editCost(btn) {
-  const li = btn.closest('li');
-  li.querySelectorAll('.view-mode').forEach(e => e.classList.add('hidden'));
-  li.querySelectorAll('.edit-mode').forEach(e => e.classList.remove('hidden'));
-}
-function cancelEdit(btn) {
-  const li = btn.closest('li');
-  li.querySelectorAll('.edit-mode').forEach(e => e.classList.add('hidden'));
-  li.querySelectorAll('.view-mode').forEach(e => e.classList.remove('hidden'));
-}
-async function saveCost(type, id, btn) {
-  const li = btn.closest('li');
-  let data = {};
-  if (type === 'material') {
-    data.name = li.querySelector('.edit-name').value;
-    data.cost = li.querySelector('.edit-cost').value;
-  } else {
-    data.description = li.querySelector('.edit-desc').value;
-    data.cost = li.querySelector('.edit-cost').value;
-  }
-  await fetch(`/api/inventory-costs.php?action=update&type=${type}&id=${id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  loadCostLists(currentCostItemId);
-}
-document.getElementById('addMaterialForm').onsubmit = async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  await addCost('material', { name: form.name.value, cost: form.cost.value });
-  form.reset();
-};
-document.getElementById('addLaborForm').onsubmit = async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  await addCost('labor', { description: form.description.value, cost: form.cost.value });
-  form.reset();
-};
-document.getElementById('addEnergyForm').onsubmit = async function(e) {
-  e.preventDefault();
-  const form = e.target;
-  await addCost('energy', { description: form.description.value, cost: form.cost.value });
-  form.reset();
-};
-async function addCost(type, data) {
-  data.inventoryId = currentCostItemId;
-  await fetch(`/api/inventory-costs.php?action=add&type=${type}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  await loadCostLists(currentCostItemId);
-}
-async function deleteCost(type, id) {
-  await fetch(`/api/inventory-costs.php?action=delete&type=${type}&id=${id}`, { method: 'POST' });
-  loadCostLists(currentCostItemId);
-}
-document.querySelectorAll('.stock-input').forEach(input => {
-  input.addEventListener('change', updateStockLevel);
-  input.addEventListener('blur', updateStockLevel);
-  input.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      updateStockLevel.call(this);
-    }
-  });
+    // Initial load
+    loadInventory();
 });
-async function updateStockLevel(e) {
-  const input = this;
-  const inventoryId = input.getAttribute('data-inventory-id');
-  const newValue = input.value;
-  await fetch('/api/update-inventory-stock.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ inventoryId, stockLevel: newValue })
-  });
-  input.classList.add('bg-green-100');
-  setTimeout(() => input.classList.remove('bg-green-100'), 800);
-}
 </script>

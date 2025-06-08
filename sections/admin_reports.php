@@ -1,164 +1,141 @@
 <?php
-// Admin Reports & Analytics
-// This page provides comprehensive reports and analytics for business insights
+// Admin Reports
+// This page provides analytics and reporting tools for business insights
 
 // Prevent direct access
 if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
-// Fetch data for reports
-$ordersData = fetchData('sales_orders') ?? [];
-$customersData = fetchData('users') ?? [];
-$inventoryData = fetchData('inventory') ?? [];
+// Include database configuration
+require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
 
-// Get time period filter
-$timePeriod = isset($_GET['time_period']) ? $_GET['time_period'] : 'month';
-$customStartDate = isset($_GET['start_date']) ? $_GET['start_date'] : '';
-$customEndDate = isset($_GET['end_date']) ? $_GET['end_date'] : '';
+// Initialize arrays to prevent null values
+$ordersData = [];
+$customersData = [];
+$inventoryData = [];
 
-// Calculate date ranges based on selected time period
-$endDate = date('Y-m-d');
-$startDate = '';
-
-switch ($timePeriod) {
-    case 'week':
-        $startDate = date('Y-m-d', strtotime('-7 days'));
-        break;
-    case 'month':
-        $startDate = date('Y-m-d', strtotime('-30 days'));
-        break;
-    case 'quarter':
-        $startDate = date('Y-m-d', strtotime('-90 days'));
-        break;
-    case 'year':
-        $startDate = date('Y-m-d', strtotime('-365 days'));
-        break;
-    case 'custom':
-        $startDate = !empty($customStartDate) ? $customStartDate : date('Y-m-d', strtotime('-30 days'));
-        $endDate = !empty($customEndDate) ? $customEndDate : date('Y-m-d');
-        break;
+try {
+    // Create a PDO connection
+    $pdo = new PDO($dsn, $user, $pass, $options);
+    
+    // Fetch orders data directly from database
+    $ordersStmt = $pdo->query('SELECT * FROM orders');
+    $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // For each order, get its items
+    foreach ($ordersData as &$order) {
+        $itemsStmt = $pdo->prepare('SELECT * FROM order_items WHERE orderId = ?');
+        $itemsStmt->execute([$order['id']]);
+        $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Convert shippingAddress from JSON string to array if it exists
+        if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
+            $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
+        }
+    }
+    
+    // Fetch customers/users data directly from database
+    $usersStmt = $pdo->query('SELECT * FROM users');
+    $customersData = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch inventory data directly from database
+    $inventoryStmt = $pdo->query('SELECT * FROM inventory');
+    $inventoryData = $inventoryStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Close the connection
+    $pdo = null;
+} catch (PDOException $e) {
+    error_log('Database Error: ' . $e->getMessage());
+} catch (Exception $e) {
+    error_log('General Error: ' . $e->getMessage());
 }
+
+// Ensure arrays are never null
+$ordersData = is_array($ordersData) ? $ordersData : [];
+$customersData = is_array($customersData) ? $customersData : [];
+$inventoryData = is_array($inventoryData) ? $inventoryData : [];
+
+// Calculate metrics for reports
+$totalRevenue = 0;
+$totalOrders = count($ordersData);
+$totalCustomers = count($customersData);
+$totalProducts = count($inventoryData);
+
+// Calculate revenue
+foreach ($ordersData as $order) {
+    $totalRevenue += floatval($order['total'] ?? 0);
+}
+
+// Get date range for filtering
+$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-d', strtotime('-30 days'));
+$endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 
 // Filter orders by date range
 $filteredOrders = array_filter($ordersData, function($order) use ($startDate, $endDate) {
-    if (!isset($order['date'])) return false;
-    $orderDate = date('Y-m-d', strtotime($order['date']));
+    $orderDate = isset($order['date']) ? date('Y-m-d', strtotime($order['date'])) : '';
     return $orderDate >= $startDate && $orderDate <= $endDate;
 });
 
-// Calculate key metrics
-$totalRevenue = 0;
-$totalOrders = count($filteredOrders);
-$totalProductsSold = 0;
-$productSales = [];
-$dailySales = [];
-$categorySales = [];
-$customerSales = [];
-$regionSales = [];
-
-// Initialize daily sales array with zeros for all dates in range
-$currentDate = new DateTime($startDate);
-$lastDate = new DateTime($endDate);
-while ($currentDate <= $lastDate) {
-    $dateKey = $currentDate->format('Y-m-d');
-    $dailySales[$dateKey] = 0;
-    $currentDate->modify('+1 day');
-}
-
-// Process orders to calculate metrics
+// Calculate metrics for filtered orders
+$filteredRevenue = 0;
 foreach ($filteredOrders as $order) {
-    $orderTotal = floatval($order['total'] ?? 0);
-    $totalRevenue += $orderTotal;
-    
-    // Daily sales
-    $orderDate = date('Y-m-d', strtotime($order['date']));
-    if (isset($dailySales[$orderDate])) {
-        $dailySales[$orderDate] += $orderTotal;
-    }
-    
-    // Process order items
-    $items = $order['items'] ?? [];
-    foreach ($items as $item) {
-        $productId = $item['productId'] ?? '';
-        $quantity = intval($item['quantity'] ?? 0);
-        $price = floatval($item['price'] ?? 0);
-        $totalProductsSold += $quantity;
-        
-        // Product sales
-        if (!isset($productSales[$productId])) {
-            $productSales[$productId] = [
-                'quantity' => 0,
-                'revenue' => 0,
-                'name' => ''
-            ];
-        }
-        $productSales[$productId]['quantity'] += $quantity;
-        $productSales[$productId]['revenue'] += $quantity * $price;
-        
-        // Get product name and category
-        foreach ($inventoryData as $product) {
-            if (($product['id'] ?? '') == $productId) {
-                $productSales[$productId]['name'] = $product['name'] ?? 'Unknown Product';
-                $category = $product['category'] ?? 'Uncategorized';
-                
-                // Category sales
-                if (!isset($categorySales[$category])) {
-                    $categorySales[$category] = [
-                        'quantity' => 0,
-                        'revenue' => 0
-                    ];
-                }
-                $categorySales[$category]['quantity'] += $quantity;
-                $categorySales[$category]['revenue'] += $quantity * $price;
-                break;
-            }
-        }
-    }
-    
-    // Customer sales
-    $customerId = $order['customerId'] ?? '';
-    if (!isset($customerSales[$customerId])) {
-        $customerSales[$customerId] = [
-            'orders' => 0,
-            'revenue' => 0,
-            'name' => 'Unknown Customer'
-        ];
-        
-        // Get customer name
-        foreach ($customersData as $customer) {
-            if (($customer['first_name'] ?? '') == $customerId) {
-                $customerSales[$customerId]['name'] = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
-                break;
-            }
-        }
-    }
-    $customerSales[$customerId]['orders']++;
-    $customerSales[$customerId]['revenue'] += $orderTotal;
-    
-    // Region sales (using shipping address state/region)
-    $shippingAddress = $order['shippingAddress'] ?? '';
-    $region = 'Unknown';
-    
-    // Simple region extraction (would be more sophisticated in a real system)
-    if (preg_match('/([A-Z]{2})/', $shippingAddress, $matches)) {
-        $region = $matches[1];
-    }
-    
-    if (!isset($regionSales[$region])) {
-        $regionSales[$region] = [
-            'orders' => 0,
-            'revenue' => 0
-        ];
-    }
-    $regionSales[$region]['orders']++;
-    $regionSales[$region]['revenue'] += $orderTotal;
+    $filteredRevenue += floatval($order['total'] ?? 0);
 }
 
 // Calculate average order value
 $averageOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
 
-// Sort product sales by revenue (descending)
+// Group orders by date for chart data
+$ordersByDate = [];
+foreach ($filteredOrders as $order) {
+    $orderDate = isset($order['date']) ? date('Y-m-d', strtotime($order['date'])) : '';
+    if (!isset($ordersByDate[$orderDate])) {
+        $ordersByDate[$orderDate] = [
+            'count' => 0,
+            'revenue' => 0
+        ];
+    }
+    $ordersByDate[$orderDate]['count']++;
+    $ordersByDate[$orderDate]['revenue'] += floatval($order['total'] ?? 0);
+}
+
+// Sort by date
+ksort($ordersByDate);
+
+// Prepare chart data
+$chartLabels = [];
+$chartData = [];
+$chartRevenue = [];
+
+foreach ($ordersByDate as $date => $data) {
+    $chartLabels[] = $date;
+    $chartData[] = $data['count'];
+    $chartRevenue[] = $data['revenue'];
+}
+
+// Convert to JSON for chart.js
+$chartLabelsJson = json_encode($chartLabels);
+$chartDataJson = json_encode($chartData);
+$chartRevenueJson = json_encode($chartRevenue);
+
+// Get top products
+$productSales = [];
+foreach ($ordersData as $order) {
+    foreach ($order['items'] ?? [] as $item) {
+        $productId = $item['productId'] ?? '';
+        if (!isset($productSales[$productId])) {
+            $productSales[$productId] = [
+                'quantity' => 0,
+                'revenue' => 0
+            ];
+        }
+        $productSales[$productId]['quantity'] += intval($item['quantity'] ?? 0);
+        $productSales[$productId]['revenue'] += floatval($item['price'] ?? 0) * intval($item['quantity'] ?? 0);
+    }
+}
+
+// Sort by revenue
 uasort($productSales, function($a, $b) {
     return $b['revenue'] <=> $a['revenue'];
 });
@@ -166,253 +143,139 @@ uasort($productSales, function($a, $b) {
 // Get top 5 products
 $topProducts = array_slice($productSales, 0, 5, true);
 
-// Sort customer sales by revenue (descending)
-uasort($customerSales, function($a, $b) {
-    return $b['revenue'] <=> $a['revenue'];
+// Get product names
+$productNames = [];
+foreach ($inventoryData as $product) {
+    $productId = $product['productId'] ?? '';
+    $productNames[$productId] = $product['name'] ?? 'Unknown Product';
+}
+
+// Get low stock products
+$lowStockProducts = array_filter($inventoryData, function($product) {
+    return isset($product['stockLevel']) && isset($product['reorderPoint']) && 
+           intval($product['stockLevel']) <= intval($product['reorderPoint']);
 });
-
-// Get top 5 customers
-$topCustomers = array_slice($customerSales, 0, 5, true);
-
-// Sort category sales by revenue (descending)
-uasort($categorySales, function($a, $b) {
-    return $b['revenue'] <=> $a['revenue'];
-});
-
-// Format daily sales for chart
-$salesDates = array_keys($dailySales);
-$salesValues = array_values($dailySales);
-
-// Format category sales for chart
-$categoryNames = array_keys($categorySales);
-$categoryRevenues = array_map(function($item) {
-    return $item['revenue'];
-}, $categorySales);
-
-// Format region sales for chart
-$regionNames = array_keys($regionSales);
-$regionRevenues = array_map(function($item) {
-    return $item['revenue'];
-}, $regionSales);
 ?>
 
-<!-- Back to Dashboard Navigation -->
-<div class="mb-6">
+<style>
+  .admin-data-label {
+    color: #222 !important;
+  }
+  .admin-data-value {
+    color: #c00 !important;
+    font-weight: bold;
+  }
+  .report-card {
+    @apply bg-white rounded-lg shadow p-6 mb-6;
+  }
+  .report-card-title {
+    @apply text-lg font-medium text-gray-900 mb-4;
+  }
+  .metric-card {
+    @apply bg-white rounded-lg shadow p-4;
+  }
+  .metric-value {
+    @apply text-2xl font-bold text-gray-900;
+  }
+  .metric-label {
+    @apply text-sm text-gray-500;
+  }
+  .chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+</style>
+
+<!-- Top bar: Back to Dashboard | Date Range Selector -->
+<div class="mb-4 flex flex-row justify-between items-center gap-2">
     <a href="/?page=admin" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Back to Dashboard
     </a>
-</div>
-
-<!-- Reports Header -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <div class="flex flex-col md:flex-row justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Reports & Analytics</h1>
-            <p class="text-gray-600">Insights and performance metrics for your business</p>
-        </div>
-        <div class="mt-4 md:mt-0">
-            <div class="flex space-x-2">
-                <button type="button" onclick="exportReportCSV()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Export CSV
-                </button>
-                <button type="button" onclick="printReport()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                    Print Report
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Time Period Filter -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <form action="" method="GET" class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+    <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0">
         <input type="hidden" name="page" value="admin">
         <input type="hidden" name="section" value="reports">
-        
-        <div class="w-full md:w-48">
-            <label for="time_period" class="block text-sm font-medium text-gray-700">Time Period</label>
-            <select id="time_period" name="time_period" onchange="toggleCustomDateInputs()" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
-                <option value="week" <?php echo $timePeriod === 'week' ? 'selected' : ''; ?>>Last 7 Days</option>
-                <option value="month" <?php echo $timePeriod === 'month' ? 'selected' : ''; ?>>Last 30 Days</option>
-                <option value="quarter" <?php echo $timePeriod === 'quarter' ? 'selected' : ''; ?>>Last 90 Days</option>
-                <option value="year" <?php echo $timePeriod === 'year' ? 'selected' : ''; ?>>Last 365 Days</option>
-                <option value="custom" <?php echo $timePeriod === 'custom' ? 'selected' : ''; ?>>Custom Range</option>
-            </select>
+        <div class="flex items-center">
+            <label for="start_date" class="block text-sm font-medium text-gray-700 mr-2">From:</label>
+            <input type="date" name="start_date" id="start_date" value="<?php echo htmlspecialchars($startDate); ?>" class="block px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
         </div>
-        
-        <div id="custom_date_container" class="<?php echo $timePeriod !== 'custom' ? 'hidden' : ''; ?> flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-            <div class="w-full md:w-48">
-                <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
-                <input type="date" name="start_date" id="start_date" value="<?php echo $customStartDate; ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-            </div>
-            
-            <div class="w-full md:w-48">
-                <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
-                <input type="date" name="end_date" id="end_date" value="<?php echo $customEndDate; ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-            </div>
+        <div class="flex items-center">
+            <label for="end_date" class="block text-sm font-medium text-gray-700 mr-2">To:</label>
+            <input type="date" name="end_date" id="end_date" value="<?php echo htmlspecialchars($endDate); ?>" class="block px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
         </div>
-        
-        <div class="flex items-end">
-            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Apply Filter
-            </button>
-        </div>
+        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Apply
+        </button>
     </form>
+    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        Print Report
+    </button>
 </div>
 
-<!-- Key Metrics Summary -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-    <!-- Revenue Metric -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-green-100 text-green-800 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-gray-500 text-sm">Total Revenue</p>
-                <span class="admin-data-label">Total Revenue</span>
-                <span class="admin-data-value">$<?php echo number_format($totalRevenue, 2); ?></span>
-            </div>
-        </div>
+<!-- Key Metrics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="metric-card">
+        <div class="metric-label">Total Revenue</div>
+        <div class="metric-value text-green-600">$<?php echo number_format($filteredRevenue, 2); ?></div>
+        <div class="text-xs text-gray-500">For selected period</div>
     </div>
-
-    <!-- Orders Metric -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-blue-100 text-blue-800 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-gray-500 text-sm">Total Orders</p>
-                <span class="admin-data-label">Total Orders</span>
-                <span class="admin-data-value"><?php echo $totalOrders; ?></span>
-            </div>
-        </div>
+    <div class="metric-card">
+        <div class="metric-label">Orders</div>
+        <div class="metric-value text-blue-600"><?php echo count($filteredOrders); ?></div>
+        <div class="text-xs text-gray-500">For selected period</div>
     </div>
-
-    <!-- Average Order Value -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-purple-100 text-purple-800 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-gray-500 text-sm">Average Order Value</p>
-                <span class="admin-data-label">Average Order Value</span>
-                <span class="admin-data-value">$<?php echo number_format($averageOrderValue, 2); ?></span>
-            </div>
-        </div>
+    <div class="metric-card">
+        <div class="metric-label">Average Order Value</div>
+        <div class="metric-value text-purple-600">$<?php echo number_format($averageOrderValue, 2); ?></div>
+        <div class="text-xs text-gray-500">All time</div>
     </div>
-
-    <!-- Products Sold -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <div class="flex items-center">
-            <div class="p-3 rounded-full bg-yellow-100 text-yellow-800 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0v10l-8 4m-8-4V7m8 4v10M4 7v10l8 4" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-gray-500 text-sm">Products Sold</p>
-                <span class="admin-data-label">Products Sold</span>
-                <span class="admin-data-value"><?php echo $totalProductsSold; ?></span>
-            </div>
-        </div>
+    <div class="metric-card">
+        <div class="metric-label">Total Customers</div>
+        <div class="metric-value text-yellow-600"><?php echo $totalCustomers; ?></div>
+        <div class="text-xs text-gray-500">All time</div>
     </div>
 </div>
 
-<!-- Revenue Over Time Chart -->
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <h2 class="text-lg font-medium text-gray-900 mb-4">Revenue Over Time</h2>
-    <div class="h-80">
-        <canvas id="revenueChart"></canvas>
-    </div>
-</div>
-
-<!-- Sales by Category Chart -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-    <div class="bg-white shadow rounded-lg p-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Sales by Category</h2>
-        <div class="h-64">
-            <canvas id="categorySalesChart"></canvas>
-        </div>
-    </div>
-    
-    <div class="bg-white shadow rounded-lg p-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Geographic Sales Distribution</h2>
-        <div class="h-64">
-            <canvas id="regionSalesChart"></canvas>
-        </div>
+<!-- Sales Over Time Chart -->
+<div class="report-card">
+    <h3 class="report-card-title">Sales Over Time</h3>
+    <div class="chart-container">
+        <canvas id="salesChart"></canvas>
     </div>
 </div>
 
 <!-- Top Products -->
-<div class="bg-white shadow rounded-lg overflow-hidden mb-6">
-    <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
-            Top Selling Products
-        </h3>
-        <p class="mt-1 max-w-2xl text-sm text-gray-500">
-            Products with the highest revenue during the selected period
-        </p>
-    </div>
-    
+<div class="report-card">
+    <h3 class="report-card-title">Top Selling Products</h3>
     <?php if (empty($topProducts)): ?>
-        <div class="p-6 text-center text-gray-500 italic">
-            No product sales data available for the selected period.
-        </div>
+        <p class="text-gray-500 italic">No product sales data available for the selected period.</p>
     <?php else: ?>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Units Sold</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity Sold</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">% of Total</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <?php 
-                    $rank = 1;
-                    foreach ($topProducts as $productId => $product): 
-                        $percentOfTotal = $totalRevenue > 0 ? ($product['revenue'] / $totalRevenue) * 100 : 0;
-                    ?>
+                    <?php foreach ($topProducts as $productId => $data): ?>
                         <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <?php echo htmlspecialchars($productNames[$productId] ?? "Product ID: $productId"); ?>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                #<?php echo $rank++; ?>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($product['name']); ?></div>
-                                <div class="text-sm text-gray-500">ID: <?php echo htmlspecialchars($productId); ?></div>
+                                <?php echo $data['quantity']; ?>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <?php echo $product['quantity']; ?>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                $<?php echo number_format($product['revenue'], 2); ?>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                <?php echo number_format($percentOfTotal, 1); ?>%
+                                $<?php echo number_format($data['revenue'], 2); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -422,55 +285,43 @@ $regionRevenues = array_map(function($item) {
     <?php endif; ?>
 </div>
 
-<!-- Top Customers -->
-<div class="bg-white shadow rounded-lg overflow-hidden mb-6">
-    <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
-            Top Customers
-        </h3>
-        <p class="mt-1 max-w-2xl text-sm text-gray-500">
-            Customers with the highest spending during the selected period
-        </p>
-    </div>
-    
-    <?php if (empty($topCustomers)): ?>
-        <div class="p-6 text-center text-gray-500 italic">
-            No customer data available for the selected period.
-        </div>
+<!-- Low Stock Alerts -->
+<div class="report-card">
+    <h3 class="report-card-title">Inventory Alerts</h3>
+    <?php if (empty($lowStockProducts)): ?>
+        <p class="text-gray-500 italic">No low stock alerts at this time.</p>
     <?php else: ?>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spent</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Order Value</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Stock</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reorder Point</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <?php 
-                    $rank = 1;
-                    foreach ($topCustomers as $customerId => $customer): 
-                        $avgOrderValue = $customer['orders'] > 0 ? $customer['revenue'] / $customer['orders'] : 0;
+                    <?php foreach ($lowStockProducts as $product): 
+                        $stockLevel = intval($product['stockLevel'] ?? 0);
+                        $reorderPoint = intval($product['reorderPoint'] ?? 0);
+                        $status = $stockLevel === 0 ? 'Out of Stock' : 'Low Stock';
+                        $statusColor = $stockLevel === 0 ? 'red' : 'yellow';
                     ?>
                         <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <?php echo htmlspecialchars($product['name'] ?? "Unknown Product"); ?>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                #<?php echo $rank++; ?>
+                                <?php echo $stockLevel; ?>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <?php echo $reorderPoint; ?>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($customer['name']); ?></div>
-                                <div class="text-sm text-gray-500">ID: <?php echo htmlspecialchars($customerId); ?></div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <?php echo $customer['orders']; ?>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                $<?php echo number_format($customer['revenue'], 2); ?>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                $<?php echo number_format($avgOrderValue, 2); ?>
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-<?php echo $statusColor; ?>-100 text-<?php echo $statusColor; ?>-800">
+                                    <?php echo $status; ?>
+                                </span>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -480,37 +331,35 @@ $regionRevenues = array_map(function($item) {
     <?php endif; ?>
 </div>
 
-<!-- Include Chart.js -->
+<!-- Chart.js for Sales Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-    // Toggle custom date inputs based on time period selection
-    function toggleCustomDateInputs() {
-        const timePeriod = document.getElementById('time_period').value;
-        const customDateContainer = document.getElementById('custom_date_container');
-        
-        if (timePeriod === 'custom') {
-            customDateContainer.classList.remove('hidden');
-        } else {
-            customDateContainer.classList.add('hidden');
-        }
-    }
-    
-    // Revenue over time chart
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    const revenueChart = new Chart(revenueCtx, {
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: <?php echo json_encode($salesDates); ?>,
-            datasets: [{
-                label: 'Daily Revenue',
-                data: <?php echo json_encode($salesValues); ?>,
-                backgroundColor: 'rgba(107, 142, 35, 0.2)',
-                borderColor: 'rgba(107, 142, 35, 1)',
-                borderWidth: 2,
-                tension: 0.4,
-                pointBackgroundColor: 'rgba(107, 142, 35, 1)'
-            }]
+            labels: <?php echo $chartLabelsJson; ?>,
+            datasets: [
+                {
+                    label: 'Orders',
+                    data: <?php echo $chartDataJson; ?>,
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Revenue',
+                    data: <?php echo $chartRevenueJson; ?>,
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    yAxisID: 'y1'
+                }
+            ]
         },
         options: {
             responsive: true,
@@ -518,164 +367,25 @@ $regionRevenues = array_map(function($item) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value;
-                        }
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Orders'
                     }
                 },
-                x: {
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Revenue: $' + context.parsed.y.toFixed(2);
-                        }
-                    }
-                }
-            }
-        }
-    });
-    
-    // Category sales chart
-    const categoryCtx = document.getElementById('categorySalesChart').getContext('2d');
-    const categorySalesChart = new Chart(categoryCtx, {
-        type: 'pie',
-        data: {
-            labels: <?php echo json_encode($categoryNames); ?>,
-            datasets: [{
-                data: <?php echo json_encode($categoryRevenues); ?>,
-                backgroundColor: [
-                    'rgba(107, 142, 35, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(153, 102, 255, 0.7)',
-                    'rgba(255, 159, 64, 0.7)',
-                    'rgba(199, 199, 199, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(107, 142, 35, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)',
-                    'rgba(199, 199, 199, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const value = context.parsed;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return context.label + ': $' + value.toFixed(2) + ' (' + percentage + '%)';
-                        }
-                    }
-                }
-            }
-        }
-    });
-    
-    // Region sales chart
-    const regionCtx = document.getElementById('regionSalesChart').getContext('2d');
-    const regionSalesChart = new Chart(regionCtx, {
-        type: 'bar',
-        data: {
-            labels: <?php echo json_encode($regionNames); ?>,
-            datasets: [{
-                label: 'Revenue by Region',
-                data: <?php echo json_encode($regionRevenues); ?>,
-                backgroundColor: 'rgba(107, 142, 35, 0.7)',
-                borderColor: 'rgba(107, 142, 35, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
+                y1: {
                     beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value;
-                        }
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Revenue: $' + context.parsed.y.toFixed(2);
-                        }
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Revenue ($)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
                     }
                 }
             }
         }
     });
-    
-    // Export report as CSV
-    function exportReportCSV() {
-        // In a real application, this would generate a CSV file with report data
-        // For now, we'll just show an alert
-        alert('CSV export functionality would be implemented here.');
-        
-        // Example implementation would include:
-        // 1. Collect all report data
-        // 2. Format as CSV
-        // 3. Create a download link with the CSV data
-        // 4. Trigger the download
-    }
-    
-    // Print report
-    function printReport() {
-        window.print();
-    }
+});
 </script>
-
-<style>
-    @media print {
-        .no-print, .no-print * {
-            display: none !important;
-        }
-        
-        body {
-            background-color: white;
-        }
-        
-        .shadow {
-            box-shadow: none !important;
-        }
-        
-        .rounded-lg {
-            border-radius: 0 !important;
-        }
-        
-        .mb-6 {
-            margin-bottom: 1rem !important;
-        }
-    }
-    
-    .admin-data-label {
-        color: #222 !important;
-    }
-    .admin-data-value {
-        color: #c00 !important;
-        font-weight: bold;
-    }
-</style>

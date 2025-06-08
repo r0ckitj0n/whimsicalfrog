@@ -7,14 +7,54 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
-// Fetch orders, users, and inventory data from Node API (MySQL)
-$apiBase = 'https://whimsicalfrog.us';
-$ordersJson = @file_get_contents($apiBase . '/api/sales_orders');
-$ordersData = $ordersJson ? json_decode($ordersJson, true) : [];
-$customersJson = @file_get_contents($apiBase . '/api/users');
-$customersData = $customersJson ? json_decode($customersJson, true) : [];
-$inventoryJson = @file_get_contents($apiBase . '/api/inventory');
-$inventoryData = $inventoryJson ? json_decode($inventoryJson, true) : [];
+// Include database configuration
+require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
+
+// Initialize arrays to prevent null values
+$ordersData = [];
+$customersData = [];
+$inventoryData = [];
+
+try {
+    // Create a PDO connection
+    $pdo = new PDO($dsn, $user, $pass, $options);
+    
+    // Fetch orders data directly from database
+    $ordersStmt = $pdo->query('SELECT * FROM orders');
+    $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // For each order, get its items
+    foreach ($ordersData as &$order) {
+        $itemsStmt = $pdo->prepare('SELECT * FROM order_items WHERE orderId = ?');
+        $itemsStmt->execute([$order['id']]);
+        $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Convert shippingAddress from JSON string to array if it exists
+        if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
+            $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
+        }
+    }
+    
+    // Fetch customers/users data directly from database
+    $usersStmt = $pdo->query('SELECT * FROM users');
+    $customersData = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch inventory data directly from database
+    $inventoryStmt = $pdo->query('SELECT * FROM inventory');
+    $inventoryData = $inventoryStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Close the connection
+    $pdo = null;
+} catch (PDOException $e) {
+    error_log('Database Error: ' . $e->getMessage());
+} catch (Exception $e) {
+    error_log('General Error: ' . $e->getMessage());
+}
+
+// Ensure arrays are never null
+$ordersData = is_array($ordersData) ? $ordersData : [];
+$customersData = is_array($customersData) ? $customersData : [];
+$inventoryData = is_array($inventoryData) ? $inventoryData : [];
 
 // Handle search/filter
 $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
@@ -26,13 +66,13 @@ if (!empty($searchTerm)) {
     $ordersData = array_filter($ordersData, function($order) use ($searchTerm) {
         // Search in order ID, customer name, or email
         $orderId = $order['id'] ?? '';
-        $customerId = $order['customerId'] ?? '';
+        $userId = $order['userId'] ?? '';
         
         // Find customer info
         $customerName = '';
         $customerEmail = '';
         foreach ($GLOBALS['customersData'] as $customer) {
-            if (($customer['id'] ?? '') == $customerId) {
+            if (($customer['id'] ?? '') == $userId) {
                 $customerName = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
                 $customerEmail = $customer['email'] ?? '';
                 break;
@@ -87,17 +127,17 @@ usort($ordersData, function($a, $b) use ($sortBy, $sortDir) {
             $valB = $b['id'] ?? '';
             break;
         case 'customer':
-            $customerIdA = $a['customerId'] ?? '';
-            $customerIdB = $b['customerId'] ?? '';
+            $userIdA = $a['userId'] ?? '';
+            $userIdB = $b['userId'] ?? '';
             
             $customerNameA = '';
             $customerNameB = '';
             
             foreach ($GLOBALS['customersData'] as $customer) {
-                if (($customer['id'] ?? '') == $customerIdA) {
+                if (($customer['id'] ?? '') == $userIdA) {
                     $customerNameA = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
                 }
-                if (($customer['id'] ?? '') == $customerIdB) {
+                if (($customer['id'] ?? '') == $userIdB) {
                     $customerNameB = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
                 }
             }
@@ -153,9 +193,9 @@ function getSortIndicator($column, $currentSort, $currentDir) {
 }
 
 // Helper function to get customer name from ID
-function getCustomerName($customerId, $customersData) {
+function getCustomerName($userId, $customersData) {
     foreach ($customersData as $customer) {
-        if (($customer['id'] ?? '') == $customerId) {
+        if (($customer['id'] ?? '') == $userId) {
             return ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
         }
     }
@@ -178,9 +218,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
     $newStatus = $_POST['status'] ?? '';
     $trackingNumber = $_POST['tracking_number'] ?? '';
     
-    // In a real application, this would update the database
-    // For now, we'll just show a success message
-    $updateSuccess = true;
+    try {
+        // Create a PDO connection
+        $pdo = new PDO($dsn, $user, $pass, $options);
+        
+        // Update order status in database
+        $stmt = $pdo->prepare('UPDATE orders SET status = ?, trackingNumber = ? WHERE id = ?');
+        $result = $stmt->execute([$newStatus, $trackingNumber, $orderId]);
+        
+        // Close the connection
+        $pdo = null;
+        
+        if ($result) {
+            $updateSuccess = true;
+            
+            // Update the order in the array to reflect changes
+            foreach ($ordersData as &$order) {
+                if (($order['id'] ?? '') == $orderId) {
+                    $order['status'] = $newStatus;
+                    $order['trackingNumber'] = $trackingNumber;
+                    break;
+                }
+            }
+        } else {
+            $updateError = 'Failed to update order status.';
+        }
+    } catch (PDOException $e) {
+        $updateError = 'Database error: ' . $e->getMessage();
+    } catch (Exception $e) {
+        $updateError = 'Unexpected error: ' . $e->getMessage();
+    }
 }
 ?>
 
@@ -308,13 +375,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
                     <?php foreach ($paginatedOrders as $order): 
                         $orderId = $order['id'] ?? '';
                         $orderDate = $order['date'] ?? '';
-                        $customerId = $order['customerId'] ?? '';
+                        $userId = $order['userId'] ?? '';
                         $total = $order['total'] ?? 0;
                         $status = $order['status'] ?? 'Pending';
                         $paymentStatus = $order['paymentStatus'] ?? $order['payment_status'] ?? 'Pending';
                         
                         // Get customer name
-                        $customerName = getCustomerName($customerId, $customersData);
+                        $customerName = getCustomerName($userId, $customersData);
                     ?>
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -325,7 +392,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status']
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($customerName); ?></div>
-                                <div class="text-sm text-gray-500">ID: <span class="admin-data-value"><?php echo htmlspecialchars($customerId); ?></span></div>
+                                <div class="text-sm text-gray-500">ID: <span class="admin-data-value"><?php echo htmlspecialchars($userId); ?></span></div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 <span class="admin-data-value">$<?php echo number_format(floatval($total), 2); ?></span>
@@ -454,7 +521,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
     }
     
     if ($orderData) {
-        $customerId = $orderData['customerId'] ?? '';
+        $userId = $orderData['userId'] ?? '';
         $orderDate = $orderData['date'] ?? '';
         $orderStatus = $orderData['status'] ?? 'Pending';
         $orderTotal = $orderData['total'] ?? 0;
@@ -465,10 +532,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
         $paymentMethod = $orderData['paymentMethod'] ?? 'Credit Card';
         
         // Get customer info
-        $customerName = getCustomerName($customerId, $customersData);
+        $customerName = getCustomerName($userId, $customersData);
         $customerEmail = '';
         foreach ($customersData as $customer) {
-            if (($customer['id'] ?? '') == $customerId) {
+            if (($customer['id'] ?? '') == $userId) {
                 $customerEmail = $customer['email'] ?? '';
                 break;
             }
@@ -574,7 +641,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                     </div>
                 </div>
             </div>
-            <a href="/?page=admin&section=customers&action=view&id=<?php echo $customerId; ?>" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+            <a href="/?page=admin&section=customers&action=view&id=<?php echo $userId; ?>" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
                 <span class="admin-data-label">View Customer Profile</span> →
             </a>
         </div>
@@ -623,18 +690,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                 <script>
                 document.getElementById('markPaymentReceivedBtn').onclick = async function() {
                     if (!confirm('Mark payment as received for this order?')) return;
-                    const apiBase = 'https://whimsicalfrog.us';
-                    const response = await fetch(apiBase + '/api/update-payment-status', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId: <?php echo json_encode($orderId); ?>, newStatus: 'Received' })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        alert('Payment marked as received!');
-                        location.reload();
-                    } else {
-                        alert('Error: ' + (data.error || 'Unknown error'));
+                    try {
+                        const response = await fetch('/api/update-payment-status.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ orderId: <?php echo json_encode($orderId); ?>, newStatus: 'Received' })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            alert('Payment marked as received!');
+                            location.reload();
+                        } else {
+                            alert('Error: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        alert('Error updating payment status: ' + error.message);
                     }
                 };
                 </script>

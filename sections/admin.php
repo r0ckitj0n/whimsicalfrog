@@ -2,10 +2,49 @@
 // Admin Dashboard
 // This page provides comprehensive management tools for administrators
 
-// Fetch summary data for dashboard metrics
-$inventoryData = fetchData('inventory') ?? [];
-$ordersData = fetchData('sales_orders') ?? [];
-$customersData = fetchData('users') ?? [];
+// Include database configuration
+require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
+
+// Initialize arrays to prevent null values
+$inventoryData = [];
+$ordersData = [];
+$customersData = [];
+
+try {
+    // Create a PDO connection
+    $pdo = new PDO($dsn, $user, $pass, $options);
+    
+    // Fetch inventory data directly from database
+    $stmt = $pdo->query('SELECT * FROM inventory');
+    $inventoryData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch orders data directly from database
+    $ordersStmt = $pdo->query('SELECT * FROM orders');
+    $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // For each order, get its items
+    foreach ($ordersData as &$order) {
+        $itemsStmt = $pdo->prepare('SELECT * FROM order_items WHERE orderId = ?');
+        $itemsStmt->execute([$order['id']]);
+        $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Convert shippingAddress from JSON string to array if it exists
+        if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
+            $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
+        }
+    }
+    
+    // Fetch customers/users data directly from database
+    $usersStmt = $pdo->query('SELECT * FROM users');
+    $customersData = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Close the connection
+    $pdo = null;
+} catch (PDOException $e) {
+    error_log('Database Error: ' . $e->getMessage());
+} catch (Exception $e) {
+    error_log('General Error: ' . $e->getMessage());
+}
 
 // Calculate metrics
 $totalProducts = count($inventoryData);

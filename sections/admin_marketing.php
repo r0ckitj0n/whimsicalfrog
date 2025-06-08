@@ -1,6 +1,28 @@
 <?php
 // Include database configuration
-require_once 'api/config.php';
+require_once '../api/config.php'; // Corrected path: from sections/admin_marketing.php to api/config.php
+
+// Initialize all variables to prevent undefined variable errors
+$customerCount = 0;
+$orderCount = 0;
+$totalSales = 0;
+$productCount = 0;
+$recentOrders = [];
+$monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]; // Default labels
+$salesData = [0, 0, 0, 0, 0, 0]; // Default data
+$topProducts = [];
+
+$emailCampaignsExist = false;
+$discountCodesExist = false;
+$socialAccountsExist = false; // Used for social_accounts and social_posts tables
+
+$emailCampaigns = [];
+$emailSubscribers = [];
+$discountCodes = [];
+$socialAccounts = [];
+$socialPosts = [];
+
+$allMarketingTablesExist = false; // Flag to hide setup button
 
 // Connect to database
 try {
@@ -8,17 +30,17 @@ try {
     
     // Get customer count
     $customerStmt = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'Customer' OR roleType = 'Customer'");
-    $customerCount = $customerStmt->fetchColumn();
+    $customerCount = $customerStmt->fetchColumn() ?: 0;
     
     // Check if orders table exists
     $orderTableExists = false;
-    $stmt = $pdo->query("SHOW TABLES LIKE 'orders'");
-    if ($stmt->rowCount() > 0) {
+    $stmtOrderCheck = $pdo->query("SHOW TABLES LIKE 'orders'");
+    if ($stmtOrderCheck->rowCount() > 0) {
         $orderTableExists = true;
         
         // Get orders count
         $orderStmt = $pdo->query("SELECT COUNT(*) FROM orders");
-        $orderCount = $orderStmt->fetchColumn();
+        $orderCount = $orderStmt->fetchColumn() ?: 0;
         
         // Get total sales
         $salesStmt = $pdo->query("SELECT SUM(totalAmount) FROM orders");
@@ -30,7 +52,7 @@ try {
                                         LEFT JOIN users u ON o.userId = u.id 
                                         ORDER BY o.orderDate DESC 
                                         LIMIT 5");
-        $recentOrders = $recentOrdersStmt->fetchAll(PDO::FETCH_ASSOC);
+        $recentOrders = $recentOrdersStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         
         // Get monthly sales data
         $monthlySalesStmt = $pdo->query("SELECT 
@@ -40,22 +62,17 @@ try {
                                         WHERE orderDate >= DATE_SUB(NOW(), INTERVAL 6 MONTH) 
                                         GROUP BY MONTH(orderDate) 
                                         ORDER BY month");
-        $monthlySales = $monthlySalesStmt->fetchAll(PDO::FETCH_ASSOC);
+        $monthlySalesData = $monthlySalesStmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Format monthly data for chart
-        $monthLabels = [];
-        $salesData = [];
-        
-        foreach ($monthlySales as $data) {
-            $monthName = date("M", mktime(0, 0, 0, $data['month'], 10));
-            $monthLabels[] = $monthName;
-            $salesData[] = $data['total'];
-        }
-        
-        // If no monthly sales data, provide empty arrays
-        if (empty($monthLabels)) {
-            $monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-            $salesData = [0, 0, 0, 0, 0, 0];
+        if (!empty($monthlySalesData)) {
+            $monthLabels = []; // Reset default
+            $salesData = [];   // Reset default
+            foreach ($monthlySalesData as $data) {
+                $monthName = date("M", mktime(0, 0, 0, $data['month'], 10));
+                $monthLabels[] = $monthName;
+                $salesData[] = $data['total'];
+            }
         }
         
         // Get top products
@@ -65,88 +82,60 @@ try {
                                         GROUP BY oi.productId
                                         ORDER BY orderCount DESC
                                         LIMIT 5");
-        $topProducts = $topProductsStmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        // Default values if orders table doesn't exist
-        $orderCount = 0;
-        $totalSales = 0;
-        $recentOrders = [];
-        $monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-        $salesData = [0, 0, 0, 0, 0, 0];
-        $topProducts = [];
+        $topProducts = $topProductsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
     
     // Get product count
     $productStmt = $pdo->query("SELECT COUNT(*) FROM products");
-    $productCount = $productStmt->fetchColumn();
-    
-    // Check if marketing tables exist and get data
-    $emailCampaignsExist = false;
-    $discountCodesExist = false;
-    $socialAccountsExist = false;
-    
-    $emailCampaigns = [];
-    $emailSubscribers = [];
-    $discountCodes = [];
-    $socialAccounts = [];
-    $socialPosts = [];
+    $productCount = $productStmt->fetchColumn() ?: 0;
     
     // Check for email_campaigns table
-    $stmt = $pdo->query("SHOW TABLES LIKE 'email_campaigns'");
-    if ($stmt->rowCount() > 0) {
+    $stmtEmailCheck = $pdo->query("SHOW TABLES LIKE 'email_campaigns'");
+    if ($stmtEmailCheck->rowCount() > 0) {
         $emailCampaignsExist = true;
-        
-        // Get email campaigns
         $campaignsStmt = $pdo->query("SELECT * FROM email_campaigns ORDER BY created_date DESC");
-        $emailCampaigns = $campaignsStmt->fetchAll(PDO::FETCH_ASSOC);
+        $emailCampaigns = $campaignsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         
-        // Get email subscribers
-        $subscribersStmt = $pdo->query("SELECT * FROM email_subscribers WHERE status = 'active'");
-        $emailSubscribers = $subscribersStmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmtSubscribersCheck = $pdo->query("SHOW TABLES LIKE 'email_subscribers'");
+        if($stmtSubscribersCheck->rowCount() > 0) {
+            $subscribersStmt = $pdo->query("SELECT * FROM email_subscribers WHERE status = 'active'");
+            $emailSubscribers = $subscribersStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        }
     }
     
     // Check for discount_codes table
-    $stmt = $pdo->query("SHOW TABLES LIKE 'discount_codes'");
-    if ($stmt->rowCount() > 0) {
+    $stmtDiscountCheck = $pdo->query("SHOW TABLES LIKE 'discount_codes'");
+    if ($stmtDiscountCheck->rowCount() > 0) {
         $discountCodesExist = true;
-        
-        // Get discount codes
         $codesStmt = $pdo->query("SELECT * FROM discount_codes ORDER BY start_date DESC");
-        $discountCodes = $codesStmt->fetchAll(PDO::FETCH_ASSOC);
+        $discountCodes = $codesStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
     
-    // Check for social_accounts table
-    $stmt = $pdo->query("SHOW TABLES LIKE 'social_accounts'");
-    if ($stmt->rowCount() > 0) {
-        $socialAccountsExist = true;
+    // Check for social_accounts and social_posts tables
+    $stmtSocialAccountsCheck = $pdo->query("SHOW TABLES LIKE 'social_accounts'");
+    $stmtSocialPostsCheck = $pdo->query("SHOW TABLES LIKE 'social_posts'");
+    if ($stmtSocialAccountsCheck->rowCount() > 0 && $stmtSocialPostsCheck->rowCount() > 0) {
+        $socialAccountsExist = true; // This flag controls display of social media section
         
-        // Get social accounts
         $accountsStmt = $pdo->query("SELECT * FROM social_accounts");
-        $socialAccounts = $accountsStmt->fetchAll(PDO::FETCH_ASSOC);
+        $socialAccounts = $accountsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         
-        // Get social posts
         $postsStmt = $pdo->query("SELECT * FROM social_posts ORDER BY scheduled_date DESC");
-        $socialPosts = $postsStmt->fetchAll(PDO::FETCH_ASSOC);
+        $socialPosts = $postsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    // Check if all marketing tables exist to hide the setup button
+    if ($emailCampaignsExist && $discountCodesExist && $socialAccountsExist) {
+        $allMarketingTablesExist = true;
     }
     
 } catch (PDOException $e) {
-    // Handle database errors
-    $customerCount = 0;
-    $orderCount = 0;
-    $totalSales = 0;
-    $productCount = 0;
-    $recentOrders = [];
-    $monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-    $salesData = [0, 0, 0, 0, 0, 0];
-    $topProducts = [];
-    $emailCampaigns = [];
-    $emailSubscribers = [];
-    $discountCodes = [];
-    $socialAccounts = [];
-    $socialPosts = [];
+    // Log error, don't display to user directly for security
+    error_log("Marketing Page Database Error: " . $e->getMessage());
+    // Variables will retain their initialized default values (0, empty arrays, false)
 }
 
-// Generate unique IDs for new items
+// Function to generate unique IDs for new items
 function generateId($prefix, $length = 3) {
     $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $id = $prefix;
@@ -383,8 +372,8 @@ function generateId($prefix, $length = 3) {
                                         <td><?php echo htmlspecialchars($campaign['name']); ?></td>
                                         <td><?php echo htmlspecialchars($campaign['subject']); ?></td>
                                         <td>
-                                            <span class="status-badge status-<?php echo $campaign['status']; ?>">
-                                                <?php echo ucfirst($campaign['status']); ?>
+                                            <span class="status-badge status-<?php echo htmlspecialchars($campaign['status']); ?>">
+                                                <?php echo ucfirst(htmlspecialchars($campaign['status'])); ?>
                                             </span>
                                         </td>
                                         <td><?php echo date('M d, Y', strtotime($campaign['created_date'])); ?></td>
@@ -415,11 +404,13 @@ function generateId($prefix, $length = 3) {
                             </tbody>
                         </table>
                     <?php endif; ?>
-                <?php else: ?>
+                <?php elseif (!$allMarketingTablesExist): // Show setup button only if not all tables exist ?>
                     <div class="setup-notice">
                         <p>Email campaign features require database setup.</p>
                         <a href="setup_marketing_tables.php" class="button primary">Setup Marketing Tables</a>
                     </div>
+                <?php else: // Tables for this specific feature might be missing, but others exist ?>
+                     <p class="no-data">Email campaigns table not found. Please ensure marketing tables are fully set up.</p>
                 <?php endif; ?>
             </div>
             
@@ -537,7 +528,7 @@ function generateId($prefix, $length = 3) {
                                         <td>
                                             <?php 
                                             if ($code['type'] === 'percentage') {
-                                                echo $code['value'] . '%';
+                                                echo htmlspecialchars($code['value']) . '%';
                                             } else {
                                                 echo '$' . number_format($code['value'], 2);
                                             }
@@ -546,9 +537,9 @@ function generateId($prefix, $length = 3) {
                                         <td>
                                             <?php 
                                             if ($code['max_uses'] > 0) {
-                                                echo $code['current_uses'] . '/' . $code['max_uses'];
+                                                echo htmlspecialchars($code['current_uses']) . '/' . htmlspecialchars($code['max_uses']);
                                             } else {
-                                                echo $code['current_uses'] . '/∞';
+                                                echo htmlspecialchars($code['current_uses']) . '/∞';
                                             }
                                             ?>
                                         </td>
@@ -559,8 +550,8 @@ function generateId($prefix, $length = 3) {
                                             ?>
                                         </td>
                                         <td>
-                                            <span class="status-badge status-<?php echo $code['status']; ?>">
-                                                <?php echo ucfirst($code['status']); ?>
+                                            <span class="status-badge status-<?php echo htmlspecialchars($code['status']); ?>">
+                                                <?php echo ucfirst(htmlspecialchars($code['status'])); ?>
                                             </span>
                                         </td>
                                         <td class="actions">
@@ -576,11 +567,13 @@ function generateId($prefix, $length = 3) {
                             </tbody>
                         </table>
                     <?php endif; ?>
-                <?php else: ?>
+                <?php elseif (!$allMarketingTablesExist): ?>
                     <div class="setup-notice">
                         <p>Discount code features require database setup.</p>
                         <a href="setup_marketing_tables.php" class="button primary">Setup Marketing Tables</a>
                     </div>
+                <?php else: ?>
+                    <p class="no-data">Discount codes table not found. Please ensure marketing tables are fully set up.</p>
                 <?php endif; ?>
             </div>
         </div>
@@ -606,11 +599,11 @@ function generateId($prefix, $length = 3) {
                             <?php foreach ($socialAccounts as $account): ?>
                                 <div class="social-account-card <?php echo $account['connected'] ? 'connected' : 'disconnected'; ?>">
                                     <div class="platform-icon">
-                                        <i class="fab fa-<?php echo strtolower($account['platform']); ?>"></i>
+                                        <i class="fab fa-<?php echo strtolower(htmlspecialchars($account['platform'])); ?>"></i>
                                     </div>
                                     <div class="account-info">
                                         <h4><?php echo htmlspecialchars($account['account_name']); ?></h4>
-                                        <p><?php echo ucfirst($account['platform']); ?></p>
+                                        <p><?php echo ucfirst(htmlspecialchars($account['platform'])); ?></p>
                                         <span class="connection-status">
                                             <?php echo $account['connected'] ? 'Connected' : 'Disconnected'; ?>
                                         </span>
@@ -630,11 +623,13 @@ function generateId($prefix, $length = 3) {
                             <i class="fas fa-plus"></i> Add Account
                         </button>
                     </div>
-                <?php else: ?>
+                <?php elseif (!$allMarketingTablesExist): ?>
                     <div class="setup-notice">
                         <p>Social media features require database setup.</p>
                         <a href="setup_marketing_tables.php" class="button primary">Setup Marketing Tables</a>
                     </div>
+                <?php else: ?>
+                     <p class="no-data">Social media tables not found. Please ensure marketing tables are fully set up.</p>
                 <?php endif; ?>
             </div>
             
@@ -651,8 +646,8 @@ function generateId($prefix, $length = 3) {
                             <select id="post-platform" name="platform" required>
                                 <?php foreach ($socialAccounts as $account): ?>
                                     <?php if ($account['connected']): ?>
-                                        <option value="<?php echo $account['platform']; ?>">
-                                            <?php echo ucfirst($account['platform']) . ' - ' . $account['account_name']; ?>
+                                        <option value="<?php echo htmlspecialchars($account['platform']); ?>">
+                                            <?php echo ucfirst(htmlspecialchars($account['platform'])) . ' - ' . htmlspecialchars($account['account_name']); ?>
                                         </option>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
@@ -704,10 +699,10 @@ function generateId($prefix, $length = 3) {
                                 <div class="social-post-card">
                                     <div class="post-header">
                                         <div class="platform-icon">
-                                            <i class="fab fa-<?php echo strtolower($post['platform']); ?>"></i>
+                                            <i class="fab fa-<?php echo strtolower(htmlspecialchars($post['platform'])); ?>"></i>
                                         </div>
                                         <div class="post-meta">
-                                            <span class="post-platform"><?php echo ucfirst($post['platform']); ?></span>
+                                            <span class="post-platform"><?php echo ucfirst(htmlspecialchars($post['platform'])); ?></span>
                                             <span class="post-date">
                                                 <?php 
                                                 if ($post['status'] === 'posted') {
@@ -719,8 +714,8 @@ function generateId($prefix, $length = 3) {
                                             </span>
                                         </div>
                                         <div class="post-status">
-                                            <span class="status-badge status-<?php echo $post['status']; ?>">
-                                                <?php echo ucfirst($post['status']); ?>
+                                            <span class="status-badge status-<?php echo htmlspecialchars($post['status']); ?>">
+                                                <?php echo ucfirst(htmlspecialchars($post['status'])); ?>
                                             </span>
                                         </div>
                                     </div>
@@ -796,10 +791,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set current date as default for date inputs
     const today = new Date().toISOString().split('T')[0];
-    if (document.getElementById('start-date')) {
+    if (document.getElementById('start-date')) { // For discount codes
         document.getElementById('start-date').value = today;
     }
-    if (document.getElementById('end-date')) {
+    if (document.getElementById('end-date')) { // For discount codes
         const nextMonth = new Date();
         nextMonth.setMonth(nextMonth.getMonth() + 1);
         document.getElementById('end-date').value = nextMonth.toISOString().split('T')[0];

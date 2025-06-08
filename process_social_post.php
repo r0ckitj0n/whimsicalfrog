@@ -7,20 +7,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Include database configuration
-require_once __DIR__ . '/../api/config.php'; // Adjusted path to be relative to this file
+require_once 'api/config.php'; // Corrected path for root directory file
 
 // Default response
 $response = ['success' => false, 'message' => 'An unknown error occurred.'];
-
-// Function to generate a unique ID if not provided
-function generatePostId($prefix = 'SP', $length = 7) {
-    $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    $id = $prefix;
-    for ($i = 0; $i < $length; $i++) {
-        $id .= $characters[rand(0, strlen($characters) - 1)];
-    }
-    return $id;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     try {
@@ -29,23 +19,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         if ($action === 'create') {
             // Validate required fields
-            $requiredFields = ['platform', 'content', 'scheduled_date', 'status'];
+            $requiredFields = ['id', 'platform', 'content', 'scheduled_date', 'status'];
             foreach ($requiredFields as $field) {
                 if (empty($_POST[$field])) {
                     throw new Exception("Missing required field: " . ucfirst(str_replace('_', ' ', $field)));
                 }
             }
 
-            $id = !empty($_POST['id']) ? $_POST['id'] : generatePostId();
+            $id = $_POST['id'];
             $platform = $_POST['platform'];
             $content = $_POST['content'];
-            $image_url = !empty($_POST['image_url']) ? $_POST['image_url'] : null;
+            $image_url = isset($_POST['image_url']) ? $_POST['image_url'] : null;
             $scheduled_date = date('Y-m-d H:i:s', strtotime($_POST['scheduled_date']));
             $status = $_POST['status'];
-            // posted_date is set when status becomes 'posted'
+            $posted_date = null;
 
-            $sql = "INSERT INTO social_posts (id, platform, content, image_url, scheduled_date, status, created_date) 
-                    VALUES (:id, :platform, :content, :image_url, :scheduled_date, :status, NOW())";
+            // Character limit validation for Twitter
+            if (strtolower($platform) === 'twitter' && strlen($content) > 280) {
+                throw new Exception("Twitter posts cannot exceed 280 characters.");
+            }
+
+            $sql = "INSERT INTO social_posts (id, platform, content, image_url, scheduled_date, posted_date, status, created_date) 
+                    VALUES (:id, :platform, :content, :image_url, :scheduled_date, :posted_date, :status, NOW())";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 ':id' => $id,
@@ -53,11 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 ':content' => $content,
                 ':image_url' => $image_url,
                 ':scheduled_date' => $scheduled_date,
+                ':posted_date' => $posted_date,
                 ':status' => $status
             ]);
 
-            $_SESSION['success_message'] = "Social post for {$platform} created successfully!";
-            $response = ['success' => true, 'message' => "Social post for {$platform} created successfully!"];
+            $_SESSION['success_message'] = "Social post created successfully!";
+            $response = ['success' => true, 'message' => "Social post created successfully!"];
 
         } elseif ($action === 'update') {
             // Validate required fields
@@ -71,50 +67,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $id = $_POST['id'];
             $platform = $_POST['platform'];
             $content = $_POST['content'];
-            $image_url = !empty($_POST['image_url']) ? $_POST['image_url'] : null;
+            $image_url = isset($_POST['image_url']) ? $_POST['image_url'] : null;
             $scheduled_date = date('Y-m-d H:i:s', strtotime($_POST['scheduled_date']));
             $status = $_POST['status'];
-            $posted_date = null;
+            $posted_date = isset($_POST['posted_date']) ? $_POST['posted_date'] : null;
 
-            // If status is changing to 'posted', set posted_date
-            if ($status === 'posted') {
-                $stmt_check_status = $pdo->prepare("SELECT status FROM social_posts WHERE id = :id");
-                $stmt_check_status->execute([':id' => $id]);
-                $current_post = $stmt_check_status->fetch(PDO::FETCH_ASSOC);
-                if ($current_post && $current_post['status'] !== 'posted') {
-                    $posted_date = date('Y-m-d H:i:s');
-                } elseif ($current_post && $current_post['status'] === 'posted' && isset($_POST['original_posted_date'])) {
-                    $posted_date = $_POST['original_posted_date']; // Keep original if already posted
-                }
+            // Character limit validation for Twitter
+            if (strtolower($platform) === 'twitter' && strlen($content) > 280) {
+                throw new Exception("Twitter posts cannot exceed 280 characters.");
             }
-
 
             $sql = "UPDATE social_posts SET 
                     platform = :platform, 
                     content = :content, 
                     image_url = :image_url, 
                     scheduled_date = :scheduled_date, 
-                    status = :status" .
-                    ($posted_date ? ", posted_date = :posted_date" : "") .
-                   " WHERE id = :id";
+                    posted_date = :posted_date, 
+                    status = :status 
+                    WHERE id = :id";
             $stmt = $pdo->prepare($sql);
-            
-            $params = [
+            $stmt->execute([
                 ':id' => $id,
                 ':platform' => $platform,
                 ':content' => $content,
                 ':image_url' => $image_url,
                 ':scheduled_date' => $scheduled_date,
+                ':posted_date' => $posted_date,
                 ':status' => $status
-            ];
-            if ($posted_date) {
-                $params[':posted_date'] = $posted_date;
-            }
-            
-            $stmt->execute($params);
+            ]);
 
-            $_SESSION['success_message'] = "Social post for {$platform} updated successfully!";
-            $response = ['success' => true, 'message' => "Social post for {$platform} updated successfully!"];
+            $_SESSION['success_message'] = "Social post updated successfully!";
+            $response = ['success' => true, 'message' => "Social post updated successfully!"];
 
         } elseif ($action === 'delete') {
             if (empty($_POST['id'])) {
@@ -132,29 +115,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             } else {
                 throw new Exception("Social post not found or already deleted.");
             }
-        } elseif ($action === 'post_now') { // Simulate posting now
+
+        } elseif ($action === 'publish_now') {
             if (empty($_POST['id'])) {
-                throw new Exception("Post ID is required to post now.");
+                throw new Exception("Post ID is required for publishing.");
             }
             $id = $_POST['id'];
+            $current_time = date('Y-m-d H:i:s');
 
-            $sql = "UPDATE social_posts SET status = 'posted', posted_date = NOW() WHERE id = :id AND status != 'posted'";
+            // In a real application, you would integrate with social media APIs here
+            // For this simulation, we'll just update the status and posted_date
+
+            $sql = "UPDATE social_posts SET status = 'posted', posted_date = :posted_date WHERE id = :id";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([':id' => $id]);
+            $stmt->execute([
+                ':posted_date' => $current_time,
+                ':id' => $id
+            ]);
 
             if ($stmt->rowCount() > 0) {
-                $_SESSION['success_message'] = "Social post marked as posted successfully!";
-                $response = ['success' => true, 'message' => "Social post marked as posted successfully!"];
+                $_SESSION['success_message'] = "Social post published successfully!";
+                $response = ['success' => true, 'message' => "Social post published successfully!"];
             } else {
-                 $stmt_check = $pdo->prepare("SELECT status FROM social_posts WHERE id = :id");
-                 $stmt_check->execute([':id' => $id]);
-                 $post_status = $stmt_check->fetchColumn();
-                 if ($post_status === 'posted') {
-                    throw new Exception("Social post was already posted.");
-                 } else {
-                    throw new Exception("Social post not found or could not be updated.");
-                 }
+                throw new Exception("Social post not found or already published.");
             }
+
         } else {
             throw new Exception("Invalid action specified.");
         }

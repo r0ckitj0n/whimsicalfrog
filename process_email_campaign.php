@@ -7,7 +7,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Include database configuration
-require_once __DIR__ . '/../api/config.php'; // Adjusted path to be relative to this file
+require_once 'api/config.php'; // Corrected path for root directory file
 
 // Default response
 $response = ['success' => false, 'message' => 'An unknown error occurred.'];

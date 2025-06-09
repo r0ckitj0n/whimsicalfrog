@@ -439,6 +439,14 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` VALUES ('U001','admin','pass.123','admin@whimsicalfrog.com','Admin','Admin','Admin4','WhimsicalFrog','4047878900','91 Singletree Lane','nothing','Dawsonville','GA','30534'),('U002','customer','pass.123','customer@example.com','Customer','Customer',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),('Uwc8nl7kg','sarah','pass.123','sarah@catn8.us','Customer','Customer','Sarah','Graves','6788979763','4765 Fourth Rail Ln','the end','Cumming','GA','30041');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Dumping events for database 'whimsicalfrog'
+--
+
+--
+-- Dumping routines for database 'whimsicalfrog'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -449,4 +457,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-08 21:21:26
+-- Dump completed on 2025-06-08 21:22:53

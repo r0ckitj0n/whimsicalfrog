@@ -47,10 +47,10 @@ if (isset($_GET['view']) && !empty($_GET['view'])) {
         $equipmentStmt->execute([$editItem['id']]);
         $equipment = $equipmentStmt->fetchAll(PDO::FETCH_ASSOC);
         
-        $materialTotal = 0; foreach ($materials as $item) { $materialTotal += floatval($item['cost']); }
-        $laborTotal = 0; foreach ($labor as $item) { $laborTotal += floatval($item['cost']); }
-        $energyTotal = 0; foreach ($energy as $item) { $energyTotal += floatval($item['cost']); }
-        $equipmentTotal = 0; foreach ($equipment as $item) { $equipmentTotal += floatval($item['cost']); }
+        $materialTotal = 0; foreach ($materials as $item_cost) { $materialTotal += floatval($item_cost['cost']); }
+        $laborTotal = 0; foreach ($labor as $item_cost) { $laborTotal += floatval($item_cost['cost']); }
+        $energyTotal = 0; foreach ($energy as $item_cost) { $energyTotal += floatval($item_cost['cost']); }
+        $equipmentTotal = 0; foreach ($equipment as $item_cost) { $equipmentTotal += floatval($item_cost['cost']); }
         $suggestedCost = $materialTotal + $laborTotal + $energyTotal + $equipmentTotal;
         
         $editCostBreakdown = [
@@ -91,10 +91,10 @@ elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
         $equipmentStmt->execute([$editItem['id']]);
         $equipment = $equipmentStmt->fetchAll(PDO::FETCH_ASSOC);
         
-        $materialTotal = 0; foreach ($materials as $item) { $materialTotal += floatval($item['cost']); }
-        $laborTotal = 0; foreach ($labor as $item) { $laborTotal += floatval($item['cost']); }
-        $energyTotal = 0; foreach ($energy as $item) { $energyTotal += floatval($item['cost']); }
-        $equipmentTotal = 0; foreach ($equipment as $item) { $equipmentTotal += floatval($item['cost']); }
+        $materialTotal = 0; foreach ($materials as $item_cost) { $materialTotal += floatval($item_cost['cost']); }
+        $laborTotal = 0; foreach ($labor as $item_cost) { $laborTotal += floatval($item_cost['cost']); }
+        $energyTotal = 0; foreach ($energy as $item_cost) { $energyTotal += floatval($item_cost['cost']); }
+        $equipmentTotal = 0; foreach ($equipment as $item_cost) { $equipmentTotal += floatval($item_cost['cost']); }
         $suggestedCost = $materialTotal + $laborTotal + $energyTotal + $equipmentTotal;
         
         $editCostBreakdown = [
@@ -306,7 +306,7 @@ $messageType = $_GET['type'] ?? '';
                     <tr><td colspan="8" class="text-center py-4">No inventory items found matching your criteria.</td></tr>
                 <?php else: ?>
                     <?php foreach ($inventoryItems as $item): ?>
-                    <tr data-id="<?= htmlspecialchars($item['id']) ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'highlight' : '' ?>">
+                    <tr data-id="<?= htmlspecialchars($item['id']) ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'bg-yellow-100' : '' ?>">
                         <td class="editable" data-field="name"><?= htmlspecialchars($item['name']) ?></td>
                         <td class="editable" data-field="category"><?= htmlspecialchars($item['category']) ?></td>
                         <td><?= htmlspecialchars($item['sku']) ?></td> <!-- SKU not typically inline editable -->
@@ -407,11 +407,11 @@ $messageType = $_GET['type'] ?? '';
                         <h4 class="font-semibold text-gray-700 mb-1 text-sm"><?= ucfirst($costType); ?></h4>
                         <div class="mb-2" id="view_<?= $costType; ?>List" style="max-height: 100px; overflow-y: auto;">
                             <?php if (!empty($editCostBreakdown[$costType])): ?>
-                                <?php foreach ($editCostBreakdown[$costType] as $item): ?>
+                                <?php foreach ($editCostBreakdown[$costType] as $item_cost): ?>
                                 <div class="cost-item">
-                                    <span class="cost-item-name"><?= htmlspecialchars($costType === 'materials' ? $item['name'] : $item['description']) ?></span>
+                                    <span class="cost-item-name"><?= htmlspecialchars($costType === 'materials' ? $item_cost['name'] : $item_cost['description']) ?></span>
                                     <div class="cost-item-actions">
-                                        <span class="cost-item-value">$<?= number_format(floatval($item['cost']), 2) ?></span>
+                                        <span class="cost-item-value">$<?= number_format(floatval($item_cost['cost']), 2) ?></span>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
@@ -450,7 +450,7 @@ $messageType = $_GET['type'] ?? '';
             <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
-        <form id="inventoryForm" method="POST" action="/process_inventory_update.php" class="flex flex-col flex-grow overflow-hidden">
+        <form id="inventoryForm" method="POST" action="#" class="flex flex-col flex-grow overflow-hidden">
             <input type="hidden" name="action" value="<?= $modalMode === 'add' ? 'add' : 'update'; ?>">
             <?php if ($modalMode === 'edit' && isset($editItem['id'])): ?>
                 <input type="hidden" name="itemId" value="<?= htmlspecialchars($editItem['id']); ?>">
@@ -665,15 +665,15 @@ function editCostItem(type, id) {
         showToast('error', 'Cost breakdown data not available.');
         return;
     }
-    const item = costBreakdown[type].find(i => String(i.id) === String(id));
-    if (!item) {
+    const item_cost = costBreakdown[type].find(i => String(i.id) === String(id));
+    if (!item_cost) {
         showToast('error', 'Cost item not found.');
         return;
     }
     document.getElementById('costForm').reset();
-    document.getElementById('costItemId').value = item.id;
+    document.getElementById('costItemId').value = item_cost.id;
     document.getElementById('costItemType').value = type;
-    document.getElementById('costItemCost').value = item.cost;
+    document.getElementById('costItemCost').value = item_cost.cost;
     document.getElementById('costFormTitle').textContent = `Edit ${type.charAt(0).toUpperCase() + type.slice(1)} Cost`;
 
     const materialNameField = document.getElementById('materialNameField');
@@ -682,11 +682,11 @@ function editCostItem(type, id) {
     if (type === 'materials') {
         materialNameField.style.display = 'block';
         genericDescriptionField.style.display = 'none';
-        document.getElementById('costItemName').value = item.name || '';
+        document.getElementById('costItemName').value = item_cost.name || '';
     } else {
         materialNameField.style.display = 'none';
         genericDescriptionField.style.display = 'block';
-        document.getElementById('costItemDescription').value = item.description || '';
+        document.getElementById('costItemDescription').value = item_cost.description || '';
     }
     document.getElementById('deleteCostItem').classList.remove('hidden');
     document.getElementById('costFormModal').classList.add('show');
@@ -736,7 +736,6 @@ function deleteCurrentCostItem() { // Called by delete button in costFormModal
     }
     if (!confirm(`Are you sure you want to delete this ${type.slice(0,-1)} cost item?`)) return;
 
-    // Build URL with query parameters
     const url = `/process_cost_breakdown.php?id=${id}&costType=${type}&inventoryId=${currentItemId}`;
 
     fetch(url, {
@@ -790,58 +789,60 @@ function renderCostBreakdown(data) {
 }
 
 function renderCostList(type, items) {
-    // Check for both regular and view mode lists
     const listElement = document.getElementById(`${type}List`);
     const viewListElement = document.getElementById(`view_${type}List`);
     
-    // Handle regular list (edit mode)
     if (listElement) {
         listElement.innerHTML = ''; 
         if (!items || items.length === 0) {
             listElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added yet.</p>';
         } else {
-            items.forEach(item => {
+            items.forEach(item_cost => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'cost-item';
-                const nameText = (type === 'materials' ? item.name : item.description) || 'N/A';
+                const nameText = (type === 'materials' ? item_cost.name : item_cost.description) || 'N/A';
                 itemDiv.innerHTML = `
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
-                        <span class="cost-item-value">$${parseFloat(item.cost).toFixed(2)}</span>
-                        <button type="button" class="cost-edit-btn" onclick="editCostItem('${type}', '${item.id}')" title="Edit Cost"><svg fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg></button>
+                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
+                        <button type="button" class="cost-edit-btn" onclick="editCostItem('${type}', '${item_cost.id}')" title="Edit Cost"><svg fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg></button>
                     </div>`;
                 listElement.appendChild(itemDiv);
             });
         }
     }
     
-    // Handle view mode list (if it exists)
     if (viewListElement) {
         viewListElement.innerHTML = ''; 
         if (!items || items.length === 0) {
             viewListElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added.</p>';
         } else {
-            items.forEach(item => {
+            items.forEach(item_cost => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'cost-item';
-                const nameText = (type === 'materials' ? item.name : item.description) || 'N/A';
+                const nameText = (type === 'materials' ? item_cost.name : item_cost.description) || 'N/A';
                 itemDiv.innerHTML = `
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
-                        <span class="cost-item-value">$${parseFloat(item.cost).toFixed(2)}</span>
+                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
                     </div>`;
                 viewListElement.appendChild(itemDiv);
             });
         }
     }
 }
+
 function htmlspecialchars(str) {
-    if (typeof str !== 'string') return '';
-    return str.replace(/[&<>\"']/g, function (match) {
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "\'": '&#039;' };
-        return map[match];
-    });
-}
+    if (str === null || str === undefined) return '';
+    if (typeof str !== 'string') str = String(str);
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return str.replace(/[&<>"']/g, function(m) { return map[m]; });}
 
 
 function updateTotalsDisplay(totals) {
@@ -871,7 +872,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if ((modalMode === 'edit' || modalMode === 'view') && currentItemId && costBreakdown) {
         refreshCostBreakdown(true); 
     } else if (modalMode === 'add') {
-        renderCostBreakdown(null); // Clear/initialize cost breakdown for new item
+        renderCostBreakdown(null); 
     }
     
     const inventoryTable = document.getElementById('inventoryTable');
@@ -883,7 +884,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const originalValue = cell.dataset.originalValue || cell.textContent.trim();
             const field = cell.dataset.field;
             const itemId = cell.closest('tr').dataset.id;
-            cell.dataset.originalValue = originalValue; // Store it
+            cell.dataset.originalValue = originalValue;
 
             let inputElement;
             if (field === 'category') {
@@ -923,10 +924,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const saveEdit = () => {
                 const newValue = inputElement.value;
                 cell.classList.remove('editing');
-                if (newValue !== originalValue || (field === 'category' && newValue !== originalValue)) { // Check if value actually changed
+                if (newValue !== originalValue || (field === 'category' && newValue !== originalValue)) { 
                     saveInlineEdit(itemId, field, newValue, cell, originalValue);
                 } else {
-                    cell.innerHTML = originalValue; // Revert to original if no change
+                    cell.innerHTML = originalValue; 
                 }
             };
 
@@ -981,42 +982,68 @@ document.addEventListener('DOMContentLoaded', function() {
         const spinner = saveBtn ? saveBtn.querySelector('.loading-spinner') : null;
 
         inventoryForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+            e.preventDefault(); // CRITICAL: Prevent default form submission
+            
             if(saveBtn && btnText && spinner) {
                 btnText.classList.add('hidden');
                 spinner.classList.remove('hidden');
                 saveBtn.disabled = true;
             }
+            
             const formData = new FormData(inventoryForm);
-            fetch('/process_inventory_update.php', {
-                method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+
+            fetch('/process_inventory_update.php', { // API endpoint for processing
+                method: 'POST', 
+                body: formData, 
+                headers: { 'X-Requested-With': 'XMLHttpRequest' } // Important for backend to identify AJAX
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => {
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else {
+                    // If not JSON, read as text and throw an error to be caught by .catch()
+                    return response.text().then(text => { 
+                        throw new Error("Server returned non-JSON response: " + text.substring(0, 200)); 
+                    });
+                }
+            })
+            .then(data => { // This block executes if response.json() was successful
                 if (data.success) {
                     showToast('success', data.message);
+                    
+                    // Redirect to the inventory page, optionally highlighting the item
+                    // This ensures the main table is refreshed and modal is closed.
+                    let redirectUrl = '?page=admin&section=inventory';
+                    if (data.itemId) { // itemId is returned by add/update operations
+                        redirectUrl += '&highlight=' + data.itemId;
+                    }
+                    // Use a short delay to allow toast to be seen before navigation
                     setTimeout(() => {
-                        window.location.href = '?page=admin&section=inventory' + (data.itemId ? '&edit=' + data.itemId + '&highlight=' + data.itemId : '');
-                    }, 1000);
-                } else {
-                    showToast('error', data.error || 'Failed to save item.');
+                        window.location.href = redirectUrl;
+                    }, 500); 
+                    // Button will be re-enabled by page reload, no need to manually do it here.
+                    return; 
+
+                } else { // data.success is false
+                    showToast('error', data.error || 'Failed to save item. Please check inputs.');
                     if(saveBtn && btnText && spinner) {
                         btnText.classList.remove('hidden');
                         spinner.classList.add('hidden');
                         saveBtn.disabled = false;
                     }
-                     if (data.field_errors) {
+                    if (data.field_errors) {
                         document.querySelectorAll('.field-error-highlight').forEach(el => el.classList.remove('field-error-highlight'));
                         data.field_errors.forEach(fieldName => {
-                            const field = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
-                            if (field) field.classList.add('field-error-highlight');
+                            const fieldElement = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
+                            if (fieldElement) fieldElement.classList.add('field-error-highlight');
                         });
                     }
                 }
             })
-            .catch(error => {
+            .catch(error => { // Catches network errors or the error thrown from non-JSON response
                 console.error('Error saving item:', error);
-                showToast('error', 'An unexpected error occurred.');
+                showToast('error', 'An unexpected error occurred: ' + error.message);
                  if(saveBtn && btnText && spinner) {
                     btnText.classList.remove('hidden');
                     spinner.classList.add('hidden');
@@ -1049,15 +1076,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             previewImg.src = data.imageUrl;
                             previewDiv.style.display = 'block';
                         }
-                        // Update or add hidden input for existingImageUrl if form is submitted before page reload
-                        let hiddenUrlInput = inventoryForm.querySelector('input[name="existingImageUrl"]');
-                        if (!hiddenUrlInput) {
-                            hiddenUrlInput = document.createElement('input');
-                            hiddenUrlInput.type = 'hidden';
-                            hiddenUrlInput.name = 'existingImageUrl';
-                            inventoryForm.appendChild(hiddenUrlInput);
+                        const currentInventoryForm = document.getElementById('inventoryForm'); // Get form again
+                        if (currentInventoryForm) {
+                            let hiddenUrlInput = currentInventoryForm.querySelector('input[name="existingImageUrl"]');
+                            if (!hiddenUrlInput) {
+                                hiddenUrlInput = document.createElement('input');
+                                hiddenUrlInput.type = 'hidden';
+                                hiddenUrlInput.name = 'existingImageUrl';
+                                currentInventoryForm.appendChild(hiddenUrlInput);
+                            }
+                             hiddenUrlInput.value = data.imageUrl;
                         }
-                        hiddenUrlInput.value = data.imageUrl;
                         showToast('success', 'Image uploaded successfully.');
                     } else {
                         showToast('error', data.error || 'Failed to upload image.');
@@ -1103,6 +1132,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     showToast('success', data.message);
+                    // Redirect to refresh the list after successful deletion
                     setTimeout(() => { window.location.href = '?page=admin&section=inventory'; }, 1000);
                 } else {
                     showToast('error', data.error || 'Failed to delete item.');
@@ -1116,18 +1146,36 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteConfirmModalElement?.querySelectorAll('.close-modal-button').forEach(btn => {
         btn.addEventListener('click', () => deleteConfirmModalElement.classList.remove('show'));
     });
-     // Close delete confirm modal on escape key
+
     window.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
-            if (deleteConfirmModalElement && deleteConfirmModalElement.classList.contains('show')) {
+            const mainModal = document.getElementById('inventoryModalOuter');
+            // Check if mainModal is actually displayed (not just present in DOM)
+            if (mainModal && mainModal.offsetParent !== null) { 
+                window.location.href = '?page=admin&section=inventory'; // Redirect to close
+            } else if (document.getElementById('costFormModal')?.classList.contains('show')) {
+                 closeCostModal();
+            } else if (deleteConfirmModalElement && deleteConfirmModalElement.classList.contains('show')) {
                 deleteConfirmModalElement.classList.remove('show');
             }
-            if (document.getElementById('costFormModal')?.classList.contains('show')) {
-                 closeCostModal();
-            }
-            // For main modal, Escape is handled by browser for links, or could be added if it becomes a div modal
         }
     });
+
+    // Highlight row if specified in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    if (highlightId) {
+        const rowToHighlight = document.querySelector(`tr[data-id='${highlightId}']`);
+        if (rowToHighlight) {
+            rowToHighlight.classList.add('bg-yellow-100'); 
+            rowToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                rowToHighlight.classList.remove('bg-yellow-100');
+                const cleanUrl = window.location.pathname + '?page=admin&section=inventory'; // Remove highlight param
+                history.replaceState({path: cleanUrl}, '', cleanUrl);
+            }, 3000);
+        }
+    }
 
 });
 </script>

@@ -142,8 +142,20 @@ $messageType = $_GET['type'] ?? '';
     .status-delivered { background-color: #dcfce7; color: #166534; }
     .status-cancelled { background-color: #fee2e2; color: #b91c1c; }
     
-    .payment-status-pending { background-color: #fef3c7; color: #92400e; }
-    .payment-status-received { background-color: #dcfce7; color: #166534; }
+    .payment-status-badge { /* Renamed for clarity */
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px; /* Tailwind's rounded-full */
+        font-size: 0.75rem; /* Tailwind's text-xs */
+        font-weight: 500; /* Tailwind's font-medium */
+    }
+    .payment-status-pending { background-color: #fef3c7; color: #92400e; } /* Tailwind's yellow-100 bg, yellow-700 text */
+    .payment-status-received { background-color: #dcfce7; color: #166534; } /* Tailwind's green-100 bg, green-700 text */
+    /* Add more payment statuses as needed, e.g., Processing, Refunded, Failed */
+    .payment-status-processing { background-color: #e0f2fe; color: #0369a1; } /* Example: blue */
+    .payment-status-refunded { background-color: #e5e7eb; color: #4b5563; } /* Example: gray */
+    .payment-status-failed { background-color: #fee2e2; color: #b91c1c; } /* Example: red */
+
 </style>
 
 <div class="container mx-auto px-4 py-6">
@@ -182,13 +194,13 @@ $messageType = $_GET['type'] ?? '';
                         <td><?= htmlspecialchars(date('M j, Y', strtotime($order['date']))) ?></td>
                         <td>$<?= number_format(floatval($order['total']), 2) ?></td>
                         <td>
-                            <span class="status-badge status-<?= strtolower($order['status']) ?>">
+                            <span class="status-badge status-<?= strtolower(htmlspecialchars($order['status'])) ?>">
                                 <?= htmlspecialchars($order['status']) ?>
                             </span>
                         </td>
                         <td><?= htmlspecialchars($order['paymentMethod']) ?></td>
                         <td>
-                            <span class="payment-status-badge payment-status-<?= strtolower($order['paymentStatus']) ?>">
+                            <span class="payment-status-badge payment-status-<?= strtolower(htmlspecialchars($order['paymentStatus'])) ?>">
                                 <?= htmlspecialchars($order['paymentStatus']) ?>
                             </span>
                         </td>
@@ -246,7 +258,7 @@ $messageType = $_GET['type'] ?? '';
                             <div class="order-detail-item">
                                 <div class="order-detail-label">Status</div>
                                 <div class="order-detail-value">
-                                    <span class="status-badge status-<?= strtolower($orderDetails['status']) ?>">
+                                    <span class="status-badge status-<?= strtolower(htmlspecialchars($orderDetails['status'])) ?>">
                                         <?= htmlspecialchars($orderDetails['status']) ?>
                                     </span>
                                 </div>
@@ -274,7 +286,7 @@ $messageType = $_GET['type'] ?? '';
                             <div class="order-detail-item">
                                 <div class="order-detail-label">Payment Status</div>
                                 <div class="order-detail-value">
-                                    <span class="payment-status-badge payment-status-<?= strtolower($orderDetails['paymentStatus']) ?>">
+                                    <span class="payment-status-badge payment-status-<?= strtolower(htmlspecialchars($orderDetails['paymentStatus'])) ?>">
                                         <?= htmlspecialchars($orderDetails['paymentStatus']) ?>
                                     </span>
                                 </div>
@@ -331,7 +343,7 @@ $messageType = $_GET['type'] ?? '';
             </div>
             
             <div class="modal-form-container">
-                <form id="orderForm" method="POST" action="/api/update-payment-status.php" class="space-y-4">
+                <form id="orderForm" method="POST" action="#" class="space-y-4">
                     <input type="hidden" name="orderId" value="<?= htmlspecialchars($editOrderId) ?>">
                     
                     <div class="order-details-section">
@@ -375,6 +387,7 @@ $messageType = $_GET['type'] ?? '';
                                 <select id="paymentStatus" name="paymentStatus" class="mt-1 block w-full p-2 border border-gray-300 rounded">
                                     <option value="Pending" <?= $orderDetails['paymentStatus'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
                                     <option value="Received" <?= $orderDetails['paymentStatus'] === 'Received' ? 'selected' : '' ?>>Received</option>
+                                    <!-- Add other statuses if your API supports them, e.g., Processing, Refunded, Failed -->
                                 </select>
                             </div>
                             <div id="checkNumberField" style="<?= $orderDetails['paymentMethod'] === 'Check' ? '' : 'display: none;' ?>">
@@ -422,13 +435,15 @@ $messageType = $_GET['type'] ?? '';
 document.addEventListener('DOMContentLoaded', function() {
     // Toggle check number field based on payment method
     window.toggleCheckNumberField = function() {
-        const paymentMethod = document.getElementById('paymentMethod').value;
+        const paymentMethodEl = document.getElementById('paymentMethod');
         const checkNumberField = document.getElementById('checkNumberField');
         
-        if (paymentMethod === 'Check') {
-            checkNumberField.style.display = 'block';
-        } else {
-            checkNumberField.style.display = 'none';
+        if (paymentMethodEl && checkNumberField) {
+            if (paymentMethodEl.value === 'Check') {
+                checkNumberField.style.display = 'block';
+            } else {
+                checkNumberField.style.display = 'none';
+            }
         }
     };
     
@@ -467,20 +482,40 @@ document.addEventListener('DOMContentLoaded', function() {
             saveBtn.disabled = true;
             
             const formData = new FormData(orderForm);
+            const payload = {
+                orderId: formData.get('orderId'),
+                newStatus: formData.get('paymentStatus')
+                // Note: /api/update-payment-status.php only handles payment status.
+                // To update other fields (order status, tracking, etc.),
+                // a different API endpoint that accepts all these fields would be needed.
+                // For example, you might collect all fields like this:
+                // status: formData.get('status'),
+                // trackingNumber: formData.get('trackingNumber'),
+                // shippingAddress: formData.get('shippingAddress'),
+                // paymentMethod: formData.get('paymentMethod'),
+                // checkNumber: formData.get('checkNumber'),
+                // paymentDate: formData.get('paymentDate'),
+                // paymentNotes: formData.get('paymentNotes')
+            };
             
-            fetch('/api/update-payment-status.php', {
+            fetch('/api/update-payment-status.php', { // This URL is for updating payment status only
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast('success', 'Order updated successfully');
+                    // The message "Order updated successfully" might be misleading if only payment status changed.
+                    // Consider changing if this form is intended for more.
+                    showToast('success', data.message || 'Payment status updated successfully.');
                     setTimeout(() => {
-                        window.location.href = '?page=admin_orders';
+                        window.location.href = '?page=admin_orders&highlight=' + payload.orderId; // Highlight the updated order
                     }, 1000);
                 } else {
-                    showToast('error', data.message || 'Failed to update order');
+                    showToast('error', data.error || 'Failed to update payment status.');
                     btnText.classList.remove('hidden');
                     spinner.classList.add('hidden');
                     saveBtn.disabled = false;
@@ -488,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('error', 'An error occurred while updating the order');
+                showToast('error', 'An error occurred while updating the payment status.');
                 btnText.classList.remove('hidden');
                 spinner.classList.add('hidden');
                 saveBtn.disabled = false;
@@ -496,33 +531,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Handle payment toggle buttons
+    // Handle payment toggle buttons (functionality not present in HTML, but if added, this would be the approach)
+    // This is an example if you had direct toggle buttons in the main table:
     document.querySelectorAll('.payment-toggle').forEach(button => {
         button.addEventListener('click', function() {
             const orderId = this.dataset.orderId;
-            const action = this.classList.contains('mark-paid') ? 'markPaid' : 'markUnpaid';
+            const currentStatus = this.dataset.currentStatus; // e.g., 'Pending'
+            let newStatus;
+
+            // Example: Toggling between 'Pending' and 'Received'
+            if (this.classList.contains('mark-paid')) { // Assuming 'mark-paid' means set to 'Received'
+                newStatus = 'Received';
+            } else if (this.classList.contains('mark-unpaid')) { // Assuming 'mark-unpaid' means set to 'Pending'
+                newStatus = 'Pending';
+            } else {
+                console.warn('Unknown payment toggle action');
+                return;
+            }
+
+            if (newStatus === currentStatus) {
+                showToast('info', 'Payment status is already ' + newStatus);
+                return;
+            }
+
+            const payload = {
+                orderId: orderId,
+                newStatus: newStatus
+            };
             
             fetch('/api/update-payment-status.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/json'
                 },
-                body: `orderId=${orderId}&action=${action}`
+                body: JSON.stringify(payload)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast('success', data.message);
+                    showToast('success', data.message || 'Payment status updated.');
                     setTimeout(() => {
-                        window.location.reload();
+                        window.location.reload(); // Or update UI dynamically
                     }, 1000);
                 } else {
-                    showToast('error', data.message || 'Failed to update payment status');
+                    showToast('error', data.error || 'Failed to update payment status.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('error', 'An error occurred while updating payment status');
+                showToast('error', 'An error occurred while updating payment status.');
             });
         });
     });
@@ -534,7 +591,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.delete-order').forEach(button => {
         button.addEventListener('click', function() {
             orderIdToDelete = this.dataset.id;
-            deleteConfirmModal.classList.add('show');
+            if (deleteConfirmModal) {
+                deleteConfirmModal.classList.add('show');
+            }
         });
     });
     
@@ -544,18 +603,19 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmDeleteBtn.addEventListener('click', function() {
             if (!orderIdToDelete) return;
             
-            fetch(`/api/delete-order.php?orderId=${orderIdToDelete}`, {
-                method: 'DELETE'
+            // Assuming your delete API is at /api/delete-order.php and takes orderId as a query param
+            fetch(`/api/delete-order.php?orderId=${orderIdToDelete}`, { // Make sure this endpoint exists and works
+                method: 'DELETE' // Or POST if your server expects that for deletion
             })
-            .then(response => response.json())
+            .then(response => response.json()) // Assuming it returns JSON
             .then(data => {
                 if (data.success) {
-                    showToast('success', 'Order deleted successfully');
+                    showToast('success', data.message || 'Order deleted successfully');
                     setTimeout(() => {
-                        window.location.reload();
+                        window.location.reload(); // Reload to reflect changes
                     }, 1000);
                 } else {
-                    showToast('error', data.message || 'Failed to delete order');
+                    showToast('error', data.error || 'Failed to delete order');
                 }
             })
             .catch(error => {
@@ -563,25 +623,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast('error', 'An error occurred while deleting the order');
             });
             
-            deleteConfirmModal.classList.remove('show');
+            if(deleteConfirmModal) deleteConfirmModal.classList.remove('show');
         });
     }
     
     // Close delete modal
     document.querySelectorAll('.close-modal-button').forEach(button => {
         button.addEventListener('click', function() {
-            deleteConfirmModal.classList.remove('show');
+            if(deleteConfirmModal) deleteConfirmModal.classList.remove('show');
         });
     });
     
     // Close modals on escape key
     window.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
-            if (deleteConfirmModal.classList.contains('show')) {
+            const viewModal = document.getElementById('viewOrderModal');
+            const editModal = document.getElementById('editOrderModal');
+
+            if (deleteConfirmModal && deleteConfirmModal.classList.contains('show')) {
                 deleteConfirmModal.classList.remove('show');
+            } else if (viewModal && viewModal.offsetParent !== null) { // Check if visible
+                 window.location.href = '?page=admin_orders'; // Close by redirecting
+            } else if (editModal && editModal.offsetParent !== null) { // Check if visible
+                 window.location.href = '?page=admin_orders'; // Close by redirecting
             }
         }
     });
+
+    // Highlight row if specified in URL (e.g., after an update)
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    if (highlightId) {
+        const rowToHighlight = document.querySelector(`table.orders-table tr td:first-child`).parentNode; // Simplistic selector, refine if needed
+        // A more robust selector would be to add data-order-id to TR tags
+        // Example: document.querySelector(`tr[data-order-id='${highlightId}']`)
+        if (rowToHighlight) {
+            rowToHighlight.style.backgroundColor = '#fefcbf'; // Light yellow
+            setTimeout(() => {
+                rowToHighlight.style.backgroundColor = ''; // Reset
+                // Optionally remove highlight param from URL
+                const cleanUrl = window.location.pathname + '?page=admin_orders';
+                history.replaceState(null, '', cleanUrl);
+            }, 3000);
+        }
+    }
 });
 </script>
 

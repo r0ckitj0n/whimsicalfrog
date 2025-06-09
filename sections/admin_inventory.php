@@ -228,7 +228,7 @@ $messageType = $_GET['type'] ?? '';
     .modal-form-main-column { flex: 1; padding-right: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; /* Reduced gap */ }
     @media (max-width: 767px) { .modal-form-main-column { padding-right: 0; } }
     .modal-form-cost-column { width: 100%; padding-left: 0; margin-top: 1rem; }
-    @media (min-width: 768px) { .modal-form-cost-column { flex: 0 0 40%; padding-left: 0.75rem; margin-top: 0; } }
+    @media (min-width: 768px) { .modal-form-cost-column { flex: 0 0 40%; padding-left: 0.75rem; margin-top: 0; } }\
     
     .modal-form-main-column label { font-size: 0.8rem; margin-bottom: 0.1rem; }
     .modal-form-main-column input[type="text"],
@@ -617,9 +617,9 @@ $messageType = $_GET['type'] ?? '';
 
 
 <script>
-var modalMode = '<?= $modalMode ?>';
-var currentItemId = '<?= ($modalMode === 'edit' || $modalMode === 'view') && isset($editItem['id']) ? $editItem['id'] : '' ?>';
-var costBreakdown = <?= ($modalMode === 'edit' || $modalMode === 'view') && isset($editCostBreakdown) ? json_encode($editCostBreakdown) : 'null' ?>;
+var modalMode = <?= json_encode($modalMode ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>;
+var currentItemId = <?= json_encode(($modalMode === 'edit' || $modalMode === 'view') && isset($editItem['id']) ? $editItem['id'] : '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>;
+var costBreakdown = <?= ($modalMode === 'edit' || $modalMode === 'view') && isset($editCostBreakdown) ? json_encode($editCostBreakdown, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) : 'null'; ?>;
 
 function showToast(type, message) {
     const existingToast = document.getElementById('toast-notification');
@@ -842,7 +842,7 @@ function htmlspecialchars(str) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return str.replace(/[&<>"']/g, function(m) { return map[m]; });}
+    return str.replace(/[&<>\"\']/g, function(m) { return map[m]; });}
 
 
 function updateTotalsDisplay(totals) {
@@ -896,7 +896,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.textContent = 'Select Category';
                 inputElement.appendChild(option);
                 
-                <?= json_encode($categories) ?>.forEach(cat => {
+                <?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>.forEach(cat => {
                     const option = document.createElement('option');
                     option.value = cat;
                     option.textContent = cat;

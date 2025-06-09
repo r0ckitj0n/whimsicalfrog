@@ -1,14 +1,27 @@
 <?php
-// Simple process_inventory_update.php - handles inventory form submissions
+// Start output buffering to catch any unexpected output
+ob_start();
 
-// Set headers for JSON responses
-header('Content-Type: application/json');
+// Override error display settings for this script
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL);
+
+// Set up error logging to file instead of displaying
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/inventory_errors.log');
 
 // Include database configuration
 require_once __DIR__ . '/api/config.php';
 
 // Function to return JSON success response
 function returnSuccess($message, $data = null) {
+    // Clear any previous output
+    if (ob_get_length()) ob_clean();
+    
+    // Set headers for JSON responses
+    header('Content-Type: application/json');
+    
     $response = ['success' => true, 'message' => $message];
     if ($data !== null) {
         $response['data'] = $data;
@@ -19,7 +32,13 @@ function returnSuccess($message, $data = null) {
 
 // Function to return JSON error response
 function returnError($message, $statusCode = 400) {
+    // Clear any previous output
+    if (ob_get_length()) ob_clean();
+    
+    // Set headers for JSON responses
+    header('Content-Type: application/json');
     http_response_code($statusCode);
+    
     echo json_encode(['success' => false, 'error' => $message]);
     exit;
 }
@@ -86,7 +105,7 @@ try {
             $costPrice = floatval($_POST['costPrice']);
             $retailPrice = floatval($_POST['retailPrice']);
             $description = isset($_POST['description']) ? trim($_POST['description']) : '';
-            $imageUrl = isset($_POST['imageUrl']) ? trim($_POST['imageUrl']) : '';
+            $imageUrl = isset($_POST['existingImageUrl']) ? trim($_POST['existingImageUrl']) : '';
             $productId = isset($_POST['productId']) ? trim($_POST['productId']) : '';
             
             if ($action === 'add') {
@@ -188,8 +207,13 @@ try {
         returnError('Invalid request method or missing parameters');
     }
 } catch (PDOException $e) {
-    returnError('Database error: ' . $e->getMessage(), 500);
+    error_log("Database error in process_inventory_update.php: " . $e->getMessage());
+    returnError('Database error occurred. Please check server logs.', 500);
 } catch (Exception $e) {
-    returnError('An unexpected error occurred: ' . $e->getMessage(), 500);
+    error_log("General error in process_inventory_update.php: " . $e->getMessage());
+    returnError('An unexpected error occurred. Please check server logs.', 500);
 }
+
+// Clear any remaining output buffer before script ends
+if (ob_get_length()) ob_end_clean();
 ?>

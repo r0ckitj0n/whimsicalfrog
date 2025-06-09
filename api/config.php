@@ -4,6 +4,16 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Helper function to detect if this is an AJAX request
+function isAjaxRequest() {
+    return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+           (isset($_SERVER['CONTENT_TYPE']) && 
+            strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) ||
+           (isset($_SERVER['HTTP_ACCEPT']) && 
+            strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+}
+
 // Improved environment detection with multiple checks
 $isLocalhost = false;
 
@@ -64,8 +74,8 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// For debugging
-if ($isLocalhost && isset($_GET['debug'])) {
+// For debugging - only show if not an AJAX request and debug parameter is set
+if ($isLocalhost && isset($_GET['debug']) && !isAjaxRequest()) {
     echo "Environment: " . ($isLocalhost ? "LOCAL" : "PRODUCTION") . "<br>";
     echo "Database: $host/$db<br>";
 }

@@ -1,970 +1,591 @@
 <?php
-// Admin Orders Management
-// This page provides tools for managing customer orders and order processing
+// Admin Orders Management Section
+ob_start();
 
-// Prevent direct access
-if (!defined('INCLUDED_FROM_INDEX')) {
-    define('INCLUDED_FROM_INDEX', true);
+// Database connection
+$pdo = new PDO($dsn, $user, $pass, $options);
+
+// Get orders
+$stmt = $pdo->query("SELECT o.*, u.username FROM orders o JOIN users u ON o.userId = u.id ORDER BY o.date DESC");
+$orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Initialize modal state
+$modalMode = ''; // Default to no modal
+$viewOrderId = '';
+$editOrderId = '';
+
+// Check if we're in view mode
+if (isset($_GET['view']) && !empty($_GET['view'])) {
+    $viewOrderId = $_GET['view'];
+    $modalMode = 'view';
 }
 
-// Include database configuration
-require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
-
-// Initialize arrays to prevent null values
-$ordersData = [];
-$customersData = [];
-$inventoryData = [];
-
-try {
-    // Create a PDO connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
-    
-    // Fetch orders data directly from database
-    $ordersStmt = $pdo->query('SELECT * FROM orders');
-    $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // For each order, get its items
-    foreach ($ordersData as &$order) {
-        $itemsStmt = $pdo->prepare('SELECT * FROM order_items WHERE orderId = ?');
-        $itemsStmt->execute([$order['id']]);
-        $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Convert shippingAddress from JSON string to array if it exists
-        if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
-            $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
-        }
-        
-        // Ensure date is properly formatted
-        if (isset($order['date']) && !empty($order['date'])) {
-            // Store the original timestamp for sorting
-            $order['date_timestamp'] = strtotime($order['date']);
-            // Format the date for display
-            $order['date_formatted'] = date('M d, Y', strtotime($order['date']));
-        } else {
-            $order['date_timestamp'] = 0;
-            $order['date_formatted'] = 'Unknown Date';
-        }
-    }
-    
-    // Fetch customers/users data directly from database
-    $usersStmt = $pdo->query('SELECT * FROM users');
-    $customersData = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Fetch inventory data directly from database
-    $inventoryStmt = $pdo->query('SELECT * FROM inventory');
-    $inventoryData = $inventoryStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Close the connection
-    $pdo = null;
-} catch (PDOException $e) {
-    error_log('Database Error: ' . $e->getMessage());
-} catch (Exception $e) {
-    error_log('General Error: ' . $e->getMessage());
+// Check if we're in edit mode
+if (isset($_GET['edit']) && !empty($_GET['edit'])) {
+    $editOrderId = $_GET['edit'];
+    $modalMode = 'edit';
 }
 
-// Ensure arrays are never null
-$ordersData = is_array($ordersData) ? $ordersData : [];
-$customersData = is_array($customersData) ? $customersData : [];
-$inventoryData = is_array($inventoryData) ? $inventoryData : [];
-
-// Handle search/filter
-$searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
-$filterStatus = isset($_GET['status']) ? $_GET['status'] : 'all';
-$dateRange = isset($_GET['date_range']) ? $_GET['date_range'] : 'all';
-
-// Filter orders based on search term
-if (!empty($searchTerm)) {
-    $ordersData = array_filter($ordersData, function($order) use ($searchTerm) {
-        // Search in order ID, customer name, or email
-        $orderId = $order['id'] ?? '';
-        $userId = $order['userId'] ?? '';
-        
-        // Find customer info
-        $customerName = '';
-        $customerEmail = '';
-        foreach ($GLOBALS['customersData'] as $customer) {
-            if (($customer['id'] ?? '') == $userId) {
-                $customerName = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
-                $customerEmail = $customer['email'] ?? '';
-                break;
-            }
-        }
-        
-        return (stripos($orderId, $searchTerm) !== false ||
-                stripos($customerName, $searchTerm) !== false ||
-                stripos($customerEmail, $searchTerm) !== false);
-    });
-}
-
-// Filter by status
-if ($filterStatus !== 'all') {
-    $ordersData = array_filter($ordersData, function($order) use ($filterStatus) {
-        return isset($order['status']) && $order['status'] === $filterStatus;
-    });
-}
-
-// Filter by date range
-if ($dateRange !== 'all') {
-    $today = date('Y-m-d');
-    $ordersData = array_filter($ordersData, function($order) use ($dateRange, $today) {
-        if (!isset($order['date'])) return false;
-        
-        $orderDate = date('Y-m-d', strtotime($order['date']));
-        $diff = (strtotime($today) - strtotime($orderDate)) / (60 * 60 * 24); // difference in days
-        
-        switch ($dateRange) {
-            case 'today':
-                return $orderDate === $today;
-            case 'yesterday':
-                return $diff >= 1 && $diff < 2;
-            case 'week':
-                return $diff < 7;
-            case 'month':
-                return $diff < 30;
-            default:
-                return true;
-        }
-    });
-}
-
-// Sort orders
-$sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'date';
-$sortDir = isset($_GET['dir']) ? $_GET['dir'] : 'desc';
-
-usort($ordersData, function($a, $b) use ($sortBy, $sortDir) {
-    switch($sortBy) {
-        case 'id':
-            $valA = $a['id'] ?? '';
-            $valB = $b['id'] ?? '';
-            break;
-        case 'customer':
-            $userIdA = $a['userId'] ?? '';
-            $userIdB = $b['userId'] ?? '';
-            
-            $customerNameA = '';
-            $customerNameB = '';
-            
-            foreach ($GLOBALS['customersData'] as $customer) {
-                if (($customer['id'] ?? '') == $userIdA) {
-                    $customerNameA = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
-                }
-                if (($customer['id'] ?? '') == $userIdB) {
-                    $customerNameB = ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
-                }
-            }
-            
-            $valA = $customerNameA;
-            $valB = $customerNameB;
-            break;
-        case 'total':
-            $valA = floatval($a['total'] ?? 0);
-            $valB = floatval($b['total'] ?? 0);
-            break;
-        case 'status':
-            $valA = $a['status'] ?? '';
-            $valB = $b['status'] ?? '';
-            break;
-        case 'date':
-        default:
-            // Use the pre-calculated timestamp for more reliable sorting
-            $valA = $a['date_timestamp'] ?? 0;
-            $valB = $b['date_timestamp'] ?? 0;
-    }
-    
-    if ($sortDir === 'asc') {
-        return $valA <=> $valB;
-    } else {
-        return $valB <=> $valA;
-    }
-});
-
-// Pagination
-$itemsPerPage = 10;
-$totalItems = count($ordersData);
-$totalPages = ceil($totalItems / $itemsPerPage);
-$currentPage = isset($_GET['page']) ? max(1, min($totalPages, intval($_GET['page']))) : 1;
-$offset = ($currentPage - 1) * $itemsPerPage;
-
-$paginatedOrders = array_slice($ordersData, $offset, $itemsPerPage);
-
-// Helper function to generate sort URL
-function getSortUrl($column, $currentSort, $currentDir) {
-    $newDir = ($column === $currentSort && $currentDir === 'asc') ? 'desc' : 'asc';
-    $queryParams = $_GET;
-    $queryParams['sort'] = $column;
-    $queryParams['dir'] = $newDir;
-    return '?' . http_build_query($queryParams);
-}
-
-// Helper function to get sort indicator
-function getSortIndicator($column, $currentSort, $currentDir) {
-    if ($column !== $currentSort) {
-        return '';
-    }
-    return $currentDir === 'asc' ? '↑' : '↓';
-}
-
-// Helper function to get customer name from ID
-function getCustomerName($userId, $customersData) {
-    foreach ($customersData as $customer) {
-        if (($customer['id'] ?? '') == $userId) {
-            return ($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? '');
-        }
-    }
-    return 'Unknown Customer';
-}
-
-// Helper function to get product name from ID
-function getProductName($productId, $inventoryData) {
-    foreach ($inventoryData as $product) {
-        if (($product['id'] ?? '') == $productId) {
-            return $product['name'] ?? 'Unknown Product';
-        }
-    }
-    return 'Unknown Product';
-}
-
-// Helper function to format address for display
-function formatAddress($address) {
-    if (is_array($address)) {
-        // Format the address array into a readable string
-        $formattedAddress = '';
-        
-        if (!empty($address['name'])) {
-            $formattedAddress .= $address['name'] . "\n";
-        }
-        
-        if (!empty($address['line1'])) {
-            $formattedAddress .= $address['line1'] . "\n";
-        }
-        
-        if (!empty($address['line2'])) {
-            $formattedAddress .= $address['line2'] . "\n";
-        }
-        
-        $cityStateZip = '';
-        if (!empty($address['city'])) {
-            $cityStateZip .= $address['city'];
-        }
-        
-        if (!empty($address['state'])) {
-            $cityStateZip .= !empty($cityStateZip) ? ', ' . $address['state'] : $address['state'];
-        }
-        
-        if (!empty($address['zip'])) {
-            $cityStateZip .= !empty($cityStateZip) ? ' ' . $address['zip'] : $address['zip'];
-        }
-        
-        if (!empty($cityStateZip)) {
-            $formattedAddress .= $cityStateZip . "\n";
-        }
-        
-        if (!empty($address['country'])) {
-            $formattedAddress .= $address['country'];
-        }
-        
-        return $formattedAddress;
-    } else if (is_string($address)) {
-        return $address;
-    }
-    
-    return '';
-}
-
-// Process order status update if form submitted
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order_status'])) {
-    $orderId = $_POST['order_id'] ?? '';
-    $newStatus = $_POST['status'] ?? '';
-    $trackingNumber = $_POST['tracking_number'] ?? '';
-    
-    try {
-        // Create a PDO connection
-        $pdo = new PDO($dsn, $user, $pass, $options);
-        
-        // Update order status in database
-        $stmt = $pdo->prepare('UPDATE orders SET status = ?, trackingNumber = ? WHERE id = ?');
-        $result = $stmt->execute([$newStatus, $trackingNumber, $orderId]);
-        
-        // Close the connection
-        $pdo = null;
-        
-        if ($result) {
-            $updateSuccess = true;
-            
-            // Update the order in the array to reflect changes
-            foreach ($ordersData as &$order) {
-                if (($order['id'] ?? '') == $orderId) {
-                    $order['status'] = $newStatus;
-                    $order['trackingNumber'] = $trackingNumber;
-                    break;
-                }
-            }
-        } else {
-            $updateError = 'Failed to update order status.';
-        }
-    } catch (PDOException $e) {
-        $updateError = 'Database error: ' . $e->getMessage();
-    } catch (Exception $e) {
-        $updateError = 'Unexpected error: ' . $e->getMessage();
-    }
-}
+$message = $_GET['message'] ?? '';
+$messageType = $_GET['type'] ?? '';
 ?>
 
 <style>
-  .admin-data-label {
-    color: #222 !important;
-  }
-  .admin-data-value {
-    color: #c00 !important;
-    font-weight: bold;
-  }
+    /* Force the orders title to be green with highest specificity */
+    h1.orders-title.text-2xl.font-bold {
+        color: #87ac3a !important;
+    }
+    
+    /* Brand button styling */
+    .brand-button {
+        background-color: #87ac3a !important;
+        color: white !important;
+        transition: background-color 0.3s ease;
+    }
+    
+    .brand-button:hover {
+        background-color: #6b8e23 !important; /* Darker shade for hover */
+    }
+    
+    /* Payment status toggle buttons */
+    .payment-toggle {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 4px;
+    }
+    
+    .mark-paid {
+        background-color: #87ac3a;
+        color: white;
+    }
+    
+    .mark-paid:hover {
+        background-color: #6b8e23;
+    }
+    
+    .mark-unpaid {
+        background-color: #f59e0b;
+        color: white;
+    }
+    
+    .mark-unpaid:hover {
+        background-color: #d97706;
+    }
+    
+    /* Toast notification */
+    .toast-notification {
+        position: fixed; top: 20px; right: 20px; padding: 12px 20px;
+        border-radius: 4px; color: white; font-weight: 500; z-index: 9999;
+        opacity: 0; transform: translateY(-20px); box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: opacity 0.3s, transform 0.3s;
+    }
+    .toast-notification.show { opacity: 1; transform: translateY(0); }
+    .toast-notification.success { background-color: #48bb78; } /* Tailwind green-500 */
+    .toast-notification.error { background-color: #f56565; } /* Tailwind red-500 */
+    .toast-notification.info { background-color: #4299e1; } /* Tailwind blue-500 */
+
+    /* Orders table */
+    .orders-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px; }
+    .orders-table th { background-color: #87ac3a; color: white; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 0.8rem; position: sticky; top: 0; z-index: 10; }
+    .orders-table td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; }
+    .orders-table tr:hover { background-color: #f7fafc; }
+    .orders-table th:first-child { border-top-left-radius: 6px; }
+    .orders-table th:last-child { border-top-right-radius: 6px; }
+
+    /* Action buttons */
+    .action-btn { padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; border: none; }
+    .view-btn { background-color: #4299e1; color: white; } .view-btn:hover { background-color: #3182ce; }
+    .edit-btn { background-color: #f59e0b; color: white; } .edit-btn:hover { background-color: #d97706; }
+    .delete-btn { background-color: #f56565; color: white; } .delete-btn:hover { background-color: #e53e3e; }
+    
+    /* Modal styles */
+    .modal-outer { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
+    .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: 60rem; max-height: 90vh; display: flex; flex-direction: column; }
+    .modal-form-container { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-right: 0.5rem; }
+    
+    /* Order details in modal */
+    .order-details { margin-bottom: 1rem; }
+    .order-details-section { margin-bottom: 1rem; padding: 1rem; border-radius: 0.5rem; background-color: #f9fafb; }
+    .order-details-section h3 { margin-bottom: 0.5rem; color: #374151; font-size: 1.1rem; font-weight: 600; }
+    .order-details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .order-detail-item { margin-bottom: 0.5rem; }
+    .order-detail-label { font-weight: 500; color: #6b7280; font-size: 0.85rem; }
+    .order-detail-value { font-weight: 600; color: #111827; }
+    
+    /* Delete confirmation modal */
+    .delete-modal { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 60; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .delete-modal.show { opacity: 1; pointer-events: auto; }
+    .delete-modal-content { background-color: white; border-radius: 0.5rem; padding: 1.25rem; width: 100%; max-width: 30rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+    
+    /* Loading spinner */
+    .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Status badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .status-pending { background-color: #fef3c7; color: #92400e; }
+    .status-processing { background-color: #e0f2fe; color: #0369a1; }
+    .status-shipped { background-color: #d1fae5; color: #047857; }
+    .status-delivered { background-color: #dcfce7; color: #166534; }
+    .status-cancelled { background-color: #fee2e2; color: #b91c1c; }
+    
+    .payment-status-pending { background-color: #fef3c7; color: #92400e; }
+    .payment-status-received { background-color: #dcfce7; color: #166534; }
 </style>
 
-<!-- Top bar: Back to Dashboard | Search/Filters | Add New Order (if applicable) -->
-<div class="mb-4 flex flex-row justify-between items-center gap-2">
-    <a href="/?page=admin" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to Dashboard
-    </a>
-    <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0" style="flex:1;max-width:600px;justify-content:center;">
-        <input type="hidden" name="page" value="admin">
-        <input type="hidden" name="section" value="orders">
-        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm); ?>" class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500" placeholder="Search..." style="max-width:140px;">
-        <select id="status" name="status" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:100px;">
-            <option value="all" <?php echo $filterStatus === 'all' ? 'selected' : ''; ?>>All</option>
-            <option value="active" <?php echo $filterStatus === 'active' ? 'selected' : ''; ?>>Active</option>
-            <option value="processing" <?php echo $filterStatus === 'processing' ? 'selected' : ''; ?>>Processing</option>
-            <option value="completed" <?php echo $filterStatus === 'completed' ? 'selected' : ''; ?>>Completed</option>
-            <option value="cancelled" <?php echo $filterStatus === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
-        </select>
-        <select id="date_range" name="date_range" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:100px;">
-            <option value="all" <?php echo $dateRange === 'all' ? 'selected' : ''; ?>>All Dates</option>
-            <option value="today" <?php echo $dateRange === 'today' ? 'selected' : ''; ?>>Today</option>
-            <option value="week" <?php echo $dateRange === 'week' ? 'selected' : ''; ?>>This Week</option>
-            <option value="month" <?php echo $dateRange === 'month' ? 'selected' : ''; ?>>This Month</option>
-        </select>
-        <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-        </button>
-    </form>
-    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" onclick="window.location.href='/?page=admin&section=orders&export=1'">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        Export Orders
-    </button>
-</div>
-
-<!-- Status Update Success Message -->
-<?php if (isset($updateSuccess) && $updateSuccess): ?>
-<div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-    <div class="flex">
-        <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-            </svg>
-        </div>
-        <div class="ml-3">
-            <p class="text-sm text-green-700">
-                Order status updated successfully.
-            </p>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- Order List -->
-<div class="bg-white shadow rounded-lg overflow-hidden mb-6">
-    <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
-            Order List
-        </h3>
-        <p class="mt-1 max-w-2xl text-sm text-gray-500">
-            Showing <?php echo count($paginatedOrders); ?> of <?php echo $totalItems; ?> orders
-        </p>
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-5">
+        <h1 class="orders-title text-2xl font-bold" style="color: #87ac3a !important;">Orders Management</h1>
     </div>
     
-    <?php if (empty($paginatedOrders)): ?>
-        <div class="p-6 text-center text-gray-500 italic">
-            No orders found matching your criteria.
+    <?php if ($message): ?>
+        <div class="mb-4 p-3 rounded text-white <?= $messageType === 'success' ? 'bg-green-500' : 'bg-red-500'; ?>">
+            <?= htmlspecialchars($message); ?>
         </div>
-    <?php else: ?>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+    <?php endif; ?>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Payment Method</th>
+                    <th>Payment Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($orders)): ?>
+                    <tr><td colspan="8" class="text-center py-4">No orders found.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($orders as $order): ?>
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <a href="<?php echo getSortUrl('id', $sortBy, $sortDir); ?>" class="flex items-center">
-                                <span class="admin-data-label">Order ID</span> <?php echo getSortIndicator('id', $sortBy, $sortDir); ?>
-                            </a>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <a href="<?php echo getSortUrl('date', $sortBy, $sortDir); ?>" class="flex items-center">
-                                <span class="admin-data-label">Date</span> <?php echo getSortIndicator('date', $sortBy, $sortDir); ?>
-                            </a>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <a href="<?php echo getSortUrl('customer', $sortBy, $sortDir); ?>" class="flex items-center">
-                                <span class="admin-data-label">Customer</span> <?php echo getSortIndicator('customer', $sortBy, $sortDir); ?>
-                            </a>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <a href="<?php echo getSortUrl('total', $sortBy, $sortDir); ?>" class="flex items-center">
-                                <span class="admin-data-label">Total</span> <?php echo getSortIndicator('total', $sortBy, $sortDir); ?>
-                            </a>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <a href="<?php echo getSortUrl('status', $sortBy, $sortDir); ?>" class="flex items-center">
-                                <span class="admin-data-label">Status</span> <?php echo getSortIndicator('status', $sortBy, $sortDir); ?>
-                            </a>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <span class="admin-data-label">Payment Status</span>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <span class="admin-data-label">Actions</span>
-                        </th>
+                        <td><?= htmlspecialchars($order['id']) ?></td>
+                        <td><?= htmlspecialchars($order['username']) ?></td>
+                        <td><?= htmlspecialchars(date('M j, Y', strtotime($order['date']))) ?></td>
+                        <td>$<?= number_format(floatval($order['total']), 2) ?></td>
+                        <td>
+                            <span class="status-badge status-<?= strtolower($order['status']) ?>">
+                                <?= htmlspecialchars($order['status']) ?>
+                            </span>
+                        </td>
+                        <td><?= htmlspecialchars($order['paymentMethod']) ?></td>
+                        <td>
+                            <span class="payment-status-badge payment-status-<?= strtolower($order['paymentStatus']) ?>">
+                                <?= htmlspecialchars($order['paymentStatus']) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="?page=admin_orders&view=<?= htmlspecialchars($order['id']) ?>" class="action-btn view-btn" title="View Order">👁️</a>
+                            <a href="?page=admin_orders&edit=<?= htmlspecialchars($order['id']) ?>" class="action-btn edit-btn" title="Edit Order">✏️</a>
+                            <button class="action-btn delete-btn delete-order" data-id="<?= htmlspecialchars($order['id']) ?>" title="Delete Order">🗑️</button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <?php foreach ($paginatedOrders as $order): 
-                        $orderId = $order['id'] ?? '';
-                        $orderDate = $order['date_formatted'] ?? 'Unknown Date';
-                        $userId = $order['userId'] ?? '';
-                        $total = $order['total'] ?? 0;
-                        $status = $order['status'] ?? 'Pending';
-                        $paymentStatus = $order['paymentStatus'] ?? $order['payment_status'] ?? 'Pending';
-                        
-                        // Get customer name
-                        $customerName = getCustomerName($userId, $customersData);
-                    ?>
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span class="admin-data-value">#<?php echo htmlspecialchars($orderId); ?></span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span class="admin-data-value"><?php echo htmlspecialchars($orderDate); ?></span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($customerName); ?></div>
-                                <div class="text-sm text-gray-500">ID: <span class="admin-data-value"><?php echo htmlspecialchars($userId); ?></span></div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span class="admin-data-value">$<?php echo number_format(floatval($total), 2); ?></span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <?php 
-                                $statusColor = 'gray';
-                                
-                                switch($status) {
-                                    case 'Completed':
-                                        $statusColor = 'green';
-                                        break;
-                                    case 'Processing':
-                                        $statusColor = 'blue';
-                                        break;
-                                    case 'Shipped':
-                                        $statusColor = 'indigo';
-                                        break;
-                                    case 'Delivered':
-                                        $statusColor = 'purple';
-                                        break;
-                                    case 'Cancelled':
-                                        $statusColor = 'red';
-                                        break;
-                                    default:
-                                        $statusColor = 'yellow';
-                                }
-                                ?>
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-<?php echo $statusColor; ?>-100 text-<?php echo $statusColor; ?>-800">
-                                    <span class="admin-data-value"><?php echo htmlspecialchars($status); ?></span>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-<?php echo $paymentStatus === 'Received' ? 'green' : 'yellow'; ?>-100 text-<?php echo $paymentStatus === 'Received' ? 'green' : 'yellow'; ?>-800">
-                                    <span class="admin-data-value"><?php echo htmlspecialchars($paymentStatus); ?></span>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="/?page=admin&section=orders&action=view&id=<?php echo $orderId; ?>" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
-                                <a href="/?page=admin&section=orders&action=edit&id=<?php echo $orderId; ?>" class="text-green-600 hover:text-green-900">Update</a>
-                            </td>
-                        </tr>
                     <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination -->
-        <?php if ($totalPages > 1): ?>
-            <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            Showing <span class="font-medium"><?php echo $offset + 1; ?></span> to <span class="font-medium"><?php echo min($offset + $itemsPerPage, $totalItems); ?></span> of <span class="font-medium"><?php echo $totalItems; ?></span> results
-                        </p>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- View Order Modal -->
+<?php if ($modalMode === 'view' && !empty($viewOrderId)): ?>
+    <?php
+    // Get order details
+    $orderStmt = $pdo->prepare("SELECT o.*, u.username FROM orders o JOIN users u ON o.userId = u.id WHERE o.id = ?");
+    $orderStmt->execute([$viewOrderId]);
+    $orderDetails = $orderStmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($orderDetails):
+    ?>
+    <div class="modal-outer" id="viewOrderModal">
+        <div class="modal-content-wrapper">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold text-green-700">Order Details: <?= htmlspecialchars($viewOrderId) ?></h2>
+                <a href="?page=admin_orders" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
+            </div>
+            
+            <div class="modal-form-container">
+                <div class="order-details">
+                    <div class="order-details-section">
+                        <h3>Order Information</h3>
+                        <div class="order-details-grid">
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Order ID</div>
+                                <div class="order-detail-value"><?= htmlspecialchars($orderDetails['id']) ?></div>
+                            </div>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Date</div>
+                                <div class="order-detail-value"><?= htmlspecialchars(date('F j, Y', strtotime($orderDetails['date']))) ?></div>
+                            </div>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Customer</div>
+                                <div class="order-detail-value"><?= htmlspecialchars($orderDetails['username']) ?></div>
+                            </div>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Total</div>
+                                <div class="order-detail-value">$<?= number_format(floatval($orderDetails['total']), 2) ?></div>
+                            </div>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Status</div>
+                                <div class="order-detail-value">
+                                    <span class="status-badge status-<?= strtolower($orderDetails['status']) ?>">
+                                        <?= htmlspecialchars($orderDetails['status']) ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Shipping Address</div>
+                                <div class="order-detail-value"><?= htmlspecialchars($orderDetails['shippingAddress'] ?? 'N/A') ?></div>
+                            </div>
+                            <?php if (!empty($orderDetails['trackingNumber'])): ?>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Tracking Number</div>
+                                <div class="order-detail-value"><?= htmlspecialchars($orderDetails['trackingNumber']) ?></div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    <div>
-                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                            <?php
-                            // Previous page link
-                            $prevPageUrl = '?';
-                            $queryParams = $_GET;
-                            $queryParams['page'] = max(1, $currentPage - 1);
-                            $prevPageUrl .= http_build_query($queryParams);
-                            
-                            // Next page link
-                            $nextPageUrl = '?';
-                            $queryParams = $_GET;
-                            $queryParams['page'] = min($totalPages, $currentPage + 1);
-                            $nextPageUrl .= http_build_query($queryParams);
-                            ?>
-                            
-                            <a href="<?php echo $prevPageUrl; ?>" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                <span class="sr-only">Previous</span>
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                            </a>
-                            
-                            <?php
-                            // Page number links
-                            $startPage = max(1, $currentPage - 2);
-                            $endPage = min($totalPages, $currentPage + 2);
-                            
-                            for ($i = $startPage; $i <= $endPage; $i++) {
-                                $pageUrl = '?';
-                                $queryParams = $_GET;
-                                $queryParams['page'] = $i;
-                                $pageUrl .= http_build_query($queryParams);
-                                
-                                $isCurrentPage = $i === $currentPage;
-                                $classes = $isCurrentPage 
-                                    ? 'z-10 bg-green-50 border-green-500 text-green-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium'
-                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium';
-                                
-                                echo '<a href="' . $pageUrl . '" class="' . $classes . '">' . $i . '</a>';
-                            }
-                            ?>
-                            
-                            <a href="<?php echo $nextPageUrl; ?>" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                <span class="sr-only">Next</span>
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                </svg>
-                            </a>
-                        </nav>
+                    
+                    <div class="order-details-section">
+                        <h3>Payment Information</h3>
+                        <div class="order-details-grid">
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Payment Method</div>
+                                <div class="order-detail-value"><?= htmlspecialchars($orderDetails['paymentMethod']) ?></div>
+                            </div>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Payment Status</div>
+                                <div class="order-detail-value">
+                                    <span class="payment-status-badge payment-status-<?= strtolower($orderDetails['paymentStatus']) ?>">
+                                        <?= htmlspecialchars($orderDetails['paymentStatus']) ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <?php if ($orderDetails['paymentMethod'] === 'Check' && !empty($orderDetails['checkNumber'])): ?>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Check Number</div>
+                                <div class="order-detail-value"><?= htmlspecialchars($orderDetails['checkNumber']) ?></div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($orderDetails['paymentDate'])): ?>
+                            <div class="order-detail-item">
+                                <div class="order-detail-label">Payment Date</div>
+                                <div class="order-detail-value"><?= htmlspecialchars(date('F j, Y', strtotime($orderDetails['paymentDate']))) ?></div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($orderDetails['paymentNotes'])): ?>
+                            <div class="order-detail-item col-span-2">
+                                <div class="order-detail-label">Payment Notes</div>
+                                <div class="order-detail-value"><?= htmlspecialchars($orderDetails['paymentNotes']) ?></div>
+                            </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
+                    
+                    <!-- Order Items would go here if you have them in your database -->
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-auto pt-4 border-t">
+                    <a href="?page=admin_orders" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 inline-block text-sm">Close</a>
+                    <a href="?page=admin_orders&edit=<?= htmlspecialchars($viewOrderId) ?>" class="brand-button px-4 py-2 rounded text-sm">Edit Order</a>
                 </div>
             </div>
-        <?php endif; ?>
+        </div>
+    </div>
     <?php endif; ?>
+<?php endif; ?>
+
+<!-- Edit Order Modal -->
+<?php if ($modalMode === 'edit' && !empty($editOrderId)): ?>
+    <?php
+    // Get order details
+    $orderStmt = $pdo->prepare("SELECT o.*, u.username FROM orders o JOIN users u ON o.userId = u.id WHERE o.id = ?");
+    $orderStmt->execute([$editOrderId]);
+    $orderDetails = $orderStmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($orderDetails):
+    ?>
+    <div class="modal-outer" id="editOrderModal">
+        <div class="modal-content-wrapper">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold text-green-700">Edit Order: <?= htmlspecialchars($editOrderId) ?></h2>
+                <a href="?page=admin_orders" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
+            </div>
+            
+            <div class="modal-form-container">
+                <form id="orderForm" method="POST" action="/api/update-payment-status.php" class="space-y-4">
+                    <input type="hidden" name="orderId" value="<?= htmlspecialchars($editOrderId) ?>">
+                    
+                    <div class="order-details-section">
+                        <h3>Order Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="status" class="block text-gray-700 text-sm font-medium mb-1">Order Status</label>
+                                <select id="status" name="status" class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                    <option value="Pending" <?= $orderDetails['status'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
+                                    <option value="Processing" <?= $orderDetails['status'] === 'Processing' ? 'selected' : '' ?>>Processing</option>
+                                    <option value="Shipped" <?= $orderDetails['status'] === 'Shipped' ? 'selected' : '' ?>>Shipped</option>
+                                    <option value="Delivered" <?= $orderDetails['status'] === 'Delivered' ? 'selected' : '' ?>>Delivered</option>
+                                    <option value="Cancelled" <?= $orderDetails['status'] === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="trackingNumber" class="block text-gray-700 text-sm font-medium mb-1">Tracking Number</label>
+                                <input type="text" id="trackingNumber" name="trackingNumber" class="mt-1 block w-full p-2 border border-gray-300 rounded" value="<?= htmlspecialchars($orderDetails['trackingNumber'] ?? '') ?>">
+                            </div>
+                            <div class="col-span-2">
+                                <label for="shippingAddress" class="block text-gray-700 text-sm font-medium mb-1">Shipping Address</label>
+                                <textarea id="shippingAddress" name="shippingAddress" rows="2" class="mt-1 block w-full p-2 border border-gray-300 rounded"><?= htmlspecialchars($orderDetails['shippingAddress'] ?? '') ?></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-details-section">
+                        <h3>Payment Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="paymentMethod" class="block text-gray-700 text-sm font-medium mb-1">Payment Method</label>
+                                <select id="paymentMethod" name="paymentMethod" class="mt-1 block w-full p-2 border border-gray-300 rounded" onchange="toggleCheckNumberField()">
+                                    <option value="Credit Card" <?= $orderDetails['paymentMethod'] === 'Credit Card' ? 'selected' : '' ?>>Credit Card</option>
+                                    <option value="PayPal" <?= $orderDetails['paymentMethod'] === 'PayPal' ? 'selected' : '' ?>>PayPal</option>
+                                    <option value="Check" <?= $orderDetails['paymentMethod'] === 'Check' ? 'selected' : '' ?>>Check</option>
+                                    <option value="Cash" <?= $orderDetails['paymentMethod'] === 'Cash' ? 'selected' : '' ?>>Cash</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="paymentStatus" class="block text-gray-700 text-sm font-medium mb-1">Payment Status</label>
+                                <select id="paymentStatus" name="paymentStatus" class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                    <option value="Pending" <?= $orderDetails['paymentStatus'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
+                                    <option value="Received" <?= $orderDetails['paymentStatus'] === 'Received' ? 'selected' : '' ?>>Received</option>
+                                </select>
+                            </div>
+                            <div id="checkNumberField" style="<?= $orderDetails['paymentMethod'] === 'Check' ? '' : 'display: none;' ?>">
+                                <label for="checkNumber" class="block text-gray-700 text-sm font-medium mb-1">Check Number</label>
+                                <input type="text" id="checkNumber" name="checkNumber" class="mt-1 block w-full p-2 border border-gray-300 rounded" value="<?= htmlspecialchars($orderDetails['checkNumber'] ?? '') ?>">
+                            </div>
+                            <div>
+                                <label for="paymentDate" class="block text-gray-700 text-sm font-medium mb-1">Payment Date</label>
+                                <input type="date" id="paymentDate" name="paymentDate" class="mt-1 block w-full p-2 border border-gray-300 rounded" value="<?= htmlspecialchars($orderDetails['paymentDate'] ?? '') ?>">
+                            </div>
+                            <div class="col-span-2">
+                                <label for="paymentNotes" class="block text-gray-700 text-sm font-medium mb-1">Payment Notes</label>
+                                <textarea id="paymentNotes" name="paymentNotes" rows="2" class="mt-1 block w-full p-2 border border-gray-300 rounded"><?= htmlspecialchars($orderDetails['paymentNotes'] ?? '') ?></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-auto pt-4 border-t">
+                        <a href="?page=admin_orders" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 inline-block text-sm">Cancel</a>
+                        <button type="submit" id="saveOrderBtn" class="brand-button px-4 py-2 rounded text-sm">
+                            <span class="button-text">Save Changes</span>
+                            <span class="loading-spinner hidden"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+<?php endif; ?>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="delete-modal">
+    <div class="delete-modal-content">
+        <h2 class="text-md font-bold mb-3 text-gray-800">Confirm Delete</h2>
+        <p class="mb-4 text-sm text-gray-600">Are you sure you want to delete this order? This action cannot be undone.</p>
+        <div class="flex justify-end space-x-2">
+            <button type="button" class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm close-modal-button">Cancel</button>
+            <button type="button" id="confirmDeleteBtn" class="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Delete</button>
+        </div>
+    </div>
 </div>
 
-<!-- Order Detail View -->
-<?php
-if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) {
-    $orderId = $_GET['id'];
-    $orderData = null;
-    
-    // Find the order
-    foreach ($ordersData as $order) {
-        if (($order['id'] ?? '') == $orderId) {
-            $orderData = $order;
-            break;
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle check number field based on payment method
+    window.toggleCheckNumberField = function() {
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const checkNumberField = document.getElementById('checkNumberField');
+        
+        if (paymentMethod === 'Check') {
+            checkNumberField.style.display = 'block';
+        } else {
+            checkNumberField.style.display = 'none';
         }
+    };
+    
+    // Show toast notification
+    function showToast(type, message) {
+        const existingToast = document.getElementById('toast-notification');
+        if (existingToast) {
+            existingToast.remove();
+        }
+        const toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.className = `toast-notification ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
     
-    if ($orderData) {
-        $userId = $orderData['userId'] ?? '';
-        $orderDate = $orderData['date_formatted'] ?? 'Unknown Date';
-        $orderStatus = $orderData['status'] ?? 'Pending';
-        $orderTotal = $orderData['total'] ?? 0;
-        $orderItems = $orderData['items'] ?? [];
-        $shippingAddress = $orderData['shippingAddress'] ?? '';
-        $billingAddress = $orderData['billingAddress'] ?? '';
-        $trackingNumber = $orderData['trackingNumber'] ?? '';
-        $paymentMethod = $orderData['paymentMethod'] ?? 'Credit Card';
-        
-        // Get customer info
-        $customerName = getCustomerName($userId, $customersData);
-        $customerEmail = '';
-        foreach ($customersData as $customer) {
-            if (($customer['id'] ?? '') == $userId) {
-                $customerEmail = $customer['email'] ?? '';
-                break;
+    // Handle order form submission
+    const orderForm = document.getElementById('orderForm');
+    if (orderForm) {
+        orderForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveOrderBtn');
+            const btnText = saveBtn.querySelector('.button-text');
+            const spinner = saveBtn.querySelector('.loading-spinner');
+            
+            btnText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            saveBtn.disabled = true;
+            
+            const formData = new FormData(orderForm);
+            
+            fetch('/api/update-payment-status.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Order updated successfully');
+                    setTimeout(() => {
+                        window.location.href = '?page=admin_orders';
+                    }, 1000);
+                } else {
+                    showToast('error', data.message || 'Failed to update order');
+                    btnText.classList.remove('hidden');
+                    spinner.classList.add('hidden');
+                    saveBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'An error occurred while updating the order');
+                btnText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                saveBtn.disabled = false;
+            });
+        });
+    }
+    
+    // Handle payment toggle buttons
+    document.querySelectorAll('.payment-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.dataset.orderId;
+            const action = this.classList.contains('mark-paid') ? 'markPaid' : 'markUnpaid';
+            
+            fetch('/api/update-payment-status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `orderId=${orderId}&action=${action}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', data.message);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('error', data.message || 'Failed to update payment status');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'An error occurred while updating payment status');
+            });
+        });
+    });
+    
+    // Handle delete order buttons
+    let orderIdToDelete = null;
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    
+    document.querySelectorAll('.delete-order').forEach(button => {
+        button.addEventListener('click', function() {
+            orderIdToDelete = this.dataset.id;
+            deleteConfirmModal.classList.add('show');
+        });
+    });
+    
+    // Handle delete confirmation
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (!orderIdToDelete) return;
+            
+            fetch(`/api/delete-order.php?orderId=${orderIdToDelete}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Order deleted successfully');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('error', data.message || 'Failed to delete order');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'An error occurred while deleting the order');
+            });
+            
+            deleteConfirmModal.classList.remove('show');
+        });
+    }
+    
+    // Close delete modal
+    document.querySelectorAll('.close-modal-button').forEach(button => {
+        button.addEventListener('click', function() {
+            deleteConfirmModal.classList.remove('show');
+        });
+    });
+    
+    // Close modals on escape key
+    window.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            if (deleteConfirmModal.classList.contains('show')) {
+                deleteConfirmModal.classList.remove('show');
             }
         }
-?>
-<div class="bg-white shadow rounded-lg overflow-hidden mb-6">
-    <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-        <div>
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Order #<span class="admin-data-value"><?php echo htmlspecialchars($orderId); ?></span>
-            </h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                Placed on <span class="admin-data-value"><?php echo htmlspecialchars($orderDate); ?></span>
-            </p>
-        </div>
-        <div>
-            <a href="/?page=admin&section=orders" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Orders
-            </a>
-        </div>
-    </div>
-    
-    <!-- Order Status -->
-    <div class="p-6 border-b border-gray-200">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div class="mb-4 md:mb-0">
-                <h4 class="text-lg font-medium text-gray-900">Order Status</h4>
-                <?php 
-                $statusColor = 'gray';
-                
-                switch($orderStatus) {
-                    case 'Completed':
-                        $statusColor = 'green';
-                        break;
-                    case 'Processing':
-                        $statusColor = 'blue';
-                        break;
-                    case 'Shipped':
-                        $statusColor = 'indigo';
-                        break;
-                    case 'Delivered':
-                        $statusColor = 'purple';
-                        break;
-                    case 'Cancelled':
-                        $statusColor = 'red';
-                        break;
-                    default:
-                        $statusColor = 'yellow';
-                }
-                ?>
-                <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-<?php echo $statusColor; ?>-100 text-<?php echo $statusColor; ?>-800">
-                    <span class="admin-data-value"><?php echo htmlspecialchars($orderStatus); ?></span>
-                </span>
-                <?php if (!empty($trackingNumber)): ?>
-                <div class="mt-2 text-sm text-gray-500">
-                    Tracking #: <span class="admin-data-value"><?php echo htmlspecialchars($trackingNumber); ?></span>
-                </div>
-                <?php endif; ?>
-            </div>
-            <div>
-                <a href="/?page=admin&section=orders&action=edit&id=<?php echo $orderId; ?>" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Update Status
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Customer and Order Info -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-b border-gray-200">
-        <div>
-            <h4 class="text-lg font-medium text-gray-900 mb-4">Customer Information</h4>
-            <div class="flex items-center mb-4">
-                <div class="flex-shrink-0 h-10 w-10">
-                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span class="text-gray-600 font-medium">
-                            <?php 
-                            $initials = 'CU';
-                            $nameParts = explode(' ', $customerName);
-                            if (count($nameParts) >= 2) {
-                                $initials = substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1);
-                            } elseif (!empty($customerName)) {
-                                $initials = substr($customerName, 0, 2);
-                            }
-                            echo strtoupper($initials);
-                            ?>
-                        </span>
-                    </div>
-                </div>
-                <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">
-                        <span class="admin-data-label">Customer Name</span>
-                        <span class="admin-data-value"><?php echo htmlspecialchars($customerName); ?></span>
-                    </div>
-                    <div class="text-sm text-gray-500">
-                        <span class="admin-data-label">Customer Email</span>
-                        <span class="admin-data-value"><?php echo htmlspecialchars($customerEmail); ?></span>
-                    </div>
-                </div>
-            </div>
-            <a href="/?page=admin&section=customers&action=view&id=<?php echo $userId; ?>" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                <span class="admin-data-label">View Customer Profile</span> →
-            </a>
-        </div>
-        
-        <div>
-            <h4 class="text-lg font-medium text-gray-900 mb-4">Order Details</h4>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <span class="block text-sm font-medium text-gray-500">Order Date</span>
-                    <span class="block text-gray-900"><span class="admin-data-label">Order Date</span> <?php echo htmlspecialchars($orderDate); ?></span>
-                </div>
-                <div>
-                    <span class="block text-sm font-medium text-gray-500">Payment Method</span>
-                    <span class="block text-gray-900"><span class="admin-data-label">Payment Method</span> <?php echo htmlspecialchars($paymentMethod); ?></span>
-                </div>
-                <div>
-                    <span class="block text-sm font-medium text-gray-500">Total Amount</span>
-                    <span class="block text-gray-900 font-bold"><span class="admin-data-label">Total Amount</span> $<?php echo number_format(floatval($orderTotal), 2); ?></span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Shipping and Billing -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border-b border-gray-200">
-        <div>
-            <h4 class="text-lg font-medium text-gray-900 mb-4">Shipping Address</h4>
-            <p class="text-gray-700 whitespace-pre-line"><span class="admin-data-label">Shipping Address</span> <?php echo htmlspecialchars(formatAddress($shippingAddress)); ?></p>
-        </div>
-        
-        <div>
-            <h4 class="text-lg font-medium text-gray-900 mb-4">Billing Address</h4>
-            <p class="text-gray-700 whitespace-pre-line"><span class="admin-data-label">Billing Address</span> <?php echo htmlspecialchars(formatAddress($billingAddress)); ?></p>
-        </div>
-    </div>
-    
-    <!-- Payment Status Section in Order Detail View -->
-    <div class="p-6 border-b border-gray-200">
-        <h4 class="text-lg font-medium text-gray-900 mb-2">Payment Status</h4>
-        <div class="flex items-center gap-4">
-            <span id="paymentStatusLabel" class="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-<?php echo ($orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending') === 'Received' ? 'green' : 'yellow'; ?>-100 text-<?php echo ($orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending') === 'Received' ? 'green' : 'yellow'; ?>-800">
-                <span class="admin-data-value"><?php echo htmlspecialchars($orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending'); ?></span>
-            </span>
-            <?php if ((($orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending') === 'Pending') && (($_SESSION['user']['role'] ?? '') === 'Admin')) : ?>
-                <button id="markPaymentReceivedBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Mark as Received</button>
-                <script>
-                document.getElementById('markPaymentReceivedBtn').onclick = async function() {
-                    if (!confirm('Mark payment as received for this order?')) return;
-                    try {
-                        const response = await fetch('/api/update-payment-status.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ orderId: <?php echo json_encode($orderId); ?>, newStatus: 'Received' })
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            alert('Payment marked as received!');
-                            location.reload();
-                        } else {
-                            alert('Error: ' + (data.error || 'Unknown error'));
-                        }
-                    } catch (error) {
-                        alert('Error updating payment status: ' + error.message);
-                    }
-                };
-                </script>
-            <?php endif; ?>
-        </div>
-    </div>
-    
-    <!-- Order Items -->
-    <div class="p-6">
-        <h4 class="text-lg font-medium text-gray-900 mb-4">Order Items</h4>
-        
-        <?php if (empty($orderItems)): ?>
-            <p class="text-gray-500 italic">No items found for this order.</p>
-        <?php else: ?>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <?php 
-                        $subtotal = 0;
-                        foreach ($orderItems as $item): 
-                            $productId = $item['productId'] ?? '';
-                            $productName = getProductName($productId, $inventoryData);
-                            $price = floatval($item['price'] ?? 0);
-                            $quantity = intval($item['quantity'] ?? 0);
-                            $itemTotal = $price * $quantity;
-                            $subtotal += $itemTotal;
-                        ?>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900"><span class="admin-data-label">Product</span> <?php echo htmlspecialchars($productName); ?></div>
-                                            <div class="text-sm text-gray-500"><span class="admin-data-label">SKU</span> <?php echo htmlspecialchars($productId); ?></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <span class="admin-data-value">$<?php echo number_format($price, 2); ?></span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <span class="admin-data-value"><?php echo $quantity; ?></span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                    <span class="admin-data-value">$<?php echo number_format($itemTotal, 2); ?></span>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">Subtotal:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                                <span class="admin-data-value">$<?php echo number_format($subtotal, 2); ?></span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">Shipping:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                                <span class="admin-data-value">$<?php echo number_format(floatval($orderTotal) - $subtotal, 2); ?></span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="3" class="px-6 py-4 whitespace-nowrap text-base font-bold text-gray-900 text-right">Total:</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-base font-bold text-gray-900 text-right">
-                                <span class="admin-data-value">$<?php echo number_format(floatval($orderTotal), 2); ?></span>
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
-<?php
-    } else {
-        echo '<div class="bg-white shadow rounded-lg p-6 mb-6 text-center text-red-600">Order not found.</div>';
-    }
-}
-?>
+    });
+});
+</script>
 
-<!-- Order Status Update Form -->
 <?php
-if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id'])) {
-    $orderId = $_GET['id'];
-    $orderData = null;
-    
-    // Find the order
-    foreach ($ordersData as $order) {
-        if (($order['id'] ?? '') == $orderId) {
-            $orderData = $order;
-            break;
-        }
-    }
-    
-    if ($orderData) {
-        $orderStatus = $orderData['status'] ?? 'Pending';
-        $trackingNumber = $orderData['trackingNumber'] ?? '';
-        $paymentStatus = $orderData['paymentStatus'] ?? $orderData['payment_status'] ?? 'Pending';
+$output = ob_get_clean();
+echo $output;
 ?>
-<div class="bg-white shadow rounded-lg overflow-hidden mb-6">
-    <div class="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-        <div>
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                Update Order Status
-            </h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                Order #<span class="admin-data-value"><?php echo htmlspecialchars($orderId); ?></span>
-            </p>
-        </div>
-        <div>
-            <a href="/?page=admin&section=orders&action=view&id=<?php echo $orderId; ?>" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Order Details
-            </a>
-        </div>
-    </div>
-    
-    <div class="p-6">
-        <form action="/?page=admin&section=orders&action=view&id=<?php echo $orderId; ?>" method="POST" class="space-y-6">
-            <input type="hidden" name="order_id" value="<?php echo htmlspecialchars($orderId); ?>">
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Order Status</label>
-                    <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
-                        <option value="Pending" <?php echo $orderStatus === 'Pending' ? 'selected' : ''; ?>>Pending</option>
-                        <option value="Processing" <?php echo $orderStatus === 'Processing' ? 'selected' : ''; ?>>Processing</option>
-                        <option value="Shipped" <?php echo $orderStatus === 'Shipped' ? 'selected' : ''; ?> <?php echo $paymentStatus !== 'Received' ? 'disabled' : ''; ?>>Shipped<?php echo $paymentStatus !== 'Received' ? ' (Payment not received)' : ''; ?></option>
-                        <option value="Delivered" <?php echo $orderStatus === 'Delivered' ? 'selected' : ''; ?>>Delivered</option>
-                        <option value="Completed" <?php echo $orderStatus === 'Completed' ? 'selected' : ''; ?>>Completed</option>
-                        <option value="Cancelled" <?php echo $orderStatus === 'Cancelled' ? 'selected' : ''; ?>>Cancelled</option>
-                    </select>
-                    <?php if ($paymentStatus !== 'Received') : ?>
-                        <div class="text-yellow-700 text-xs mt-1">You must mark payment as received before shipping.</div>
-                    <?php endif; ?>
-                </div>
-                
-                <div>
-                    <label for="tracking_number" class="block text-sm font-medium text-gray-700">Tracking Number</label>
-                    <input type="text" name="tracking_number" id="tracking_number" value="<?php echo htmlspecialchars($trackingNumber); ?>" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 gap-6">
-                <div>
-                    <label for="notes" class="block text-sm font-medium text-gray-700">Status Update Notes</label>
-                    <textarea id="notes" name="notes" rows="3" class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
-                    <p class="mt-2 text-sm text-gray-500">Add any notes about this status update (optional).</p>
-                </div>
-            </div>
-            
-            <div class="pt-5 border-t border-gray-200">
-                <div class="flex justify-end">
-                    <a href="/?page=admin&section=orders&action=view&id=<?php echo $orderId; ?>" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mr-3">Cancel</a>
-                    <button type="submit" name="update_order_status" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                        Update Order Status
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-<?php
-    } else {
-        echo '<div class="bg-white shadow rounded-lg p-6 mb-6 text-center text-red-600">Order not found.</div>';
-    }
-}
-?>
-
-<!-- Square Payment Configuration Placeholder (Admin Only) -->
-<?php if (isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'Admin') : ?>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <h2 class="text-xl font-bold text-gray-800 mb-2">Payment Integration Settings</h2>
-    <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Square Payment Integration</label>
-        <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded">
-            <strong>Coming Soon:</strong> You will be able to connect your Square account here to accept credit card payments online.<br>
-            When available, paste your Square Application ID and Access Token below.<br>
-            <em>(This section is a placeholder. No credentials are stored yet.)</em>
-        </div>
-    </div>
-    <form>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Square Application ID</label>
-            <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Paste Square Application ID here" disabled>
-        </div>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Square Access Token</label>
-            <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Paste Square Access Token here" disabled>
-        </div>
-        <button type="button" class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>Save (Coming Soon)</button>
-    </form>
-</div>
-<?php endif; ?>

@@ -194,19 +194,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_customer'])) {
     <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0" style="flex:1;max-width:600px;justify-content:center;">
         <input type="hidden" name="page" value="admin">
         <input type="hidden" name="section" value="customers">
-        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm); ?>" class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-purple-500 focus:border-purple-500" placeholder="Search..." style="max-width:140px;">
-        <select id="role" name="role" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-purple-500 focus:border-purple-500" style="max-width:100px;">
+        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($searchTerm); ?>" class="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-green-500 focus:border-green-500" placeholder="Search..." style="max-width:140px;">
+        <select id="role" name="role" class="block px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-green-500 focus:border-green-500" style="max-width:100px;">
             <option value="all" <?php echo $filterRole === 'all' ? 'selected' : ''; ?>>All Roles</option>
             <option value="customer" <?php echo $filterRole === 'customer' ? 'selected' : ''; ?>>Customer</option>
             <option value="admin" <?php echo $filterRole === 'admin' ? 'selected' : ''; ?>>Admin</option>
         </select>
-        <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+        <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent rounded-md shadow-sm text-xs font-medium text-white brand-button">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
         </button>
     </form>
-    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" onclick="window.location.href='/?page=admin&section=customers&action=add'">
+    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white brand-button" onclick="window.location.href='/?page=admin&section=customers&action=add'">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -309,8 +309,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_customer'])) {
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                            <span class="text-purple-600 font-medium">
+                                        <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                            <span class="text-green-600 font-medium">
                                                 <?php 
                                                 $initials = 'CU';
                                                 if ($firstName && $lastName) {
@@ -345,7 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_customer'])) {
                                 
                                 switch(strtolower($role)) {
                                     case 'admin':
-                                        $roleColor = 'purple';
+                                        $roleColor = 'green';
                                         break;
                                     case 'customer':
                                         $roleColor = 'green';
@@ -362,8 +362,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_customer'])) {
                                 <span class="admin-data-value"><?php echo $orderCount; ?></span> orders
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="/?page=admin&section=customers&action=view&id=<?php echo $customerId; ?>" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
-                                <a href="/?page=admin&section=customers&action=edit&id=<?php echo $customerId; ?>" class="text-purple-600 hover:text-purple-900 mr-3">Edit</a>
+                                <a href="/?page=admin&section=customers&action=view&id=<?php echo $customerId; ?>" class="text-green-600 hover:text-green-900 mr-3">View</a>
+                                <a href="/?page=admin&section=customers&action=edit&id=<?php echo $customerId; ?>" class="text-green-600 hover:text-green-900 mr-3">Edit</a>
                                 <button type="button" onclick="confirmDelete('<?php echo $customerId; ?>', '<?php echo htmlspecialchars(addslashes($firstName . ' ' . $lastName)); ?>')" class="text-red-600 hover:text-red-900">Delete</button>
                             </td>
                         </tr>
@@ -417,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_customer'])) {
                                 
                                 $isCurrentPage = $i === $currentPage;
                                 $classes = $isCurrentPage 
-                                    ? 'z-10 bg-purple-50 border-purple-500 text-purple-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium'
+                                    ? 'z-10 bg-green-50 border-green-500 text-green-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium'
                                     : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium';
                                 
                                 echo '<a href="' . $pageUrl . '" class="' . $classes . '">' . $i . '</a>';
@@ -522,7 +522,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
             </p>
         </div>
         <div>
-            <a href="/?page=admin&section=customers" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+            <a href="/?page=admin&section=customers" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -537,8 +537,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
             <h4 class="text-lg font-medium text-gray-900 mb-4">Personal Information</h4>
             <div class="flex items-center mb-4">
                 <div class="flex-shrink-0 h-16 w-16">
-                    <div class="h-16 w-16 rounded-full bg-purple-100 flex items-center justify-center">
-                        <span class="text-purple-600 font-medium text-xl">
+                    <div class="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                        <span class="text-green-600 font-medium text-xl">
                             <?php 
                             $initials = 'CU';
                             if ($firstName && $lastName) {
@@ -603,7 +603,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
             </div>
             
             <div class="mt-6 flex space-x-3">
-                <a href="/?page=admin&section=customers&action=edit&id=<?php echo $customerId; ?>" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                <a href="/?page=admin&section=customers&action=edit&id=<?php echo $customerId; ?>" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white brand-button">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
@@ -663,10 +663,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                                                 $statusColor = 'blue';
                                                 break;
                                             case 'Shipped':
-                                                $statusColor = 'indigo';
+                                                $statusColor = 'green';
                                                 break;
                                             case 'Delivered':
-                                                $statusColor = 'purple';
+                                                $statusColor = 'green';
                                                 break;
                                             case 'Cancelled':
                                                 $statusColor = 'red';
@@ -680,7 +680,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'view' && isset($_GET['id'])) 
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="/?page=admin&section=orders&action=view&id=<?php echo $orderId; ?>" class="text-indigo-600 hover:text-indigo-900">View</a>
+                                        <a href="/?page=admin&section=orders&action=view&id=<?php echo $orderId; ?>" class="text-green-600 hover:text-green-900">View</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

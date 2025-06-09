@@ -1,9 +1,5 @@
 <?php
-session_start();
-if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] ?? '') !== 'Admin') {
-    header('Location: /?page=login');
-    exit;
-}
+// Admin settings page - Authentication is now handled by index.php
 ?>
 <style>
   .admin-data-label {
@@ -33,6 +29,6 @@ if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] ?? '') !== 'Admin') 
             <label class="block text-sm font-medium text-gray-700">Square Access Token</label>
             <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Paste Square Access Token here" disabled>
         </div>
-        <button type="button" class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed" disabled>Save (Coming Soon)</button>
+        <button type="button" class="brand-button px-4 py-2 rounded cursor-not-allowed" disabled>Save (Coming Soon)</button>
     </form>
 </div> 

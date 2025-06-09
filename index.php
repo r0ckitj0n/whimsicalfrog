@@ -180,6 +180,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whimsical Frog - Custom Crafts</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after {
@@ -541,7 +542,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
     // Detect WebP support
     (function(){
         var d=document.createElement('div');
-        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==" onerror="document.documentElement.className += \' no-webp\';" onload="document.documentElement.className += \' webp\';">';
+        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==\" onerror=\"document.documentElement.className += \' no-webp\';\" onload=\"document.documentElement.className += \' webp\';\">';
     })();
 </script>
 

@@ -465,7 +465,7 @@ if (!empty($message) && !$isAjaxRequest) {
                 <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
             </div>
 
-            <form id="inventoryForm" method="POST" action="process_inventory_update.php" class="flex flex-col flex-grow overflow-hidden">
+            <form id="inventoryForm" method="POST" action="/process_inventory_update.php" class="flex flex-col flex-grow overflow-hidden">
                 <input type="hidden" name="action" value="<?php echo $modalMode === 'add' ? 'add' : 'update'; ?>">
                 <?php if ($modalMode === 'edit' && isset($editItem['id'])): ?>
                     <input type="hidden" name="itemId" value="<?php echo htmlspecialchars($editItem['id']); ?>">
@@ -741,7 +741,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('value', value);
         // action is not needed for inline edit as process_inventory_update.php detects it by field presence
 
-        fetch('process_inventory_update.php', { // Ensure this points to the correct processing script
+        fetch('/process_inventory_update.php', { // Ensure this points to the correct processing script (absolute path)
             method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => {
@@ -793,7 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const saveButtonText = saveButton.querySelector('.button-text');
             const saveButtonSpinner = saveButton.querySelector('.loading-spinner');
 
-            // The form.action attribute is now correctly set to "process_inventory_update.php"
+            // form.action is now an absolute path: "/process_inventory_update.php"
             console.log('Submitting inventory form via AJAX. Action URL:', form.action);
             console.log('Form Data:', Object.fromEntries(formData.entries()));
 
@@ -803,7 +803,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             form.querySelectorAll('.field-error-highlight').forEach(el => el.classList.remove('field-error-highlight'));
 
-            fetch(form.action, { // form.action will be "process_inventory_update.php"
+            fetch(form.action, { 
                 method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(response => {
@@ -812,8 +812,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Raw response text:', text);
                     if (!response.ok) {
                         let errorData = { error: `HTTP error! Status: ${response.status}`, details: text.substring(0, 500), rawText: text };
-                        try { const parsedError = JSON.parse(text); errorData = {...errorData, ...parsedError}; } catch (e) {}
-                        throw errorData;
+                        try { const parsedError = JSON.parse(text); errorData = {...errorData, ...parsedError}; } catch (e) {}\n                        throw errorData;
                     }
                     try { return JSON.parse(text); } catch (e) {
                         console.error("Failed to parse JSON from successful response:", e, text);
@@ -909,7 +908,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('itemId', itemIdForUpload); // Pass itemId
                 formData.append('productId', effectiveProductId || ''); // Pass productId if available
 
-                fetch('process_image_upload.php', { method: 'POST', body: formData })
+                fetch('/process_image_upload.php', { method: 'POST', body: formData }) // Absolute path
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -1041,7 +1040,7 @@ function saveCostItem() {
 
     if (isUpdate) { payload.id = id; }
 
-    fetch('process_cost_breakdown.php', {
+    fetch('/process_cost_breakdown.php', { // Absolute path
         method: method,
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify(payload)
@@ -1094,7 +1093,7 @@ function confirmDeleteCostItem() {
     btnText.classList.add('hidden');
     spinner.classList.remove('hidden');
 
-    fetch(`process_cost_breakdown.php?inventoryId=${currentItemId}&costType=${type}&id=${id}`, {
+    fetch(`/process_cost_breakdown.php?inventoryId=${currentItemId}&costType=${type}&id=${id}`, { // Absolute path
         method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(response => response.json())
@@ -1137,7 +1136,7 @@ function refreshCostBreakdown(useExistingData = false) {
         renderAllCostLists(); updateTotalsDisplay(); return;
     }
 
-    fetch(`process_cost_breakdown.php?inventoryId=${currentItemId}&costType=all`, {
+    fetch(`/process_cost_breakdown.php?inventoryId=${currentItemId}&costType=all`, { // Absolute path
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(response => response.json())

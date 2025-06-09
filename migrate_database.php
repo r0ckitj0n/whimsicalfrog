@@ -11,8 +11,8 @@
 // Security check - change this password
 define('MIGRATION_PASSWORD', 'migrate2025');
 
-// Database configuration
-require_once 'config.php';
+// Database configuration - fixed path to use api/config.php
+require_once 'api/config.php';
 
 // Check if password is provided
 $password = $_POST['password'] ?? $_GET['password'] ?? '';
@@ -92,6 +92,7 @@ $confirmed = $_POST['confirmed'] ?? false;
             <?php
             // Run the migration
             try {
+                // Use the database connection variables from api/config.php
                 $pdo = new PDO($dsn, $user, $pass, $options);
                 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 

@@ -164,7 +164,7 @@ CREATE TABLE `inventory_energy` (
 
 LOCK TABLES `inventory_energy` WRITE;
 /*!40000 ALTER TABLE `inventory_energy` DISABLE KEYS */;
-INSERT INTO `inventory_energy` VALUES (1,'I001','light while sewing',1.01),(2,'I001','sewing machine power',2.01),(3,'I002','power',3.01),(4,'I005','lights',1.00),(5,'I003','fire',10.00),(6,'I003','wood',2.00);
+INSERT INTO `inventory_energy` VALUES (1,'I001','light while sewing',1.01),(2,'I001','sewing machine power',2.01),(3,'I002','power',3.01),(4,'I005','lights',1.00),(5,'I003','fire',10.01),(6,'I003','wood',2.00);
 /*!40000 ALTER TABLE `inventory_energy` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -449,4 +449,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-08 21:48:27
+-- Dump completed on 2025-06-08 21:55:40

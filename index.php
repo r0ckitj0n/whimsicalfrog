@@ -5,7 +5,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // Load environment variables
 require_once __DIR__ . '/api/config.php';
-// Start or resume session
+// Start or resume session (already started at the top)
 
 // Check if a page is specified in the URL
 $page = isset($_GET['page']) ? $_GET['page'] : 'landing';
@@ -14,7 +14,8 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'landing';
 $allowed_pages = [
     'landing', 'main_room', 'shop', 'cart', 'login', 'register', 'admin', 'admin_inventory',
     'room_tshirts', 'room_tumblers', 'room_artwork', 'room_sublimation', 'room_windowwraps',
-    'admin_customers', 'admin_orders', 'admin_reports', 'admin_marketing', 'admin_settings'
+    'admin_customers', 'admin_orders', 'admin_reports', 'admin_marketing', 'admin_settings',
+    'account_settings' // Added account_settings if it's a page
 ];
 
 // Validate page parameter
@@ -22,28 +23,53 @@ if (!in_array($page, $allowed_pages)) {
     $page = 'landing'; // Default to landing if invalid
 }
 
-// Check if user is logged in
+// Check if user is logged in and process user data
 $isLoggedIn = isset($_SESSION['user']);
 $isAdmin = false;
 $userData = [];
 $welcomeMessage = "";
 
 if ($isLoggedIn) {
-    // Handle both JSON string and array formats for backward compatibility
-    if (is_string($_SESSION['user'])) {
-        $userData = json_decode($_SESSION['user'], true);
+    $currentSessionUser = $_SESSION['user']; // Work with a copy for processing
+    $processedUserData = null; 
+
+    if (is_string($currentSessionUser)) {
+        $decodedUser = json_decode($currentSessionUser, true);
+        // Check if decoding was successful and resulted in an array
+        if (is_array($decodedUser)) {
+            $_SESSION['user'] = $decodedUser; // Normalize: store the array back into the session
+            $processedUserData = $decodedUser;
+        } else {
+            // Invalid JSON string in session. Treat as not logged in for safety.
+            unset($_SESSION['user']);
+            $isLoggedIn = false; // Update $isLoggedIn status
+        }
+    } elseif (is_array($currentSessionUser)) {
+        $processedUserData = $currentSessionUser; // It's already an array
     } else {
-        $userData = $_SESSION['user'];
+        // $_SESSION['user'] is set but is neither a string nor an array (e.g. number, bool).
+        // This is an unexpected/corrupt state. Treat as not logged in.
+        unset($_SESSION['user']);
+        $isLoggedIn = false; // Update $isLoggedIn status
     }
-    
-    $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
-    
-    // Welcome message with user's name if available
-    if (isset($userData['firstName']) || isset($userData['lastName'])) {
-        $welcomeMessage = "Welcome, " . ($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '');
+
+    // If still logged in after processing and data is valid
+    if ($isLoggedIn && $processedUserData !== null) {
+        $userData = $processedUserData; 
+        $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
+        
+        // Welcome message with user's name if available
+        if (isset($userData['firstName']) || isset($userData['lastName'])) {
+            $welcomeMessage = "Welcome, " . ($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '');
+        }
+    } else {
+        // If $isLoggedIn became false due to session processing, ensure $isAdmin is false and $userData is empty
+        $isAdmin = false;
+        $userData = []; 
+        // $welcomeMessage remains its initial ""
     }
 }
-
+// This is the admin authentication check, correctly placed after $isAdmin is determined and before HTML output.
 // Redirect if trying to access admin pages without admin privileges
 if (strpos($page, 'admin') === 0 && !$isAdmin) {
     header('Location: /?page=login');
@@ -515,7 +541,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
     // Detect WebP support
     (function(){
         var d=document.createElement('div');
-        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==\" onerror=\"document.documentElement.className += \\' no-webp\\';\" onload=\"document.documentElement.className += \\' webp\\';\">';
+        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==" onerror="document.documentElement.className += \' no-webp\';" onload="document.documentElement.className += \' webp\';">';
     })();
 </script>
 
@@ -524,20 +550,20 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
     // --- DOM Elements ---
     const enterShopDoor = document.getElementById('enterShopDoor');
     const loginForm = document.getElementById('loginForm');
-    const cartCount = document.getElementById('cartCount');
+    const cartCountEl = document.getElementById('cartCount'); // Renamed to avoid conflict with cartCount variable
     const mainContent = document.getElementById('mainContent');
 
     // Update cart count when cart changes
-    function updateCartCount() {
-        if (typeof window.cart !== 'undefined') {
+    function updateCartDisplay() { // Renamed to avoid conflict with cart.js if any
+        if (typeof window.cart !== 'undefined' && cartCountEl) { // Check if cartCountEl exists
             const count = window.cart.items.reduce((total, item) => total + item.quantity, 0);
-            cartCount.textContent = count + ' items';
-            cartCount.style.display = count > 0 ? 'flex' : 'none';
+            cartCountEl.textContent = count + ' items';
+            // cartCountEl.style.display = count > 0 ? 'flex' : 'none'; // This might hide the "0 items" text, consider UX
         }
     }
 
     // Listen for cart updates
-    window.addEventListener('cartUpdated', updateCartCount);
+    window.addEventListener('cartUpdated', updateCartDisplay);
 
     // Initial cart count update
     document.addEventListener('DOMContentLoaded', function() {
@@ -546,7 +572,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             console.error('Cart not initialized properly');
         } else {
             console.log('Cart is initialized and ready');
-            updateCartCount();
+            updateCartDisplay();
         }
         
         // Removed document-level click handler to avoid interference with back button
@@ -584,20 +610,21 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
                 }
                 
                 // Store user data in both session storage and PHP session
-                sessionStorage.setItem('user', JSON.stringify(data));
+                // PHP session is now primarily handled by process_login.php setting $_SESSION['user'] correctly as an array
+                sessionStorage.setItem('user', JSON.stringify(data.user)); // Assuming data.user contains the user object
                 
-                // Store in PHP session via AJAX
-                await fetch('/set_session.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(data)
-                });
+                // No need for set_session.php if process_login.php handles session correctly
+                // await fetch('/set_session.php', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //     },
+                //     credentials: 'same-origin',
+                //     body: JSON.stringify(data.user)
+                // });
                 
                 // Redirect based on role
-                if (data.role === 'Admin') {
+                if (data.user && data.user.role === 'Admin') {
                     window.location.href = '/?page=admin';
                 } else {
                     window.location.href = '/?page=shop';
@@ -613,28 +640,9 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
         // Clear client-side session storage
         sessionStorage.removeItem('user');
         
-        // Clear PHP session
-        fetch('/set_session.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ clear: true })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Logout failed');
-            }
-            
-            // Force reload the page to clear any cached state
-            window.location.href = '/?page=login';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // Still redirect to login even if there's an error
-            window.location.href = '/?page=login';
-        });
+        // Clear PHP session by redirecting to logout.php
+        // logout.php should handle session_destroy() and redirect
+        window.location.href = '/logout.php'; 
     }
 </script>
 </body>

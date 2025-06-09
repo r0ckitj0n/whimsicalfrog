@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Edit Item Simulation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            color: #333;
+            background-color: #f9fafb;
+        }
+        h1, h2, h3 {
+            color: #556B2F;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+        }
+        .debug-section {
+            background-color: #fffbea;
+            border: 1px solid #f0b429;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .error {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        .success {
+            color: #38a169;
+            font-weight: bold;
+        }
+        
+        /* Cost Breakdown Styles from admin_inventory.php */
+        .cost-breakdown {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .cost-breakdown h3 {
+            color: #4a5568;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        .cost-breakdown-section {
+            margin-bottom: 16px;
+        }
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .cost-item:last-child {
+            border-bottom: none;
+        }
+        .cost-item-name {
+            font-weight: 500;
+        }
+        .cost-item-value {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .cost-totals {
+            background-color: #edf2f7;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+        .cost-total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        .suggested-cost {
+            color: #805ad5;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .cost-label {
+            font-size: 14px;
+            color: #718096;
+        }
+        
+        /* Modal Simulation */
+        .modal-simulation {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+    <h1>Edit Item Simulation Test</h1>
+    <p>This script simulates clicking the edit button for inventory item I001 and displays the cost breakdown section.</p><div class='debug-section'>
+    <h2>Test Configuration</h2>
+    <p>Simulating <code>$_GET['edit'] = 'I001'</code> to test cost breakdown display</p>
+</div><div class='debug-section'>
+    <h2>Simulated Parameters</h2>
+    <p>Edit Item ID: I001</p>
+</div><p class='success'>✅ Database configuration loaded successfully</p><p>Environment: LOCAL</p><p>Database: localhost/whimsicalfrog</p><p class='success'>✅ Database connection successful</p><p class='success'>✅ Found inventory item: T-Shirt, White, S (ID: I001)</p><p class='success'>✅ Cost breakdown data retrieved successfully</p><div class='debug-section'>
+        <h2>Cost Breakdown Array Structure</h2>
+        <pre>Array
+(
+    [materials] =&gt; Array
+        (
+            [0] =&gt; Array
+                (
+                    [id] =&gt; 1
+                    [inventoryId] =&gt; I001
+                    [name] =&gt; cotton sheet
+                    [cost] =&gt; 1.32
+                )
+
+        )
+
+    [labor] =&gt; Array
+        (
+            [0] =&gt; Array
+                (
+                    [id] =&gt; 1
+                    [inventoryId] =&gt; I001
+                    [description] =&gt; sewing a dress
+                    [cost] =&gt; 79.99
+                )
+
+        )
+
+    [energy] =&gt; Array
+        (
+            [0] =&gt; Array
+                (
+                    [id] =&gt; 1
+                    [inventoryId] =&gt; I001
+                    [description] =&gt; light while sewing
+                    [cost] =&gt; 1.00
+                )
+
+            [1] =&gt; Array
+                (
+                    [id] =&gt; 2
+                    [inventoryId] =&gt; I001
+                    [description] =&gt; sewing machine power
+                    [cost] =&gt; 2.00
+                )
+
+        )
+
+    [totals] =&gt; Array
+        (
+            [materialTotal] =&gt; 1.32
+            [laborTotal] =&gt; 79.99
+            [energyTotal] =&gt; 3
+            [suggestedCost] =&gt; 84.31
+        )
+
+)
+</pre>
+    </div><div class='modal-simulation'>
+    <div class='modal-header'>
+        <div class='modal-title'>Edit Item: T-Shirt, White, S</div>
+        <a href='#' class='close-btn'>×</a>
+    </div>
+    
+    <form method='POST' action='' class='space-y-4'>
+        <!-- Basic item fields would go here in the real form -->
+        <div style='margin-bottom: 20px;'>
+            <p><strong>Item ID:</strong> I001</p>
+            <p><strong>Name:</strong> T-Shirt, White, S</p>
+            <p><strong>Category:</strong> T-Shirts</p>
+            <p><strong>Current Cost Price:</strong> $8.50</p>
+            <p><strong>Current Retail Price:</strong> $19.99</p>
+        </div><div class='cost-breakdown'>
+        <h3>Cost Breakdown</h3>
+        
+        <!-- Materials Section -->
+        <div class='cost-breakdown-section'>
+            <h4 class='font-semibold text-gray-700 mb-2'>Materials</h4>
+            <div class='mb-2'><div class='cost-item'>
+                        <span class='cost-item-name'>cotton sheet</span>
+                        <span class='cost-item-value'>$1.32</span>
+                    </div></div>
+        </div>
+        
+        <!-- Labor Section -->
+        <div class='cost-breakdown-section'>
+            <h4 class='font-semibold text-gray-700 mb-2'>Labor</h4>
+            <div class='mb-2'><div class='cost-item'>
+                        <span class='cost-item-name'>sewing a dress</span>
+                        <span class='cost-item-value'>$79.99</span>
+                    </div></div>
+        </div>
+        
+        <!-- Energy Section -->
+        <div class='cost-breakdown-section'>
+            <h4 class='font-semibold text-gray-700 mb-2'>Energy</h4>
+            <div class='mb-2'><div class='cost-item'>
+                        <span class='cost-item-name'>light while sewing</span>
+                        <span class='cost-item-value'>$1.00</span>
+                    </div><div class='cost-item'>
+                        <span class='cost-item-name'>sewing machine power</span>
+                        <span class='cost-item-value'>$2.00</span>
+                    </div></div>
+        </div>
+        
+        <!-- Totals Section -->
+        <div class='cost-totals'>
+            <div class='cost-total-row'>
+                <span class='cost-label'>Materials Total:</span>
+                <span class='cost-item-value'>$1.32</span>
+            </div>
+            <div class='cost-total-row'>
+                <span class='cost-label'>Labor Total:</span>
+                <span class='cost-item-value'>$79.99</span>
+            </div>
+            <div class='cost-total-row'>
+                <span class='cost-label'>Energy Total:</span>
+                <span class='cost-item-value'>$3.00</span>
+            </div>
+            <div class='cost-total-row border-t border-gray-300 pt-2 mt-2'>
+                <span class='font-semibold'>Suggested Cost:</span>
+                <span class='font-bold text-purple-700'>$84.31</span>
+            </div>
+            <div class='mt-2 text-sm text-gray-600'>
+                <button type='button' onclick="alert('This would update the cost price field in the real form')" class='text-blue-600 hover:text-blue-800 underline'>Use suggested cost</button>
+            </div>
+        </div>
+    </div>
+        <div class='flex justify-end space-x-3' style='margin-top: 20px;'>
+            <button type='button' class='px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400'>Cancel</button>
+            <button type='button' class='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700'>Save Item</button>
+        </div>
+    </form>
+</div><div class='debug-section'>
+    <h2>Test Results</h2><p class='success'>✅ Cost breakdown data is available and displayed correctly</p><p>The cost breakdown section is rendering properly with the following data:</p>
+    <ul>
+        <li>Materials: 1 items</li>
+        <li>Labor: 1 items</li>
+        <li>Energy: 2 items</li>
+        <li>Suggested Cost: $84.31</li>
+    </ul></div>
+
+<div class='debug-section'>
+    <h2>Possible Issues</h2>
+    <p>If you're not seeing the cost breakdown in the actual admin interface, check for:</p>
+    <ol>
+        <li>JavaScript errors in the browser console that might prevent the modal from loading properly</li>
+        <li>CSS issues that might be hiding the cost breakdown section</li>
+        <li>Conditional checks in the PHP code that might be preventing the cost breakdown section from being included</li>
+        <li>URL parameter issues - make sure the edit parameter is being passed correctly</li>
+        <li>Database connection differences between development and production environments</li>
+    </ol>
+</div>
+
+</body>
+</html>

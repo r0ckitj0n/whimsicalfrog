@@ -76,19 +76,14 @@ try {
         }
         
         // Get top products
-        $topProductsStmt = $pdo->query("SELECT p.name, SUM(oi.quantity) as units 
-                                        FROM order_items oi
-                                        JOIN orders o ON oi.orderId = o.id
-                                        JOIN products p ON oi.productId = p.id
-                                        WHERE YEAR(o.date) = YEAR(CURDATE())
-                                        GROUP BY oi.productId
-                                        ORDER BY units DESC
-                                        LIMIT 5");
+        $topProductsStmt = $pdo->prepare("SELECT p.name, SUM(oi.quantity) as units \n                                        FROM order_items oi\n                                        JOIN orders o ON oi.orderId = o.id\n                                        JOIN products p ON oi.productId = p.id\n                                        WHERE o.date BETWEEN :start AND :end\n                                        GROUP BY oi.productId\n                                        ORDER BY units DESC\n                                        LIMIT 5");
+        $topProductsStmt->execute([':start'=>$marketingStart, ':end'=>$marketingEnd]);
         $topProducts = $topProductsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
     
-    // Total units (quantity) sold YTD
-    $unitsStmt = $pdo->query("SELECT SUM(oi.quantity) FROM order_items oi JOIN orders o ON oi.orderId = o.id WHERE YEAR(o.date) = YEAR(CURDATE())");
+    // Total units sold in selected range
+    $unitsStmt = $pdo->prepare("SELECT SUM(oi.quantity) FROM order_items oi JOIN orders o ON oi.orderId = o.id WHERE o.date BETWEEN :start AND :end");
+    $unitsStmt->execute([':start'=>$marketingStart, ':end'=>$marketingEnd]);
     $productCount = $unitsStmt->fetchColumn() ?: 0;
     
     // Check for email_campaigns table

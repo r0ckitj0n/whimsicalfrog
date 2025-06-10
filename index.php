@@ -235,6 +235,18 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             color: #fff !important;
         }
         
+        /* --- Admin button colour override --- */
+        body.is-admin button,
+        body.is-admin .button {
+            background: #87ac3a !important;
+            color: #ffffff !important;
+            border: none !important;
+        }
+        body.is-admin button:hover,
+        body.is-admin .button:hover {
+            background: #a3cc4a !important;
+        }
+        
         body {
             font-family: 'Merienda', cursive;
             background-image: url('images/home_background.png?v=cb2'); /* Fallback */

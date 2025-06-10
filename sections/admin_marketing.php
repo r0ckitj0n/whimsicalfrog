@@ -158,7 +158,7 @@ $marketingEnd   = isset($_GET['end_date']) ? $_GET['end_date']   : date('Y-m-d')
         <input type="date" id="mFrom" name="start_date" value="<?php echo htmlspecialchars($marketingStart); ?>" class="border rounded p-1">
         <label class="text-sm font-medium" style="color:#87ac3a !important;" for="mTo">To:</label>
         <input type="date" id="mTo" name="end_date" value="<?php echo htmlspecialchars($marketingEnd); ?>" class="border rounded p-1">
-        <button type="submit" class="px-3 py-1 rounded border border-[#87ac3a] text-[#87ac3a] hover:bg-[#a3cc4a] hover:text-white transition">Apply</button>
+        <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">Apply</button>
     </form>
 </div>
 

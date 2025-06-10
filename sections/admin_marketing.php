@@ -149,7 +149,9 @@ function generateId($prefix, $length = 3) {
 
 <div class="admin-section-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
     <h2 class="text-2xl font-bold" style="color:#87ac3a !important;">Marketing Dashboard <span class="text-base font-medium ml-2" style="color:#87ac3a !important;">Year-to-Date Performance</span></h2>
-    <form class="flex items-center gap-2" method="get" action="/?page=admin&section=marketing">
+    <form class="flex items-center gap-2" method="get" action="">
+        <input type="hidden" name="page" value="admin">
+        <input type="hidden" name="section" value="marketing">
         <label class="text-sm font-medium" style="color:#87ac3a !important;" for="mFrom">From:</label>
         <input type="date" id="mFrom" name="start_date" value="<?php echo htmlspecialchars($marketingStart); ?>" class="border rounded p-1">
         <label class="text-sm font-medium" style="color:#87ac3a !important;" for="mTo">To:</label>

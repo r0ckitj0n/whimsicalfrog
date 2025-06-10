@@ -146,11 +146,20 @@ function generateId($prefix, $length = 3) {
     }
     return $id;
 }
+
+$marketingStart = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-01-01');
+$marketingEnd   = isset($_GET['end_date']) ? $_GET['end_date']   : date('Y-m-d');
 ?>
 
-<div class="admin-section-header flex items-center justify-between mb-4">
-    <h2 class="text-2xl font-bold text-[#87ac3a]">Marketing Dashboard <span class="text-base font-medium ml-2">Year-to-Date Performance</span></h2>
-    <a href="/?page=admin" class="back-button text-green-700 hover:underline">← Back to Admin</a>
+<div class="admin-section-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+    <h2 class="text-2xl font-bold" style="color:#87ac3a !important;">Marketing Dashboard <span class="text-base font-medium ml-2">Year-to-Date Performance</span></h2>
+    <form class="flex items-center gap-2" method="get" action="/?page=admin&section=marketing">
+        <label class="text-sm font-medium" style="color:#87ac3a !important;" for="mFrom">From:</label>
+        <input type="date" id="mFrom" name="start_date" value="<?php echo htmlspecialchars($marketingStart); ?>" class="border rounded p-1">
+        <label class="text-sm font-medium" style="color:#87ac3a !important;" for="mTo">To:</label>
+        <input type="date" id="mTo" name="end_date" value="<?php echo htmlspecialchars($marketingEnd); ?>" class="border rounded p-1">
+        <button type="submit" class="bg-[#87ac3a] hover:bg-[#a3cc4a] text-white px-3 py-1 rounded">Apply</button>
+    </form>
 </div>
 
 <div class="admin-content">

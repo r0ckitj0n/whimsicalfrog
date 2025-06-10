@@ -452,5 +452,5 @@ document.addEventListener('DOMContentLoaded', function() {
         <input type="date" id="toDate" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>" class="border rounded p-1">
         <button type="submit" class="bg-[#87ac3a] hover:bg-[#a3cc4a] text-white px-3 py-1 rounded">Apply</button>
     </form>
-    <a href="/?page=admin" class="back-button text-[#87ac3a] hover:underline">← Back to Admin</a>
+    <!-- removed back button -->
 </div>

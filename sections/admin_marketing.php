@@ -42,25 +42,25 @@ try {
         $orderStmt = $pdo->query("SELECT COUNT(*) FROM orders");
         $orderCount = $orderStmt->fetchColumn() ?: 0;
         
-        // Get total sales
-        $salesStmt = $pdo->query("SELECT SUM(totalAmount) FROM orders");
+        // Get total sales (column is `total` in orders table)
+        $salesStmt = $pdo->query("SELECT SUM(total) FROM orders");
         $totalSales = $salesStmt->fetchColumn() ?: 0;
         
         // Get recent orders
         $recentOrdersStmt = $pdo->query("SELECT o.*, u.username, u.email 
                                         FROM orders o 
                                         LEFT JOIN users u ON o.userId = u.id 
-                                        ORDER BY o.orderDate DESC 
+                                        ORDER BY o.date DESC 
                                         LIMIT 5");
         $recentOrders = $recentOrdersStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         
         // Get monthly sales data
         $monthlySalesStmt = $pdo->query("SELECT 
-                                        MONTH(orderDate) as month, 
-                                        SUM(totalAmount) as total 
+                                        MONTH(date) as month, 
+                                        SUM(total) as total 
                                         FROM orders 
-                                        WHERE orderDate >= DATE_SUB(NOW(), INTERVAL 6 MONTH) 
-                                        GROUP BY MONTH(orderDate) 
+                                        WHERE date >= DATE_SUB(NOW(), INTERVAL 6 MONTH) 
+                                        GROUP BY MONTH(date) 
                                         ORDER BY month");
         $monthlySalesData = $monthlySalesStmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -239,8 +239,8 @@ function generateId($prefix, $length = 3) {
                                     <tr>
                                         <td><?php echo htmlspecialchars($order['id']); ?></td>
                                         <td><?php echo htmlspecialchars($order['username'] ?? $order['email'] ?? 'Unknown'); ?></td>
-                                        <td>$<?php echo number_format($order['totalAmount'], 2); ?></td>
-                                        <td><?php echo date('M d, Y', strtotime($order['orderDate'])); ?></td>
+                                        <td>$<?php echo number_format($order['total'], 2); ?></td>
+                                        <td><?php echo date('M d, Y', strtotime($order['date'])); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

@@ -43,7 +43,7 @@ try {
         $orderCount = $orderStmt->fetchColumn() ?: 0;
         
         // Get total sales (column is `total` in orders table)
-        $salesStmt = $pdo->query("SELECT SUM(total) FROM orders WHERE date >= DATE_FORMAT(NOW(), '%Y-01-01')");
+        $salesStmt = $pdo->query("SELECT SUM(total) FROM orders WHERE YEAR(date) = YEAR(CURDATE())");
         $totalSales = $salesStmt->fetchColumn() ?: 0;
         
         // Get recent orders
@@ -86,7 +86,7 @@ try {
     }
     
     // Total units (quantity) sold YTD
-    $unitsStmt = $pdo->query("SELECT SUM(oi.quantity) FROM order_items oi JOIN orders o ON oi.orderId = o.id WHERE o.date >= DATE_FORMAT(NOW(), '%Y-01-01')");
+    $unitsStmt = $pdo->query("SELECT SUM(oi.quantity) FROM order_items oi JOIN orders o ON oi.orderId = o.id WHERE YEAR(o.date) = YEAR(CURDATE())");
     $productCount = $unitsStmt->fetchColumn() ?: 0;
     
     // Check for email_campaigns table
@@ -153,6 +153,11 @@ function generateId($prefix, $length = 3) {
 
 <div class="admin-content">
     <div class="dashboard-stats">
+        <div class="stat-card" style="flex-basis: 100%; background:#f0fdf4;">
+            <div class="stat-info text-center">
+                <h3 class="text-lg font-bold">Year-to-Date</h3>
+            </div>
+        </div>
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-users"></i>
@@ -178,7 +183,7 @@ function generateId($prefix, $length = 3) {
                 <i class="fas fa-dollar-sign"></i>
             </div>
             <div class="stat-info">
-                <h3>Total Sales YTD</h3>
+                <h3>Total Sales</h3>
                 <p class="stat-value">$<?php echo number_format($totalSales, 2); ?></p>
             </div>
         </div>
@@ -188,7 +193,7 @@ function generateId($prefix, $length = 3) {
                 <i class="fas fa-box"></i>
             </div>
             <div class="stat-info">
-                <h3>Products Sold YTD</h3>
+                <h3>Products Sold</h3>
                 <p class="stat-value"><?php echo $productCount; ?></p>
             </div>
         </div>

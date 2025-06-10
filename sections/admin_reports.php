@@ -256,12 +256,6 @@ $lowStockProducts = array_filter($inventoryData, function($product) {
             Apply
         </button>
     </form>
-    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="window.print()">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-        </svg>
-        Print Report
-    </button>
 </div>
 
 <!-- Key Metrics Cards - Using the new stats-section class for white background -->
@@ -436,16 +430,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<div class="admin-section-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-    <div class="flex items-center gap-2">
-        <h2 class="text-2xl font-bold text-[#87ac3a]">Reports <span class="text-base font-medium ml-2">Year-to-Date Performance</span></h2>
-    </div>
-    <form class="flex items-center gap-2" method="get" action="/?page=admin&section=reports">
-        <label class="text-sm font-medium text-[#87ac3a]" for="fromDate">From:</label>
-        <input type="date" id="fromDate" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>" class="border rounded p-1">
-        <label class="text-sm font-medium text-[#87ac3a]" for="toDate">To:</label>
-        <input type="date" id="toDate" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>" class="border rounded p-1">
-        <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">Apply</button>
-    </form>
-    <!-- removed back button -->
+<!-- Bottom action bar -->
+<div class="mt-6 flex justify-end">
+    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        Print Report
+    </button>
 </div>

@@ -21,7 +21,7 @@
     }
     
     .clickable-area:hover {
-        background-color: rgba(255, 255, 255, 0.1); /* Slightly visible on hover */
+        transform: scale(1.1); /* Enlarge to 110% on hover */
     }
     
     .clickable-area img {
@@ -38,7 +38,6 @@
         left: 601px; 
         width: 125px; 
         height: 77px; 
-        background-color: #fff; /* White background for product areas, fully opaque */
         border-radius: 8px;
     }
 </style> 

@@ -1,8 +1,12 @@
 <?php
 // Admin Inventory Management Section
 ob_start();
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
 // The authentication check is now handled by index.php before including this file
+
+// Include database configuration
+require_once __DIR__ . '/../api/config.php';
 
 // Database connection
 $pdo = new PDO($dsn, $user, $pass, $options);
@@ -125,6 +129,10 @@ elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
 // Get categories for dropdown
 $stmt = $pdo->query("SELECT DISTINCT category FROM inventory ORDER BY category");
 $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+// Ensure categories is always an array
+if (!is_array($categories)) {
+    $categories = [];
+}
 
 // Search and filter logic
 $search = $_GET['search'] ?? '';
@@ -617,9 +625,10 @@ $messageType = $_GET['type'] ?? '';
 
 
 <script>
-var modalMode = <?= json_encode($modalMode ?? '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>;
-var currentItemId = <?= json_encode(($modalMode === 'edit' || $modalMode === 'view') && isset($editItem['id']) ? $editItem['id'] : '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>;
-var costBreakdown = <?= ($modalMode === 'edit' || $modalMode === 'view') && isset($editCostBreakdown) ? json_encode($editCostBreakdown, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) : 'null'; ?>;
+// Initialize variables
+var modalMode = <?= json_encode($modalMode ?? '') ?>;
+var currentItemId = <?= json_encode(isset($editItem['id']) ? $editItem['id'] : '') ?>;
+var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $editCostBreakdown) ? json_encode($editCostBreakdown) : 'null' ?>;
 
 function showToast(type, message) {
     const existingToast = document.getElementById('toast-notification');
@@ -779,18 +788,25 @@ function refreshCostBreakdown(useExistingData = false) {
 }
 
 function renderCostBreakdown(data) {
+    console.log('renderCostBreakdown called with data:', data);
     if (!data) {
+        console.log('No data provided, rendering empty lists');
         ['materials', 'labor', 'energy', 'equipment'].forEach(type => renderCostList(type, []));
         updateTotalsDisplay({ materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 });
         return;
     }
+    console.log('Rendering cost breakdown with data:', data);
     ['materials', 'labor', 'energy', 'equipment'].forEach(type => renderCostList(type, data[type] || []));
     updateTotalsDisplay(data.totals || { materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 });
 }
 
 function renderCostList(type, items) {
+    console.log(`renderCostList called for type: ${type}, items:`, items);
     const listElement = document.getElementById(`${type}List`);
     const viewListElement = document.getElementById(`view_${type}List`);
+    
+    console.log(`Found listElement for ${type}:`, listElement);
+    console.log(`Found viewListElement for ${type}:`, viewListElement);
     
     if (listElement) {
         listElement.innerHTML = ''; 
@@ -842,15 +858,19 @@ function htmlspecialchars(str) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return str.replace(/[&<>\"\']/g, function(m) { return map[m]; });}
-
+    return str.replace(/[&<>\"\']/g, function(m) { return map[m]; });
+}
 
 function updateTotalsDisplay(totals) {
-    document.getElementById('materialsTotalDisplay')?.textContent = `$${parseFloat(totals.materialTotal || 0).toFixed(2)}`;
-    document.getElementById('laborTotalDisplay')?.textContent = `$${parseFloat(totals.laborTotal || 0).toFixed(2)}`;
-    document.getElementById('energyTotalDisplay')?.textContent = `$${parseFloat(totals.energyTotal || 0).toFixed(2)}`;
-    document.getElementById('equipmentTotalDisplay')?.textContent = `$${parseFloat(totals.equipmentTotal || 0).toFixed(2)}`;
-    document.getElementById('suggestedCostDisplay')?.textContent = `$${parseFloat(totals.suggestedCost || 0).toFixed(2)}`;
+    try {
+        document.getElementById('materialsTotalDisplay').textContent = '$' + parseFloat(totals.materialTotal || 0).toFixed(2);
+        document.getElementById('laborTotalDisplay').textContent = '$' + parseFloat(totals.laborTotal || 0).toFixed(2);
+        document.getElementById('energyTotalDisplay').textContent = '$' + parseFloat(totals.energyTotal || 0).toFixed(2);
+        document.getElementById('equipmentTotalDisplay').textContent = '$' + parseFloat(totals.equipmentTotal || 0).toFixed(2);
+        document.getElementById('suggestedCostDisplay').textContent = '$' + parseFloat(totals.suggestedCost || 0).toFixed(2);
+    } catch(e) {
+        console.log('Error in updateTotalsDisplay:', e);
+    }
 }
 
 function useSuggestedCost() {
@@ -869,10 +889,22 @@ function closeCostModal() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemId:', currentItemId, 'costBreakdown:', costBreakdown);
+    
+    // Test if the HTML elements exist
+    console.log('materialsList element:', document.getElementById('materialsList'));
+    console.log('laborList element:', document.getElementById('laborList'));
+    console.log('energyList element:', document.getElementById('energyList'));
+    console.log('equipmentList element:', document.getElementById('equipmentList'));
+    
     if ((modalMode === 'edit' || modalMode === 'view') && currentItemId && costBreakdown) {
+        console.log('Calling refreshCostBreakdown(true)');
         refreshCostBreakdown(true); 
     } else if (modalMode === 'add') {
+        console.log('Calling renderCostBreakdown(null) for add mode');
         renderCostBreakdown(null); 
+    } else {
+        console.log('Conditions not met - modalMode:', modalMode, 'currentItemId:', currentItemId, 'costBreakdown:', !!costBreakdown);
     }
     
     const inventoryTable = document.getElementById('inventoryTable');
@@ -896,7 +928,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.textContent = 'Select Category';
                 inputElement.appendChild(option);
                 
-                <?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>.forEach(cat => {
+                (<?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> || []).forEach(cat => {
                     const option = document.createElement('option');
                     option.value = cat;
                     option.textContent = cat;

@@ -2737,3 +2737,24 @@
 [Tue Jun 10 15:08:33 2025] [::1]:56420 Accepted
 [Tue Jun 10 15:08:33 2025] [::1]:56420 [200]: GET /favicon.ico
 [Tue Jun 10 15:08:33 2025] [::1]:56420 Closing
+[Tue Jun 10 15:10:18 2025] [::1]:56480 Accepted
+[Tue Jun 10 15:10:18 2025] [::1]:56480 [200]: GET /?page=admin&section=reports
+[Tue Jun 10 15:10:18 2025] [::1]:56480 Closing
+[Tue Jun 10 15:10:18 2025] [::1]:56481 Accepted
+[Tue Jun 10 15:10:18 2025] [::1]:56481 [200]: GET /css/styles.css?v=1749582618
+[Tue Jun 10 15:10:18 2025] [::1]:56481 Closing
+[Tue Jun 10 15:10:18 2025] [::1]:56482 Accepted
+[Tue Jun 10 15:10:18 2025] [::1]:56483 Accepted
+[Tue Jun 10 15:10:18 2025] [::1]:56482 [200]: GET /js/cart.js?v=1749582618
+[Tue Jun 10 15:10:18 2025] [::1]:56483 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 15:10:18 2025] [::1]:56482 Closing
+[Tue Jun 10 15:10:18 2025] [::1]:56483 Closing
+[Tue Jun 10 15:10:18 2025] [::1]:56484 Accepted
+[Tue Jun 10 15:10:18 2025] [::1]:56484 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 15:10:18 2025] [::1]:56484 Closing
+[Tue Jun 10 15:10:18 2025] [::1]:56485 Accepted
+[Tue Jun 10 15:10:18 2025] [::1]:56485 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 15:10:18 2025] [::1]:56485 Closing
+[Tue Jun 10 15:10:18 2025] [::1]:56486 Accepted
+[Tue Jun 10 15:10:18 2025] [::1]:56486 [200]: GET /favicon.ico
+[Tue Jun 10 15:10:18 2025] [::1]:56486 Closing

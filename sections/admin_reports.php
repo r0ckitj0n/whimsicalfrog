@@ -69,18 +69,24 @@ $inventoryData = is_array($inventoryData) ? $inventoryData : [];
 $productsData = is_array($productsData) ? $productsData : [];
 
 // Calculate metrics for reports
+$ordersYTD = array_filter($ordersData, function($order){
+    $dt = $order['date'] ?? $order['orderDate'] ?? null;
+    return $dt && date('Y', strtotime($dt)) == date('Y');
+});
+
+// Calculate metrics for reports (YTD)
 $totalRevenue = 0;
-$totalOrders = count($ordersData);
+$totalOrders = count($ordersYTD);
 $totalCustomers = count($customersData);
 $totalProducts = count($productsData);
 
 // Calculate revenue - using totalAmount instead of total
-foreach ($ordersData as $order) {
+foreach ($ordersYTD as $order) {
     $totalRevenue += floatval($order['totalAmount'] ?? $order['total'] ?? 0);
 }
 
 // Get date range for filtering
-$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-d', strtotime('-30 days'));
+$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-01-01');
 $endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 
 // Filter orders by date range - using orderDate instead of date
@@ -434,3 +440,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<div class="admin-section-header flex items-center justify-between mb-4">
+    <h2 class="text-2xl font-bold">Reports <span class="text-base font-medium text-green-700 ml-2">Year-to-Date Performance</span></h2>
+    <a href="/?page=admin" class="back-button text-green-700 hover:underline">← Back to Admin</a>
+</div>

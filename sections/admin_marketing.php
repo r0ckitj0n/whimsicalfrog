@@ -2,6 +2,10 @@
 // Include database configuration
 require_once 'api/config.php'; // Changed from '../api/config.php' to match other section files
 
+// ---Date range---
+$marketingStart = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-01-01');
+$marketingEnd   = isset($_GET['end_date']) ? $_GET['end_date']   : date('Y-m-d');
+
 // Initialize all variables to prevent undefined variable errors
 $customerCount = 0;
 $orderCount = 0;
@@ -141,9 +145,6 @@ function generateId($prefix, $length = 3) {
     }
     return $id;
 }
-
-$marketingStart = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-01-01');
-$marketingEnd   = isset($_GET['end_date']) ? $_GET['end_date']   : date('Y-m-d');
 ?>
 
 <div class="admin-section-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">

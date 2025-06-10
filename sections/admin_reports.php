@@ -441,7 +441,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<div class="admin-section-header flex items-center justify-between mb-4">
-    <h2 class="text-2xl font-bold">Reports <span class="text-base font-medium text-green-700 ml-2">Year-to-Date Performance</span></h2>
-    <a href="/?page=admin" class="back-button text-green-700 hover:underline">← Back to Admin</a>
+<div class="admin-section-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+    <div class="flex items-center gap-2">
+        <h2 class="text-2xl font-bold text-[#87ac3a]">Reports <span class="text-base font-medium ml-2">Year-to-Date Performance</span></h2>
+    </div>
+    <form class="flex items-center gap-2" method="get" action="/?page=admin&section=reports">
+        <label class="text-sm font-medium text-[#87ac3a]" for="fromDate">From:</label>
+        <input type="date" id="fromDate" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>" class="border rounded p-1">
+        <label class="text-sm font-medium text-[#87ac3a]" for="toDate">To:</label>
+        <input type="date" id="toDate" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>" class="border rounded p-1">
+        <button type="submit" class="bg-[#87ac3a] hover:bg-[#a3cc4a] text-white px-3 py-1 rounded">Apply</button>
+    </form>
+    <a href="/?page=admin" class="back-button text-[#87ac3a] hover:underline">← Back to Admin</a>
 </div>

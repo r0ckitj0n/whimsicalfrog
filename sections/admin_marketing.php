@@ -149,7 +149,7 @@ function generateId($prefix, $length = 3) {
 ?>
 
 <div class="admin-section-header flex items-center justify-between mb-4">
-    <h2 class="text-2xl font-bold">Marketing Dashboard <span class="text-base font-medium text-green-700 ml-2">Year-to-Date Performance</span></h2>
+    <h2 class="text-2xl font-bold text-[#87ac3a]">Marketing Dashboard <span class="text-base font-medium ml-2">Year-to-Date Performance</span></h2>
     <a href="/?page=admin" class="back-button text-green-700 hover:underline">← Back to Admin</a>
 </div>
 

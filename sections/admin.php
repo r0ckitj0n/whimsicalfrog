@@ -91,6 +91,7 @@ $adminRole = $userData['roleType'] ?? 'Administrator';
         'orders' => ['Orders', 'bg-blue-100', 'text-blue-800'],
         'reports' => ['Reports', 'bg-indigo-100', 'text-indigo-800'],
         'marketing' => ['Marketing', 'bg-red-100', 'text-red-800'],
+        'categories' => ['Categories', 'bg-yellow-100', 'text-yellow-800'],
         'settings' => ['Settings', 'bg-gray-100', 'text-gray-800'],
     ];
     ?>
@@ -122,6 +123,9 @@ $adminRole = $userData['roleType'] ?? 'Administrator';
                 break;
             case 'marketing':
                 include 'sections/admin_marketing.php';
+                break;
+            case 'categories':
+                include 'sections/admin_categories.php';
                 break;
             case 'settings':
                 include 'sections/admin_settings.php';

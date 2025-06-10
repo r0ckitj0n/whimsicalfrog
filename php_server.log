@@ -2758,3 +2758,40 @@
 [Tue Jun 10 15:10:18 2025] [::1]:56486 Accepted
 [Tue Jun 10 15:10:18 2025] [::1]:56486 [200]: GET /favicon.ico
 [Tue Jun 10 15:10:18 2025] [::1]:56486 Closing
+[Tue Jun 10 15:11:36 2025] [::1]:56528 Accepted
+[Tue Jun 10 15:11:36 2025] [::1]:56528 [200]: GET /?page=admin&section=reports
+[Tue Jun 10 15:11:36 2025] [::1]:56528 Closing
+[Tue Jun 10 15:11:36 2025] [::1]:56529 Accepted
+[Tue Jun 10 15:11:36 2025] [::1]:56529 [200]: GET /css/styles.css?v=1749582696
+[Tue Jun 10 15:11:36 2025] [::1]:56529 Closing
+[Tue Jun 10 15:11:36 2025] [::1]:56530 Accepted
+[Tue Jun 10 15:11:36 2025] [::1]:56531 Accepted
+[Tue Jun 10 15:11:36 2025] [::1]:56530 [200]: GET /js/cart.js?v=1749582696
+[Tue Jun 10 15:11:36 2025] [::1]:56531 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 15:11:36 2025] [::1]:56530 Closing
+[Tue Jun 10 15:11:36 2025] [::1]:56531 Closing
+[Tue Jun 10 15:11:36 2025] [::1]:56532 Accepted
+[Tue Jun 10 15:11:36 2025] [::1]:56532 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 15:11:36 2025] [::1]:56532 Closing
+[Tue Jun 10 15:11:36 2025] [::1]:56533 Accepted
+[Tue Jun 10 15:11:36 2025] [::1]:56533 [200]: GET /favicon.ico
+[Tue Jun 10 15:11:36 2025] [::1]:56533 Closing
+[Tue Jun 10 15:11:50 2025] [::1]:56542 Accepted
+[Tue Jun 10 15:11:50 2025] Marketing Page Database Error: SQLSTATE[HY000]: General error: 1267 Illegal mix of collations (utf8mb4_0900_ai_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '='
+[Tue Jun 10 15:11:50 2025] [::1]:56542 [200]: GET /?page=admin&section=marketing
+[Tue Jun 10 15:11:50 2025] [::1]:56542 Closing
+[Tue Jun 10 15:11:50 2025] [::1]:56543 Accepted
+[Tue Jun 10 15:11:50 2025] [::1]:56543 [200]: GET /css/styles.css?v=1749582710
+[Tue Jun 10 15:11:50 2025] [::1]:56543 Closing
+[Tue Jun 10 15:11:50 2025] [::1]:56544 Accepted
+[Tue Jun 10 15:11:50 2025] [::1]:56545 Accepted
+[Tue Jun 10 15:11:50 2025] [::1]:56544 [200]: GET /js/cart.js?v=1749582710
+[Tue Jun 10 15:11:50 2025] [::1]:56545 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 15:11:50 2025] [::1]:56544 Closing
+[Tue Jun 10 15:11:50 2025] [::1]:56545 Closing
+[Tue Jun 10 15:11:50 2025] [::1]:56546 Accepted
+[Tue Jun 10 15:11:50 2025] [::1]:56546 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 15:11:50 2025] [::1]:56546 Closing
+[Tue Jun 10 15:11:50 2025] [::1]:56547 Accepted
+[Tue Jun 10 15:11:50 2025] [::1]:56547 [200]: GET /favicon.ico
+[Tue Jun 10 15:11:50 2025] [::1]:56547 Closing

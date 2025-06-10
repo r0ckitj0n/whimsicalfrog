@@ -2652,3 +2652,24 @@
 [Tue Jun 10 15:03:21 2025] [::1]:56247 Accepted
 [Tue Jun 10 15:03:21 2025] [::1]:56247 [200]: GET /favicon.ico
 [Tue Jun 10 15:03:21 2025] [::1]:56247 Closing
+[Tue Jun 10 15:06:19 2025] [::1]:56313 Accepted
+[Tue Jun 10 15:06:19 2025] [::1]:56313 [200]: GET /?page=admin&section=reports
+[Tue Jun 10 15:06:19 2025] [::1]:56313 Closing
+[Tue Jun 10 15:06:19 2025] [::1]:56314 Accepted
+[Tue Jun 10 15:06:19 2025] [::1]:56314 [200]: GET /css/styles.css?v=1749582379
+[Tue Jun 10 15:06:19 2025] [::1]:56314 Closing
+[Tue Jun 10 15:06:19 2025] [::1]:56315 Accepted
+[Tue Jun 10 15:06:19 2025] [::1]:56316 Accepted
+[Tue Jun 10 15:06:19 2025] [::1]:56315 [200]: GET /js/cart.js?v=1749582379
+[Tue Jun 10 15:06:19 2025] [::1]:56316 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 15:06:19 2025] [::1]:56315 Closing
+[Tue Jun 10 15:06:19 2025] [::1]:56316 Closing
+[Tue Jun 10 15:06:19 2025] [::1]:56317 Accepted
+[Tue Jun 10 15:06:19 2025] [::1]:56317 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 15:06:19 2025] [::1]:56317 Closing
+[Tue Jun 10 15:06:19 2025] [::1]:56318 Accepted
+[Tue Jun 10 15:06:19 2025] [::1]:56318 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 15:06:19 2025] [::1]:56318 Closing
+[Tue Jun 10 15:06:19 2025] [::1]:56319 Accepted
+[Tue Jun 10 15:06:19 2025] [::1]:56319 [200]: GET /favicon.ico
+[Tue Jun 10 15:06:19 2025] [::1]:56319 Closing

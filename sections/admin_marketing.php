@@ -38,8 +38,8 @@ try {
     if ($stmtOrderCheck->rowCount() > 0) {
         $orderTableExists = true;
         
-        // Get orders count
-        $orderStmt = $pdo->query("SELECT COUNT(*) FROM orders");
+        // Get orders count YTD
+        $orderStmt = $pdo->query("SELECT COUNT(*) FROM orders WHERE YEAR(date) = YEAR(CURDATE())");
         $orderCount = $orderStmt->fetchColumn() ?: 0;
         
         // Get total sales (column is `total` in orders table)
@@ -76,11 +76,13 @@ try {
         }
         
         // Get top products
-        $topProductsStmt = $pdo->query("SELECT p.name, COUNT(oi.productId) as orderCount 
+        $topProductsStmt = $pdo->query("SELECT p.name, SUM(oi.quantity) as units 
                                         FROM order_items oi
+                                        JOIN orders o ON oi.orderId = o.id
                                         JOIN products p ON oi.productId = p.id
+                                        WHERE YEAR(o.date) = YEAR(CURDATE())
                                         GROUP BY oi.productId
-                                        ORDER BY orderCount DESC
+                                        ORDER BY units DESC
                                         LIMIT 5");
         $topProducts = $topProductsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
@@ -146,18 +148,13 @@ function generateId($prefix, $length = 3) {
 }
 ?>
 
-<div class="admin-section-header" style="display: none;">
-    <h2>Marketing Dashboard</h2>
-    <a href="/?page=admin" class="back-button">← Back to Admin</a>
+<div class="admin-section-header flex items-center justify-between mb-4">
+    <h2 class="text-2xl font-bold">Marketing Dashboard <span class="text-base font-medium text-green-700 ml-2">Year-to-Date Performance</span></h2>
+    <a href="/?page=admin" class="back-button text-green-700 hover:underline">← Back to Admin</a>
 </div>
 
 <div class="admin-content">
     <div class="dashboard-stats">
-        <div class="stat-card" style="flex-basis: 100%; background:#f0fdf4;">
-            <div class="stat-info text-center">
-                <h3 class="text-lg font-bold">Year-to-Date</h3>
-            </div>
-        </div>
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-users"></i>
@@ -215,7 +212,7 @@ function generateId($prefix, $length = 3) {
                         <?php foreach ($topProducts as $product): ?>
                             <li>
                                 <span class="product-name"><?php echo htmlspecialchars($product['name']); ?></span>
-                                <span class="product-orders"><?php echo $product['orderCount']; ?> orders</span>
+                                <span class="product-orders"><?php echo $product['units']; ?> units</span>
                             </li>
                         <?php endforeach; ?>
                     <?php else: ?>

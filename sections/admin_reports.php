@@ -257,7 +257,7 @@ $lowStockProducts = array_filter($inventoryData, function($product) {
             <label for="end_date" class="block text-sm font-medium text-gray-700 mr-2">To:</label>
             <input type="date" name="end_date" id="end_date" value="<?php echo htmlspecialchars($endDate); ?>" class="block px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
         </div>
-        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        <button type="submit" class="px-3 py-1 rounded border border-[#87ac3a] text-[#87ac3a] hover:bg-[#a3cc4a] hover:text-white transition">
             Apply
         </button>
     </form>
@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <input type="date" id="fromDate" name="start_date" value="<?php echo htmlspecialchars($startDate); ?>" class="border rounded p-1">
         <label class="text-sm font-medium text-[#87ac3a]" for="toDate">To:</label>
         <input type="date" id="toDate" name="end_date" value="<?php echo htmlspecialchars($endDate); ?>" class="border rounded p-1">
-        <button type="submit" class="bg-[#87ac3a] hover:bg-[#a3cc4a] text-white px-3 py-1 rounded">Apply</button>
+        <button type="submit" class="px-3 py-1 rounded border border-[#87ac3a] text-[#87ac3a] hover:bg-[#a3cc4a] hover:text-white transition">Apply</button>
     </form>
     <!-- removed back button -->
 </div>

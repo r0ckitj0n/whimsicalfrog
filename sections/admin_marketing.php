@@ -43,7 +43,7 @@ try {
         $orderCount = $orderStmt->fetchColumn() ?: 0;
         
         // Get total sales (column is `total` in orders table)
-        $salesStmt = $pdo->query("SELECT SUM(total) FROM orders");
+        $salesStmt = $pdo->query("SELECT SUM(total) FROM orders WHERE date >= DATE_FORMAT(NOW(), '%Y-01-01')");
         $totalSales = $salesStmt->fetchColumn() ?: 0;
         
         // Get recent orders
@@ -85,9 +85,9 @@ try {
         $topProducts = $topProductsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
     
-    // Get product count
-    $productStmt = $pdo->query("SELECT COUNT(*) FROM products");
-    $productCount = $productStmt->fetchColumn() ?: 0;
+    // Total units (quantity) sold YTD
+    $unitsStmt = $pdo->query("SELECT SUM(oi.quantity) FROM order_items oi JOIN orders o ON oi.orderId = o.id WHERE o.date >= DATE_FORMAT(NOW(), '%Y-01-01')");
+    $productCount = $unitsStmt->fetchColumn() ?: 0;
     
     // Check for email_campaigns table
     $stmtEmailCheck = $pdo->query("SHOW TABLES LIKE 'email_campaigns'");
@@ -178,7 +178,7 @@ function generateId($prefix, $length = 3) {
                 <i class="fas fa-dollar-sign"></i>
             </div>
             <div class="stat-info">
-                <h3>Total Sales</h3>
+                <h3>Total Sales YTD</h3>
                 <p class="stat-value">$<?php echo number_format($totalSales, 2); ?></p>
             </div>
         </div>
@@ -188,7 +188,7 @@ function generateId($prefix, $length = 3) {
                 <i class="fas fa-box"></i>
             </div>
             <div class="stat-info">
-                <h3>Total Products</h3>
+                <h3>Products Sold YTD</h3>
                 <p class="stat-value"><?php echo $productCount; ?></p>
             </div>
         </div>

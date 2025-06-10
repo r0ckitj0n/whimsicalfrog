@@ -1073,3 +1073,222 @@
 [Tue Jun 10 13:24:00 2025] [::1]:54224 Accepted
 [Tue Jun 10 13:24:00 2025] [::1]:54224 [200]: GET /favicon.ico
 [Tue Jun 10 13:24:00 2025] [::1]:54224 Closing
+[Tue Jun 10 13:38:41 2025] [::1]:54368 Accepted
+[Tue Jun 10 13:38:41 2025] [::1]:54368 [200]: GET /?page=landing
+[Tue Jun 10 13:38:41 2025] [::1]:54368 Closing
+[Tue Jun 10 13:38:41 2025] [::1]:54369 Accepted
+[Tue Jun 10 13:38:41 2025] [::1]:54370 Accepted
+[Tue Jun 10 13:38:41 2025] [::1]:54371 Accepted
+[Tue Jun 10 13:38:41 2025] [::1]:54369 [200]: GET /css/styles.css?v=1749577121
+[Tue Jun 10 13:38:41 2025] [::1]:54370 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 13:38:41 2025] [::1]:54371 [200]: GET /images/sign_welcome.webp
+[Tue Jun 10 13:38:41 2025] [::1]:54369 Closing
+[Tue Jun 10 13:38:41 2025] [::1]:54371 Closing
+[Tue Jun 10 13:38:41 2025] [::1]:54370 Closing
+[Tue Jun 10 13:38:41 2025] [::1]:54372 Accepted
+[Tue Jun 10 13:38:41 2025] [::1]:54372 [200]: GET /js/cart.js?v=1749577121
+[Tue Jun 10 13:38:41 2025] [::1]:54372 Closing
+[Tue Jun 10 13:38:41 2025] [::1]:54373 Accepted
+[Tue Jun 10 13:38:41 2025] [::1]:54373 [200]: GET /images/home_background.webp?v=cb2
+[Tue Jun 10 13:38:41 2025] [::1]:54373 Closing
+[Tue Jun 10 13:38:41 2025] [::1]:54374 Accepted
+[Tue Jun 10 13:38:41 2025] [::1]:54374 [200]: GET /favicon.ico
+[Tue Jun 10 13:38:41 2025] [::1]:54374 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54375 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54375 [200]: GET /?page=main_room
+[Tue Jun 10 13:38:43 2025] [::1]:54375 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54376 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54377 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54378 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54379 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54380 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54376 [200]: GET /css/styles.css?v=1749577123
+[Tue Jun 10 13:38:43 2025] [::1]:54381 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54377 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 13:38:43 2025] [::1]:54378 [200]: GET /images/sign_door_tshirts.webp
+[Tue Jun 10 13:38:43 2025] [::1]:54379 [200]: GET /images/sign_door_tumblers.webp
+[Tue Jun 10 13:38:43 2025] [::1]:54380 [200]: GET /images/sign_door_artwork.webp
+[Tue Jun 10 13:38:43 2025] [::1]:54381 [200]: GET /images/sign_door_windowwraps.webp
+[Tue Jun 10 13:38:43 2025] [::1]:54376 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54382 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54382 [200]: GET /js/cart.js?v=1749577123
+[Tue Jun 10 13:38:43 2025] [::1]:54377 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54378 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54379 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54380 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54382 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54381 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54383 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54383 [200]: GET /images/sign_door_sublimation.webp
+[Tue Jun 10 13:38:43 2025] [::1]:54383 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54384 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54384 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 13:38:43 2025] [::1]:54384 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54385 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54385 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 13:38:43 2025] [::1]:54385 Closing
+[Tue Jun 10 13:38:43 2025] [::1]:54386 Accepted
+[Tue Jun 10 13:38:43 2025] [::1]:54386 [200]: GET /favicon.ico
+[Tue Jun 10 13:38:43 2025] [::1]:54386 Closing
+[Tue Jun 10 13:38:44 2025] [::1]:54388 Accepted
+[Tue Jun 10 13:38:44 2025] [::1]:54388 [200]: GET /?page=room_tshirts
+[Tue Jun 10 13:38:44 2025] [::1]:54388 Closing
+[Tue Jun 10 13:38:44 2025] [::1]:54389 Accepted
+[Tue Jun 10 13:38:44 2025] [::1]:54390 Accepted
+[Tue Jun 10 13:38:44 2025] [::1]:54391 Accepted
+[Tue Jun 10 13:38:44 2025] [::1]:54389 [200]: GET /css/styles.css?v=1749577124
+[Tue Jun 10 13:38:44 2025] [::1]:54390 [200]: GET /js/cart.js?v=1749577124
+[Tue Jun 10 13:38:44 2025] [::1]:54391 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 13:38:44 2025] [::1]:54389 Closing
+[Tue Jun 10 13:38:44 2025] [::1]:54390 Closing
+[Tue Jun 10 13:38:44 2025] [::1]:54391 Closing
+[Tue Jun 10 13:38:44 2025] [::1]:54392 Accepted
+[Tue Jun 10 13:38:44 2025] [::1]:54393 Accepted
+[Tue Jun 10 13:38:44 2025] [::1]:54392 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 13:38:44 2025] [::1]:54393 [200]: GET /images/room_tshirts.webp?v=cb2
+[Tue Jun 10 13:38:44 2025] [::1]:54392 Closing
+[Tue Jun 10 13:38:44 2025] [::1]:54393 Closing
+[Tue Jun 10 13:38:44 2025] [::1]:54394 Accepted
+[Tue Jun 10 13:38:44 2025] [::1]:54394 [200]: GET /favicon.ico
+[Tue Jun 10 13:38:44 2025] [::1]:54394 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54395 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54395 [200]: GET /?page=main_room
+[Tue Jun 10 13:38:47 2025] [::1]:54395 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54396 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54397 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54398 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54399 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54400 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54396 [200]: GET /css/styles.css?v=1749577127
+[Tue Jun 10 13:38:47 2025] [::1]:54401 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54397 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 13:38:47 2025] [::1]:54398 [200]: GET /images/sign_door_tshirts.webp
+[Tue Jun 10 13:38:47 2025] [::1]:54399 [200]: GET /images/sign_door_tumblers.webp
+[Tue Jun 10 13:38:47 2025] [::1]:54396 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54400 [200]: GET /images/sign_door_artwork.webp
+[Tue Jun 10 13:38:47 2025] [::1]:54397 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54398 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54399 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54400 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54401 [200]: GET /images/sign_door_windowwraps.webp
+[Tue Jun 10 13:38:47 2025] [::1]:54401 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54402 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54402 [200]: GET /js/cart.js?v=1749577127
+[Tue Jun 10 13:38:47 2025] [::1]:54402 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54403 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54404 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54403 [200]: GET /images/sign_door_sublimation.webp
+[Tue Jun 10 13:38:47 2025] [::1]:54404 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 13:38:47 2025] [::1]:54403 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54404 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54405 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54405 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 13:38:47 2025] [::1]:54405 Closing
+[Tue Jun 10 13:38:47 2025] [::1]:54406 Accepted
+[Tue Jun 10 13:38:47 2025] [::1]:54406 [200]: GET /favicon.ico
+[Tue Jun 10 13:38:47 2025] [::1]:54406 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54407 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54407 [200]: GET /?page=shop
+[Tue Jun 10 13:38:50 2025] [::1]:54407 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54408 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54409 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54410 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54411 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54412 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54408 [200]: GET /css/styles.css?v=1749577130
+[Tue Jun 10 13:38:50 2025] [::1]:54413 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54409 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 13:38:50 2025] [::1]:54408 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54410 [200]: GET /images/frog_tshirt_1.png
+[Tue Jun 10 13:38:50 2025] [::1]:54411 [200]: GET /images/products/product_custom-tumbler-20oz.png
+[Tue Jun 10 13:38:50 2025] [::1]:54412 [200]: GET /images/products/product_custom-tumbler-30oz.png
+[Tue Jun 10 13:38:50 2025] [::1]:54414 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54413 [200]: GET /images/frog_painter_1.png
+[Tue Jun 10 13:38:50 2025] [::1]:54415 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54409 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54414 [200]: GET /js/cart.js?v=1749577130
+[Tue Jun 10 13:38:50 2025] [::1]:54415 [200]: GET /images/products/product_sublimation-blank-item-e-g-mug.png
+[Tue Jun 10 13:38:50 2025] [::1]:54414 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54410 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54411 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54416 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54415 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54416 [200]: GET /images/products/product_custom-window-wrap.png
+[Tue Jun 10 13:38:50 2025] [::1]:54417 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54418 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54417 [200]: GET /images/products/product_new-test-thumbs.png
+[Tue Jun 10 13:38:50 2025] [::1]:54418 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 13:38:50 2025] [::1]:54417 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54416 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54418 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54412 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54413 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54419 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54419 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 13:38:50 2025] [::1]:54419 Closing
+[Tue Jun 10 13:38:50 2025] [::1]:54420 Accepted
+[Tue Jun 10 13:38:50 2025] [::1]:54420 [200]: GET /favicon.ico
+[Tue Jun 10 13:38:50 2025] [::1]:54420 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54462 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54462 [200]: GET /?page=shop
+[Tue Jun 10 13:40:43 2025] [::1]:54462 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54463 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54464 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54465 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54466 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54467 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54463 [200]: GET /css/styles.css?v=1749577243
+[Tue Jun 10 13:40:43 2025] [::1]:54468 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54464 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 13:40:43 2025] [::1]:54463 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54465 [200]: GET /images/frog_tshirt_1.png
+[Tue Jun 10 13:40:43 2025] [::1]:54466 [200]: GET /images/products/product_custom-tumbler-20oz.png
+[Tue Jun 10 13:40:43 2025] [::1]:54467 [200]: GET /images/products/product_custom-tumbler-30oz.png
+[Tue Jun 10 13:40:43 2025] [::1]:54468 [200]: GET /images/frog_painter_1.png
+[Tue Jun 10 13:40:43 2025] [::1]:54469 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54469 [200]: GET /js/cart.js?v=1749577243
+[Tue Jun 10 13:40:43 2025] [::1]:54464 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54469 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54470 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54466 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54465 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54471 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54470 [200]: GET /images/products/product_sublimation-blank-item-e-g-mug.png
+[Tue Jun 10 13:40:43 2025] [::1]:54471 [200]: GET /images/products/product_custom-window-wrap.png
+[Tue Jun 10 13:40:43 2025] [::1]:54472 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54473 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54472 [200]: GET /images/products/product_new-test-thumbs.png
+[Tue Jun 10 13:40:43 2025] [::1]:54470 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54473 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 13:40:43 2025] [::1]:54471 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54472 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54473 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54468 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54467 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54474 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54474 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 13:40:43 2025] [::1]:54474 Closing
+[Tue Jun 10 13:40:43 2025] [::1]:54475 Accepted
+[Tue Jun 10 13:40:43 2025] [::1]:54475 [200]: GET /favicon.ico
+[Tue Jun 10 13:40:43 2025] [::1]:54475 Closing
+[Tue Jun 10 13:40:57 2025] [::1]:54477 Accepted
+[Tue Jun 10 13:40:57 2025] [::1]:54477 [200]: GET /?page=landing
+[Tue Jun 10 13:40:57 2025] [::1]:54477 Closing
+[Tue Jun 10 13:40:57 2025] [::1]:54478 Accepted
+[Tue Jun 10 13:40:57 2025] [::1]:54479 Accepted
+[Tue Jun 10 13:40:57 2025] [::1]:54480 Accepted
+[Tue Jun 10 13:40:57 2025] [::1]:54481 Accepted
+[Tue Jun 10 13:40:57 2025] [::1]:54478 [200]: GET /css/styles.css?v=1749577257
+[Tue Jun 10 13:40:57 2025] [::1]:54479 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 13:40:57 2025] [::1]:54480 [200]: GET /js/cart.js?v=1749577257
+[Tue Jun 10 13:40:57 2025] [::1]:54481 [200]: GET /images/sign_welcome.webp
+[Tue Jun 10 13:40:57 2025] [::1]:54478 Closing
+[Tue Jun 10 13:40:57 2025] [::1]:54480 Closing
+[Tue Jun 10 13:40:57 2025] [::1]:54481 Closing
+[Tue Jun 10 13:40:57 2025] [::1]:54479 Closing
+[Tue Jun 10 13:40:57 2025] [::1]:54482 Accepted
+[Tue Jun 10 13:40:57 2025] [::1]:54482 [200]: GET /images/home_background.webp?v=cb2
+[Tue Jun 10 13:40:57 2025] [::1]:54482 Closing
+[Tue Jun 10 13:40:57 2025] [::1]:54483 Accepted
+[Tue Jun 10 13:40:57 2025] [::1]:54483 [200]: GET /favicon.ico
+[Tue Jun 10 13:40:57 2025] [::1]:54483 Closing

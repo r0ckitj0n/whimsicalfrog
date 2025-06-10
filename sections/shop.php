@@ -73,13 +73,15 @@ if (!defined('INCLUDED_FROM_INDEX')) {
                 $formattedPrice = '$' . number_format((float)$price, 2);
         ?>
         <div class="product-card" data-category="<?php echo htmlspecialchars($category); ?>">
-            <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <img src="<?php echo $imageUrl; ?>" alt="<?php echo $productName; ?>" class="w-full h-48 object-cover" 
+            <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
+                <img src="<?php echo $imageUrl; ?>" alt="<?php echo $productName; ?>" class="w-full h-48 object-contain bg-gray-100" 
                      onerror="this.onerror=null; this.src='images/product-placeholder.png';">
-                <div class="p-4">
-                    <h3 class="font-merienda text-lg text-[#87ac3a] mb-2"><?php echo $productName; ?></h3>
-                    <p class="text-gray-600 mb-2 text-sm line-clamp-2"><?php echo $description; ?></p>
-                    <div class="flex justify-between items-center">
+                <div class="p-4 flex flex-col flex-grow">
+                    <h3 class="font-merienda text-lg text-[#87ac3a] mb-2 line-clamp-2"><?php echo $productName; ?></h3>
+                    <p class="text-gray-600 mb-2 text-sm line-clamp-2 flex-grow-0">
+                        <?php echo $description; ?>
+                    </p>
+                    <div class="flex justify-between items-center mt-auto">
                         <span class="font-bold text-[#87ac3a]"><?php echo $formattedPrice; ?></span>
                         <button class="add-to-cart-btn bg-[#87ac3a] hover:bg-[#a3cc4a] text-white px-3 py-1 rounded-md text-sm transition-colors"
                                 data-product-id="<?php echo $productId; ?>"

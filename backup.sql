@@ -220,7 +220,7 @@ CREATE TABLE `inventory_labor` (
 
 LOCK TABLES `inventory_labor` WRITE;
 /*!40000 ALTER TABLE `inventory_labor` DISABLE KEYS */;
-INSERT INTO `inventory_labor` VALUES (1,'I001','sewing a dress',80.04),(2,'I002','digging',5.01),(3,'I005','swimming',2.00),(4,'I003','holy',3.00),(5,'I001','pedaling',2.00);
+INSERT INTO `inventory_labor` VALUES (1,'I001','sewing a dress',80.04),(2,'I002','digging',5.01),(3,'I005','swimming',2.00),(4,'I003','holy',3.00),(5,'I001','pedaling',2.01);
 /*!40000 ALTER TABLE `inventory_labor` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -452,4 +452,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-09 18:29:12
+-- Dump completed on 2025-06-10 13:25:03

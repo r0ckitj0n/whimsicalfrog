@@ -240,21 +240,16 @@ $lowStockProducts = array_filter($inventoryData, function($product) {
 
 <!-- Top bar: Back to Dashboard | Date Range Selector -->
 <div class="mb-4 flex flex-row justify-between items-center gap-2">
-    <a href="/?page=admin" class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-md">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to Dashboard
-    </a>
+    <!-- Back link removed -->
     <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0">
         <input type="hidden" name="page" value="admin">
         <input type="hidden" name="section" value="reports">
         <div class="flex items-center">
-            <label for="start_date" class="block text-sm font-medium text-gray-700 mr-2">From:</label>
+            <label for="start_date" class="block text-sm font-medium mr-2" style="color:#87ac3a !important;">From:</label>
             <input type="date" name="start_date" id="start_date" value="<?php echo htmlspecialchars($startDate); ?>" class="block px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
         </div>
         <div class="flex items-center">
-            <label for="end_date" class="block text-sm font-medium text-gray-700 mr-2">To:</label>
+            <label for="end_date" class="block text-sm font-medium mr-2" style="color:#87ac3a !important;">To:</label>
             <input type="date" name="end_date" id="end_date" value="<?php echo htmlspecialchars($endDate); ?>" class="block px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
         </div>
         <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">

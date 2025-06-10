@@ -2346,3 +2346,105 @@
 [Tue Jun 10 14:50:39 2025] [::1]:55794 Accepted
 [Tue Jun 10 14:50:39 2025] [::1]:55794 [200]: GET /favicon.ico
 [Tue Jun 10 14:50:39 2025] [::1]:55794 Closing
+[Tue Jun 10 14:54:08 2025] [::1]:55865 Accepted
+[Tue Jun 10 14:54:08 2025] Marketing Page Database Error: SQLSTATE[HY000]: General error: 1267 Illegal mix of collations (utf8mb4_0900_ai_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '='
+[Tue Jun 10 14:54:08 2025] [::1]:55865 [200]: GET /?page=admin&section=marketing
+[Tue Jun 10 14:54:08 2025] [::1]:55865 Closing
+[Tue Jun 10 14:54:08 2025] [::1]:55866 Accepted
+[Tue Jun 10 14:54:08 2025] [::1]:55867 Accepted
+[Tue Jun 10 14:54:08 2025] [::1]:55868 Accepted
+[Tue Jun 10 14:54:08 2025] [::1]:55866 [200]: GET /css/styles.css?v=1749581648
+[Tue Jun 10 14:54:08 2025] [::1]:55867 [200]: GET /js/cart.js?v=1749581648
+[Tue Jun 10 14:54:08 2025] [::1]:55868 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 14:54:08 2025] [::1]:55866 Closing
+[Tue Jun 10 14:54:08 2025] [::1]:55867 Closing
+[Tue Jun 10 14:54:08 2025] [::1]:55868 Closing
+[Tue Jun 10 14:54:08 2025] [::1]:55869 Accepted
+[Tue Jun 10 14:54:08 2025] [::1]:55869 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 14:54:08 2025] [::1]:55869 Closing
+[Tue Jun 10 14:54:08 2025] [::1]:55870 Accepted
+[Tue Jun 10 14:54:08 2025] [::1]:55870 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 14:54:08 2025] [::1]:55870 Closing
+[Tue Jun 10 14:54:08 2025] [::1]:55871 Accepted
+[Tue Jun 10 14:54:08 2025] [::1]:55871 [200]: GET /favicon.ico
+[Tue Jun 10 14:54:08 2025] [::1]:55871 Closing
+[Tue Jun 10 14:54:31 2025] [::1]:55872 Accepted
+[Tue Jun 10 14:54:31 2025] [::1]:55872 [200]: GET /?page=admin&section=reports
+[Tue Jun 10 14:54:31 2025] [::1]:55872 Closing
+[Tue Jun 10 14:54:31 2025] [::1]:55873 Accepted
+[Tue Jun 10 14:54:31 2025] [::1]:55873 [200]: GET /css/styles.css?v=1749581671
+[Tue Jun 10 14:54:31 2025] [::1]:55873 Closing
+[Tue Jun 10 14:54:31 2025] [::1]:55874 Accepted
+[Tue Jun 10 14:54:31 2025] [::1]:55875 Accepted
+[Tue Jun 10 14:54:31 2025] [::1]:55874 [200]: GET /js/cart.js?v=1749581671
+[Tue Jun 10 14:54:31 2025] [::1]:55874 Closing
+[Tue Jun 10 14:54:31 2025] [::1]:55875 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 14:54:31 2025] [::1]:55875 Closing
+[Tue Jun 10 14:54:31 2025] [::1]:55876 Accepted
+[Tue Jun 10 14:54:31 2025] [::1]:55876 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 14:54:31 2025] [::1]:55876 Closing
+[Tue Jun 10 14:54:31 2025] [::1]:55877 Accepted
+[Tue Jun 10 14:54:31 2025] [::1]:55877 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 14:54:31 2025] [::1]:55877 Closing
+[Tue Jun 10 14:54:31 2025] [::1]:55878 Accepted
+[Tue Jun 10 14:54:31 2025] [::1]:55878 [200]: GET /favicon.ico
+[Tue Jun 10 14:54:31 2025] [::1]:55878 Closing
+[Tue Jun 10 14:54:36 2025] [::1]:55879 Accepted
+[Tue Jun 10 14:54:36 2025] Marketing Page Database Error: SQLSTATE[HY000]: General error: 1267 Illegal mix of collations (utf8mb4_0900_ai_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '='
+[Tue Jun 10 14:54:36 2025] [::1]:55879 [200]: GET /?page=admin&section=marketing
+[Tue Jun 10 14:54:36 2025] [::1]:55879 Closing
+[Tue Jun 10 14:54:36 2025] [::1]:55880 Accepted
+[Tue Jun 10 14:54:36 2025] [::1]:55881 Accepted
+[Tue Jun 10 14:54:36 2025] [::1]:55882 Accepted
+[Tue Jun 10 14:54:36 2025] [::1]:55880 [200]: GET /css/styles.css?v=1749581676
+[Tue Jun 10 14:54:36 2025] [::1]:55881 [200]: GET /js/cart.js?v=1749581676
+[Tue Jun 10 14:54:36 2025] [::1]:55882 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 14:54:36 2025] [::1]:55880 Closing
+[Tue Jun 10 14:54:36 2025] [::1]:55881 Closing
+[Tue Jun 10 14:54:36 2025] [::1]:55882 Closing
+[Tue Jun 10 14:54:36 2025] [::1]:55883 Accepted
+[Tue Jun 10 14:54:36 2025] [::1]:55883 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 14:54:36 2025] [::1]:55883 Closing
+[Tue Jun 10 14:54:36 2025] [::1]:55884 Accepted
+[Tue Jun 10 14:54:36 2025] [::1]:55884 [200]: GET /favicon.ico
+[Tue Jun 10 14:54:36 2025] [::1]:55884 Closing
+[Tue Jun 10 14:54:43 2025] [::1]:55885 Accepted
+[Tue Jun 10 14:54:43 2025] [::1]:55885 [200]: GET /?page=admin&section=reports
+[Tue Jun 10 14:54:43 2025] [::1]:55885 Closing
+[Tue Jun 10 14:54:43 2025] [::1]:55886 Accepted
+[Tue Jun 10 14:54:43 2025] [::1]:55887 Accepted
+[Tue Jun 10 14:54:43 2025] [::1]:55888 Accepted
+[Tue Jun 10 14:54:43 2025] [::1]:55886 [200]: GET /css/styles.css?v=1749581683
+[Tue Jun 10 14:54:43 2025] [::1]:55887 [200]: GET /js/cart.js?v=1749581683
+[Tue Jun 10 14:54:43 2025] [::1]:55888 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 14:54:43 2025] [::1]:55886 Closing
+[Tue Jun 10 14:54:43 2025] [::1]:55887 Closing
+[Tue Jun 10 14:54:43 2025] [::1]:55888 Closing
+[Tue Jun 10 14:54:43 2025] [::1]:55889 Accepted
+[Tue Jun 10 14:54:43 2025] [::1]:55889 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 14:54:43 2025] [::1]:55889 Closing
+[Tue Jun 10 14:54:43 2025] [::1]:55890 Accepted
+[Tue Jun 10 14:54:43 2025] [::1]:55890 [200]: GET /favicon.ico
+[Tue Jun 10 14:54:43 2025] [::1]:55890 Closing
+[Tue Jun 10 14:55:22 2025] [::1]:55927 Accepted
+[Tue Jun 10 14:55:22 2025] Marketing Page Database Error: SQLSTATE[HY000]: General error: 1267 Illegal mix of collations (utf8mb4_0900_ai_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '='
+[Tue Jun 10 14:55:22 2025] [::1]:55927 [200]: GET /?page=admin&section=marketing
+[Tue Jun 10 14:55:22 2025] [::1]:55927 Closing
+[Tue Jun 10 14:55:22 2025] [::1]:55928 Accepted
+[Tue Jun 10 14:55:22 2025] [::1]:55929 Accepted
+[Tue Jun 10 14:55:22 2025] [::1]:55930 Accepted
+[Tue Jun 10 14:55:22 2025] [::1]:55928 [200]: GET /css/styles.css?v=1749581722
+[Tue Jun 10 14:55:22 2025] [::1]:55929 [200]: GET /js/cart.js?v=1749581722
+[Tue Jun 10 14:55:22 2025] [::1]:55930 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 14:55:22 2025] [::1]:55928 Closing
+[Tue Jun 10 14:55:22 2025] [::1]:55929 Closing
+[Tue Jun 10 14:55:22 2025] [::1]:55930 Closing
+[Tue Jun 10 14:55:22 2025] [::1]:55931 Accepted
+[Tue Jun 10 14:55:22 2025] [::1]:55931 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 14:55:22 2025] [::1]:55931 Closing
+[Tue Jun 10 14:55:22 2025] [::1]:55932 Accepted
+[Tue Jun 10 14:55:22 2025] [::1]:55932 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 14:55:22 2025] [::1]:55932 Closing
+[Tue Jun 10 14:55:22 2025] [::1]:55933 Accepted
+[Tue Jun 10 14:55:22 2025] [::1]:55933 [200]: GET /favicon.ico
+[Tue Jun 10 14:55:22 2025] [::1]:55933 Closing

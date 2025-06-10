@@ -2448,3 +2448,64 @@
 [Tue Jun 10 14:55:22 2025] [::1]:55933 Accepted
 [Tue Jun 10 14:55:22 2025] [::1]:55933 [200]: GET /favicon.ico
 [Tue Jun 10 14:55:22 2025] [::1]:55933 Closing
+[Tue Jun 10 14:55:24 2025] [::1]:55937 Accepted
+[Tue Jun 10 14:55:24 2025] [::1]:55937 [200]: GET /?page=admin&section=reports
+[Tue Jun 10 14:55:24 2025] [::1]:55937 Closing
+[Tue Jun 10 14:55:24 2025] [::1]:55938 Accepted
+[Tue Jun 10 14:55:24 2025] [::1]:55938 [200]: GET /css/styles.css?v=1749581724
+[Tue Jun 10 14:55:24 2025] [::1]:55938 Closing
+[Tue Jun 10 14:55:24 2025] [::1]:55939 Accepted
+[Tue Jun 10 14:55:24 2025] [::1]:55940 Accepted
+[Tue Jun 10 14:55:24 2025] [::1]:55939 [200]: GET /js/cart.js?v=1749581724
+[Tue Jun 10 14:55:24 2025] [::1]:55940 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 14:55:24 2025] [::1]:55939 Closing
+[Tue Jun 10 14:55:24 2025] [::1]:55940 Closing
+[Tue Jun 10 14:55:24 2025] [::1]:55941 Accepted
+[Tue Jun 10 14:55:24 2025] [::1]:55941 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 14:55:24 2025] [::1]:55941 Closing
+[Tue Jun 10 14:55:24 2025] [::1]:55942 Accepted
+[Tue Jun 10 14:55:24 2025] [::1]:55942 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 14:55:24 2025] [::1]:55942 Closing
+[Tue Jun 10 14:55:24 2025] [::1]:55943 Accepted
+[Tue Jun 10 14:55:24 2025] [::1]:55943 [200]: GET /favicon.ico
+[Tue Jun 10 14:55:24 2025] [::1]:55943 Closing
+[Tue Jun 10 14:55:30 2025] [::1]:55950 Accepted
+[Tue Jun 10 14:55:30 2025] Marketing Page Database Error: SQLSTATE[HY000]: General error: 1267 Illegal mix of collations (utf8mb4_0900_ai_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '='
+[Tue Jun 10 14:55:30 2025] [::1]:55950 [200]: GET /?page=admin&section=marketing
+[Tue Jun 10 14:55:30 2025] [::1]:55950 Closing
+[Tue Jun 10 14:55:30 2025] [::1]:55951 Accepted
+[Tue Jun 10 14:55:30 2025] [::1]:55952 Accepted
+[Tue Jun 10 14:55:30 2025] [::1]:55953 Accepted
+[Tue Jun 10 14:55:30 2025] [::1]:55951 [200]: GET /css/styles.css?v=1749581730
+[Tue Jun 10 14:55:30 2025] [::1]:55952 [200]: GET /js/cart.js?v=1749581730
+[Tue Jun 10 14:55:30 2025] [::1]:55953 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 14:55:30 2025] [::1]:55951 Closing
+[Tue Jun 10 14:55:30 2025] [::1]:55952 Closing
+[Tue Jun 10 14:55:30 2025] [::1]:55953 Closing
+[Tue Jun 10 14:55:30 2025] [::1]:55954 Accepted
+[Tue Jun 10 14:55:30 2025] [::1]:55954 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 14:55:30 2025] [::1]:55954 Closing
+[Tue Jun 10 14:55:30 2025] [::1]:55955 Accepted
+[Tue Jun 10 14:55:30 2025] [::1]:55955 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 14:55:30 2025] [::1]:55955 Closing
+[Tue Jun 10 14:55:30 2025] [::1]:55956 Accepted
+[Tue Jun 10 14:55:30 2025] [::1]:55956 [200]: GET /favicon.ico
+[Tue Jun 10 14:55:30 2025] [::1]:55956 Closing
+[Tue Jun 10 14:55:34 2025] [::1]:55961 Accepted
+[Tue Jun 10 14:55:34 2025] [::1]:55961 [200]: GET /?page=admin&section=reports
+[Tue Jun 10 14:55:34 2025] [::1]:55961 Closing
+[Tue Jun 10 14:55:34 2025] [::1]:55962 Accepted
+[Tue Jun 10 14:55:34 2025] [::1]:55963 Accepted
+[Tue Jun 10 14:55:34 2025] [::1]:55964 Accepted
+[Tue Jun 10 14:55:34 2025] [::1]:55962 [200]: GET /css/styles.css?v=1749581734
+[Tue Jun 10 14:55:34 2025] [::1]:55963 [200]: GET /js/cart.js?v=1749581734
+[Tue Jun 10 14:55:34 2025] [::1]:55964 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 14:55:34 2025] [::1]:55962 Closing
+[Tue Jun 10 14:55:34 2025] [::1]:55963 Closing
+[Tue Jun 10 14:55:34 2025] [::1]:55964 Closing
+[Tue Jun 10 14:55:34 2025] [::1]:55965 Accepted
+[Tue Jun 10 14:55:34 2025] [::1]:55965 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 14:55:34 2025] [::1]:55965 Closing
+[Tue Jun 10 14:55:34 2025] [::1]:55966 Accepted
+[Tue Jun 10 14:55:34 2025] [::1]:55966 [200]: GET /favicon.ico
+[Tue Jun 10 14:55:34 2025] [::1]:55966 Closing

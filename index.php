@@ -109,8 +109,8 @@ try {
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Fetch products with direct SQL query - map database column names to expected names
-    $stmt = $pdo->query('SELECT id AS productId, name AS productName, productType, basePrice AS price, description, image AS imageUrl FROM products');
+    // Fetch product rows; preserve original column names while also providing the aliases used by the shop layout.
+    $stmt = $pdo->query('SELECT id AS productId, name AS productName, productType, basePrice, description, image AS imageUrl FROM products');
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if ($products && is_array($products)) {
@@ -122,10 +122,29 @@ try {
             if (!isset($categories[$category])) {
                 $categories[$category] = [];
             }
-            // Ensure price is available as 'price' for compatibility
+            /* -------------------------------------------------------------------------
+             * Normalise/duplicate field names so that all front-end sections can work
+             * with a single data structure.
+             *
+             *  –  The "shop" section (sections/shop.php) expects:             
+             *        productId, productName, price, description, imageUrl
+             *  –  The "room_*" sections expect:                    
+             *        id, name, basePrice (or price), description, image
+             *
+             *  We therefore keep the original aliases for the shop and create the
+             *  additional keys required by the room pages.
+             * --------------------------------------------------------------------- */
+
+            // Provide a generic 'price' key (used by both shop and rooms)
             if (isset($product['basePrice'])) {
                 $product['price'] = $product['basePrice'];
             }
+
+            // Duplicate keys for room pages compatibility
+            $product['id']    = $product['productId']   ?? null;
+            $product['name']  = $product['productName'] ?? null;
+            $product['image'] = $product['imageUrl']    ?? null;
+
             $categories[$category][] = $product;
         }
     }

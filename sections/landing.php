@@ -34,10 +34,10 @@
     
     /* Area 1 base coordinates */
     .area-1 { 
-        top: 411px; 
-        left: 601px; 
-        width: 125px; 
-        height: 77px; 
+        top: 414px; 
+        left: 466px; 
+        width: 285px; 
+        height: 153px; 
         border-radius: 8px;
     }
 </style> 
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Area coordinates
     const areaCoordinates = [
-        { selector: '.area-1', top: 411, left: 601, width: 125, height: 77 } // Area 1
+        { selector: '.area-1', top: 414, left: 466, width: 285, height: 153 } // Area 1
     ];
 
     function positionAreas() {

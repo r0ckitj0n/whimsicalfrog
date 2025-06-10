@@ -8,18 +8,44 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 // Categories are already loaded in index.php and available in $categories
 ?>
 
+<style>
+    /* Use the same green from the header bar */
+    :root {
+        --wf-green: #87ac3a;
+        --wf-green-light: #a3cc4a;
+    }
+
+    #shopPage h1 {
+        color: var(--wf-green) !important; /* override global reset */
+    }
+
+    /* Category buttons styling */
+    .category-btn {
+        background: var(--wf-green);
+        color: #ffffff !important; /* override reset */
+        border: none;
+        transition: background 0.2s ease;
+    }
+
+    .category-btn:hover,
+    .category-btn.active {
+        background: var(--wf-green-light);
+        color: #ffffff !important;
+    }
+</style>
+
 <section id="shopPage" class="py-6">
-    <h1 class="text-3xl font-merienda text-center text-[#87ac3a] mb-6">Welcome to Our Shop</h1>
+    <h1 class="text-3xl font-merienda text-center mb-6">Welcome to Our Shop</h1>
     
     <!-- Category Navigation -->
     <div class="flex flex-wrap justify-center mb-8 gap-2">
         <?php foreach (array_keys($categories) as $category): ?>
-            <button class="category-btn px-4 py-2 rounded-full bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition-colors"
+            <button class="category-btn px-4 py-2 rounded-full"
                     data-category="<?php echo htmlspecialchars($category); ?>">
                 <?php echo htmlspecialchars($category); ?>
             </button>
         <?php endforeach; ?>
-        <button class="category-btn px-4 py-2 rounded-full bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition-colors active"
+        <button class="category-btn px-4 py-2 rounded-full active"
                 data-category="all">
             All Products
         </button>
@@ -83,9 +109,9 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const category = this.getAttribute('data-category');
             
-            // Update active button
-            categoryButtons.forEach(btn => btn.classList.remove('active', 'bg-[#a3cc4a]'));
-            this.classList.add('active', 'bg-[#a3cc4a]');
+            // Update active button (CSS handles color changes)
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
             
             // Filter products
             productCards.forEach(card => {

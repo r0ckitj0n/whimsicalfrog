@@ -1,1 +1,1261 @@
-[Mon Jun  9 15:26:53 2025] Failed to listen on localhost:8000 (reason: Address already in use)
+[Mon Jun  9 18:31:30 2025] PHP 8.4.7 Development Server (http://localhost:8000) started
+[Mon Jun  9 18:32:09 2025] [::1]:64651 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64651 [200]: GET /
+[Mon Jun  9 18:32:09 2025] [::1]:64651 Closing
+[Mon Jun  9 18:32:09 2025] [::1]:64656 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64656 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:32:09 2025] [::1]:64656 Closing
+[Mon Jun  9 18:32:09 2025] [::1]:64657 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64658 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64659 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64660 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64657 [200]: GET /css/styles.css?v=1749508329
+[Mon Jun  9 18:32:09 2025] [::1]:64657 Closing
+[Mon Jun  9 18:32:09 2025] [::1]:64658 [200]: GET /js/cart.js?v=1749508329
+[Mon Jun  9 18:32:09 2025] [::1]:64659 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:32:09 2025] [::1]:64658 Closing
+[Mon Jun  9 18:32:09 2025] [::1]:64660 [200]: GET /images/sign_welcome.webp
+[Mon Jun  9 18:32:09 2025] [::1]:64659 Closing
+[Mon Jun  9 18:32:09 2025] [::1]:64660 Closing
+[Mon Jun  9 18:32:09 2025] [::1]:64661 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64661 [200]: GET /images/home_background.png?v=cb2
+[Mon Jun  9 18:32:09 2025] [::1]:64661 Closing
+[Mon Jun  9 18:32:09 2025] [::1]:64662 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64662 [200]: GET /images/home_background.webp?v=cb2
+[Mon Jun  9 18:32:09 2025] [::1]:64662 Closing
+[Mon Jun  9 18:32:09 2025] [::1]:64663 Accepted
+[Mon Jun  9 18:32:09 2025] [::1]:64663 [200]: GET /favicon.ico
+[Mon Jun  9 18:32:09 2025] [::1]:64663 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64676 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64676 [200]: GET /?page=main_room
+[Mon Jun  9 18:32:13 2025] [::1]:64676 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64677 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64677 [200]: GET /css/styles.css?v=1749508333
+[Mon Jun  9 18:32:13 2025] [::1]:64677 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64678 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64679 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64680 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64681 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64682 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64683 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64678 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:32:13 2025] [::1]:64679 [200]: GET /images/sign_door_tshirts.webp
+[Mon Jun  9 18:32:13 2025] [::1]:64680 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:32:13 2025] [::1]:64680 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64681 [200]: GET /js/cart.js?v=1749508333
+[Mon Jun  9 18:32:13 2025] [::1]:64682 [200]: GET /images/sign_door_tumblers.webp
+[Mon Jun  9 18:32:13 2025] [::1]:64683 [200]: GET /images/sign_door_artwork.webp
+[Mon Jun  9 18:32:13 2025] [::1]:64684 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64678 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64679 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64681 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64683 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64685 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64682 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64684 [200]: GET /images/sign_door_windowwraps.webp
+[Mon Jun  9 18:32:13 2025] [::1]:64684 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64685 [200]: GET /images/sign_door_sublimation.webp
+[Mon Jun  9 18:32:13 2025] [::1]:64686 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64685 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64686 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:32:13 2025] [::1]:64686 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64687 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64687 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:32:13 2025] [::1]:64688 Accepted
+[Mon Jun  9 18:32:13 2025] [::1]:64687 Closing
+[Mon Jun  9 18:32:13 2025] [::1]:64688 [200]: GET /favicon.ico
+[Mon Jun  9 18:32:13 2025] [::1]:64688 Closing
+[Mon Jun  9 18:32:19 2025] [::1]:64713 Accepted
+[Mon Jun  9 18:32:19 2025] [::1]:64713 [200]: GET /?page=admin
+[Mon Jun  9 18:32:19 2025] [::1]:64713 Closing
+[Mon Jun  9 18:32:19 2025] [::1]:64714 Accepted
+[Mon Jun  9 18:32:19 2025] [::1]:64715 Accepted
+[Mon Jun  9 18:32:19 2025] [::1]:64716 Accepted
+[Mon Jun  9 18:32:19 2025] [::1]:64717 Accepted
+[Mon Jun  9 18:32:19 2025] [::1]:64714 [200]: GET /css/styles.css?v=1749508339
+[Mon Jun  9 18:32:19 2025] [::1]:64714 Closing
+[Mon Jun  9 18:32:19 2025] [::1]:64715 [200]: GET /js/cart.js?v=1749508339
+[Mon Jun  9 18:32:19 2025] [::1]:64715 Closing
+[Mon Jun  9 18:32:19 2025] [::1]:64716 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:32:19 2025] [::1]:64716 Closing
+[Mon Jun  9 18:32:19 2025] [::1]:64717 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:32:19 2025] [::1]:64717 Closing
+[Mon Jun  9 18:32:19 2025] [::1]:64718 Accepted
+[Mon Jun  9 18:32:19 2025] [::1]:64718 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:32:19 2025] [::1]:64718 Closing
+[Mon Jun  9 18:32:19 2025] [::1]:64719 Accepted
+[Mon Jun  9 18:32:19 2025] [::1]:64719 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:32:19 2025] [::1]:64719 Closing
+[Mon Jun  9 18:32:19 2025] [::1]:64720 Accepted
+[Mon Jun  9 18:32:19 2025] [::1]:64720 [200]: GET /favicon.ico
+[Mon Jun  9 18:32:19 2025] [::1]:64720 Closing
+[Mon Jun  9 18:32:24 2025] [::1]:64745 Accepted
+[Mon Jun  9 18:32:24 2025] [::1]:64745 [200]: GET /?page=admin&section=orders
+[Mon Jun  9 18:32:24 2025] [::1]:64745 Closing
+[Mon Jun  9 18:32:24 2025] [::1]:64746 Accepted
+[Mon Jun  9 18:32:24 2025] [::1]:64747 Accepted
+[Mon Jun  9 18:32:24 2025] [::1]:64748 Accepted
+[Mon Jun  9 18:32:24 2025] [::1]:64749 Accepted
+[Mon Jun  9 18:32:24 2025] [::1]:64746 [200]: GET /css/styles.css?v=1749508344
+[Mon Jun  9 18:32:24 2025] [::1]:64747 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:32:24 2025] [::1]:64747 Closing
+[Mon Jun  9 18:32:24 2025] [::1]:64748 [200]: GET /js/cart.js?v=1749508344
+[Mon Jun  9 18:32:24 2025] [::1]:64749 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:32:24 2025] [::1]:64746 Closing
+[Mon Jun  9 18:32:24 2025] [::1]:64748 Closing
+[Mon Jun  9 18:32:24 2025] [::1]:64749 Closing
+[Mon Jun  9 18:32:24 2025] [::1]:64750 Accepted
+[Mon Jun  9 18:32:24 2025] [::1]:64750 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:32:24 2025] [::1]:64750 Closing
+[Mon Jun  9 18:32:24 2025] [::1]:64751 Accepted
+[Mon Jun  9 18:32:24 2025] [::1]:64752 Accepted
+[Mon Jun  9 18:32:24 2025] [::1]:64751 [200]: GET /favicon.ico
+[Mon Jun  9 18:32:24 2025] [::1]:64751 Closing
+[Mon Jun  9 18:32:24 2025] [::1]:64752 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:32:24 2025] [::1]:64752 Closing
+[Mon Jun  9 18:32:27 2025] [::1]:64761 Accepted
+[Mon Jun  9 18:32:27 2025] [::1]:64761 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 18:32:27 2025] [::1]:64761 Closing
+[Mon Jun  9 18:32:27 2025] [::1]:64762 Accepted
+[Mon Jun  9 18:32:27 2025] [::1]:64763 Accepted
+[Mon Jun  9 18:32:27 2025] [::1]:64764 Accepted
+[Mon Jun  9 18:32:27 2025] [::1]:64765 Accepted
+[Mon Jun  9 18:32:27 2025] [::1]:64762 [200]: GET /css/styles.css?v=1749508347
+[Mon Jun  9 18:32:27 2025] [::1]:64762 Closing
+[Mon Jun  9 18:32:27 2025] [::1]:64763 [200]: GET /js/cart.js?v=1749508347
+[Mon Jun  9 18:32:27 2025] [::1]:64763 Closing
+[Mon Jun  9 18:32:27 2025] [::1]:64764 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:32:27 2025] [::1]:64764 Closing
+[Mon Jun  9 18:32:27 2025] [::1]:64765 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:32:27 2025] [::1]:64765 Closing
+[Mon Jun  9 18:32:27 2025] [::1]:64766 Accepted
+[Mon Jun  9 18:32:27 2025] [::1]:64766 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:32:27 2025] [::1]:64766 Closing
+[Mon Jun  9 18:32:27 2025] [::1]:64767 Accepted
+[Mon Jun  9 18:32:27 2025] [::1]:64767 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:32:27 2025] [::1]:64767 Closing
+[Mon Jun  9 18:32:27 2025] [::1]:64768 Accepted
+[Mon Jun  9 18:32:27 2025] [::1]:64768 [200]: GET /favicon.ico
+[Mon Jun  9 18:32:27 2025] [::1]:64768 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64781 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64781 [200]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 18:32:29 2025] [::1]:64781 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64782 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64783 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64784 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64785 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64782 [200]: GET /css/styles.css?v=1749508349
+[Mon Jun  9 18:32:29 2025] [::1]:64782 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64786 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64783 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:32:29 2025] [::1]:64784 [200]: GET /images/P001.png
+[Mon Jun  9 18:32:29 2025] [::1]:64785 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:32:29 2025] [::1]:64785 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64786 [200]: GET /js/cart.js?v=1749508349
+[Mon Jun  9 18:32:29 2025] [::1]:64783 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64786 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64784 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64787 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64787 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:32:29 2025] [::1]:64787 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64788 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64788 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:32:29 2025] [::1]:64788 Closing
+[Mon Jun  9 18:32:29 2025] [::1]:64789 Accepted
+[Mon Jun  9 18:32:29 2025] [::1]:64789 [200]: GET /favicon.ico
+[Mon Jun  9 18:32:29 2025] [::1]:64789 Closing
+[Mon Jun  9 18:40:53 2025] [::1]:50506 Accepted
+[Mon Jun  9 18:40:53 2025] [::1]:50506 [302]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 18:40:53 2025] [::1]:50506 Closing
+[Mon Jun  9 18:41:20 2025] [::1]:50618 Accepted
+[Mon Jun  9 18:41:20 2025] [::1]:50618 [200]: GET /test_js_vars.php
+[Mon Jun  9 18:41:20 2025] [::1]:50618 Closing
+[Mon Jun  9 18:41:51 2025] [::1]:50759 Accepted
+[Mon Jun  9 18:41:51 2025] [::1]:50759 [302]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 18:41:51 2025] [::1]:50759 Closing
+[Mon Jun  9 18:41:57 2025] [::1]:50780 Accepted
+[Mon Jun  9 18:41:57 2025] [::1]:50780 [302]: HEAD /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 18:41:57 2025] [::1]:50780 Closing
+[Mon Jun  9 18:42:33 2025] [::1]:50951 Accepted
+[Mon Jun  9 18:42:33 2025] [::1]:50951 [200]: GET /test_js_vars_add.php
+[Mon Jun  9 18:42:33 2025] [::1]:50951 Closing
+[Mon Jun  9 18:44:10 2025] [::1]:51349 Accepted
+[Mon Jun  9 18:44:10 2025] [::1]:51349 [200]: GET /test_admin_js.php
+[Mon Jun  9 18:44:10 2025] [::1]:51349 Closing
+[Mon Jun  9 18:44:15 2025] [::1]:51370 Accepted
+[Mon Jun  9 18:44:15 2025] [::1]:51370 [200]: GET /test_admin_js.php
+[Mon Jun  9 18:44:15 2025] [::1]:51370 Closing
+[Mon Jun  9 18:44:57 2025] [::1]:51550 Accepted
+[Mon Jun  9 18:44:57 2025] [::1]:51550 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 18:44:57 2025] [::1]:51550 Closing
+[Mon Jun  9 18:44:57 2025] [::1]:51551 Accepted
+[Mon Jun  9 18:44:57 2025] [::1]:51552 Accepted
+[Mon Jun  9 18:44:57 2025] [::1]:51553 Accepted
+[Mon Jun  9 18:44:57 2025] [::1]:51554 Accepted
+[Mon Jun  9 18:44:57 2025] [::1]:51551 [200]: GET /css/styles.css?v=1749509097
+[Mon Jun  9 18:44:57 2025] [::1]:51551 Closing
+[Mon Jun  9 18:44:57 2025] [::1]:51552 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:44:57 2025] [::1]:51552 Closing
+[Mon Jun  9 18:44:57 2025] [::1]:51553 [200]: GET /js/cart.js?v=1749509097
+[Mon Jun  9 18:44:57 2025] [::1]:51554 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:44:57 2025] [::1]:51553 Closing
+[Mon Jun  9 18:44:57 2025] [::1]:51554 Closing
+[Mon Jun  9 18:44:57 2025] [::1]:51555 Accepted
+[Mon Jun  9 18:44:57 2025] [::1]:51555 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:44:57 2025] [::1]:51555 Closing
+[Mon Jun  9 18:44:57 2025] [::1]:51556 Accepted
+[Mon Jun  9 18:44:57 2025] [::1]:51556 [200]: GET /favicon.ico
+[Mon Jun  9 18:44:57 2025] [::1]:51556 Closing
+[Mon Jun  9 18:44:59 2025] [::1]:51565 Accepted
+[Mon Jun  9 18:44:59 2025] [::1]:51565 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 18:44:59 2025] [::1]:51565 Closing
+[Mon Jun  9 18:44:59 2025] [::1]:51566 Accepted
+[Mon Jun  9 18:44:59 2025] [::1]:51567 Accepted
+[Mon Jun  9 18:44:59 2025] [::1]:51568 Accepted
+[Mon Jun  9 18:44:59 2025] [::1]:51566 [200]: GET /css/styles.css?v=1749509099
+[Mon Jun  9 18:44:59 2025] [::1]:51567 [200]: GET /js/cart.js?v=1749509099
+[Mon Jun  9 18:44:59 2025] [::1]:51568 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:44:59 2025] [::1]:51566 Closing
+[Mon Jun  9 18:44:59 2025] [::1]:51567 Closing
+[Mon Jun  9 18:44:59 2025] [::1]:51568 Closing
+[Mon Jun  9 18:44:59 2025] [::1]:51569 Accepted
+[Mon Jun  9 18:44:59 2025] [::1]:51569 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:44:59 2025] [::1]:51569 Closing
+[Mon Jun  9 18:44:59 2025] [::1]:51570 Accepted
+[Mon Jun  9 18:44:59 2025] [::1]:51570 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:44:59 2025] [::1]:51570 Closing
+[Mon Jun  9 18:44:59 2025] [::1]:51571 Accepted
+[Mon Jun  9 18:44:59 2025] [::1]:51571 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:44:59 2025] [::1]:51571 Closing
+[Mon Jun  9 18:44:59 2025] [::1]:51572 Accepted
+[Mon Jun  9 18:44:59 2025] [::1]:51572 [200]: GET /favicon.ico
+[Mon Jun  9 18:44:59 2025] [::1]:51572 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51590 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51590 [200]: GET /?page=admin&section=inventory&edit=I002
+[Mon Jun  9 18:45:03 2025] [::1]:51590 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51591 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51592 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51593 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51591 [200]: GET /css/styles.css?v=1749509103
+[Mon Jun  9 18:45:03 2025] [::1]:51592 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:45:03 2025] [::1]:51593 [200]: GET /images/frog_tumbler_3.png
+[Mon Jun  9 18:45:03 2025] [::1]:51591 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51592 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51594 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51595 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51594 [200]: GET /js/cart.js?v=1749509103
+[Mon Jun  9 18:45:03 2025] [::1]:51594 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51595 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:45:03 2025] [::1]:51595 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51596 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51596 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:45:03 2025] [::1]:51596 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51593 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51597 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51597 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:45:03 2025] [::1]:51597 Closing
+[Mon Jun  9 18:45:03 2025] [::1]:51598 Accepted
+[Mon Jun  9 18:45:03 2025] [::1]:51598 [200]: GET /favicon.ico
+[Mon Jun  9 18:45:03 2025] [::1]:51598 Closing
+[Mon Jun  9 18:45:19 2025] [::1]:51663 Accepted
+[Mon Jun  9 18:45:19 2025] [::1]:51663 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 18:45:19 2025] [::1]:51663 Closing
+[Mon Jun  9 18:45:19 2025] [::1]:51668 Accepted
+[Mon Jun  9 18:45:19 2025] [::1]:51669 Accepted
+[Mon Jun  9 18:45:19 2025] [::1]:51670 Accepted
+[Mon Jun  9 18:45:19 2025] [::1]:51671 Accepted
+[Mon Jun  9 18:45:19 2025] [::1]:51668 [200]: GET /css/styles.css?v=1749509119
+[Mon Jun  9 18:45:19 2025] [::1]:51669 [200]: GET /js/cart.js?v=1749509119
+[Mon Jun  9 18:45:19 2025] [::1]:51668 Closing
+[Mon Jun  9 18:45:19 2025] [::1]:51670 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:45:19 2025] [::1]:51670 Closing
+[Mon Jun  9 18:45:19 2025] [::1]:51669 Closing
+[Mon Jun  9 18:45:19 2025] [::1]:51671 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:45:19 2025] [::1]:51671 Closing
+[Mon Jun  9 18:45:19 2025] [::1]:51672 Accepted
+[Mon Jun  9 18:45:19 2025] [::1]:51672 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:45:19 2025] [::1]:51672 Closing
+[Mon Jun  9 18:45:20 2025] [::1]:51673 Accepted
+[Mon Jun  9 18:45:20 2025] [::1]:51673 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:45:20 2025] [::1]:51673 Closing
+[Mon Jun  9 18:45:20 2025] [::1]:51674 Accepted
+[Mon Jun  9 18:45:20 2025] [::1]:51674 [200]: GET /favicon.ico
+[Mon Jun  9 18:45:20 2025] [::1]:51674 Closing
+[Mon Jun  9 18:45:22 2025] [::1]:51683 Accepted
+[Mon Jun  9 18:45:22 2025] [::1]:51683 [302]: GET /logout.php
+[Mon Jun  9 18:45:22 2025] [::1]:51683 Closing
+[Mon Jun  9 18:45:22 2025] [::1]:51684 Accepted
+[Mon Jun  9 18:45:22 2025] [::1]:51684 [200]: GET /
+[Mon Jun  9 18:45:22 2025] [::1]:51684 Closing
+[Mon Jun  9 18:45:22 2025] [::1]:51685 Accepted
+[Mon Jun  9 18:45:22 2025] [::1]:51685 [200]: GET /css/styles.css?v=1749509122
+[Mon Jun  9 18:45:22 2025] [::1]:51685 Closing
+[Mon Jun  9 18:45:22 2025] [::1]:51686 Accepted
+[Mon Jun  9 18:45:22 2025] [::1]:51687 Accepted
+[Mon Jun  9 18:45:22 2025] [::1]:51688 Accepted
+[Mon Jun  9 18:45:22 2025] [::1]:51689 Accepted
+[Mon Jun  9 18:45:22 2025] [::1]:51686 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:45:22 2025] [::1]:51687 [200]: GET /images/sign_welcome.webp
+[Mon Jun  9 18:45:22 2025] [::1]:51688 [200]: GET /js/cart.js?v=1749509122
+[Mon Jun  9 18:45:22 2025] [::1]:51690 Accepted
+[Mon Jun  9 18:45:22 2025] [::1]:51686 Closing
+[Mon Jun  9 18:45:22 2025] [::1]:51687 Closing
+[Mon Jun  9 18:45:22 2025] [::1]:51688 Closing
+[Mon Jun  9 18:45:22 2025] [::1]:51689 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:45:22 2025] [::1]:51689 Closing
+[Mon Jun  9 18:45:22 2025] [::1]:51690 [200]: GET /images/home_background.png?v=cb2
+[Mon Jun  9 18:45:22 2025] [::1]:51690 Closing
+[Mon Jun  9 18:45:23 2025] [::1]:51695 Accepted
+[Mon Jun  9 18:45:23 2025] [::1]:51696 Accepted
+[Mon Jun  9 18:45:23 2025] [::1]:51695 [200]: GET /favicon.ico
+[Mon Jun  9 18:45:23 2025] [::1]:51695 Closing
+[Mon Jun  9 18:45:23 2025] [::1]:51696 [200]: GET /images/home_background.webp?v=cb2
+[Mon Jun  9 18:45:23 2025] [::1]:51696 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51701 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51701 [200]: GET /?page=main_room
+[Mon Jun  9 18:45:24 2025] [::1]:51701 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51702 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51703 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51704 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51705 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51702 [200]: GET /css/styles.css?v=1749509124
+[Mon Jun  9 18:45:24 2025] [::1]:51702 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51703 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:45:24 2025] [::1]:51703 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51704 [200]: GET /images/sign_door_tshirts.webp
+[Mon Jun  9 18:45:24 2025] [::1]:51705 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:45:24 2025] [::1]:51705 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51706 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51707 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51706 [200]: GET /images/sign_door_tumblers.webp
+[Mon Jun  9 18:45:24 2025] [::1]:51708 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51704 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51707 [200]: GET /images/sign_door_artwork.webp
+[Mon Jun  9 18:45:24 2025] [::1]:51709 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51708 [200]: GET /images/sign_door_windowwraps.webp
+[Mon Jun  9 18:45:24 2025] [::1]:51706 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51707 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51709 [200]: GET /js/cart.js?v=1749509124
+[Mon Jun  9 18:45:24 2025] [::1]:51709 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51708 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51710 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51711 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51710 [200]: GET /images/sign_door_sublimation.webp
+[Mon Jun  9 18:45:24 2025] [::1]:51711 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:45:24 2025] [::1]:51710 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51711 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51712 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51712 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:45:24 2025] [::1]:51712 Closing
+[Mon Jun  9 18:45:24 2025] [::1]:51713 Accepted
+[Mon Jun  9 18:45:24 2025] [::1]:51713 [200]: GET /favicon.ico
+[Mon Jun  9 18:45:24 2025] [::1]:51713 Closing
+[Mon Jun  9 18:45:26 2025] [::1]:51722 Accepted
+[Mon Jun  9 18:45:26 2025] [::1]:51722 [200]: GET /?page=login
+[Mon Jun  9 18:45:26 2025] [::1]:51722 Closing
+[Mon Jun  9 18:45:26 2025] [::1]:51723 Accepted
+[Mon Jun  9 18:45:26 2025] [::1]:51724 Accepted
+[Mon Jun  9 18:45:26 2025] [::1]:51725 Accepted
+[Mon Jun  9 18:45:26 2025] [::1]:51726 Accepted
+[Mon Jun  9 18:45:26 2025] [::1]:51723 [200]: GET /css/styles.css?v=1749509126
+[Mon Jun  9 18:45:26 2025] [::1]:51724 [200]: GET /js/cart.js?v=1749509126
+[Mon Jun  9 18:45:26 2025] [::1]:51725 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:45:26 2025] [::1]:51723 Closing
+[Mon Jun  9 18:45:26 2025] [::1]:51724 Closing
+[Mon Jun  9 18:45:26 2025] [::1]:51725 Closing
+[Mon Jun  9 18:45:26 2025] [::1]:51726 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:45:26 2025] [::1]:51726 Closing
+[Mon Jun  9 18:45:26 2025] [::1]:51727 Accepted
+[Mon Jun  9 18:45:26 2025] [::1]:51727 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:45:26 2025] [::1]:51727 Closing
+[Mon Jun  9 18:45:26 2025] [::1]:51728 Accepted
+[Mon Jun  9 18:45:26 2025] [::1]:51728 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:45:26 2025] [::1]:51728 Closing
+[Mon Jun  9 18:45:26 2025] [::1]:51729 Accepted
+[Mon Jun  9 18:45:26 2025] [::1]:51729 [200]: GET /favicon.ico
+[Mon Jun  9 18:45:26 2025] [::1]:51729 Closing
+[Mon Jun  9 18:45:31 2025] [::1]:51750 Accepted
+[Mon Jun  9 18:45:31 2025] [::1]:51750 [401]: POST /process_login.php
+[Mon Jun  9 18:45:31 2025] [::1]:51750 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51779 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51779 [200]: POST /process_login.php
+[Mon Jun  9 18:45:38 2025] [::1]:51779 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51780 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51780 [200]: GET /?page=shop
+[Mon Jun  9 18:45:38 2025] [::1]:51780 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51781 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51781 [200]: GET /css/styles.css?v=1749509138
+[Mon Jun  9 18:45:38 2025] [::1]:51781 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51782 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51783 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51784 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51785 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51786 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51787 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51782 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:45:38 2025] [::1]:51783 [200]: GET /images/frog_tshirt_1.png
+[Mon Jun  9 18:45:38 2025] [::1]:51784 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:45:38 2025] [::1]:51784 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51785 [200]: GET /js/cart.js?v=1749509138
+[Mon Jun  9 18:45:38 2025] [::1]:51786 [200]: GET /images/products/product_custom-tumbler-20oz.png
+[Mon Jun  9 18:45:38 2025] [::1]:51787 [200]: GET /images/products/product_custom-tumbler-30oz.png
+[Mon Jun  9 18:45:38 2025] [::1]:51782 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51788 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51785 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51783 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51789 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51790 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51788 [200]: GET /images/frog_painter_1.png
+[Mon Jun  9 18:45:38 2025] [::1]:51786 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51789 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:45:38 2025] [::1]:51790 [200]: GET /images/products/product_new-test-thumbs.png
+[Mon Jun  9 18:45:38 2025] [::1]:51791 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51789 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51790 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51791 [200]: GET /images/products/product_custom-window-wrap.png
+[Mon Jun  9 18:45:38 2025] [::1]:51792 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51792 [200]: GET /images/products/product_sublimation-blank-item-e-g-mug.png
+[Mon Jun  9 18:45:38 2025] [::1]:51791 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51792 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51788 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51787 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51793 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51794 Accepted
+[Mon Jun  9 18:45:38 2025] [::1]:51793 [200]: GET /favicon.ico
+[Mon Jun  9 18:45:38 2025] [::1]:51793 Closing
+[Mon Jun  9 18:45:38 2025] [::1]:51794 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:45:38 2025] [::1]:51794 Closing
+[Mon Jun  9 18:45:49 2025] [::1]:51840 Accepted
+[Mon Jun  9 18:45:49 2025] [::1]:51840 [200]: GET /?page=admin
+[Mon Jun  9 18:45:49 2025] [::1]:51840 Closing
+[Mon Jun  9 18:45:49 2025] [::1]:51841 Accepted
+[Mon Jun  9 18:45:49 2025] [::1]:51842 Accepted
+[Mon Jun  9 18:45:49 2025] [::1]:51843 Accepted
+[Mon Jun  9 18:45:49 2025] [::1]:51844 Accepted
+[Mon Jun  9 18:45:49 2025] [::1]:51841 [200]: GET /css/styles.css?v=1749509149
+[Mon Jun  9 18:45:49 2025] [::1]:51842 [200]: GET /js/cart.js?v=1749509149
+[Mon Jun  9 18:45:49 2025] [::1]:51843 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:45:49 2025] [::1]:51844 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:45:49 2025] [::1]:51844 Closing
+[Mon Jun  9 18:45:49 2025] [::1]:51841 Closing
+[Mon Jun  9 18:45:49 2025] [::1]:51842 Closing
+[Mon Jun  9 18:45:49 2025] [::1]:51843 Closing
+[Mon Jun  9 18:45:49 2025] [::1]:51845 Accepted
+[Mon Jun  9 18:45:49 2025] [::1]:51845 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:45:49 2025] [::1]:51845 Closing
+[Mon Jun  9 18:45:49 2025] [::1]:51846 Accepted
+[Mon Jun  9 18:45:49 2025] [::1]:51846 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:45:49 2025] [::1]:51846 Closing
+[Mon Jun  9 18:45:49 2025] [::1]:51847 Accepted
+[Mon Jun  9 18:45:49 2025] [::1]:51847 [200]: GET /favicon.ico
+[Mon Jun  9 18:45:49 2025] [::1]:51847 Closing
+[Mon Jun  9 18:45:52 2025] [::1]:51860 Accepted
+[Mon Jun  9 18:45:52 2025] [::1]:51860 [200]: GET /?page=admin&section=orders
+[Mon Jun  9 18:45:52 2025] [::1]:51860 Closing
+[Mon Jun  9 18:45:52 2025] [::1]:51861 Accepted
+[Mon Jun  9 18:45:52 2025] [::1]:51862 Accepted
+[Mon Jun  9 18:45:52 2025] [::1]:51863 Accepted
+[Mon Jun  9 18:45:52 2025] [::1]:51864 Accepted
+[Mon Jun  9 18:45:52 2025] [::1]:51861 [200]: GET /css/styles.css?v=1749509152
+[Mon Jun  9 18:45:52 2025] [::1]:51862 [200]: GET /js/cart.js?v=1749509152
+[Mon Jun  9 18:45:52 2025] [::1]:51861 Closing
+[Mon Jun  9 18:45:52 2025] [::1]:51862 Closing
+[Mon Jun  9 18:45:52 2025] [::1]:51863 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:45:52 2025] [::1]:51863 Closing
+[Mon Jun  9 18:45:52 2025] [::1]:51864 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:45:52 2025] [::1]:51864 Closing
+[Mon Jun  9 18:45:52 2025] [::1]:51865 Accepted
+[Mon Jun  9 18:45:52 2025] [::1]:51865 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:45:52 2025] [::1]:51865 Closing
+[Mon Jun  9 18:45:52 2025] [::1]:51866 Accepted
+[Mon Jun  9 18:45:52 2025] [::1]:51866 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:45:52 2025] [::1]:51866 Closing
+[Mon Jun  9 18:45:52 2025] [::1]:51867 Accepted
+[Mon Jun  9 18:45:52 2025] [::1]:51867 [200]: GET /favicon.ico
+[Mon Jun  9 18:45:52 2025] [::1]:51867 Closing
+[Mon Jun  9 18:46:52 2025] [::1]:52110 Accepted
+[Mon Jun  9 18:46:52 2025] [::1]:52110 [200]: GET /?page=admin_orders&edit=TEST001
+[Mon Jun  9 18:46:52 2025] [::1]:52110 Closing
+[Mon Jun  9 18:46:52 2025] [::1]:52111 Accepted
+[Mon Jun  9 18:46:52 2025] [::1]:52112 Accepted
+[Mon Jun  9 18:46:52 2025] [::1]:52113 Accepted
+[Mon Jun  9 18:46:52 2025] [::1]:52114 Accepted
+[Mon Jun  9 18:46:52 2025] [::1]:52111 [200]: GET /css/styles.css?v=1749509212
+[Mon Jun  9 18:46:52 2025] [::1]:52111 Closing
+[Mon Jun  9 18:46:52 2025] [::1]:52112 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:46:52 2025] [::1]:52112 Closing
+[Mon Jun  9 18:46:52 2025] [::1]:52113 [200]: GET /js/cart.js?v=1749509212
+[Mon Jun  9 18:46:52 2025] [::1]:52113 Closing
+[Mon Jun  9 18:46:52 2025] [::1]:52114 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:46:52 2025] [::1]:52114 Closing
+[Mon Jun  9 18:46:52 2025] [::1]:52115 Accepted
+[Mon Jun  9 18:46:52 2025] [::1]:52115 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:46:52 2025] [::1]:52115 Closing
+[Mon Jun  9 18:46:52 2025] [::1]:52116 Accepted
+[Mon Jun  9 18:46:52 2025] [::1]:52116 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:46:52 2025] [::1]:52116 Closing
+[Mon Jun  9 18:46:52 2025] [::1]:52117 Accepted
+[Mon Jun  9 18:46:52 2025] [::1]:52117 [200]: GET /favicon.ico
+[Mon Jun  9 18:46:52 2025] [::1]:52117 Closing
+[Mon Jun  9 18:46:55 2025] [::1]:52130 Accepted
+[Mon Jun  9 18:46:55 2025] [::1]:52130 [200]: GET /?page=admin_orders
+[Mon Jun  9 18:46:55 2025] [::1]:52130 Closing
+[Mon Jun  9 18:46:55 2025] [::1]:52131 Accepted
+[Mon Jun  9 18:46:55 2025] [::1]:52132 Accepted
+[Mon Jun  9 18:46:55 2025] [::1]:52133 Accepted
+[Mon Jun  9 18:46:55 2025] [::1]:52134 Accepted
+[Mon Jun  9 18:46:55 2025] [::1]:52131 [200]: GET /css/styles.css?v=1749509215
+[Mon Jun  9 18:46:55 2025] [::1]:52132 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:46:55 2025] [::1]:52132 Closing
+[Mon Jun  9 18:46:55 2025] [::1]:52133 [200]: GET /js/cart.js?v=1749509215
+[Mon Jun  9 18:46:55 2025] [::1]:52134 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:46:55 2025] [::1]:52131 Closing
+[Mon Jun  9 18:46:55 2025] [::1]:52133 Closing
+[Mon Jun  9 18:46:55 2025] [::1]:52134 Closing
+[Mon Jun  9 18:46:55 2025] [::1]:52135 Accepted
+[Mon Jun  9 18:46:55 2025] [::1]:52135 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:46:55 2025] [::1]:52135 Closing
+[Mon Jun  9 18:46:55 2025] [::1]:52136 Accepted
+[Mon Jun  9 18:46:55 2025] [::1]:52136 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:46:55 2025] [::1]:52136 Closing
+[Mon Jun  9 18:46:55 2025] [::1]:52137 Accepted
+[Mon Jun  9 18:46:55 2025] [::1]:52137 [200]: GET /favicon.ico
+[Mon Jun  9 18:46:55 2025] [::1]:52137 Closing
+[Mon Jun  9 18:47:01 2025] [::1]:52158 Accepted
+[Mon Jun  9 18:47:01 2025] [::1]:52158 [200]: GET /?page=admin
+[Mon Jun  9 18:47:01 2025] [::1]:52158 Closing
+[Mon Jun  9 18:47:01 2025] [::1]:52159 Accepted
+[Mon Jun  9 18:47:01 2025] [::1]:52159 [200]: GET /css/styles.css?v=1749509221
+[Mon Jun  9 18:47:01 2025] [::1]:52159 Closing
+[Mon Jun  9 18:47:01 2025] [::1]:52160 Accepted
+[Mon Jun  9 18:47:01 2025] [::1]:52161 Accepted
+[Mon Jun  9 18:47:01 2025] [::1]:52162 Accepted
+[Mon Jun  9 18:47:01 2025] [::1]:52160 [200]: GET /js/cart.js?v=1749509221
+[Mon Jun  9 18:47:01 2025] [::1]:52161 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:47:01 2025] [::1]:52162 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:47:01 2025] [::1]:52162 Closing
+[Mon Jun  9 18:47:01 2025] [::1]:52160 Closing
+[Mon Jun  9 18:47:01 2025] [::1]:52161 Closing
+[Mon Jun  9 18:47:01 2025] [::1]:52165 Accepted
+[Mon Jun  9 18:47:01 2025] [::1]:52165 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:47:01 2025] [::1]:52165 Closing
+[Mon Jun  9 18:47:01 2025] [::1]:52168 Accepted
+[Mon Jun  9 18:47:01 2025] [::1]:52168 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:47:01 2025] [::1]:52168 Closing
+[Mon Jun  9 18:47:01 2025] [::1]:52169 Accepted
+[Mon Jun  9 18:47:01 2025] [::1]:52169 [200]: GET /favicon.ico
+[Mon Jun  9 18:47:01 2025] [::1]:52169 Closing
+[Mon Jun  9 18:47:04 2025] [::1]:52178 Accepted
+[Mon Jun  9 18:47:04 2025] [::1]:52178 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 18:47:04 2025] [::1]:52178 Closing
+[Mon Jun  9 18:47:04 2025] [::1]:52179 Accepted
+[Mon Jun  9 18:47:04 2025] [::1]:52180 Accepted
+[Mon Jun  9 18:47:04 2025] [::1]:52181 Accepted
+[Mon Jun  9 18:47:04 2025] [::1]:52182 Accepted
+[Mon Jun  9 18:47:04 2025] [::1]:52179 [200]: GET /css/styles.css?v=1749509224
+[Mon Jun  9 18:47:04 2025] [::1]:52180 [200]: GET /js/cart.js?v=1749509224
+[Mon Jun  9 18:47:04 2025] [::1]:52181 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:47:04 2025] [::1]:52179 Closing
+[Mon Jun  9 18:47:04 2025] [::1]:52180 Closing
+[Mon Jun  9 18:47:04 2025] [::1]:52181 Closing
+[Mon Jun  9 18:47:04 2025] [::1]:52182 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:47:04 2025] [::1]:52182 Closing
+[Mon Jun  9 18:47:04 2025] [::1]:52183 Accepted
+[Mon Jun  9 18:47:04 2025] [::1]:52183 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:47:04 2025] [::1]:52183 Closing
+[Mon Jun  9 18:47:04 2025] [::1]:52184 Accepted
+[Mon Jun  9 18:47:04 2025] [::1]:52184 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:47:04 2025] [::1]:52184 Closing
+[Mon Jun  9 18:47:04 2025] [::1]:52185 Accepted
+[Mon Jun  9 18:47:04 2025] [::1]:52185 [200]: GET /favicon.ico
+[Mon Jun  9 18:47:04 2025] [::1]:52185 Closing
+[Mon Jun  9 18:47:07 2025] [::1]:52198 Accepted
+[Mon Jun  9 18:47:07 2025] [::1]:52198 [200]: GET /?page=admin&section=inventory&edit=I002
+[Mon Jun  9 18:47:07 2025] [::1]:52198 Closing
+[Mon Jun  9 18:47:07 2025] [::1]:52199 Accepted
+[Mon Jun  9 18:47:07 2025] [::1]:52200 Accepted
+[Mon Jun  9 18:47:07 2025] [::1]:52201 Accepted
+[Mon Jun  9 18:47:07 2025] [::1]:52202 Accepted
+[Mon Jun  9 18:47:07 2025] [::1]:52199 [200]: GET /css/styles.css?v=1749509227
+[Mon Jun  9 18:47:07 2025] [::1]:52200 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:47:07 2025] [::1]:52200 Closing
+[Mon Jun  9 18:47:07 2025] [::1]:52203 Accepted
+[Mon Jun  9 18:47:07 2025] [::1]:52201 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:47:07 2025] [::1]:52202 [200]: GET /images/frog_tumbler_3.png
+[Mon Jun  9 18:47:07 2025] [::1]:52199 Closing
+[Mon Jun  9 18:47:07 2025] [::1]:52203 [200]: GET /js/cart.js?v=1749509227
+[Mon Jun  9 18:47:07 2025] [::1]:52203 Closing
+[Mon Jun  9 18:47:07 2025] [::1]:52201 Closing
+[Mon Jun  9 18:47:07 2025] [::1]:52202 Closing
+[Mon Jun  9 18:47:07 2025] [::1]:52204 Accepted
+[Mon Jun  9 18:47:07 2025] [::1]:52204 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:47:07 2025] [::1]:52204 Closing
+[Mon Jun  9 18:47:07 2025] [::1]:52205 Accepted
+[Mon Jun  9 18:47:07 2025] [::1]:52205 [200]: GET /favicon.ico
+[Mon Jun  9 18:47:07 2025] [::1]:52205 Closing
+[Mon Jun  9 18:51:09 2025] [::1]:53211 Accepted
+[Mon Jun  9 18:51:09 2025] [::1]:53211 [200]: GET /debug_js_output.php
+[Mon Jun  9 18:51:09 2025] [::1]:53211 Closing
+[Mon Jun  9 18:51:14 2025] [::1]:53260 Accepted
+[Mon Jun  9 18:51:14 2025] [::1]:53260 [200]: GET /debug_js_output.php
+[Mon Jun  9 18:51:14 2025] [::1]:53260 Closing
+[Mon Jun  9 18:52:22 2025] [::1]:53550 Accepted
+[Mon Jun  9 18:52:22 2025] [::1]:53550 [200]: GET /debug_categories.php
+[Mon Jun  9 18:52:22 2025] [::1]:53550 Closing
+[Mon Jun  9 18:54:47 2025] [::1]:54140 Accepted
+[Mon Jun  9 18:54:47 2025] [::1]:54140 [200]: GET /test_minimal_js.php
+[Mon Jun  9 18:54:47 2025] [::1]:54140 Closing
+[Mon Jun  9 18:55:56 2025] [::1]:54437 Accepted
+[Mon Jun  9 18:55:56 2025] [::1]:54437 [302]: GET /?page=admin&section=inventory&edit=I002
+[Mon Jun  9 18:55:56 2025] [::1]:54437 Closing
+[Mon Jun  9 18:56:37 2025] [::1]:54610 Accepted
+[Mon Jun  9 18:56:37 2025] [::1]:54610 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 18:56:37 2025] [::1]:54610 Closing
+[Mon Jun  9 18:56:37 2025] [::1]:54611 Accepted
+[Mon Jun  9 18:56:37 2025] [::1]:54612 Accepted
+[Mon Jun  9 18:56:37 2025] [::1]:54613 Accepted
+[Mon Jun  9 18:56:37 2025] [::1]:54614 Accepted
+[Mon Jun  9 18:56:37 2025] [::1]:54611 [200]: GET /css/styles.css?v=1749509797
+[Mon Jun  9 18:56:37 2025] [::1]:54612 [200]: GET /js/cart.js?v=1749509797
+[Mon Jun  9 18:56:37 2025] [::1]:54613 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:56:37 2025] [::1]:54614 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:56:37 2025] [::1]:54614 Closing
+[Mon Jun  9 18:56:37 2025] [::1]:54611 Closing
+[Mon Jun  9 18:56:37 2025] [::1]:54612 Closing
+[Mon Jun  9 18:56:37 2025] [::1]:54613 Closing
+[Mon Jun  9 18:56:37 2025] [::1]:54615 Accepted
+[Mon Jun  9 18:56:37 2025] [::1]:54615 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:56:37 2025] [::1]:54615 Closing
+[Mon Jun  9 18:56:37 2025] [::1]:54616 Accepted
+[Mon Jun  9 18:56:37 2025] [::1]:54616 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:56:37 2025] [::1]:54616 Closing
+[Mon Jun  9 18:56:37 2025] [::1]:54617 Accepted
+[Mon Jun  9 18:56:37 2025] [::1]:54617 [200]: GET /favicon.ico
+[Mon Jun  9 18:56:37 2025] [::1]:54617 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54627 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54627 [200]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 18:56:39 2025] [::1]:54627 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54628 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54629 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54630 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54631 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54628 [200]: GET /css/styles.css?v=1749509799
+[Mon Jun  9 18:56:39 2025] [::1]:54629 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:56:39 2025] [::1]:54630 [200]: GET /images/P001.png
+[Mon Jun  9 18:56:39 2025] [::1]:54631 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:56:39 2025] [::1]:54631 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54628 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54632 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54629 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54630 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54632 [200]: GET /js/cart.js?v=1749509799
+[Mon Jun  9 18:56:39 2025] [::1]:54632 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54633 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54633 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:56:39 2025] [::1]:54633 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54634 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54634 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:56:39 2025] [::1]:54634 Closing
+[Mon Jun  9 18:56:39 2025] [::1]:54635 Accepted
+[Mon Jun  9 18:56:39 2025] [::1]:54635 [200]: GET /favicon.ico
+[Mon Jun  9 18:56:39 2025] [::1]:54635 Closing
+[Mon Jun  9 18:57:24 2025] [::1]:54818 Accepted
+[Mon Jun  9 18:57:24 2025] [::1]:54818 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 18:57:24 2025] [::1]:54818 Closing
+[Mon Jun  9 18:57:24 2025] [::1]:54819 Accepted
+[Mon Jun  9 18:57:24 2025] [::1]:54820 Accepted
+[Mon Jun  9 18:57:24 2025] [::1]:54821 Accepted
+[Mon Jun  9 18:57:24 2025] [::1]:54822 Accepted
+[Mon Jun  9 18:57:24 2025] [::1]:54819 [200]: GET /css/styles.css?v=1749509844
+[Mon Jun  9 18:57:24 2025] [::1]:54820 [200]: GET /js/cart.js?v=1749509844
+[Mon Jun  9 18:57:24 2025] [::1]:54821 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:57:24 2025] [::1]:54822 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:57:24 2025] [::1]:54822 Closing
+[Mon Jun  9 18:57:24 2025] [::1]:54819 Closing
+[Mon Jun  9 18:57:24 2025] [::1]:54820 Closing
+[Mon Jun  9 18:57:24 2025] [::1]:54821 Closing
+[Mon Jun  9 18:57:24 2025] [::1]:54823 Accepted
+[Mon Jun  9 18:57:24 2025] [::1]:54823 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:57:24 2025] [::1]:54823 Closing
+[Mon Jun  9 18:57:24 2025] [::1]:54824 Accepted
+[Mon Jun  9 18:57:24 2025] [::1]:54824 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:57:24 2025] [::1]:54824 Closing
+[Mon Jun  9 18:57:24 2025] [::1]:54825 Accepted
+[Mon Jun  9 18:57:24 2025] [::1]:54825 [200]: GET /favicon.ico
+[Mon Jun  9 18:57:24 2025] [::1]:54825 Closing
+[Mon Jun  9 18:57:27 2025] [::1]:54838 Accepted
+[Mon Jun  9 18:57:27 2025] [::1]:54838 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 18:57:27 2025] [::1]:54838 Closing
+[Mon Jun  9 18:57:27 2025] [::1]:54839 Accepted
+[Mon Jun  9 18:57:27 2025] [::1]:54840 Accepted
+[Mon Jun  9 18:57:27 2025] [::1]:54841 Accepted
+[Mon Jun  9 18:57:27 2025] [::1]:54842 Accepted
+[Mon Jun  9 18:57:27 2025] [::1]:54839 [200]: GET /css/styles.css?v=1749509847
+[Mon Jun  9 18:57:27 2025] [::1]:54839 Closing
+[Mon Jun  9 18:57:27 2025] [::1]:54840 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:57:27 2025] [::1]:54840 Closing
+[Mon Jun  9 18:57:27 2025] [::1]:54841 [200]: GET /js/cart.js?v=1749509847
+[Mon Jun  9 18:57:27 2025] [::1]:54841 Closing
+[Mon Jun  9 18:57:27 2025] [::1]:54843 Accepted
+[Mon Jun  9 18:57:27 2025] [::1]:54842 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:57:27 2025] [::1]:54842 Closing
+[Mon Jun  9 18:57:27 2025] [::1]:54843 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:57:27 2025] [::1]:54843 Closing
+[Mon Jun  9 18:57:27 2025] [::1]:54844 Accepted
+[Mon Jun  9 18:57:27 2025] [::1]:54844 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:57:27 2025] [::1]:54844 Closing
+[Mon Jun  9 18:57:27 2025] [::1]:54845 Accepted
+[Mon Jun  9 18:57:27 2025] [::1]:54845 [200]: GET /favicon.ico
+[Mon Jun  9 18:57:27 2025] [::1]:54845 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54854 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54854 [200]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 18:57:29 2025] [::1]:54854 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54855 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54855 [200]: GET /css/styles.css?v=1749509849
+[Mon Jun  9 18:57:29 2025] [::1]:54855 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54856 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54857 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54858 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54859 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54856 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 18:57:29 2025] [::1]:54856 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54857 [200]: GET /js/cart.js?v=1749509849
+[Mon Jun  9 18:57:29 2025] [::1]:54858 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 18:57:29 2025] [::1]:54859 [200]: GET /images/P001.png
+[Mon Jun  9 18:57:29 2025] [::1]:54857 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54858 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54859 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54860 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54860 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 18:57:29 2025] [::1]:54860 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54865 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54865 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 18:57:29 2025] [::1]:54865 Closing
+[Mon Jun  9 18:57:29 2025] [::1]:54866 Accepted
+[Mon Jun  9 18:57:29 2025] [::1]:54866 [200]: GET /favicon.ico
+[Mon Jun  9 18:57:29 2025] [::1]:54866 Closing
+[Mon Jun  9 19:00:10 2025] [::1]:55549 Accepted
+[Mon Jun  9 19:00:10 2025] [::1]:55549 [200]: GET /debug_js_generation.php
+[Mon Jun  9 19:00:10 2025] [::1]:55549 Closing
+[Mon Jun  9 19:00:16 2025] [::1]:55571 Accepted
+[Mon Jun  9 19:00:16 2025] [::1]:55571 [200]: GET /debug_js_generation.php
+[Mon Jun  9 19:00:16 2025] [::1]:55571 Closing
+[Mon Jun  9 19:01:41 2025] [::1]:55970 Accepted
+[Mon Jun  9 19:01:41 2025] [::1]:55970 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:01:41 2025] [::1]:55970 Closing
+[Mon Jun  9 19:01:41 2025] [::1]:55971 Accepted
+[Mon Jun  9 19:01:41 2025] [::1]:55972 Accepted
+[Mon Jun  9 19:01:41 2025] [::1]:55973 Accepted
+[Mon Jun  9 19:01:41 2025] [::1]:55974 Accepted
+[Mon Jun  9 19:01:41 2025] [::1]:55971 [200]: GET /css/styles.css?v=1749510101
+[Mon Jun  9 19:01:41 2025] [::1]:55972 [200]: GET /js/cart.js?v=1749510101
+[Mon Jun  9 19:01:41 2025] [::1]:55971 Closing
+[Mon Jun  9 19:01:41 2025] [::1]:55973 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:01:41 2025] [::1]:55974 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:01:41 2025] [::1]:55974 Closing
+[Mon Jun  9 19:01:41 2025] [::1]:55972 Closing
+[Mon Jun  9 19:01:41 2025] [::1]:55975 Accepted
+[Mon Jun  9 19:01:41 2025] [::1]:55975 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:01:41 2025] [::1]:55973 Closing
+[Mon Jun  9 19:01:41 2025] [::1]:55975 Closing
+[Mon Jun  9 19:01:41 2025] [::1]:55976 Accepted
+[Mon Jun  9 19:01:41 2025] [::1]:55976 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:01:41 2025] [::1]:55977 Accepted
+[Mon Jun  9 19:01:41 2025] [::1]:55976 Closing
+[Mon Jun  9 19:01:41 2025] [::1]:55977 [200]: GET /favicon.ico
+[Mon Jun  9 19:01:41 2025] [::1]:55977 Closing
+[Mon Jun  9 19:01:45 2025] [::1]:55991 Accepted
+[Mon Jun  9 19:01:45 2025] [::1]:55991 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:01:45 2025] [::1]:55991 Closing
+[Mon Jun  9 19:01:45 2025] [::1]:55992 Accepted
+[Mon Jun  9 19:01:45 2025] [::1]:55993 Accepted
+[Mon Jun  9 19:01:45 2025] [::1]:55994 Accepted
+[Mon Jun  9 19:01:45 2025] [::1]:55992 [200]: GET /css/styles.css?v=1749510105
+[Mon Jun  9 19:01:45 2025] [::1]:55993 [200]: GET /js/cart.js?v=1749510105
+[Mon Jun  9 19:01:45 2025] [::1]:55994 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:01:45 2025] [::1]:55992 Closing
+[Mon Jun  9 19:01:45 2025] [::1]:55993 Closing
+[Mon Jun  9 19:01:45 2025] [::1]:55994 Closing
+[Mon Jun  9 19:01:45 2025] [::1]:55995 Accepted
+[Mon Jun  9 19:01:45 2025] [::1]:55995 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:01:45 2025] [::1]:55995 Closing
+[Mon Jun  9 19:01:45 2025] [::1]:55996 Accepted
+[Mon Jun  9 19:01:45 2025] [::1]:55996 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:01:45 2025] [::1]:55996 Closing
+[Mon Jun  9 19:01:45 2025] [::1]:55997 Accepted
+[Mon Jun  9 19:01:45 2025] [::1]:55997 [200]: GET /favicon.ico
+[Mon Jun  9 19:01:45 2025] [::1]:55997 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56018 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56018 [200]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 19:01:49 2025] [::1]:56018 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56019 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56020 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56021 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56022 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56019 [200]: GET /css/styles.css?v=1749510109
+[Mon Jun  9 19:01:49 2025] [::1]:56019 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56023 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56020 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:01:49 2025] [::1]:56020 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56023 [200]: GET /js/cart.js?v=1749510109
+[Mon Jun  9 19:01:49 2025] [::1]:56021 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:01:49 2025] [::1]:56022 [200]: GET /images/P001.png
+[Mon Jun  9 19:01:49 2025] [::1]:56023 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56021 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56022 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56024 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56024 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:01:49 2025] [::1]:56024 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56025 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56025 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:01:49 2025] [::1]:56025 Closing
+[Mon Jun  9 19:01:49 2025] [::1]:56026 Accepted
+[Mon Jun  9 19:01:49 2025] [::1]:56026 [200]: GET /favicon.ico
+[Mon Jun  9 19:01:49 2025] [::1]:56026 Closing
+[Mon Jun  9 19:02:02 2025] [::1]:56075 Accepted
+[Mon Jun  9 19:02:02 2025] [::1]:56075 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:02:02 2025] [::1]:56075 Closing
+[Mon Jun  9 19:02:02 2025] [::1]:56076 Accepted
+[Mon Jun  9 19:02:02 2025] [::1]:56076 [200]: GET /css/styles.css?v=1749510122
+[Mon Jun  9 19:02:02 2025] [::1]:56076 Closing
+[Mon Jun  9 19:02:02 2025] [::1]:56077 Accepted
+[Mon Jun  9 19:02:02 2025] [::1]:56078 Accepted
+[Mon Jun  9 19:02:02 2025] [::1]:56079 Accepted
+[Mon Jun  9 19:02:02 2025] [::1]:56077 [200]: GET /js/cart.js?v=1749510122
+[Mon Jun  9 19:02:02 2025] [::1]:56078 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:02:02 2025] [::1]:56079 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:02:02 2025] [::1]:56079 Closing
+[Mon Jun  9 19:02:02 2025] [::1]:56077 Closing
+[Mon Jun  9 19:02:02 2025] [::1]:56078 Closing
+[Mon Jun  9 19:02:02 2025] [::1]:56080 Accepted
+[Mon Jun  9 19:02:02 2025] [::1]:56080 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:02:02 2025] [::1]:56080 Closing
+[Mon Jun  9 19:02:02 2025] [::1]:56081 Accepted
+[Mon Jun  9 19:02:02 2025] [::1]:56081 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:02:02 2025] [::1]:56081 Closing
+[Mon Jun  9 19:02:02 2025] [::1]:56082 Accepted
+[Mon Jun  9 19:02:02 2025] [::1]:56082 [200]: GET /favicon.ico
+[Mon Jun  9 19:02:02 2025] [::1]:56082 Closing
+[Mon Jun  9 19:02:05 2025] [::1]:56095 Accepted
+[Mon Jun  9 19:02:05 2025] [::1]:56095 [200]: GET /?page=admin&section=reports
+[Mon Jun  9 19:02:05 2025] [::1]:56095 Closing
+[Mon Jun  9 19:02:05 2025] [::1]:56096 Accepted
+[Mon Jun  9 19:02:05 2025] [::1]:56097 Accepted
+[Mon Jun  9 19:02:05 2025] [::1]:56098 Accepted
+[Mon Jun  9 19:02:05 2025] [::1]:56099 Accepted
+[Mon Jun  9 19:02:05 2025] [::1]:56096 [200]: GET /css/styles.css?v=1749510125
+[Mon Jun  9 19:02:05 2025] [::1]:56096 Closing
+[Mon Jun  9 19:02:05 2025] [::1]:56097 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:02:05 2025] [::1]:56097 Closing
+[Mon Jun  9 19:02:05 2025] [::1]:56098 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:02:05 2025] [::1]:56099 [200]: GET /js/cart.js?v=1749510125
+[Mon Jun  9 19:02:05 2025] [::1]:56099 Closing
+[Mon Jun  9 19:02:05 2025] [::1]:56100 Accepted
+[Mon Jun  9 19:02:05 2025] [::1]:56098 Closing
+[Mon Jun  9 19:02:05 2025] [::1]:56100 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:02:05 2025] [::1]:56100 Closing
+[Mon Jun  9 19:02:05 2025] [::1]:56101 Accepted
+[Mon Jun  9 19:02:05 2025] [::1]:56101 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:02:05 2025] [::1]:56101 Closing
+[Mon Jun  9 19:02:05 2025] [::1]:56106 Accepted
+[Mon Jun  9 19:02:05 2025] [::1]:56106 [200]: GET /favicon.ico
+[Mon Jun  9 19:02:05 2025] [::1]:56106 Closing
+[Mon Jun  9 19:03:49 2025] [::1]:56536 Accepted
+[Mon Jun  9 19:03:49 2025] [::1]:56536 [200]: GET /debug_admin_complete.php
+[Mon Jun  9 19:03:49 2025] [::1]:56536 Closing
+[Mon Jun  9 19:04:46 2025] [::1]:56776 Accepted
+[Mon Jun  9 19:04:46 2025] [::1]:56776 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:04:46 2025] [::1]:56776 Closing
+[Mon Jun  9 19:04:46 2025] [::1]:56777 Accepted
+[Mon Jun  9 19:04:46 2025] [::1]:56778 Accepted
+[Mon Jun  9 19:04:46 2025] [::1]:56779 Accepted
+[Mon Jun  9 19:04:46 2025] [::1]:56780 Accepted
+[Mon Jun  9 19:04:46 2025] [::1]:56777 [200]: GET /css/styles.css?v=1749510286
+[Mon Jun  9 19:04:46 2025] [::1]:56778 [200]: GET /js/cart.js?v=1749510286
+[Mon Jun  9 19:04:46 2025] [::1]:56779 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:04:46 2025] [::1]:56780 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:04:46 2025] [::1]:56780 Closing
+[Mon Jun  9 19:04:46 2025] [::1]:56777 Closing
+[Mon Jun  9 19:04:46 2025] [::1]:56778 Closing
+[Mon Jun  9 19:04:46 2025] [::1]:56779 Closing
+[Mon Jun  9 19:04:46 2025] [::1]:56781 Accepted
+[Mon Jun  9 19:04:46 2025] [::1]:56781 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:04:46 2025] [::1]:56781 Closing
+[Mon Jun  9 19:04:46 2025] [::1]:56782 Accepted
+[Mon Jun  9 19:04:46 2025] [::1]:56782 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:04:46 2025] [::1]:56782 Closing
+[Mon Jun  9 19:04:46 2025] [::1]:56783 Accepted
+[Mon Jun  9 19:04:46 2025] [::1]:56783 [200]: GET /favicon.ico
+[Mon Jun  9 19:04:46 2025] [::1]:56783 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56796 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56796 [200]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 19:04:49 2025] [::1]:56796 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56797 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56798 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56799 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56800 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56797 [200]: GET /css/styles.css?v=1749510289
+[Mon Jun  9 19:04:49 2025] [::1]:56798 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:04:49 2025] [::1]:56798 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56801 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56799 [200]: GET /js/cart.js?v=1749510289
+[Mon Jun  9 19:04:49 2025] [::1]:56800 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:04:49 2025] [::1]:56801 [200]: GET /images/P001.png
+[Mon Jun  9 19:04:49 2025] [::1]:56797 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56799 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56800 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56802 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56802 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:04:49 2025] [::1]:56801 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56802 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56803 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56803 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:04:49 2025] [::1]:56803 Closing
+[Mon Jun  9 19:04:49 2025] [::1]:56804 Accepted
+[Mon Jun  9 19:04:49 2025] [::1]:56804 [200]: GET /favicon.ico
+[Mon Jun  9 19:04:49 2025] [::1]:56804 Closing
+[Mon Jun  9 19:04:57 2025] [::1]:56837 Accepted
+[Mon Jun  9 19:04:57 2025] [::1]:56837 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:04:57 2025] [::1]:56837 Closing
+[Mon Jun  9 19:04:57 2025] [::1]:56838 Accepted
+[Mon Jun  9 19:04:57 2025] [::1]:56839 Accepted
+[Mon Jun  9 19:04:57 2025] [::1]:56840 Accepted
+[Mon Jun  9 19:04:57 2025] [::1]:56841 Accepted
+[Mon Jun  9 19:04:57 2025] [::1]:56838 [200]: GET /css/styles.css?v=1749510297
+[Mon Jun  9 19:04:57 2025] [::1]:56839 [200]: GET /js/cart.js?v=1749510297
+[Mon Jun  9 19:04:57 2025] [::1]:56840 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:04:57 2025] [::1]:56840 Closing
+[Mon Jun  9 19:04:57 2025] [::1]:56841 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:04:57 2025] [::1]:56838 Closing
+[Mon Jun  9 19:04:57 2025] [::1]:56839 Closing
+[Mon Jun  9 19:04:57 2025] [::1]:56841 Closing
+[Mon Jun  9 19:04:57 2025] [::1]:56842 Accepted
+[Mon Jun  9 19:04:57 2025] [::1]:56842 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:04:57 2025] [::1]:56842 Closing
+[Mon Jun  9 19:04:57 2025] [::1]:56843 Accepted
+[Mon Jun  9 19:04:57 2025] [::1]:56843 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:04:57 2025] [::1]:56843 Closing
+[Mon Jun  9 19:04:57 2025] [::1]:56844 Accepted
+[Mon Jun  9 19:04:57 2025] [::1]:56844 [200]: GET /favicon.ico
+[Mon Jun  9 19:04:57 2025] [::1]:56844 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56857 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56857 [200]: GET /?page=admin&section=inventory&edit=I002
+[Mon Jun  9 19:04:59 2025] [::1]:56857 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56858 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56859 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56860 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56861 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56858 [200]: GET /css/styles.css?v=1749510299
+[Mon Jun  9 19:04:59 2025] [::1]:56859 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:04:59 2025] [::1]:56859 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56860 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:04:59 2025] [::1]:56862 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56861 [200]: GET /images/frog_tumbler_3.png
+[Mon Jun  9 19:04:59 2025] [::1]:56858 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56860 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56862 [200]: GET /js/cart.js?v=1749510299
+[Mon Jun  9 19:04:59 2025] [::1]:56862 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56863 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56863 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:04:59 2025] [::1]:56863 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56861 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56864 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56865 Accepted
+[Mon Jun  9 19:04:59 2025] [::1]:56864 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:04:59 2025] [::1]:56865 [200]: GET /favicon.ico
+[Mon Jun  9 19:04:59 2025] [::1]:56865 Closing
+[Mon Jun  9 19:04:59 2025] [::1]:56864 Closing
+[Mon Jun  9 19:05:04 2025] [::1]:56887 Accepted
+[Mon Jun  9 19:05:04 2025] [::1]:56887 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:05:04 2025] [::1]:56887 Closing
+[Mon Jun  9 19:05:04 2025] [::1]:56888 Accepted
+[Mon Jun  9 19:05:04 2025] [::1]:56889 Accepted
+[Mon Jun  9 19:05:04 2025] [::1]:56890 Accepted
+[Mon Jun  9 19:05:04 2025] [::1]:56891 Accepted
+[Mon Jun  9 19:05:04 2025] [::1]:56888 [200]: GET /css/styles.css?v=1749510304
+[Mon Jun  9 19:05:04 2025] [::1]:56889 [200]: GET /js/cart.js?v=1749510304
+[Mon Jun  9 19:05:04 2025] [::1]:56890 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:05:04 2025] [::1]:56891 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:05:04 2025] [::1]:56891 Closing
+[Mon Jun  9 19:05:04 2025] [::1]:56888 Closing
+[Mon Jun  9 19:05:04 2025] [::1]:56889 Closing
+[Mon Jun  9 19:05:04 2025] [::1]:56890 Closing
+[Mon Jun  9 19:05:04 2025] [::1]:56892 Accepted
+[Mon Jun  9 19:05:04 2025] [::1]:56892 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:05:04 2025] [::1]:56892 Closing
+[Mon Jun  9 19:05:04 2025] [::1]:56893 Accepted
+[Mon Jun  9 19:05:04 2025] [::1]:56893 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:05:04 2025] [::1]:56893 Closing
+[Mon Jun  9 19:05:04 2025] [::1]:56894 Accepted
+[Mon Jun  9 19:05:04 2025] [::1]:56894 [200]: GET /favicon.ico
+[Mon Jun  9 19:05:04 2025] [::1]:56894 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56907 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56907 [200]: GET /?page=admin&section=inventory&edit=I004
+[Mon Jun  9 19:05:07 2025] [::1]:56907 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56908 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56909 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56910 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56911 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56908 [200]: GET /css/styles.css?v=1749510307
+[Mon Jun  9 19:05:07 2025] [::1]:56909 [200]: GET /images/frog_windowwrap_2.png
+[Mon Jun  9 19:05:07 2025] [::1]:56910 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:05:07 2025] [::1]:56910 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56911 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:05:07 2025] [::1]:56908 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56911 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56912 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56912 [200]: GET /js/cart.js?v=1749510307
+[Mon Jun  9 19:05:07 2025] [::1]:56912 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56909 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56913 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56913 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:05:07 2025] [::1]:56913 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56914 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56914 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:05:07 2025] [::1]:56914 Closing
+[Mon Jun  9 19:05:07 2025] [::1]:56915 Accepted
+[Mon Jun  9 19:05:07 2025] [::1]:56915 [200]: GET /favicon.ico
+[Mon Jun  9 19:05:07 2025] [::1]:56915 Closing
+[Mon Jun  9 19:05:11 2025] [::1]:56932 Accepted
+[Mon Jun  9 19:05:11 2025] [::1]:56932 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:05:11 2025] [::1]:56932 Closing
+[Mon Jun  9 19:05:12 2025] [::1]:56933 Accepted
+[Mon Jun  9 19:05:12 2025] [::1]:56934 Accepted
+[Mon Jun  9 19:05:12 2025] [::1]:56935 Accepted
+[Mon Jun  9 19:05:12 2025] [::1]:56936 Accepted
+[Mon Jun  9 19:05:12 2025] [::1]:56933 [200]: GET /css/styles.css?v=1749510311
+[Mon Jun  9 19:05:12 2025] [::1]:56934 [200]: GET /js/cart.js?v=1749510311
+[Mon Jun  9 19:05:12 2025] [::1]:56935 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:05:12 2025] [::1]:56936 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:05:12 2025] [::1]:56936 Closing
+[Mon Jun  9 19:05:12 2025] [::1]:56933 Closing
+[Mon Jun  9 19:05:12 2025] [::1]:56934 Closing
+[Mon Jun  9 19:05:12 2025] [::1]:56935 Closing
+[Mon Jun  9 19:05:12 2025] [::1]:56937 Accepted
+[Mon Jun  9 19:05:12 2025] [::1]:56937 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:05:12 2025] [::1]:56937 Closing
+[Mon Jun  9 19:05:12 2025] [::1]:56938 Accepted
+[Mon Jun  9 19:05:12 2025] [::1]:56938 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:05:12 2025] [::1]:56938 Closing
+[Mon Jun  9 19:05:12 2025] [::1]:56939 Accepted
+[Mon Jun  9 19:05:12 2025] [::1]:56939 [200]: GET /favicon.ico
+[Mon Jun  9 19:05:12 2025] [::1]:56939 Closing
+[Mon Jun  9 19:07:13 2025] [::1]:57470 Accepted
+[Mon Jun  9 19:07:13 2025] [::1]:57470 [200]: GET /process_cost_breakdown.php?inventoryId=I001
+[Mon Jun  9 19:07:13 2025] [::1]:57470 Closing
+[Mon Jun  9 19:08:28 2025] [::1]:57781 Accepted
+[Mon Jun  9 19:08:28 2025] [::1]:57781 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:08:28 2025] [::1]:57781 Closing
+[Mon Jun  9 19:08:28 2025] [::1]:57782 Accepted
+[Mon Jun  9 19:08:28 2025] [::1]:57783 Accepted
+[Mon Jun  9 19:08:28 2025] [::1]:57784 Accepted
+[Mon Jun  9 19:08:28 2025] [::1]:57782 [200]: GET /css/styles.css?v=1749510508
+[Mon Jun  9 19:08:28 2025] [::1]:57783 [200]: GET /js/cart.js?v=1749510508
+[Mon Jun  9 19:08:28 2025] [::1]:57784 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:08:28 2025] [::1]:57782 Closing
+[Mon Jun  9 19:08:28 2025] [::1]:57783 Closing
+[Mon Jun  9 19:08:28 2025] [::1]:57784 Closing
+[Mon Jun  9 19:08:28 2025] [::1]:57785 Accepted
+[Mon Jun  9 19:08:28 2025] [::1]:57785 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:08:28 2025] [::1]:57785 Closing
+[Mon Jun  9 19:08:28 2025] [::1]:57786 Accepted
+[Mon Jun  9 19:08:28 2025] [::1]:57786 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:08:28 2025] [::1]:57786 Closing
+[Mon Jun  9 19:08:28 2025] [::1]:57787 Accepted
+[Mon Jun  9 19:08:28 2025] [::1]:57787 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:08:28 2025] [::1]:57787 Closing
+[Mon Jun  9 19:08:28 2025] [::1]:57788 Accepted
+[Mon Jun  9 19:08:28 2025] [::1]:57788 [200]: GET /favicon.ico
+[Mon Jun  9 19:08:28 2025] [::1]:57788 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57817 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57817 [200]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 19:08:35 2025] [::1]:57817 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57818 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57819 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57820 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57821 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57818 [200]: GET /css/styles.css?v=1749510515
+[Mon Jun  9 19:08:35 2025] [::1]:57819 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:08:35 2025] [::1]:57820 [200]: GET /images/P001.png
+[Mon Jun  9 19:08:35 2025] [::1]:57821 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:08:35 2025] [::1]:57821 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57822 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57818 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57822 [200]: GET /js/cart.js?v=1749510515
+[Mon Jun  9 19:08:35 2025] [::1]:57819 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57822 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57820 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57823 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57823 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:08:35 2025] [::1]:57823 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57824 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57824 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:08:35 2025] [::1]:57824 Closing
+[Mon Jun  9 19:08:35 2025] [::1]:57825 Accepted
+[Mon Jun  9 19:08:35 2025] [::1]:57825 [200]: GET /favicon.ico
+[Mon Jun  9 19:08:35 2025] [::1]:57825 Closing
+[Mon Jun  9 19:08:45 2025] [::1]:57867 Accepted
+[Mon Jun  9 19:08:45 2025] [::1]:57867 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:08:45 2025] [::1]:57867 Closing
+[Mon Jun  9 19:08:45 2025] [::1]:57868 Accepted
+[Mon Jun  9 19:08:45 2025] [::1]:57869 Accepted
+[Mon Jun  9 19:08:45 2025] [::1]:57870 Accepted
+[Mon Jun  9 19:08:45 2025] [::1]:57871 Accepted
+[Mon Jun  9 19:08:45 2025] [::1]:57868 [200]: GET /css/styles.css?v=1749510525
+[Mon Jun  9 19:08:45 2025] [::1]:57869 [200]: GET /js/cart.js?v=1749510525
+[Mon Jun  9 19:08:45 2025] [::1]:57870 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:08:45 2025] [::1]:57868 Closing
+[Mon Jun  9 19:08:45 2025] [::1]:57869 Closing
+[Mon Jun  9 19:08:45 2025] [::1]:57871 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:08:45 2025] [::1]:57871 Closing
+[Mon Jun  9 19:08:45 2025] [::1]:57870 Closing
+[Mon Jun  9 19:08:45 2025] [::1]:57872 Accepted
+[Mon Jun  9 19:08:45 2025] [::1]:57872 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:08:45 2025] [::1]:57872 Closing
+[Mon Jun  9 19:08:45 2025] [::1]:57873 Accepted
+[Mon Jun  9 19:08:45 2025] [::1]:57874 Accepted
+[Mon Jun  9 19:08:45 2025] [::1]:57873 [200]: GET /favicon.ico
+[Mon Jun  9 19:08:45 2025] [::1]:57873 Closing
+[Mon Jun  9 19:08:45 2025] [::1]:57874 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:08:45 2025] [::1]:57874 Closing
+[Mon Jun  9 19:08:48 2025] [::1]:57887 Accepted
+[Mon Jun  9 19:08:48 2025] [::1]:57887 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:08:48 2025] [::1]:57887 Closing
+[Mon Jun  9 19:08:48 2025] [::1]:57888 Accepted
+[Mon Jun  9 19:08:48 2025] [::1]:57889 Accepted
+[Mon Jun  9 19:08:48 2025] [::1]:57890 Accepted
+[Mon Jun  9 19:08:48 2025] [::1]:57891 Accepted
+[Mon Jun  9 19:08:48 2025] [::1]:57888 [200]: GET /css/styles.css?v=1749510528
+[Mon Jun  9 19:08:48 2025] [::1]:57888 Closing
+[Mon Jun  9 19:08:48 2025] [::1]:57889 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:08:48 2025] [::1]:57889 Closing
+[Mon Jun  9 19:08:48 2025] [::1]:57890 [200]: GET /js/cart.js?v=1749510528
+[Mon Jun  9 19:08:48 2025] [::1]:57890 Closing
+[Mon Jun  9 19:08:48 2025] [::1]:57892 Accepted
+[Mon Jun  9 19:08:48 2025] [::1]:57891 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:08:48 2025] [::1]:57891 Closing
+[Mon Jun  9 19:08:48 2025] [::1]:57892 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:08:48 2025] [::1]:57892 Closing
+[Mon Jun  9 19:08:48 2025] [::1]:57893 Accepted
+[Mon Jun  9 19:08:48 2025] [::1]:57893 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:08:48 2025] [::1]:57893 Closing
+[Mon Jun  9 19:08:48 2025] [::1]:57894 Accepted
+[Mon Jun  9 19:08:48 2025] [::1]:57894 [200]: GET /favicon.ico
+[Mon Jun  9 19:08:48 2025] [::1]:57894 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57907 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57907 [200]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 19:08:51 2025] [::1]:57907 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57908 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57909 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57910 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57911 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57908 [200]: GET /css/styles.css?v=1749510531
+[Mon Jun  9 19:08:51 2025] [::1]:57908 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57909 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:08:51 2025] [::1]:57909 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57910 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:08:51 2025] [::1]:57911 [200]: GET /images/P001.png
+[Mon Jun  9 19:08:51 2025] [::1]:57910 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57912 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57911 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57912 [200]: GET /js/cart.js?v=1749510531
+[Mon Jun  9 19:08:51 2025] [::1]:57912 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57913 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57913 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:08:51 2025] [::1]:57913 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57914 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57914 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:08:51 2025] [::1]:57914 Closing
+[Mon Jun  9 19:08:51 2025] [::1]:57915 Accepted
+[Mon Jun  9 19:08:51 2025] [::1]:57915 [200]: GET /favicon.ico
+[Mon Jun  9 19:08:51 2025] [::1]:57915 Closing
+[Mon Jun  9 19:11:22 2025] [::1]:58585 Accepted
+[Mon Jun  9 19:11:22 2025] [::1]:58585 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:11:22 2025] [::1]:58585 Closing
+[Mon Jun  9 19:11:22 2025] [::1]:58586 Accepted
+[Mon Jun  9 19:11:22 2025] [::1]:58587 Accepted
+[Mon Jun  9 19:11:22 2025] [::1]:58588 Accepted
+[Mon Jun  9 19:11:22 2025] [::1]:58589 Accepted
+[Mon Jun  9 19:11:22 2025] [::1]:58586 [200]: GET /css/styles.css?v=1749510682
+[Mon Jun  9 19:11:22 2025] [::1]:58587 [200]: GET /js/cart.js?v=1749510682
+[Mon Jun  9 19:11:22 2025] [::1]:58588 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:11:22 2025] [::1]:58589 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:11:22 2025] [::1]:58589 Closing
+[Mon Jun  9 19:11:22 2025] [::1]:58586 Closing
+[Mon Jun  9 19:11:22 2025] [::1]:58587 Closing
+[Mon Jun  9 19:11:22 2025] [::1]:58588 Closing
+[Mon Jun  9 19:11:22 2025] [::1]:58590 Accepted
+[Mon Jun  9 19:11:22 2025] [::1]:58590 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:11:22 2025] [::1]:58590 Closing
+[Mon Jun  9 19:11:22 2025] [::1]:58591 Accepted
+[Mon Jun  9 19:11:22 2025] [::1]:58591 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:11:22 2025] [::1]:58591 Closing
+[Mon Jun  9 19:11:22 2025] [::1]:58592 Accepted
+[Mon Jun  9 19:11:22 2025] [::1]:58592 [200]: GET /favicon.ico
+[Mon Jun  9 19:11:22 2025] [::1]:58592 Closing
+[Mon Jun  9 19:14:22 2025] [::1]:59406 Accepted
+[Mon Jun  9 19:14:22 2025] [::1]:59406 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:14:22 2025] [::1]:59406 Closing
+[Mon Jun  9 19:14:22 2025] [::1]:59407 Accepted
+[Mon Jun  9 19:14:22 2025] [::1]:59408 Accepted
+[Mon Jun  9 19:14:22 2025] [::1]:59409 Accepted
+[Mon Jun  9 19:14:22 2025] [::1]:59407 [200]: GET /css/styles.css?v=1749510862
+[Mon Jun  9 19:14:22 2025] [::1]:59407 Closing
+[Mon Jun  9 19:14:22 2025] [::1]:59408 [200]: GET /js/cart.js?v=1749510862
+[Mon Jun  9 19:14:22 2025] [::1]:59409 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:14:22 2025] [::1]:59409 Closing
+[Mon Jun  9 19:14:22 2025] [::1]:59408 Closing
+[Mon Jun  9 19:14:22 2025] [::1]:59410 Accepted
+[Mon Jun  9 19:14:22 2025] [::1]:59410 [200]: GET /favicon.ico
+[Mon Jun  9 19:14:22 2025] [::1]:59410 Closing
+[Mon Jun  9 19:14:26 2025] [::1]:59427 Accepted
+[Mon Jun  9 19:14:26 2025] [::1]:59427 [200]: GET /?page=admin&section=inventory
+[Mon Jun  9 19:14:26 2025] [::1]:59427 Closing
+[Mon Jun  9 19:14:26 2025] [::1]:59428 Accepted
+[Mon Jun  9 19:14:26 2025] [::1]:59428 [200]: GET /css/styles.css?v=1749510866
+[Mon Jun  9 19:14:26 2025] [::1]:59428 Closing
+[Mon Jun  9 19:14:26 2025] [::1]:59429 Accepted
+[Mon Jun  9 19:14:26 2025] [::1]:59430 Accepted
+[Mon Jun  9 19:14:26 2025] [::1]:59429 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:14:26 2025] [::1]:59430 [200]: GET /js/cart.js?v=1749510866
+[Mon Jun  9 19:14:26 2025] [::1]:59430 Closing
+[Mon Jun  9 19:14:26 2025] [::1]:59429 Closing
+[Mon Jun  9 19:14:26 2025] [::1]:59431 Accepted
+[Mon Jun  9 19:14:26 2025] [::1]:59431 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:14:26 2025] [::1]:59431 Closing
+[Mon Jun  9 19:14:26 2025] [::1]:59432 Accepted
+[Mon Jun  9 19:14:26 2025] [::1]:59432 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:14:26 2025] [::1]:59432 Closing
+[Mon Jun  9 19:14:26 2025] [::1]:59433 Accepted
+[Mon Jun  9 19:14:26 2025] [::1]:59433 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:14:26 2025] [::1]:59433 Closing
+[Mon Jun  9 19:14:26 2025] [::1]:59434 Accepted
+[Mon Jun  9 19:14:26 2025] [::1]:59434 [200]: GET /favicon.ico
+[Mon Jun  9 19:14:26 2025] [::1]:59434 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59451 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59451 [200]: GET /?page=admin&section=inventory&edit=I001
+[Mon Jun  9 19:14:30 2025] [::1]:59451 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59452 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59452 [200]: GET /css/styles.css?v=1749510870
+[Mon Jun  9 19:14:30 2025] [::1]:59452 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59453 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59454 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59455 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59456 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59453 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun  9 19:14:30 2025] [::1]:59454 [200]: GET /images/P001.png
+[Mon Jun  9 19:14:30 2025] [::1]:59455 [200]: GET /js/cart.js?v=1749510870
+[Mon Jun  9 19:14:30 2025] [::1]:59455 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59453 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59456 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Mon Jun  9 19:14:30 2025] [::1]:59456 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59457 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59454 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59457 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun  9 19:14:30 2025] [::1]:59457 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59458 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59458 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun  9 19:14:30 2025] [::1]:59458 Closing
+[Mon Jun  9 19:14:30 2025] [::1]:59459 Accepted
+[Mon Jun  9 19:14:30 2025] [::1]:59459 [200]: GET /favicon.ico
+[Mon Jun  9 19:14:30 2025] [::1]:59459 Closing

@@ -136,7 +136,7 @@ CREATE TABLE `inventory` (
 
 LOCK TABLES `inventory` WRITE;
 /*!40000 ALTER TABLE `inventory` DISABLE KEYS */;
-INSERT INTO `inventory` VALUES ('I001','P001','T-Shirt, White, S','T-Shirts','Color: White, Size: S','TS-WHT-S',5,10,81.39,19.97,'images/P001.png'),('I002','P002','Tumbler, 20oz, White','Tumblers','Color: White (for sublimation)','TUM20-WHT',39,5,10.02,14.99,'images/frog_tumbler_3.png'),('I003','P004','Artwork Print Blank Canvas 8x10','Artwork','Material: Canvas, Size: 8x10','ART-CAN-810',20,7,3.70,12.98,'images/frog_painter_2.png'),('I004','P006','Window Wrap, Small Business','Window Wraps','Size: 3x4 ft','WW-SB-34',15,3,45.00,89.99,'images/frog_windowwrap_2.png'),('I005','P003','Custom Tumbler (24oz)','Tumblers','This new tumbler rumbles with just the right size :)','NEW-SKU',1,6,7.50,16.99,'images/frog_tumbler_2.png'),('I006','P005','New Inventory Item','Sublimation','New item description','NEW-SKU',0,5,4.25,9.99,'images/frog_mug.png'),('I007','P003','Custom Tumbler (30oz)','Tumblers','New item description','NEW-SKU',0,5,8.00,18.99,'images/frog_tumbler_2.png'),('I008','P007','New Test thumbs','T-Shirts','New item description','NEW-SKU',1,5,2.50,7.99,'images/placeholder.png');
+INSERT INTO `inventory` VALUES ('I001','P001','T-Shirt, White, S','T-Shirts','Color: White, Size: S','TS-WHT-S',5,10,115.41,19.97,'images/P001.png'),('I002','P002','Tumbler, 20oz, White','Tumblers','Color: White (for sublimation)','TUM20-WHT',39,5,10.02,14.99,'images/frog_tumbler_3.png'),('I003','P004','Artwork Print Blank Canvas 8x10','Artwork','Material: Canvas, Size: 8x10','ART-CAN-810',20,7,3.70,12.98,'images/frog_painter_2.png'),('I004','P006','Window Wrap, Small Business','Window Wraps','Size: 3x4 ft','WW-SB-34',15,3,45.00,89.99,'images/frog_windowwrap_2.png'),('I005','P003','Custom Tumbler (24oz)','Tumblers','This new tumbler rumbles with just the right size :)','NEW-SKU',1,6,7.50,16.99,'images/frog_tumbler_2.png'),('I006','P005','New Inventory Item','Sublimation','New item description','NEW-SKU',0,5,4.25,9.99,'images/frog_mug.png'),('I007','P003','Custom Tumbler (30oz)','Tumblers','New item description','NEW-SKU',0,5,8.00,18.99,'images/frog_tumbler_2.png'),('I008','P007','New Test thumbs','T-Shirts','New item description','NEW-SKU',1,5,2.50,7.99,'images/placeholder.png');
 /*!40000 ALTER TABLE `inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -155,7 +155,7 @@ CREATE TABLE `inventory_energy` (
   PRIMARY KEY (`id`),
   KEY `inventoryId` (`inventoryId`),
   CONSTRAINT `inventory_energy_ibfk_1` FOREIGN KEY (`inventoryId`) REFERENCES `inventory` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -164,7 +164,7 @@ CREATE TABLE `inventory_energy` (
 
 LOCK TABLES `inventory_energy` WRITE;
 /*!40000 ALTER TABLE `inventory_energy` DISABLE KEYS */;
-INSERT INTO `inventory_energy` VALUES (3,'I002','power',3.01),(4,'I005','lights',1.00),(5,'I003','fire',10.01),(6,'I003','wood',2.00);
+INSERT INTO `inventory_energy` VALUES (3,'I002','power',3.01),(4,'I005','lights',1.00),(5,'I003','fire',10.01),(6,'I003','wood',2.00),(7,'I001','fire',2.00);
 /*!40000 ALTER TABLE `inventory_energy` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -183,7 +183,7 @@ CREATE TABLE `inventory_equipment` (
   PRIMARY KEY (`id`),
   KEY `idx_inventoryId` (`inventoryId`),
   CONSTRAINT `inventory_equipment_ibfk_1` FOREIGN KEY (`inventoryId`) REFERENCES `inventory` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -192,7 +192,7 @@ CREATE TABLE `inventory_equipment` (
 
 LOCK TABLES `inventory_equipment` WRITE;
 /*!40000 ALTER TABLE `inventory_equipment` DISABLE KEYS */;
-INSERT INTO `inventory_equipment` VALUES (1,'I003','treadmill',13.00);
+INSERT INTO `inventory_equipment` VALUES (1,'I003','treadmill',13.00),(2,'I001','honey pot',30.00);
 /*!40000 ALTER TABLE `inventory_equipment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -248,7 +248,7 @@ CREATE TABLE `inventory_materials` (
 
 LOCK TABLES `inventory_materials` WRITE;
 /*!40000 ALTER TABLE `inventory_materials` DISABLE KEYS */;
-INSERT INTO `inventory_materials` VALUES (1,'I001','cotton sheet',1.37),(3,'I002','linen',2.00),(4,'I005','wood',4.99),(5,'I003','linen',5.00),(6,'I003','cotton',1.01);
+INSERT INTO `inventory_materials` VALUES (1,'I001','cotton sheet',1.36),(3,'I002','linen',2.00),(4,'I005','wood',4.99),(5,'I003','linen',5.00),(6,'I003','cotton',1.01);
 /*!40000 ALTER TABLE `inventory_materials` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -312,7 +312,7 @@ CREATE TABLE `orders` (
 
 LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
-INSERT INTO `orders` VALUES ('O12345','U001',59.97,'Credit Card',NULL,'{\"name\":\"Admin User\",\"street\":\"123 Main St\",\"city\":\"Dawsonville\",\"state\":\"GA\",\"zip\":\"30534\"}','Completed','2025-06-08 14:25:15','','Received',NULL,NULL),('O23456','U002',24.99,'PayPal',NULL,'{\"name\":\"Test Customer\",\"street\":\"456 Oak Ave\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zip\":\"30303\"}','Shipped','2025-06-06 14:25:15','1234','Received',NULL,NULL),('O34567','U002',149.95,'Credit Card',NULL,'{\"name\":\"Test Customer\",\"street\":\"456 Oak Ave\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zip\":\"30303\"}','Delivered','2025-06-01 14:25:15',NULL,'Received',NULL,NULL),('TEST001','U001',45.99,'Check','1234',NULL,'Pending','2025-06-09 19:27:21',NULL,'Pending',NULL,'Check cleared on 6/9/25'),('TEST002','U001',29.99,'Cash',NULL,NULL,'Pending','2025-06-09 19:27:21',NULL,'Received','2025-06-09','Cash payment received in store'),('TEST003','U001',67.50,'Check','5678',NULL,'Pending','2025-06-09 19:27:21',NULL,'Pending',NULL,'Check #5678 - customer promises to deliver tomorrow');
+INSERT INTO `orders` VALUES ('O12345','U001',59.97,'Credit Card',NULL,'{\"name\":\"Admin User\",\"street\":\"123 Main St\",\"city\":\"Dawsonville\",\"state\":\"GA\",\"zip\":\"30534\"}','Completed','2025-06-08 14:25:15','','Received',NULL,NULL),('O23456','U002',24.99,'PayPal',NULL,'{\"name\":\"Test Customer\",\"street\":\"456 Oak Ave\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zip\":\"30303\"}','Shipped','2025-06-06 14:25:15','1234','Received',NULL,NULL),('O34567','U002',149.95,'Credit Card',NULL,'{\"name\":\"Test Customer\",\"street\":\"456 Oak Ave\",\"city\":\"Atlanta\",\"state\":\"GA\",\"zip\":\"30303\"}','Delivered','2025-06-01 14:25:15',NULL,'Received',NULL,NULL),('TEST001','U001',45.99,'Check','1234',NULL,'Pending','2025-06-09 19:27:21',NULL,'Received',NULL,'Check cleared on 6/9/25'),('TEST002','U001',29.99,'Cash',NULL,NULL,'Pending','2025-06-09 19:27:21',NULL,'Received','2025-06-09','Cash payment received in store'),('TEST003','U001',67.50,'Check','5678',NULL,'Pending','2025-06-09 19:27:21',NULL,'Pending',NULL,'Check #5678 - customer promises to deliver tomorrow');
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -452,4 +452,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-10 15:30:20
+-- Dump completed on 2025-06-10 17:27:09

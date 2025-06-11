@@ -7353,3 +7353,180 @@
 [Tue Jun 10 17:26:33 2025] [::1]:61122 Accepted
 [Tue Jun 10 17:26:33 2025] [::1]:61122 [200]: GET /favicon.ico
 [Tue Jun 10 17:26:33 2025] [::1]:61122 Closing
+[Tue Jun 10 17:27:47 2025] [::1]:61171 Accepted
+[Tue Jun 10 17:27:47 2025] [::1]:61171 [200]: GET /?page=admin
+[Tue Jun 10 17:27:47 2025] [::1]:61171 Closing
+[Tue Jun 10 17:27:47 2025] [::1]:61172 Accepted
+[Tue Jun 10 17:27:47 2025] [::1]:61173 Accepted
+[Tue Jun 10 17:27:47 2025] [::1]:61174 Accepted
+[Tue Jun 10 17:27:47 2025] [::1]:61172 [200]: GET /css/styles.css?v=1749590867
+[Tue Jun 10 17:27:47 2025] [::1]:61173 [200]: GET /js/cart.js?v=1749590867
+[Tue Jun 10 17:27:47 2025] [::1]:61174 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 17:27:47 2025] [::1]:61172 Closing
+[Tue Jun 10 17:27:47 2025] [::1]:61173 Closing
+[Tue Jun 10 17:27:47 2025] [::1]:61174 Closing
+[Tue Jun 10 17:27:47 2025] [::1]:61175 Accepted
+[Tue Jun 10 17:27:47 2025] [::1]:61175 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 17:27:47 2025] [::1]:61175 Closing
+[Tue Jun 10 17:27:47 2025] [::1]:61176 Accepted
+[Tue Jun 10 17:27:47 2025] [::1]:61176 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 17:27:47 2025] [::1]:61176 Closing
+[Tue Jun 10 17:27:47 2025] [::1]:61177 Accepted
+[Tue Jun 10 17:27:47 2025] [::1]:61177 [200]: GET /favicon.ico
+[Tue Jun 10 17:27:47 2025] [::1]:61177 Closing
+[Tue Jun 10 17:30:30 2025] [::1]:61241 Accepted
+[Tue Jun 10 17:30:30 2025] [::1]:61241 [200]: GET /?page=landing
+[Tue Jun 10 17:30:30 2025] [::1]:61241 Closing
+[Tue Jun 10 17:30:30 2025] [::1]:61242 Accepted
+[Tue Jun 10 17:30:30 2025] [::1]:61242 [200]: GET /css/styles.css?v=1749591030
+[Tue Jun 10 17:30:30 2025] [::1]:61242 Closing
+[Tue Jun 10 17:30:30 2025] [::1]:61243 Accepted
+[Tue Jun 10 17:30:30 2025] [::1]:61244 Accepted
+[Tue Jun 10 17:30:30 2025] [::1]:61243 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 17:30:30 2025] [::1]:61244 [200]: GET /images/sign_welcome.webp
+[Tue Jun 10 17:30:30 2025] [::1]:61243 Closing
+[Tue Jun 10 17:30:30 2025] [::1]:61244 Closing
+[Tue Jun 10 17:30:30 2025] [::1]:61245 Accepted
+[Tue Jun 10 17:30:30 2025] [::1]:61245 [200]: GET /js/cart.js?v=1749591030
+[Tue Jun 10 17:30:30 2025] [::1]:61245 Closing
+[Tue Jun 10 17:30:30 2025] [::1]:61246 Accepted
+[Tue Jun 10 17:30:30 2025] [::1]:61246 [200]: GET /images/home_background.webp?v=cb2
+[Tue Jun 10 17:30:30 2025] [::1]:61246 Closing
+[Tue Jun 10 17:30:30 2025] [::1]:61247 Accepted
+[Tue Jun 10 17:30:30 2025] [::1]:61247 [200]: GET /favicon.ico
+[Tue Jun 10 17:30:30 2025] [::1]:61247 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61248 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61248 [200]: GET /?page=main_room
+[Tue Jun 10 17:30:32 2025] [::1]:61248 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61249 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61250 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61251 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61252 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61253 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61249 [200]: GET /css/styles.css?v=1749591032
+[Tue Jun 10 17:30:32 2025] [::1]:61254 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61250 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 17:30:32 2025] [::1]:61251 [200]: GET /images/sign_door_tshirts.webp
+[Tue Jun 10 17:30:32 2025] [::1]:61252 [200]: GET /images/sign_door_tumblers.webp
+[Tue Jun 10 17:30:32 2025] [::1]:61253 [200]: GET /images/sign_door_artwork.webp
+[Tue Jun 10 17:30:32 2025] [::1]:61249 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61250 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61251 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61254 [200]: GET /images/sign_door_windowwraps.webp
+[Tue Jun 10 17:30:32 2025] [::1]:61252 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61253 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61254 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61255 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61256 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61255 [200]: GET /js/cart.js?v=1749591032
+[Tue Jun 10 17:30:32 2025] [::1]:61256 [200]: GET /images/sign_door_sublimation.webp
+[Tue Jun 10 17:30:32 2025] [::1]:61255 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61256 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61257 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61257 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 17:30:32 2025] [::1]:61257 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61258 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61258 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 17:30:32 2025] [::1]:61258 Closing
+[Tue Jun 10 17:30:32 2025] [::1]:61259 Accepted
+[Tue Jun 10 17:30:32 2025] [::1]:61259 [200]: GET /favicon.ico
+[Tue Jun 10 17:30:32 2025] [::1]:61259 Closing
+[Tue Jun 10 17:30:35 2025] [::1]:61260 Accepted
+[Tue Jun 10 17:30:35 2025] [::1]:61260 [200]: GET /?page=room_sublimation
+[Tue Jun 10 17:30:35 2025] [::1]:61260 Closing
+[Tue Jun 10 17:30:35 2025] [::1]:61261 Accepted
+[Tue Jun 10 17:30:35 2025] [::1]:61262 Accepted
+[Tue Jun 10 17:30:35 2025] [::1]:61263 Accepted
+[Tue Jun 10 17:30:35 2025] [::1]:61264 Accepted
+[Tue Jun 10 17:30:35 2025] [::1]:61261 [200]: GET /css/styles.css?v=1749591035
+[Tue Jun 10 17:30:35 2025] [::1]:61262 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 17:30:35 2025] [::1]:61263 [200]: GET /js/cart.js?v=1749591035
+[Tue Jun 10 17:30:35 2025] [::1]:61264 [200]: GET /images/products/product_sublimation-blank-item-e-g-mug.webp
+[Tue Jun 10 17:30:35 2025] [::1]:61261 Closing
+[Tue Jun 10 17:30:35 2025] [::1]:61262 Closing
+[Tue Jun 10 17:30:35 2025] [::1]:61263 Closing
+[Tue Jun 10 17:30:35 2025] [::1]:61264 Closing
+[Tue Jun 10 17:30:35 2025] [::1]:61265 Accepted
+[Tue Jun 10 17:30:35 2025] [::1]:61265 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 17:30:35 2025] [::1]:61266 Accepted
+[Tue Jun 10 17:30:35 2025] [::1]:61265 Closing
+[Tue Jun 10 17:30:35 2025] [::1]:61266 [200]: GET /images/room_sublimation.webp?v=cb2
+[Tue Jun 10 17:30:35 2025] [::1]:61266 Closing
+[Tue Jun 10 17:30:35 2025] [::1]:61267 Accepted
+[Tue Jun 10 17:30:35 2025] [::1]:61267 [200]: GET /favicon.ico
+[Tue Jun 10 17:30:35 2025] [::1]:61267 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61270 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61270 [200]: GET /?page=main_room
+[Tue Jun 10 17:31:28 2025] [::1]:61270 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61271 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61271 [200]: GET /?page=shop
+[Tue Jun 10 17:31:28 2025] [::1]:61271 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61272 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61273 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61274 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61275 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61276 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61272 [200]: GET /css/styles.css?v=1749591088
+[Tue Jun 10 17:31:28 2025] [::1]:61277 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61273 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 17:31:28 2025] [::1]:61274 [200]: GET /images/products/product_custom-tumbler-20oz.png
+[Tue Jun 10 17:31:28 2025] [::1]:61275 [200]: GET /images/products/product_custom-tumbler-30oz.png
+[Tue Jun 10 17:31:28 2025] [::1]:61276 [200]: GET /images/frog_painter_1.png
+[Tue Jun 10 17:31:28 2025] [::1]:61277 [200]: GET /images/products/product_sublimation-blank-item-e-g-mug.png
+[Tue Jun 10 17:31:28 2025] [::1]:61272 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61273 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61278 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61279 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61278 [200]: GET /js/cart.js?v=1749591088
+[Tue Jun 10 17:31:28 2025] [::1]:61279 [200]: GET /images/products/product_custom-window-wrap.png
+[Tue Jun 10 17:31:28 2025] [::1]:61278 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61274 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61277 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61280 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61280 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 17:31:28 2025] [::1]:61279 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61280 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61276 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61281 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61281 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 17:31:28 2025] [::1]:61275 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61281 Closing
+[Tue Jun 10 17:31:28 2025] [::1]:61282 Accepted
+[Tue Jun 10 17:31:28 2025] [::1]:61282 [200]: GET /favicon.ico
+[Tue Jun 10 17:31:28 2025] [::1]:61282 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61432 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61432 [200]: GET /?page=shop
+[Tue Jun 10 17:37:40 2025] [::1]:61432 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61433 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61433 [200]: GET /css/styles.css?v=1749591460
+[Tue Jun 10 17:37:40 2025] [::1]:61433 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61434 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61435 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61434 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 10 17:37:40 2025] [::1]:61435 [200]: GET /images/products/product_custom-tumbler-20oz.png
+[Tue Jun 10 17:37:40 2025] [::1]:61434 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61435 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61436 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61437 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61438 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61439 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61440 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61436 [200]: GET /images/products/product_custom-tumbler-30oz.png
+[Tue Jun 10 17:37:40 2025] [::1]:61437 [200]: GET /images/frog_painter_1.png
+[Tue Jun 10 17:37:40 2025] [::1]:61438 [200]: GET /js/cart.js?v=1749591460
+[Tue Jun 10 17:37:40 2025] [::1]:61439 [200]: GET /images/products/product_sublimation-blank-item-e-g-mug.png
+[Tue Jun 10 17:37:40 2025] [::1]:61440 [200]: GET /images/products/product_custom-window-wrap.png
+[Tue Jun 10 17:37:40 2025] [::1]:61438 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61439 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61440 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61437 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61436 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61441 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61441 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 10 17:37:40 2025] [::1]:61441 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61442 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61442 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 10 17:37:40 2025] [::1]:61442 Closing
+[Tue Jun 10 17:37:40 2025] [::1]:61443 Accepted
+[Tue Jun 10 17:37:40 2025] [::1]:61443 [200]: GET /favicon.ico
+[Tue Jun 10 17:37:40 2025] [::1]:61443 Closing

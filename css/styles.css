@@ -1,0 +1,458 @@
+/* Base styles */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Room navigation styles */
+.room-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.room-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hotspot {
+    position: absolute;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.hotspot:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+}
+
+/* Product display styles */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.product-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.product-info {
+    padding: 15px;
+}
+
+.product-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.product-price {
+    font-size: 1rem;
+    color: #4a5568;
+    margin-bottom: 12px;
+}
+
+.product-description {
+    font-size: 0.9rem;
+    color: #718096;
+    margin-bottom: 15px;
+}
+
+/* Cart styles */
+.cart-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cart-item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
+}
+
+.cart-item-details {
+    flex-grow: 1;
+}
+
+.cart-item-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.cart-item-price {
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.cart-item-quantity {
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
+}
+
+.quantity-btn {
+    background-color: #e2e8f0;
+    border: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.quantity-input {
+    width: 40px;
+    text-align: center;
+    margin: 0 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.cart-item-remove {
+    color: #e53e3e;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.cart-summary {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f7fafc;
+    border-radius: 8px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.summary-total {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Form styles */
+.form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+.form-button {
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.form-button:hover {
+    background-color: #3182ce;
+}
+
+/* Header and navigation */
+.header {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 15px 20px;
+}
+
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-link {
+    margin-left: 20px;
+    color: #4a5568;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #4299e1;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    
+    .cart-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .cart-item-image {
+        margin-bottom: 10px;
+    }
+    
+    .cart-item-quantity {
+        margin: 10px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Admin panel styles */
+.admin-panel {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    background-color: #2d3748;
+    color: white;
+    padding: 20px;
+}
+
+.admin-content {
+    padding: 20px;
+    background-color: #f7fafc;
+}
+
+.admin-heading {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #2d3748;
+}
+
+.admin-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-table th {
+    background-color: #f7fafc;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.admin-table tr:hover {
+    background-color: #f7fafc;
+}
+
+.admin-form {
+    max-width: 600px;
+}
+
+/* Utility classes */
+.text-center {
+    text-align: center;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+/* Brand-specific styles */
+.brand-color {
+    color: #87ac3a !important;
+}
+
+.brand-bg {
+    background-color: #87ac3a !important;
+}
+
+/* TARGETED BUTTON STYLING - ONLY BRAND BUTTONS */
+
+/* Brand button class - primary green styling */
+.brand-button {
+    background-color: #87ac3a !important;
+    border-color: #87ac3a !important;
+    color: white !important;
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.brand-button:hover {
+    background-color: #6b8e23 !important;
+    border-color: #6b8e23 !important;
+}
+
+/* Specific admin button IDs that should be green */
+#markPaymentReceivedBtn,
+#addInventoryBtn,
+#saveInventoryBtn,
+#updateInventoryBtn,
+#addCustomerBtn,
+#saveCustomerBtn {
+    background-color: #87ac3a !important;
+    border-color: #87ac3a !important;
+    color: white !important;
+}
+
+#markPaymentReceivedBtn:hover,
+#addInventoryBtn:hover,
+#saveInventoryBtn:hover,
+#updateInventoryBtn:hover,
+#addCustomerBtn:hover,
+#saveCustomerBtn:hover {
+    background-color: #6b8e23 !important;
+    border-color: #6b8e23 !important;
+}
+
+/* Test rule - this should make the red test button red */
+.brand-button-test {
+    background-color: red !important;
+    color: white !important;
+    border: 3px solid red !important;
+}
+
+/* Admin Reports - Apply and Print Report buttons */
+button.bg-indigo-600,
+.bg-indigo-600 {
+    background-color: #87ac3a !important;
+    border-color: #87ac3a !important;
+}
+
+button.bg-indigo-600:hover,
+.bg-indigo-600:hover,
+button.hover\\:bg-indigo-700:hover,
+.hover\\:bg-indigo-700:hover {
+    background-color: #6b8e23 !important;
+    border-color: #6b8e23 !important;
+}
+
+/* Payment Toggle Button Styles */
+.payment-toggle-btn {
+    padding: 0.25rem 0.5rem; /* Corresponds to py-1 px-2 */
+    font-size: 0.75rem; /* Corresponds to text-xs */
+    border-radius: 0.375rem; /* Corresponds to rounded-md */
+    border: 1px solid transparent;
+    font-weight: 500; /* Corresponds to font-medium */
+    color: white !important; /* Ensure text is white */
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.payment-toggle-btn.paid {
+    background-color: #87ac3a !important; /* Brand green for paid */
+}
+
+.payment-toggle-btn.paid:hover {
+    background-color: #6b8e23 !important; /* Darker brand green for hover */
+}
+
+.payment-toggle-btn.pending {
+    background-color: #F59E0B !important; /* Yellow/Orange for pending (Tailwind yellow-500) */
+}
+
+.payment-toggle-btn.pending:hover {
+    background-color: #D97706 !important; /* Darker Yellow/Orange for hover (Tailwind yellow-600) */
+}

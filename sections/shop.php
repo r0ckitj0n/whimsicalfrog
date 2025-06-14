@@ -1,215 +1,323 @@
 <?php
 // Shop page section
+if (!defined('INCLUDED_FROM_INDEX')) {
+    header('Location: /?page=shop');
+    exit;
+}
+
+// Include the image carousel component and helpers
+require_once __DIR__ . '/../components/image_carousel.php';
+require_once __DIR__ . '/../includes/product_image_helpers.php';
+
+// Categories are already loaded in index.php and available in $categories
 ?>
-<section id="shopPage" class="p-6 bg-white rounded-lg shadow-lg">
-    <h2 class="text-4xl font-merienda text-center text-[#556B2F] mb-8">Our Craft Shelves</h2>
-    <div id="productCategories" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <?php foreach ($categories as $category => $products): ?>
-            <div class="category-item bg-white p-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow duration-300"
-                 onclick="displayProducts('<?php echo htmlspecialchars($category); ?>', <?php echo htmlspecialchars(json_encode($products)); ?>)">
-                <img src="<?php echo htmlspecialchars($products[0][8] ?? 'images/placeholder.png'); ?>" 
-                     alt="<?php echo htmlspecialchars($category); ?>" 
-                     class="w-full h-48 object-cover rounded-md mb-4">
-                <h3 class="text-xl font-merienda text-[#556B2F] mb-2"><?php echo htmlspecialchars($category); ?></h3>
-                <p class="text-gray-700 text-sm"><?php echo htmlspecialchars($products[0][4] ?? 'No description available'); ?></p>
-            </div>
+
+<style>
+    /* Use the same green from the header bar */
+    :root {
+        --wf-green: #87ac3a;
+        --wf-green-light: #a3cc4a;
+    }
+
+    #shopPage h1 {
+        color: var(--wf-green) !important; /* override global reset */
+    }
+
+    /* Category buttons styling */
+    .category-btn {
+        background: var(--wf-green);
+        color: #ffffff !important; /* override reset */
+        border: none;
+        transition: background 0.2s ease;
+    }
+
+    .category-btn:hover,
+    .category-btn.active {
+        background: var(--wf-green-light);
+        color: #ffffff !important;
+    }
+</style>
+
+<section id="shopPage" class="py-6">
+    <h1 class="text-3xl font-merienda text-center mb-6">Welcome to Our Shop</h1>
+    
+    <!-- Category Navigation -->
+    <div class="flex flex-wrap justify-center mb-8 gap-2">
+        <?php foreach (array_keys($categories) as $category): ?>
+            <button class="category-btn px-4 py-2 rounded-full"
+                    data-category="<?php echo htmlspecialchars($category); ?>">
+                <?php echo htmlspecialchars($category); ?>
+            </button>
         <?php endforeach; ?>
+        <button class="category-btn px-4 py-2 rounded-full active"
+                data-category="all">
+            All Products
+        </button>
+    </div>
+    
+    <!-- Products Grid -->
+    <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <?php 
+        // Display all products from all categories
+        foreach ($categories as $category => $products): 
+            foreach ($products as $product):
+                // Skip products without required fields
+                if (!isset($product['productName']) || !isset($product['price'])) {
+                    continue;
+                }
+                
+                // Get product details
+                $productName = htmlspecialchars($product['productName']);
+                $productId = isset($product['productId']) ? htmlspecialchars($product['productId']) : '';
+                $price = isset($product['price']) ? htmlspecialchars($product['price']) : '';
+                $description = isset($product['description']) ? htmlspecialchars($product['description']) : '';
+                $stock = isset($product['stock']) ? (int)$product['stock'] : 0;
+                
+                // Format price
+                $formattedPrice = '$' . number_format((float)$price, 2);
+                
+                // Get primary image for cart data
+                $primaryImage = getPrimaryProductImage($productId);
+                $imageUrl = $primaryImage ? htmlspecialchars($primaryImage['image_path']) : 'images/products/placeholder.png';
+        ?>
+        <div class="product-card" data-category="<?php echo htmlspecialchars($category); ?>">
+            <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
+                <?php 
+                // Display product images (carousel if multiple, single image if one)
+                echo renderProductImageDisplay($productId, [
+                    'height' => '192px', // h-48 equivalent
+                    'showThumbnails' => false,
+                    'showControls' => true,
+                    'autoplay' => false,
+                    'className' => 'shop-product-image'
+                ]);
+                ?>
+                <div class="p-4 flex flex-col flex-grow">
+                    <h3 class="font-merienda text-lg text-[#87ac3a] mb-1 line-clamp-2"><?php echo $productName; ?></h3>
+                    <div class="text-xs text-gray-500 mb-1"><?php echo htmlspecialchars($category); ?></div>
+                    <p class="text-gray-600 mb-2 text-sm line-clamp-2 flex-grow-0">
+                        <?php echo $description; ?>
+                    </p>
+                    <div class="mt-2 text-sm <?php echo $stock>0 ? 'text-gray-600' : 'text-red-600'; ?>">In stock: <?php echo $stock; ?></div>
+                    <div class="flex justify-between items-center mt-auto">
+                        <span class="font-bold text-[#87ac3a]"><?php echo $formattedPrice; ?></span>
+                        <button class="add-to-cart-btn <?php echo $stock>0 ? 'bg-[#87ac3a] hover:bg-[#a3cc4a]' : 'bg-gray-400 cursor-not-allowed'; ?> text-white px-3 py-1 rounded-md text-sm transition-colors"
+                                <?php if($stock==0) echo 'disabled'; ?>
+                                data-product-id="<?php echo $productId; ?>"
+                                data-product-name="<?php echo $productName; ?>"
+                                data-product-price="<?php echo $price; ?>"
+                                data-product-image="<?php echo $imageUrl; ?>">
+                            <?php echo $stock>0 ? 'Add to Cart' : 'Out of Stock'; ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php 
+            endforeach;
+        endforeach; 
+        ?>
     </div>
 </section>
 
-<!-- Product Modal -->
-<div id="productModal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeProductModal()">&times;</span>
-        <div id="modalContent" class="p-4">
-            <!-- Content will be dynamically inserted here -->
+<!-- Quantity Selection Modal -->
+<div id="quantityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-[#87ac3a]">Select Quantity</h3>
+            <button id="closeQuantityModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        
+        <div class="flex items-center mb-4">
+            <img id="modalProductImage" src="" alt="" class="w-16 h-16 object-contain bg-gray-100 rounded mr-4">
+            <div>
+                <h4 id="modalProductName" class="font-medium text-gray-800"></h4>
+                <p id="modalProductPrice" class="text-[#87ac3a] font-semibold"></p>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <label for="quantityInput" class="block text-sm font-medium text-gray-700 mb-2">Quantity:</label>
+            <div class="flex items-center justify-center gap-4">
+                <button id="decreaseQty" class="bg-gray-200 hover:bg-gray-300 text-gray-800 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold">-</button>
+                <input type="number" id="quantityInput" value="1" min="1" max="999" class="w-20 text-center border border-gray-300 rounded-md py-2 text-lg font-semibold">
+                <button id="increaseQty" class="bg-gray-200 hover:bg-gray-300 text-gray-800 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold">+</button>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="flex justify-between items-center text-lg">
+                <span class="font-medium text-gray-700">Total:</span>
+                <span id="modalTotal" class="font-bold text-[#87ac3a] text-xl">$0.00</span>
+            </div>
+            <div class="text-sm text-gray-500 mt-1">
+                <span id="modalUnitPrice">$0.00</span> × <span id="modalQuantity">1</span>
+            </div>
+        </div>
+        
+        <div class="flex gap-3">
+            <button id="cancelQuantityModal" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-md font-medium">Cancel</button>
+            <button id="confirmAddToCart" class="flex-1 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white py-2 px-4 rounded-md font-medium">Add to Cart</button>
         </div>
     </div>
 </div>
 
 <script>
-// Remove the cart initialization since it's now handled in cart.js
-function openProductModal() {
-    console.log('Opening product modal');
-    const modal = document.getElementById('productModal');
-    if (modal) {
-        modal.style.display = 'block';
-    } else {
-        console.error('Product modal element not found');
-    }
-}
-
-function closeProductModal() {
-    console.log('Closing product modal');
-    const modal = document.getElementById('productModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('productModal');
-    if (event.target == modal) {
-        closeProductModal();
-    }
-}
-
-function displayProducts(category, products) {
-    console.log('Displaying products for category:', category);
-    const modal = document.getElementById('productModal');
-    const modalContent = document.getElementById('modalContent');
+document.addEventListener('DOMContentLoaded', function() {
+    // Category filtering
+    const categoryButtons = document.querySelectorAll('.category-btn');
+    const productCards = document.querySelectorAll('.product-card');
     
-    if (!modal || !modalContent) {
-        console.error('Modal elements not found');
-        return;
-    }
-    
-    let productsHTML = `
-        <div class="text-center mb-6">
-            <h2 class="text-3xl font-merienda text-[#556B2F]">${category}</h2>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    `;
-    
-    products.forEach(product => {
-        const imageUrl = product[8] || 'images/placeholder.png';
-        const price = parseFloat(product[3]) || 0.00;
-        const escapedName = product[1].replace(/'/g, "\\'").replace(/"/g, '\\"');
-        productsHTML += `
-            <div class="product-item bg-white p-4 rounded-lg shadow-md">
-                <img src="${imageUrl}" 
-                     alt="${escapedName}" 
-                     class="w-full h-48 object-cover rounded-md mb-4">
-                <h3 class="text-xl font-merienda text-[#556B2F] mb-2">${escapedName}</h3>
-                <p class="text-gray-700 text-sm mb-4">${product[4] || 'No description available'}</p>
-                <div class="flex justify-between items-center">
-                    <span class="text-lg font-semibold text-[#6B8E23]">$${price.toFixed(2)}</span>
-                    <button onclick="addToCart('${product[0]}', '${escapedName}', ${price}, '${imageUrl}')" 
-                            class="bg-[#6B8E23] hover:bg-[#556B2F] text-white font-semibold py-2 px-4 rounded-md transition duration-150 cursor-pointer">
-                        Add to Cart
-                    </button>
-                </div>
-            </div>
-        `;
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+            
+            // Update active button (CSS handles color changes)
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter products
+            productCards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
     });
     
-    productsHTML += '</div>';
-    modalContent.innerHTML = productsHTML;
-    openProductModal();
-}
-
-function addToCart(id, name, price, image) {
-    console.log('Adding to cart:', { id, name, price, image });
-    try {
-        if (typeof window.cart === 'undefined') {
-            console.error('Cart not initialized');
-            alert('Shopping cart is not available. Please refresh the page and try again.');
-            return;
-        }
-        window.cart.addItem({ id, name, price, image });
-        console.log('Item added to cart successfully');
-    } catch (error) {
-        console.error('Error adding item to cart:', error);
-        alert('There was an error adding the item to your cart. Please try again.');
+    // Quantity modal functionality
+    const quantityModal = document.getElementById('quantityModal');
+    const modalProductImage = document.getElementById('modalProductImage');
+    const modalProductName = document.getElementById('modalProductName');
+    const modalProductPrice = document.getElementById('modalProductPrice');
+    const modalUnitPrice = document.getElementById('modalUnitPrice');
+    const modalQuantity = document.getElementById('modalQuantity');
+    const modalTotal = document.getElementById('modalTotal');
+    const quantityInput = document.getElementById('quantityInput');
+    const decreaseQtyBtn = document.getElementById('decreaseQty');
+    const increaseQtyBtn = document.getElementById('increaseQty');
+    const closeModalBtn = document.getElementById('closeQuantityModal');
+    const cancelModalBtn = document.getElementById('cancelQuantityModal');
+    const confirmAddBtn = document.getElementById('confirmAddToCart');
+    
+    let currentProduct = null;
+    
+    // Function to update total calculation
+    function updateTotal() {
+        const quantity = parseInt(quantityInput.value) || 1;
+        const unitPrice = currentProduct ? currentProduct.price : 0;
+        const total = quantity * unitPrice;
+        
+        modalQuantity.textContent = quantity;
+        modalTotal.textContent = '$' + total.toFixed(2);
     }
-}
+    
+    // Quantity input event listeners
+    quantityInput.addEventListener('input', function() {
+        const value = Math.max(1, Math.min(999, parseInt(this.value) || 1));
+        this.value = value;
+        updateTotal();
+    });
+    
+    decreaseQtyBtn.addEventListener('click', function() {
+        const current = parseInt(quantityInput.value) || 1;
+        if (current > 1) {
+            quantityInput.value = current - 1;
+            updateTotal();
+        }
+    });
+    
+    increaseQtyBtn.addEventListener('click', function() {
+        const current = parseInt(quantityInput.value) || 1;
+        if (current < 999) {
+            quantityInput.value = current + 1;
+            updateTotal();
+        }
+    });
+    
+    // Modal close functionality
+    function closeModal() {
+        quantityModal.classList.add('hidden');
+        quantityInput.value = 1;
+        currentProduct = null;
+    }
+    
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelModalBtn.addEventListener('click', closeModal);
+    
+    // Close modal when clicking outside
+    quantityModal.addEventListener('click', function(e) {
+        if (e.target === quantityModal) {
+            closeModal();
+        }
+    });
+    
+    // Add to cart functionality - now opens quantity modal
+    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+    
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            const productName = this.getAttribute('data-product-name');
+            const productPrice = parseFloat(this.getAttribute('data-product-price'));
+            const productImage = this.getAttribute('data-product-image');
+            
+            // Store current product data
+            currentProduct = {
+                id: productId,
+                name: productName,
+                price: productPrice,
+                image: productImage
+            };
+            
+            // Populate modal with product info
+            modalProductImage.src = productImage;
+            modalProductImage.alt = productName;
+            modalProductName.textContent = productName;
+            modalProductPrice.textContent = '$' + productPrice.toFixed(2);
+            modalUnitPrice.textContent = '$' + productPrice.toFixed(2);
+            
+            // Reset quantity and update total
+            quantityInput.value = 1;
+            updateTotal();
+            
+            // Show modal
+            quantityModal.classList.remove('hidden');
+        });
+    });
+    
+    // Confirm add to cart
+    confirmAddBtn.addEventListener('click', function() {
+        if (currentProduct && typeof window.cart !== 'undefined') {
+            const quantity = parseInt(quantityInput.value) || 1;
+            
+            window.cart.addItem({
+                id: currentProduct.id,
+                name: currentProduct.name,
+                price: currentProduct.price,
+                image: currentProduct.image,
+                quantity: quantity
+            });
+            
+            // Show confirmation
+            const customAlert = document.getElementById('customAlertBox');
+            const customAlertMessage = document.getElementById('customAlertMessage');
+            const quantityText = quantity > 1 ? ` (${quantity})` : '';
+            customAlertMessage.textContent = `${currentProduct.name}${quantityText} added to your cart!`;
+            customAlert.style.display = 'block';
+            
+                            // Auto-hide after 5 seconds (more readable)
+                setTimeout(() => {
+                    customAlert.style.display = 'none';
+                }, 5000);
+            
+            // Close modal
+            closeModal();
+        } else {
+            console.error('Cart functionality not available');
+        }
+    });
+});
 </script>
-
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    overflow-y: auto;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 1200px;
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.close-button {
-    position: absolute;
-    right: 20px;
-    top: 10px;
-    color: #556B2F;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close-button:hover {
-    color: #6B8E23;
-}
-
-/* Ensure buttons are visible and properly styled */
-button {
-    display: inline-block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    cursor: pointer !important;
-    pointer-events: auto !important;
-    background-color: #6B8E23 !important;
-    color: white !important;
-    font-weight: 600 !important;
-    padding: 0.5rem 1rem !important;
-    border-radius: 0.375rem !important;
-    transition: background-color 0.15s ease-in-out !important;
-}
-
-button:hover {
-    background-color: #556B2F !important;
-}
-
-/* Ensure product items are properly styled */
-.product-item {
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.product-item img {
-    width: 100%;
-    height: 12rem;
-    object-fit: cover;
-    border-radius: 0.375rem;
-    margin-bottom: 1rem;
-}
-
-.product-item h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #556B2F;
-    margin-bottom: 0.5rem;
-}
-
-.product-item p {
-    color: #4B5563;
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
-    flex-grow: 1;
-}
-
-.product-item .flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto;
-}
-</style> 

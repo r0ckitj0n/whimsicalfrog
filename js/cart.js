@@ -13,10 +13,11 @@ class ShoppingCart {
 
     addItem(product) {
         console.log('Adding item to cart:', product);
+        const quantity = product.quantity || 1; // Use provided quantity or default to 1
         const existingItem = this.items.find(item => item.id === product.id);
         
         if (existingItem) {
-            existingItem.quantity += 1;
+            existingItem.quantity += quantity;
             console.log('Updated existing item quantity:', existingItem);
         } else {
             this.items.push({
@@ -24,14 +25,14 @@ class ShoppingCart {
                 name: product.name,
                 price: product.price,
                 image: product.image,
-                quantity: 1
+                quantity: quantity
             });
             console.log('Added new item to cart');
         }
         
         this.saveCart();
         this.updateCartCount();
-        this.showNotification('Item added to cart');
+        this.showNotification(`${quantity > 1 ? quantity + ' items' : 'Item'} added to cart`);
         this.dispatchCartUpdate();
     }
 
@@ -103,13 +104,31 @@ class ShoppingCart {
     showNotification(message) {
         console.log('Showing notification:', message);
         const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+        notification.className = 'fixed top-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg z-50 font-medium';
+        notification.style.backgroundColor = '#87ac3a'; // Your brand green color
+        notification.style.border = '2px solid #6b8e23'; // Slightly darker green border
         notification.textContent = message;
         document.body.appendChild(notification);
         
+        // Add a subtle fade-in animation
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-10px)';
+        notification.style.transition = 'all 0.3s ease-in-out';
+        
+        // Trigger the fade-in
         setTimeout(() => {
-            notification.remove();
-        }, 2000);
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateY(0)';
+        }, 10);
+        
+        // Remove after 4 seconds (much more readable)
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 4000);
     }
 
     renderCart() {
@@ -124,6 +143,10 @@ class ShoppingCart {
             cartContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Your cart is empty</p>';
             return;
         }
+
+        const subtotal = this.getTotal();
+        const salesTax = +(subtotal * 0.08).toFixed(2);
+        const total = +(subtotal + salesTax).toFixed(2);
 
         let html = `
             <div class="space-y-4">
@@ -154,8 +177,16 @@ class ShoppingCart {
             </div>
             <div class="mt-6 p-4 bg-gray-50 rounded-lg">
                 <div class="flex justify-between text-lg font-semibold">
+                    <span>Subtotal:</span>
+                    <span>$${subtotal.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between text-lg font-semibold">
+                    <span>Sales Tax (8%):</span>
+                    <span>$${salesTax.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between text-lg font-semibold">
                     <span>Total:</span>
-                    <span>$${this.getTotal().toFixed(2)}</span>
+                    <span>$${total.toFixed(2)}</span>
                 </div>
                 <button onclick="cart.checkout()" 
                         class="w-full mt-4 bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded">
@@ -168,21 +199,134 @@ class ShoppingCart {
     }
 
     async checkout() {
-        console.log('Proceeding to checkout...');
+        // Show payment method modal
+        if (!document.getElementById('paymentMethodModal')) {
+            this.createPaymentMethodModal();
+        }
+        document.getElementById('paymentMethodModal').classList.remove('hidden');
+    }
+
+    createPaymentMethodModal() {
+        const modal = document.createElement('div');
+        modal.id = 'paymentMethodModal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative" style="padding-top: 60px;">
+                <a href="/?page=main_room" class="back-button text-[#556B2F]" style="position:absolute;top:16px;left:16px;background:rgba(107,142,35,0.9);color:white;padding:8px 14px;border-radius:25px;text-decoration:none;font-weight:bold;transition:all 0.3s ease;z-index:1000;cursor:pointer;pointer-events:auto;">
+                    ← Back to Main Room
+                </a>
+                <button id="closePaymentMethodModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
+                <h2 class="text-lg font-bold mb-4">Payment & Shipping</h2>
+                <form id="paymentMethodForm">
+                    <div class="mb-4">
+                        <label class="block mb-2 font-medium">Payment Method</label>
+                        <select id="paymentMethodSelect" class="w-full border-gray-300 rounded-md">
+                            <option value="Cash">Cash</option>
+                            <option value="Check">Check</option>
+                            <option value="Credit Card" disabled>Credit Card (Coming Soon)</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 font-medium">Shipping Method</label>
+                        <select id="shippingMethodSelect" class="w-full border-gray-300 rounded-md">
+                            <option value="Customer Pickup" selected>🏪 Customer Pickup - Pick up at store location</option>
+                            <option value="Local Delivery">🚚 Local Delivery - Within our delivery area</option>
+                            <option value="USPS">📮 USPS - United States Postal Service</option>
+                            <option value="FedEx">📦 FedEx - Federal Express shipping</option>
+                            <option value="UPS">🚛 UPS - United Parcel Service</option>
+                        </select>
+                        <div class="mt-2 text-xs text-gray-600">
+                            💡 <strong>Tip:</strong> Customer Pickup saves on shipping costs and is available during store hours.
+                        </div>
+                    </div>
+                    <div id="shippingInfoNotice" class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 text-sm" style="display: none;">
+                        <p class="font-medium text-blue-800 mb-2">📋 Important Shipping Information</p>
+                        <p class="text-blue-700">
+                            Shipping charges are calculated individually based on your order size, weight, and destination. 
+                            As a small family-operated business, we'll determine the most cost-effective shipping method for you 
+                            and notify you via text or email with the exact shipping/handling charge before finalizing your order. 
+                            Your payment will only be processed after you approve the total cost. We handle all orders quickly 
+                            and efficiently with personal attention to detail.
+                        </p>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Continue</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('closePaymentMethodModal').onclick = () => modal.classList.add('hidden');
         
-        // Check if user is logged in
-        const user = JSON.parse(sessionStorage.getItem('user'));
+        // Add event listener for shipping method changes
+        const shippingSelect = document.getElementById('shippingMethodSelect');
+        const shippingInfoNotice = document.getElementById('shippingInfoNotice');
+        
+        // Function to toggle shipping info visibility
+        const toggleShippingInfo = () => {
+            if (shippingSelect.value === 'Customer Pickup') {
+                shippingInfoNotice.style.display = 'none';
+            } else {
+                shippingInfoNotice.style.display = 'block';
+            }
+        };
+        
+        // Set initial state and add change listener
+        toggleShippingInfo();
+        shippingSelect.addEventListener('change', toggleShippingInfo);
+        
+        document.getElementById('paymentMethodForm').onsubmit = (e) => {
+            e.preventDefault();
+            const paymentMethod = document.getElementById('paymentMethodSelect').value;
+            const shippingMethod = document.getElementById('shippingMethodSelect').value;
+            modal.classList.add('hidden');
+            this.submitCheckout(paymentMethod, shippingMethod);
+        };
+    }
+
+    async submitCheckout(paymentMethod, shippingMethod) {
+        console.log('Proceeding to checkout...');
+        let user = null;
+        const userRaw = sessionStorage.getItem('user');
+        if (userRaw) {
+            try { user = JSON.parse(userRaw); } catch(e) { console.warn('Invalid user JSON in sessionStorage'); }
+        }
         if (!user) {
-            // Save current cart state
             localStorage.setItem('pendingCheckout', 'true');
-            // Redirect to login page
             window.location.href = '/?page=login';
             return;
         }
-        
-        // If logged in, proceed with checkout
-        // This will be implemented when we integrate with Square
-        this.showNotification('Checkout functionality coming soon!');
+        if (this.items.length === 0) {
+            this.showNotification('Your cart is empty!');
+            return;
+        }
+        const customerId = user.userId ? user.userId : user.id;
+        const productIds = this.items.map(item => item.id);
+        const quantities = this.items.map(item => item.quantity);
+        const status = 'Pending';
+        const date = new Date().toISOString().slice(0, 10);
+        const apiEndpoint = window.location.origin + '/api/add-order.php';
+        const subtotal = this.getTotal();
+        const salesTax = +(subtotal * 0.08).toFixed(2);
+        const total = +(subtotal + salesTax).toFixed(2);
+        try {
+            const response = await fetch(apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId, productIds, quantities, status, date, paymentMethod, shippingMethod, subtotal, salesTax, total })
+            });
+            const data = await response.json();
+            if (data.success) {
+                this.showNotification('Order placed successfully!');
+                this.clearCart();
+                setTimeout(() => { window.location.href = '/?page=receipt&orderId=' + data.orderId; }, 1000);
+            } else {
+                const msg = data.error || 'Unknown error';
+                this.showNotification('Order creation failed: ' + msg);
+            }
+        } catch (error) {
+            this.showNotification('Checkout failed: ' + error.message);
+        }
     }
 }
 

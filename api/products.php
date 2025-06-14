@@ -1,56 +1,51 @@
 <?php
-header('Content-Type: application/json');
+// Include the configuration file
+require_once 'config.php';
+
+// Set CORS headers
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json');
 
-// Handle preflight requests
+// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+    http_response_code(200);
+    exit;
 }
-
-// Load configuration and environment variables
-require_once __DIR__ . '/../config.php';
-
-// Include Google API client (you'll need to install this via Composer)
-require_once __DIR__ . '/../vendor/autoload.php';
 
 try {
-    // Configuration
-    $spreadsheetId = getenv('SPREADSHEET_ID');
-    $credentialsPath = __DIR__ . '/../credentials.json';
+    // Create database connection using config
+    $pdo = new PDO($dsn, $user, $pass, $options);
     
-    if (!$spreadsheetId) {
-        throw new Exception('SPREADSHEET_ID environment variable not set');
+    // Query to get all products
+    $stmt = $pdo->query('SELECT * FROM products');
+    $products = $stmt->fetchAll();
+    
+    // Format prices as numbers instead of strings
+    foreach ($products as &$product) {
+        if (isset($product['basePrice'])) {
+            $product['price'] = floatval($product['basePrice']);
+        }
     }
     
-    if (!file_exists($credentialsPath)) {
-        throw new Exception('credentials.json file not found');
-    }
+    // Return products as JSON
+    echo json_encode($products);
     
-    // Initialize Google Sheets client
-    $client = new Google_Client();
-    $client->setAuthConfig($credentialsPath);
-    $client->addScope(Google_Service_Sheets::SPREADSHEETS_READONLY);
-    
-    $service = new Google_Service_Sheets($client);
-    
-    // Fetch data from Products sheet
-    $range = 'Products!A1:Z1000';
-    $response = $service->spreadsheets_values->get($spreadsheetId, $range);
-    $values = $response->getValues();
-    
-    if (empty($values)) {
-        echo json_encode([]);
-    } else {
-        echo json_encode($values);
-    }
-    
-} catch (Exception $e) {
+} catch (PDOException $e) {
+    // Handle database errors
     http_response_code(500);
     echo json_encode([
-        'error' => 'Failed to fetch data from Google Sheets',
+        'error' => 'Database error occurred',
         'details' => $e->getMessage()
     ]);
+    exit;
+} catch (Exception $e) {
+    // Handle general errors
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'An unexpected error occurred',
+        'details' => $e->getMessage()
+    ]);
+    exit;
 }
-?> 

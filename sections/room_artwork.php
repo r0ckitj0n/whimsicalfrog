@@ -4,29 +4,56 @@ $artworkProducts = [];
 if (isset($categories['Artwork'])) {
     $artworkProducts = $categories['Artwork'];
 }
+
+// Include image helpers for room pages
+require_once __DIR__ . '/../includes/product_image_helpers.php';
 ?>
 <style>
     .room-container {
-        background-image: url('images/webp/room_artwork.webp');
+        /* Removed background-image, it will be on room-overlay-wrapper */
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        min-height: 80vh;
+        /* min-height: 80vh; */ /* This might be overridden by aspect ratio logic below */
         position: relative;
         border-radius: 15px;
         overflow: hidden;
+        /* max-width: 100%; */ /* Ensure it can shrink */
+        /* width: 100%; */ /* Take full available width up to its container's limit */
+        /* display: flex; */ /* To center the wrapper if it's smaller than container */
+        /* justify-content: center; */
+        /* align-items: center; */
     }
     
-    .room-overlay {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(0.5px);
-        min-height: 80vh;
-        padding: 10px;
-        position: relative;
+    .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
+        width: 100%;
+        padding-top: 70%; /* Adjusted for 1280x896 aspect ratio (896/1280 * 100) */
+        position: relative; /* For absolute positioning of content inside */
+        background-image: url('images/room_artwork.webp?v=cb2');
+        background-size: contain; /* Preserve aspect ratio, fit within container */
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 15px; /* If you want rounded corners on the image itself */
+        overflow: hidden; /* Add this to prevent internal scrollbars */
+    }
+
+    .no-webp .room-overlay-wrapper {
+        background-image: url('images/room_artwork.png?v=cb2');
+    }
+
+    .room-overlay-content { /* New content container */
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex; /* Using flex to layer header, shelf-area, and back button */
+        flex-direction: column;
+        overflow: hidden; /* Prevent content overflow issues */
     }
     
     .shelf-area {
-        position: absolute;
+        position: absolute; /* Position relative to room-overlay-content */
         width: 100%;
         height: 100%;
         top: 0;
@@ -35,38 +62,32 @@ if (isset($categories['Artwork'])) {
     
     .product-icon {
         position: absolute;
-        width: 40px;
-        height: 40px;
         cursor: pointer;
         transition: all 0.3s ease;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        background: white;
-        padding: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: #fff; /* White background, fully opaque */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     }
     
     .product-icon:hover {
-        transform: scale(1.2);
-        border-color: #6B8E23;
-        box-shadow: 0 4px 15px rgba(107, 142, 35, 0.5);
+        transform: scale(1.1);
         z-index: 100;
     }
     
     .product-icon img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
     }
     
-    /* Position icons on shelves - adjust based on your room_artwork.png */
-    .icon-1 { top: 30%; left: 20%; }
-    .icon-2 { top: 35%; left: 40%; }
-    .icon-3 { top: 32%; left: 60%; }
-    .icon-4 { top: 50%; left: 25%; }
-    .icon-5 { top: 55%; left: 45%; }
-    .icon-6 { top: 52%; left: 65%; }
+    /* Removed Artwork Room Specific Areas CSS positioning to avoid conflict with JavaScript positioning */
+    /* JavaScript in the document.addEventListener('DOMContentLoaded') function below now handles all positioning */
     
     .product-popup {
         position: absolute;
@@ -104,6 +125,8 @@ if (isset($categories['Artwork'])) {
         margin-bottom: 8px;
     }
     
+    .popup-category { font-size:12px;color:#6B8E23;margin-bottom:1px;font-weight:600; }
+    
     .popup-description {
         font-size: 12px;
         color: #666;
@@ -138,10 +161,10 @@ if (isset($categories['Artwork'])) {
         text-align: center;
         background: transparent;
         padding: 10px;
-        border-radius: 15px;
+        /* border-radius: 15px; */ /* Match the container's rounding if needed */
         margin-bottom: 10px;
-        position: relative;
-        z-index: 10;
+        position: relative; /* Needed for z-index to work if other elements overlap */
+        z-index: 10; /* Ensure header is above other elements like product icons if they could overlap */
     }
     
     .room-header h1 {
@@ -181,7 +204,9 @@ if (isset($categories['Artwork'])) {
         text-decoration: none;
         font-weight: bold;
         transition: all 0.3s ease;
-        z-index: 10;
+        z-index: 1000; /* Increased z-index to ensure it's above everything */
+        cursor: pointer; /* Added to show hand cursor on hover */
+        pointer-events: auto !important; /* Ensure clicks are registered */
     }
     
     .back-button:hover {
@@ -191,35 +216,44 @@ if (isset($categories['Artwork'])) {
 </style>
 
 <section id="artworkRoomPage" class="p-2">
-    <div class="room-container mx-auto max-w-full">
-        <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
-        
-        <div class="room-overlay">
-            <div class="room-header">
-                <h1 class="text-3xl font-merienda text-[#556B2F] mb-2">🎨 Artwork Studio</h1>
-                <p class="text-sm text-gray-700">Hover over items on the shelves to see details</p>
-            </div>
-            
-            <?php if (empty($artworkProducts)): ?>
-                <div class="text-center py-8">
-                    <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
-                        <p class="text-xl text-gray-600">No artwork items available at the moment.</p>
-                        <p class="text-gray-500 mt-2">Check back soon for new creative pieces!</p>
-                    </div>
+    <div class="room-container mx-auto max-w-full" data-room-name="Artwork">
+        <div class="room-overlay-wrapper">
+            <a href="/?page=main_room" class="back-button text-[#556B2F]" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
+            <div class="room-overlay-content">
+                <div class="room-header">
+                    <h1>Artwork Gallery</h1>
+                    <p>Discover our unique artistic creations.</p>
                 </div>
-            <?php else: ?>
-                <div class="shelf-area">
-                    <?php foreach ($artworkProducts as $index => $product): ?>
-                        <div class="product-icon icon-<?php echo $index + 1; ?>" 
-                             data-product-id="<?php echo htmlspecialchars($product[0]); ?>"
-                             onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
-                             onmouseleave="hidePopup()">
-                            <img src="<?php echo htmlspecialchars($product[8] ?? 'images/placeholder.png'); ?>" 
-                                 alt="<?php echo htmlspecialchars($product[1]); ?>">
+                
+                <?php if (empty($artworkProducts)): ?>
+                    <div class="text-center py-8">
+                        <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
+                            <p class="text-xl text-gray-600">No artwork items available at the moment.</p>
+                            <p class="text-gray-500 mt-2">Check back soon for new designs!</p>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="shelf-area">
+                        <?php foreach ($artworkProducts as $index => $product): ?>
+                            <?php $area_class = 'area-' . ($index + 1); ?>
+                            <div class="product-icon <?php echo $area_class; ?>" 
+                                 data-product-id="<?php echo htmlspecialchars($product['id']); ?>"
+                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
+                                 onmouseleave="hidePopup()">
+                                <?php 
+                                // Use new image system with fallback to old system
+                                $primaryImage = getPrimaryProductImage($product['id']);
+                                if ($primaryImage && $primaryImage['file_exists']) {
+                                    echo '<img src="' . htmlspecialchars($primaryImage['image_path']) . '" alt="' . htmlspecialchars($product['name']) . '">';
+                                } else {
+                                    echo getImageTag($product['image'] ?? 'images/products/placeholder.png', $product['name']);
+                                }
+                                ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
     
@@ -227,30 +261,88 @@ if (isset($categories['Artwork'])) {
     <div id="productPopup" class="product-popup">
         <img id="popupImage" src="" alt="" class="popup-image">
         <div id="popupTitle" class="popup-title"></div>
+        <div id="popupCategory" class="popup-category"></div>
         <div id="popupDescription" class="popup-description"></div>
         <div id="popupPrice" class="popup-price"></div>
-        <button id="popupAddBtn" class="popup-add-btn" onclick="addToCartFromPopup()">
+        <button id="popupAddBtn" class="popup-add-btn" onclick="openQuantityModal()">
             Add to Cart
         </button>
     </div>
 </section>
 
+<!-- Quantity Selection Modal -->
+<div id="quantityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-[#87ac3a]">Select Quantity</h3>
+            <button id="closeQuantityModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        
+        <div class="flex items-center mb-4">
+            <img id="modalProductImage" src="" alt="" class="w-16 h-16 object-contain bg-gray-100 rounded mr-4">
+            <div>
+                <h4 id="modalProductName" class="font-medium text-gray-800"></h4>
+                <p id="modalProductPrice" class="text-[#87ac3a] font-semibold"></p>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <label for="quantityInput" class="block text-sm font-medium text-gray-700 mb-2">Quantity:</label>
+            <div class="flex items-center justify-center gap-4">
+                <button id="decreaseQty" class="bg-gray-200 hover:bg-gray-300 text-gray-800 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold">-</button>
+                <input type="number" id="quantityInput" value="1" min="1" max="999" class="w-20 text-center border border-gray-300 rounded-md py-2 text-lg font-semibold">
+                <button id="increaseQty" class="bg-gray-200 hover:bg-gray-300 text-gray-800 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold">+</button>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="flex justify-between items-center text-lg">
+                <span class="font-medium text-gray-700">Total:</span>
+                <span id="modalTotal" class="font-bold text-[#87ac3a] text-xl">$0.00</span>
+            </div>
+            <div class="text-sm text-gray-500 mt-1">
+                <span id="modalUnitPrice">$0.00</span> × <span id="modalQuantity">1</span>
+            </div>
+        </div>
+        
+        <div class="flex gap-3">
+            <button id="cancelQuantityModal" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-md font-medium">Cancel</button>
+            <button id="confirmAddToCart" class="flex-1 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white py-2 px-4 rounded-md font-medium">Add to Cart</button>
+        </div>
+    </div>
+</div>
+
 <script>
 let currentProduct = null;
 let popupTimeout = null;
+let popupOpen = false;
 
 function showPopup(element, product) {
     clearTimeout(popupTimeout);
     currentProduct = product;
+    popupOpen = true;
     
     const popup = document.getElementById('productPopup');
     const rect = element.getBoundingClientRect();
     
-    // Update popup content
-    document.getElementById('popupImage').src = product[8] || 'images/placeholder.png';
-    document.getElementById('popupTitle').textContent = product[1];
-    document.getElementById('popupDescription').textContent = product[4] || 'No description available';
-    document.getElementById('popupPrice').textContent = '$' + parseFloat(product[3] || 0).toFixed(2);
+    // Update popup content - use primary image from new system
+    const productId = product['id'] || product['productId'];
+    fetch(`api/get_product_images.php?productId=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.primaryImage) {
+                document.getElementById('popupImage').src = data.primaryImage.image_path;
+            } else {
+                document.getElementById('popupImage').src = product['image'] || 'images/products/placeholder.png';
+            }
+        })
+        .catch(() => {
+            document.getElementById('popupImage').src = product['image'] || 'images/products/placeholder.png';
+        });
+    document.getElementById('popupTitle').textContent = product['name'];
+    document.getElementById('popupCategory').textContent = product['productType'] || product['category'] || '';
+    document.getElementById('popupDescription').textContent = product['description'] || 'No description available';
+    document.getElementById('popupPrice').textContent = '$' + parseFloat(product['basePrice'] || product['price'] || 0).toFixed(2);
     
     // Position popup
     const roomContainer = element.closest('.room-container');
@@ -277,32 +369,192 @@ function hidePopup() {
         const popup = document.getElementById('productPopup');
         popup.classList.remove('show');
         currentProduct = null;
+        popupOpen = false;
     }, 100);
 }
 
-function addToCartFromPopup() {
+// Quantity modal functionality - wrapped in DOM ready
+let quantityModal, modalProductImage, modalProductName, modalProductPrice;
+let modalUnitPrice, modalQuantity, modalTotal, quantityInput;
+let decreaseQtyBtn, increaseQtyBtn, closeModalBtn, cancelModalBtn, confirmAddBtn;
+let modalProduct = null;
+
+// Initialize modal elements when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Get modal elements
+    quantityModal = document.getElementById('quantityModal');
+    modalProductImage = document.getElementById('modalProductImage');
+    modalProductName = document.getElementById('modalProductName');
+    modalProductPrice = document.getElementById('modalProductPrice');
+    modalUnitPrice = document.getElementById('modalUnitPrice');
+    modalQuantity = document.getElementById('modalQuantity');
+    modalTotal = document.getElementById('modalTotal');
+    quantityInput = document.getElementById('quantityInput');
+    decreaseQtyBtn = document.getElementById('decreaseQty');
+    increaseQtyBtn = document.getElementById('increaseQty');
+    closeModalBtn = document.getElementById('closeQuantityModal');
+    cancelModalBtn = document.getElementById('cancelQuantityModal');
+    confirmAddBtn = document.getElementById('confirmAddToCart');
+
+    // Function to update total calculation
+    function updateTotal() {
+        const quantity = parseInt(quantityInput.value) || 1;
+        const unitPrice = modalProduct ? modalProduct.price : 0;
+        const total = quantity * unitPrice;
+        
+        modalQuantity.textContent = quantity;
+        modalTotal.textContent = '$' + total.toFixed(2);
+    }
+
+    // Quantity input event listeners
+    if (quantityInput) {
+        quantityInput.addEventListener('input', function() {
+            const value = Math.max(1, Math.min(999, parseInt(this.value) || 1));
+            this.value = value;
+            updateTotal();
+        });
+    }
+
+    if (decreaseQtyBtn) {
+        decreaseQtyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const current = parseInt(quantityInput.value) || 1;
+            if (current > 1) {
+                quantityInput.value = current - 1;
+                updateTotal();
+            }
+        });
+    }
+
+    if (increaseQtyBtn) {
+        increaseQtyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const current = parseInt(quantityInput.value) || 1;
+            if (current < 999) {
+                quantityInput.value = current + 1;
+                updateTotal();
+            }
+        });
+    }
+
+    // Modal close functionality
+    function closeQuantityModal() {
+        if (quantityModal) {
+            quantityModal.classList.add('hidden');
+        }
+        if (quantityInput) {
+            quantityInput.value = 1;
+        }
+        modalProduct = null;
+    }
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeQuantityModal);
+    }
+    
+    if (cancelModalBtn) {
+        cancelModalBtn.addEventListener('click', closeQuantityModal);
+    }
+
+    // Close modal when clicking outside
+    if (quantityModal) {
+        quantityModal.addEventListener('click', function(e) {
+            if (e.target === quantityModal) {
+                closeQuantityModal();
+            }
+        });
+    }
+
+    // Confirm add to cart
+    if (confirmAddBtn) {
+        confirmAddBtn.addEventListener('click', function() {
+            if (modalProduct && typeof window.cart !== 'undefined') {
+                const quantity = parseInt(quantityInput.value) || 1;
+                
+                console.log('Adding to cart:', modalProduct, 'quantity:', quantity);
+                try {
+                    window.cart.addItem({
+                        id: modalProduct.id,
+                        name: modalProduct.name,
+                        price: modalProduct.price,
+                        image: modalProduct.image,
+                        quantity: quantity
+                    });
+                    console.log('Item added to cart successfully');
+                    
+                    // Show confirmation alert if available
+                    const customAlert = document.getElementById('customAlertBox');
+                    const customAlertMessage = document.getElementById('customAlertMessage');
+                    if (customAlert && customAlertMessage) {
+                        const quantityText = quantity > 1 ? ` (${quantity})` : '';
+                        customAlertMessage.textContent = `${modalProduct.name}${quantityText} added to your cart!`;
+                        customAlert.style.display = 'block';
+                        
+                        // Auto-hide after 5 seconds (more readable)
+                        setTimeout(() => {
+                            customAlert.style.display = 'none';
+                        }, 5000);
+                    }
+                    
+                    // Close modal
+                    closeQuantityModal();
+                } catch (error) {
+                    console.error('Error adding item to cart:', error);
+                    alert('There was an error adding the item to your cart. Please try again.');
+                }
+            } else {
+                console.error('Cart functionality not available');
+                alert('Shopping cart is not available. Please refresh the page and try again.');
+            }
+        });
+    }
+
+    // Make updateTotal and closeQuantityModal available globally for openQuantityModal
+    window.updateTotal = updateTotal;
+    window.closeQuantityModal = closeQuantityModal;
+});
+
+// Open quantity modal function
+function openQuantityModal() {
     if (!currentProduct) return;
     
-    const id = currentProduct[0];
-    const name = currentProduct[1];
-    const price = parseFloat(currentProduct[3] || 0);
-    const image = currentProduct[8] || 'images/placeholder.png';
+    const id = currentProduct['id'];
+    const name = currentProduct['name'];
+    const price = parseFloat(currentProduct['basePrice'] || currentProduct['price'] || 0);
+                const image = currentProduct['image'] || 'images/products/placeholder.png';
     
-    console.log('Adding to cart:', { id, name, price, image });
-    try {
-        if (typeof window.cart === 'undefined') {
-            console.error('Cart not initialized');
-            alert('Shopping cart is not available. Please refresh the page and try again.');
-            return;
-        }
-        window.cart.addItem({ id, name, price, image });
-        console.log('Item added to cart successfully');
-        
-        // Hide popup after adding to cart
-        hidePopup();
-    } catch (error) {
-        console.error('Error adding item to cart:', error);
-        alert('There was an error adding the item to your cart. Please try again.');
+    // Store current product data for modal
+    modalProduct = { id, name, price, image };
+    
+    // Populate modal with product info
+    if (modalProductImage) {
+        modalProductImage.src = image;
+        modalProductImage.alt = name;
+    }
+    if (modalProductName) {
+        modalProductName.textContent = name;
+    }
+    if (modalProductPrice) {
+        modalProductPrice.textContent = '$' + price.toFixed(2);
+    }
+    if (modalUnitPrice) {
+        modalUnitPrice.textContent = '$' + price.toFixed(2);
+    }
+    
+    // Reset quantity and update total
+    if (quantityInput) {
+        quantityInput.value = 1;
+    }
+    if (window.updateTotal) {
+        window.updateTotal();
+    }
+    
+    // Hide popup and show modal
+    hidePopup();
+    if (quantityModal) {
+        quantityModal.classList.remove('hidden');
     }
 }
 
@@ -314,4 +566,136 @@ document.getElementById('productPopup').addEventListener('mouseenter', () => {
 document.getElementById('productPopup').addEventListener('mouseleave', () => {
     hidePopup();
 });
-</script> 
+
+// Simple document click listener for popup closing
+document.addEventListener('click', function(e) {
+    console.log('Document clicked:', e.target);
+    const popup = document.getElementById('productPopup');
+    
+    // Close popup if it's open and click is outside it
+    if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
+        console.log('Closing popup');
+        hidePopup();
+    }
+});
+
+// Click-outside room functionality
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up click-outside functionality');
+    
+    // Handle clicks on document body for background detection
+    document.body.addEventListener('click', function(e) {
+        console.log('Body clicked:', e.target);
+        
+        // Skip if click is on or inside room container or any UI elements
+        const roomContainer = document.querySelector('#artworkRoomPage .room-container');
+        const backButton = document.querySelector('.back-button');
+        
+        // Debug what was clicked
+        console.log('Clicked on back button?', e.target === backButton || backButton.contains(e.target));
+        console.log('Clicked on room container?', roomContainer && roomContainer.contains(e.target));
+        
+        // If back button was clicked, let it handle navigation
+        if (e.target === backButton || (backButton && backButton.contains(e.target))) {
+            console.log('Back button clicked, allowing default navigation');
+            return true; // Let the link handle navigation
+        }
+        
+        // If popup is open, don't handle background clicks
+        const popup = document.getElementById('productPopup');
+        if (popup && popup.classList.contains('show')) {
+            console.log('Popup is open, not handling background click');
+            return;
+        }
+        
+        // If click is not on room container or its children, navigate to main room
+        if (roomContainer && !roomContainer.contains(e.target)) {
+            console.log('Click outside room container, navigating to main room');
+            window.location.href = '/?page=main_room';
+        }
+    });
+    
+    // Ensure back button works
+    const backButton = document.querySelector('.back-button');
+    if (backButton) {
+        console.log('Back button found, ensuring it works');
+        
+        // Remove any existing click listeners that might interfere
+        const newBackButton = backButton.cloneNode(true);
+        backButton.parentNode.replaceChild(newBackButton, backButton);
+        
+        // Add a clean click listener
+        newBackButton.addEventListener('click', function(e) {
+            console.log('Back button clicked via event listener');
+            // Let the default link behavior happen
+        });
+    }
+});
+
+// Script to dynamically scale product icon areas
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    const roomOverlayWrapper = document.querySelector('#artworkRoomPage .room-overlay-wrapper');
+
+    const baseAreas = [
+        { selector: '.area-1', top: 235, left: 193, width: 115, height: 77 },
+        { selector: '.area-2', top: 235, left: 378, width: 67, height: 114 },
+        { selector: '.area-3', top: 205, left: 499, width: 103, height: 81 },
+        { selector: '.area-4', top: 399, left: 242, width: 68, height: 97 },
+        { selector: '.area-5', top: 426, left: 375, width: 89, height: 61 },
+        { selector: '.area-6', top: 371, left: 511, width: 54, height: 105 },
+        { selector: '.area-7', top: 339, left: 621, width: 58, height: 77 },
+        { selector: '.area-8', top: 346, left: 1051, width: 90, height: 73 }
+    ];
+
+    function updateAreaCoordinates() {
+        if (!roomOverlayWrapper) {
+            console.error('Artwork Room overlay wrapper not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomOverlayWrapper.offsetWidth;
+        const wrapperHeight = roomOverlayWrapper.offsetHeight;
+
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        baseAreas.forEach(areaData => {
+            const areaElement = roomOverlayWrapper.querySelector(areaData.selector);
+            if (areaElement) {
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            } else {
+                // console.warn('Area element not found in Artwork room:', areaData.selector);
+            }
+        });
+    }
+
+    updateAreaCoordinates();
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
+    });
+});
+</script>

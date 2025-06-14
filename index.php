@@ -1,128 +1,311 @@
 <?php
 session_start();
+ob_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+// Load environment variables
+require_once __DIR__ . '/api/config.php';
+// Start or resume session (already started at the top)
 
-// Load configuration and environment variables
-require_once __DIR__ . '/config.php';
+// Check if a page is specified in the URL
+$page = isset($_GET['page']) ? $_GET['page'] : 'landing';
 
-// Include Google API client
-require_once __DIR__ . '/vendor/autoload.php';
-
-// Configuration
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'];
-$baseUrl = $protocol . '://' . $host;
-
-$config = [
-    'spreadsheet_id' => getenv('SPREADSHEET_ID'),
-    'google_client_id' => getenv('GOOGLE_CLIENT_ID'),
-    'api_url' => $baseUrl . '/api'
+// Define allowed pages
+$allowed_pages = [
+    'landing', 'main_room', 'shop', 'cart', 'login', 'register', 'admin', 'admin_inventory',
+    'room_tshirts', 'room_tumblers', 'room_artwork', 'room_sublimation', 'room_windowwraps',
+    'admin_customers', 'admin_orders', 'admin_reports', 'admin_marketing', 'admin_settings',
+    'account_settings', 'receipt' // Added receipt page
 ];
 
-// Helper functions
-function fetchDataFromSheet($sheetName) {
-    try {
-        // Configuration
-        $spreadsheetId = getenv('SPREADSHEET_ID');
-        $credentialsPath = __DIR__ . '/credentials.json';
-        
-        if (!$spreadsheetId) {
-            throw new Exception('SPREADSHEET_ID environment variable not set');
-        }
-        
-        if (!file_exists($credentialsPath)) {
-            throw new Exception('credentials.json file not found');
-        }
-        
-        // Initialize Google Sheets client
-        $client = new Google_Client();
-        $client->setAuthConfig($credentialsPath);
-        $client->addScope(Google_Service_Sheets::SPREADSHEETS_READONLY);
-        
-        $service = new Google_Service_Sheets($client);
-        
-        // Fetch data from specified sheet
-        $range = $sheetName . '!A1:Z1000';
-        $response = $service->spreadsheets_values->get($spreadsheetId, $range);
-        $values = $response->getValues();
-        
-        return $values ?: [];
-        
-    } catch (Exception $e) {
-        error_log("Error fetching data from $sheetName: " . $e->getMessage());
-        return [];
-    }
+// Validate page parameter
+if (!in_array($page, $allowed_pages)) {
+    $page = 'landing'; // Default to landing if invalid
 }
 
-function fetchData($endpoint) {
-    switch ($endpoint) {
-        case 'products':
-            return fetchDataFromSheet('Products');
-        case 'inventory':
-            return fetchDataFromSheet('Inventory');
-        default:
-            return [];
-    }
-}
+// Check if user is logged in and process user data
+$isLoggedIn = isset($_SESSION['user']);
+$isAdmin = false;
+$userData = [];
+$welcomeMessage = "";
 
-// Get data for the page
-$products = fetchData('products');
-$inventory = fetchData('inventory');
-$currentYear = date('Y');
+if ($isLoggedIn) {
+    $currentSessionUser = $_SESSION['user']; // Work with a copy for processing
+    $processedUserData = null; 
 
-// Debug logging
-error_log('Raw Products data: ' . print_r($products, true));
-error_log('Raw Inventory data: ' . print_r($inventory, true));
-
-// Group products by category
-$categories = [];
-if ($products) {
-    $productData = array_slice($products, 1); // Skip header row
-    foreach ($productData as $product) {
-        $category = $product[2]; // ProductType is in third column
-        if (!isset($categories[$category])) {
-            $categories[$category] = [];
-        }
-        $categories[$category][] = $product;
-    }
-}
-
-error_log('Processed Categories data: ' . print_r($categories, true));
-
-// Determine which page to show
-$currentPage = 'landing';
-$user = json_decode($_SESSION['user'] ?? '{}', true);
-
-// Handle page access and redirects
-if (isset($_GET['page'])) {
-    $requestedPage = $_GET['page'];
-    
-    // Handle login redirects
-    if ($requestedPage === 'login' && isset($_SESSION['user'])) {
-        if ($user['role'] === 'Admin') {
-            header('Location: /?page=admin');
-            exit;
+    if (is_string($currentSessionUser)) {
+        $decodedUser = json_decode($currentSessionUser, true);
+        // Check if decoding was successful and resulted in an array
+        if (is_array($decodedUser)) {
+            $_SESSION['user'] = $decodedUser; // Normalize: store the array back into the session
+            $processedUserData = $decodedUser;
         } else {
-            header('Location: /?page=shop');
-            exit;
+            // Invalid JSON string in session. Treat as not logged in for safety.
+            unset($_SESSION['user']);
+            $isLoggedIn = false; // Update $isLoggedIn status
+        }
+    } elseif (is_array($currentSessionUser)) {
+        $processedUserData = $currentSessionUser; // It's already an array
+    } else {
+        // $_SESSION['user'] is set but is neither a string nor an array (e.g. number, bool).
+        // This is an unexpected/corrupt state. Treat as not logged in.
+        unset($_SESSION['user']);
+        $isLoggedIn = false; // Update $isLoggedIn status
+    }
+
+    // If still logged in after processing and data is valid
+    if ($isLoggedIn && $processedUserData !== null) {
+        $userData = $processedUserData; 
+        $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
+        
+        // Welcome message with user's name if available
+        if (isset($userData['firstName']) || isset($userData['lastName'])) {
+            $welcomeMessage = "Welcome, " . ($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '');
+        }
+    } else {
+        // If $isLoggedIn became false due to session processing, ensure $isAdmin is false and $userData is empty
+        $isAdmin = false;
+        $userData = []; 
+        // $welcomeMessage remains its initial ""
+    }
+}
+// This is the admin authentication check, correctly placed after $isAdmin is determined and before HTML output.
+// Redirect if trying to access admin pages without admin privileges
+if (strpos($page, 'admin') === 0 && !$isAdmin) {
+    header('Location: /?page=login');
+    exit;
+}
+
+// Define flag for files included from index.php
+define('INCLUDED_FROM_INDEX', true);
+
+// Function to get image tag with WebP and fallback
+function getImageTag($imagePath, $altText = '') {
+    $rootDir = __DIR__;
+    $pathInfo = pathinfo($imagePath);
+    $extension = $pathInfo['extension'] ?? '';
+    $basePath = ($pathInfo['dirname'] && $pathInfo['dirname'] !== '.')
+        ? $pathInfo['dirname'] . '/' . $pathInfo['filename']
+        : $pathInfo['filename'];
+
+    if (strtolower($extension) === 'webp') {
+        return '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '">';
+    }
+
+    $webpPath = $basePath . '.webp';
+    $webpAbs = $rootDir . '/' . $webpPath;
+    $fallbackPath = $imagePath;
+
+    if(file_exists($webpAbs)) {
+        return '<picture><source srcset="' . htmlspecialchars($webpPath) . '" type="image/webp">'
+              . '<img src="' . htmlspecialchars($fallbackPath) . '" alt="' . htmlspecialchars($altText) . '"></picture>';
+    }
+    // If PNG fallback doesn't exist either, use original path
+    return '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '">';
+}
+
+// Fetch product data using direct SQL queries
+$categories = [];
+$inventory = [];
+
+try {
+    // Create database connection using config
+    $pdo = new PDO($dsn, $user, $pass, $options);
+    
+    // Fetch product rows; preserve original column names while also providing the aliases used by the shop layout.
+    $stmt = $pdo->query('SELECT id AS productId, name AS productName, productType, basePrice, description, image AS imageUrl FROM products');
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if ($products && is_array($products)) {
+        foreach ($products as $product) {
+            if (!isset($product['productType'])) {
+                continue; // Skip rows without a category
+            }
+            $category = $product['productType'];
+            if (!isset($categories[$category])) {
+                $categories[$category] = [];
+            }
+            /* -------------------------------------------------------------------------
+             * Normalise/duplicate field names so that all front-end sections can work
+             * with a single data structure.
+             *
+             *  –  The "shop" section (sections/shop.php) expects:             
+             *        productId, productName, price, description, imageUrl
+             *  –  The "room_*" sections expect:                    
+             *        id, name, basePrice (or price), description, image
+             *
+             *  We therefore keep the original aliases for the shop and create the
+             *  additional keys required by the room pages.
+             * --------------------------------------------------------------------- */
+
+            // Provide a generic 'price' key (used by both shop and rooms)
+            if (isset($product['basePrice'])) {
+                $product['price'] = $product['basePrice'];
+            }
+
+            // Add stock level
+            $product['stock'] = $stockMap[$product['productId']] ?? 0;
+
+            // Duplicate keys for room pages compatibility
+            $product['id']    = $product['productId']   ?? null;
+            $product['name']  = $product['productName'] ?? null;
+            $product['image'] = $product['imageUrl']    ?? null;
+
+            $categories[$category][] = $product;
         }
     }
     
-    // Check admin access for admin pages
-    if (($requestedPage === 'admin' || $requestedPage === 'admin_inventory') && (!isset($user['role']) || $user['role'] !== 'Admin')) {
-        header('Location: /?page=login');
-        exit;
+    // Fetch inventory with direct SQL query
+    $stmt = $pdo->query('SELECT * FROM inventory');
+    $inventoryItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Format inventory data to match the expected structure
+    $inventory = $inventoryItems;
+    
+    // Build quick lookup of stock levels by productId and by name
+    $stockMap = [];
+    $stockByName = [];
+    $imageByName = [];
+    foreach ($inventory as $invRow) {
+        if (isset($invRow['productId'])) {
+            $pid = $invRow['productId'];
+            $qty = (int)($invRow['stockLevel'] ?? 0);
+            if (!isset($stockMap[$pid])) $stockMap[$pid] = 0;
+            $stockMap[$pid] += $qty;
+        }
+        // also collect by name for rows whose productId may be placeholder
+        if (isset($invRow['name'])) {
+            $nkey = strtolower(trim($invRow['name']));
+            $qty  = (int)($invRow['stockLevel'] ?? 0);
+            if (!isset($stockByName[$nkey])) $stockByName[$nkey] = 0;
+            $stockByName[$nkey] += $qty;
+            if (!empty($invRow['imageUrl'])) {
+                $imageByName[$nkey] = $invRow['imageUrl'];
+            }
+        }
     }
 
-    // Cart is accessible to everyone - login only required at checkout
-    
-    $currentPage = $requestedPage;
+    // Inject stock levels into the already-built products list
+    foreach ($categories as $catKey => &$prodArray) {
+        foreach ($prodArray as &$prod) {
+            if (isset($prod['productId'])) {
+                $nkey = strtolower(trim($prod['productName']));
+                $prod['stock'] = $stockMap[$prod['productId']] ?? ($stockByName[$nkey] ?? 0);
+
+                // if product image missing, try inventory image
+                if (empty($prod['imageUrl']) && isset($imageByName[$nkey])) {
+                    $prod['imageUrl'] = $imageByName[$nkey];
+                    $prod['image'] = $imageByName[$nkey];
+                }
+            }
+        }
+        unset($prod); // break reference
+    }
+    unset($prodArray);
+
+    /* ---------------------------------------------------------------------
+     * Ensure that every product fetched from `products` has a category entry.
+     * Some rows (e.g., P001, P007) have productType NULL.  We infer their
+     * category by looking at the inventory rows that reference the same
+     * productId.  This guarantees the item shows up in the shop & room pages
+     * even if the `products` table is incomplete.
+     * ------------------------------------------------------------------ */
+
+    // Build quick lookup: productId => category (from inventory)
+    $categoryByPid = [];
+    $nameByPid = [];
+    $imageByPid = [];
+    foreach ($inventory as $invRow) {
+        if (!empty($invRow['productId']) && !empty($invRow['name'])) {
+            $nameByPid[$invRow['productId']] = $invRow['name'];
+        }
+        if (!empty($invRow['productId']) && !empty($invRow['imageUrl'])) {
+            $imageByPid[$invRow['productId']] = $invRow['imageUrl'];
+        }
+    }
+
+    // Build set of productIds already present in $categories for quick check
+    $presentPids = [];
+    foreach ($categories as $catArr) {
+        foreach ($catArr as $prod) {
+            if (isset($prod['productId'])) {
+                $presentPids[$prod['productId']] = true;
+            }
+        }
+    }
+
+    foreach ($products as $prod) {
+        $pid = $prod['productId'];
+        if (isset($presentPids[$pid])) continue; // already added
+
+        // Infer category
+        $infCat = $categoryByPid[$pid] ?? null;
+        if (!$infCat) continue; // cannot place without category
+
+        // Copy product & normalise fields similar to earlier logic
+        $prod['productType'] = $infCat;
+        // Provide generic field names
+        if (isset($prod['basePrice'])) {
+            $prod['price'] = $prod['basePrice'];
+        }
+        // Prefer inventory name if available (ensures variant names appear)
+        if (isset($nameByPid[$pid])) {
+            $prod['productName'] = $nameByPid[$pid];
+        }
+        if (empty($prod['imageUrl']) && isset($imageByPid[$pid])) {
+            $prod['imageUrl'] = $imageByPid[$pid];
+        }
+
+        // Stock level
+        $prod['stock'] = $stockMap[$pid] ?? 0;
+        // Duplicate for room pages
+        $prod['id']    = $prod['productId'];
+        $prod['name']  = $prod['productName'];
+        $prod['image'] = $prod['imageUrl'];
+
+        // Finally, push into categories
+        if (!isset($categories[$infCat])) {
+            $categories[$infCat] = [];
+        }
+        $categories[$infCat][] = $prod;
+    }
+
+} catch (PDOException $e) {
+    // Handle database errors
+    error_log('Database Error: ' . $e->getMessage());
+    // You might want to show an error message to the user
 }
 
-// Handle logout
-if ($currentPage === 'login' && isset($_SESSION['user'])) {
-    session_destroy();
-    $_SESSION = array();
+// Set body class based on page
+$bodyClass = '';
+if ($page === 'landing') {
+    $bodyClass = 'is-landing';
+} elseif (strpos($page, 'admin') === 0) {
+    $bodyClass = 'is-admin';
 }
+
+// Determine if this is a fullscreen layout page
+$isFullscreenPage = in_array($page, ['landing']);
+if ($isFullscreenPage) {
+    $bodyClass .= ' body-fullscreen-layout';
+}
+
+// Handle cart data
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+$cartCount = 0;
+$cartTotal = 0;
+
+foreach ($_SESSION['cart'] as $item) {
+    $cartCount += $item['quantity'];
+    $cartTotal += $item['price'] * $item['quantity'];
+}
+
+// Format cart total
+$formattedCartTotal = '$' . number_format($cartTotal, 2);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -131,67 +314,118 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whimsical Frog - Custom Crafts</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box; /* Apply border-box to all elements */
+            margin: 0; /* Reset default margins */
+            padding: 0; /* Reset default padding */
+        }
+        
         body, html {
             color: #222 !important;
-            background: #fff;
+            background: #333; /* Dark grey background */
+            width: 100%; /* Ensure html and body take full width */
+            height: 100%; /* Ensure full height for viewport calculations */
+            overflow-x: hidden; /* Prevent horizontal scrollbar */
+            overflow-y: auto; /* HTML is the primary vertical scroll container */
         }
+        
         label, input, select, textarea, button, p, h1, h2, h3, h4, h5, h6, span, div {
             color: #222 !important;
         }
+        
         .bg-white, .bg-gray-100, .bg-gray-200, .bg-gray-50 {
             color: #222 !important;
         }
+        
         /* Remove forced white text except on dark backgrounds */
         .text-white:not([class*='bg-']) {
             color: #222 !important;
         }
+        
         /* Keep white text on dark backgrounds */
-        .bg-[#6B8E23] .text-white,
-        .bg-[#556B2F] .text-white,
-        .bg-green-700 .text-white,
-        .bg-green-800 .text-white,
-        .bg-black .text-white {
+        .bg-[#6B8E23] .text-white, .bg-[#556B2F] .text-white, .bg-green-700 .text-white, .bg-green-800 .text-white, .bg-black .text-white {
             color: #fff !important;
         }
+        
+        /* --- Admin button colour override --- */
+        body.is-admin button,
+        body.is-admin .button {
+            background: #87ac3a !important;
+            color: #ffffff !important;
+            border: none !important;
+        }
+        body.is-admin button:hover,
+        body.is-admin .button:hover {
+            background: #a3cc4a !important;
+        }
+        
         body {
             font-family: 'Merienda', cursive;
-            background-image: url('images/home_background.png'); /* Fallback for older browsers */
-            background-image: url('images/webp/home_background.webp');
+            background-image: url('images/home_background.png?v=cb2'); /* Fallback */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            min-height: 100vh;
+            min-height: 100%; /* Make body fill html height */
+            /* overflow-x: hidden; Already on html, body */
+            /* overflow-y: auto; Removed, html handles this */
         }
+        
         /* WebP support detection */
         .webp body {
-            background-image: url('images/webp/home_background.webp');
+            background-image: url('images/home_background.webp?v=cb2');
         }
+        
         .no-webp body {
-            background-image: url('images/home_background.png');
+            background-image: url('images/home_background.png?v=cb2');
         }
+        
+        /* Non-landing pages background */
+        body:not(.is-landing) {
+            background-image: url('images/room_main.png?v=cb2'); /* Fallback */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        
+        .webp body:not(.is-landing) {
+            background-image: url('images/room_main.webp?v=cb2');
+        }
+        
+        .no-webp body:not(.is-landing) {
+            background-image: url('images/room_main.png?v=cb2');
+        }
+        
         .font-merienda {
             font-family: 'Merienda', cursive;
         }
+        
         .cottage-bg {
             background: transparent;
         }
+        
         .shelf {
             background-color: #D2B48C;
             border: 2px solid #8B4513;
         }
+        
         .door {
             cursor: pointer;
             transition: transform 0.3s ease;
         }
+        
         .door:hover {
             transform: scale(1.05);
         }
+        
         .shelf:hover {
             transform: translateY(-5px);
         }
+        
         .modal {
             display: none;
             position: fixed;
@@ -203,6 +437,7 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
             background-color: rgba(0,0,0,0.5);
             overflow-y: auto;
         }
+        
         .modal-content {
             background-color: #fefefe;
             margin: 5% auto;
@@ -214,6 +449,7 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
             max-height: 90vh;
             overflow-y: auto;
         }
+        
         .close-button {
             position: absolute;
             right: 20px;
@@ -223,280 +459,376 @@ if ($currentPage === 'login' && isset($_SESSION['user'])) {
             font-weight: bold;
             cursor: pointer;
         }
+        
         .close-button:hover {
             color: #6B8E23;
         }
+        
         .custom-alert {
             display: none;
             position: fixed;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border: 1px solid #f5c6cb;
-            border-radius: 8px;
-            z-index: 200;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background-color: #87ac3a;
+            color: #ffffff;
+            padding: 20px 30px;
+            border: 2px solid #6b8e23;
+            border-radius: 12px;
+            z-index: 99999;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+            min-width: 300px;
+            animation: slideInFromTop 0.3s ease-out;
+        }
+        
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        /* Style for the header gradient and text readability */
+        nav.main-nav {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent); /* Even stronger gradient */
+            padding-top: 5px; /* Reduced padding */
+            padding-bottom: 5px; /* Reduced padding */
+        }
+        
+        nav.main-nav a, /* Targets all links, including title and nav items */
+        nav.main-nav p, /* Targets the tagline */
+        nav.main-nav span { /* Targets spans like cart count/total */
+            color: #87ac3a !important;
+            font-size: 1.1rem; /* Bigger text but still compact */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7); /* subtle shadow for readability */
+            line-height: 1.2; /* maintain header height */
+        }
+        
+        /* Ensure cart text also gets the shadow even if scoped styles override */
+        #cartCount, #cartTotal {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+        
+        nav.main-nav p.tagline { /* Specific styling for the tagline */
+            color: #87ac3a !important;
+            font-size: 1.3rem; /* More prominent tagline */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            margin-top: 0.25rem;
+            line-height: 1.2;
+        }
+        
+        nav.main-nav a:hover { /* Styling for hover state */
+            color: #a3cc4a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+        
+        /* Ensure SVGs within the nav also use green stroke and subtle shadow */
+        nav.main-nav svg {
+            stroke: #87ac3a !important;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.7));
+        }
+        
+        /* Hide elements on landing page */
+        body.is-landing a[href="/?page=shop"],
+        body.is-landing a[href="/?page=cart"],
+        body.is-landing a[href="/?page=login"] {
+            display: none !important;
+        }
+        
+        /* Hide "Back to Room" overlays */
+        .back-to-room-overlay {
+            display: none !important;
+        }
+        
+        /* Fix popup issues */
+        .popup {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        .popup.show, .product-popup.show {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* Room pages should have less spacing */
+        .room-section {
+            padding: 0.25rem !important;
+            margin-top: 0 !important;
+        }
+        
+        /* Main room specific spacing fixes */
+        .room-section .main-room-container {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        
+        /* Full-screen page styling */
+        .body-fullscreen-layout {
+            overflow: hidden; /* Handles structural full-screen behavior */
+        }
+        
+        /* This rule is a fallback in case #mainContent is somehow rendered on a fullscreen page */
+        .body-fullscreen-layout #mainContent {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: 100vh !important;
+        }
+        
+        .fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        /* User welcome message styling */
+        .welcome-message {
+            color: #87ac3a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+        
+        .room-header h1, .room-header p {
+            color: #87ac3a !important;
+            -webkit-text-stroke: 2px #471907;
+            paint-order: stroke fill;
+            text-shadow: -1px -1px 0 #471907,
+                         1px -1px 0 #471907,
+                        -1px  1px 0 #471907,
+                         1px  1px 0 #471907,
+                         0  -1px 0 #471907,
+                         0   1px 0 #471907,
+                        -1px  0   0 #471907,
+                         1px  0   0 #471907;
         }
     </style>
 </head>
-<body class="text-gray-800">
-    <div id="customAlertBox" class="custom-alert">
-        <p id="customAlertMessage"></p>
-        <button onclick="document.getElementById('customAlertBox').style.display = 'none';" class="mt-2 px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600">OK</button>
-    </div>
+<body class="flex flex-col min-h-screen <?php echo $bodyClass; ?>">
 
-    <nav>
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-2xl font-merienda text-[#556B2F]">Whimsical Frog</a>
-                    </div>
-                    <p class="text-lg text-gray-600 ml-6 hidden md:block">Discover unique custom crafts, made with love.</p>
-                </div>
-                <div class="flex items-center">
-                    <?php if (isset($_SESSION['user'])): ?>
-                        <?php if ($user['role'] === 'Admin'): ?>
-                            <a href="/?page=admin" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</a>
-                            <a href="/?page=admin_inventory" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Manage Inventory</a>
+<div id="customAlertBox" class="custom-alert">
+    <p id="customAlertMessage"></p>
+    <button onclick="document.getElementById('customAlertBox').style.display = 'none';" class="mt-3 px-6 py-2 bg-white text-[#87ac3a] rounded-lg hover:bg-gray-100 font-semibold border-2 border-white transition-all duration-200">OK</button>
+</div>
+
+<!-- Main Navigation -->
+<nav class="main-nav sticky top-0 z-50 transition-all duration-300 ease-in-out">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between w-full py-1"> <!-- Main flex row for 3 sections -->
+            <!-- Left Section: Logo and Tagline -->
+            <div class="flex-none">
+                <div id="nav-center-content" class="flex items-center">
+                    <a href="/?page=landing" class="flex items-center text-2xl font-bold font-merienda">
+                        <img src="images/sign_whimsicalfrog.webp" alt="Whimsical Frog" style="height: 60px; margin-right: 8px;" onerror="this.onerror=null; this.src='images/sign_whimsicalfrog.png';">
+                    </a>
+                    <div>
+                        <p class="text-sm font-merienda ml-2 hidden md:block" style="color: #87ac3a !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">Discover unique custom crafts, made with love.</p>
+                        <?php if ($isLoggedIn && !empty($welcomeMessage)): ?>
+                            <p class="welcome-message">
+                                <a href="/?page=account_settings" class="hover:underline text-[#87ac3a]" title="Edit your account settings"><?php echo htmlspecialchars($welcomeMessage); ?></a>
+                            </p>
                         <?php endif; ?>
-                        <a href="/?page=main_room" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Rooms</a>
-                        <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
-                    <?php else: ?>
-                        <a href="/?page=main_room" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Rooms</a>
-                        <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Center Section: Empty space (welcome sign removed) -->
+            <div class="flex-grow"></div>
+            
+            <!-- Right Section: Navigation Links -->
+            <div class="flex-none">
+                <div class="flex items-center">
+                    <?php if ($isAdmin): ?>
+                    <a href="/?page=admin" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Manage</a>
                     <?php endif; ?>
+                    <a href="/?page=shop" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Shop</a>
                     <a href="/?page=cart" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium relative inline-flex items-center">
-                        <div class="flex items-center space-x-2">
-                            <span id="cartCount" class="text-sm font-medium whitespace-nowrap">0 items</span>
-                            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center space-x-1 md:space-x-2">
+                            <span id="cartCount" class="text-sm font-medium whitespace-nowrap"><?php echo $cartCount; ?> items</span>
+                            <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <span id="cartTotal" class="text-sm font-medium whitespace-nowrap">$0.00</span>
+                            <span id="cartTotal" class="text-sm font-medium whitespace-nowrap hidden md:inline"><?php echo $formattedCartTotal; ?></span>
                         </div>
                     </a>
-                    <?php if (isset($_SESSION['user'])): ?>
-                        <a href="#" onclick="logout()" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Logout</a>
+                    <?php if ($isLoggedIn): ?>
+                        <a href="/logout.php" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium" onclick="logout(); return false;">Logout</a>
                     <?php else: ?>
                         <a href="/?page=login" class="text-gray-700 hover:text-[#6B8E23] px-3 py-2 rounded-md text-sm font-medium">Login</a>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <main class="max-w-7xl mx-auto py-2 sm:px-2 lg:px-4">
-        <?php
-        switch ($currentPage) {
-            case 'login':
-                include 'sections/login.php';
-                break;
-            case 'register':
-                include 'sections/register.php';
-                break;
-            case 'admin':
-                if ($user['role'] === 'Admin') {
-                    include 'sections/admin.php';
-                } else {
-                    header('Location: /?page=login');
-                    exit;
-                }
-                break;
-            case 'admin_inventory':
-                if ($user['role'] === 'Admin') {
-                    include 'sections/admin_inventory.php';
-                } else {
-                    header('Location: /?page=login');
-                    exit;
-                }
-                break;
-            case 'shop':
-                include 'sections/shop.php';
-                break;
-            case 'cart':
-                include 'sections/cart.php';
-                break;
-            case 'main_room':
-                include 'sections/main_room.php';
-                break;
-            case 'room_artwork':
-                include 'sections/room_artwork.php';
-                break;
-            case 'room_tshirts':
-                include 'sections/room_tshirts.php';
-                break;
-            case 'room_tumblers':
-                include 'sections/room_tumblers.php';
-                break;
-            case 'room_sublimation':
-                include 'sections/room_sublimation.php';
-                break;
-            case 'room_windowwraps':
-                include 'sections/room_windowwraps.php';
-                break;
-            default:
-                include 'sections/landing.php';
-                break;
+<?php if ($isFullscreenPage): ?>
+    <div class="fullscreen-container">
+        <?php include "sections/{$page}.php"; ?>
+    </div>
+<?php else: ?>
+    <main class="flex-grow container mx-auto p-2 md:p-4 lg:p-6 cottage-bg" id="mainContent">
+        <?php 
+        // Include the appropriate page content
+        $pageFile = 'sections/' . $page . '.php';
+        
+        // Handle admin section parameter for the main admin page
+        if ($page === 'admin' && isset($_GET['section'])) {
+            $section = $_GET['section'];
+            $sectionFile = 'sections/admin_' . $section . '.php';
+            
+            // Check if the section file exists
+            if (file_exists($sectionFile)) {
+                include $pageFile; // Include the main admin page first
+                // The admin.php page will handle including the section file
+            } else {
+                include $pageFile; // Just include the main admin dashboard
+            }
+        } else if (file_exists($pageFile)) {
+            include $pageFile;
+        } else {
+            echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Page not found</h1></div>';
         }
         ?>
     </main>
+<?php endif; ?>
 
-    <!-- Product Modal -->
-    <div id="productModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeProductModal()">&times;</span>
-            <div id="modalContent" class="p-4">
-                <!-- Content will be dynamically inserted here -->
-            </div>
+<!-- Product Modal -->
+<div id="productModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeProductModal()">&times;</span>
+        <div id="modalContent" class="p-4">
+            <!-- Content will be dynamically inserted here -->
         </div>
     </div>
+</div>
 
-    <!-- Load cart script first -->
-    <script src="/js/cart.js"></script>
-    
-    <!-- WebP Support Detection -->
-    <script>
-        // Detect WebP support
-        function supportsWebP() {
-            return new Promise(resolve => {
-                const webP = new Image();
-                webP.onload = webP.onerror = () => resolve(webP.height === 2);
-                webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
-            });
+<!-- Load cart script first (only on non-admin pages) -->
+<?php if ($page !== 'admin'): ?>
+<script src="js/cart.js?v=<?php echo time(); ?>"></script>
+<?php endif; ?>
+
+<!-- WebP Support Detection -->
+<script>
+    // Detect WebP support
+    (function(){
+        var d=document.createElement('div');
+        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==\" onerror=\"document.documentElement.className += \' no-webp\';\" onload=\"document.documentElement.className += \' webp\';\">';
+    })();
+</script>
+
+<!-- Then load other scripts -->
+<script>
+    // --- DOM Elements ---
+    const enterShopDoor = document.getElementById('enterShopDoor');
+    const loginForm = document.getElementById('loginForm');
+    const cartCountEl = document.getElementById('cartCount'); // Renamed to avoid conflict with cartCount variable
+    const mainContent = document.getElementById('mainContent');
+
+    // Update cart count when cart changes
+    function updateCartDisplay() { // Renamed to avoid conflict with cart.js if any
+        if (typeof window.cart !== 'undefined' && cartCountEl) { // Check if cartCountEl exists
+            const count = window.cart.items.reduce((total, item) => total + item.quantity, 0);
+            cartCountEl.textContent = count + ' items';
+            // cartCountEl.style.display = count > 0 ? 'flex' : 'none'; // This might hide the "0 items" text, consider UX
+        } else if (cartCountEl) {
+            // If cart is not loaded (admin pages), keep the server-side count
+            // cartCountEl.textContent remains as set by PHP
         }
+    }
+
+    // Listen for cart updates
+    window.addEventListener('cartUpdated', updateCartDisplay);
+
+    // Initial cart count update
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only initialize cart on non-admin pages to avoid conflicts
+        const isAdminPage = window.location.search.includes('page=admin');
         
-        // Add appropriate class to html element
-        supportsWebP().then(supported => {
-            document.documentElement.classList.add(supported ? 'webp' : 'no-webp');
-        });
-    </script>
-    
-    <!-- Then load other scripts -->
-    <script>
-        // --- DOM Elements ---
-        const enterShopDoor = document.getElementById('enterShopDoor');
-        const loginForm = document.getElementById('loginForm');
-        const cartCount = document.getElementById('cartCount');
-
-        // Update cart count when cart changes
-        function updateCartCount() {
-            if (typeof window.cart !== 'undefined') {
-                const count = window.cart.items.reduce((total, item) => total + item.quantity, 0);
-                cartCount.textContent = count + ' items';
-                cartCount.style.display = count > 0 ? 'flex' : 'none';
-            }
-        }
-
-        // Listen for cart updates
-        window.addEventListener('cartUpdated', updateCartCount);
-
-        // Initial cart count update
-        document.addEventListener('DOMContentLoaded', function() {
+        if (!isAdminPage) {
             console.log('DOM loaded, checking cart initialization...');
             if (typeof window.cart === 'undefined') {
                 console.error('Cart not initialized properly');
             } else {
                 console.log('Cart is initialized and ready');
-                updateCartCount();
+                updateCartDisplay();
             }
-        });
-
-        // --- Event Listeners ---
-        if (enterShopDoor) {
-            enterShopDoor.addEventListener('click', () => {
-                console.log('Enter shop door clicked');
-                window.location.href = '/?page=shop';
-            });
         }
         
-        if (loginForm) {
-            loginForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const errorMessage = document.getElementById('errorMessage');
-                
-                try {
-                    const response = await fetch('http://localhost:3000/api/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ username, password })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Login failed');
-                    }
-                    
-                    // Store user data in both session storage and PHP session
-                    sessionStorage.setItem('user', JSON.stringify(data));
-                    
-                    // Store in PHP session via AJAX
-                    await fetch('/set_session.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data)
-                    });
-                    
-                    // Redirect based on role
-                    if (data.role === 'Admin') {
-                        window.location.href = '/?page=admin';
-                    } else {
-                        window.location.href = '/?page=shop';
-                    }
-                    
-                } catch (error) {
-                    errorMessage.textContent = error.message;
-                    errorMessage.classList.remove('hidden');
-                }
-            });
-        }
+        // Removed document-level click handler to avoid interference with back button
+    });
 
-        function logout() {
-            // Clear client-side session storage
-            sessionStorage.removeItem('user');
+    // --- Event Listeners ---
+    if (enterShopDoor) {
+        enterShopDoor.addEventListener('click', () => {
+            console.log('Enter shop door clicked');
+            window.location.href = '/?page=shop';
+        });
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
             
-            // First clear PHP session
-            fetch('/set_session.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ clear: true })
-            })
-            .then(() => {
-                // Then clear Node.js session
-                return fetch('http://localhost:3000/api/logout', {
+            try {
+                // Direct SQL query handled by server-side code
+                const response = await fetch('/process_login.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    credentials: 'include'
+                    body: JSON.stringify({ username, password })
                 });
-            })
-            .then(response => {
+                
+                const data = await response.json();
+                
                 if (!response.ok) {
-                    throw new Error('Logout failed');
+                    throw new Error(data.error || 'Login failed');
                 }
-                // Force reload the page to clear any cached state
-                window.location.href = '/?page=login';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Still redirect to login even if there's an error
-                window.location.href = '/?page=login';
-            });
-        }
-    </script>
+                
+                // Store user data in sessionStorage
+                const userObj = data.user ? data.user : data; // support both formats
+                sessionStorage.setItem('user', JSON.stringify(userObj));
+                
+                // Redirect based on role
+                if (data.user && data.user.role === 'Admin') {
+                    window.location.href = '/?page=admin';
+                } else {
+                    window.location.href = '/?page=shop';
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    }
+
+    function logout() {
+        // Clear client-side session storage
+        sessionStorage.removeItem('user');
+        
+        // Clear PHP session by redirecting to logout.php
+        // logout.php should handle session_destroy() and redirect
+        window.location.href = '/logout.php'; 
+    }
+</script>
 </body>
 </html>

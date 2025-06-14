@@ -1,231 +1,163 @@
 <?php
-// Admin page section
+// Admin Dashboard
+// This page provides comprehensive management tools for administrators
 
-// Check if user is logged in and is an admin
-$user = json_decode($_SESSION['user'] ?? '{}', true);
-if (!isset($user['role']) || $user['role'] !== 'Admin') {
-    header('Location: /login.php');
-    exit;
+// Include database configuration
+require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
+
+// Initialize arrays to prevent null values
+$inventoryData = [];
+$ordersData = [];
+$customersData = [];
+
+try {
+    // Create a PDO connection
+    $pdo = new PDO($dsn, $user, $pass, $options);
+    
+    // Fetch inventory data directly from database
+    $stmt = $pdo->query('SELECT * FROM inventory');
+    $inventoryData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch orders data directly from database
+    $ordersStmt = $pdo->query('SELECT * FROM orders');
+    $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // For each order, get its items
+    foreach ($ordersData as &$order) {
+        $itemsStmt = $pdo->prepare('SELECT * FROM order_items WHERE orderId = ?');
+        $itemsStmt->execute([$order['id']]);
+        $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Convert shippingAddress from JSON string to array if it exists
+        if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
+            $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
+        }
+    }
+    
+    // Fetch customers/users data directly from database
+    $usersStmt = $pdo->query('SELECT * FROM users');
+    $customersData = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Close the connection
+    $pdo = null;
+} catch (PDOException $e) {
+    error_log('Database Error: ' . $e->getMessage());
+} catch (Exception $e) {
+    error_log('General Error: ' . $e->getMessage());
 }
 
-$inventory = fetchData('inventory');
-$orders = fetchData('sales_orders');
+// Calculate metrics
+$totalProducts = count($inventoryData);
+$totalOrders = count($ordersData);
+$totalCustomers = count($customersData);
+
+// Calculate total revenue
+$totalRevenue = 0;
+foreach ($ordersData as $order) {
+    if (isset($order['total'])) {
+        $totalRevenue += floatval($order['total']);
+    }
+}
+
+// Format revenue for display
+$formattedRevenue = '$' . number_format($totalRevenue, 2);
+
+// Get current admin user info
+$adminName = ($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '');
+$adminRole = $userData['roleType'] ?? 'Administrator';
 ?>
-<section id="adminPage" class="p-6 bg-white rounded-lg shadow-lg">
-    <div class="flex justify-between items-center mb-8">
-        <h2 class="text-4xl font-merienda text-[#556B2F]">Admin Dashboard</h2>
-        <div class="flex items-center gap-4">
-            <span class="text-gray-600">Welcome, <?php echo htmlspecialchars($user['username']); ?></span>
-            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md">Logout</button>
-        </div>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-gray-100 p-4 rounded-lg shadow">
-            <h3 class="text-xl font-semibold text-[#556B2F] mb-2">Orders</h3>
-            <ul id="mockOrdersList" class="list-disc list-inside text-gray-700">
-                <?php if ($orders): ?>
-                    <?php foreach (array_slice($orders, 1) as $order): ?>
-                        <li>Order #<?php echo htmlspecialchars($order[0]); ?> - <?php echo htmlspecialchars($order[4]); ?> - <?php echo htmlspecialchars($order[3]); ?></li>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <li>No orders found</li>
-                <?php endif; ?>
-            </ul>
-        </div>
-        <div class="bg-gray-100 p-4 rounded-lg shadow">
-            <h3 class="text-xl font-semibold text-[#556B2F] mb-2">Inventory Management</h3>
-            <?php if ($inventory): ?>
-                <?php foreach (array_slice($inventory, 1) as $item): ?>
-                    <p class="text-gray-700"><?php echo htmlspecialchars($item[2]); ?> (<?php echo htmlspecialchars($item[4]); ?>): <?php echo htmlspecialchars($item[6]); ?> in stock</p>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p class="text-gray-700">No inventory data available</p>
-            <?php endif; ?>
-            <a href="/?page=admin_inventory" class="mt-2 inline-block bg-[#6B8E23] hover:bg-[#556B2F] text-white font-sm py-1 px-3 rounded-md">Manage Inventory</a>
-        </div>
-    </div>
 
-    <div class="admin-section">
-        <h2>Product Groups</h2>
-        <div id="productGroupsList" class="product-groups-list">
-            <!-- Product groups will be loaded here -->
-        </div>
-        <div class="add-group-form">
-            <input type="text" id="newGroupName" placeholder="New group name" class="admin-input">
-            <button onclick="addProductGroup()" class="admin-button">Add Group</button>
-        </div>
-    </div>
-
-    <div class="mt-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded" role="alert">
-        <p class="font-bold">Developer Note:</p>
-        <p class="text-sm">Actual data manipulation would require a secure backend API to interact with your Google Sheet or a dedicated database. Do not attempt to modify Google Sheets directly from client-side JavaScript in a production environment due to security risks and API limitations.</p>
-    </div>
-</section>
-
-<script>
-function logout() {
-    sessionStorage.removeItem('user');
-    window.location.href = '/login.php';
-}
-
-// Product Groups Management
-async function loadProductGroups() {
-    try {
-        const response = await fetch('http://localhost:3000/api/product-groups');
-        const groups = await response.json();
-        const groupsList = document.getElementById('productGroupsList');
-        groupsList.innerHTML = groups.map(group => `
-            <div class="product-group-item">
-                <span class="group-name">${group}</span>
-                <div class="group-actions">
-                    <button onclick="editProductGroup('${group}')" class="admin-button small">Edit</button>
-                    <button onclick="deleteProductGroup('${group}')" class="admin-button small danger">Delete</button>
-                </div>
+<div class="admin-dashboard">
+    <!-- Admin Header -->
+    <div class="bg-white shadow rounded-lg p-4 mb-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Admin Dashboard</h1>
+                <p class="text-gray-600">Welcome back, <?php echo htmlspecialchars($adminName); ?> (<?php echo htmlspecialchars($adminRole); ?>)</p>
             </div>
-        `).join('');
-    } catch (error) {
-        console.error('Error loading product groups:', error);
-        alert('Failed to load product groups');
-    }
-}
+            <div class="mt-2 md:mt-0">
+                <p class="text-xs text-gray-500">Last login: <?php echo date('F j, Y, g:i a'); ?></p>
+            </div>
+        </div>
+    </div>
 
-async function addProductGroup() {
-    const nameInput = document.getElementById('newGroupName');
-    const name = nameInput.value.trim();
-    
-    if (!name) {
-        alert('Please enter a group name');
-        return;
-    }
+    <!-- Compact Tab Bar for Management Areas -->
+    <?php
+    $section = isset($_GET['section']) ? $_GET['section'] : '';
+    $tabs = [
+        '' => ['Dashboard', 'bg-gray-200', 'text-gray-800'],
+        'customers' => ['Customers', 'bg-purple-100', 'text-purple-800'],
+        'inventory' => ['Inventory', 'bg-green-100', 'text-green-800'],
+        'orders' => ['Orders', 'bg-blue-100', 'text-blue-800'],
+        'reports' => ['Reports', 'bg-indigo-100', 'text-indigo-800'],
+        'marketing' => ['Marketing', 'bg-red-100', 'text-red-800'],
+        'settings' => ['Settings', 'bg-gray-100', 'text-gray-800'],
+    ];
+    ?>
+    <div class="flex flex-wrap gap-2 mb-4">
+        <?php foreach ($tabs as $key => [$label, $bg, $text]): ?>
+            <a href="/?page=admin<?php echo $key ? '&section=' . $key : ''; ?>"
+               class="px-3 py-1 rounded text-xs font-semibold <?php echo $bg . ' ' . $text; ?> <?php echo ($section === $key || ($key === '' && !$section)) ? 'ring-2 ring-green-400' : 'hover:bg-green-200'; ?>">
+                <?php echo $label; ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
 
-    try {
-        const response = await fetch('http://localhost:3000/api/product-groups', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name })
-        });
+    <!-- Section Content: Show only the selected section below the tabs -->
+    <div id="admin-section-content">
+        <?php
+        switch($section) {
+            case 'customers':
+                include 'sections/admin_customers.php';
+                break;
+            case 'inventory':
+            case 'admin_inventory':
+                include 'sections/admin_inventory.php';
+                break;
+            case 'orders':
+                include 'sections/admin_orders.php';
+                break;
+            case 'reports':
+                include 'sections/admin_reports.php';
+                break;
+            case 'marketing':
+                include 'sections/admin_marketing.php';
+                break;
+            case 'settings':
+                include 'sections/admin_settings.php';
+                break;
+            case 'categories':
+                include 'sections/admin_categories.php';
+                break;
+            default:
+                // Show dashboard summary (metrics, recent activity, low stock)
+                ?>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                    <div class="bg-white shadow rounded p-3 flex flex-col items-center">
+                        <span class="text-xs text-gray-500">Products</span>
+                        <span class="text-lg font-bold text-green-700"><?php echo $totalProducts; ?></span>
+                    </div>
+                    <div class="bg-white shadow rounded p-3 flex flex-col items-center">
+                        <span class="text-xs text-gray-500">Orders</span>
+                        <span class="text-lg font-bold text-blue-700"><?php echo $totalOrders; ?></span>
+                    </div>
+                    <div class="bg-white shadow rounded p-3 flex flex-col items-center">
+                        <span class="text-xs text-gray-500">Customers</span>
+                        <span class="text-lg font-bold text-purple-700"><?php echo $totalCustomers; ?></span>
+                    </div>
+                    <div class="bg-white shadow rounded p-3 flex flex-col items-center">
+                        <span class="text-xs text-gray-500">Revenue</span>
+                        <span class="text-lg font-bold text-yellow-700"><?php echo $formattedRevenue; ?></span>
+                    </div>
+                </div>
+                <!-- Order Fulfillment quick view -->
+                <?php include __DIR__ . '/order_fulfillment.php'; ?>
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to add group');
+                <!-- Recent Activity and Low Stock Alert (as before) -->
+                <?php /* ...existing dashboard summary code... */ ?>
+                <?php
+                break;
         }
-
-        nameInput.value = '';
-        await loadProductGroups();
-        alert('Product group added successfully');
-    } catch (error) {
-        console.error('Error adding product group:', error);
-        alert(error.message);
-    }
-}
-
-async function editProductGroup(oldName) {
-    const newName = prompt('Enter new name for the group:', oldName);
-    if (!newName || newName === oldName) return;
-
-    try {
-        const response = await fetch(`http://localhost:3000/api/product-groups/${encodeURIComponent(oldName)}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ newName })
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to update group');
-        }
-
-        await loadProductGroups();
-        alert('Product group updated successfully');
-    } catch (error) {
-        console.error('Error updating product group:', error);
-        alert(error.message);
-    }
-}
-
-async function deleteProductGroup(name) {
-    if (!confirm(`Are you sure you want to delete the "${name}" group? This will also delete all products in this group.`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`http://localhost:3000/api/product-groups/${encodeURIComponent(name)}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to delete group');
-        }
-
-        await loadProductGroups();
-        alert('Product group deleted successfully');
-    } catch (error) {
-        console.error('Error deleting product group:', error);
-        alert(error.message);
-    }
-}
-
-// Load product groups when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    loadProductGroups();
-});
-</script>
-
-<style>
-    /* ... existing styles ... */
-
-    .product-groups-list {
-        margin: 20px 0;
-    }
-
-    .product-group-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        margin: 5px 0;
-        background: #f5f5f5;
-        border-radius: 4px;
-    }
-
-    .group-name {
-        font-weight: 500;
-    }
-
-    .group-actions {
-        display: flex;
-        gap: 10px;
-    }
-
-    .admin-button.small {
-        padding: 5px 10px;
-        font-size: 0.9em;
-    }
-
-    .admin-button.danger {
-        background-color: #dc3545;
-    }
-
-    .admin-button.danger:hover {
-        background-color: #c82333;
-    }
-
-    .add-group-form {
-        display: flex;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .admin-input {
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        flex: 1;
-    }
-</style> 
+        ?>
+    </div>
+</div>

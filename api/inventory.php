@@ -1,56 +1,88 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Set error reporting for debugging
+ini_set('display_errors', 0); // Turn off display errors for production
+error_reporting(E_ALL);
 
-// Handle preflight requests
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+// Include the configuration file with correct path
+require_once __DIR__ . '/config.php'; // Use absolute path to avoid path issues
+
+// Set CORS headers - only after making sure no output has been sent
+if (!headers_sent()) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
+    header('Content-Type: application/json');
 }
 
-// Load configuration and environment variables
-require_once __DIR__ . '/../config.php';
-
-// Include Google API client (you'll need to install this via Composer)
-require_once __DIR__ . '/../vendor/autoload.php';
+// Handle preflight OPTIONS request
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    if (!headers_sent()) {
+        http_response_code(200);
+    }
+    exit;
+}
 
 try {
-    // Configuration
-    $spreadsheetId = getenv('SPREADSHEET_ID');
-    $credentialsPath = __DIR__ . '/../credentials.json';
+    // Create database connection using config
+    $pdo = new PDO($dsn, $user, $pass, $options);
     
-    if (!$spreadsheetId) {
-        throw new Exception('SPREADSHEET_ID environment variable not set');
+    // Build query based on filters
+    $query = "SELECT * FROM inventory"; // This will include costPrice and retailPrice fields
+    $params = [];
+    $whereConditions = [];
+    
+    // Add search filter
+    if (isset($_GET['search']) && !empty($_GET['search'])) {
+        $search = '%' . $_GET['search'] . '%';
+        $whereConditions[] = "(name LIKE ? OR category LIKE ? OR sku LIKE ? OR description LIKE ?)";
+        $params = array_merge($params, [$search, $search, $search, $search]);
     }
     
-    if (!file_exists($credentialsPath)) {
-        throw new Exception('credentials.json file not found');
+    // Add category filter
+    if (isset($_GET['category']) && !empty($_GET['category'])) {
+        $whereConditions[] = "category = ?";
+        $params[] = $_GET['category'];
     }
     
-    // Initialize Google Sheets client
-    $client = new Google_Client();
-    $client->setAuthConfig($credentialsPath);
-    $client->addScope(Google_Service_Sheets::SPREADSHEETS_READONLY);
-    
-    $service = new Google_Service_Sheets($client);
-    
-    // Fetch data from Inventory sheet
-    $range = 'Inventory!A1:Z1000';
-    $response = $service->spreadsheets_values->get($spreadsheetId, $range);
-    $values = $response->getValues();
-    
-    if (empty($values)) {
-        echo json_encode([]);
-    } else {
-        echo json_encode($values);
+    // Add WHERE clause if conditions exist
+    if (!empty($whereConditions)) {
+        $query .= " WHERE " . implode(" AND ", $whereConditions);
     }
     
-} catch (Exception $e) {
-    http_response_code(500);
+    // Add sorting
+    $query .= " ORDER BY name ASC";
+    
+    // Prepare and execute query
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+    $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Output inventory data directly as an array (not wrapped in a success/debug object)
+    // This matches the format expected by the JavaScript in admin_inventory.php
+    echo json_encode($inventory);
+    
+} catch (PDOException $e) {
+    // Handle database errors with detailed information
+    if (!headers_sent()) {
+        http_response_code(500);
+    }
     echo json_encode([
-        'error' => 'Failed to fetch data from Google Sheets',
-        'details' => $e->getMessage()
+        'error' => 'Database error',
+        'message' => $e->getMessage()
     ]);
+    // Log error for debugging
+    error_log("Inventory API Database Error: " . $e->getMessage());
+    exit;
+} catch (Exception $e) {
+    // Handle general errors
+    if (!headers_sent()) {
+        http_response_code(500);
+    }
+    echo json_encode([
+        'error' => 'General error',
+        'message' => $e->getMessage()
+    ]);
+    // Log error for debugging
+    error_log("Inventory API General Error: " . $e->getMessage());
+    exit;
 }
-?> 

@@ -317,12 +317,9 @@ $messageType = $_GET['type'] ?? '';
                     <?php foreach ($inventoryItems as $item): ?>
                     <tr data-id="<?= htmlspecialchars($item['id']) ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
                         <td>
-                            <?php if (!empty($item['imageUrl'])): ?>
-                                <img src="<?= htmlspecialchars($item['imageUrl']) ?>" alt="thumb" style="width:40px;height:40px;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px #bbb;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                <div style="display:none; width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>
-                            <?php else: ?>
-                                <div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>
-                            <?php endif; ?>
+                            <div class="thumbnail-container" data-product-id="<?= htmlspecialchars($item['productId']) ?>" style="width:40px;height:40px;">
+                                <div class="thumbnail-loading" style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">...</div>
+                            </div>
                         </td>
                         <td class="editable" data-field="name"><?= htmlspecialchars($item['name']) ?></td>
                         <td><?= htmlspecialchars($item['category'] ?? '') ?></td>
@@ -406,26 +403,15 @@ $messageType = $_GET['type'] ?? '';
                     <label for="description" class="block text-gray-700">Description</label>
                     <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" rows="2" readonly><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                 </div>
-                <?php if (!empty($editItem['imageUrl'])): ?>
                 <div>
-                    <label class="block text-gray-700">Product Image</label>
+                    <label class="block text-gray-700">Product Images</label>
                     <div class="image-preview mt-2">
-                        <img src="<?= htmlspecialchars($editItem['imageUrl']); ?>" alt="Product Image" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <div style="display:none; width:200px;height:200px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#999;flex-direction:column;">
-                            <div>📷</div>
-                            <div>Image not available</div>
+                        <div id="viewModalImagesList" class="grid grid-cols-2 gap-3">
+                            <!-- Images will be loaded dynamically -->
+                            <div class="col-span-2 text-center text-gray-500 text-sm" id="viewModalImagesLoading">Loading images...</div>
                         </div>
                     </div>
                 </div>
-                <?php else: ?>
-                <div>
-                    <label class="block text-gray-700">Product Image</label>
-                    <div class="image-preview mt-2">
-                        <img src="images/products/placeholder.png" alt="No image available" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); opacity: 0.5;">
-                        <p class="text-gray-500 text-sm mt-1">No image available</p>
-                    </div>
-                </div>
-                <?php endif; ?>
             </div>
 
             <div class="modal-form-cost-column">
@@ -1514,20 +1500,61 @@ function uploadSelectedImages() {
     });
 }
 
-function loadCurrentImages(productId) {
+function loadCurrentImages(productId, isViewModal = false) {
     if (!productId) return;
     
     fetch(`/api/get_product_images.php?productId=${encodeURIComponent(productId)}`)
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            displayCurrentImages(data.images);
+            if (isViewModal) {
+                displayViewModalImages(data.images);
+            } else {
+                displayCurrentImages(data.images);
+            }
         } else {
             console.error('Failed to load images:', data.error);
+            if (isViewModal) {
+                const container = document.getElementById('viewModalImagesList');
+                const loadingDiv = document.getElementById('viewModalImagesLoading');
+                if (loadingDiv) loadingDiv.remove();
+                if (container) container.innerHTML = '<div class="col-span-2 text-center text-gray-500 text-sm">Failed to load images</div>';
+            }
         }
     })
     .catch(error => {
         console.error('Error loading images:', error);
+        if (isViewModal) {
+            const container = document.getElementById('viewModalImagesList');
+            const loadingDiv = document.getElementById('viewModalImagesLoading');
+            if (loadingDiv) loadingDiv.remove();
+            if (container) container.innerHTML = '<div class="col-span-2 text-center text-gray-500 text-sm">Error loading images</div>';
+        }
+    });
+}
+
+function loadThumbnailImage(productId, container) {
+    if (!productId || !container) return;
+    
+    fetch(`/api/get_product_images.php?productId=${encodeURIComponent(productId)}`)
+    .then(response => response.json())
+    .then(data => {
+        const loadingDiv = container.querySelector('.thumbnail-loading');
+        if (loadingDiv) loadingDiv.remove();
+        
+        if (data.success && data.images && data.images.length > 0) {
+            // Find primary image or use first image
+            const primaryImage = data.images.find(img => img.is_primary) || data.images[0];
+            container.innerHTML = `<img src="${primaryImage.image_path}" alt="thumb" style="width:40px;height:40px;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px #bbb;" onerror="this.parentElement.innerHTML='<div style=&quot;width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;&quot;>No img</div>'">`;
+        } else {
+            container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading thumbnail:', error);
+        const loadingDiv = container.querySelector('.thumbnail-loading');
+        if (loadingDiv) loadingDiv.remove();
+        container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>';
     });
 }
 
@@ -1558,6 +1585,62 @@ function displayCurrentImages(images) {
             </div>
         `;
         container.appendChild(imageDiv);
+    });
+}
+
+function displayViewModalImages(images) {
+    const container = document.getElementById('viewModalImagesList');
+    const loadingDiv = document.getElementById('viewModalImagesLoading');
+    
+    if (loadingDiv) {
+        loadingDiv.remove();
+    }
+    
+    if (!images || images.length === 0) {
+        container.innerHTML = '<div class="col-span-2 text-center text-gray-500 text-sm">No images available</div>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    images.forEach(image => {
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'relative bg-white border rounded-lg overflow-hidden shadow-sm';
+        imageDiv.innerHTML = `
+            <div class="aspect-square">
+                <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;aspect-square bg-gray-100 flex items-center justify-center text-gray-500 text-xs&quot;>📷<br/>No image</div>'">
+            </div>
+            <div class="p-1">
+                <div class="text-xs text-gray-600 truncate">${image.image_path.split('/').pop()}</div>
+                ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
+            </div>
+        `;
+        container.appendChild(imageDiv);
+    });
+}
+
+function loadThumbnailImage(productId, container) {
+    if (!productId || !container) return;
+    
+    fetch(`/api/get_product_images.php?productId=${encodeURIComponent(productId)}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.images && data.images.length > 0) {
+            // Find primary image or use first image
+            const primaryImage = data.images.find(img => img.is_primary) || data.images[0];
+            
+            container.innerHTML = `
+                <img src="${primaryImage.image_path}" alt="thumb" 
+                     style="width:40px;height:40px;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px #bbb;" 
+                     onerror="this.parentElement.innerHTML='<div style=&quot;width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;&quot;>No img</div>'">
+            `;
+        } else {
+            container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading thumbnail for', productId, ':', error);
+        container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>';
     });
 }
 
@@ -1620,18 +1703,50 @@ function deleteProductImage(imageId, productId) {
 
 // Load current images when modal opens
 document.addEventListener('DOMContentLoaded', function() {
-    if (modalMode === 'edit') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+    const viewId = urlParams.get('view');
+    
+    if (modalMode === 'edit' && editId) {
         // Wait a bit for the DOM to be fully ready
         setTimeout(() => {
             const productIdField = document.getElementById('productIdDisplay');
             if (productIdField && productIdField.value) {
-                console.log('Loading current images for product:', productIdField.value);
-                loadCurrentImages(productIdField.value);
+                console.log('Loading current images for edit modal:', productIdField.value);
+                loadCurrentImages(productIdField.value, false);
             } else {
                 console.log('No product ID found for loading images');
             }
         }, 100);
+         } else if (modalMode === 'view' && viewId) {
+        // Load images for view modal
+        setTimeout(() => {
+            // For view modal, we need to extract the productId from the edit item
+            const productId = '<?= htmlspecialchars($editItem['productId'] ?? '') ?>';
+            if (productId) {
+                console.log('Loading current images for view modal:', productId);
+                loadCurrentImages(productId, true);
+            } else {
+                console.log('No product ID found for view modal');
+                const container = document.getElementById('viewModalImagesList');
+                const loadingDiv = document.getElementById('viewModalImagesLoading');
+                if (loadingDiv) loadingDiv.remove();
+                if (container) container.innerHTML = '<div class="col-span-2 text-center text-gray-500 text-sm">No product ID available</div>';
+            }
+        }, 100);
     }
+    
+    // Load thumbnails for inventory list
+    const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
+    thumbnailContainers.forEach((container, index) => {
+        const productId = container.dataset.productId;
+        if (productId) {
+            // Stagger the requests to avoid overwhelming the server
+            setTimeout(() => {
+                loadThumbnailImage(productId, container);
+            }, index * 50); // 50ms delay between each request
+        }
+    });
 });
 
 // ==================== INLINE EDITING FUNCTIONALITY ====================
@@ -1784,3 +1899,4 @@ document.addEventListener('DOMContentLoaded', function() {
 $output = ob_get_clean();
 echo $output;
 ?>
+

@@ -97,6 +97,10 @@ fi
 # Clean up verification script
 rm verify_deployment.txt
 
+# Fix permissions automatically after deployment
+echo -e "${GREEN}🔧 Fixing image permissions on server...${NC}"
+curl -s "https://whimsicalfrog.us/api/fix_permissions.php" > /dev/null 2>&1 || true
+
 # Test image accessibility
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://whimsicalfrog.com/images/products/TS002A.webp")

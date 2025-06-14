@@ -2,7 +2,7 @@
 echo "<h2>Testing get_product_images API for TS001</h2>";
 
 // Test the API directly
-$url = 'https://whimsicalfrog.com/api/get_product_images.php?productId=TS001';
+$url = 'https://whimsicalfrog.us/api/get_product_images.php?productId=TS001';
 $response = file_get_contents($url);
 
 echo "<h3>API Response:</h3>";
@@ -32,5 +32,6 @@ if ($data) {
     }
 } else {
     echo "<p>Failed to parse JSON response</p>";
+    echo "<p>JSON Error: " . json_last_error_msg() . "</p>";
 }
 ?> 

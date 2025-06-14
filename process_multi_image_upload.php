@@ -51,10 +51,18 @@ try {
         $stmt->execute([$productId]);
     }
     
-    // Get current image count for this product to determine naming
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM product_images WHERE product_id = ?");
+    // Get existing image paths to determine what letter suffixes are already used
+    $stmt = $pdo->prepare("SELECT image_path FROM product_images WHERE product_id = ?");
     $stmt->execute([$productId]);
-    $currentCount = $stmt->fetchColumn();
+    $existingPaths = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+    // Extract used letter suffixes
+    $usedSuffixes = [];
+    foreach ($existingPaths as $path) {
+        if (preg_match('/\/' . preg_quote($productId) . '([A-Z])\./', $path, $matches)) {
+            $usedSuffixes[] = $matches[1];
+        }
+    }
     
     // Process each uploaded file
     $fileCount = count($_FILES['images']['name']);
@@ -81,10 +89,22 @@ try {
             continue;
         }
         
-        // Generate filename based on product ID with letter suffix
-        // All images get a letter suffix (A, B, C, etc.)
-        $letterIndex = $currentCount + $i;
-        $suffix = chr(65 + $letterIndex); // 65 is ASCII for 'A'
+        // Find next available letter suffix
+        $suffix = null;
+        for ($letterIndex = 0; $letterIndex < 26; $letterIndex++) {
+            $testSuffix = chr(65 + $letterIndex); // 65 is ASCII for 'A'
+            if (!in_array($testSuffix, $usedSuffixes)) {
+                $suffix = $testSuffix;
+                $usedSuffixes[] = $suffix; // Mark this suffix as used for subsequent files in this batch
+                break;
+            }
+        }
+        
+        if ($suffix === null) {
+            $errors[] = "Too many images for product $productId (max 26)";
+            continue;
+        }
+        
         $filename = $productId . $suffix . '.' . $ext;
         
         $relPath = 'images/products/' . $filename;
@@ -102,8 +122,8 @@ try {
             // Determine if this should be primary
             $isThisPrimary = $isPrimary && $i === 0; // Only first image can be primary if multiple uploaded
             
-            // Get sort order
-            $sortOrder = $currentCount + $i;
+            // Get sort order (use letter index for consistent ordering)
+            $sortOrder = ord($suffix) - 65; // Convert A=0, B=1, C=2, etc.
             
             // Insert into database
             $stmt = $pdo->prepare("

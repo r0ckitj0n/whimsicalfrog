@@ -1568,24 +1568,31 @@ function displayCurrentImages(images) {
     
     container.innerHTML = '';
     
+    // Create a flex container for all images
+    const imageRow = document.createElement('div');
+    imageRow.className = 'flex flex-wrap gap-3';
+    
     images.forEach(image => {
         const imageDiv = document.createElement('div');
         imageDiv.className = 'relative bg-white border rounded-lg overflow-hidden shadow-sm';
+        imageDiv.style.width = '120px'; // Fixed small size
         imageDiv.innerHTML = `
             <div class="aspect-square">
                 <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.src='images/products/placeholder.png'">
             </div>
-            <div class="p-2">
-                <div class="text-xs text-gray-600 truncate">${image.image_path.split('/').pop()}</div>
+            <div class="p-1">
+                <div class="text-xs text-gray-600 truncate" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
                 ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
                 <div class="flex gap-1 mt-1">
-                    ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Set Primary</button>` : ''}
-                    <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">Delete</button>
+                    ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600" title="Set as Primary">Primary</button>` : ''}
+                    <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-1 py-0.5 bg-red-500 text-white rounded hover:bg-red-600" title="Delete Image">Delete</button>
                 </div>
             </div>
         `;
-        container.appendChild(imageDiv);
+        imageRow.appendChild(imageDiv);
     });
+    
+    container.appendChild(imageRow);
 }
 
 function displayViewModalImages(images) {
@@ -1603,20 +1610,27 @@ function displayViewModalImages(images) {
     
     container.innerHTML = '';
     
+    // Create a flex container for all images
+    const imageRow = document.createElement('div');
+    imageRow.className = 'flex flex-wrap gap-3';
+    
     images.forEach(image => {
         const imageDiv = document.createElement('div');
         imageDiv.className = 'relative bg-white border rounded-lg overflow-hidden shadow-sm';
+        imageDiv.style.width = '120px'; // Fixed small size
         imageDiv.innerHTML = `
             <div class="aspect-square">
                 <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;aspect-square bg-gray-100 flex items-center justify-center text-gray-500 text-xs&quot;>📷<br/>No image</div>'">
             </div>
             <div class="p-1">
-                <div class="text-xs text-gray-600 truncate">${image.image_path.split('/').pop()}</div>
+                <div class="text-xs text-gray-600 truncate" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
                 ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
             </div>
         `;
-        container.appendChild(imageDiv);
+        imageRow.appendChild(imageDiv);
     });
+    
+    container.appendChild(imageRow);
 }
 
 function loadThumbnailImage(productId, container) {

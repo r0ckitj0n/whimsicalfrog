@@ -18,3 +18,4 @@
 [inventory_update] action=update itemId=I008 imageUrl=images/products/P007-004ae8.webp
 [inventory_update] action=update itemId=I001 imageUrl=images/P001.png
 [inventory_update] action=update itemId=I001 imageUrl=images/P001.png
+[inventory_update] action=update itemId=I001 imageUrl=images/products/TS001A.png

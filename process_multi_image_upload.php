@@ -56,6 +56,10 @@ try {
     $stmt->execute([$productId]);
     $existingPaths = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
+    // Debug logging
+    error_log("Multi-image upload debug - Product ID: $productId");
+    error_log("Multi-image upload debug - Existing paths: " . json_encode($existingPaths));
+    
     // Extract used letter suffixes
     $usedSuffixes = [];
     foreach ($existingPaths as $path) {
@@ -63,6 +67,8 @@ try {
             $usedSuffixes[] = $matches[1];
         }
     }
+    
+    error_log("Multi-image upload debug - Used suffixes: " . json_encode($usedSuffixes));
     
     // Process each uploaded file
     $fileCount = count($_FILES['images']['name']);
@@ -106,6 +112,8 @@ try {
         }
         
         $filename = $productId . $suffix . '.' . $ext;
+        
+        error_log("Multi-image upload debug - Generated filename: $filename for original: $originalName");
         
         $relPath = 'images/products/' . $filename;
         $absPath = $productsDir . $filename;

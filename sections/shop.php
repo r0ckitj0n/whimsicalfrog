@@ -53,6 +53,18 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
         background-color: #9ca3af !important;
         cursor: not-allowed !important;
     }
+
+    /* Modal Add to Cart button styling */
+    #confirmAddToCart {
+        background-color: var(--wf-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+
+    #confirmAddToCart:hover {
+        background-color: var(--wf-green-light) !important;
+        color: #ffffff !important;
+    }
 </style>
 
 <section id="shopPage" class="py-6">

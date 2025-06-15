@@ -209,7 +209,7 @@
 
 <!-- Room Mapper Modal -->
 <div id="roomMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center p-6 border-b">
             <h2 class="text-2xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
             <button onclick="closeRoomMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -234,7 +234,7 @@
             </div>
             
             <div class="room-mapper-container relative mb-4" id="roomMapperContainer">
-                <div class="room-mapper-wrapper relative w-full bg-gray-800 rounded-lg overflow-hidden" id="roomMapperDisplay" style="padding-top: 70%; background-size: contain; background-position: center; background-repeat: no-repeat;">
+                <div class="room-mapper-wrapper relative w-full bg-gray-800 rounded-lg overflow-hidden" id="roomMapperDisplay" style="height: 60vh; background-size: contain; background-position: center; background-repeat: no-repeat;">
                     <div class="grid-overlay absolute top-0 left-0 w-full h-full pointer-events-none hidden" id="mapperGridOverlay" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px;"></div>
                     <!-- Clickable areas will be added here -->
                 </div>
@@ -244,7 +244,7 @@
                 <p class="text-blue-800"><strong>Note:</strong> This mapper uses the exact same scaling system as your live site. The coordinates generated will match the room page layout perfectly.</p>
             </div>
             
-            <div class="bg-gray-100 border border-gray-300 rounded p-4 max-h-64 overflow-y-auto font-mono text-sm" id="mapperCoordinates">
+            <div class="bg-gray-100 border border-gray-300 rounded p-4 max-h-96 overflow-y-auto font-mono text-sm" id="mapperCoordinates">
                 Click and drag on the image to create clickable areas. Coordinates will appear here.
             </div>
         </div>

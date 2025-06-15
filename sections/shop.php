@@ -39,30 +39,43 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
 
     /* Add to Cart button styling - force green color */
     .add-to-cart-btn {
-        background-color: var(--wf-green) !important;
+        background-color: #87ac3a !important;
         color: #ffffff !important;
         border: none !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
 
     .add-to-cart-btn:hover:not(:disabled) {
-        background-color: var(--wf-green-light) !important;
+        background-color: #a3cc4a !important;
         color: #ffffff !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        transform: translateY(-1px) !important;
     }
 
     .add-to-cart-btn:disabled {
         background-color: #9ca3af !important;
         cursor: not-allowed !important;
+        transform: none !important;
+        box-shadow: none !important;
     }
 
     /* Modal Add to Cart button styling */
     #confirmAddToCart {
-        background-color: var(--wf-green) !important;
+        background-color: #87ac3a !important;
         color: #ffffff !important;
         border: none !important;
+        padding: 8px 16px !important;
+        border-radius: 6px !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
     }
 
     #confirmAddToCart:hover {
-        background-color: var(--wf-green-light) !important;
+        background-color: #a3cc4a !important;
         color: #ffffff !important;
     }
 </style>

@@ -196,7 +196,7 @@ class ShoppingCart {
                     <span>$${total.toFixed(2)}</span>
                 </div>
                 <button onclick="cart.checkout()" 
-                        class="w-full mt-4 bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded">
+                        class="w-full mt-4 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white font-bold py-2 px-4 rounded">
                     Proceed to Checkout
                 </button>
             </div>

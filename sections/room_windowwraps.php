@@ -148,7 +148,7 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
     
     .popup-add-btn {
         width: 100%;
-        background: #6B8E23;
+        background: #87ac3a;
         color: white;
         border: none;
         padding: 8px;
@@ -156,10 +156,13 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
         font-weight: bold;
         cursor: pointer;
         transition: background 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .popup-add-btn:hover {
-        background: #556B2F;
+        background: #a3cc4a;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-1px);
     }
 
     /* Modal Add to Cart button styling - force green color */

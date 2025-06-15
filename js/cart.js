@@ -274,7 +274,7 @@ class ShoppingCart {
                         </p>
                     </div>
                     <div class="flex justify-end">
-                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">Continue</button>
+                        <button type="submit" class="px-4 py-2 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white rounded">Continue</button>
                     </div>
                 </form>
             </div>

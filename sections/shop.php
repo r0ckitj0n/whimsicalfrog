@@ -36,6 +36,23 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
         background: var(--wf-green-light);
         color: #ffffff !important;
     }
+
+    /* Add to Cart button styling - force green color */
+    .add-to-cart-btn {
+        background-color: var(--wf-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+
+    .add-to-cart-btn:hover:not(:disabled) {
+        background-color: var(--wf-green-light) !important;
+        color: #ffffff !important;
+    }
+
+    .add-to-cart-btn:disabled {
+        background-color: #9ca3af !important;
+        cursor: not-allowed !important;
+    }
 </style>
 
 <section id="shopPage" class="py-6">

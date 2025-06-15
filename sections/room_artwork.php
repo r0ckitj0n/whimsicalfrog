@@ -143,21 +143,22 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
     
     .popup-add-btn {
         width: 100%;
-        background: #87ac3a;
-        color: white;
-        border: none;
-        padding: 8px;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background: #87ac3a !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        transition: background 0.3s ease !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
     
     .popup-add-btn:hover {
-        background: #a3cc4a;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        transform: translateY(-1px);
+        background: #a3cc4a !important;
+        color: white !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        transform: translateY(-1px) !important;
     }
 
     /* Modal Add to Cart button styling - force green color */

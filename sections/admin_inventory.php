@@ -1567,23 +1567,24 @@ function displayCurrentImages(images) {
     
     container.innerHTML = '';
     
-    // Create carousel container
+    // Create carousel container with larger images
     const carouselContainer = document.createElement('div');
     carouselContainer.className = 'image-carousel-container relative';
+    carouselContainer.style.height = '280px'; // Fixed height for larger images
     carouselContainer.innerHTML = `
-        <div class="image-carousel-wrapper overflow-hidden">
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out" id="editCarouselTrack">
+        <div class="image-carousel-wrapper overflow-hidden h-full">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out h-full" id="editCarouselTrack">
                 <!-- Images will be added here -->
             </div>
         </div>
         ${images.length > 3 ? `
-            <button class="carousel-nav carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md z-10" onclick="moveCarousel('edit', -1)">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('edit', -1)">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <button class="carousel-nav carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md z-10" onclick="moveCarousel('edit', 1)">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('edit', 1)">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
             </button>
@@ -1592,26 +1593,42 @@ function displayCurrentImages(images) {
     
     const track = carouselContainer.querySelector('#editCarouselTrack');
     
-    images.forEach((image, index) => {
+    // Always show exactly 3 slots, fill empty ones with blank spaces
+    for (let i = 0; i < 3; i++) {
         const imageDiv = document.createElement('div');
-        imageDiv.className = 'carousel-slide flex-shrink-0 w-1/3 px-1';
-        imageDiv.innerHTML = `
-            <div class="relative bg-white border rounded-lg overflow-hidden shadow-sm">
-                <div class="aspect-square">
-                    <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.src='images/products/placeholder.png'">
-                </div>
-                <div class="p-2">
-                    <div class="text-xs text-gray-600 truncate" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
-                    ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
-                    <div class="flex gap-1 mt-1">
-                        ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600" title="Set as Primary">Primary</button>` : ''}
-                        <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-1 py-0.5 bg-red-500 text-white rounded hover:bg-red-600" title="Delete Image">Delete</button>
+        imageDiv.className = 'carousel-slide flex-shrink-0 px-2 h-full';
+        imageDiv.style.width = 'calc(100% / 3)'; // Exactly 1/3 width
+        
+        if (i < images.length) {
+            const image = images[i];
+            imageDiv.innerHTML = `
+                <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md h-full flex flex-col">
+                    <div class="flex-1 min-h-0">
+                        <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.src='images/products/placeholder.png'">
+                    </div>
+                    <div class="p-3 bg-gray-50">
+                        <div class="text-sm text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
+                        ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary Image</div>' : ''}
+                        <div class="flex gap-2 mt-2">
+                            ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Set Primary</button>` : ''}
+                            <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        } else {
+            // Empty slot - show placeholder
+            imageDiv.innerHTML = `
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg h-full flex flex-col items-center justify-center text-gray-400">
+                    <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="text-sm">No image</span>
+                </div>
+            `;
+        }
         track.appendChild(imageDiv);
-    });
+    }
     
     container.appendChild(carouselContainer);
     
@@ -1634,23 +1651,24 @@ function displayViewModalImages(images) {
     
     container.innerHTML = '';
     
-    // Create carousel container
+    // Create carousel container with larger images
     const carouselContainer = document.createElement('div');
     carouselContainer.className = 'image-carousel-container relative col-span-2';
+    carouselContainer.style.height = '280px'; // Fixed height for larger images
     carouselContainer.innerHTML = `
-        <div class="image-carousel-wrapper overflow-hidden">
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out" id="viewCarouselTrack">
+        <div class="image-carousel-wrapper overflow-hidden h-full">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out h-full" id="viewCarouselTrack">
                 <!-- Images will be added here -->
             </div>
         </div>
         ${images.length > 3 ? `
-            <button class="carousel-nav carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md z-10" onclick="moveCarousel('view', -1)">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('view', -1)">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <button class="carousel-nav carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md z-10" onclick="moveCarousel('view', 1)">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('view', 1)">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
             </button>
@@ -1659,22 +1677,38 @@ function displayViewModalImages(images) {
     
     const track = carouselContainer.querySelector('#viewCarouselTrack');
     
-    images.forEach((image, index) => {
+    // Always show exactly 3 slots, fill empty ones with blank spaces
+    for (let i = 0; i < 3; i++) {
         const imageDiv = document.createElement('div');
-        imageDiv.className = 'carousel-slide flex-shrink-0 w-1/3 px-1';
-        imageDiv.innerHTML = `
-            <div class="relative bg-white border rounded-lg overflow-hidden shadow-sm">
-                <div class="aspect-square">
-                    <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;aspect-square bg-gray-100 flex items-center justify-center text-gray-500 text-xs&quot;>📷<br/>No image</div>'">
+        imageDiv.className = 'carousel-slide flex-shrink-0 px-2 h-full';
+        imageDiv.style.width = 'calc(100% / 3)'; // Exactly 1/3 width
+        
+        if (i < images.length) {
+            const image = images[i];
+            imageDiv.innerHTML = `
+                <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md h-full flex flex-col">
+                    <div class="flex-1 min-h-0">
+                        <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.src='images/products/placeholder.png'">
+                    </div>
+                    <div class="p-3 bg-gray-50">
+                        <div class="text-sm text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
+                        ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary Image</div>' : ''}
+                    </div>
                 </div>
-                <div class="p-2">
-                    <div class="text-xs text-gray-600 truncate" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
-                    ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
+            `;
+        } else {
+            // Empty slot - show placeholder
+            imageDiv.innerHTML = `
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg h-full flex flex-col items-center justify-center text-gray-400">
+                    <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="text-sm">No image</span>
                 </div>
-            </div>
-        `;
+            `;
+        }
         track.appendChild(imageDiv);
-    });
+    }
     
     container.appendChild(carouselContainer);
     
@@ -1968,6 +2002,10 @@ function moveCarousel(type, direction) {
     const slides = track.querySelectorAll('.carousel-slide');
     const totalSlides = slides.length;
     const slidesToShow = 3;
+    
+    // Only allow navigation if there are more than 3 images
+    if (totalSlides <= slidesToShow) return;
+    
     const maxPosition = Math.max(0, totalSlides - slidesToShow);
     
     // Update position

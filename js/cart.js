@@ -206,7 +206,24 @@ class ShoppingCart {
     }
 
     async checkout() {
-        // Show payment method modal
+        // Check if user is logged in before allowing checkout
+        let user = null;
+        const userRaw = sessionStorage.getItem('user');
+        if (userRaw) {
+            try { user = JSON.parse(userRaw); } catch(e) { console.warn('Invalid user JSON in sessionStorage'); }
+        }
+        
+        if (!user) {
+            // User not logged in - redirect to login page
+            localStorage.setItem('pendingCheckout', 'true');
+            this.showNotification('Please log in to complete your checkout');
+            setTimeout(() => {
+                window.location.href = '/?page=login';
+            }, 1500);
+            return;
+        }
+
+        // User is logged in - proceed with checkout
         if (!document.getElementById('paymentMethodModal')) {
             this.createPaymentMethodModal();
         }

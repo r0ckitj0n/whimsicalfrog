@@ -808,6 +808,14 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
                 const userObj = data.user ? data.user : data; // support both formats
                 sessionStorage.setItem('user', JSON.stringify(userObj));
                 
+                // Check if user was trying to checkout before login
+                const pendingCheckout = localStorage.getItem('pendingCheckout');
+                if (pendingCheckout === 'true') {
+                    localStorage.removeItem('pendingCheckout');
+                    window.location.href = '/?page=cart';
+                    return;
+                }
+                
                 // Redirect based on role
                 if (data.user && data.user.role === 'Admin') {
                     window.location.href = '/?page=admin';

@@ -48,6 +48,15 @@
                 ID# Legend
             </button>
         </div>
+        <div>
+            <p class="text-sm text-gray-600 mb-3">Map clickable areas on room images for product placement and navigation.</p>
+            <button onclick="openRoomMapperModal()" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                </svg>
+                Room Mapper
+            </button>
+        </div>
     </div>
 </div>
 
@@ -198,7 +207,74 @@
     </div>
 </div>
 
+<!-- Room Mapper Modal -->
+<div id="roomMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-6 border-b">
+            <h2 class="text-2xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
+            <button onclick="closeRoomMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-6">
+            <p class="text-gray-600 mb-4">This tool helps you map clickable areas on your room images with the same scaling as your live site.</p>
+            
+            <div class="controls mb-4">
+                <label for="roomMapperSelect" class="mr-2">Select Room:</label>
+                <select id="roomMapperSelect" class="px-3 py-2 border border-gray-300 rounded mr-4">
+                    <option value="landing">Landing Page</option>
+                    <option value="room_main">Main Room</option>
+                    <option value="room_artwork">Artwork Room</option>
+                    <option value="room_tshirts">T-Shirts Room</option>
+                    <option value="room_tumblers">Tumblers Room</option>
+                    <option value="room_sublimation">Sublimation Room</option>
+                    <option value="room_windowwraps">Window Wraps Room</option>
+                </select>
+                <button onclick="toggleMapperGrid()" class="px-3 py-2 bg-gray-500 text-white rounded mr-2">Toggle Grid</button>
+                <button onclick="clearMapperAreas()" class="px-3 py-2 bg-red-500 text-white rounded">Clear Areas</button>
+            </div>
+            
+            <div class="room-mapper-container relative mb-4" id="roomMapperContainer">
+                <div class="room-mapper-wrapper relative w-full bg-gray-800 rounded-lg overflow-hidden" id="roomMapperDisplay" style="padding-top: 70%; background-size: contain; background-position: center; background-repeat: no-repeat;">
+                    <div class="grid-overlay absolute top-0 left-0 w-full h-full pointer-events-none hidden" id="mapperGridOverlay" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px;"></div>
+                    <!-- Clickable areas will be added here -->
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
+                <p class="text-blue-800"><strong>Note:</strong> This mapper uses the exact same scaling system as your live site. The coordinates generated will match the room page layout perfectly.</p>
+            </div>
+            
+            <div class="bg-gray-100 border border-gray-300 rounded p-4 max-h-64 overflow-y-auto font-mono text-sm" id="mapperCoordinates">
+                Click and drag on the image to create clickable areas. Coordinates will appear here.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.room-mapper-clickable-area {
+    position: absolute;
+    border: 2px solid red;
+    background: rgba(255, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 100;
+}
+.room-mapper-clickable-area:hover {
+    background: rgba(255, 0, 0, 0.4);
+}
+.room-mapper-container.grid-active .grid-overlay {
+    display: block !important;
+}
+</style>
+
 <script>
+let mapperIsDrawing = false;
+let mapperStartX, mapperStartY;
+let mapperCurrentArea = null;
+let mapperAreaCount = 0;
+const mapperOriginalImageWidth = 1280;
+const mapperOriginalImageHeight = 896;
+
 function openIdLegendModal() {
     document.getElementById('idLegendModal').style.display = 'block';
 }
@@ -207,11 +283,158 @@ function closeIdLegendModal() {
     document.getElementById('idLegendModal').style.display = 'none';
 }
 
+function openRoomMapperModal() {
+    document.getElementById('roomMapperModal').style.display = 'flex';
+    initializeRoomMapper();
+}
+
+function closeRoomMapperModal() {
+    document.getElementById('roomMapperModal').style.display = 'none';
+}
+
+function initializeRoomMapper() {
+    const roomSelect = document.getElementById('roomMapperSelect');
+    const roomDisplay = document.getElementById('roomMapperDisplay');
+    const roomContainer = document.getElementById('roomMapperContainer');
+    const coordinates = document.getElementById('mapperCoordinates');
+
+    roomSelect.addEventListener('change', function() {
+        // Special handling for landing page image
+        if (this.value === 'landing') {
+            roomDisplay.style.backgroundImage = `url('images/home_background.png')`;
+        } else {
+            roomDisplay.style.backgroundImage = `url('images/${this.value}.png')`;
+        }
+        clearMapperAreas();
+    });
+
+    // Initialize with the selected room
+    if (roomSelect.value === 'landing') {
+        roomDisplay.style.backgroundImage = `url('images/home_background.png')`;
+    } else {
+        roomDisplay.style.backgroundImage = `url('images/${roomSelect.value}.png')`;
+    }
+
+    roomDisplay.addEventListener('mousedown', function(e) {
+        const rect = roomDisplay.getBoundingClientRect();
+        mapperStartX = e.clientX - rect.left;
+        mapperStartY = e.clientY - rect.top;
+        
+        mapperIsDrawing = true;
+        
+        mapperCurrentArea = document.createElement('div');
+        mapperCurrentArea.className = 'room-mapper-clickable-area';
+        mapperCurrentArea.style.left = mapperStartX + 'px';
+        mapperCurrentArea.style.top = mapperStartY + 'px';
+        mapperCurrentArea.style.width = '0px';
+        mapperCurrentArea.style.height = '0px';
+        roomDisplay.appendChild(mapperCurrentArea);
+    });
+
+    roomDisplay.addEventListener('mousemove', function(e) {
+        if (mapperIsDrawing && mapperCurrentArea) {
+            const rect = roomDisplay.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            const width = Math.abs(currentX - mapperStartX);
+            const height = Math.abs(currentY - mapperStartY);
+            const left = Math.min(currentX, mapperStartX);
+            const top = Math.min(currentY, mapperStartY);
+            
+            mapperCurrentArea.style.left = left + 'px';
+            mapperCurrentArea.style.top = top + 'px';
+            mapperCurrentArea.style.width = width + 'px';
+            mapperCurrentArea.style.height = height + 'px';
+        }
+    });
+
+    roomDisplay.addEventListener('mouseup', function(e) {
+        if (mapperIsDrawing && mapperCurrentArea) {
+            mapperIsDrawing = false;
+            mapperAreaCount++;
+            
+            // Get container dimensions
+            const wrapperWidth = roomDisplay.offsetWidth;
+            const wrapperHeight = roomDisplay.offsetHeight;
+            
+            // Calculate scaling factors
+            const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+            const imageAspectRatio = mapperOriginalImageWidth / mapperOriginalImageHeight;
+            
+            let renderedImageWidth, renderedImageHeight;
+            let offsetX = 0;
+            let offsetY = 0;
+            
+            // Calculate image rendering dimensions within container
+            if (wrapperAspectRatio > imageAspectRatio) {
+                renderedImageHeight = wrapperHeight;
+                renderedImageWidth = renderedImageHeight * imageAspectRatio;
+                offsetX = (wrapperWidth - renderedImageWidth) / 2;
+            } else {
+                renderedImageWidth = wrapperWidth;
+                renderedImageHeight = renderedImageWidth / imageAspectRatio;
+                offsetY = (wrapperHeight - renderedImageHeight) / 2;
+            }
+            
+            // Get the pixel values from the drawn area
+            const leftPx = parseFloat(mapperCurrentArea.style.left);
+            const topPx = parseFloat(mapperCurrentArea.style.top);
+            const widthPx = parseFloat(mapperCurrentArea.style.width);
+            const heightPx = parseFloat(mapperCurrentArea.style.height);
+            
+            // Convert to original image coordinates
+            const originalLeft = Math.round(((leftPx - offsetX) / renderedImageWidth) * mapperOriginalImageWidth);
+            const originalTop = Math.round(((topPx - offsetY) / renderedImageHeight) * mapperOriginalImageHeight);
+            const originalWidth = Math.round((widthPx / renderedImageWidth) * mapperOriginalImageWidth);
+            const originalHeight = Math.round((heightPx / renderedImageHeight) * mapperOriginalImageHeight);
+            
+            const cssClass = `area-${mapperAreaCount}`;
+            mapperCurrentArea.setAttribute('data-area', cssClass);
+            
+            const cssCode = `.${cssClass} { top: ${originalTop}px; left: ${originalLeft}px; width: ${originalWidth}px; height: ${originalHeight}px; }`;
+            
+            // JavaScript array format for room pages
+            const jsArrayFormat = `{ selector: '.${cssClass}', top: ${originalTop}, left: ${originalLeft}, width: ${originalWidth}, height: ${originalHeight} }, // Area ${mapperAreaCount}`;
+            
+            const selectedRoom = roomSelect.value;
+            coordinates.innerHTML += `
+                <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <strong>Area ${mapperAreaCount} (${selectedRoom}):</strong><br>
+                    <div style="margin: 5px 0;">CSS: ${cssCode}</div>
+                    <div style="margin: 5px 0;">JS Array: ${jsArrayFormat}</div>
+                </div>
+            `;
+            
+            mapperCurrentArea = null;
+        }
+    });
+}
+
+function toggleMapperGrid() {
+    const roomContainer = document.getElementById('roomMapperContainer');
+    roomContainer.classList.toggle('grid-active');
+}
+
+function clearMapperAreas() {
+    const roomDisplay = document.getElementById('roomMapperDisplay');
+    const coordinates = document.getElementById('mapperCoordinates');
+    const areas = roomDisplay.querySelectorAll('.room-mapper-clickable-area');
+    areas.forEach(area => area.remove());
+    coordinates.innerHTML = 'Click and drag on the image to create clickable areas. Coordinates will appear here.';
+    mapperAreaCount = 0;
+}
+
 // Close modal when clicking outside of it
 window.onclick = function(event) {
-    const modal = document.getElementById('idLegendModal');
-    if (event.target == modal) {
+    const idModal = document.getElementById('idLegendModal');
+    const mapperModal = document.getElementById('roomMapperModal');
+    
+    if (event.target == idModal) {
         closeIdLegendModal();
+    }
+    if (event.target == mapperModal) {
+        closeRoomMapperModal();
     }
 }
 </script> 

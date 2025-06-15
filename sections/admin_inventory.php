@@ -926,7 +926,7 @@ function renderCostList(type, items) {
                 itemDiv.innerHTML = `
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
-                        <span class="cost-item-value">$<?= number_format(floatval($item_cost.cost).toFixed(2)}</span>
+                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
                     </div>`;
                 listElement.appendChild(itemDiv);
             });

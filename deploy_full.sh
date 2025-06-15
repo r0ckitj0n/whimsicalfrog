@@ -16,7 +16,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🚀 Starting FULL deployment (files + database)...${NC}"
+echo -e "${GREEN}🚀 Starting file deployment...${NC}"
 
 # Clean up any stale git lock file
 if [ -f .git/index.lock ]; then
@@ -38,14 +38,8 @@ else
   echo -e "${GREEN}✅ No changes to commit${NC}"
 fi
 
-# Export local MySQL database
-echo -e "${GREEN}📊 Exporting local MySQL database...${NC}"
-if mysqldump -u root -pPalz2516 whimsicalfrog > backup.sql 2>/dev/null; then
-  echo -e "${GREEN}✅ Database exported successfully${NC}"
-else
-  echo -e "${RED}❌ Failed to export database${NC}"
-  exit 1
-fi
+# Skip database export - handled separately via PHP scripts
+echo -e "${GREEN}📊 Skipping database export (handled separately)${NC}"
 
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
@@ -65,7 +59,6 @@ mirror --reverse --delete --verbose \
   --exclude-glob temp_cron.txt \
   --exclude-glob SERVER_MANAGEMENT.md \
   --exclude-glob factory-tutorial/ \
-  --exclude-glob backup.sql \
   --exclude-glob deploy_commands.txt \
   --exclude-glob fix_clown_frog_image.sql \
   --include-glob credentials.json \
@@ -106,14 +99,8 @@ fi
 # Clean up permissions script
 rm fix_permissions.txt
 
-# Deploy database to live server
-echo -e "${GREEN}🗄️  Deploying database to live server...${NC}"
-if mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME < backup.sql 2>/dev/null; then
-  echo -e "${GREEN}✅ Database deployed successfully${NC}"
-else
-  echo -e "${YELLOW}⚠️  Database deployment failed - you may need to run it manually${NC}"
-  echo -e "${YELLOW}    Command: mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME < backup.sql${NC}"
-fi
+# Skip database deployment - handled separately via PHP scripts
+echo -e "${GREEN}🗄️  Skipping database deployment (handled separately)${NC}"
 
 # Verify critical files exist on server
 echo -e "${GREEN}🔍 Verifying deployment...${NC}"
@@ -151,15 +138,13 @@ else
 fi
 
 # Final summary
-echo -e "\n${GREEN}📊 Full Deployment Summary:${NC}"
+echo -e "\n${GREEN}📊 File Deployment Summary:${NC}"
 echo -e "  • Files: ✅ Deployed to server"
-echo -e "  • Database: ✅ Exported locally and deployed to live server"
+echo -e "  • Database: ⏭️  Skipped (handled separately via PHP scripts)"
 echo -e "  • Images: ✅ Included in deployment"
 echo -e "  • Permissions: ✅ Image directory permissions fixed"
 echo -e "  • Verification: ✅ Completed"
 
-echo -e "\n${GREEN}🎉 Full deployment completed!${NC}"
+echo -e "\n${GREEN}🎉 File deployment completed!${NC}"
 echo -e "${YELLOW}💡 If images still don't appear, wait 5-10 minutes for server cache to clear${NC}"
-
-# Keep backup file for reference
-echo -e "${GREEN}💾 Database backup saved as: backup.sql${NC}" 
+echo -e "${YELLOW}💡 Database changes should be deployed separately using your PHP scripts${NC}" 

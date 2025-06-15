@@ -51,7 +51,7 @@ const upload = multer({
             cb(null, `${Date.now()}_${Math.round(Math.random() * 1E9)}${ext}`);
         }
     }),
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (!allowedTypes.includes(file.mimetype)) {
@@ -450,7 +450,7 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
             return res.status(400).json({ error: msg });
         }
         if (msg.includes('File too large')) {
-            return res.status(400).json({ error: 'File too large (max 5MB)' });
+            return res.status(400).json({ error: 'File too large (max 10MB allowed)' });
         }
         res.status(500).json({ error: 'Failed to upload image', details: msg });
     }

@@ -83,9 +83,9 @@ try {
             continue;
         }
         
-        // Validate file size (max 5MB)
-        if ($fileSize > 5 * 1024 * 1024) {
-            $errors[] = "File too large: $originalName (max 5MB)";
+        // Validate file size (max 10MB)
+        if ($fileSize > 10 * 1024 * 1024) {
+            $errors[] = "File too large: $originalName (max 10MB allowed)";
             continue;
         }
         

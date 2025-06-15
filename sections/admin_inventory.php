@@ -590,6 +590,9 @@ $messageType = $_GET['type'] ?? '';
                                         📁 Upload Images
                                     </button>
                                 </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Maximum file size: 10MB per image. Supported formats: PNG, JPG, JPEG, WebP, GIF
+                                </div>
                                 <div id="uploadProgress" class="mt-2 hidden">
                                     <div class="text-sm text-gray-600 mb-2">Uploading images...</div>
                                     <div class="w-full bg-gray-200 rounded-full h-2">
@@ -1591,6 +1594,18 @@ let selectedFiles = [];
 document.getElementById('multiImageUpload')?.addEventListener('change', function(e) {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+    
+    // Validate file sizes before upload (10MB = 10 * 1024 * 1024 bytes)
+    const maxFileSize = 10 * 1024 * 1024;
+    const oversizedFiles = files.filter(file => file.size > maxFileSize);
+    
+    if (oversizedFiles.length > 0) {
+        const fileNames = oversizedFiles.map(file => `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`).join(', ');
+        showToast('error', `The following files are too large (max 10MB allowed): ${fileNames}`);
+        // Clear the file input
+        this.value = '';
+        return;
+    }
     
     // Show progress indicator
     const progressContainer = document.getElementById('uploadProgress');

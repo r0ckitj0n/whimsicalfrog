@@ -63,7 +63,8 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
         box-shadow: none !important;
     }
 
-    /* Modal Add to Cart button styling */
+    /* Modal Add to Cart button styling - highest specificity */
+    div #confirmAddToCart,
     #confirmAddToCart {
         background-color: #87ac3a !important;
         color: #ffffff !important;
@@ -72,11 +73,15 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
         border-radius: 6px !important;
         font-weight: 500 !important;
         transition: all 0.2s ease !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
 
+    div #confirmAddToCart:hover,
     #confirmAddToCart:hover {
         background-color: #a3cc4a !important;
         color: #ffffff !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+        transform: translateY(-1px) !important;
     }
 </style>
 

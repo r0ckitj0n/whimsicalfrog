@@ -70,6 +70,9 @@ if ($isLoggedIn) {
         // $welcomeMessage remains its initial ""
     }
 }
+// Set isAdmin as a global variable for use in components
+$GLOBALS['isAdmin'] = $isAdmin;
+
 // This is the admin authentication check, correctly placed after $isAdmin is determined and before HTML output.
 // Redirect if trying to access admin pages without admin privileges
 if (strpos($page, 'admin') === 0 && !$isAdmin) {

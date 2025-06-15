@@ -196,7 +196,10 @@ class ShoppingCart {
                     <span>$${total.toFixed(2)}</span>
                 </div>
                 <button onclick="cart.checkout()" 
-                        class="w-full mt-4 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white font-bold py-2 px-4 rounded">
+                        class="w-full mt-4 text-white font-bold py-2 px-4 rounded"
+                        style="background-color: #87ac3a !important; color: white !important;"
+                        onmouseover="this.style.backgroundColor='#a3cc4a'"
+                        onmouseout="this.style.backgroundColor='#87ac3a'">
                     Proceed to Checkout
                 </button>
             </div>
@@ -274,7 +277,7 @@ class ShoppingCart {
                         </p>
                     </div>
                     <div class="flex justify-end">
-                        <button type="submit" class="px-4 py-2 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white rounded">Continue</button>
+                        <button type="submit" class="px-4 py-2 text-white rounded" style="background-color: #87ac3a !important; color: white !important;" onmouseover="this.style.backgroundColor='#a3cc4a'" onmouseout="this.style.backgroundColor='#87ac3a'">Continue</button>
                     </div>
                 </form>
             </div>

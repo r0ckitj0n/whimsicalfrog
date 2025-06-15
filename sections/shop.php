@@ -101,7 +101,7 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
                     <div class="mt-2 text-sm <?php echo $stock>0 ? 'text-gray-600' : 'text-red-600'; ?>">In stock: <?php echo $stock; ?></div>
                     <div class="flex justify-between items-center mt-auto">
                         <span class="font-bold text-[#87ac3a]"><?php echo $formattedPrice; ?></span>
-                        <button class="add-to-cart-btn <?php echo $stock>0 ? 'bg-[#87ac3a] hover:bg-[#a3cc4a]' : 'bg-gray-400 cursor-not-allowed'; ?> text-white px-3 py-1 rounded-md text-sm transition-colors"
+                        <button class="add-to-cart-btn <?php echo $stock>0 ? 'bg-[#87ac3a] hover:bg-[#a3cc4a]' : 'bg-gray-400 cursor-not-allowed'; ?> text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg"
                                 <?php if($stock==0) echo 'disabled'; ?>
                                 data-product-id="<?php echo $productId; ?>"
                                 data-product-name="<?php echo $productName; ?>"

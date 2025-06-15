@@ -86,6 +86,26 @@ fi
 # Clean up lftp commands file
 rm deploy_commands.txt
 
+# Fix image directory permissions
+echo -e "${GREEN}🔧 Fixing image directory permissions...${NC}"
+cat > fix_permissions.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+chmod 755 images/
+chmod 755 images/products/
+bye
+EOL
+
+if lftp -f fix_permissions.txt 2>/dev/null; then
+  echo -e "${GREEN}✅ Image directory permissions fixed${NC}"
+else
+  echo -e "${YELLOW}⚠️  Permission fix failed - images may not be accessible${NC}"
+fi
+
+# Clean up permissions script
+rm fix_permissions.txt
+
 # Deploy database to live server
 echo -e "${GREEN}🗄️  Deploying database to live server...${NC}"
 if mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME < backup.sql 2>/dev/null; then
@@ -121,9 +141,9 @@ rm verify_deployment.txt
 
 # Test image accessibility
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://whimsicalfrog.com/images/products/TS002A.webp")
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://whimsicalfrog.us/images/products/TS002A.webp")
 if [ "$HTTP_CODE" = "200" ]; then
-  echo -e "${GREEN}✅ Clown frog image is accessible online!${NC}"
+  echo -e "${GREEN}✅ Product images are accessible online!${NC}"
 elif [ "$HTTP_CODE" = "404" ]; then
   echo -e "${YELLOW}⚠️  Image returns 404 - may need a few minutes to propagate${NC}"
 else
@@ -135,6 +155,7 @@ echo -e "\n${GREEN}📊 Full Deployment Summary:${NC}"
 echo -e "  • Files: ✅ Deployed to server"
 echo -e "  • Database: ✅ Exported locally and deployed to live server"
 echo -e "  • Images: ✅ Included in deployment"
+echo -e "  • Permissions: ✅ Image directory permissions fixed"
 echo -e "  • Verification: ✅ Completed"
 
 echo -e "\n${GREEN}🎉 Full deployment completed!${NC}"

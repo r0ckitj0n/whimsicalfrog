@@ -219,18 +219,58 @@
             <p class="text-gray-600 mb-4">This tool helps you map clickable areas on your room images with the same scaling as your live site.</p>
             
             <div class="controls mb-4">
-                <label for="roomMapperSelect" class="mr-2">Select Room:</label>
-                <select id="roomMapperSelect" class="px-3 py-2 border border-gray-300 rounded mr-4">
-                    <option value="landing">Landing Page</option>
-                    <option value="room_main">Main Room</option>
-                    <option value="room_artwork">Artwork Room</option>
-                    <option value="room_tshirts">T-Shirts Room</option>
-                    <option value="room_tumblers">Tumblers Room</option>
-                    <option value="room_sublimation">Sublimation Room</option>
-                    <option value="room_windowwraps">Window Wraps Room</option>
-                </select>
-                <button onclick="toggleMapperGrid()" class="px-3 py-2 bg-gray-500 text-white rounded mr-2">Toggle Grid</button>
-                <button onclick="clearMapperAreas()" class="px-3 py-2 bg-red-500 text-white rounded">Clear Areas</button>
+                <div class="flex flex-wrap gap-3 mb-3">
+                    <div class="flex items-center">
+                        <label for="roomMapperSelect" class="mr-2">Select Room:</label>
+                        <select id="roomMapperSelect" class="px-3 py-2 border border-gray-300 rounded">
+                            <option value="landing">Landing Page</option>
+                            <option value="room_main">Main Room</option>
+                            <option value="room_artwork">Artwork Room</option>
+                            <option value="room_tshirts">T-Shirts Room</option>
+                            <option value="room_tumblers">Tumblers Room</option>
+                            <option value="room_sublimation">Sublimation Room</option>
+                            <option value="room_windowwraps">Window Wraps Room</option>
+                        </select>
+                    </div>
+                    <button onclick="toggleMapperGrid()" class="px-3 py-2 bg-gray-500 text-white rounded">Toggle Grid</button>
+                    <button onclick="clearMapperAreas()" class="px-3 py-2 bg-red-500 text-white rounded">Clear Areas</button>
+                </div>
+                
+                <div class="flex flex-wrap gap-3 mb-3">
+                    <div class="flex items-center">
+                        <input type="text" id="mapNameInput" placeholder="Enter map name..." class="px-3 py-2 border border-gray-300 rounded mr-2" />
+                        <button onclick="saveRoomMap()" class="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded">Save Map</button>
+                    </div>
+                    <div class="flex items-center">
+                        <select id="savedMapsSelect" class="px-3 py-2 border border-gray-300 rounded mr-2">
+                            <option value="">Select saved map...</option>
+                        </select>
+                        <button onclick="loadSavedMap()" class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded mr-2">Load</button>
+                        <button onclick="applySavedMap()" class="px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded mr-2">Apply to Live</button>
+                        <button onclick="deleteSavedMap()" class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded">Delete</button>
+                    </div>
+                </div>
+                
+                <div id="mapStatus" class="text-sm mb-3"></div>
+                
+                <!-- History Section -->
+                <div class="border-t pt-4">
+                    <h4 class="font-semibold text-gray-800 mb-3">📜 Map History</h4>
+                    <div class="flex items-center gap-3 mb-3">
+                        <button onclick="toggleHistoryView()" class="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-sm">
+                            <span id="historyToggleText">Show History</span>
+                        </button>
+                        <span class="text-sm text-gray-600">View and restore previous map versions</span>
+                    </div>
+                    
+                    <div id="historySection" class="hidden">
+                        <div class="bg-gray-50 border border-gray-200 rounded p-4 max-h-80 overflow-y-auto">
+                            <div id="historyList" class="space-y-2">
+                                <p class="text-gray-500 text-sm">Select a room to view its history</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="room-mapper-container relative mb-4" id="roomMapperContainer">
@@ -306,6 +346,7 @@ function initializeRoomMapper() {
             roomDisplay.style.backgroundImage = `url('images/${this.value}.png')`;
         }
         clearMapperAreas();
+        loadSavedMapsForRoom(this.value);
     });
 
     // Initialize with the selected room
@@ -314,6 +355,9 @@ function initializeRoomMapper() {
     } else {
         roomDisplay.style.backgroundImage = `url('images/${roomSelect.value}.png')`;
     }
+    
+    // Load saved maps for the initial room
+    loadSavedMapsForRoom(roomSelect.value);
 
     roomDisplay.addEventListener('mousedown', function(e) {
         const rect = roomDisplay.getBoundingClientRect();
@@ -423,6 +467,509 @@ function clearMapperAreas() {
     areas.forEach(area => area.remove());
     coordinates.innerHTML = 'Click and drag on the image to create clickable areas. Coordinates will appear here.';
     mapperAreaCount = 0;
+}
+
+// New room map management functions
+async function loadSavedMapsForRoom(roomType) {
+    try {
+        const response = await fetch(`api/room_maps.php?room_type=${roomType}`);
+        const data = await response.json();
+        
+        const savedMapsSelect = document.getElementById('savedMapsSelect');
+        savedMapsSelect.innerHTML = '<option value="">Select saved map...</option>';
+        
+        if (data.success && data.maps) {
+            data.maps.forEach(map => {
+                const option = document.createElement('option');
+                option.value = map.id;
+                option.textContent = `${map.map_name}${map.is_active ? ' (ACTIVE)' : ''}`;
+                option.dataset.mapData = JSON.stringify(map);
+                savedMapsSelect.appendChild(option);
+            });
+        }
+        
+        updateMapStatus(roomType);
+    } catch (error) {
+        console.error('Error loading saved maps:', error);
+        showMapperMessage('Error loading saved maps', 'error');
+    }
+}
+
+async function saveRoomMap() {
+    const roomType = document.getElementById('roomMapperSelect').value;
+    const mapName = document.getElementById('mapNameInput').value.trim();
+    
+    if (!mapName) {
+        showMapperMessage('Please enter a map name', 'error');
+        return;
+    }
+    
+    const areas = document.querySelectorAll('.room-mapper-clickable-area');
+    if (areas.length === 0) {
+        showMapperMessage('Please create some clickable areas first', 'error');
+        return;
+    }
+    
+    // Extract coordinates from current areas
+    const coordinates = [];
+    areas.forEach((area, index) => {
+        const areaData = area.getAttribute('data-area');
+        if (areaData) {
+            // Parse from the coordinates display to get the actual coordinate data
+            const coordDiv = document.querySelector(`#mapperCoordinates div:nth-child(${index + 1})`);
+            if (coordDiv) {
+                const jsArrayMatch = coordDiv.textContent.match(/{ selector: '([^']+)', top: (\d+), left: (\d+), width: (\d+), height: (\d+) }/);
+                if (jsArrayMatch) {
+                    coordinates.push({
+                        selector: jsArrayMatch[1],
+                        top: parseInt(jsArrayMatch[2]),
+                        left: parseInt(jsArrayMatch[3]),
+                        width: parseInt(jsArrayMatch[4]),
+                        height: parseInt(jsArrayMatch[5])
+                    });
+                }
+            }
+        }
+    });
+    
+    try {
+        const response = await fetch('api/room_maps.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'save',
+                room_type: roomType,
+                map_name: mapName,
+                coordinates: coordinates
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMapperMessage('Map saved successfully!', 'success');
+            document.getElementById('mapNameInput').value = '';
+            loadSavedMapsForRoom(roomType);
+        } else {
+            showMapperMessage('Error saving map: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving map:', error);
+        showMapperMessage('Error saving map', 'error');
+    }
+}
+
+async function loadSavedMap() {
+    const savedMapsSelect = document.getElementById('savedMapsSelect');
+    const selectedOption = savedMapsSelect.options[savedMapsSelect.selectedIndex];
+    
+    if (!selectedOption || !selectedOption.value) {
+        showMapperMessage('Please select a map to load', 'error');
+        return;
+    }
+    
+    const mapData = JSON.parse(selectedOption.dataset.mapData);
+    
+    // Clear current areas
+    clearMapperAreas();
+    
+    // Load the coordinates from the saved map
+    if (mapData.coordinates && mapData.coordinates.length > 0) {
+        const roomDisplay = document.getElementById('roomMapperDisplay');
+        const coordinates = document.getElementById('mapperCoordinates');
+        
+        mapData.coordinates.forEach((coord, index) => {
+            mapperAreaCount++;
+            
+            // Create visual area
+            const area = document.createElement('div');
+            area.className = 'room-mapper-clickable-area';
+            area.setAttribute('data-area', coord.selector);
+            
+            // We need to convert the original coordinates back to display coordinates
+            const wrapperWidth = roomDisplay.offsetWidth;
+            const wrapperHeight = roomDisplay.offsetHeight;
+            const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+            const imageAspectRatio = mapperOriginalImageWidth / mapperOriginalImageHeight;
+            
+            let renderedImageWidth, renderedImageHeight;
+            let offsetX = 0;
+            let offsetY = 0;
+            
+            if (wrapperAspectRatio > imageAspectRatio) {
+                renderedImageHeight = wrapperHeight;
+                renderedImageWidth = renderedImageHeight * imageAspectRatio;
+                offsetX = (wrapperWidth - renderedImageWidth) / 2;
+            } else {
+                renderedImageWidth = wrapperWidth;
+                renderedImageHeight = renderedImageWidth / imageAspectRatio;
+                offsetY = (wrapperHeight - renderedImageHeight) / 2;
+            }
+            
+            // Convert back to display coordinates
+            const displayLeft = (coord.left / mapperOriginalImageWidth) * renderedImageWidth + offsetX;
+            const displayTop = (coord.top / mapperOriginalImageHeight) * renderedImageHeight + offsetY;
+            const displayWidth = (coord.width / mapperOriginalImageWidth) * renderedImageWidth;
+            const displayHeight = (coord.height / mapperOriginalImageHeight) * renderedImageHeight;
+            
+            area.style.left = displayLeft + 'px';
+            area.style.top = displayTop + 'px';
+            area.style.width = displayWidth + 'px';
+            area.style.height = displayHeight + 'px';
+            
+            roomDisplay.appendChild(area);
+            
+            // Add to coordinates display
+            const cssCode = `.${coord.selector} { top: ${coord.top}px; left: ${coord.left}px; width: ${coord.width}px; height: ${coord.height}px; }`;
+            const jsArrayFormat = `{ selector: '.${coord.selector}', top: ${coord.top}, left: ${coord.left}, width: ${coord.width}, height: ${coord.height} }, // Area ${index + 1}`;
+            
+            coordinates.innerHTML += `
+                <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <strong>Area ${index + 1} (${document.getElementById('roomMapperSelect').value}):</strong><br>
+                    <div style="margin: 5px 0;">CSS: ${cssCode}</div>
+                    <div style="margin: 5px 0;">JS Array: ${jsArrayFormat}</div>
+                </div>
+            `;
+        });
+        
+        showMapperMessage('Map loaded successfully!', 'success');
+    }
+}
+
+async function applySavedMap() {
+    const savedMapsSelect = document.getElementById('savedMapsSelect');
+    const selectedOption = savedMapsSelect.options[savedMapsSelect.selectedIndex];
+    
+    if (!selectedOption || !selectedOption.value) {
+        showMapperMessage('Please select a map to apply', 'error');
+        return;
+    }
+    
+    const mapId = selectedOption.value;
+    const roomType = document.getElementById('roomMapperSelect').value;
+    
+    if (!confirm('This will apply the selected map to the live room. Are you sure?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/room_maps.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'apply',
+                room_type: roomType,
+                map_id: mapId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMapperMessage('Map applied to live room successfully!', 'success');
+            loadSavedMapsForRoom(roomType); // Refresh the list to show active status
+        } else {
+            showMapperMessage('Error applying map: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error applying map:', error);
+        showMapperMessage('Error applying map', 'error');
+    }
+}
+
+async function deleteSavedMap() {
+    const savedMapsSelect = document.getElementById('savedMapsSelect');
+    const selectedOption = savedMapsSelect.options[savedMapsSelect.selectedIndex];
+    
+    if (!selectedOption || !selectedOption.value) {
+        showMapperMessage('Please select a map to delete', 'error');
+        return;
+    }
+    
+    const mapId = selectedOption.value;
+    const mapName = selectedOption.textContent;
+    
+    if (!confirm(`Are you sure you want to delete the map "${mapName}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/room_maps.php', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                map_id: mapId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMapperMessage('Map deleted successfully!', 'success');
+            loadSavedMapsForRoom(document.getElementById('roomMapperSelect').value);
+        } else {
+            showMapperMessage('Error deleting map: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting map:', error);
+        showMapperMessage('Error deleting map', 'error');
+    }
+}
+
+async function updateMapStatus(roomType) {
+    try {
+        const response = await fetch(`api/room_maps.php?room_type=${roomType}&active_only=true`);
+        const data = await response.json();
+        
+        const statusDiv = document.getElementById('mapStatus');
+        
+        if (data.success && data.map) {
+            statusDiv.innerHTML = `<span class="text-green-600">✓ Active Map: ${data.map.map_name} (${data.map.coordinates.length} areas)</span>`;
+        } else {
+            statusDiv.innerHTML = `<span class="text-yellow-600">⚠ No active map for this room</span>`;
+        }
+    } catch (error) {
+        console.error('Error checking map status:', error);
+    }
+}
+
+function showMapperMessage(message, type) {
+    const statusDiv = document.getElementById('mapStatus');
+    const colorClass = type === 'success' ? 'text-green-600' : type === 'error' ? 'text-red-600' : 'text-blue-600';
+    const icon = type === 'success' ? '✓' : type === 'error' ? '❌' : 'ℹ';
+    
+    statusDiv.innerHTML = `<span class="${colorClass}">${icon} ${message}</span>`;
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+        const roomType = document.getElementById('roomMapperSelect').value;
+        updateMapStatus(roomType);
+    }, 5000);
+}
+
+// History functionality
+function toggleHistoryView() {
+    const historySection = document.getElementById('historySection');
+    const toggleText = document.getElementById('historyToggleText');
+    
+    if (historySection.classList.contains('hidden')) {
+        historySection.classList.remove('hidden');
+        toggleText.textContent = 'Hide History';
+        loadRoomHistory();
+    } else {
+        historySection.classList.add('hidden');
+        toggleText.textContent = 'Show History';
+    }
+}
+
+async function loadRoomHistory() {
+    const roomType = document.getElementById('roomMapperSelect').value;
+    const historyList = document.getElementById('historyList');
+    
+    try {
+        const response = await fetch(`api/room_maps.php?room_type=${roomType}`);
+        const data = await response.json();
+        
+        if (data.success && data.maps && data.maps.length > 0) {
+            historyList.innerHTML = '';
+            
+            data.maps.forEach(map => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'border border-gray-300 rounded p-3 bg-white';
+                
+                const statusBadge = map.is_active ? 
+                    '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">ACTIVE</span>' : 
+                    '<span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">INACTIVE</span>';
+                
+                const coordinateCount = map.coordinates ? map.coordinates.length : 0;
+                
+                historyItem.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h5 class="font-medium text-gray-900">${map.map_name}</h5>
+                            <p class="text-sm text-gray-600">
+                                Created: ${new Date(map.created_at).toLocaleString()}<br>
+                                Areas: ${coordinateCount} | Room: ${roomType}
+                            </p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            ${statusBadge}
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="restoreMap(${map.id}, '${map.map_name}', false)" 
+                                class="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">
+                            Restore as New
+                        </button>
+                        <button onclick="restoreMap(${map.id}, '${map.map_name}', true)" 
+                                class="px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded">
+                            Restore & Apply
+                        </button>
+                        <button onclick="previewHistoricalMap(${map.id}, '${map.map_name}')" 
+                                class="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded">
+                            Preview
+                        </button>
+                        ${!map.is_active ? `<button onclick="deleteHistoricalMap(${map.id}, '${map.map_name}')" 
+                                class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
+                            Delete
+                        </button>` : ''}
+                    </div>
+                `;
+                
+                historyList.appendChild(historyItem);
+            });
+        } else {
+            historyList.innerHTML = '<p class="text-gray-500 text-sm">No map history found for this room</p>';
+        }
+    } catch (error) {
+        console.error('Error loading room history:', error);
+        historyList.innerHTML = '<p class="text-red-500 text-sm">Error loading history</p>';
+    }
+}
+
+async function restoreMap(mapId, mapName, applyImmediately) {
+    const action = applyImmediately ? 'restore and apply' : 'restore';
+    
+    if (!confirm(`Are you sure you want to ${action} the map "${mapName}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/room_maps.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'restore',
+                map_id: mapId,
+                apply_immediately: applyImmediately
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const message = applyImmediately ? 
+                'Map restored and applied successfully!' : 
+                'Map restored successfully!';
+            showMapperMessage(message, 'success');
+            
+            // Refresh the lists
+            const roomType = document.getElementById('roomMapperSelect').value;
+            loadSavedMapsForRoom(roomType);
+            loadRoomHistory();
+        } else {
+            showMapperMessage('Error restoring map: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error restoring map:', error);
+        showMapperMessage('Error restoring map', 'error');
+    }
+}
+
+async function previewHistoricalMap(mapId, mapName) {
+    try {
+        const response = await fetch(`api/room_maps.php?room_type=${document.getElementById('roomMapperSelect').value}`);
+        const data = await response.json();
+        
+        if (data.success && data.maps) {
+            const map = data.maps.find(m => m.id == mapId);
+            if (map) {
+                clearMapperAreas();
+                
+                // Load the coordinates visually (similar to loadSavedMap but for preview)
+                if (map.coordinates && map.coordinates.length > 0) {
+                    const roomDisplay = document.getElementById('roomMapperDisplay');
+                    const coordinates = document.getElementById('mapperCoordinates');
+                    
+                    map.coordinates.forEach((coord, index) => {
+                        mapperAreaCount++;
+                        
+                        // Create visual area
+                        const area = document.createElement('div');
+                        area.className = 'room-mapper-clickable-area';
+                        area.style.border = '2px solid orange'; // Different color for preview
+                        area.style.backgroundColor = 'rgba(255, 165, 0, 0.2)';
+                        area.setAttribute('data-area', coord.selector);
+                        
+                        // Convert coordinates to display coordinates
+                        const wrapperWidth = roomDisplay.offsetWidth;
+                        const wrapperHeight = roomDisplay.offsetHeight;
+                        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+                        const imageAspectRatio = mapperOriginalImageWidth / mapperOriginalImageHeight;
+                        
+                        let renderedImageWidth, renderedImageHeight;
+                        let offsetX = 0;
+                        let offsetY = 0;
+                        
+                        if (wrapperAspectRatio > imageAspectRatio) {
+                            renderedImageHeight = wrapperHeight;
+                            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+                            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+                        } else {
+                            renderedImageWidth = wrapperWidth;
+                            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+                            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+                        }
+                        
+                        const displayLeft = (coord.left / mapperOriginalImageWidth) * renderedImageWidth + offsetX;
+                        const displayTop = (coord.top / mapperOriginalImageHeight) * renderedImageHeight + offsetY;
+                        const displayWidth = (coord.width / mapperOriginalImageWidth) * renderedImageWidth;
+                        const displayHeight = (coord.height / mapperOriginalImageHeight) * renderedImageHeight;
+                        
+                        area.style.left = displayLeft + 'px';
+                        area.style.top = displayTop + 'px';
+                        area.style.width = displayWidth + 'px';
+                        area.style.height = displayHeight + 'px';
+                        
+                        roomDisplay.appendChild(area);
+                    });
+                    
+                    showMapperMessage(`Previewing historical map: ${mapName}`, 'info');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error previewing historical map:', error);
+        showMapperMessage('Error previewing map', 'error');
+    }
+}
+
+async function deleteHistoricalMap(mapId, mapName) {
+    if (!confirm(`Are you sure you want to permanently delete the historical map "${mapName}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/room_maps.php', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                map_id: mapId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMapperMessage('Historical map deleted successfully!', 'success');
+            loadRoomHistory(); // Refresh history
+        } else {
+            showMapperMessage('Error deleting historical map: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting historical map:', error);
+        showMapperMessage('Error deleting historical map', 'error');
+    }
 }
 
 // Close modal when clicking outside of it

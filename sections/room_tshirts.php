@@ -668,7 +668,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalImageHeight = 896;
     const roomOverlayWrapper = document.querySelector('#tshirtsRoomPage .room-overlay-wrapper');
 
-    const baseAreas = [
+    // Default/fallback areas (in case database doesn't have active map)
+    const defaultAreas = [
         { selector: '.area-1', top: 332, left: 104, width: 121, height: 137 },
         { selector: '.area-2', top: 345, left: 289, width: 92, height: 122 },
         { selector: '.area-3', top: 347, left: 385, width: 83, height: 122 },
@@ -677,6 +678,8 @@ document.addEventListener('DOMContentLoaded', function() {
         { selector: '.area-6', top: 466, left: 911, width: 96, height: 133 },
         { selector: '.area-7', top: 469, left: 1067, width: 107, height: 149 }
     ];
+    
+    let baseAreas = defaultAreas; // Will be replaced with database coordinates if available
 
     function updateAreaCoordinates() {
         if (!roomOverlayWrapper) {
@@ -720,7 +723,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    updateAreaCoordinates();
+    // Load coordinates from database first, then initialize
+    loadRoomCoordinatesFromDatabase();
+    
+    async function loadRoomCoordinatesFromDatabase() {
+        try {
+            const response = await fetch('api/get_room_coordinates.php?room_type=room_tshirts');
+            
+            // Check if the response is ok (not 500 error)
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Database not available`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.coordinates && data.coordinates.length > 0) {
+                baseAreas = data.coordinates;
+                console.log('Loaded T-shirts room coordinates from database:', data.map_name);
+            } else {
+                console.log('Using default T-shirts room coordinates (no active map found)');
+            }
+        } catch (error) {
+            console.error('Error loading T-shirts room coordinates from database:', error);
+            console.log('Using default T-shirts room coordinates (fallback)');
+            // Continue with default coordinates - no need to show error to users
+        }
+        
+        // Initialize coordinates after loading (or using defaults)
+        updateAreaCoordinates();
+    }
+
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);

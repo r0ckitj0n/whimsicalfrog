@@ -5,7 +5,7 @@
  * Sets a specific image as the primary image for a product
  */
 
-require_once '../config.php';
+require_once __DIR__ . '/../api/config.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

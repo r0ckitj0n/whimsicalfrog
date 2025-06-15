@@ -47,7 +47,7 @@ try {
     
     // If this is marked as primary, unset any existing primary images for this product
     if ($isPrimary) {
-        $stmt = $pdo->prepare("UPDATE product_images SET is_primary = FALSE WHERE product_id = ?");
+        $stmt = $pdo->prepare("UPDATE product_images SET is_primary = 0 WHERE product_id = ?");
         $stmt->execute([$productId]);
     }
     
@@ -120,7 +120,7 @@ try {
             chmod($absPath, 0644);
             
             // Determine if this should be primary
-            $isThisPrimary = $isPrimary && $i === 0; // Only first image can be primary if multiple uploaded
+            $isThisPrimary = ($isPrimary && $i === 0) ? 1 : 0; // Only first image can be primary if multiple uploaded
             
             // Get sort order (use letter index for consistent ordering)
             $sortOrder = ord($suffix) - 65; // Convert A=0, B=1, C=2, etc.
@@ -129,11 +129,6 @@ try {
             $stmt = $pdo->prepare("
                 INSERT INTO product_images (product_id, image_path, is_primary, alt_text, sort_order) 
                 VALUES (?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE 
-                image_path = VALUES(image_path),
-                is_primary = VALUES(is_primary),
-                alt_text = VALUES(alt_text),
-                updated_at = CURRENT_TIMESTAMP
             ");
             
             $stmt->execute([
@@ -147,7 +142,7 @@ try {
             $uploadedImages[] = [
                 'filename' => $filename,
                 'path' => $relPath,
-                'isPrimary' => $isThisPrimary,
+                'isPrimary' => $isThisPrimary == 1,
                 'sortOrder' => $sortOrder
             ];
             
@@ -168,13 +163,13 @@ try {
     
     // If no primary image exists for this product, make the first uploaded image primary
     if (!empty($uploadedImages)) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM product_images WHERE product_id = ? AND is_primary = TRUE");
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM product_images WHERE product_id = ? AND is_primary = 1");
         $stmt->execute([$productId]);
         $hasPrimary = $stmt->fetchColumn() > 0;
         
         if (!$hasPrimary && !empty($uploadedImages)) {
             $firstImage = $uploadedImages[0];
-            $stmt = $pdo->prepare("UPDATE product_images SET is_primary = TRUE WHERE product_id = ? AND image_path = ?");
+            $stmt = $pdo->prepare("UPDATE product_images SET is_primary = 1 WHERE product_id = ? AND image_path = ?");
             $stmt->execute([$productId, $firstImage['path']]);
             
             // Update inventory and products tables
@@ -202,7 +197,7 @@ try {
     
 } catch (PDOException $e) {
     error_log("Database error in multi-image upload: " . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Database error occurred']);
+    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
     error_log("Error in multi-image upload: " . $e->getMessage());
     echo json_encode(['success' => false, 'error' => 'Upload failed: ' . $e->getMessage()]);

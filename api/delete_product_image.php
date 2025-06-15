@@ -5,7 +5,7 @@
  * Deletes a specific product image and the associated file
  */
 
-require_once '../config.php';
+require_once __DIR__ . '/../api/config.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

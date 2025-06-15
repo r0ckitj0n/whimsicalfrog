@@ -229,7 +229,7 @@ $messageType = $_GET['type'] ?? '';
     .cost-label { font-size: 0.8rem; color: #6b7280; }
     
     .modal-outer { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
-    .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: 60rem; /* Slightly reduced max-width */ max-height: 90vh; display: flex; flex-direction: column; }
+    .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: calc(60rem + 10px); /* Slightly reduced max-width */ max-height: calc(90vh + 10px); display: flex; flex-direction: column; }
     .modal-form-container { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-right: 0.5rem; /* For scrollbar */ }
     @media (min-width: 768px) { .modal-form-container { flex-direction: row; } }
     .modal-form-main-column { flex: 1; padding-right: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; /* Reduced gap */ }
@@ -269,6 +269,44 @@ $messageType = $_GET['type'] ?? '';
     .cost-modal-content label { font-size: 0.8rem; }
     .cost-modal-content input { font-size: 0.85rem; padding: 0.4rem 0.6rem; }
     .cost-modal-content button { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
+    
+    /* Enhanced image layout styles */
+    .images-section-container.full-width-images {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .image-grid-container {
+        width: 100%;
+    }
+    
+    .image-item {
+        position: relative;
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .image-item:hover {
+        transform: translateY(-2px);
+        z-index: 5;
+    }
+    
+    /* Responsive image grid improvements */
+    @media (max-width: 768px) {
+        .image-grid-container .grid-cols-4 {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+        .image-grid-container .grid-cols-3 {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .image-grid-container .grid-cols-2,
+        .image-grid-container .grid-cols-3,
+        .image-grid-container .grid-cols-4 {
+            grid-template-columns: 1fr !important;
+        }
+    }
 </style>
 
 <div class="container mx-auto px-4 py-6">
@@ -349,7 +387,7 @@ $messageType = $_GET['type'] ?? '';
             <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
-        <div class="modal-form-container">
+        <div class="modal-form-container gap-5">
             <div class="modal-form-main-column">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
@@ -403,12 +441,15 @@ $messageType = $_GET['type'] ?? '';
                     <label for="description" class="block text-gray-700">Description</label>
                     <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" rows="2" readonly><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                 </div>
-                <div>
-                    <label class="block text-gray-700">Product Images</label>
-                    <div class="image-preview mt-2">
-                        <div id="viewModalImagesList" class="grid grid-cols-2 gap-3">
-                            <!-- Images will be loaded dynamically -->
-                            <div class="col-span-2 text-center text-gray-500 text-sm" id="viewModalImagesLoading">Loading images...</div>
+                <!-- Product Images Section - Same layout as edit modal -->
+<div class="images-section-container" id="imagesSection">
+                    
+                    <!-- Current Images Display -->
+                    <div id="currentImagesContainer" class="current-images-section">
+                        <div class="text-sm text-gray-600 mb-2">Current Images:</div>
+                        <div id="currentImagesList" class="w-full">
+                            <!-- Current images will be loaded here with dynamic layout -->
+                            <div class="text-center text-gray-500 text-sm" id="viewModalImagesLoading">Loading images...</div>
                         </div>
                     </div>
                 </div>
@@ -529,38 +570,31 @@ $messageType = $_GET['type'] ?? '';
                         <label for="description" class="block text-gray-700">Description</label>
                         <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="2"><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 mb-2">Product Images</label>
+                    <!-- Product Images Section - Now spans full width when needed -->
+                    <div class="images-section-container" id="imagesSection">
                         
-                        <!-- Multi-Image Upload Section -->
-                        <div class="multi-image-upload-section">
+                        <!-- Current Images Display -->
+                        <div id="currentImagesContainer" class="current-images-section">
+                            <div class="text-sm text-gray-600 mb-2">Current Images:</div>
+                            <div id="currentImagesList" class="w-full">
+                                <!-- Current images will be loaded here with dynamic layout -->
+                            </div>
+                        </div>
+                        
+                        <!-- Multi-Image Upload Section - Only show in edit/add mode -->
+                        <div class="multi-image-upload-section mt-3" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
+                            <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden">
                             <div class="upload-controls mb-3">
-                                <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden">
                                 <div class="flex gap-2 flex-wrap">
                                     <button type="button" onclick="document.getElementById('multiImageUpload').click()" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                                         📁 Upload Images
                                     </button>
-                                    <button type="button" onclick="uploadSelectedImages()" id="uploadImagesBtn" class="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm hidden">
-                                        ⬆️ Upload Images
-                                    </button>
-                                    <label class="flex items-center text-sm">
-                                        <input type="checkbox" id="setPrimaryImage" class="mr-1"> Set as Primary
-                                    </label>
-                                    <label class="flex items-center text-sm">
-                                        <input type="checkbox" id="overwriteImages" class="mr-1"> Overwrite Existing
-                                    </label>
                                 </div>
-                                <div id="selectedFilesPreview" class="mt-2 hidden">
-                                    <div class="text-sm text-gray-600 mb-2">Selected files:</div>
-                                    <div id="selectedFilesList" class="flex gap-2 flex-wrap"></div>
-                                </div>
-                            </div>
-                            
-                            <!-- Current Images Display -->
-                            <div id="currentImagesContainer" class="current-images-section">
-                                <div class="text-sm text-gray-600 mb-2">Current Images:</div>
-                                <div id="currentImagesList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                    <!-- Current images will be loaded here -->
+                                <div id="uploadProgress" class="mt-2 hidden">
+                                    <div class="text-sm text-gray-600 mb-2">Uploading images...</div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div id="uploadProgressBar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -683,6 +717,177 @@ var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $
 
 // Initialize global categories array
 window.inventoryCategories = <?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> || [];
+
+// Define image management functions first
+function setPrimaryImage(productId, imageId) {
+    console.log('setPrimaryImage called with:', productId, imageId);
+    fetch('/api/set_primary_image.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            productId: productId,
+            imageId: imageId
+        })
+    })
+    .then(response => {
+        console.log('Primary response status:', response.status);
+        return response.text(); // Get as text first to see what we're getting
+    })
+    .then(text => {
+        console.log('Primary response text:', text);
+        try {
+            const data = JSON.parse(text);
+            if (data.success) {
+                showToast('success', 'Primary image updated');
+                loadCurrentImages(productId);
+            } else {
+                showToast('error', data.error || 'Failed to set primary image');
+            }
+        } catch (e) {
+            console.error('Failed to parse JSON:', e);
+            showToast('error', 'Server returned invalid response: ' + text.substring(0, 100));
+        }
+    })
+    .catch(error => {
+        console.error('Error setting primary image:', error);
+        showToast('error', 'Failed to set primary image');
+    });
+}
+
+function deleteProductImage(imageId, productId) {
+    console.log('deleteProductImage called with:', imageId, productId);
+    
+    // Show custom confirmation modal
+    showImageDeleteConfirmation(imageId, productId);
+}
+
+function showImageDeleteConfirmation(imageId, productId) {
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    overlay.id = 'imageDeleteModal';
+    
+    // Create modal content
+    overlay.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900">Delete Image</h3>
+                    <p class="text-sm text-gray-500">This action cannot be undone.</p>
+                </div>
+            </div>
+            <p class="text-gray-700 mb-6">Are you sure you want to delete this image? It will be permanently removed from the product.</p>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeImageDeleteModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="confirmImageDelete(${imageId}, '${productId}')" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                    Delete Image
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            closeImageDeleteModal();
+        }
+    });
+    
+    // Close on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageDeleteModal();
+        }
+    });
+}
+
+function closeImageDeleteModal() {
+    const modal = document.getElementById('imageDeleteModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function confirmImageDelete(imageId, productId) {
+    console.log('Confirming delete for image:', imageId, productId);
+    
+    // Close the modal
+    closeImageDeleteModal();
+    
+    // Proceed with deletion
+    fetch('/api/delete_product_image.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            imageId: imageId
+        })
+    })
+    .then(response => {
+        console.log('Delete response status:', response.status);
+        return response.text(); // Get as text first to see what we're getting
+    })
+    .then(text => {
+        console.log('Delete response text:', text);
+        try {
+            const data = JSON.parse(text);
+            if (data.success) {
+                showToast('success', 'Image deleted');
+                loadCurrentImages(productId);
+            } else {
+                showToast('error', data.error || 'Failed to delete image');
+            }
+        } catch (e) {
+            console.error('Failed to parse JSON:', e);
+            showToast('error', 'Server returned invalid response: ' + text.substring(0, 100));
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting image:', error);
+        showToast('error', 'Failed to delete image');
+    });
+}
+
+// Make functions globally accessible immediately
+window.setPrimaryImage = setPrimaryImage;
+window.deleteProductImage = deleteProductImage;
+
+// Debug function availability
+console.log('Functions defined:', {
+    setPrimaryImage: typeof window.setPrimaryImage,
+    deleteProductImage: typeof window.deleteProductImage
+});
+
+// Add event delegation for image action buttons
+document.addEventListener('click', function(e) {
+    if (e.target.dataset.action === 'set-primary') {
+        e.preventDefault();
+        const productId = e.target.dataset.productId;
+        const imageId = e.target.dataset.imageId;
+        console.log('Event delegation - setPrimaryImage called with:', productId, imageId);
+        setPrimaryImage(productId, imageId);
+    } else if (e.target.dataset.action === 'delete-image') {
+        e.preventDefault();
+        const productId = e.target.dataset.productId;
+        const imageId = e.target.dataset.imageId;
+        console.log('Event delegation - deleteProductImage called with:', imageId, productId);
+        deleteProductImage(imageId, productId);
+    }
+});
 
 function showToast(type, message) {
     const existingToast = document.getElementById('toast-notification');
@@ -926,7 +1131,7 @@ function renderCostList(type, items) {
                 itemDiv.innerHTML = `
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
-                        <span class="cost-item-value">$<?= number_format(floatval($item_cost.cost).toFixed(2)}</span>
+                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
                     </div>`;
                 listElement.appendChild(itemDiv);
             });
@@ -945,7 +1150,7 @@ function renderCostList(type, items) {
                 itemDiv.innerHTML = `
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
-                        <span class="cost-item-value">$<?= number_format(floatval($item_cost.cost).toFixed(2)}</span>
+                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
                     </div>`;
                 viewListElement.appendChild(itemDiv);
             });
@@ -1382,121 +1587,111 @@ window.addEventListener('storage', function(e) {
 // Multi-Image Upload Functions
 let selectedFiles = [];
 
-// Handle file selection
+// Handle file selection and auto-upload
 document.getElementById('multiImageUpload')?.addEventListener('change', function(e) {
-    selectedFiles = Array.from(e.target.files);
-    displaySelectedFiles();
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
     
-    const uploadBtn = document.getElementById('uploadImagesBtn');
-    if (selectedFiles.length > 0) {
-        uploadBtn.classList.remove('hidden');
-    } else {
-        uploadBtn.classList.add('hidden');
-    }
+    // Show progress indicator
+    const progressContainer = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    progressContainer.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    
+    // Auto-upload the selected files
+    autoUploadImages(files);
 });
 
-function displaySelectedFiles() {
-    const previewContainer = document.getElementById('selectedFilesPreview');
-    const filesList = document.getElementById('selectedFilesList');
-    
-    if (selectedFiles.length === 0) {
-        previewContainer.classList.add('hidden');
-        return;
-    }
-    
-    previewContainer.classList.remove('hidden');
-    filesList.innerHTML = '';
-    
-    selectedFiles.forEach((file, index) => {
-        const filePreview = document.createElement('div');
-        filePreview.className = 'relative bg-gray-100 p-2 rounded border';
-        filePreview.innerHTML = `
-            <div class="text-xs text-gray-600 mb-1">${file.name}</div>
-            <div class="text-xs text-gray-500">${(file.size / 1024).toFixed(1)} KB</div>
-            <button type="button" onclick="removeSelectedFile(${index})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center hover:bg-red-600">×</button>
-        `;
-        filesList.appendChild(filePreview);
-    });
-}
-
-function removeSelectedFile(index) {
-    selectedFiles.splice(index, 1);
-    displaySelectedFiles();
-    
-    const uploadBtn = document.getElementById('uploadImagesBtn');
-    if (selectedFiles.length === 0) {
-        uploadBtn.classList.add('hidden');
-    }
-}
-
-function uploadSelectedImages() {
-    if (selectedFiles.length === 0) {
-        showToast('error', 'No files selected');
-        return;
-    }
+function autoUploadImages(files) {
+    console.log('autoUploadImages called with files:', files);
     
     const productId = document.getElementById('productIdDisplay')?.value;
+    console.log('Product ID:', productId);
+    
     if (!productId) {
+        console.error('No product ID found');
         showToast('error', 'Product ID is required');
+        hideUploadProgress();
         return;
     }
     
     const formData = new FormData();
-    selectedFiles.forEach(file => {
+    files.forEach((file, index) => {
+        console.log(`Adding file ${index + 1}:`, file.name, file.size, 'bytes');
         formData.append('images[]', file);
     });
     
     formData.append('productId', productId);
-    formData.append('isPrimary', document.getElementById('setPrimaryImage').checked);
-    formData.append('overwrite', document.getElementById('overwriteImages').checked);
     formData.append('altText', document.getElementById('name')?.value || '');
     
-    const uploadBtn = document.getElementById('uploadImagesBtn');
-    const originalText = uploadBtn.innerHTML;
-    uploadBtn.innerHTML = '⏳ Uploading...';
-    uploadBtn.disabled = true;
+    console.log('FormData prepared, starting upload...');
+    
+    // Update progress bar
+    const progressBar = document.getElementById('uploadProgressBar');
+    progressBar.style.width = '25%';
     
     fetch('/process_multi_image_upload.php', {
         method: 'POST',
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('success', data.message);
-            
-            // Clear selected files
-            selectedFiles = [];
-            document.getElementById('multiImageUpload').value = '';
-            displaySelectedFiles();
-            
-            // Refresh current images display
-            loadCurrentImages(productId);
-            
-            // Reset checkboxes
-            document.getElementById('setPrimaryImage').checked = false;
-            document.getElementById('overwriteImages').checked = false;
-            
-        } else {
-            showToast('error', data.error || 'Upload failed');
-        }
+    .then(response => {
+        console.log('Upload response status:', response.status);
+        console.log('Upload response headers:', response.headers);
+        progressBar.style.width = '75%';
+        return response.text(); // Get as text first to see what we're getting
+    })
+    .then(text => {
+        console.log('Upload response text:', text);
+        progressBar.style.width = '100%';
         
-        if (data.warnings && data.warnings.length > 0) {
-            data.warnings.forEach(warning => {
-                showToast('warning', warning);
-            });
+        try {
+            const data = JSON.parse(text);
+            console.log('Parsed upload response:', data);
+            
+            if (data.success) {
+                showToast('success', data.message || `Successfully uploaded ${files.length} image(s)`);
+                
+                // Clear the file input
+                document.getElementById('multiImageUpload').value = '';
+                
+                // Refresh current images display
+                loadCurrentImages(productId);
+                
+            } else {
+                console.error('Upload failed:', data.error);
+                showToast('error', data.error || 'Upload failed');
+            }
+            
+            if (data.warnings && data.warnings.length > 0) {
+                data.warnings.forEach(warning => {
+                    console.warn('Upload warning:', warning);
+                    showToast('warning', warning);
+                });
+            }
+        } catch (e) {
+            console.error('Failed to parse JSON response:', e);
+            console.error('Raw response:', text.substring(0, 500));
+            showToast('error', 'Server returned invalid response: ' + text.substring(0, 100));
         }
     })
     .catch(error => {
-        console.error('Upload error:', error);
-        showToast('error', 'Upload failed');
+        console.error('Upload fetch error:', error);
+        showToast('error', 'Upload failed: ' + error.message);
     })
     .finally(() => {
-        uploadBtn.innerHTML = originalText;
-        uploadBtn.disabled = false;
-        uploadBtn.classList.add('hidden');
+        // Hide progress after a short delay
+        setTimeout(() => {
+            hideUploadProgress();
+        }, 1000);
     });
+}
+
+function hideUploadProgress() {
+    const progressContainer = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    progressContainer.classList.add('hidden');
+    progressBar.style.width = '0%';
 }
 
 function loadCurrentImages(productId, isViewModal = false) {
@@ -1506,29 +1701,22 @@ function loadCurrentImages(productId, isViewModal = false) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            if (isViewModal) {
-                displayViewModalImages(data.images);
-            } else {
-                displayCurrentImages(data.images);
-            }
+            // Use the same function for both edit and view modals
+            displayCurrentImages(data.images, isViewModal);
         } else {
             console.error('Failed to load images:', data.error);
-            if (isViewModal) {
-                const container = document.getElementById('viewModalImagesList');
-                const loadingDiv = document.getElementById('viewModalImagesLoading');
-                if (loadingDiv) loadingDiv.remove();
-                if (container) container.innerHTML = '<div class="col-span-2 text-center text-gray-500 text-sm">Failed to load images</div>';
-            }
+            const container = document.getElementById('currentImagesList');
+            const loadingDiv = document.getElementById('viewModalImagesLoading') || document.getElementById('currentImagesLoading');
+            if (loadingDiv) loadingDiv.remove();
+            if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">Failed to load images</div>';
         }
     })
     .catch(error => {
         console.error('Error loading images:', error);
-        if (isViewModal) {
-            const container = document.getElementById('viewModalImagesList');
-            const loadingDiv = document.getElementById('viewModalImagesLoading');
-            if (loadingDiv) loadingDiv.remove();
-            if (container) container.innerHTML = '<div class="col-span-2 text-center text-gray-500 text-sm">Error loading images</div>';
-        }
+        const container = document.getElementById('currentImagesList');
+        const loadingDiv = document.getElementById('viewModalImagesLoading') || document.getElementById('currentImagesLoading');
+        if (loadingDiv) loadingDiv.remove();
+        if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">Error loading images</div>';
     });
 }
 
@@ -1557,7 +1745,7 @@ function loadThumbnailImage(productId, container) {
     });
 }
 
-function displayCurrentImages(images) {
+function displayCurrentImages(images, isViewModal = false) {
     const container = document.getElementById('currentImagesList');
     
     if (!images || images.length === 0) {
@@ -1567,22 +1755,27 @@ function displayCurrentImages(images) {
     
     container.innerHTML = '';
     
-    // Create carousel container with flexible height
+    // Determine carousel type and track ID
+    const carouselType = isViewModal ? 'view' : 'edit';
+    const trackId = isViewModal ? 'viewCarouselTrack' : 'editCarouselTrack';
+    
+    // Create carousel container
     const carouselContainer = document.createElement('div');
     carouselContainer.className = 'image-carousel-container relative';
+    carouselContainer.style.width = '100%';
     carouselContainer.innerHTML = `
-        <div class="image-carousel-wrapper overflow-hidden">
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out gap-6" id="editCarouselTrack">
+        <div class="image-carousel-wrapper overflow-hidden" style="width: 100%; max-width: 525px;">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out" id="${trackId}">
                 <!-- Images will be added here -->
             </div>
         </div>
-        ${images.length > 2 ? `
-            <button class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('edit', -1)">
+        ${images.length > 3 ? `
+            <button type="button" class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('${carouselType}', -1)">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <button class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('edit', 1)">
+            <button type="button" class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('${carouselType}', 1)">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -1590,130 +1783,102 @@ function displayCurrentImages(images) {
         ` : ''}
     `;
     
-    const track = carouselContainer.querySelector('#editCarouselTrack');
+    const track = carouselContainer.querySelector(`#${trackId}`);
     
-    // Always show exactly 2 slots for larger previews, fill empty ones with blank spaces
-    for (let i = 0; i < 2; i++) {
+    // Add all images to the carousel track
+    images.forEach((image, index) => {
         const imageDiv = document.createElement('div');
         imageDiv.className = 'carousel-slide flex-shrink-0';
-        imageDiv.style.width = 'calc((100% - 3rem) / 2)'; // Much wider - 2 images instead of 3
+        // Use fixed pixel width to show exactly 3 images - calculate based on container
+        // Container is ~506px, so each slide should be ~155px to fit 3 with gaps
+        imageDiv.style.width = '155px';
+        imageDiv.style.marginRight = '15px';
         
-        if (i < images.length) {
-            const image = images[i];
-            imageDiv.innerHTML = `
-                <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md">
-                    <div class="relative">
-                        <img src="${image.image_path}" alt="${image.alt_text}" 
-                             class="w-full h-auto object-contain bg-gray-50" 
-                             onerror="this.src='images/products/placeholder.png'"
-                             style="min-height: 200px; max-height: 400px;">
-                    </div>
-                    <div class="p-4 bg-gray-50">
-                        <div class="text-sm text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
-                        ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary Image</div>' : ''}
-                        <div class="flex gap-2 mt-3">
-                            ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Set Primary</button>` : ''}
-                            <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
-                        </div>
-                    </div>
+        console.log(`Creating slide ${index + 1}, width: 155px, marginRight: 15px`);
+        
+        // Action buttons only for edit modal
+        const actionButtons = isViewModal ? '' : `
+            <div class="flex gap-1 mt-1 flex-wrap">
+                        ${!image.is_primary ? `<button type="button" data-action="set-primary" data-product-id="${image.product_id}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
+                                  <button type="button" data-action="delete-image" data-product-id="${image.product_id}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
+            </div>
+        `;
+        
+        imageDiv.innerHTML = `
+            <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md h-full">
+                <div class="relative carousel-image-container" style="height: 150px;">
+                    <img src="${image.image_path}" alt="${image.alt_text}" 
+                         class="w-full h-full object-contain bg-gray-50 carousel-image" 
+                         onerror="this.src='images/products/placeholder.png'"
+                         style="object-position: center;">
                 </div>
-            `;
-        } else {
-            // Empty slot - show placeholder
-            imageDiv.innerHTML = `
-                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400" style="min-height: 250px;">
-                    <svg class="w-16 h-16 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"></path>
-                    </svg>
-                    <span class="text-sm">No image</span>
+                <div class="p-2 bg-gray-50">
+                    <div class="text-xs text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
+                    ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary</div>' : ''}
+                    ${actionButtons}
                 </div>
-            `;
-        }
+            </div>
+        `;
         track.appendChild(imageDiv);
+    });
+    
+    // Set the track width based on number of images using fixed pixel widths
+    // Each slide is 155px + 15px margin = 170px per slide
+    let trackWidth;
+    if (images.length <= 3) {
+        trackWidth = '100%';
+    } else {
+        // Calculate total width needed: (slides * 155px) + ((slides-1) * 15px gaps)
+        const totalWidth = (images.length * 155) + ((images.length - 1) * 15);
+        trackWidth = totalWidth + 'px';
     }
+    track.style.width = trackWidth;
+    
+    // Debug: Force container to show only 3 images worth of width
+    const wrapper = track.parentElement;
+    if (wrapper && images.length > 3) {
+        // 3 images * 155px + 2 gaps * 15px = 495px
+        wrapper.style.width = '495px';
+        wrapper.style.maxWidth = '495px';
+        console.log('Forced wrapper width to 495px to show exactly 3 images');
+    }
+    
+    console.log(`Track width set to: ${trackWidth} for ${images.length} images`);
     
     container.appendChild(carouselContainer);
     
     // Initialize carousel position
-    window.editCarouselPosition = 0;
+    const positionVar = isViewModal ? 'viewCarouselPosition' : 'editCarouselPosition';
+    window[positionVar] = 0;
+    
+    // Images now have fixed height, no normalization needed
+    
+    // Debug: Check actual container and track dimensions
+    setTimeout(() => {
+        const containerWidth = container.offsetWidth;
+        const trackElement = document.getElementById(trackId);
+        const trackWidth = trackElement ? trackElement.offsetWidth : 'not found';
+        const slides = trackElement ? trackElement.querySelectorAll('.carousel-slide') : [];
+        
+        console.log(`Carousel debug for ${carouselType}:`);
+        console.log(`- Container width: ${containerWidth}px`);
+        console.log(`- Track width: ${trackWidth}px`);
+        console.log(`- Number of slides: ${slides.length}`);
+        if (slides.length > 0) {
+            console.log(`- First slide width: ${slides[0].offsetWidth}px`);
+            console.log(`- First slide computed width: ${getComputedStyle(slides[0]).width}`);
+        }
+    }, 100);
+    
+    // Update carousel navigation visibility
+    updateCarouselNavigation(carouselType, images.length);
+    
+    console.log('Loaded', images.length, 'images for', carouselType, 'carousel, track width:', trackWidth);
 }
 
-function displayViewModalImages(images) {
-    const container = document.getElementById('viewModalImagesList');
-    
-    if (!images || images.length === 0) {
-        container.innerHTML = '<div class="text-gray-500 text-sm">No images available</div>';
-        return;
-    }
-    
-    container.innerHTML = '';
-    
-    // Create carousel container with flexible height
-    const carouselContainer = document.createElement('div');
-    carouselContainer.className = 'image-carousel-container relative';
-    carouselContainer.innerHTML = `
-        <div class="image-carousel-wrapper overflow-hidden">
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out gap-6" id="viewCarouselTrack">
-                <!-- Images will be added here -->
-            </div>
-        </div>
-        ${images.length > 2 ? `
-            <button class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('view', -1)">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
-            <button class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('view', 1)">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </button>
-        ` : ''}
-    `;
-    
-    const track = carouselContainer.querySelector('#viewCarouselTrack');
-    
-    // Always show exactly 2 slots for larger previews, fill empty ones with blank spaces
-    for (let i = 0; i < 2; i++) {
-        const imageDiv = document.createElement('div');
-        imageDiv.className = 'carousel-slide flex-shrink-0';
-        imageDiv.style.width = 'calc((100% - 3rem) / 2)'; // Much wider - 2 images instead of 3
-        
-        if (i < images.length) {
-            const image = images[i];
-            imageDiv.innerHTML = `
-                <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md">
-                    <div class="relative">
-                        <img src="${image.image_path}" alt="${image.alt_text}" 
-                             class="w-full h-auto object-contain bg-gray-50" 
-                             onerror="this.src='images/products/placeholder.png'"
-                             style="min-height: 200px; max-height: 400px;">
-                    </div>
-                    <div class="p-4 bg-gray-50">
-                        <div class="text-sm text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
-                        ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary Image</div>' : ''}
-                    </div>
-                </div>
-            `;
-        } else {
-            // Empty slot - show placeholder
-            imageDiv.innerHTML = `
-                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400" style="min-height: 250px;">
-                    <svg class="w-16 h-16 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"></path>
-                    </svg>
-                    <span class="text-sm">No image</span>
-                </div>
-            `;
-        }
-        track.appendChild(imageDiv);
-    }
-    
-    container.appendChild(carouselContainer);
-    
-    // Initialize carousel position
-    window.viewCarouselPosition = 0;
-}
+// Helper functions removed - now using carousel layout
+
+// displayViewModalImages function removed - now using unified displayCurrentImages function
 
 function loadThumbnailImage(productId, container) {
     if (!productId || !container) return;
@@ -1740,63 +1905,6 @@ function loadThumbnailImage(productId, container) {
     });
 }
 
-function setPrimaryImage(productId, imageId) {
-    fetch('/api/set_primary_image.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            productId: productId,
-            imageId: imageId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('success', 'Primary image updated');
-            loadCurrentImages(productId);
-        } else {
-            showToast('error', data.error || 'Failed to set primary image');
-        }
-    })
-    .catch(error => {
-        console.error('Error setting primary image:', error);
-        showToast('error', 'Failed to set primary image');
-    });
-}
-
-function deleteProductImage(imageId, productId) {
-    if (!confirm('Are you sure you want to delete this image?')) {
-        return;
-    }
-    
-    fetch('/api/delete_product_image.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            imageId: imageId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('success', 'Image deleted');
-            loadCurrentImages(productId);
-        } else {
-            showToast('error', data.error || 'Failed to delete image');
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting image:', error);
-        showToast('error', 'Failed to delete image');
-    });
-}
-
 // Load current images when modal opens
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1817,17 +1925,17 @@ document.addEventListener('DOMContentLoaded', function() {
          } else if (modalMode === 'view' && viewId) {
         // Load images for view modal
         setTimeout(() => {
-            // For view modal, we need to extract the productId from the edit item
-            const productId = '<?= htmlspecialchars($editItem['productId'] ?? '') ?>';
-            if (productId) {
-                console.log('Loading current images for view modal:', productId);
-                loadCurrentImages(productId, true);
+            // For view modal, get the productId from the readonly field
+            const productIdField = document.getElementById('productIdDisplay');
+            if (productIdField && productIdField.value) {
+                console.log('Loading current images for view modal:', productIdField.value);
+                loadCurrentImages(productIdField.value, true);
             } else {
                 console.log('No product ID found for view modal');
-                const container = document.getElementById('viewModalImagesList');
+                const container = document.getElementById('currentImagesList');
                 const loadingDiv = document.getElementById('viewModalImagesLoading');
                 if (loadingDiv) loadingDiv.remove();
-                if (container) container.innerHTML = '<div class="col-span-2 text-center text-gray-500 text-sm">No product ID available</div>';
+                if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">No product ID available</div>';
             }
         }, 100);
     }
@@ -1990,20 +2098,84 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Function to normalize carousel image heights
+function normalizeCarouselImageHeights(trackId) {
+    const track = document.getElementById(trackId);
+    if (!track) return;
+    
+    const imageContainers = track.querySelectorAll('.carousel-image-container');
+    const images = track.querySelectorAll('.carousel-image');
+    
+    if (images.length === 0) return;
+    
+    // Wait for all images to load
+    let loadedCount = 0;
+    const totalImages = images.length;
+    
+    const checkAllLoaded = () => {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+            // All images loaded, now find the tallest
+            let maxHeight = 0;
+            
+            images.forEach(img => {
+                if (img.complete && img.naturalHeight > 0) {
+                    // Calculate the height this image would have at the container width
+                    const containerWidth = img.parentElement.offsetWidth;
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
+                    const scaledHeight = containerWidth / aspectRatio;
+                    maxHeight = Math.max(maxHeight, scaledHeight);
+                }
+            });
+            
+            // Set minimum height to ensure reasonable size
+            maxHeight = Math.max(maxHeight, 200);
+            maxHeight = Math.min(maxHeight, 400); // Cap at 400px
+            
+            console.log(`Setting carousel image height to: ${maxHeight}px`);
+            
+            // Apply the height to all image containers
+            imageContainers.forEach(container => {
+                container.style.height = maxHeight + 'px';
+            });
+        }
+    };
+    
+    // Add load listeners to all images
+    images.forEach(img => {
+        if (img.complete) {
+            checkAllLoaded();
+        } else {
+            img.addEventListener('load', checkAllLoaded);
+            img.addEventListener('error', checkAllLoaded); // Count errors as "loaded" too
+        }
+    });
+}
+
+
+
 // Carousel navigation function
 function moveCarousel(type, direction) {
     const trackId = type === 'edit' ? 'editCarouselTrack' : 'viewCarouselTrack';
     const positionVar = type === 'edit' ? 'editCarouselPosition' : 'viewCarouselPosition';
     
     const track = document.getElementById(trackId);
-    if (!track) return;
+    if (!track) {
+        console.log(`Carousel track not found: ${trackId}`);
+        return;
+    }
     
     const slides = track.querySelectorAll('.carousel-slide');
     const totalSlides = slides.length;
-    const slidesToShow = 2; // Changed from 3 to 2
+    const slidesToShow = 3; // Show 3 images at a time
     
-    // Only allow navigation if there are more than 2 images
-    if (totalSlides <= slidesToShow) return;
+    console.log(`Moving ${type} carousel, direction: ${direction}, total slides: ${totalSlides}`);
+    
+    // Only allow navigation if there are more than 3 images
+    if (totalSlides <= slidesToShow) {
+        console.log(`Not enough slides to navigate: ${totalSlides} <= ${slidesToShow}`);
+        return;
+    }
     
     const maxPosition = Math.max(0, totalSlides - slidesToShow);
     
@@ -2018,17 +2190,45 @@ function moveCarousel(type, direction) {
     // Store position
     window[positionVar] = currentPosition;
     
-    // Apply transform
-    const translateX = -(currentPosition * (100 / slidesToShow));
-    track.style.transform = `translateX(${translateX}%)`;
+    // Apply transform - move by one slide width including margin
+    // Each slide is 155px + 15px margin = 170px per slide
+    const translateX = -(currentPosition * 170);
+    track.style.transform = `translateX(${translateX}px)`;
+    
+    console.log(`Moved to position ${currentPosition}, translateX: ${translateX}px, maxPosition: ${maxPosition}`);
     
     // Update button visibility
+    updateCarouselNavigation(type, totalSlides);
+}
+
+function updateCarouselNavigation(type, totalSlides) {
+    const trackId = type === 'edit' ? 'editCarouselTrack' : 'viewCarouselTrack';
+    const positionVar = type === 'edit' ? 'editCarouselPosition' : 'viewCarouselPosition';
+    
+    const track = document.getElementById(trackId);
+    if (!track) {
+        console.log(`Track not found for navigation update: ${trackId}`);
+        return;
+    }
+    
     const container = track.closest('.image-carousel-container');
     const prevBtn = container.querySelector('.carousel-prev');
     const nextBtn = container.querySelector('.carousel-next');
     
-    if (prevBtn) prevBtn.style.display = currentPosition === 0 ? 'none' : 'block';
-    if (nextBtn) nextBtn.style.display = currentPosition >= maxPosition ? 'none' : 'block';
+    const slidesToShow = 3;
+    const currentPosition = window[positionVar] || 0;
+    const maxPosition = Math.max(0, totalSlides - slidesToShow);
+    
+    console.log(`Updating ${type} navigation: totalSlides=${totalSlides}, currentPosition=${currentPosition}, maxPosition=${maxPosition}`);
+    
+    if (prevBtn) {
+        prevBtn.style.display = currentPosition === 0 ? 'none' : 'block';
+        console.log(`${type} prev button:`, currentPosition === 0 ? 'hidden' : 'visible');
+    }
+    if (nextBtn) {
+        nextBtn.style.display = currentPosition >= maxPosition ? 'none' : 'block';
+        console.log(`${type} next button:`, currentPosition >= maxPosition ? 'hidden' : 'visible');
+    }
 }
 </script>
 

@@ -34,6 +34,40 @@ try {
     error_log('General Error: ' . $e->getMessage());
 }
 
+// Initialize modal state
+$modalMode = ''; // Default to no modal unless 'view' or 'edit' is in URL
+$editCustomer = null;
+$customerOrders = [];
+
+// Check if we're in view mode
+if (isset($_GET['view']) && !empty($_GET['view'])) {
+    $customerIdToView = $_GET['view'];
+    $editCustomer = array_filter($customersData, function($customer) use ($customerIdToView) {
+        return ($customer['id'] ?? '') === $customerIdToView;
+    });
+    $editCustomer = !empty($editCustomer) ? array_values($editCustomer)[0] : null;
+
+    if ($editCustomer) {
+        $modalMode = 'view';
+        // Get customer orders
+        $customerOrders = getCustomerOrders($editCustomer['id'], $ordersData);
+    }
+}
+// Check if we're in edit mode
+elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
+    $customerIdToEdit = $_GET['edit'];
+    $editCustomer = array_filter($customersData, function($customer) use ($customerIdToEdit) {
+        return ($customer['id'] ?? '') === $customerIdToEdit;
+    });
+    $editCustomer = !empty($editCustomer) ? array_values($editCustomer)[0] : null;
+
+    if ($editCustomer) {
+        $modalMode = 'edit';
+        // Get customer orders
+        $customerOrders = getCustomerOrders($editCustomer['id'], $ordersData);
+    }
+}
+
 // Handle search/filter
 $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
 $filterRole = isset($_GET['role']) ? $_GET['role'] : 'all';
@@ -295,7 +329,7 @@ $messageType = $_GET['type'] ?? '';
                         $customerOrders = getCustomerOrders($customerId, $ordersData);
                         $orderCount = count($customerOrders);
                     ?>
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50" data-customer-id="<?= htmlspecialchars($customerId) ?>">
                         <td>
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
@@ -329,8 +363,8 @@ $messageType = $_GET['type'] ?? '';
                         </td>
                         <td class="text-sm text-gray-600"><?= $orderCount; ?> orders</td>
                         <td>
-                            <button onclick="viewCustomer('<?= $customerId; ?>')" class="action-btn view-btn" title="View Customer">👁️</button>
-                            <button onclick="editCustomer('<?= $customerId; ?>')" class="action-btn edit-btn" title="Edit Customer">✏️</button>
+                            <a href="?page=admin&section=customers&view=<?= htmlspecialchars($customerId) ?>" class="action-btn view-btn" title="View Customer">👁️</a>
+                            <a href="?page=admin&section=customers&edit=<?= htmlspecialchars($customerId) ?>" class="action-btn edit-btn" title="Edit Customer">✏️</a>
                             <button onclick="confirmDelete('<?= $customerId; ?>', '<?= htmlspecialchars(addslashes($firstName . ' ' . $lastName)); ?>')" class="action-btn delete-btn" title="Delete Customer">🗑️</button>
                         </td>
                     </tr>
@@ -356,39 +390,261 @@ $messageType = $_GET['type'] ?? '';
     </div>
 </div>
 
-<!-- Customer Detail Modal -->
-<div id="customerDetailModal" class="modal-outer" style="display: none;">
+<?php if (($modalMode === 'view' || $modalMode === 'edit') && $editCustomer): ?>
+<div class="modal-outer" id="customerModalOuter">
     <div class="modal-content-wrapper">
         <div class="flex justify-between items-center mb-3">
-            <h2 class="text-lg font-bold text-green-700" id="modalTitle">Customer Profile</h2>
-            <button type="button" onclick="closeCustomerModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            <h2 class="text-lg font-bold text-green-700">
+                <?= $modalMode === 'view' ? 'View Customer: ' : 'Edit Customer: ' ?>
+                <?= htmlspecialchars(($editCustomer['first_name'] ?? '') . ' ' . ($editCustomer['last_name'] ?? '')) ?>
+            </h2>
+            <a href="?page=admin&section=customers" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
-        <div class="modal-form-container">
+        <?php if ($modalMode === 'edit'): ?>
+        <form id="customerForm" method="POST" action="#" class="flex flex-col flex-grow overflow-hidden">
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="customerId" value="<?= htmlspecialchars($editCustomer['id']); ?>">
+        <?php endif; ?>
+
+        <div class="modal-form-container gap-5">
             <div class="modal-form-main-column">
-                <div id="modalContent">
-                    <!-- Content will be loaded dynamically -->
+                <?php
+                $firstName = $editCustomer['first_name'] ?? '';
+                $lastName = $editCustomer['last_name'] ?? '';
+                $email = $editCustomer['email'] ?? '';
+                $username = $editCustomer['username'] ?? '';
+                $role = $editCustomer['role'] ?? '';
+                $phoneNumber = $editCustomer['phoneNumber'] ?? '';
+                $addressLine1 = $editCustomer['addressLine1'] ?? '';
+                $addressLine2 = $editCustomer['addressLine2'] ?? '';
+                $city = $editCustomer['city'] ?? '';
+                $state = $editCustomer['state'] ?? '';
+                $zipCode = $editCustomer['zipCode'] ?? '';
+                
+                $initials = ($firstName && $lastName) ? 
+                    (substr($firstName, 0, 1) . substr($lastName, 0, 1)) : 
+                    (substr($firstName ?: $lastName ?: 'CU', 0, 2));
+                $initials = strtoupper($initials);
+                ?>
+                
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 h-16 w-16">
+                        <div class="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                            <span class="text-green-600 font-medium text-xl"><?= $initials ?></span>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-grow">
+                        <h4 class="text-lg font-medium text-gray-900 mb-2">Personal Information</h4>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label for="firstName" class="block text-gray-700">First Name</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <input type="text" id="firstName" name="firstName" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   value="<?= htmlspecialchars($firstName) ?>" required>
+                        <?php else: ?>
+                            <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($firstName) ?>">
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <label for="lastName" class="block text-gray-700">Last Name</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <input type="text" id="lastName" name="lastName" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   value="<?= htmlspecialchars($lastName) ?>" required>
+                        <?php else: ?>
+                            <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($lastName) ?>">
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label for="username" class="block text-gray-700">Username</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <input type="text" id="username" name="username" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   value="<?= htmlspecialchars($username) ?>" required>
+                        <?php else: ?>
+                            <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($username) ?>">
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-gray-700">Email</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <input type="email" id="email" name="email" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   value="<?= htmlspecialchars($email) ?>" required>
+                        <?php else: ?>
+                            <input type="email" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($email) ?>">
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label for="role" class="block text-gray-700">Role</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <select id="role" name="role" class="mt-1 block w-full p-2 border border-gray-300 rounded" required>
+                                <option value="customer" <?= $role === 'customer' ? 'selected' : '' ?>>Customer</option>
+                                <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Admin</option>
+                            </select>
+                        <?php else: ?>
+                            <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($role) ?>">
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <label for="phoneNumber" class="block text-gray-700">Phone Number</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   value="<?= htmlspecialchars($phoneNumber) ?>">
+                        <?php else: ?>
+                            <input type="tel" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($phoneNumber ?: 'Not provided') ?>">
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div>
+                    <h5 class="text-sm font-medium text-gray-700 mb-2">Address Information</h5>
+                </div>
+
+                <div>
+                    <label for="addressLine1" class="block text-gray-700">Address Line 1</label>
+                    <?php if ($modalMode === 'edit'): ?>
+                        <input type="text" id="addressLine1" name="addressLine1" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                               value="<?= htmlspecialchars($addressLine1) ?>">
+                    <?php else: ?>
+                        <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                               value="<?= htmlspecialchars($addressLine1 ?: 'Not provided') ?>">
+                    <?php endif; ?>
+                </div>
+
+                <div>
+                    <label for="addressLine2" class="block text-gray-700">Address Line 2</label>
+                    <?php if ($modalMode === 'edit'): ?>
+                        <input type="text" id="addressLine2" name="addressLine2" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                               value="<?= htmlspecialchars($addressLine2) ?>">
+                    <?php else: ?>
+                        <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                               value="<?= htmlspecialchars($addressLine2 ?: 'Not provided') ?>">
+                    <?php endif; ?>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label for="city" class="block text-gray-700">City</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <input type="text" id="city" name="city" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   value="<?= htmlspecialchars($city) ?>">
+                        <?php else: ?>
+                            <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($city ?: 'Not provided') ?>">
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <label for="state" class="block text-gray-700">State</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <input type="text" id="state" name="state" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   value="<?= htmlspecialchars($state) ?>">
+                        <?php else: ?>
+                            <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($state ?: 'Not provided') ?>">
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <label for="zipCode" class="block text-gray-700">ZIP Code</label>
+                        <?php if ($modalMode === 'edit'): ?>
+                            <input type="text" id="zipCode" name="zipCode" class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   value="<?= htmlspecialchars($zipCode) ?>">
+                        <?php else: ?>
+                            <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                                   value="<?= htmlspecialchars($zipCode ?: 'Not provided') ?>">
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
             
             <div class="modal-form-side-column">
                 <div class="bg-gray-50 border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0; height: 100%; display: flex; flex-direction: column;">
                     <h3 class="color: #374151; font-size: 1rem; font-weight: 600; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #d1d5db;">Order History</h3>
-                    <div id="orderHistory" style="flex-grow: 1; overflow-y: auto; max-height: 300px;">
-                        Loading orders...
+                    <div style="flex-grow: 1; overflow-y: auto; max-height: 300px;">
+                        <?php if (empty($customerOrders)): ?>
+                            <p class="text-gray-500 italic text-sm">No orders found for this customer.</p>
+                        <?php else: ?>
+                            <?php foreach ($customerOrders as $order): 
+                                $orderDate = date('M j, Y', strtotime($order['date'] ?? $order['createdAt'] ?? 'now'));
+                                $statusClass = 'status-' . strtolower($order['status'] ?? 'pending');
+                            ?>
+                            <div class="order-item mb-3 p-2 bg-white rounded border">
+                                <h5 class="font-medium text-sm">Order #<?= htmlspecialchars($order['id']) ?></h5>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    <div>Date: <?= $orderDate ?></div>
+                                    <div>Total: $<?= number_format(floatval($order['total'] ?? $order['totalAmount'] ?? 0), 2) ?></div>
+                                    <div>Status: <span class="<?= $statusClass ?>"><?= htmlspecialchars($order['status'] ?? 'Pending') ?></span></div>
+                                    <div>Payment: <?= htmlspecialchars($order['paymentMethod'] ?? 'N/A') ?> - <?= htmlspecialchars($order['paymentStatus'] ?? 'N/A') ?></div>
+                                    <?php if (!empty($order['shippingMethod'])): ?>
+                                    <div>Shipping: <?= htmlspecialchars($order['shippingMethod']) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="flex justify-end space-x-3 mt-auto pt-4 border-t">
-            <button type="button" onclick="closeCustomerModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm">Close</button>
-            <button type="button" id="editCustomerBtn" onclick="editCustomerFromModal()" class="brand-button px-4 py-2 rounded text-sm" style="display: none;">Edit Customer</button>
+            <a href="?page=admin&section=customers" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 inline-block text-sm">
+                <?= $modalMode === 'edit' ? 'Cancel' : 'Close' ?>
+            </a>
+            <?php if ($modalMode === 'view'): ?>
+                <a href="?page=admin&section=customers&edit=<?= htmlspecialchars($editCustomer['id']) ?>" class="brand-button px-4 py-2 rounded text-sm">Edit Customer</a>
+            <?php else: ?>
+                <button type="submit" id="saveCustomerBtn" class="brand-button px-4 py-2 rounded text-sm">
+                    <span class="button-text">Save Changes</span>
+                    <span class="loading-spinner hidden"></span>
+                </button>
+            <?php endif; ?>
         </div>
+
+        <?php if ($modalMode === 'edit'): ?>
+        </form>
+        <?php endif; ?>
     </div>
 </div>
+<?php endif; ?>
 
 <script>
+// Initialize variables
+var modalMode = <?= json_encode($modalMode ?? '') ?>;
+var currentCustomerId = <?= json_encode(isset($editCustomer['id']) ? $editCustomer['id'] : '') ?>;
+
+function showToast(type, message) {
+    const existingToast = document.getElementById('toast-notification');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    const toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.className = `toast-notification ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 function confirmDelete(customerId, customerName) {
     document.getElementById('delete_customer_id').value = customerId;
     document.getElementById('modal-message').innerText = `Are you sure you want to delete ${customerName}? This action cannot be undone.`;
@@ -399,177 +655,111 @@ function closeModal() {
     document.getElementById('deleteConfirmModal').classList.remove('show');
 }
 
-function closeCustomerModal() {
-    document.getElementById('customerDetailModal').style.display = 'none';
-}
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle customer form submission for edit mode
+    const customerForm = document.getElementById('customerForm');
+    if (customerForm) {
+        const saveBtn = customerForm.querySelector('#saveCustomerBtn');
+        const btnText = saveBtn ? saveBtn.querySelector('.button-text') : null;
+        const spinner = saveBtn ? saveBtn.querySelector('.loading-spinner') : null;
 
-async function viewCustomer(customerId) {
-    try {
-        // Show modal and loading state
-        const modal = document.getElementById('customerDetailModal');
-        const modalContent = document.getElementById('modalContent');
-        const modalTitle = document.getElementById('modalTitle');
-        const editBtn = document.getElementById('editCustomerBtn');
-        
-        modalTitle.textContent = 'Customer Profile';
-        modalContent.innerHTML = '<div class="text-center py-8">Loading customer details...</div>';
-        editBtn.style.display = 'none';
-        modal.style.display = 'flex';
-        
-        // Fetch customer data
-        const response = await fetch(`/process_customers_get.php?id=${customerId}`);
-        const customer = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(customer.error || 'Failed to load customer');
-        }
-        
-        // Build customer details HTML
-        const firstName = customer.firstName || '';
-        const lastName = customer.lastName || '';
-        const email = customer.email || '';
-        const username = customer.username || '';
-        const role = customer.role || '';
-        const phoneNumber = customer.phoneNumber || '';
-        const addressLine1 = customer.addressLine1 || '';
-        const addressLine2 = customer.addressLine2 || '';
-        const city = customer.city || '';
-        const state = customer.state || '';
-        const zipCode = customer.zipCode || '';
-        
-        const initials = (firstName && lastName) ? 
-            (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() : 
-            (firstName ? firstName.substring(0, 2).toUpperCase() : 
-             (lastName ? lastName.substring(0, 2).toUpperCase() : 'CU'));
-        
-        modalContent.innerHTML = `
-            <div>
-                <h4 class="text-lg font-medium text-gray-900 mb-4">Personal Information</h4>
-                <div class="flex items-center mb-4">
-                    <div class="flex-shrink-0 h-16 w-16">
-                        <div class="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-                            <span class="text-green-600 font-medium text-xl">${initials}</span>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <div class="text-lg font-medium text-gray-900">
-                            <span class="admin-data-value">${firstName} ${lastName}</span>
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            <span class="admin-data-label">Username:</span> <span class="admin-data-value">${username}</span>
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            <span class="admin-data-label">Email:</span> <span class="admin-data-value">${email}</span>
-                        </div>
-                        <div class="text-sm text-gray-500">
-                            <span class="admin-data-label">Role:</span> <span class="admin-data-value">${role}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-4">
-                    <h5 class="text-sm font-medium text-gray-700 mb-2">Contact Information</h5>
-                    ${phoneNumber ? `<div class="text-sm text-gray-500 mb-1">
-                        <span class="admin-data-label">Phone:</span> <span class="admin-data-value">${phoneNumber}</span>
-                    </div>` : '<div class="text-sm text-gray-500 italic">No phone number provided</div>'}
-                    
-                    <h5 class="text-sm font-medium text-gray-700 mt-4 mb-2">Address</h5>
-                    ${addressLine1 ? `<div class="text-sm text-gray-500 mb-1">
-                        <span class="admin-data-value">${addressLine1}</span>
-                    </div>` : ''}
-                    ${addressLine2 ? `<div class="text-sm text-gray-500 mb-1">
-                        <span class="admin-data-value">${addressLine2}</span>
-                    </div>` : ''}
-                    ${(city || state || zipCode) ? `<div class="text-sm text-gray-500 mb-1">
-                        <span class="admin-data-value">${city}${city && state ? ', ' : ''}${state}${zipCode ? ' ' + zipCode : ''}</span>
-                    </div>` : ''}
-                    ${(!addressLine1 && !addressLine2 && !city && !state && !zipCode) ? '<div class="text-sm text-gray-500 italic">No address provided</div>' : ''}
-                </div>
-            </div>
-        `;
-        
-        // Show edit button and store customer ID
-        editBtn.style.display = 'inline-block';
-        editBtn.dataset.customerId = customerId;
-        
-        // Load order history
-        loadCustomerOrders(customerId);
-        
-    } catch (error) {
-        document.getElementById('modalContent').innerHTML = `
-            <div class="text-center py-8 text-red-600">
-                Error loading customer: ${error.message}
-            </div>
-        `;
-    }
-}
-
-async function loadCustomerOrders(customerId) {
-    try {
-        const response = await fetch(`/process_customer_orders.php?customerId=${customerId}`);
-        const orders = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(orders.error || 'Failed to load orders');
-        }
-        
-        const orderHistoryDiv = document.getElementById('orderHistory');
-        
-        if (!orders || orders.length === 0) {
-            orderHistoryDiv.innerHTML = '<p class="text-gray-500 italic text-sm">No orders found for this customer.</p>';
-            return;
-        }
-        
-        let ordersHtml = '';
-        orders.forEach(order => {
-            const orderDate = new Date(order.createdAt).toLocaleDateString();
-            const statusClass = `status-${order.status.toLowerCase()}`;
+        customerForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
             
-            ordersHtml += `
-                <div class="order-item">
-                    <h5>Order #${order.id}</h5>
-                    <div class="order-detail">
-                        <span>Date:</span>
-                        <span>${orderDate}</span>
-                    </div>
-                    <div class="order-detail">
-                        <span>Total:</span>
-                        <span>$${parseFloat(order.totalAmount || 0).toFixed(2)}</span>
-                    </div>
-                    <div class="order-detail">
-                        <span>Status:</span>
-                        <span class="order-status ${statusClass}">${order.status}</span>
-                    </div>
-                    <div class="order-detail">
-                        <span>Payment:</span>
-                        <span>${order.paymentMethod || 'N/A'} - ${order.paymentStatus || 'N/A'}</span>
-                    </div>
-                    ${order.shippingMethod ? `<div class="order-detail">
-                        <span>Shipping:</span>
-                        <span>${order.shippingMethod}</span>
-                    </div>` : ''}
-                </div>
-            `;
+            if(saveBtn && btnText && spinner) {
+                btnText.classList.add('hidden');
+                spinner.classList.remove('hidden');
+                saveBtn.disabled = true;
+            }
+            
+            const formData = new FormData(customerForm);
+
+            fetch('/process_customer_update.php', { // API endpoint for processing
+                method: 'POST', 
+                body: formData, 
+                headers: { 'X-Requested-With': 'XMLHttpRequest' } // Important for backend to identify AJAX
+            })
+            .then(response => {
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else {
+                    // If not JSON, read as text and throw an error to be caught by .catch()
+                    return response.text().then(text => { 
+                        throw new Error("Server returned non-JSON response: " + text.substring(0, 200)); 
+                    });
+                }
+            })
+            .then(data => { // This block executes if response.json() was successful
+                if (data.success) {
+                    showToast('success', data.message);
+                    
+                    // Redirect to the customers page, optionally highlighting the customer
+                    let redirectUrl = '?page=admin&section=customers';
+                    if (data.customerId) { // customerId is returned by update operations
+                        redirectUrl += '&highlight=' + data.customerId;
+                    }
+                    // Use a short delay to allow toast to be seen before navigation
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 500); 
+                    return; 
+
+                } else { // data.success is false
+                    showToast('error', data.error || 'Failed to save customer. Please check inputs.');
+                    if(saveBtn && btnText && spinner) {
+                        btnText.classList.remove('hidden');
+                        spinner.classList.add('hidden');
+                        saveBtn.disabled = false;
+                    }
+                    if (data.field_errors) {
+                        document.querySelectorAll('.field-error-highlight').forEach(el => el.classList.remove('field-error-highlight'));
+                        data.field_errors.forEach(fieldName => {
+                            const fieldElement = document.getElementById(fieldName) || document.querySelector(`[name="${fieldName}"]`);
+                            if (fieldElement) fieldElement.classList.add('field-error-highlight');
+                        });
+                    }
+                }
+            })
+            .catch(error => { // Catches network errors or the error thrown from non-JSON response
+                console.error('Error saving customer:', error);
+                showToast('error', 'An unexpected error occurred: ' + error.message);
+                 if(saveBtn && btnText && spinner) {
+                    btnText.classList.remove('hidden');
+                    spinner.classList.add('hidden');
+                    saveBtn.disabled = false;
+                }
+            });
         });
-        
-        orderHistoryDiv.innerHTML = ordersHtml;
-        
-    } catch (error) {
-        document.getElementById('orderHistory').innerHTML = `
-            <p class="text-red-500 text-sm">Error loading orders: ${error.message}</p>
-        `;
     }
-}
 
-function editCustomer(customerId) {
-    // Redirect to edit page
-    window.location.href = `/?page=admin&section=customers&action=edit&id=${customerId}`;
-}
+    // Handle escape key to close modal
+    window.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const mainModal = document.getElementById('customerModalOuter');
+            // Check if mainModal is actually displayed (not just present in DOM)
+            if (mainModal && mainModal.offsetParent !== null) { 
+                window.location.href = '?page=admin&section=customers'; // Redirect to close
+            } else if (document.getElementById('deleteConfirmModal')?.classList.contains('show')) {
+                closeModal();
+            }
+        }
+    });
 
-function editCustomerFromModal() {
-    const customerId = document.getElementById('editCustomerBtn').dataset.customerId;
-    if (customerId) {
-        editCustomer(customerId);
+    // Highlight row if specified in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    if (highlightId) {
+        const rowToHighlight = document.querySelector(`tr[data-customer-id='${highlightId}']`);
+        if (rowToHighlight) {
+            rowToHighlight.classList.add('bg-yellow-100'); 
+            rowToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                rowToHighlight.classList.remove('bg-yellow-100');
+                const cleanUrl = window.location.pathname + '?page=admin&section=customers'; // Remove highlight param
+                history.replaceState({path: cleanUrl}, '', cleanUrl);
+            }, 3000);
+        }
     }
-}
+});
 </script>

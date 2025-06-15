@@ -58,5 +58,5 @@ $pending = ($order['paymentStatus'] === 'Pending');
         </div>
     <?php endif; ?>
 
-    <button id="printBtn" onclick="window.print();" class="px-4 py-2 bg-[#87ac3a] hover:bg-[#6b8e23] text-white rounded">Print Receipt</button>
+    <button id="printBtn" onclick="window.print();" class="px-4 py-2 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white rounded">Print Receipt</button>
 </div> 

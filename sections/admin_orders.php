@@ -235,7 +235,7 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
             <label for="end_date" class="text-sm font-medium" style="color:#87ac3a !important;">To:</label>
             <input type="date" name="end_date" id="end_date" value="<?= htmlspecialchars($endDate); ?>" class="border rounded px-2 py-1 text-sm">
             <a href="?page=admin&section=orders" class="text-sm text-gray-600 underline">Clear</a>
-            <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#6b8e23] transition">Apply</button>
+            <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">Apply</button>
         </form>
     </div>
     

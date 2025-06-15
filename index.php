@@ -623,7 +623,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
 
 <div id="customAlertBox" class="custom-alert">
     <p id="customAlertMessage"></p>
-    <button onclick="document.getElementById('customAlertBox').style.display = 'none';" class="mt-3 px-6 py-2 bg-white text-[#87ac3a] rounded-lg hover:bg-gray-100 font-semibold border-2 border-white transition-all duration-200">OK</button>
+    <button onclick="document.getElementById('customAlertBox').style.display = 'none';" class="mt-3 px-6 py-2 bg-[#87ac3a] text-white rounded-lg hover:bg-[#a3cc4a] font-semibold border-2 border-[#87ac3a] transition-all duration-200">OK</button>
 </div>
 
 <!-- Main Navigation -->

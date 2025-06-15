@@ -927,7 +927,6 @@ function renderCostList(type, items) {
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
                         <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
-                        <button type="button" class="cost-edit-btn" onclick="editCostItem('${type}', '${item_cost.id}')" title="Edit Cost"><svg fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg></button>
                     </div>`;
                 listElement.appendChild(itemDiv);
             });
@@ -1568,31 +1567,56 @@ function displayCurrentImages(images) {
     
     container.innerHTML = '';
     
-    // Create a flex container for all images
-    const imageRow = document.createElement('div');
-    imageRow.className = 'flex flex-wrap gap-3';
-    
-    images.forEach(image => {
-        const imageDiv = document.createElement('div');
-        imageDiv.className = 'relative bg-white border rounded-lg overflow-hidden shadow-sm';
-        imageDiv.style.width = '120px'; // Fixed small size
-        imageDiv.innerHTML = `
-            <div class="aspect-square">
-                <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.src='images/products/placeholder.png'">
+    // Create carousel container
+    const carouselContainer = document.createElement('div');
+    carouselContainer.className = 'image-carousel-container relative';
+    carouselContainer.innerHTML = `
+        <div class="image-carousel-wrapper overflow-hidden">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out" id="editCarouselTrack">
+                <!-- Images will be added here -->
             </div>
-            <div class="p-1">
-                <div class="text-xs text-gray-600 truncate" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
-                ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
-                <div class="flex gap-1 mt-1">
-                    ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600" title="Set as Primary">Primary</button>` : ''}
-                    <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-1 py-0.5 bg-red-500 text-white rounded hover:bg-red-600" title="Delete Image">Delete</button>
+        </div>
+        ${images.length > 3 ? `
+            <button class="carousel-nav carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md z-10" onclick="moveCarousel('edit', -1)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <button class="carousel-nav carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md z-10" onclick="moveCarousel('edit', 1)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        ` : ''}
+    `;
+    
+    const track = carouselContainer.querySelector('#editCarouselTrack');
+    
+    images.forEach((image, index) => {
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'carousel-slide flex-shrink-0 w-1/3 px-1';
+        imageDiv.innerHTML = `
+            <div class="relative bg-white border rounded-lg overflow-hidden shadow-sm">
+                <div class="aspect-square">
+                    <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.src='images/products/placeholder.png'">
+                </div>
+                <div class="p-2">
+                    <div class="text-xs text-gray-600 truncate" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
+                    ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
+                    <div class="flex gap-1 mt-1">
+                        ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600" title="Set as Primary">Primary</button>` : ''}
+                        <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-1 py-0.5 bg-red-500 text-white rounded hover:bg-red-600" title="Delete Image">Delete</button>
+                    </div>
                 </div>
             </div>
         `;
-        imageRow.appendChild(imageDiv);
+        track.appendChild(imageDiv);
     });
     
-    container.appendChild(imageRow);
+    container.appendChild(carouselContainer);
+    
+    // Initialize carousel position
+    window.editCarouselPosition = 0;
 }
 
 function displayViewModalImages(images) {
@@ -1610,27 +1634,52 @@ function displayViewModalImages(images) {
     
     container.innerHTML = '';
     
-    // Create a flex container for all images
-    const imageRow = document.createElement('div');
-    imageRow.className = 'flex flex-wrap gap-3';
-    
-    images.forEach(image => {
-        const imageDiv = document.createElement('div');
-        imageDiv.className = 'relative bg-white border rounded-lg overflow-hidden shadow-sm';
-        imageDiv.style.width = '120px'; // Fixed small size
-        imageDiv.innerHTML = `
-            <div class="aspect-square">
-                <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;aspect-square bg-gray-100 flex items-center justify-center text-gray-500 text-xs&quot;>📷<br/>No image</div>'">
+    // Create carousel container
+    const carouselContainer = document.createElement('div');
+    carouselContainer.className = 'image-carousel-container relative col-span-2';
+    carouselContainer.innerHTML = `
+        <div class="image-carousel-wrapper overflow-hidden">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out" id="viewCarouselTrack">
+                <!-- Images will be added here -->
             </div>
-            <div class="p-1">
-                <div class="text-xs text-gray-600 truncate" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
-                ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
+        </div>
+        ${images.length > 3 ? `
+            <button class="carousel-nav carousel-prev absolute left-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md z-10" onclick="moveCarousel('view', -1)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <button class="carousel-nav carousel-next absolute right-0 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-md z-10" onclick="moveCarousel('view', 1)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        ` : ''}
+    `;
+    
+    const track = carouselContainer.querySelector('#viewCarouselTrack');
+    
+    images.forEach((image, index) => {
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'carousel-slide flex-shrink-0 w-1/3 px-1';
+        imageDiv.innerHTML = `
+            <div class="relative bg-white border rounded-lg overflow-hidden shadow-sm">
+                <div class="aspect-square">
+                    <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;aspect-square bg-gray-100 flex items-center justify-center text-gray-500 text-xs&quot;>📷<br/>No image</div>'">
+                </div>
+                <div class="p-2">
+                    <div class="text-xs text-gray-600 truncate" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
+                    ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
+                </div>
             </div>
         `;
-        imageRow.appendChild(imageDiv);
+        track.appendChild(imageDiv);
     });
     
-    container.appendChild(imageRow);
+    container.appendChild(carouselContainer);
+    
+    // Initialize carousel position
+    window.viewCarouselPosition = 0;
 }
 
 function loadThumbnailImage(productId, container) {
@@ -1907,6 +1956,43 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Carousel navigation function
+function moveCarousel(type, direction) {
+    const trackId = type === 'edit' ? 'editCarouselTrack' : 'viewCarouselTrack';
+    const positionVar = type === 'edit' ? 'editCarouselPosition' : 'viewCarouselPosition';
+    
+    const track = document.getElementById(trackId);
+    if (!track) return;
+    
+    const slides = track.querySelectorAll('.carousel-slide');
+    const totalSlides = slides.length;
+    const slidesToShow = 3;
+    const maxPosition = Math.max(0, totalSlides - slidesToShow);
+    
+    // Update position
+    let currentPosition = window[positionVar] || 0;
+    currentPosition += direction;
+    
+    // Clamp position
+    if (currentPosition < 0) currentPosition = 0;
+    if (currentPosition > maxPosition) currentPosition = maxPosition;
+    
+    // Store position
+    window[positionVar] = currentPosition;
+    
+    // Apply transform
+    const translateX = -(currentPosition * (100 / slidesToShow));
+    track.style.transform = `translateX(${translateX}%)`;
+    
+    // Update button visibility
+    const container = track.closest('.image-carousel-container');
+    const prevBtn = container.querySelector('.carousel-prev');
+    const nextBtn = container.querySelector('.carousel-next');
+    
+    if (prevBtn) prevBtn.style.display = currentPosition === 0 ? 'none' : 'block';
+    if (nextBtn) nextBtn.style.display = currentPosition >= maxPosition ? 'none' : 'block';
+}
 </script>
 
 <?php

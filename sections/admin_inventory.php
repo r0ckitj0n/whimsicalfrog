@@ -926,7 +926,7 @@ function renderCostList(type, items) {
                 itemDiv.innerHTML = `
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
-                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
+                        <span class="cost-item-value">$<?= number_format(floatval($item_cost.cost).toFixed(2)}</span>
                     </div>`;
                 listElement.appendChild(itemDiv);
             });
@@ -945,7 +945,7 @@ function renderCostList(type, items) {
                 itemDiv.innerHTML = `
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
-                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
+                        <span class="cost-item-value">$<?= number_format(floatval($item_cost.cost).toFixed(2)}</span>
                     </div>`;
                 viewListElement.appendChild(itemDiv);
             });
@@ -1572,11 +1572,11 @@ function displayCurrentImages(images) {
     carouselContainer.className = 'image-carousel-container relative';
     carouselContainer.innerHTML = `
         <div class="image-carousel-wrapper overflow-hidden">
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out gap-4" id="editCarouselTrack">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out gap-6" id="editCarouselTrack">
                 <!-- Images will be added here -->
             </div>
         </div>
-        ${images.length > 3 ? `
+        ${images.length > 2 ? `
             <button class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('edit', -1)">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -1592,11 +1592,11 @@ function displayCurrentImages(images) {
     
     const track = carouselContainer.querySelector('#editCarouselTrack');
     
-    // Always show exactly 3 slots, fill empty ones with blank spaces
-    for (let i = 0; i < 3; i++) {
+    // Always show exactly 2 slots for larger previews, fill empty ones with blank spaces
+    for (let i = 0; i < 2; i++) {
         const imageDiv = document.createElement('div');
         imageDiv.className = 'carousel-slide flex-shrink-0';
-        imageDiv.style.width = 'calc((100% - 2rem) / 3)'; // Account for gap spacing
+        imageDiv.style.width = 'calc((100% - 3rem) / 2)'; // Much wider - 2 images instead of 3
         
         if (i < images.length) {
             const image = images[i];
@@ -1606,14 +1606,14 @@ function displayCurrentImages(images) {
                         <img src="${image.image_path}" alt="${image.alt_text}" 
                              class="w-full h-auto object-contain bg-gray-50" 
                              onerror="this.src='images/products/placeholder.png'"
-                             style="min-height: 150px;">
+                             style="min-height: 200px; max-height: 400px;">
                     </div>
-                    <div class="p-3 bg-gray-50">
+                    <div class="p-4 bg-gray-50">
                         <div class="text-sm text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
                         ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary Image</div>' : ''}
-                        <div class="flex gap-2 mt-2">
-                            ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Set Primary</button>` : ''}
-                            <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
+                        <div class="flex gap-2 mt-3">
+                            ${!image.is_primary ? `<button onclick="setPrimaryImage('${image.product_id}', ${image.id})" class="text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Set Primary</button>` : ''}
+                            <button onclick="deleteProductImage(${image.id}, '${image.product_id}')" class="text-xs px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -1621,8 +1621,8 @@ function displayCurrentImages(images) {
         } else {
             // Empty slot - show placeholder
             imageDiv.innerHTML = `
-                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400" style="min-height: 200px;">
-                    <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400" style="min-height: 250px;">
+                    <svg class="w-16 h-16 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"></path>
                     </svg>
                     <span class="text-sm">No image</span>
@@ -1653,11 +1653,11 @@ function displayViewModalImages(images) {
     carouselContainer.className = 'image-carousel-container relative';
     carouselContainer.innerHTML = `
         <div class="image-carousel-wrapper overflow-hidden">
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out gap-4" id="viewCarouselTrack">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out gap-6" id="viewCarouselTrack">
                 <!-- Images will be added here -->
             </div>
         </div>
-        ${images.length > 3 ? `
+        ${images.length > 2 ? `
             <button class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('view', -1)">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -1673,11 +1673,11 @@ function displayViewModalImages(images) {
     
     const track = carouselContainer.querySelector('#viewCarouselTrack');
     
-    // Always show exactly 3 slots, fill empty ones with blank spaces
-    for (let i = 0; i < 3; i++) {
+    // Always show exactly 2 slots for larger previews, fill empty ones with blank spaces
+    for (let i = 0; i < 2; i++) {
         const imageDiv = document.createElement('div');
         imageDiv.className = 'carousel-slide flex-shrink-0';
-        imageDiv.style.width = 'calc((100% - 2rem) / 3)'; // Account for gap spacing
+        imageDiv.style.width = 'calc((100% - 3rem) / 2)'; // Much wider - 2 images instead of 3
         
         if (i < images.length) {
             const image = images[i];
@@ -1687,9 +1687,9 @@ function displayViewModalImages(images) {
                         <img src="${image.image_path}" alt="${image.alt_text}" 
                              class="w-full h-auto object-contain bg-gray-50" 
                              onerror="this.src='images/products/placeholder.png'"
-                             style="min-height: 150px;">
+                             style="min-height: 200px; max-height: 400px;">
                     </div>
-                    <div class="p-3 bg-gray-50">
+                    <div class="p-4 bg-gray-50">
                         <div class="text-sm text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
                         ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary Image</div>' : ''}
                     </div>
@@ -1698,8 +1698,8 @@ function displayViewModalImages(images) {
         } else {
             // Empty slot - show placeholder
             imageDiv.innerHTML = `
-                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400" style="min-height: 200px;">
-                    <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400" style="min-height: 250px;">
+                    <svg class="w-16 h-16 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"></path>
                     </svg>
                     <span class="text-sm">No image</span>
@@ -2000,9 +2000,9 @@ function moveCarousel(type, direction) {
     
     const slides = track.querySelectorAll('.carousel-slide');
     const totalSlides = slides.length;
-    const slidesToShow = 3;
+    const slidesToShow = 2; // Changed from 3 to 2
     
-    // Only allow navigation if there are more than 3 images
+    // Only allow navigation if there are more than 2 images
     if (totalSlides <= slidesToShow) return;
     
     const maxPosition = Math.max(0, totalSlides - slidesToShow);

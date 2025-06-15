@@ -926,7 +926,7 @@ function renderCostList(type, items) {
                 itemDiv.innerHTML = `
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
-                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
+                        <span class="cost-item-value">$<?= number_format(floatval($item_cost.cost).toFixed(2)}</span>
                     </div>`;
                 listElement.appendChild(itemDiv);
             });
@@ -1567,13 +1567,12 @@ function displayCurrentImages(images) {
     
     container.innerHTML = '';
     
-    // Create carousel container with larger images
+    // Create carousel container with flexible height
     const carouselContainer = document.createElement('div');
     carouselContainer.className = 'image-carousel-container relative';
-    carouselContainer.style.height = '280px'; // Fixed height for larger images
     carouselContainer.innerHTML = `
-        <div class="image-carousel-wrapper overflow-hidden h-full">
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out h-full" id="editCarouselTrack">
+        <div class="image-carousel-wrapper overflow-hidden">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out gap-4" id="editCarouselTrack">
                 <!-- Images will be added here -->
             </div>
         </div>
@@ -1596,15 +1595,18 @@ function displayCurrentImages(images) {
     // Always show exactly 3 slots, fill empty ones with blank spaces
     for (let i = 0; i < 3; i++) {
         const imageDiv = document.createElement('div');
-        imageDiv.className = 'carousel-slide flex-shrink-0 px-2 h-full';
-        imageDiv.style.width = 'calc(100% / 3)'; // Exactly 1/3 width
+        imageDiv.className = 'carousel-slide flex-shrink-0';
+        imageDiv.style.width = 'calc((100% - 2rem) / 3)'; // Account for gap spacing
         
         if (i < images.length) {
             const image = images[i];
             imageDiv.innerHTML = `
-                <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md h-full flex flex-col">
-                    <div class="flex-1 min-h-0">
-                        <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.src='images/products/placeholder.png'">
+                <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md">
+                    <div class="relative">
+                        <img src="${image.image_path}" alt="${image.alt_text}" 
+                             class="w-full h-auto object-contain bg-gray-50" 
+                             onerror="this.src='images/products/placeholder.png'"
+                             style="min-height: 150px;">
                     </div>
                     <div class="p-3 bg-gray-50">
                         <div class="text-sm text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
@@ -1619,9 +1621,9 @@ function displayCurrentImages(images) {
         } else {
             // Empty slot - show placeholder
             imageDiv.innerHTML = `
-                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg h-full flex flex-col items-center justify-center text-gray-400">
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400" style="min-height: 200px;">
                     <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"></path>
                     </svg>
                     <span class="text-sm">No image</span>
                 </div>
@@ -1638,26 +1640,20 @@ function displayCurrentImages(images) {
 
 function displayViewModalImages(images) {
     const container = document.getElementById('viewModalImagesList');
-    const loadingDiv = document.getElementById('viewModalImagesLoading');
-    
-    if (loadingDiv) {
-        loadingDiv.remove();
-    }
     
     if (!images || images.length === 0) {
-        container.innerHTML = '<div class="col-span-2 text-center text-gray-500 text-sm">No images available</div>';
+        container.innerHTML = '<div class="text-gray-500 text-sm">No images available</div>';
         return;
     }
     
     container.innerHTML = '';
     
-    // Create carousel container with larger images
+    // Create carousel container with flexible height
     const carouselContainer = document.createElement('div');
-    carouselContainer.className = 'image-carousel-container relative col-span-2';
-    carouselContainer.style.height = '280px'; // Fixed height for larger images
+    carouselContainer.className = 'image-carousel-container relative';
     carouselContainer.innerHTML = `
-        <div class="image-carousel-wrapper overflow-hidden h-full">
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out h-full" id="viewCarouselTrack">
+        <div class="image-carousel-wrapper overflow-hidden">
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out gap-4" id="viewCarouselTrack">
                 <!-- Images will be added here -->
             </div>
         </div>
@@ -1680,15 +1676,18 @@ function displayViewModalImages(images) {
     // Always show exactly 3 slots, fill empty ones with blank spaces
     for (let i = 0; i < 3; i++) {
         const imageDiv = document.createElement('div');
-        imageDiv.className = 'carousel-slide flex-shrink-0 px-2 h-full';
-        imageDiv.style.width = 'calc(100% / 3)'; // Exactly 1/3 width
+        imageDiv.className = 'carousel-slide flex-shrink-0';
+        imageDiv.style.width = 'calc((100% - 2rem) / 3)'; // Account for gap spacing
         
         if (i < images.length) {
             const image = images[i];
             imageDiv.innerHTML = `
-                <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md h-full flex flex-col">
-                    <div class="flex-1 min-h-0">
-                        <img src="${image.image_path}" alt="${image.alt_text}" class="w-full h-full object-cover" onerror="this.src='images/products/placeholder.png'">
+                <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md">
+                    <div class="relative">
+                        <img src="${image.image_path}" alt="${image.alt_text}" 
+                             class="w-full h-auto object-contain bg-gray-50" 
+                             onerror="this.src='images/products/placeholder.png'"
+                             style="min-height: 150px;">
                     </div>
                     <div class="p-3 bg-gray-50">
                         <div class="text-sm text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
@@ -1699,9 +1698,9 @@ function displayViewModalImages(images) {
         } else {
             // Empty slot - show placeholder
             imageDiv.innerHTML = `
-                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg h-full flex flex-col items-center justify-center text-gray-400">
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400" style="min-height: 200px;">
                     <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"></path>
                     </svg>
                     <span class="text-sm">No image</span>
                 </div>

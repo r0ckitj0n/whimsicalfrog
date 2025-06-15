@@ -65,7 +65,7 @@ function renderImageCarousel($productId, $images = [], $options = []) {
                          alt="<?= htmlspecialchars($image['alt_text'] ?: 'Product image') ?>"
                          style="width: 100%; height: 100%; object-fit: contain; background: white;"
                          onerror="this.onerror=null; this.src='images/products/placeholder.png';">
-                    <?php if ($image['is_primary']): ?>
+                    <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin']): ?>
                         <div class="primary-badge" style="position: absolute; top: 10px; right: 10px; background: #87ac3a; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
                             Primary
                         </div>
@@ -98,7 +98,7 @@ function renderImageCarousel($productId, $images = [], $options = []) {
                              alt="Thumbnail <?= $index + 1 ?>"
                              style="width: 100%; height: 100%; object-fit: cover;"
                              onerror="this.onerror=null; this.src='images/products/placeholder.png';">
-                        <?php if ($image['is_primary']): ?>
+                        <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin']): ?>
                             <div style="position: absolute; top: 2px; right: 2px; background: #87ac3a; color: white; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px;">
                                 ⭐
                             </div>

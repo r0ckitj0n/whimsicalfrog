@@ -2367,11 +2367,14 @@ function fixSampleEmail() {
             return;
         }
         
-        // Proceed with fixing sample email
-        return fetch('api/fix_sample_email.php', {
+        // Proceed with fixing sample email using database manager
+        const formData = new FormData();
+        formData.append('action', 'fix_sample_email');
+        
+        return fetch('api/db_manager.php', {
             method: 'POST',
+            body: formData,
             headers: {
-                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });

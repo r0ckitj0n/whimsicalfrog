@@ -129,6 +129,9 @@ function handlePost($pdo, $input) {
         case 'update_order':
             updateOrder($pdo, $input);
             break;
+        case 'update_single_order':
+            updateSingleOrder($pdo, $input);
+            break;
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -240,6 +243,31 @@ function updateOrder($pdo, $input) {
         echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
     } catch (PDOException $e) {
         $pdo->rollback();
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+function updateSingleOrder($pdo, $input) {
+    $assignmentId = $input['assignment_id'] ?? null;
+    $displayOrder = $input['display_order'] ?? null;
+    
+    if ($assignmentId === null || $displayOrder === null) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Assignment ID and display order are required']);
+        return;
+    }
+    
+    try {
+        $stmt = $pdo->prepare("UPDATE room_category_assignments SET display_order = ? WHERE id = ?");
+        $result = $stmt->execute([$displayOrder, $assignmentId]);
+        
+        if ($result && $stmt->rowCount() > 0) {
+            echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Assignment not found']);
+        }
+    } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }

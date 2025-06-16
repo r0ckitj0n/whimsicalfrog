@@ -1306,7 +1306,10 @@ async function loadRoomCategories() {
                             <span class="font-medium">${assignment.category_name}</span>
                         </div>
                         <div class="text-xs text-gray-500">
-                            Order: ${assignment.display_order} | Created: ${new Date(assignment.created_at).toLocaleDateString()}
+                            Order: <span class="inline-editable-order cursor-pointer hover:bg-yellow-100 px-1 rounded" 
+                                        data-assignment-id="${assignment.id}" 
+                                        data-current-order="${assignment.display_order}"
+                                        title="Click to edit display order">${assignment.display_order}</span> | Created: ${new Date(assignment.created_at).toLocaleDateString()}
                         </div>
                         ${assignment.category_description ? `<div class="text-xs text-gray-400 mt-1">${assignment.category_description}</div>` : ''}
                     </div>
@@ -1448,6 +1451,113 @@ async function removeRoomCategory(assignmentId) {
         }
     );
 }
+
+// Inline editing for display order
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('inline-editable-order')) {
+        const span = e.target;
+        const assignmentId = span.dataset.assignmentId;
+        const currentOrder = span.dataset.currentOrder;
+        
+        // Don't create multiple inputs
+        if (span.querySelector('input')) return;
+        
+        // Create input element
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentOrder;
+        input.min = '0';
+        input.max = '999';
+        input.className = 'w-12 px-1 py-0 text-xs border border-orange-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-orange-500';
+        input.style.fontSize = '11px';
+        
+        // Replace span content with input
+        const originalText = span.textContent;
+        span.textContent = '';
+        span.appendChild(input);
+        span.classList.add('bg-orange-50', 'border', 'border-orange-300', 'rounded');
+        
+        // Focus and select
+        input.focus();
+        input.select();
+        
+        // Save function
+        const saveOrder = async () => {
+            const newOrder = parseInt(input.value);
+            
+            if (isNaN(newOrder) || newOrder < 0) {
+                showNotification('Invalid Order', 'Please enter a valid number (0 or greater)', 'error');
+                input.focus();
+                return;
+            }
+            
+            if (newOrder.toString() === currentOrder) {
+                // No change, just restore
+                span.textContent = originalText;
+                span.classList.remove('bg-orange-50', 'border', 'border-orange-300');
+                return;
+            }
+            
+            try {
+                const response = await fetch('api/room_category_assignments.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'update_single_order',
+                        assignment_id: assignmentId,
+                        display_order: newOrder
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update the display
+                    span.textContent = newOrder;
+                    span.dataset.currentOrder = newOrder;
+                    span.classList.remove('bg-orange-50', 'border', 'border-orange-300');
+                    
+                    // Reload the room categories to show updated order
+                    loadRoomCategories();
+                    loadRoomCategorySummary();
+                    
+                    showNotification('Order Updated!', `Display order changed to ${newOrder}`, 'success');
+                } else {
+                    showNotification('Update Failed', data.message || 'Could not update display order', 'error');
+                    // Restore original
+                    span.textContent = originalText;
+                    span.classList.remove('bg-orange-50', 'border', 'border-orange-300');
+                }
+            } catch (error) {
+                console.error('Error updating display order:', error);
+                showNotification('Connection Error', 'Please check your internet connection and try again.', 'error');
+                // Restore original
+                span.textContent = originalText;
+                span.classList.remove('bg-orange-50', 'border', 'border-orange-300');
+            }
+        };
+        
+        // Cancel function
+        const cancelEdit = () => {
+            span.textContent = originalText;
+            span.classList.remove('bg-orange-50', 'border', 'border-orange-300');
+        };
+        
+        // Event handlers
+        input.addEventListener('blur', saveOrder);
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveOrder();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelEdit();
+            }
+        });
+    }
+});
 
 
 </script>

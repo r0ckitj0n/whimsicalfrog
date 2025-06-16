@@ -116,8 +116,8 @@ try {
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Fetch product rows; preserve original column names while also providing the aliases used by the shop layout.
-    $stmt = $pdo->query('SELECT id AS productId, name AS productName, productType, basePrice, description, image AS imageUrl FROM products');
+    // Fetch inventory data joined with product types - use inventory as primary source
+    $stmt = $pdo->query('SELECT i.id AS inventoryId, i.sku, i.name AS productName, i.stockLevel, i.retailPrice, i.description, p.productType FROM inventory i LEFT JOIN products p ON p.sku = i.sku WHERE i.stockLevel > 0');
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if ($products && is_array($products)) {
@@ -134,145 +134,43 @@ try {
              * with a single data structure.
              *
              *  –  The "shop" section (sections/shop.php) expects:             
-             *        productId, productName, price, description, imageUrl
+             *        productId, productName, price, description, imageUrl, stock
              *  –  The "room_*" sections expect:                    
              *        id, name, basePrice (or price), description, image
              *
-             *  We therefore keep the original aliases for the shop and create the
-             *  additional keys required by the room pages.
+             *  We use SKU as the primary identifier and map to expected field names.
              * --------------------------------------------------------------------- */
 
-            // Provide a generic 'price' key (used by both shop and rooms)
-            if (isset($product['basePrice'])) {
-                $product['price'] = $product['basePrice'];
-            }
-
-            // Add stock level
-            $product['stock'] = $stockMap[$product['productId']] ?? 0;
+            // Use SKU as productId for compatibility
+            $product['productId'] = $product['sku'];
+            
+            // Use retail price as the main price
+            $product['price'] = $product['retailPrice'];
+            $product['basePrice'] = $product['retailPrice'];
+            
+            // Set stock level
+            $product['stock'] = (int)$product['stockLevel'];
+            
+            // Set image URL to empty - will be handled by SKU-based image system
+            $product['imageUrl'] = '';
 
             // Duplicate keys for room pages compatibility
-            $product['id']    = $product['productId']   ?? null;
+            $product['id']    = $product['sku'];  // Use SKU as ID
             $product['name']  = $product['productName'] ?? null;
-            $product['image'] = $product['imageUrl']    ?? null;
+            $product['image'] = '';  // Will be handled by SKU-based system
 
             $categories[$category][] = $product;
         }
     }
     
-    // Fetch inventory with direct SQL query
+    // Fetch inventory for admin sections that still need it
     $stmt = $pdo->query('SELECT * FROM inventory');
     $inventoryItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Format inventory data to match the expected structure
     $inventory = $inventoryItems;
-    
-    // Build quick lookup of stock levels by productId and by name
-    $stockMap = [];
-    $stockByName = [];
-    $imageByName = [];
-    foreach ($inventory as $invRow) {
-        if (isset($invRow['productId'])) {
-            $pid = $invRow['productId'];
-            $qty = (int)($invRow['stockLevel'] ?? 0);
-            if (!isset($stockMap[$pid])) $stockMap[$pid] = 0;
-            $stockMap[$pid] += $qty;
-        }
-        // also collect by name for rows whose productId may be placeholder
-        if (isset($invRow['name'])) {
-            $nkey = strtolower(trim($invRow['name']));
-            $qty  = (int)($invRow['stockLevel'] ?? 0);
-            if (!isset($stockByName[$nkey])) $stockByName[$nkey] = 0;
-            $stockByName[$nkey] += $qty;
-            if (!empty($invRow['imageUrl'])) {
-                $imageByName[$nkey] = $invRow['imageUrl'];
-            }
-        }
-    }
 
-    // Inject stock levels into the already-built products list
-    foreach ($categories as $catKey => &$prodArray) {
-        foreach ($prodArray as &$prod) {
-            if (isset($prod['productId'])) {
-                $nkey = strtolower(trim($prod['productName']));
-                $prod['stock'] = $stockMap[$prod['productId']] ?? ($stockByName[$nkey] ?? 0);
 
-                // if product image missing, try inventory image
-                if (empty($prod['imageUrl']) && isset($imageByName[$nkey])) {
-                    $prod['imageUrl'] = $imageByName[$nkey];
-                    $prod['image'] = $imageByName[$nkey];
-                }
-            }
-        }
-        unset($prod); // break reference
-    }
-    unset($prodArray);
-
-    /* ---------------------------------------------------------------------
-     * Ensure that every product fetched from `products` has a category entry.
-     * Some rows (e.g., P001, P007) have productType NULL.  We infer their
-     * category by looking at the inventory rows that reference the same
-     * productId.  This guarantees the item shows up in the shop & room pages
-     * even if the `products` table is incomplete.
-     * ------------------------------------------------------------------ */
-
-    // Build quick lookup: productId => category (from inventory)
-    $categoryByPid = [];
-    $nameByPid = [];
-    $imageByPid = [];
-    foreach ($inventory as $invRow) {
-        if (!empty($invRow['productId']) && !empty($invRow['name'])) {
-            $nameByPid[$invRow['productId']] = $invRow['name'];
-        }
-        if (!empty($invRow['productId']) && !empty($invRow['imageUrl'])) {
-            $imageByPid[$invRow['productId']] = $invRow['imageUrl'];
-        }
-    }
-
-    // Build set of productIds already present in $categories for quick check
-    $presentPids = [];
-    foreach ($categories as $catArr) {
-        foreach ($catArr as $prod) {
-            if (isset($prod['productId'])) {
-                $presentPids[$prod['productId']] = true;
-            }
-        }
-    }
-
-    foreach ($products as $prod) {
-        $pid = $prod['productId'];
-        if (isset($presentPids[$pid])) continue; // already added
-
-        // Infer category
-        $infCat = $categoryByPid[$pid] ?? null;
-        if (!$infCat) continue; // cannot place without category
-
-        // Copy product & normalise fields similar to earlier logic
-        $prod['productType'] = $infCat;
-        // Provide generic field names
-        if (isset($prod['basePrice'])) {
-            $prod['price'] = $prod['basePrice'];
-        }
-        // Prefer inventory name if available (ensures variant names appear)
-        if (isset($nameByPid[$pid])) {
-            $prod['productName'] = $nameByPid[$pid];
-        }
-        if (empty($prod['imageUrl']) && isset($imageByPid[$pid])) {
-            $prod['imageUrl'] = $imageByPid[$pid];
-        }
-
-        // Stock level
-        $prod['stock'] = $stockMap[$pid] ?? 0;
-        // Duplicate for room pages
-        $prod['id']    = $prod['productId'];
-        $prod['name']  = $prod['productName'];
-        $prod['image'] = $prod['imageUrl'];
-
-        // Finally, push into categories
-        if (!isset($categories[$infCat])) {
-            $categories[$infCat] = [];
-        }
-        $categories[$infCat][] = $prod;
-    }
 
 } catch (PDOException $e) {
     // Handle database errors

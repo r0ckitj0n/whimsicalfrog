@@ -116,6 +116,7 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
                 // Get product details
                 $productName = htmlspecialchars($product['productName']);
                 $productId = isset($product['productId']) ? htmlspecialchars($product['productId']) : '';
+                $sku = isset($product['sku']) ? htmlspecialchars($product['sku']) : $productId;
                 $price = isset($product['price']) ? htmlspecialchars($product['price']) : '';
                 $description = isset($product['description']) ? htmlspecialchars($product['description']) : '';
                 $stock = isset($product['stock']) ? (int)$product['stock'] : 0;
@@ -123,21 +124,25 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
                 // Format price
                 $formattedPrice = '$' . number_format((float)$price, 2);
                 
-                // Get primary image for cart data
-                $primaryImage = getPrimaryProductImage($productId);
-                $imageUrl = $primaryImage ? htmlspecialchars($primaryImage['image_path']) : 'images/products/placeholder.png';
+                // Get primary image using SKU-based system
+                $primaryImage = getPrimaryImageBySku($sku);
+                $imageUrl = $primaryImage ? htmlspecialchars($primaryImage) : 'images/products/placeholder.png';
         ?>
         <div class="product-card" data-category="<?php echo htmlspecialchars($category); ?>">
             <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
                 <?php 
-                // Display product images (carousel if multiple, single image if one)
-                echo renderProductImageDisplay($productId, [
-                    'height' => '192px', // h-48 equivalent
-                    'showThumbnails' => false,
-                    'showControls' => true,
-                    'autoplay' => false,
-                    'className' => 'shop-product-image'
-                ]);
+                // Display product images using SKU-based system
+                $primaryImage = getPrimaryImageBySku($sku);
+                if ($primaryImage) {
+                    echo '<div class="product-image-container" style="height: 192px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; overflow: hidden;">';
+                    echo '<img src="' . htmlspecialchars($primaryImage) . '" alt="' . htmlspecialchars($productName) . '" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.onerror=null; this.src=\'images/products/placeholder.png\';">';
+                    echo '</div>';
+                } else {
+                    // Show placeholder if no images
+                    echo '<div class="product-image-placeholder" style="height: 192px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">';
+                    echo '<img src="images/products/placeholder.png" alt="No image available" style="max-width: 100%; max-height: 100%; object-fit: contain;">';
+                    echo '</div>';
+                }
                 ?>
                 <div class="p-4 flex flex-col flex-grow">
                     <h3 class="font-merienda text-lg text-[#87ac3a] mb-1 line-clamp-2"><?php echo $productName; ?></h3>

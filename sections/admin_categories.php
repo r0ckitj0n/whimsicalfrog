@@ -102,6 +102,46 @@ $messageType = $_GET['type'] ?? '';
         font-size: 0.875rem;
         margin-bottom: 4px;
     }
+
+    .editable-category {
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        position: relative;
+    }
+
+    .editable-category:hover {
+        background-color: #f3f4f6;
+    }
+
+    .editable-category.editing {
+        background-color: #fef3c7;
+        cursor: text;
+    }
+
+    .category-edit-input {
+        border: 2px solid #f59e0b;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        width: 100%;
+        background-color: white;
+    }
+
+    .category-edit-input:focus {
+        outline: none;
+        border-color: #d97706;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .edit-hint {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-style: italic;
+        margin-top: 2px;
+    }
 </style>
 
 <div class="container mx-auto px-4 py-6">
@@ -146,7 +186,12 @@ $messageType = $_GET['type'] ?? '';
                         $exampleSku = "WF-{$code}-001";
                     ?>
                         <tr class="hover:bg-gray-50" data-category="<?= htmlspecialchars($cat); ?>">
-                            <td class="font-medium text-gray-900"><?= htmlspecialchars($cat); ?></td>
+                            <td>
+                                <div class="editable-category font-medium text-gray-900" data-original="<?= htmlspecialchars($cat); ?>" title="Click to edit category name">
+                                    <?= htmlspecialchars($cat); ?>
+                                </div>
+                                <div class="edit-hint">Click to edit</div>
+                            </td>
                             <td><span class="category-code"><?= htmlspecialchars($code); ?></span></td>
                             <td><span class="category-code"><?= htmlspecialchars($exampleSku); ?></span></td>
                             <td>
@@ -230,7 +275,12 @@ document.getElementById('addCategoryForm').addEventListener('submit', async (e) 
             tr.className = 'hover:bg-gray-50';
             tr.dataset.category = category;
             tr.innerHTML = `
-                <td class="font-medium text-gray-900">${category}</td>
+                <td>
+                    <div class="editable-category font-medium text-gray-900" data-original="${category}" title="Click to edit category name">
+                        ${category}
+                    </div>
+                    <div class="edit-hint">Click to edit</div>
+                </td>
                 <td><span class="category-code">${code}</span></td>
                 <td><span class="category-code">${exampleSku}</span></td>
                 <td>
@@ -320,4 +370,127 @@ document.getElementById('categoryTableBody').addEventListener('click', async (e)
         }
     }
 });
+
+// Inline editing functionality
+document.getElementById('categoryTableBody').addEventListener('click', (e) => {
+    if (e.target.classList.contains('editable-category') && !e.target.classList.contains('editing')) {
+        startInlineEdit(e.target);
+    }
+});
+
+function startInlineEdit(categoryDiv) {
+    const originalName = categoryDiv.dataset.original;
+    const currentName = categoryDiv.textContent.trim();
+    
+    // Prevent multiple edits
+    if (document.querySelector('.editing')) return;
+    
+    categoryDiv.classList.add('editing');
+    
+    // Create input field
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.className = 'category-edit-input';
+    input.dataset.original = originalName;
+    
+    // Replace content with input
+    categoryDiv.innerHTML = '';
+    categoryDiv.appendChild(input);
+    
+    // Focus and select text
+    input.focus();
+    input.select();
+    
+    // Handle save/cancel
+    const saveEdit = async () => {
+        const newName = input.value.trim();
+        
+        if (!newName) {
+            showToast('error', 'Category name cannot be empty');
+            cancelEdit();
+            return;
+        }
+        
+        if (newName === originalName) {
+            cancelEdit();
+            return;
+        }
+        
+        // Show loading state
+        input.disabled = true;
+        input.value = 'Saving...';
+        
+        try {
+            const res = await fetch('/process_category_action.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'rename', 
+                    category: originalName, 
+                    newCategory: newName 
+                })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                // Update the display
+                categoryDiv.classList.remove('editing');
+                categoryDiv.innerHTML = newName;
+                categoryDiv.dataset.original = newName;
+                
+                // Update the row's data-category attribute
+                const row = categoryDiv.closest('tr');
+                row.dataset.category = newName;
+                
+                // Update delete button's data-category
+                const deleteBtn = row.querySelector('.deleteCategoryBtn');
+                deleteBtn.dataset.category = newName;
+                
+                // Update SKU code and example
+                const newCode = data.newCategoryCode;
+                const codeSpan = row.querySelector('.category-code');
+                codeSpan.textContent = newCode;
+                
+                const exampleSpan = row.querySelectorAll('.category-code')[1];
+                exampleSpan.textContent = `WF-${newCode}-001`;
+                
+                // Show success message
+                showToast('success', `Category renamed to "${newName}" successfully! ${data.affectedProducts} products updated.`);
+                
+                // Notify other pages that categories have been updated
+                localStorage.setItem('categoriesUpdated', Date.now().toString());
+                
+                // If inventory page is open in another tab, refresh its categories
+                if (window.opener && window.opener.refreshCategoryDropdown) {
+                    window.opener.refreshCategoryDropdown();
+                }
+            } else {
+                showToast('error', data.error || 'Failed to rename category');
+                cancelEdit();
+            }
+        } catch(err) {
+            console.error(err);
+            showToast('error', 'Server error occurred');
+            cancelEdit();
+        }
+    };
+    
+    const cancelEdit = () => {
+        categoryDiv.classList.remove('editing');
+        categoryDiv.innerHTML = originalName;
+    };
+    
+    // Event listeners
+    input.addEventListener('blur', saveEdit);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveEdit();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            cancelEdit();
+        }
+    });
+}
 </script> 

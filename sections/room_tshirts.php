@@ -547,13 +547,37 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Open quantity modal function
-function openQuantityModal() {
+async function openQuantityModal() {
     if (!currentProduct) return;
     
     const id = currentProduct['id'];
-    const name = currentProduct['name'];
-    const price = parseFloat(currentProduct['basePrice'] || currentProduct['price'] || 0);
-                const image = currentProduct['image'] || 'images/products/placeholder.png';
+    let name = currentProduct['name'];
+    let price = parseFloat(currentProduct['basePrice'] || currentProduct['price'] || 0);
+    let image = currentProduct['image'] || 'images/products/placeholder.png';
+    
+    // Fetch fresh product data from database to get current image path
+    try {
+        const response = await fetch('api/get_products.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ product_ids: [id] })
+        });
+        
+        if (response.ok) {
+            const products = await response.json();
+            if (products && products.length > 0) {
+                const freshProduct = products[0];
+                name = freshProduct.name || name;
+                price = parseFloat(freshProduct.price) || price;
+                image = freshProduct.image || image;
+                console.log('Updated product data from database:', { id, name, price, image });
+            }
+        }
+    } catch (error) {
+        console.warn('Could not fetch fresh product data, using cached data:', error);
+    }
     
     // Store current product data for modal
     modalProduct = { id, name, price, image };

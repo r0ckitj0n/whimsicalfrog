@@ -160,7 +160,7 @@ class ShoppingCart {
                 ${this.items.map(item => `
                     <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow">
                         <div class="flex items-center space-x-4">
-                            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded" onerror="console.error('Failed to load image:', '${item.image}'); this.src='images/products/placeholder.png';">
+                            <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded" onerror="this.src='images/products/placeholder.png'; this.onerror=null;">
                             <div>
                                 <h3 class="font-semibold">${item.name}</h3>
                                 <p class="text-gray-600">$${item.price.toFixed(2)}</p>

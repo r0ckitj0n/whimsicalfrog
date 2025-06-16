@@ -546,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.closeQuantityModal = closeQuantityModal;
 });
 
-// Open quantity modal function
+// Add to cart directly (skip quantity modal)
 async function openQuantityModal() {
     if (!currentProduct) return;
     
@@ -579,36 +579,43 @@ async function openQuantityModal() {
         console.warn('Could not fetch fresh product data, using cached data:', error);
     }
     
-    // Store current product data for modal
-    modalProduct = { id, name, price, image };
-    
-    // Populate modal with product info
-    if (modalProductImage) {
-        modalProductImage.src = image;
-        modalProductImage.alt = name;
-    }
-    if (modalProductName) {
-        modalProductName.textContent = name;
-    }
-    if (modalProductPrice) {
-        modalProductPrice.textContent = '$' + price.toFixed(2);
-    }
-    if (modalUnitPrice) {
-        modalUnitPrice.textContent = '$' + price.toFixed(2);
-    }
-    
-    // Reset quantity and update total
-    if (quantityInput) {
-        quantityInput.value = 1;
-    }
-    if (window.updateTotal) {
-        window.updateTotal();
-    }
-    
-    // Hide popup and show modal
+    // Hide popup
     hidePopup();
-    if (quantityModal) {
-        quantityModal.classList.remove('hidden');
+    
+    // Add directly to cart with quantity 1
+    if (typeof window.cart !== 'undefined') {
+        const quantity = 1;
+        
+        console.log('Adding to cart:', { id, name, price, image }, 'quantity:', quantity);
+        try {
+            window.cart.addItem({
+                id: id,
+                name: name,
+                price: price,
+                image: image,
+                quantity: quantity
+            });
+            console.log('Item added to cart successfully');
+            
+            // Show confirmation alert if available
+            const customAlert = document.getElementById('customAlertBox');
+            const customAlertMessage = document.getElementById('customAlertMessage');
+            if (customAlert && customAlertMessage) {
+                customAlertMessage.textContent = `${name} added to your cart!`;
+                customAlert.style.display = 'block';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    customAlert.style.display = 'none';
+                }, 5000);
+            }
+        } catch (error) {
+            console.error('Error adding item to cart:', error);
+            alert('There was an error adding the item to your cart. Please try again.');
+        }
+    } else {
+        console.error('Cart functionality not available');
+        alert('Shopping cart is not available. Please refresh the page and try again.');
     }
 }
 

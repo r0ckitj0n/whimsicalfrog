@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Add to cart functionality - now opens quantity modal
+    // Add to cart functionality - directly add to cart (skip modal)
     const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
     
     addToCartButtons.forEach(button => {
@@ -311,27 +311,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const productPrice = parseFloat(this.getAttribute('data-product-price'));
             const productImage = this.getAttribute('data-product-image');
             
-            // Store current product data
-            currentProduct = {
-                id: productId,
-                name: productName,
-                price: productPrice,
-                image: productImage
-            };
-            
-            // Populate modal with product info
-            modalProductImage.src = productImage;
-            modalProductImage.alt = productName;
-            modalProductName.textContent = productName;
-            modalProductPrice.textContent = '$' + productPrice.toFixed(2);
-            modalUnitPrice.textContent = '$' + productPrice.toFixed(2);
-            
-            // Reset quantity and update total
-            quantityInput.value = 1;
-            updateTotal();
-            
-            // Show modal
-            quantityModal.classList.remove('hidden');
+            // Add directly to cart with quantity 1
+            if (typeof window.cart !== 'undefined') {
+                const quantity = 1;
+                
+                window.cart.addItem({
+                    id: productId,
+                    name: productName,
+                    price: productPrice,
+                    image: productImage,
+                    quantity: quantity
+                });
+                
+                // Show confirmation
+                const customAlert = document.getElementById('customAlertBox');
+                const customAlertMessage = document.getElementById('customAlertMessage');
+                customAlertMessage.textContent = `${productName} added to your cart!`;
+                customAlert.style.display = 'block';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    customAlert.style.display = 'none';
+                }, 5000);
+            } else {
+                console.error('Cart functionality not available');
+            }
         });
     });
     

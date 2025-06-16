@@ -116,14 +116,6 @@ $messageType = $_GET['type'] ?? '';
         </div>
     <?php endif; ?>
 
-    <!-- Naming Scheme Information -->
-    <div class="naming-scheme-info">
-        <h4>📋 SKU Naming Scheme</h4>
-        <p>Categories automatically generate SKU prefixes in the format: <strong>WF-[CODE]-###</strong></p>
-        <p>Example: "T-Shirts" → <span class="category-code">WF-TS-001</span>, "Custom Category" → <span class="category-code">WF-CU-001</span></p>
-        <p><em>The naming scheme updates automatically when you add or remove categories.</em></p>
-    </div>
-
     <!-- Add Category Form -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Add New Category</h3>
@@ -165,6 +157,14 @@ $messageType = $_GET['type'] ?? '';
                 </tbody>
             </table>
         <?php endif; ?>
+    </div>
+
+    <!-- SKU Naming Scheme Information (Bottom) -->
+    <div class="naming-scheme-info mt-6">
+        <h4>📋 SKU Naming Scheme</h4>
+        <p>Categories automatically generate SKU prefixes in the format: <strong>WF-[CODE]-###</strong></p>
+        <p>Example: "T-Shirts" → <span class="category-code">WF-TS-001</span>, "Custom Category" → <span class="category-code">WF-CU-001</span></p>
+        <p><em>The naming scheme updates automatically when you add or remove categories.</em></p>
     </div>
 </div>
 

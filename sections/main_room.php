@@ -19,23 +19,7 @@
     }
     
     .door-label {
-        position: absolute;
-        bottom: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(107, 142, 35, 0.9);
-        color: white;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 12px;
-        font-weight: bold;
-        white-space: nowrap;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .door-area:hover .door-label {
-        opacity: 1;
+        display: none;
     }
     
     .door-sign {

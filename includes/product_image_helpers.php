@@ -2,8 +2,127 @@
 /**
  * Product Image Helper Functions
  * 
- * Helper functions for retrieving and managing product images
+ * This file contains helper functions for managing product images
+ * using SKU as the primary identifier.
  */
+
+/**
+ * Get the primary image for a product by SKU
+ * 
+ * @param string $sku The product SKU
+ * @return string|null The image path or null if not found
+ */
+function getPrimaryImageBySku($sku) {
+    if (empty($sku)) {
+        return null;
+    }
+    
+    // Define possible image extensions in order of preference
+    $extensions = ['webp', 'png', 'jpg', 'jpeg'];
+    $imageDir = __DIR__ . '/../images/products/';
+    
+    // First, try to find the primary image (with 'A' suffix)
+    foreach ($extensions as $ext) {
+        $imagePath = $imageDir . $sku . 'A.' . $ext;
+        if (file_exists($imagePath)) {
+            return 'images/products/' . $sku . 'A.' . $ext;
+        }
+    }
+    
+    // If no 'A' suffix image found, try without suffix
+    foreach ($extensions as $ext) {
+        $imagePath = $imageDir . $sku . '.' . $ext;
+        if (file_exists($imagePath)) {
+            return 'images/products/' . $sku . '.' . $ext;
+        }
+    }
+    
+    // No image found
+    return null;
+}
+
+/**
+ * Get all images for a product by SKU
+ * 
+ * @param string $sku The product SKU
+ * @return array Array of image paths
+ */
+function getAllImagesBySku($sku) {
+    if (empty($sku)) {
+        return [];
+    }
+    
+    $images = [];
+    $imageDir = __DIR__ . '/../images/products/';
+    $extensions = ['webp', 'png', 'jpg', 'jpeg'];
+    
+    // Scan for all images matching the SKU pattern
+    if (is_dir($imageDir)) {
+        $files = scandir($imageDir);
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') continue;
+            
+            // Check if file matches SKU pattern (SKU.ext or SKUA.ext, SKUB.ext, etc.)
+            if (preg_match('/^' . preg_quote($sku) . '([A-Z]?)\.(webp|png|jpg|jpeg)$/i', $file, $matches)) {
+                $images[] = 'images/products/' . $file;
+            }
+        }
+    }
+    
+    // Sort images so primary (A) comes first
+    usort($images, function($a, $b) {
+        $aHasA = strpos($a, 'A.') !== false;
+        $bHasA = strpos($b, 'A.') !== false;
+        
+        if ($aHasA && !$bHasA) return -1;
+        if (!$aHasA && $bHasA) return 1;
+        return strcmp($a, $b);
+    });
+    
+    return $images;
+}
+
+/**
+ * Check if a product has any images
+ * 
+ * @param string $sku The product SKU
+ * @return bool True if images exist, false otherwise
+ */
+function hasImagesBySku($sku) {
+    $images = getAllImagesBySku($sku);
+    return !empty($images);
+}
+
+/**
+ * Get image count for a product by SKU
+ * 
+ * @param string $sku The product SKU
+ * @return int Number of images
+ */
+function getImageCountBySku($sku) {
+    $images = getAllImagesBySku($sku);
+    return count($images);
+}
+
+/**
+ * Get the fallback/placeholder image path
+ * 
+ * @return string The placeholder image path
+ */
+function getPlaceholderImage() {
+    return 'images/products/placeholder.png';
+}
+
+/**
+ * Get image with fallback to placeholder
+ * 
+ * @param string $sku The product SKU
+ * @return string The image path (primary image or placeholder)
+ */
+function getImageWithFallback($sku) {
+    $primaryImage = getPrimaryImageBySku($sku);
+    return $primaryImage ?: getPlaceholderImage();
+}
 
 /**
  * Get database connection

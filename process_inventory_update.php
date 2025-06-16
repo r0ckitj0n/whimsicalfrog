@@ -133,7 +133,6 @@ try {
             $retailPrice = floatval($_POST['retailPrice']);
             $description = isset($_POST['description']) ? trim($_POST['description']) : '';
             $imageUrl = isset($_POST['existingImageUrl']) ? trim($_POST['existingImageUrl']) : '';
-            $productId = isset($_POST['productId']) ? trim($_POST['productId']) : '';
             
             // Handle new image upload
             if(isset($_FILES['imageUpload']) && $_FILES['imageUpload']['error'] === UPLOAD_ERR_OK){
@@ -143,7 +142,7 @@ try {
                 $allowedExt = ['png','jpg','jpeg','webp'];
                 if(in_array($ext, $allowedExt)){
                     $unique = substr(md5(uniqid()),0,6);
-                    $destRel = 'images/products/' . $productId . '-' . $unique . '.' . $ext;
+                    $destRel = 'images/products/' . $sku . '-' . $unique . '.' . $ext;
                     $rootDir = __DIR__;
                     $destAbs = $rootDir . '/' . $destRel;
                     $dir = dirname($destAbs);
@@ -169,20 +168,12 @@ try {
                 $lastIdNum = $lastIdRow ? (int)substr($lastIdRow['id'], 1) : 0;
                 $itemId = 'I' . str_pad($lastIdNum + 1, 3, '0', STR_PAD_LEFT);
                 
-                // Generate new Product ID if not provided
-                if (empty($productId)) {
-                    $stmtProdId = $pdo->query("SELECT productId FROM inventory ORDER BY CAST(SUBSTRING(productId, 2) AS UNSIGNED) DESC LIMIT 1");
-                    $lastProdIdRow = $stmtProdId->fetch(PDO::FETCH_ASSOC);
-                    $lastProdIdNum = $lastProdIdRow ? (int)substr($lastProdIdRow['productId'], 1) : 0;
-                    $productId = 'P' . str_pad($lastProdIdNum + 1, 3, '0', STR_PAD_LEFT);
-                }
-                
                 // Insert query
-                $sql = "INSERT INTO inventory (id, productId, name, sku, stockLevel, reorderPoint, costPrice, retailPrice, description, imageUrl) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $sql = "INSERT INTO inventory (id, name, sku, stockLevel, reorderPoint, costPrice, retailPrice, description, imageUrl) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $success = $stmt->execute([
-                    $itemId, $productId, $name, $sku, $stockLevel, $reorderPoint, 
+                    $itemId, $name, $sku, $stockLevel, $reorderPoint, 
                     $costPrice, $retailPrice, $description, $imageUrl
                 ]);
             } else {
@@ -191,12 +182,12 @@ try {
                 
                 // Update query
                 $sql = "UPDATE inventory SET 
-                        productId = ?, name = ?, sku = ?, stockLevel = ?, 
+                        name = ?, sku = ?, stockLevel = ?, 
                         reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ?, imageUrl = ? 
                         WHERE id = ?";
                 $stmt = $pdo->prepare($sql);
                 $success = $stmt->execute([
-                    $productId, $name, $sku, $stockLevel, $reorderPoint, 
+                    $name, $sku, $stockLevel, $reorderPoint, 
                     $costPrice, $retailPrice, $description, $imageUrl, $itemId
                 ]);
             }
@@ -204,26 +195,26 @@ try {
             // Check if operation was successful
             if ($success) {
                 // Always sync products table category
-                if (!empty($productId) && !empty($category)) {
+                if (!empty($sku) && !empty($category)) {
                     if ($action === 'add') {
                         // Insert new product row if not exists
-                        $insProd = $pdo->prepare("INSERT INTO products (id, name, productType, basePrice, description, image) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE productType = VALUES(productType), name = VALUES(name)");
-                        $insProd->execute([$productId, $name, $category, $retailPrice, $description, $imageUrl]);
+                        $insProd = $pdo->prepare("INSERT INTO products (sku, name, productType, basePrice, description, image) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE productType = VALUES(productType), name = VALUES(name)");
+                        $insProd->execute([$sku, $name, $category, $retailPrice, $description, $imageUrl]);
                     } else {
                         // Update existing product details (type, name and image)
-                        $updProd = $pdo->prepare("UPDATE products SET productType = ?, name = ?, image = ?, description = ?, basePrice = ? WHERE id = ?");
-                        $updProd->execute([$category, $name, $imageUrl, $description, $retailPrice, $productId]);
+                        $updProd = $pdo->prepare("UPDATE products SET productType = ?, name = ?, image = ?, description = ?, basePrice = ? WHERE sku = ?");
+                        $updProd->execute([$category, $name, $imageUrl, $description, $retailPrice, $sku]);
                     }
                 }
 
                 // After update, always sync inventory imageUrl to products.image if products.image is set and not empty
-                if (!empty($productId)) {
-                    $stmtProdImg = $pdo->prepare("SELECT image FROM products WHERE id = ?");
-                    $stmtProdImg->execute([$productId]);
+                if (!empty($sku)) {
+                    $stmtProdImg = $pdo->prepare("SELECT image FROM products WHERE sku = ?");
+                    $stmtProdImg->execute([$sku]);
                     $prodImgRow = $stmtProdImg->fetch(PDO::FETCH_ASSOC);
                     if (!empty($prodImgRow['image']) && $prodImgRow['image'] !== $imageUrl) {
-                        $stmtInvImg = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE productId = ?");
-                        $stmtInvImg->execute([$prodImgRow['image'], $productId]);
+                        $stmtInvImg = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE sku = ?");
+                        $stmtInvImg->execute([$prodImgRow['image'], $sku]);
                     }
                 }
 

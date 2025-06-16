@@ -67,13 +67,13 @@ function getDbConnection() {
 /**
  * Get fallback image from old system
  */
-function getFallbackProductImage($productId) {
-    // Try common image patterns based on product ID
+function getFallbackProductImage($sku) {
+    // Try common image patterns based on SKU
     $possibleImages = [
-        "images/products/{$productId}A.webp",
-        "images/products/{$productId}A.png",
-        "images/products/{$productId}.webp", 
-        "images/products/{$productId}.png"
+        "images/products/{$sku}A.webp",
+        "images/products/{$sku}A.png",
+        "images/products/{$sku}.webp", 
+        "images/products/{$sku}.png"
     ];
     
     foreach ($possibleImages as $imagePath) {
@@ -81,11 +81,11 @@ function getFallbackProductImage($productId) {
         if (file_exists($fullPath)) {
             return [
                 'id' => null,
-                'product_id' => $productId,
+                'sku' => $sku,
                 'image_path' => $imagePath,
                 'is_primary' => true,
                 'sort_order' => 0,
-                'alt_text' => "Product image for {$productId}",
+                'alt_text' => "Product image for {$sku}",
                 'file_exists' => true,
                 'created_at' => null,
                 'updated_at' => null
@@ -99,12 +99,12 @@ function getFallbackProductImage($productId) {
 /**
  * Get all images for a product
  */
-function getProductImages($productId, $pdo = null) {
+function getProductImages($sku, $pdo = null) {
     if (!$pdo) {
         $pdo = getDbConnection();
         if (!$pdo) {
             // Fallback to file system check
-            $fallbackImage = getFallbackProductImage($productId);
+            $fallbackImage = getFallbackProductImage($sku);
             return $fallbackImage ? [$fallbackImage] : [];
         }
     }
@@ -114,14 +114,14 @@ function getProductImages($productId, $pdo = null) {
         $stmt = $pdo->query("SHOW TABLES LIKE 'product_images'");
         if ($stmt->rowCount() === 0) {
             // Table doesn't exist, use fallback
-            $fallbackImage = getFallbackProductImage($productId);
+            $fallbackImage = getFallbackProductImage($sku);
             return $fallbackImage ? [$fallbackImage] : [];
         }
         
         $stmt = $pdo->prepare("
             SELECT 
                 id,
-                product_id,
+                sku,
                 image_path,
                 is_primary,
                 sort_order,
@@ -129,16 +129,16 @@ function getProductImages($productId, $pdo = null) {
                 created_at,
                 updated_at
             FROM product_images 
-            WHERE product_id = ? 
+            WHERE sku = ? 
             ORDER BY is_primary DESC, sort_order ASC
         ");
         
-        $stmt->execute([$productId]);
+        $stmt->execute([$sku]);
         $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // If no images found in database, try fallback
         if (empty($images)) {
-            $fallbackImage = getFallbackProductImage($productId);
+            $fallbackImage = getFallbackProductImage($sku);
             if ($fallbackImage) {
                 return [$fallbackImage];
             }
@@ -159,7 +159,7 @@ function getProductImages($productId, $pdo = null) {
     } catch (PDOException $e) {
         error_log("Database error in getProductImages: " . $e->getMessage());
         // Fallback to file system check
-        $fallbackImage = getFallbackProductImage($productId);
+        $fallbackImage = getFallbackProductImage($sku);
         return $fallbackImage ? [$fallbackImage] : [];
     }
 }
@@ -167,8 +167,8 @@ function getProductImages($productId, $pdo = null) {
 /**
  * Get primary image for a product
  */
-function getPrimaryProductImage($productId, $pdo = null) {
-    $images = getProductImages($productId, $pdo);
+function getPrimaryProductImage($sku, $pdo = null) {
+    $images = getProductImages($sku, $pdo);
     
     foreach ($images as $image) {
         if ($image['is_primary']) {
@@ -183,8 +183,8 @@ function getPrimaryProductImage($productId, $pdo = null) {
 /**
  * Get fallback image path for a product (for backward compatibility)
  */
-function getProductImagePath($productId, $pdo = null) {
-    $primaryImage = getPrimaryProductImage($productId, $pdo);
+function getProductImagePath($sku, $pdo = null) {
+    $primaryImage = getPrimaryProductImage($sku, $pdo);
     
     if ($primaryImage && $primaryImage['file_exists']) {
         return $primaryImage['image_path'];
@@ -196,16 +196,16 @@ function getProductImagePath($productId, $pdo = null) {
 /**
  * Check if a product has multiple images
  */
-function hasMultipleImages($productId, $pdo = null) {
-    $images = getProductImages($productId, $pdo);
+function hasMultipleImages($sku, $pdo = null) {
+    $images = getProductImages($sku, $pdo);
     return count($images) > 1;
 }
 
 /**
  * Render product image display (single image or carousel)
  */
-function renderProductImageDisplay($productId, $options = []) {
-    $images = getProductImages($productId);
+function renderProductImageDisplay($sku, $options = []) {
+    $images = getProductImages($sku);
     
     $defaults = [
         'showCarousel' => true,
@@ -237,6 +237,6 @@ function renderProductImageDisplay($productId, $options = []) {
     }
     
     // Multiple images - use carousel
-    return renderImageCarousel($productId, $images, $opts);
+    return renderImageCarousel($sku, $images, $opts);
 }
 ?> 

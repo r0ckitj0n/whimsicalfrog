@@ -17,11 +17,11 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     $input = json_decode(file_get_contents('php://input'), true);
-    $productId = $input['productId'] ?? '';
+    $sku = $input['sku'] ?? '';
     $imageId = $input['imageId'] ?? '';
     
-    if (empty($productId) || empty($imageId)) {
-        echo json_encode(['success' => false, 'error' => 'Product ID and Image ID are required']);
+    if (empty($sku) || empty($imageId)) {
+        echo json_encode(['success' => false, 'error' => 'SKU and Image ID are required']);
         exit;
     }
     
@@ -29,12 +29,12 @@ try {
     $pdo->beginTransaction();
     
     // First, unset all primary images for this product
-    $stmt = $pdo->prepare("UPDATE product_images SET is_primary = FALSE WHERE product_id = ?");
-    $stmt->execute([$productId]);
+    $stmt = $pdo->prepare("UPDATE product_images SET is_primary = FALSE WHERE sku = ?");
+    $stmt->execute([$sku]);
     
     // Set the specified image as primary
-    $stmt = $pdo->prepare("UPDATE product_images SET is_primary = TRUE WHERE id = ? AND product_id = ?");
-    $stmt->execute([$imageId, $productId]);
+    $stmt = $pdo->prepare("UPDATE product_images SET is_primary = TRUE WHERE id = ? AND sku = ?");
+    $stmt->execute([$imageId, $sku]);
     
     if ($stmt->rowCount() === 0) {
         $pdo->rollBack();
@@ -43,18 +43,18 @@ try {
     }
     
     // Get the new primary image path
-    $stmt = $pdo->prepare("SELECT image_path FROM product_images WHERE id = ? AND product_id = ?");
-    $stmt->execute([$imageId, $productId]);
+    $stmt = $pdo->prepare("SELECT image_path FROM product_images WHERE id = ? AND sku = ?");
+    $stmt->execute([$imageId, $sku]);
     $primaryImagePath = $stmt->fetchColumn();
     
     if ($primaryImagePath) {
         // Update inventory table
-        $stmt = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE productId = ?");
-        $stmt->execute([$primaryImagePath, $productId]);
+        $stmt = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE sku = ?");
+        $stmt->execute([$primaryImagePath, $sku]);
         
         // Update products table
-        $stmt = $pdo->prepare("UPDATE products SET image = ? WHERE id = ?");
-        $stmt->execute([$primaryImagePath, $productId]);
+        $stmt = $pdo->prepare("UPDATE products SET image = ? WHERE sku = ?");
+        $stmt->execute([$primaryImagePath, $sku]);
     }
     
     $pdo->commit();

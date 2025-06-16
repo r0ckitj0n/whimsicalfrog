@@ -7,10 +7,10 @@ if($_SERVER['REQUEST_METHOD']!=='POST'|| !isset($_FILES['image'])){
     exit;
 }
 
-$productId = $_POST['productId'] ?? '';
+$sku = $_POST['sku'] ?? '';
 $itemId = $_POST['itemId'] ?? '';
-if($productId!==''){
-    $baseName = $productId;
+if($sku!==''){
+    $baseName = $sku;
 } elseif($itemId!=='') {
     $baseName = $itemId;
 } else {

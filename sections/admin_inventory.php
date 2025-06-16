@@ -26,7 +26,7 @@ unset($_SESSION['field_errors']);
 // Check if we're in view mode
 if (isset($_GET['view']) && !empty($_GET['view'])) {
     $itemIdToView = $_GET['view'];
-    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE i.id = ?");
+    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.sku = i.sku WHERE i.id = ?");
     $stmt->execute([$itemIdToView]);
     $fetchedViewItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -70,7 +70,7 @@ if (isset($_GET['view']) && !empty($_GET['view'])) {
 // Check if we're in edit mode
 elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
     $itemIdToEdit = $_GET['edit'];
-    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE i.id = ?");
+    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.sku = i.sku WHERE i.id = ?");
     $stmt->execute([$itemIdToEdit]);
     $fetchedEditItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -118,12 +118,13 @@ elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
     $lastIdNum = $lastIdRow ? (int)substr($lastIdRow['id'], 1) : 0;
     $nextItemId = 'I' . str_pad($lastIdNum + 1, 3, '0', STR_PAD_LEFT);
 
-    $stmtProd = $pdo->query("SELECT productId FROM inventory ORDER BY CAST(SUBSTRING(productId, 2) AS UNSIGNED) DESC LIMIT 1");
-    $lastProdIdRow = $stmtProd->fetch(PDO::FETCH_ASSOC);
-    $lastProdIdNum = $lastProdIdRow ? (int)substr($lastProdIdRow['productId'], 1) : 0;
-    $nextProductId = 'P' . str_pad($lastProdIdNum + 1, 3, '0', STR_PAD_LEFT);
+    // Generate next SKU for new item
+    $stmtSku = $pdo->query("SELECT sku FROM inventory WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
+    $lastSkuRow = $stmtSku->fetch(PDO::FETCH_ASSOC);
+    $lastSkuNum = $lastSkuRow ? (int)substr($lastSkuRow['sku'], -3) : 0;
+    $nextSku = 'WF-GEN-' . str_pad($lastSkuNum + 1, 3, '0', STR_PAD_LEFT);
     
-    $editItem = ['id' => $nextItemId, 'productId' => $nextProductId];
+    $editItem = ['id' => $nextItemId, 'sku' => $nextSku];
 }
 
 // Get categories for dropdown from products table to ensure single source of truth
@@ -138,7 +139,7 @@ $search = $_GET['search'] ?? '';
 $categoryFilter = $_GET['category'] ?? '';
 $stockFilter = $_GET['stock'] ?? '';
 
-$sql = "SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE 1=1";
+$sql = "SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.sku = i.sku WHERE 1=1";
 $params = [];
 
 if (!empty($search)) {
@@ -355,7 +356,7 @@ $messageType = $_GET['type'] ?? '';
                     <?php foreach ($inventoryItems as $item): ?>
                     <tr data-id="<?= htmlspecialchars($item['id']) ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
                         <td>
-                            <div class="thumbnail-container" data-product-id="<?= htmlspecialchars($item['productId']) ?>" style="width:40px;height:40px;">
+                            <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku']) ?>" style="width:40px;height:40px;">
                                 <div class="thumbnail-loading" style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">...</div>
                             </div>
                         </td>
@@ -391,9 +392,9 @@ $messageType = $_GET['type'] ?? '';
             <div class="modal-form-main-column">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label for="productIdDisplay" class="block text-gray-700">Product ID</label>
-                        <input type="text" id="productIdDisplay" name="productId" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
-                               value="<?= htmlspecialchars($editItem['productId'] ?? ''); ?>">
+                        <label for="skuDisplay" class="block text-gray-700">SKU</label>
+                        <input type="text" id="skuDisplay" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+                               value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
                     </div>
                     <div>
                         <label for="name" class="block text-gray-700">Name</label>
@@ -516,9 +517,9 @@ $messageType = $_GET['type'] ?? '';
                 <div class="modal-form-main-column">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                            <label for="productIdDisplay" class="block text-gray-700">Product ID</label>
-                            <input type="text" id="productIdDisplay" name="productId" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
-                                   value="<?= htmlspecialchars($editItem['productId'] ?? ($nextProductId ?? '')); ?>">
+                            <label for="skuEdit" class="block text-gray-700">SKU *</label>
+                            <input type="text" id="skuEdit" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('sku', $field_errors) ? 'field-error-highlight' : '' ?>" required 
+                                   value="<?= htmlspecialchars($editItem['sku'] ?? ($nextSku ?? '')); ?>" placeholder="Auto-generated if empty">
                         </div>
                         <div>
                             <label for="name" class="block text-gray-700">Name *</label>
@@ -526,22 +527,7 @@ $messageType = $_GET['type'] ?? '';
                                    value="<?= htmlspecialchars($editItem['name'] ?? ''); ?>">
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label for="category" class="block text-gray-700">Category *</label>
-                            <select id="category" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required>
-                                <option value="">Select Category</option>
-                                <?php foreach ($categories as $cat): ?>
-                                    <option value="<?= htmlspecialchars($cat) ?>" <?= (isset($editItem['category']) && $editItem['category'] === $cat) ? 'selected' : ''; ?>><?= htmlspecialchars($cat) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="sku" class="block text-gray-700">SKU</label>
-                            <input type="text" id="sku" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('sku', $field_errors) ? 'field-error-highlight' : '' ?>" 
-                                   value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>" placeholder="Auto-generated">
-                        </div>
-                    </div>
+
                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label for="stockLevel" class="block text-gray-700">Stock Level *</label>
@@ -722,8 +708,8 @@ var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $
 window.inventoryCategories = <?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> || [];
 
 // Define image management functions first
-function setPrimaryImage(productId, imageId) {
-    console.log('setPrimaryImage called with:', productId, imageId);
+function setPrimaryImage(sku, imageId) {
+    console.log('setPrimaryImage called with:', sku, imageId);
     fetch('/api/set_primary_image.php', {
         method: 'POST',
         headers: {
@@ -731,7 +717,7 @@ function setPrimaryImage(productId, imageId) {
             'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
-            productId: productId,
+            sku: sku,
             imageId: imageId
         })
     })
@@ -745,7 +731,7 @@ function setPrimaryImage(productId, imageId) {
             const data = JSON.parse(text);
             if (data.success) {
                 showToast('success', 'Primary image updated');
-                loadCurrentImages(productId);
+                loadCurrentImages(sku);
             } else {
                 showToast('error', data.error || 'Failed to set primary image');
             }
@@ -760,14 +746,14 @@ function setPrimaryImage(productId, imageId) {
     });
 }
 
-function deleteProductImage(imageId, productId) {
-    console.log('deleteProductImage called with:', imageId, productId);
+function deleteProductImage(imageId, sku) {
+    console.log('deleteProductImage called with:', imageId, sku);
     
     // Show custom confirmation modal
-    showImageDeleteConfirmation(imageId, productId);
+    showImageDeleteConfirmation(imageId, sku);
 }
 
-function showImageDeleteConfirmation(imageId, productId) {
+function showImageDeleteConfirmation(imageId, sku) {
     // Create modal overlay
     const overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
@@ -792,7 +778,7 @@ function showImageDeleteConfirmation(imageId, productId) {
                 <button type="button" onclick="closeImageDeleteModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
                     Cancel
                 </button>
-                <button type="button" onclick="confirmImageDelete(${imageId}, '${productId}')" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                <button type="button" onclick="confirmImageDelete(${imageId}, '${sku}')" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
                     Delete Image
                 </button>
             </div>
@@ -823,8 +809,8 @@ function closeImageDeleteModal() {
     }
 }
 
-function confirmImageDelete(imageId, productId) {
-    console.log('Confirming delete for image:', imageId, productId);
+function confirmImageDelete(imageId, sku) {
+    console.log('Confirming delete for image:', imageId, sku);
     
     // Close the modal
     closeImageDeleteModal();
@@ -850,7 +836,7 @@ function confirmImageDelete(imageId, productId) {
             const data = JSON.parse(text);
             if (data.success) {
                 showToast('success', 'Image deleted');
-                loadCurrentImages(productId);
+                loadCurrentImages(sku);
             } else {
                 showToast('error', data.error || 'Failed to delete image');
             }
@@ -879,16 +865,16 @@ console.log('Functions defined:', {
 document.addEventListener('click', function(e) {
     if (e.target.dataset.action === 'set-primary') {
         e.preventDefault();
-        const productId = e.target.dataset.productId;
+        const sku = e.target.dataset.sku;
         const imageId = e.target.dataset.imageId;
-        console.log('Event delegation - setPrimaryImage called with:', productId, imageId);
-        setPrimaryImage(productId, imageId);
+        console.log('Event delegation - setPrimaryImage called with:', sku, imageId);
+        setPrimaryImage(sku, imageId);
     } else if (e.target.dataset.action === 'delete-image') {
         e.preventDefault();
-        const productId = e.target.dataset.productId;
+        const sku = e.target.dataset.sku;
         const imageId = e.target.dataset.imageId;
-        console.log('Event delegation - deleteProductImage called with:', imageId, productId);
-        deleteProductImage(imageId, productId);
+        console.log('Event delegation - deleteProductImage called with:', imageId, sku);
+        deleteProductImage(imageId, sku);
     }
 });
 
@@ -1387,8 +1373,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('image', file);
                 const itemIdField = document.querySelector('input[name="itemId"]');
                 formData.append('itemId', itemIdField ? itemIdField.value : currentItemId);
-                const productIdField=document.getElementById('productIdDisplay');
-                if(productIdField){formData.append('productId',productIdField.value);}
+                const skuField=document.getElementById('skuEdit') || document.getElementById('skuDisplay');
+                if(skuField){formData.append('sku',skuField.value);}
                 
                 const previewDiv = this.parentNode.querySelector('.image-preview');
                 const previewImg = previewDiv ? previewDiv.querySelector('img') : null;
@@ -1620,12 +1606,12 @@ document.getElementById('multiImageUpload')?.addEventListener('change', function
 function autoUploadImages(files) {
     console.log('autoUploadImages called with files:', files);
     
-    const productId = document.getElementById('productIdDisplay')?.value;
-    console.log('Product ID:', productId);
+    const sku = (document.getElementById('skuEdit') || document.getElementById('skuDisplay'))?.value;
+    console.log('SKU:', sku);
     
-    if (!productId) {
-        console.error('No product ID found');
-        showToast('error', 'Product ID is required');
+    if (!sku) {
+        console.error('No SKU found');
+        showToast('error', 'SKU is required');
         hideUploadProgress();
         return;
     }
@@ -1636,7 +1622,7 @@ function autoUploadImages(files) {
         formData.append('images[]', file);
     });
     
-    formData.append('productId', productId);
+    formData.append('sku', sku);
     formData.append('altText', document.getElementById('name')?.value || '');
     
     console.log('FormData prepared, starting upload...');
@@ -1671,7 +1657,7 @@ function autoUploadImages(files) {
                 document.getElementById('multiImageUpload').value = '';
                 
                 // Refresh current images display
-                loadCurrentImages(productId);
+                loadCurrentImages(sku);
                 
             } else {
                 console.error('Upload failed:', data.error);
@@ -1709,10 +1695,10 @@ function hideUploadProgress() {
     progressBar.style.width = '0%';
 }
 
-function loadCurrentImages(productId, isViewModal = false) {
-    if (!productId) return;
+function loadCurrentImages(sku, isViewModal = false) {
+    if (!sku) return;
     
-    fetch(`/api/get_product_images.php?productId=${encodeURIComponent(productId)}`)
+    fetch(`/api/get_product_images.php?sku=${encodeURIComponent(sku)}`)
     .then(response => response.json())
     .then(data => {
         if (data.success) {
@@ -1735,10 +1721,10 @@ function loadCurrentImages(productId, isViewModal = false) {
     });
 }
 
-function loadThumbnailImage(productId, container) {
-    if (!productId || !container) return;
+function loadThumbnailImage(sku, container) {
+    if (!sku || !container) return;
     
-    fetch(`/api/get_product_images.php?productId=${encodeURIComponent(productId)}`)
+    fetch(`/api/get_product_images.php?sku=${encodeURIComponent(sku)}`)
     .then(response => response.json())
     .then(data => {
         const loadingDiv = container.querySelector('.thumbnail-loading');
@@ -1814,8 +1800,8 @@ function displayCurrentImages(images, isViewModal = false) {
         // Action buttons only for edit modal
         const actionButtons = isViewModal ? '' : `
             <div class="flex gap-1 mt-1 flex-wrap">
-                        ${!image.is_primary ? `<button type="button" data-action="set-primary" data-product-id="${image.product_id}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
-                                  <button type="button" data-action="delete-image" data-product-id="${image.product_id}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
+                        ${!image.is_primary ? `<button type="button" data-action="set-primary" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
+                                  <button type="button" data-action="delete-image" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
             </div>
         `;
         
@@ -1895,10 +1881,10 @@ function displayCurrentImages(images, isViewModal = false) {
 
 // displayViewModalImages function removed - now using unified displayCurrentImages function
 
-function loadThumbnailImage(productId, container) {
-    if (!productId || !container) return;
+function loadThumbnailImage(sku, container) {
+    if (!sku || !container) return;
     
-    fetch(`/api/get_product_images.php?productId=${encodeURIComponent(productId)}`)
+    fetch(`/api/get_product_images.php?sku=${encodeURIComponent(sku)}`)
     .then(response => response.json())
     .then(data => {
         if (data.success && data.images && data.images.length > 0) {
@@ -1915,7 +1901,7 @@ function loadThumbnailImage(productId, container) {
         }
     })
     .catch(error => {
-        console.error('Error loading thumbnail for', productId, ':', error);
+        console.error('Error loading thumbnail for', sku, ':', error);
         container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>';
     });
 }
@@ -1929,28 +1915,28 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalMode === 'edit' && editId) {
         // Wait a bit for the DOM to be fully ready
         setTimeout(() => {
-            const productIdField = document.getElementById('productIdDisplay');
-            if (productIdField && productIdField.value) {
-                console.log('Loading current images for edit modal:', productIdField.value);
-                loadCurrentImages(productIdField.value, false);
+            const skuField = document.getElementById('skuEdit') || document.getElementById('skuDisplay');
+            if (skuField && skuField.value) {
+                console.log('Loading current images for edit modal:', skuField.value);
+                loadCurrentImages(skuField.value, false);
             } else {
-                console.log('No product ID found for loading images');
+                console.log('No SKU found for loading images');
             }
         }, 100);
          } else if (modalMode === 'view' && viewId) {
         // Load images for view modal
         setTimeout(() => {
-            // For view modal, get the productId from the readonly field
-            const productIdField = document.getElementById('productIdDisplay');
-            if (productIdField && productIdField.value) {
-                console.log('Loading current images for view modal:', productIdField.value);
-                loadCurrentImages(productIdField.value, true);
+            // For view modal, get the SKU from the readonly field
+            const skuField = document.getElementById('skuDisplay');
+            if (skuField && skuField.value) {
+                console.log('Loading current images for view modal:', skuField.value);
+                loadCurrentImages(skuField.value, true);
             } else {
-                console.log('No product ID found for view modal');
+                console.log('No SKU found for view modal');
                 const container = document.getElementById('currentImagesList');
                 const loadingDiv = document.getElementById('viewModalImagesLoading');
                 if (loadingDiv) loadingDiv.remove();
-                if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">No product ID available</div>';
+                if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">No SKU available</div>';
             }
         }, 100);
     }
@@ -1958,11 +1944,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load thumbnails for inventory list
     const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
     thumbnailContainers.forEach((container, index) => {
-        const productId = container.dataset.productId;
-        if (productId) {
+        const sku = container.dataset.sku;
+        if (sku) {
             // Stagger the requests to avoid overwhelming the server
             setTimeout(() => {
-                loadThumbnailImage(productId, container);
+                loadThumbnailImage(sku, container);
             }, index * 50); // 50ms delay between each request
         }
     });

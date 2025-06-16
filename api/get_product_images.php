@@ -9,15 +9,15 @@ require_once '../includes/product_image_helpers.php';
 header('Content-Type: application/json');
 
 try {
-    $productId = $_GET['productId'] ?? '';
+    $sku = $_GET['sku'] ?? '';
     
-    if (empty($productId)) {
-        echo json_encode(['success' => false, 'error' => 'Product ID is required']);
+    if (empty($sku)) {
+        echo json_encode(['success' => false, 'error' => 'SKU is required']);
         exit;
     }
     
     // Use the helper function which has fallback support
-    $images = getProductImages($productId);
+    $images = getProductImages($sku);
     
     // Add additional file information
     foreach ($images as &$image) {
@@ -37,7 +37,7 @@ try {
     
     echo json_encode([
         'success' => true,
-        'productId' => $productId,
+        'sku' => $sku,
         'images' => $images,
         'totalImages' => count($images),
         'primaryImage' => !empty($images) ? $images[0] : null

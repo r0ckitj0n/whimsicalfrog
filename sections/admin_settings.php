@@ -99,6 +99,23 @@
                 Room-Category Assignments
             </button>
         </div>
+        <div>
+            <p class="text-sm text-gray-600 mb-3">Visual mapper to see room-category relationships and manage clickable area assignments.</p>
+            <div class="flex gap-2">
+                <button onclick="openRoomCategoryMapperModal()" class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                    </svg>
+                    Room-Category Mapper
+                </button>
+                <button onclick="openAreaItemMapperModal()" class="inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                    Area-Item Mapper
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1559,6 +1576,496 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// Room-Category Visual Mapper Functions
+function openRoomCategoryMapperModal() {
+    document.getElementById('roomCategoryMapperModal').style.display = 'flex';
+    loadRoomCategoryCards();
+}
+
+function closeRoomCategoryMapperModal() {
+    document.getElementById('roomCategoryMapperModal').style.display = 'none';
+}
+
+async function loadRoomCategoryCards() {
+    try {
+        const response = await fetch('api/room_category_assignments.php?action=get_summary');
+        const result = await response.json();
+        
+        if (result.success) {
+            displayRoomCategoryCards(result.summary);
+        } else {
+            showNotification('Load Error', 'Failed to load room category mappings', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading room category cards:', error);
+        showNotification('Connection Error', 'Failed to load room category mappings', 'error');
+    }
+}
+
+function displayRoomCategoryCards(summary) {
+    const container = document.getElementById('roomCategoryCards');
+    const roomNames = {
+        '0': 'Landing Page',
+        '1': 'Main Room',
+        '2': 'T-Shirts Room',
+        '3': 'Tumblers Room',
+        '4': 'Artwork Room',
+        '5': 'Sublimation Room',
+        '6': 'Window Wraps Room'
+    };
+    
+    let cardsHTML = '';
+    
+    // Create cards for all rooms (0-6)
+    for (let roomNum = 0; roomNum <= 6; roomNum++) {
+        const roomData = summary.find(s => s.room_number == roomNum);
+        const roomName = roomNames[roomNum];
+        
+        cardsHTML += `
+            <div class="bg-white border-2 border-teal-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer" onclick="openRoomCategoryManagerModal(${roomNum})">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-bold text-gray-800">Room ${roomNum}</h4>
+                    <span class="text-xs bg-teal-100 text-teal-800 px-2 py-1 rounded-full">${roomData ? roomData.total_categories : 0} categories</span>
+                </div>
+                <div class="text-sm text-gray-600 mb-3">${roomName}</div>
+                
+                ${roomData && roomData.primary_category ? `
+                    <div class="mb-2">
+                        <div class="flex items-center text-sm">
+                            <span class="text-yellow-500 mr-1">👑</span>
+                            <span class="font-semibold text-gray-800">${roomData.primary_category}</span>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${roomData && roomData.secondary_categories && roomData.secondary_categories.length > 0 ? `
+                    <div class="text-xs text-gray-600">
+                        <div class="font-medium mb-1">Secondary:</div>
+                        <div class="space-y-1">
+                            ${roomData.secondary_categories.map(cat => `<div class="bg-gray-100 px-2 py-1 rounded text-xs">${cat}</div>`).join('')}
+                        </div>
+                    </div>
+                ` : roomData && roomData.total_categories === 0 ? `
+                    <div class="text-xs text-gray-400 italic">No categories assigned</div>
+                ` : ''}
+            </div>
+        `;
+    }
+    
+    container.innerHTML = cardsHTML;
+}
+
+// Area-Item Mapper Functions
+let selectedAreaForSwap = null;
+let areaMapperData = {
+    coordinates: [],
+    mappings: [],
+    availableItems: [],
+    availableCategories: []
+};
+
+function openAreaItemMapperModal() {
+    document.getElementById('areaItemMapperModal').style.display = 'flex';
+    initializeAreaItemMapper();
+}
+
+function closeAreaItemMapperModal() {
+    document.getElementById('areaItemMapperModal').style.display = 'none';
+    selectedAreaForSwap = null;
+}
+
+async function initializeAreaItemMapper() {
+    // Load available items and categories
+    await loadAvailableItemsAndCategories();
+    
+    // Set up room selection change handler
+    const roomSelect = document.getElementById('areaMapperRoomSelect');
+    roomSelect.addEventListener('change', function() {
+        loadAreaMapperRoom(this.value);
+    });
+    
+    // Set up mapping type change handler
+    const mappingTypeSelect = document.getElementById('mappingType');
+    mappingTypeSelect.addEventListener('change', function() {
+        toggleMappingSelectors(this.value);
+    });
+    
+    // Load initial room
+    loadAreaMapperRoom(roomSelect.value);
+}
+
+async function loadAvailableItemsAndCategories() {
+    try {
+        // Load items
+        const itemsResponse = await fetch('api/area_mappings.php?action=get_available_items');
+        const itemsResult = await itemsResponse.json();
+        
+        if (itemsResult.success) {
+            areaMapperData.availableItems = itemsResult.items;
+            populateItemSelect();
+        }
+        
+        // Load categories
+        const categoriesResponse = await fetch('api/area_mappings.php?action=get_available_categories');
+        const categoriesResult = await categoriesResponse.json();
+        
+        if (categoriesResult.success) {
+            areaMapperData.availableCategories = categoriesResult.categories;
+            populateCategorySelect();
+        }
+    } catch (error) {
+        console.error('Error loading items and categories:', error);
+    }
+}
+
+function populateItemSelect() {
+    const select = document.getElementById('itemSelect');
+    select.innerHTML = '<option value="">Select item...</option>';
+    
+    areaMapperData.availableItems.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = `${item.name} - $${item.retailPrice} (${item.category || 'No Category'})`;
+        select.appendChild(option);
+    });
+}
+
+function populateCategorySelect() {
+    const select = document.getElementById('categorySelect');
+    select.innerHTML = '<option value="">Select category...</option>';
+    
+    areaMapperData.availableCategories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        select.appendChild(option);
+    });
+}
+
+function toggleMappingSelectors(type) {
+    const itemSelector = document.getElementById('itemSelector');
+    const categorySelector = document.getElementById('categorySelector');
+    
+    if (type === 'item') {
+        itemSelector.classList.remove('hidden');
+        categorySelector.classList.add('hidden');
+    } else if (type === 'category') {
+        itemSelector.classList.add('hidden');
+        categorySelector.classList.remove('hidden');
+    } else {
+        itemSelector.classList.add('hidden');
+        categorySelector.classList.add('hidden');
+    }
+}
+
+async function loadAreaMapperRoom(roomType) {
+    try {
+        // Load room coordinates
+        const coordResponse = await fetch(`api/area_mappings.php?action=get_room_coordinates&room_type=${roomType}`);
+        const coordResult = await coordResponse.json();
+        
+        if (coordResult.success) {
+            areaMapperData.coordinates = coordResult.coordinates;
+            populateAreaSelector();
+            displayRoomBackground(roomType);
+        }
+        
+        // Load existing mappings
+        const mappingsResponse = await fetch(`api/area_mappings.php?action=get_mappings&room_type=${roomType}`);
+        const mappingsResult = await mappingsResponse.json();
+        
+        if (mappingsResult.success) {
+            areaMapperData.mappings = mappingsResult.mappings;
+            displayAreaMappings();
+            displayVisualAreas();
+        }
+    } catch (error) {
+        console.error('Error loading area mapper room:', error);
+        showNotification('Load Error', 'Failed to load room data', 'error');
+    }
+}
+
+function populateAreaSelector() {
+    const select = document.getElementById('areaSelector');
+    select.innerHTML = '<option value="">Select area...</option>';
+    
+    areaMapperData.coordinates.forEach(coord => {
+        const option = document.createElement('option');
+        option.value = coord.selector;
+        option.textContent = coord.selector.replace('.area-', 'Area ');
+        select.appendChild(option);
+    });
+}
+
+function displayRoomBackground(roomType) {
+    const display = document.getElementById('areaMapperDisplay');
+    
+    if (roomType === 'landing') {
+        display.style.backgroundImage = "url('images/home_background.png')";
+    } else {
+        display.style.backgroundImage = `url('images/${roomType}.png')`;
+    }
+}
+
+function displayAreaMappings() {
+    const container = document.getElementById('areaMappingsList');
+    
+    if (areaMapperData.mappings.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-sm">No area mappings found</div>';
+        return;
+    }
+    
+    let html = '';
+    areaMapperData.mappings.forEach(mapping => {
+        const typeIcon = mapping.mapping_type === 'item' ? '🟢' : '🔵';
+        const typeLabel = mapping.mapping_type === 'item' ? 'Item' : 'Category';
+        const price = mapping.item_price ? ` - $${mapping.item_price}` : '';
+        
+        html += `
+            <div class="bg-gray-50 border rounded p-3 area-mapping-item" data-mapping-id="${mapping.id}">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="font-medium text-sm">${mapping.area_selector.replace('.area-', 'Area ')}</div>
+                        <div class="text-xs text-gray-600">${typeIcon} ${typeLabel}: ${mapping.mapped_name}${price}</div>
+                    </div>
+                    <button onclick="removeAreaMapping(${mapping.id})" class="text-red-500 hover:text-red-700 text-xs ml-2">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function displayVisualAreas() {
+    const display = document.getElementById('areaMapperDisplay');
+    
+    // Clear existing areas
+    display.querySelectorAll('.visual-area').forEach(area => area.remove());
+    
+    // Add visual areas
+    areaMapperData.coordinates.forEach(coord => {
+        const mapping = areaMapperData.mappings.find(m => m.area_selector === coord.selector);
+        
+        const area = document.createElement('div');
+        area.className = 'visual-area absolute cursor-pointer transition-all duration-200';
+        area.dataset.selector = coord.selector;
+        area.dataset.mappingId = mapping ? mapping.id : '';
+        
+        // Color coding based on mapping type
+        if (mapping) {
+            if (mapping.mapping_type === 'item') {
+                area.style.border = '3px solid #10b981'; // Green for items
+                area.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+            } else {
+                area.style.border = '3px solid #3b82f6'; // Blue for categories
+                area.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+            }
+            
+            // Add tooltip
+            area.title = `${coord.selector.replace('.area-', 'Area ')}: ${mapping.mapped_name}`;
+        } else {
+            area.style.border = '2px dashed #9ca3af'; // Gray for unmapped
+            area.style.backgroundColor = 'rgba(156, 163, 175, 0.1)';
+            area.title = `${coord.selector.replace('.area-', 'Area ')}: Unmapped`;
+        }
+        
+        // Position the area
+        const wrapperWidth = display.offsetWidth;
+        const wrapperHeight = display.offsetHeight;
+        const originalImageWidth = 1280;
+        const originalImageHeight = 896;
+        
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+        
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+        
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+        
+        const displayLeft = (coord.left / originalImageWidth) * renderedImageWidth + offsetX;
+        const displayTop = (coord.top / originalImageHeight) * renderedImageHeight + offsetY;
+        const displayWidth = (coord.width / originalImageWidth) * renderedImageWidth;
+        const displayHeight = (coord.height / originalImageHeight) * renderedImageHeight;
+        
+        area.style.left = displayLeft + 'px';
+        area.style.top = displayTop + 'px';
+        area.style.width = displayWidth + 'px';
+        area.style.height = displayHeight + 'px';
+        
+        // Add click handler for swapping
+        area.addEventListener('click', function() {
+            handleAreaClick(this);
+        });
+        
+        display.appendChild(area);
+    });
+}
+
+function handleAreaClick(areaElement) {
+    const mappingId = areaElement.dataset.mappingId;
+    
+    if (!mappingId) {
+        showNotification('Unmapped Area', 'This area is not mapped to any item or category', 'info');
+        return;
+    }
+    
+    if (selectedAreaForSwap === null) {
+        // First selection
+        selectedAreaForSwap = mappingId;
+        areaElement.style.boxShadow = '0 0 15px #f59e0b';
+        areaElement.style.transform = 'scale(1.05)';
+        showNotification('Area Selected', 'Area selected. Click another mapped area to swap.', 'info');
+    } else if (selectedAreaForSwap === mappingId) {
+        // Deselect
+        selectedAreaForSwap = null;
+        areaElement.style.boxShadow = '';
+        areaElement.style.transform = '';
+        showNotification('Selection Cleared', 'Selection cleared.', 'info');
+    } else {
+        // Second selection - perform swap
+        swapAreaMappings(selectedAreaForSwap, mappingId);
+    }
+}
+
+async function swapAreaMappings(area1Id, area2Id) {
+    try {
+        const response = await fetch('api/area_mappings.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'swap_mappings',
+                area1_id: area1Id,
+                area2_id: area2Id
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Swap Successful', 'Area mappings swapped successfully', 'success');
+            selectedAreaForSwap = null;
+            
+            // Reload the current room
+            const roomType = document.getElementById('areaMapperRoomSelect').value;
+            loadAreaMapperRoom(roomType);
+        } else {
+            showNotification('Swap Failed', result.message || 'Failed to swap mappings', 'error');
+        }
+    } catch (error) {
+        console.error('Error swapping mappings:', error);
+        showNotification('Connection Error', 'Failed to swap mappings', 'error');
+    }
+}
+
+async function addAreaMapping() {
+    const roomType = document.getElementById('areaMapperRoomSelect').value;
+    const areaSelector = document.getElementById('areaSelector').value;
+    const mappingType = document.getElementById('mappingType').value;
+    const itemId = document.getElementById('itemSelect').value;
+    const categoryId = document.getElementById('categorySelect').value;
+    
+    if (!roomType || !areaSelector || !mappingType) {
+        showNotification('Missing Information', 'Please fill in all required fields', 'error');
+        return;
+    }
+    
+    if (mappingType === 'item' && !itemId) {
+        showNotification('Missing Item', 'Please select an item', 'error');
+        return;
+    }
+    
+    if (mappingType === 'category' && !categoryId) {
+        showNotification('Missing Category', 'Please select a category', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/area_mappings.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'add_mapping',
+                room_type: roomType,
+                area_selector: areaSelector,
+                mapping_type: mappingType,
+                item_id: mappingType === 'item' ? itemId : null,
+                category_id: mappingType === 'category' ? categoryId : null
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Mapping Added', 'Area mapping added successfully', 'success');
+            
+            // Clear form
+            document.getElementById('areaSelector').value = '';
+            document.getElementById('mappingType').value = '';
+            document.getElementById('itemSelect').value = '';
+            document.getElementById('categorySelect').value = '';
+            toggleMappingSelectors('');
+            
+            // Reload the current room
+            loadAreaMapperRoom(roomType);
+        } else {
+            showNotification('Add Failed', result.message || 'Failed to add mapping', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding mapping:', error);
+        showNotification('Connection Error', 'Failed to add mapping', 'error');
+    }
+}
+
+async function removeAreaMapping(mappingId) {
+    if (!confirm('Are you sure you want to remove this area mapping?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/area_mappings.php', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: mappingId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Mapping Removed', 'Area mapping removed successfully', 'success');
+            
+            // Reload the current room
+            const roomType = document.getElementById('areaMapperRoomSelect').value;
+            loadAreaMapperRoom(roomType);
+        } else {
+            showNotification('Remove Failed', result.message || 'Failed to remove mapping', 'error');
+        }
+    } catch (error) {
+        console.error('Error removing mapping:', error);
+        showNotification('Connection Error', 'Failed to remove mapping', 'error');
+    }
+}
+
 
 </script>
 
@@ -2854,6 +3361,130 @@ function escapeHtml(text) {
                 <button onclick="closeCustomNotification()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                     OK
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Room-Category Visual Mapper Modal -->
+<div id="roomCategoryMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">🗺️ Room-Category Visual Mapper</h2>
+            <button onclick="closeRoomCategoryMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-4">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Room Cards -->
+                <div class="lg:col-span-4">
+                    <h3 class="text-lg font-semibold mb-4">Room-Category Mappings Overview</h3>
+                    <div id="roomCategoryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <!-- Room cards will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-teal-50 border border-teal-200 rounded p-3 mt-6">
+                <h3 class="font-semibold text-teal-800 mb-2">💡 Visual Mapper Guide</h3>
+                <div class="text-sm text-teal-700 space-y-1">
+                    <p><strong>Room Cards:</strong> Visual representation of each room and its assigned categories</p>
+                    <p><strong>Primary Categories:</strong> Highlighted with crown icon (👑)</p>
+                    <p><strong>Secondary Categories:</strong> Listed below primary categories</p>
+                    <p><strong>Quick Actions:</strong> Click on room cards to manage assignments</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Area-Item Mapper Modal -->
+<div id="areaItemMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">🎯 Area-Item Mapper</h2>
+            <button onclick="closeAreaItemMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Panel: Room Selection & Controls -->
+                <div class="lg:col-span-1">
+                    <div class="mb-4">
+                        <label for="areaMapperRoomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
+                        <select id="areaMapperRoomSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="landing">Landing Page</option>
+                            <option value="room_main">Main Room</option>
+                            <option value="room_tshirts">T-Shirts Room</option>
+                            <option value="room_tumblers">Tumblers Room</option>
+                            <option value="room_artwork">Artwork Room</option>
+                            <option value="room_sublimation">Sublimation Room</option>
+                            <option value="room_windowwraps">Window Wraps Room</option>
+                        </select>
+                    </div>
+                    
+                    <div class="bg-white border rounded-lg p-4 mb-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">Area Mappings</h3>
+                        <div id="areaMappingsList" class="space-y-2 max-h-96 overflow-y-auto">
+                            <!-- Area mappings will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">Add New Mapping</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Area:</label>
+                                <select id="areaSelector" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <option value="">Select area...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Mapping Type:</label>
+                                <select id="mappingType" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <option value="">Select type...</option>
+                                    <option value="item">Specific Item</option>
+                                    <option value="category">Category</option>
+                                </select>
+                            </div>
+                            <div id="itemSelector" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Item:</label>
+                                <select id="itemSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <option value="">Select item...</option>
+                                </select>
+                            </div>
+                            <div id="categorySelector" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Category:</label>
+                                <select id="categorySelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    <option value="">Select category...</option>
+                                </select>
+                            </div>
+                            <button onclick="addAreaMapping()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                                Add Mapping
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: Visual Room Display -->
+                <div class="lg:col-span-2">
+                    <h3 class="font-semibold text-gray-800 mb-3">Visual Area Mapper</h3>
+                    <div class="area-mapper-container relative mb-4" id="areaMapperContainer">
+                        <div class="area-mapper-wrapper relative w-full bg-gray-800 rounded-lg overflow-hidden" id="areaMapperDisplay" style="height: 70vh; background-size: contain; background-position: center; background-repeat: no-repeat;">
+                            <!-- Clickable areas will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-indigo-50 border border-indigo-200 rounded p-3">
+                        <h4 class="font-semibold text-indigo-800 mb-2">🎯 Area Mapper Instructions</h4>
+                        <div class="text-sm text-indigo-700 space-y-1">
+                            <p><strong>View Mappings:</strong> Colored areas show what's assigned to each clickable zone</p>
+                            <p><strong>Swap Items:</strong> Click two mapped areas to swap their assignments</p>
+                            <p><strong>Color Coding:</strong> 🟢 Items | 🔵 Categories | ⚪ Unmapped</p>
+                            <p><strong>Hover:</strong> See details about what's mapped to each area</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

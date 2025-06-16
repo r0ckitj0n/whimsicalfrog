@@ -2497,6 +2497,8 @@ function showBusinessSettingsError(message) {
 }
 
 </script>
+
+<script>
 // Background Manager Functions
 function openBackgroundManagerModal() {
     document.getElementById('backgroundManagerModal').style.display = 'flex';

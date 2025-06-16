@@ -210,19 +210,19 @@
 <!-- Room Mapper Modal -->
 <div id="roomMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
-        <div class="flex justify-between items-center p-6 border-b">
-            <h2 class="text-2xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
             <button onclick="closeRoomMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
-        <div class="p-6">
-            <p class="text-gray-600 mb-4">This tool helps you map clickable areas on your room images with the same scaling as your live site.</p>
+        <div class="p-4">
+            <p class="text-gray-600 mb-3 text-sm">This tool helps you map clickable areas on your room images with the same scaling as your live site.</p>
             
-            <div class="controls mb-4">
-                <div class="flex flex-wrap gap-3 mb-3">
+            <div class="controls mb-3">
+                <div class="flex flex-wrap gap-2 mb-2 text-sm">
                     <div class="flex items-center">
-                        <label for="roomMapperSelect" class="mr-2">Select Room:</label>
-                        <select id="roomMapperSelect" class="px-3 py-2 border border-gray-300 rounded">
+                        <label for="roomMapperSelect" class="mr-2 text-sm">Room:</label>
+                        <select id="roomMapperSelect" class="px-2 py-1 border border-gray-300 rounded text-sm">
                             <option value="landing">Landing Page</option>
                             <option value="room_main">Main Room</option>
                             <option value="room_artwork">Artwork Room</option>
@@ -232,52 +232,51 @@
                             <option value="room_windowwraps">Window Wraps Room</option>
                         </select>
                     </div>
-                    <button onclick="toggleMapperGrid()" class="px-3 py-2 bg-gray-500 text-white rounded">Toggle Grid</button>
-                    <button onclick="clearMapperAreas()" class="px-3 py-2 bg-red-500 text-white rounded">Clear Areas</button>
+                    <button onclick="toggleMapperGrid()" class="px-2 py-1 bg-gray-500 text-white rounded text-sm">Grid</button>
+                    <button onclick="clearMapperAreas()" class="px-2 py-1 bg-red-500 text-white rounded text-sm">Clear</button>
                 </div>
                 
-                <div class="flex flex-wrap gap-3 mb-3">
+                <div class="flex flex-wrap gap-2 mb-2 text-sm">
                     <div class="flex items-center">
-                        <input type="text" id="mapNameInput" placeholder="Enter map name..." class="px-3 py-2 border border-gray-300 rounded mr-2" />
-                        <button onclick="saveRoomMap()" class="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded">Save Map</button>
+                        <input type="text" id="mapNameInput" placeholder="Map name..." class="px-2 py-1 border border-gray-300 rounded mr-1 text-sm" />
+                        <button onclick="saveRoomMap()" class="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm">Save</button>
                     </div>
                     <div class="flex items-center">
-                        <select id="savedMapsSelect" class="px-3 py-2 border border-gray-300 rounded mr-2">
+                        <select id="savedMapsSelect" class="px-2 py-1 border border-gray-300 rounded mr-1 text-sm">
                             <option value="">Select saved map...</option>
                         </select>
-                        <button onclick="loadSavedMap()" class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded mr-2">Load</button>
-                        <button onclick="applySavedMap()" class="px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded mr-2">Apply to Live</button>
-                        <button onclick="deleteSavedMap()" class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded">Delete</button>
+                        <button onclick="loadSavedMap()" class="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded mr-1 text-sm">Load</button>
+                        <button onclick="applySavedMap()" class="px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded mr-1 text-sm">Apply</button>
+                        <button onclick="deleteSavedMap()" class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm">Delete</button>
                     </div>
                     
                     <!-- Map Preview Legend -->
-                    <div class="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded border">
-                        <strong>Preview Colors:</strong>
-                        <span class="inline-flex items-center ml-2">
-                            <span class="w-3 h-3 border-2 border-green-500 bg-green-200 rounded mr-1"></span>
-                            Original (Protected)
+                    <div class="mt-1 text-xs text-gray-600 bg-gray-50 p-1 rounded border">
+                        <strong>Colors:</strong>
+                        <span class="inline-flex items-center ml-1">
+                            <span class="w-2 h-2 border border-green-500 bg-green-200 rounded mr-1"></span>
+                            Original
                         </span>
-                        <span class="inline-flex items-center ml-2">
-                            <span class="w-3 h-3 border-2 border-blue-500 bg-blue-200 rounded mr-1"></span>
-                            Active Map
+                        <span class="inline-flex items-center ml-1">
+                            <span class="w-2 h-2 border border-blue-500 bg-blue-200 rounded mr-1"></span>
+                            Active
                         </span>
-                        <span class="inline-flex items-center ml-2">
-                            <span class="w-3 h-3 border-2 border-gray-500 bg-gray-200 rounded mr-1"></span>
-                            Inactive Map
+                        <span class="inline-flex items-center ml-1">
+                            <span class="w-2 h-2 border border-gray-500 bg-gray-200 rounded mr-1"></span>
+                            Inactive
                         </span>
                     </div>
                 </div>
                 
-                <div id="mapStatus" class="text-sm mb-3"></div>
+                <div id="mapStatus" class="text-xs mb-2"></div>
                 
                 <!-- History Section -->
-                <div class="border-t pt-4">
-                    <h4 class="font-semibold text-gray-800 mb-3">📜 Map History</h4>
-                    <div class="flex items-center gap-3 mb-3">
-                        <button onclick="toggleHistoryView()" class="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-sm">
-                            <span id="historyToggleText">Show History</span>
+                <div class="border-t pt-2">
+                    <div class="flex items-center gap-2 mb-2">
+                        <button onclick="toggleHistoryView()" class="px-2 py-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-xs">
+                            <span id="historyToggleText">📜 History</span>
                         </button>
-                        <span class="text-sm text-gray-600">View and restore previous map versions</span>
+                        <span class="text-xs text-gray-600">View previous versions</span>
                     </div>
                     
                     <div id="historySection" class="hidden">
@@ -291,14 +290,14 @@
             </div>
             
             <div class="room-mapper-container relative mb-4" id="roomMapperContainer">
-                <div class="room-mapper-wrapper relative w-full bg-gray-800 rounded-lg overflow-hidden" id="roomMapperDisplay" style="height: 60vh; background-size: contain; background-position: center; background-repeat: no-repeat;">
+                <div class="room-mapper-wrapper relative w-full bg-gray-800 rounded-lg overflow-hidden" id="roomMapperDisplay" style="height: 85vh; background-size: contain; background-position: center; background-repeat: no-repeat;">
                     <div class="grid-overlay absolute top-0 left-0 w-full h-full pointer-events-none hidden" id="mapperGridOverlay" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px;"></div>
                     <!-- Clickable areas will be added here -->
                 </div>
             </div>
             
-            <div class="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
-                <p class="text-blue-800"><strong>Note:</strong> This mapper uses the exact same scaling system as your live site. The coordinates generated will match the room page layout perfectly.</p>
+            <div class="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
+                <p class="text-blue-800 text-xs"><strong>Note:</strong> Uses exact scaling as live site for perfect coordinate matching.</p>
             </div>
             
             <div class="bg-gray-100 border border-gray-300 rounded p-4 max-h-96 overflow-y-auto font-mono text-sm" id="mapperCoordinates">

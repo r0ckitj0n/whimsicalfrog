@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Original Maps</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Create Original Maps</h1>
+        <p>This tool will create protected Original maps for Landing Page and Main Room.</p>
+        
+        <div id="status"></div>
+        
+        <button onclick="createLandingOriginal()" id="landingBtn">Create Landing Page Original</button>
+        <button onclick="createMainRoomOriginal()" id="mainBtn">Create Main Room Original</button>
+        <button onclick="createBothOriginals()" id="bothBtn">Create Both Originals</button>
+        
+        <div id="details" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showDetails(title, data) {
+            const detailsDiv = document.getElementById('details');
+            detailsDiv.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+
+        async function createOriginalMap(roomType, mapName, coordinates) {
+            try {
+                showStatus(`Creating ${mapName} Original map...`, 'info');
+                
+                const response = await fetch('api/room_maps.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'save',
+                        room_type: roomType,
+                        map_name: 'Original',
+                        coordinates: coordinates
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus(`✅ ${mapName} Original map created successfully!`, 'success');
+                    showDetails(`${mapName} Original Map`, {
+                        room_type: roomType,
+                        areas: coordinates.length,
+                        coordinates: coordinates
+                    });
+                    return true;
+                } else {
+                    showStatus(`❌ Failed to create ${mapName} Original: ${data.message}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                showStatus(`❌ Error creating ${mapName} Original: ${error.message}`, 'error');
+                console.error('Error:', error);
+                return false;
+            }
+        }
+
+        async function createLandingOriginal() {
+            const landingCoordinates = [
+                { selector: 'area-1', top: 414, left: 466, width: 285, height: 153 }
+            ];
+            
+            document.getElementById('landingBtn').disabled = true;
+            const success = await createOriginalMap('landing', 'Landing Page', landingCoordinates);
+            document.getElementById('landingBtn').disabled = false;
+            
+            if (success) {
+                document.getElementById('landingBtn').textContent = '✅ Landing Original Created';
+                document.getElementById('landingBtn').style.background = '#28a745';
+            }
+        }
+
+        async function createMainRoomOriginal() {
+            const mainRoomCoordinates = [
+                { selector: 'area-1', top: 243, left: 30, width: 234, height: 233 },
+                { selector: 'area-2', top: 403, left: 390, width: 202, height: 241 },
+                { selector: 'area-3', top: 271, left: 753, width: 170, height: 235 },
+                { selector: 'area-4', top: 291, left: 1001, width: 197, height: 255 },
+                { selector: 'area-5', top: 157, left: 486, width: 190, height: 230 }
+            ];
+            
+            document.getElementById('mainBtn').disabled = true;
+            const success = await createOriginalMap('room_main', 'Main Room', mainRoomCoordinates);
+            document.getElementById('mainBtn').disabled = false;
+            
+            if (success) {
+                document.getElementById('mainBtn').textContent = '✅ Main Room Original Created';
+                document.getElementById('mainBtn').style.background = '#28a745';
+            }
+        }
+
+        async function createBothOriginals() {
+            document.getElementById('bothBtn').disabled = true;
+            document.getElementById('bothBtn').textContent = 'Creating...';
+            
+            showStatus('Creating both Original maps...', 'info');
+            
+            const landingSuccess = await createLandingOriginal();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            const mainSuccess = await createMainRoomOriginal();
+            
+            if (landingSuccess && mainSuccess) {
+                showStatus('🎉 Both Original maps created successfully!', 'success');
+                document.getElementById('bothBtn').textContent = '✅ Both Originals Created';
+                document.getElementById('bothBtn').style.background = '#28a745';
+            } else {
+                showStatus('⚠️ Some Original maps may not have been created. Check individual results above.', 'error');
+                document.getElementById('bothBtn').textContent = 'Create Both Originals';
+            }
+            
+            document.getElementById('bothBtn').disabled = false;
+        }
+
+        // Show initial info
+        showStatus('Ready to create Original maps. Click a button to start.', 'info');
+    </script>
+</body>
+</html> 

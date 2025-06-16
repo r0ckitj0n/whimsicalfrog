@@ -76,6 +76,18 @@ function getFallbackProductImage($sku) {
         "images/products/{$sku}.png"
     ];
     
+    // Also try old Product ID patterns for backward compatibility
+    // Extract potential Product ID from SKU (if it follows WF-XX-### pattern, try P### format)
+    if (preg_match('/^WF-[A-Z]{2}-(\d{3})$/', $sku, $matches)) {
+        $productId = 'P' . $matches[1];
+        $possibleImages = array_merge($possibleImages, [
+            "images/products/{$productId}A.webp",
+            "images/products/{$productId}A.png",
+            "images/products/{$productId}.webp", 
+            "images/products/{$productId}.png"
+        ]);
+    }
+    
     foreach ($possibleImages as $imagePath) {
         $fullPath = __DIR__ . '/../' . $imagePath;
         if (file_exists($fullPath)) {

@@ -1,0 +1,1 @@
+*/5 * * * * /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh monitor >> /Users/jongraves/Documents/Websites/WhimsicalFrog/monitor.log 2>&1

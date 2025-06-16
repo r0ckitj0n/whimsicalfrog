@@ -323,3 +323,9 @@
 [Mon Jun 16 11:14:39 2025] Failed to log email: PDO::__construct(): Argument #1 ($dsn) must be a valid data source name
 [Mon Jun 16 11:14:39 2025] [::1]:50104 [200]: POST /api/save_email_config.php
 [Mon Jun 16 11:14:39 2025] [::1]:50104 Closing
+[Mon Jun 16 12:50:18 2025] [::1]:53929 Accepted
+[Mon Jun 16 12:50:18 2025] [::1]:53929 [200]: GET /
+[Mon Jun 16 12:50:18 2025] [::1]:53929 Closing
+[Mon Jun 16 12:58:55 2025] [::1]:56122 Accepted
+[Mon Jun 16 12:58:55 2025] [::1]:56122 [200]: GET /
+[Mon Jun 16 12:58:55 2025] [::1]:56122 Closing

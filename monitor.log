@@ -243,3 +243,17 @@
 /bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
 /bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
 /bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+2025-06-16 12:50:15 - [0;34mChecking server status...[0m
+2025-06-16 12:50:15 - [0;33mNode.js API server is not running. Restarting...[0m
+2025-06-16 12:50:15 - [0;34mStarting Node.js API server on port 3000...[0m
+2025-06-16 12:50:18 - [0;31mFailed to start Node.js API server[0m
+2025-06-16 12:50:18 - [0;32mPHP web server is running correctly[0m
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+2025-06-16 12:58:52 - [0;34mChecking server status...[0m
+2025-06-16 12:58:52 - [0;33mNode.js API server is not running. Restarting...[0m
+2025-06-16 12:58:52 - [0;34mStarting Node.js API server on port 3000...[0m
+2025-06-16 12:58:55 - [0;31mFailed to start Node.js API server[0m
+2025-06-16 12:58:55 - [0;32mPHP web server is running correctly[0m
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted

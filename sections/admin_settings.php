@@ -223,10 +223,10 @@
                     <div class="flex items-center">
                         <label for="roomMapperSelect" class="mr-2 text-sm">Room:</label>
                         <select id="roomMapperSelect" class="px-2 py-1 border border-gray-300 rounded text-sm">
-                            <option value="landing">Landing Page</option>
+                            <option value="landing" selected>Landing Page</option>
                             <option value="room_main">Main Room</option>
                             <option value="room_artwork">Artwork Room</option>
-                            <option value="room_tshirts" selected>T-Shirts Room</option>
+                            <option value="room_tshirts">T-Shirts Room</option>
                             <option value="room_tumblers">Tumblers Room</option>
                             <option value="room_sublimation">Sublimation Room</option>
                             <option value="room_windowwraps">Window Wraps Room</option>

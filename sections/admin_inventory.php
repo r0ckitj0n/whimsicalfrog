@@ -1814,7 +1814,7 @@ function displayCurrentImages(images, isViewModal = false) {
                          style="object-position: center;">
                 </div>
                 <div class="p-2 bg-gray-50">
-                    <div class="text-xs text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>
+                    ${!isViewModal ? `<div class="text-xs text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>` : ''}
                     ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary</div>' : ''}
                     ${actionButtons}
                 </div>

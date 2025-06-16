@@ -343,6 +343,7 @@ let popupTimeout = null;
 let popupOpen = false;
 
 function showPopup(element, product) {
+    console.log('showPopup called with:', element, product);
     clearTimeout(popupTimeout);
     currentProduct = product;
     popupOpen = true;
@@ -397,6 +398,10 @@ function hidePopup() {
         popupOpen = false;
     }, 100);
 }
+
+// Make functions globally available
+window.showPopup = showPopup;
+window.hidePopup = hidePopup;
 
 // Quantity modal functionality - wrapped in DOM ready
 let quantityModal, modalProductImage, modalProductName, modalProductPrice;

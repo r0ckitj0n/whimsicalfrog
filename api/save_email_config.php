@@ -43,40 +43,8 @@ function handleTestEmail() {
     
     try {
         if ($smtpEnabled) {
-            // Use SMTP - check if PHPMailer is available
-            $phpmailerPath = __DIR__ . '/../vendor/phpmailer/phpmailer/src/PHPMailer.php';
-            if (file_exists($phpmailerPath)) {
-                require_once $phpmailerPath;
-                require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/SMTP.php';
-                require_once __DIR__ . '/../vendor/phpmailer/phpmailer/src/Exception.php';
-                
-                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-                
-                $mail->isSMTP();
-                $mail->Host = $_POST['smtpHost'] ?? 'smtp.ionos.com';
-                $mail->SMTPAuth = true;
-                $mail->Username = $_POST['smtpUsername'] ?? $fromEmail;
-                $mail->Password = $_POST['smtpPassword'] ?? '';
-                $mail->SMTPSecure = $_POST['smtpEncryption'] ?? 'tls';
-                $mail->Port = intval($_POST['smtpPort'] ?? 587);
-                
-                $mail->setFrom($fromEmail, $fromName);
-                $mail->addAddress($testEmail);
-                
-                if (!empty($_POST['bccEmail'])) {
-                    $mail->addBCC($_POST['bccEmail']);
-                }
-                
-                $mail->isHTML(true);
-                $mail->Subject = $subject;
-                $mail->Body = $html;
-                
-                $mail->send();
-                $success = true;
-            } else {
-                // Fallback to basic SMTP if PHPMailer not available
-                $success = sendSmtpEmail($testEmail, $subject, $html, $fromEmail, $fromName, $_POST);
-            }
+            // Always use our custom SMTP implementation for better error handling
+            $success = sendSmtpEmail($testEmail, $subject, $html, $fromEmail, $fromName, $_POST);
         } else {
             // Use PHP mail()
             $headers = [
@@ -134,90 +102,127 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
     $password = $config['smtpPassword'] ?? '';
     $encryption = $config['smtpEncryption'] ?? 'tls';
     
-    // Create socket connection
-    $context = stream_context_create([
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-            'allow_self_signed' => true
-        ]
-    ]);
-    
+    // For IONOS, we need to handle TLS differently
+    // Connect without encryption first, then upgrade to TLS
     $socket = stream_socket_client(
-        ($encryption === 'ssl' ? 'ssl://' : '') . $host . ':' . $port,
-        $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context
+        $host . ':' . $port,
+        $errno, $errstr, 30, STREAM_CLIENT_CONNECT
     );
     
     if (!$socket) {
-        throw new Exception("Failed to connect to SMTP server: $errstr ($errno)");
+        throw new Exception("Failed to connect to SMTP server $host:$port - $errstr ($errno)");
     }
     
-    // SMTP conversation
-    $response = fgets($socket, 515);
+    // Function to read SMTP response
+    $readResponse = function() use ($socket) {
+        $response = '';
+        while (($line = fgets($socket, 515)) !== false) {
+            $response .= $line;
+            if (isset($line[3]) && $line[3] == ' ') break; // End of multi-line response
+        }
+        return trim($response);
+    };
+    
+    // Initial server greeting
+    $response = $readResponse();
     if (substr($response, 0, 3) != '220') {
-        throw new Exception("SMTP connection failed: $response");
+        fclose($socket);
+        throw new Exception("SMTP server not ready: $response");
     }
     
-    // EHLO
-    fputs($socket, "EHLO localhost\r\n");
-    $response = fgets($socket, 515);
+    // EHLO to identify client
+    fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
+    $response = $readResponse();
+    if (substr($response, 0, 3) != '250') {
+        fclose($socket);
+        throw new Exception("EHLO failed: $response");
+    }
     
-    // STARTTLS if needed
+    // Start TLS if requested
     if ($encryption === 'tls') {
         fputs($socket, "STARTTLS\r\n");
-        $response = fgets($socket, 515);
-        if (substr($response, 0, 3) != '220') {
-            throw new Exception("STARTTLS failed: $response");
+        $response = $readResponse();
+        $responseCode = substr($response, 0, 3);
+        
+        if ($responseCode != '220') {
+            fclose($socket);
+            throw new Exception("STARTTLS not supported or failed: $response");
         }
         
-        stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+        // Create TLS context
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT
+            ]
+        ]);
         
-        // EHLO again after STARTTLS
-        fputs($socket, "EHLO localhost\r\n");
-        $response = fgets($socket, 515);
+        // Enable TLS encryption
+        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+            fclose($socket);
+            throw new Exception("Failed to enable TLS encryption");
+        }
+        
+        // EHLO again after TLS
+        fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
+        $response = $readResponse();
+        if (substr($response, 0, 3) != '250') {
+            fclose($socket);
+            throw new Exception("EHLO after TLS failed: $response");
+        }
     }
     
-    // AUTH LOGIN
+    // Authentication
     fputs($socket, "AUTH LOGIN\r\n");
-    $response = fgets($socket, 515);
+    $response = $readResponse();
     if (substr($response, 0, 3) != '334') {
-        throw new Exception("AUTH LOGIN failed: $response");
+        fclose($socket);
+        throw new Exception("AUTH LOGIN not supported: $response");
     }
     
+    // Send username
     fputs($socket, base64_encode($username) . "\r\n");
-    $response = fgets($socket, 515);
+    $response = $readResponse();
     if (substr($response, 0, 3) != '334') {
-        throw new Exception("Username authentication failed: $response");
+        fclose($socket);
+        throw new Exception("Username rejected: $response");
     }
     
+    // Send password
     fputs($socket, base64_encode($password) . "\r\n");
-    $response = fgets($socket, 515);
+    $response = $readResponse();
     if (substr($response, 0, 3) != '235') {
-        throw new Exception("Password authentication failed: $response");
+        fclose($socket);
+        throw new Exception("Authentication failed - check username/password: $response");
     }
     
     // MAIL FROM
     fputs($socket, "MAIL FROM: <$fromEmail>\r\n");
-    $response = fgets($socket, 515);
+    $response = $readResponse();
     if (substr($response, 0, 3) != '250') {
-        throw new Exception("MAIL FROM failed: $response");
+        fclose($socket);
+        throw new Exception("MAIL FROM rejected: $response");
     }
     
     // RCPT TO
     fputs($socket, "RCPT TO: <$to>\r\n");
-    $response = fgets($socket, 515);
+    $response = $readResponse();
     if (substr($response, 0, 3) != '250') {
-        throw new Exception("RCPT TO failed: $response");
+        fclose($socket);
+        throw new Exception("RCPT TO rejected: $response");
     }
     
     // DATA
     fputs($socket, "DATA\r\n");
-    $response = fgets($socket, 515);
+    $response = $readResponse();
     if (substr($response, 0, 3) != '354') {
-        throw new Exception("DATA command failed: $response");
+        fclose($socket);
+        throw new Exception("DATA command rejected: $response");
     }
     
-    // Email headers and body
+    // Send email headers and body
     $email = "From: $fromName <$fromEmail>\r\n";
     $email .= "To: <$to>\r\n";
     $email .= "Subject: $subject\r\n";
@@ -225,16 +230,18 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
     $email .= "Content-Type: text/html; charset=UTF-8\r\n";
     $email .= "\r\n";
     $email .= $html . "\r\n";
-    $email .= ".\r\n";
+    $email .= ".\r\n"; // End data marker
     
     fputs($socket, $email);
-    $response = fgets($socket, 515);
+    $response = $readResponse();
     if (substr($response, 0, 3) != '250') {
-        throw new Exception("Email sending failed: $response");
+        fclose($socket);
+        throw new Exception("Email delivery failed: $response");
     }
     
-    // QUIT
+    // Close connection gracefully
     fputs($socket, "QUIT\r\n");
+    $readResponse(); // Read the response but don't check it
     fclose($socket);
     
     return true;

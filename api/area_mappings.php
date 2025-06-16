@@ -125,6 +125,40 @@ function handleGet($pdo) {
             
             echo json_encode(['success' => true, 'categories' => $categories]);
             
+        } elseif ($action === 'get_available_rooms') {
+            // Get rooms that have clickable areas defined
+            $stmt = $pdo->prepare("
+                SELECT DISTINCT room_type
+                FROM room_maps
+                WHERE is_active = 1
+                ORDER BY room_type
+            ");
+            $stmt->execute();
+            $rooms = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Map room types to display names
+            $roomNames = [
+                'room_tshirts' => 'T-Shirts Room',
+                'room_tumblers' => 'Tumblers Room', 
+                'room_artwork' => 'Artwork Room',
+                'room_sublimation' => 'Sublimation Room',
+                'room_windowwraps' => 'Window Wraps Room',
+                'room_main' => 'Main Room',
+                'landing' => 'Landing Page'
+            ];
+            
+            $availableRooms = [];
+            foreach ($rooms as $roomType) {
+                if (isset($roomNames[$roomType])) {
+                    $availableRooms[] = [
+                        'value' => $roomType,
+                        'name' => $roomNames[$roomType]
+                    ];
+                }
+            }
+            
+            echo json_encode(['success' => true, 'rooms' => $availableRooms]);
+            
         } else {
             // Get all room mappings summary
             $stmt = $pdo->prepare("

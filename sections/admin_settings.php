@@ -1568,6 +1568,9 @@ function closeAreaItemMapperModal() {
 }
 
 async function initializeAreaItemMapper() {
+    // Load available rooms first
+    await loadAvailableRooms();
+    
     // Load available items and categories
     await loadAvailableItemsAndCategories();
     
@@ -1584,7 +1587,37 @@ async function initializeAreaItemMapper() {
     });
     
     // Load initial room
-    loadAreaMapperRoom(roomSelect.value);
+    if (roomSelect.value) {
+        loadAreaMapperRoom(roomSelect.value);
+    }
+}
+
+async function loadAvailableRooms() {
+    try {
+        const response = await fetch('api/area_mappings.php?action=get_available_rooms');
+        const result = await response.json();
+        
+        if (result.success) {
+            const roomSelect = document.getElementById('areaMapperRoomSelect');
+            roomSelect.innerHTML = '';
+            
+            if (result.rooms.length === 0) {
+                roomSelect.innerHTML = '<option value="">No rooms with clickable areas found</option>';
+                return;
+            }
+            
+            result.rooms.forEach(room => {
+                const option = document.createElement('option');
+                option.value = room.value;
+                option.textContent = room.name;
+                roomSelect.appendChild(option);
+            });
+        } else {
+            console.error('Failed to load available rooms:', result.message);
+        }
+    } catch (error) {
+        console.error('Error loading available rooms:', error);
+    }
 }
 
 async function loadAvailableItemsAndCategories() {
@@ -3306,8 +3339,6 @@ function escapeHtml(text) {
                     <div class="mb-4">
                         <label for="areaMapperRoomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
                         <select id="areaMapperRoomSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="landing">Landing Page</option>
-                            <option value="room_main">Main Room</option>
                             <option value="room_tshirts">T-Shirts Room</option>
                             <option value="room_tumblers">Tumblers Room</option>
                             <option value="room_artwork">Artwork Room</option>

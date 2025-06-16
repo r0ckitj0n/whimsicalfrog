@@ -37,7 +37,7 @@
     <div class="space-y-3">
         <div>
             <p class="text-sm text-gray-600 mb-3">Manage product categories used across inventory and shop.</p>
-            <a href="/?page=admin&section=categories" class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded mr-3">Manage Categories</a>
+            <a href="/?page=admin&section=categories" class="brand-button inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded mr-3">Manage Categories</a>
         </div>
         <div>
             <p class="text-sm text-gray-600 mb-3">View information about ID numbering system used throughout the platform.</p>

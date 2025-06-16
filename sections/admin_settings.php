@@ -3339,11 +3339,7 @@ function escapeHtml(text) {
                     <div class="mb-4">
                         <label for="areaMapperRoomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
                         <select id="areaMapperRoomSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="room_tshirts">T-Shirts Room</option>
-                            <option value="room_tumblers">Tumblers Room</option>
-                            <option value="room_artwork">Artwork Room</option>
-                            <option value="room_sublimation">Sublimation Room</option>
-                            <option value="room_windowwraps">Window Wraps Room</option>
+                            <option value="">Loading rooms...</option>
                         </select>
                     </div>
                     

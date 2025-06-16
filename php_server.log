@@ -1,0 +1,325 @@
+[Mon Jun 16 10:22:01 2025] PHP 8.4.7 Development Server (http://localhost:8000) started
+[Mon Jun 16 10:32:11 2025] [::1]:49368 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49368 [200]: GET /
+[Mon Jun 16 10:32:11 2025] [::1]:49368 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49369 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49370 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49371 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49372 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49373 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49369 [200]: GET /css/styles.css?v=1750084331
+[Mon Jun 16 10:32:11 2025] [::1]:49370 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 10:32:11 2025] [::1]:49371 [200]: GET /images/sign_welcome.png
+[Mon Jun 16 10:32:11 2025] [::1]:49372 [200]: GET /images/sign_welcome.webp
+[Mon Jun 16 10:32:11 2025] [::1]:49373 [200]: GET /js/cart.js?v=1750084331
+[Mon Jun 16 10:32:11 2025] [::1]:49369 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49370 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49372 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49373 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49371 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49376 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49376 [200]: GET /images/home_background.png?v=cb2
+[Mon Jun 16 10:32:11 2025] [::1]:49376 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49377 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49377 [200]: GET /images/home_background.webp?v=cb2
+[Mon Jun 16 10:32:11 2025] [::1]:49378 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49377 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49378 [200]: GET /api/get_background.php?room_type=landing
+[Mon Jun 16 10:32:11 2025] [::1]:49378 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49380 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49380 [200]: GET /images/home_background.webp?v=1750084331814
+[Mon Jun 16 10:32:11 2025] [::1]:49380 Closing
+[Mon Jun 16 10:32:11 2025] [::1]:49381 Accepted
+[Mon Jun 16 10:32:11 2025] [::1]:49381 [200]: GET /favicon.ico
+[Mon Jun 16 10:32:11 2025] [::1]:49381 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49382 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49382 [200]: GET /?page=main_room
+[Mon Jun 16 10:32:14 2025] [::1]:49382 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49383 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49383 [200]: GET /css/styles.css?v=1750084334
+[Mon Jun 16 10:32:14 2025] [::1]:49383 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49384 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49385 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49386 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49387 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49388 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49389 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49384 [200]: GET /images/sign_door_tshirts.webp
+[Mon Jun 16 10:32:14 2025] [::1]:49385 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 10:32:14 2025] [::1]:49386 [200]: GET /images/sign_door_tumblers.webp
+[Mon Jun 16 10:32:14 2025] [::1]:49384 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49387 [200]: GET /images/sign_door_artwork.webp
+[Mon Jun 16 10:32:14 2025] [::1]:49388 [200]: GET /images/sign_door_windowwraps.webp
+[Mon Jun 16 10:32:14 2025] [::1]:49389 [200]: GET /js/cart.js?v=1750084334
+[Mon Jun 16 10:32:14 2025] [::1]:49385 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49386 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49387 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49388 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49389 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49390 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49391 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49390 [200]: GET /images/sign_door_sublimation.webp
+[Mon Jun 16 10:32:14 2025] [::1]:49390 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49391 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun 16 10:32:14 2025] [::1]:49391 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49392 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49392 [200]: GET /api/get_background.php?room_type=room_main
+[Mon Jun 16 10:32:14 2025] [::1]:49392 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49393 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49393 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun 16 10:32:14 2025] [::1]:49393 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49394 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49394 [200]: GET /favicon.ico
+[Mon Jun 16 10:32:14 2025] [::1]:49394 Closing
+[Mon Jun 16 10:32:14 2025] [::1]:49395 Accepted
+[Mon Jun 16 10:32:14 2025] [::1]:49395 [200]: GET /images/room_main.webp?v=1750084334962
+[Mon Jun 16 10:32:14 2025] [::1]:49395 Closing
+[Mon Jun 16 10:32:17 2025] [::1]:49396 Accepted
+[Mon Jun 16 10:32:17 2025] [::1]:49396 [200]: GET /?page=login
+[Mon Jun 16 10:32:17 2025] [::1]:49396 Closing
+[Mon Jun 16 10:32:17 2025] [::1]:49397 Accepted
+[Mon Jun 16 10:32:17 2025] [::1]:49398 Accepted
+[Mon Jun 16 10:32:17 2025] [::1]:49399 Accepted
+[Mon Jun 16 10:32:17 2025] [::1]:49397 [200]: GET /css/styles.css?v=1750084337
+[Mon Jun 16 10:32:17 2025] [::1]:49398 [200]: GET /js/cart.js?v=1750084337
+[Mon Jun 16 10:32:17 2025] [::1]:49399 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 10:32:17 2025] [::1]:49397 Closing
+[Mon Jun 16 10:32:17 2025] [::1]:49398 Closing
+[Mon Jun 16 10:32:17 2025] [::1]:49399 Closing
+[Mon Jun 16 10:32:17 2025] [::1]:49400 Accepted
+[Mon Jun 16 10:32:17 2025] [::1]:49400 [200]: GET /api/get_background.php?room_type=room_main
+[Mon Jun 16 10:32:17 2025] [::1]:49400 Closing
+[Mon Jun 16 10:32:17 2025] [::1]:49401 Accepted
+[Mon Jun 16 10:32:17 2025] [::1]:49401 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun 16 10:32:17 2025] [::1]:49401 Closing
+[Mon Jun 16 10:32:17 2025] [::1]:49402 Accepted
+[Mon Jun 16 10:32:17 2025] [::1]:49402 [200]: GET /favicon.ico
+[Mon Jun 16 10:32:17 2025] [::1]:49402 Closing
+[Mon Jun 16 10:32:17 2025] [::1]:49403 Accepted
+[Mon Jun 16 10:32:17 2025] [::1]:49403 [200]: GET /images/room_main.webp?v=1750084337937
+[Mon Jun 16 10:32:17 2025] [::1]:49403 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49405 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49405 [200]: POST /process_login.php
+[Mon Jun 16 10:32:24 2025] [::1]:49405 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49406 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49406 [200]: GET /?page=shop
+[Mon Jun 16 10:32:24 2025] [::1]:49406 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49407 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49408 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49409 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49410 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49411 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49412 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49407 [200]: GET /css/styles.css?v=1750084344
+[Mon Jun 16 10:32:24 2025] [::1]:49408 [200]: GET /images/products/AW001A.png
+[Mon Jun 16 10:32:24 2025] [::1]:49409 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 10:32:24 2025] [::1]:49410 [200]: GET /images/products/GN001A.png
+[Mon Jun 16 10:32:24 2025] [::1]:49411 [200]: GET /images/products/MG001A.png
+[Mon Jun 16 10:32:24 2025] [::1]:49412 [200]: GET /images/products/TS001A.png
+[Mon Jun 16 10:32:24 2025] [::1]:49407 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49409 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49413 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49414 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49413 [200]: GET /js/cart.js?v=1750084344
+[Mon Jun 16 10:32:24 2025] [::1]:49414 [200]: GET /images/products/TS001B.webp
+[Mon Jun 16 10:32:24 2025] [::1]:49408 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49411 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49413 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49412 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49414 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49410 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49415 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49416 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49417 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49415 [200]: GET /images/products/TS001C.png
+[Mon Jun 16 10:32:24 2025] [::1]:49418 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49416 [200]: GET /images/products/TS001D.png
+[Mon Jun 16 10:32:24 2025] [::1]:49417 [200]: GET /images/products/TS002A.webp
+[Mon Jun 16 10:32:24 2025] [::1]:49418 [200]: GET /images/products/TU001A.png
+[Mon Jun 16 10:32:24 2025] [::1]:49419 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49417 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49419 [200]: GET /images/products/TU002A.png
+[Mon Jun 16 10:32:24 2025] [::1]:49420 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49415 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49420 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun 16 10:32:24 2025] [::1]:49416 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49419 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49420 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49418 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49421 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49422 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49421 [200]: GET /api/get_background.php?room_type=room_main
+[Mon Jun 16 10:32:24 2025] [::1]:49421 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49422 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun 16 10:32:24 2025] [::1]:49422 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49423 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49423 [200]: GET /images/room_main.webp?v=1750084344915
+[Mon Jun 16 10:32:24 2025] [::1]:49423 Closing
+[Mon Jun 16 10:32:24 2025] [::1]:49424 Accepted
+[Mon Jun 16 10:32:24 2025] [::1]:49424 [200]: GET /favicon.ico
+[Mon Jun 16 10:32:24 2025] [::1]:49424 Closing
+[Mon Jun 16 10:32:28 2025] [::1]:49425 Accepted
+[Mon Jun 16 10:32:28 2025] [::1]:49425 [200]: GET /?page=admin
+[Mon Jun 16 10:32:28 2025] [::1]:49425 Closing
+[Mon Jun 16 10:32:28 2025] [::1]:49426 Accepted
+[Mon Jun 16 10:32:28 2025] [::1]:49427 Accepted
+[Mon Jun 16 10:32:28 2025] [::1]:49426 [200]: GET /css/styles.css?v=1750084348
+[Mon Jun 16 10:32:28 2025] [::1]:49427 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 10:32:28 2025] [::1]:49426 Closing
+[Mon Jun 16 10:32:28 2025] [::1]:49427 Closing
+[Mon Jun 16 10:32:28 2025] [::1]:49428 Accepted
+[Mon Jun 16 10:32:28 2025] [::1]:49428 [200]: GET /api/get_background.php?room_type=room_main
+[Mon Jun 16 10:32:28 2025] [::1]:49428 Closing
+[Mon Jun 16 10:32:28 2025] [::1]:49429 Accepted
+[Mon Jun 16 10:32:28 2025] [::1]:49429 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun 16 10:32:28 2025] [::1]:49429 Closing
+[Mon Jun 16 10:32:28 2025] [::1]:49430 Accepted
+[Mon Jun 16 10:32:28 2025] [::1]:49430 [200]: GET /favicon.ico
+[Mon Jun 16 10:32:28 2025] [::1]:49430 Closing
+[Mon Jun 16 10:32:28 2025] [::1]:49431 Accepted
+[Mon Jun 16 10:32:28 2025] [::1]:49431 [200]: GET /images/room_main.webp?v=1750084348238
+[Mon Jun 16 10:32:28 2025] [::1]:49431 Closing
+[Mon Jun 16 10:32:33 2025] [::1]:49432 Accepted
+[Mon Jun 16 10:32:33 2025] [::1]:49432 [200]: GET /?page=admin&section=email_settings
+[Mon Jun 16 10:32:33 2025] [::1]:49432 Closing
+[Mon Jun 16 10:32:33 2025] [::1]:49433 Accepted
+[Mon Jun 16 10:32:33 2025] [::1]:49434 Accepted
+[Mon Jun 16 10:32:33 2025] [::1]:49433 [200]: GET /css/styles.css?v=1750084353
+[Mon Jun 16 10:32:33 2025] [::1]:49434 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 10:32:33 2025] [::1]:49433 Closing
+[Mon Jun 16 10:32:33 2025] [::1]:49434 Closing
+[Mon Jun 16 10:32:33 2025] [::1]:49435 Accepted
+[Mon Jun 16 10:32:33 2025] [::1]:49435 [200]: GET /api/get_background.php?room_type=room_main
+[Mon Jun 16 10:32:33 2025] [::1]:49435 Closing
+[Mon Jun 16 10:32:33 2025] [::1]:49436 Accepted
+[Mon Jun 16 10:32:33 2025] [::1]:49436 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun 16 10:32:33 2025] [::1]:49436 Closing
+[Mon Jun 16 10:32:33 2025] [::1]:49437 Accepted
+[Mon Jun 16 10:32:33 2025] [::1]:49437 [200]: GET /favicon.ico
+[Mon Jun 16 10:32:33 2025] [::1]:49437 Closing
+[Mon Jun 16 10:32:33 2025] [::1]:49438 Accepted
+[Mon Jun 16 10:32:33 2025] [::1]:49438 [200]: GET /images/room_main.webp?v=1750084353795
+[Mon Jun 16 10:32:33 2025] [::1]:49438 Closing
+[Mon Jun 16 10:47:10 2025] [::1]:49642 Accepted
+[Mon Jun 16 10:47:10 2025] [::1]:49642 [200]: GET /?page=admin&section=email_settings
+[Mon Jun 16 10:47:10 2025] [::1]:49642 Closing
+[Mon Jun 16 10:47:10 2025] [::1]:49643 Accepted
+[Mon Jun 16 10:47:10 2025] [::1]:49643 [200]: GET /css/styles.css?v=1750085230
+[Mon Jun 16 10:47:10 2025] [::1]:49644 Accepted
+[Mon Jun 16 10:47:10 2025] [::1]:49644 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 10:47:10 2025] [::1]:49643 Closing
+[Mon Jun 16 10:47:10 2025] [::1]:49644 Closing
+[Mon Jun 16 10:47:10 2025] [::1]:49645 Accepted
+[Mon Jun 16 10:47:10 2025] [::1]:49645 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun 16 10:47:10 2025] [::1]:49645 Closing
+[Mon Jun 16 10:47:10 2025] [::1]:49646 Accepted
+[Mon Jun 16 10:47:10 2025] [::1]:49647 Accepted
+[Mon Jun 16 10:47:10 2025] [::1]:49646 [200]: GET /api/get_background.php?room_type=room_main
+[Mon Jun 16 10:47:10 2025] [::1]:49646 Closing
+[Mon Jun 16 10:47:10 2025] [::1]:49647 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun 16 10:47:10 2025] [::1]:49647 Closing
+[Mon Jun 16 10:47:10 2025] [::1]:49648 Accepted
+[Mon Jun 16 10:47:10 2025] [::1]:49648 [200]: GET /images/room_main.webp?v=1750085230323
+[Mon Jun 16 10:47:10 2025] [::1]:49648 Closing
+[Mon Jun 16 10:47:10 2025] [::1]:49649 Accepted
+[Mon Jun 16 10:47:10 2025] [::1]:49649 [200]: GET /favicon.ico
+[Mon Jun 16 10:47:10 2025] [::1]:49649 Closing
+[Mon Jun 16 10:47:25 2025] [::1]:49650 Accepted
+[Mon Jun 16 10:47:25 2025] [::1]:49650 [200]: GET /?page=admin&section=settings
+[Mon Jun 16 10:47:25 2025] [::1]:49650 Closing
+[Mon Jun 16 10:47:25 2025] [::1]:49651 Accepted
+[Mon Jun 16 10:47:25 2025] [::1]:49652 Accepted
+[Mon Jun 16 10:47:25 2025] [::1]:49651 [200]: GET /css/styles.css?v=1750085245
+[Mon Jun 16 10:47:25 2025] [::1]:49652 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 10:47:25 2025] [::1]:49651 Closing
+[Mon Jun 16 10:47:25 2025] [::1]:49652 Closing
+[Mon Jun 16 10:47:25 2025] [::1]:49653 Accepted
+[Mon Jun 16 10:47:25 2025] [::1]:49653 [200]: GET /api/get_background.php?room_type=room_main
+[Mon Jun 16 10:47:25 2025] [::1]:49653 Closing
+[Mon Jun 16 10:47:25 2025] [::1]:49654 Accepted
+[Mon Jun 16 10:47:25 2025] [::1]:49654 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun 16 10:47:25 2025] [::1]:49654 Closing
+[Mon Jun 16 10:47:25 2025] [::1]:49655 Accepted
+[Mon Jun 16 10:47:25 2025] [::1]:49655 [200]: GET /favicon.ico
+[Mon Jun 16 10:47:25 2025] [::1]:49655 Closing
+[Mon Jun 16 10:47:25 2025] [::1]:49656 Accepted
+[Mon Jun 16 10:47:25 2025] [::1]:49656 [200]: GET /images/room_main.webp?v=1750085245473
+[Mon Jun 16 10:47:25 2025] [::1]:49656 Closing
+[Mon Jun 16 10:47:35 2025] [::1]:49657 Accepted
+[Mon Jun 16 10:47:35 2025] [::1]:49657 [200]: GET /api/get_email_config.php
+[Mon Jun 16 10:47:35 2025] [::1]:49657 Closing
+[Mon Jun 16 10:48:00 2025] [::1]:49672 Accepted
+[Mon Jun 16 10:48:00 2025] [::1]:49672 [200]: POST /api/save_email_config.php
+[Mon Jun 16 10:48:00 2025] [::1]:49672 Closing
+[Mon Jun 16 10:48:44 2025] [::1]:49685 Accepted
+[Mon Jun 16 10:48:44 2025] [::1]:49685 [200]: GET /api/get_email_config.php
+[Mon Jun 16 10:48:44 2025] [::1]:49685 Closing
+[Mon Jun 16 11:04:35 2025] [::1]:49867 Accepted
+[Mon Jun 16 11:04:35 2025] [::1]:49867 [200]: GET /?page=admin&section=settings
+[Mon Jun 16 11:04:35 2025] [::1]:49867 Closing
+[Mon Jun 16 11:04:35 2025] [::1]:49868 Accepted
+[Mon Jun 16 11:04:35 2025] [::1]:49869 Accepted
+[Mon Jun 16 11:04:35 2025] [::1]:49868 [200]: GET /css/styles.css?v=1750086275
+[Mon Jun 16 11:04:35 2025] [::1]:49869 [200]: GET /images/sign_whimsicalfrog.webp
+[Mon Jun 16 11:04:35 2025] [::1]:49868 Closing
+[Mon Jun 16 11:04:35 2025] [::1]:49869 Closing
+[Mon Jun 16 11:04:36 2025] [::1]:49870 Accepted
+[Mon Jun 16 11:04:36 2025] [::1]:49870 [200]: GET /images/room_main.png?v=cb2
+[Mon Jun 16 11:04:36 2025] [::1]:49870 Closing
+[Mon Jun 16 11:04:36 2025] [::1]:49871 Accepted
+[Mon Jun 16 11:04:36 2025] [::1]:49872 Accepted
+[Mon Jun 16 11:04:36 2025] [::1]:49871 [200]: GET /api/get_background.php?room_type=room_main
+[Mon Jun 16 11:04:36 2025] [::1]:49871 Closing
+[Mon Jun 16 11:04:36 2025] [::1]:49872 [200]: GET /images/room_main.webp?v=cb2
+[Mon Jun 16 11:04:36 2025] [::1]:49872 Closing
+[Mon Jun 16 11:04:36 2025] [::1]:49873 Accepted
+[Mon Jun 16 11:04:36 2025] [::1]:49873 [200]: GET /images/room_main.webp?v=1750086276060
+[Mon Jun 16 11:04:36 2025] [::1]:49873 Closing
+[Mon Jun 16 11:04:36 2025] [::1]:49874 Accepted
+[Mon Jun 16 11:04:36 2025] [::1]:49874 [200]: GET /favicon.ico
+[Mon Jun 16 11:04:36 2025] [::1]:49874 Closing
+[Mon Jun 16 11:04:40 2025] [::1]:49875 Accepted
+[Mon Jun 16 11:04:40 2025] [::1]:49875 [403]: GET /api/get_email_history.php?page=1&limit=20&date_filter=all&type_filter=all&status_filter=all
+[Mon Jun 16 11:04:40 2025] [::1]:49875 Closing
+[Mon Jun 16 11:05:00 2025] [::1]:49878 Accepted
+[Mon Jun 16 11:05:00 2025] [::1]:49878 [200]: GET /api/get_email_config.php
+[Mon Jun 16 11:05:00 2025] [::1]:49878 Closing
+[Mon Jun 16 11:06:37 2025] [::1]:49883 Accepted
+[Mon Jun 16 11:06:37 2025] PHP Deprecated:  PDO::__construct(): Passing null to parameter #1 ($dsn) of type string is deprecated in /Users/jongraves/Documents/Websites/WhimsicalFrog/api/email_logger.php on line 13
+[Mon Jun 16 11:06:37 2025] Failed to initialize email_logs table: PDO::__construct(): Argument #1 ($dsn) must be a valid data source name
+[Mon Jun 16 11:06:37 2025] PHP Deprecated:  PDO::__construct(): Passing null to parameter #1 ($dsn) of type string is deprecated in /Users/jongraves/Documents/Websites/WhimsicalFrog/api/email_logger.php on line 50
+[Mon Jun 16 11:06:37 2025] Failed to log email: PDO::__construct(): Argument #1 ($dsn) must be a valid data source name
+[Mon Jun 16 11:06:37 2025] [::1]:49883 [200]: POST /api/save_email_config.php
+[Mon Jun 16 11:06:37 2025] [::1]:49883 Closing
+[Mon Jun 16 11:08:19 2025] [::1]:49908 Accepted
+[Mon Jun 16 11:08:19 2025] [::1]:49908 [200]: GET /api/get_email_config.php
+[Mon Jun 16 11:08:19 2025] [::1]:49908 Closing
+[Mon Jun 16 11:08:32 2025] [::1]:49909 Accepted
+[Mon Jun 16 11:08:32 2025] [::1]:49909 [200]: POST /api/save_email_config.php
+[Mon Jun 16 11:08:32 2025] [::1]:49909 Closing
+[Mon Jun 16 11:08:37 2025] [::1]:49910 Accepted
+[Mon Jun 16 11:08:37 2025] [::1]:49910 [200]: GET /api/get_email_config.php
+[Mon Jun 16 11:08:37 2025] [::1]:49910 Closing
+[Mon Jun 16 11:08:42 2025] [::1]:49913 Accepted
+[Mon Jun 16 11:08:42 2025] PHP Deprecated:  PDO::__construct(): Passing null to parameter #1 ($dsn) of type string is deprecated in /Users/jongraves/Documents/Websites/WhimsicalFrog/api/email_logger.php on line 13
+[Mon Jun 16 11:08:42 2025] Failed to initialize email_logs table: PDO::__construct(): Argument #1 ($dsn) must be a valid data source name
+[Mon Jun 16 11:08:42 2025] PHP Deprecated:  PDO::__construct(): Passing null to parameter #1 ($dsn) of type string is deprecated in /Users/jongraves/Documents/Websites/WhimsicalFrog/api/email_logger.php on line 50
+[Mon Jun 16 11:08:42 2025] Failed to log email: PDO::__construct(): Argument #1 ($dsn) must be a valid data source name
+[Mon Jun 16 11:08:42 2025] [::1]:49913 [200]: POST /api/save_email_config.php
+[Mon Jun 16 11:08:42 2025] [::1]:49913 Closing
+[Mon Jun 16 11:14:18 2025] [::1]:50101 Accepted
+[Mon Jun 16 11:14:18 2025] [::1]:50101 [200]: GET /api/get_email_config.php
+[Mon Jun 16 11:14:18 2025] [::1]:50101 Closing
+[Mon Jun 16 11:14:32 2025] [::1]:50102 Accepted
+[Mon Jun 16 11:14:32 2025] [::1]:50102 [200]: POST /api/save_email_config.php
+[Mon Jun 16 11:14:32 2025] [::1]:50102 Closing
+[Mon Jun 16 11:14:36 2025] [::1]:50103 Accepted
+[Mon Jun 16 11:14:36 2025] [::1]:50103 [200]: GET /api/get_email_config.php
+[Mon Jun 16 11:14:36 2025] [::1]:50103 Closing
+[Mon Jun 16 11:14:39 2025] [::1]:50104 Accepted
+[Mon Jun 16 11:14:39 2025] PHP Deprecated:  PDO::__construct(): Passing null to parameter #1 ($dsn) of type string is deprecated in /Users/jongraves/Documents/Websites/WhimsicalFrog/api/email_logger.php on line 13
+[Mon Jun 16 11:14:39 2025] Failed to initialize email_logs table: PDO::__construct(): Argument #1 ($dsn) must be a valid data source name
+[Mon Jun 16 11:14:39 2025] PHP Deprecated:  PDO::__construct(): Passing null to parameter #1 ($dsn) of type string is deprecated in /Users/jongraves/Documents/Websites/WhimsicalFrog/api/email_logger.php on line 50
+[Mon Jun 16 11:14:39 2025] Failed to log email: PDO::__construct(): Argument #1 ($dsn) must be a valid data source name
+[Mon Jun 16 11:14:39 2025] [::1]:50104 [200]: POST /api/save_email_config.php
+[Mon Jun 16 11:14:39 2025] [::1]:50104 Closing

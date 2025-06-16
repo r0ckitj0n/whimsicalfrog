@@ -36,6 +36,23 @@
     <h2 class="text-xl font-bold text-gray-800 mb-4">Other Settings</h2>
     <div class="space-y-3">
         <div>
+            <p class="text-sm text-gray-600 mb-3">Configure email settings for order confirmations and notifications.</p>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="openEmailConfigModal()" class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    Email Configuration
+                </button>
+                <button onclick="openEmailHistoryModal()" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Email History
+                </button>
+            </div>
+        </div>
+        <div>
             <p class="text-sm text-gray-600 mb-3">Manage product categories used across inventory and shop.</p>
             <a href="/?page=admin&section=categories" class="brand-button inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded mr-3" style="color: white !important;">Manage Categories</a>
         </div>
@@ -1965,7 +1982,658 @@ function confirmAction() {
         </button>
     `;
 }
+
+// Email Configuration Functions
+async function openEmailConfigModal() {
+    document.getElementById('emailConfigModal').style.display = 'flex';
+    
+    // Load current configuration
+    try {
+        const response = await fetch('/api/get_email_config.php');
+        const data = await response.json();
+        
+        if (data.success) {
+            populateEmailForm(data.config);
+        } else {
+            // Set recommended defaults for IONOS
+            populateEmailForm({
+                fromEmail: 'orders@whimsicalfrog.us',
+                fromName: 'WhimsicalFrog',
+                adminEmail: 'admin@whimsicalfrog.us',
+                bccEmail: '',
+                smtpEnabled: true,
+                smtpHost: 'smtp.ionos.com',
+                smtpPort: '587',
+                smtpUsername: 'orders@whimsicalfrog.us',
+                smtpPassword: '',
+                smtpEncryption: 'tls'
+            });
+        }
+    } catch (error) {
+        console.error('Error loading email config:', error);
+        showNotification('Error', 'Failed to load current email configuration', 'error');
+    }
+}
+
+function closeEmailConfigModal() {
+    document.getElementById('emailConfigModal').style.display = 'none';
+}
+
+function populateEmailForm(config) {
+    document.getElementById('fromEmail').value = config.fromEmail || '';
+    document.getElementById('fromName').value = config.fromName || '';
+    document.getElementById('adminEmail').value = config.adminEmail || '';
+    document.getElementById('bccEmail').value = config.bccEmail || '';
+    
+    const smtpEnabled = document.getElementById('smtpEnabled');
+    smtpEnabled.checked = config.smtpEnabled || false;
+    toggleSmtpSettings();
+    
+    if (config.smtpEnabled) {
+        document.getElementById('smtpHost').value = config.smtpHost || '';
+        document.getElementById('smtpPort').value = config.smtpPort || '587';
+        document.getElementById('smtpUsername').value = config.smtpUsername || '';
+        document.getElementById('smtpPassword').value = config.smtpPassword || '';
+        document.getElementById('smtpEncryption').value = config.smtpEncryption || 'tls';
+    }
+}
+
+function toggleSmtpSettings() {
+    const smtpEnabled = document.getElementById('smtpEnabled').checked;
+    const smtpSettings = document.getElementById('smtpSettings');
+    smtpSettings.style.display = smtpEnabled ? 'grid' : 'none';
+}
+
+async function sendTestEmail() {
+    const testEmail = document.getElementById('testEmailAddress').value;
+    if (!testEmail) {
+        showNotification('Error', 'Please enter a test email address', 'error');
+        return;
+    }
+    
+    // Collect current form data
+    const formData = new FormData(document.getElementById('emailConfigForm'));
+    formData.append('testEmail', testEmail);
+    formData.append('action', 'test');
+    
+    try {
+        const response = await fetch('/api/save_email_config.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            showNotification('Success', 'Test email sent successfully!', 'success');
+        } else {
+            showNotification('Error', result.error || 'Failed to send test email', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending test email:', error);
+        showNotification('Error', 'Failed to send test email', 'error');
+    }
+}
+
+// Handle email config form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const emailConfigForm = document.getElementById('emailConfigForm');
+    if (emailConfigForm) {
+        emailConfigForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('action', 'save');
+            
+            try {
+                const response = await fetch('/api/save_email_config.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Success', 'Email configuration saved successfully!', 'success');
+                    closeEmailConfigModal();
+                } else {
+                    showNotification('Error', result.error || 'Failed to save configuration', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving email config:', error);
+                showNotification('Error', 'Failed to save email configuration', 'error');
+            }
+        });
+    }
+    
+    // Add SMTP toggle functionality
+    const smtpEnabledCheckbox = document.getElementById('smtpEnabled');
+    if (smtpEnabledCheckbox) {
+        smtpEnabledCheckbox.addEventListener('change', toggleSmtpSettings);
+    }
+    
+    // Email edit form submission
+    const emailEditForm = document.getElementById('emailEditForm');
+    if (emailEditForm) {
+        emailEditForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            submitButton.textContent = 'Sending...';
+            submitButton.disabled = true;
+            
+            fetch('api/resend_email.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Success', 'Email sent successfully!', 'success');
+                    closeEmailEditModal();
+                    loadEmailHistory(currentEmailHistoryPage); // Refresh the list
+                } else {
+                    showNotification('Error', data.error || 'Failed to send email', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error', 'Failed to send email', 'error');
+            })
+            .finally(() => {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            });
+        });
+    }
+});
+
+// Email History Functions
+let currentEmailHistoryPage = 1;
+const emailHistoryPageSize = 20;
+
+function openEmailHistoryModal() {
+    document.getElementById('emailHistoryModal').style.display = 'flex';
+    loadEmailHistory();
+}
+
+function closeEmailHistoryModal() {
+    document.getElementById('emailHistoryModal').style.display = 'none';
+}
+
+function loadEmailHistory(page = 1) {
+    currentEmailHistoryPage = page;
+    
+    const dateFilter = document.getElementById('emailHistoryDateFilter').value;
+    const typeFilter = document.getElementById('emailHistoryTypeFilter').value;
+    const statusFilter = document.getElementById('emailHistoryStatusFilter').value;
+    
+    const params = new URLSearchParams({
+        page: page,
+        limit: emailHistoryPageSize,
+        date_filter: dateFilter,
+        type_filter: typeFilter,
+        status_filter: statusFilter
+    });
+    
+    const tableBody = document.getElementById('emailHistoryTableBody');
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="6" class="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                <div class="flex flex-col items-center">
+                    <svg class="w-8 h-8 mb-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Loading email history...
+                </div>
+            </td>
+        </tr>
+    `;
+    
+    fetch('api/get_email_history.php?' + params)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayEmailHistory(data.emails, data.pagination);
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="border border-gray-300 px-4 py-8 text-center text-red-500">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                ${data.error || 'Failed to load email history'}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading email history:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="border border-gray-300 px-4 py-8 text-center text-red-500">
+                        <div class="flex flex-col items-center">
+                            <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Error loading email history
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+}
+
+function displayEmailHistory(emails, pagination) {
+    const tableBody = document.getElementById('emailHistoryTableBody');
+    
+    if (!emails || emails.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                    <div class="flex flex-col items-center">
+                        <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                        No emails found matching your criteria
+                    </div>
+                </td>
+            </tr>
+        `;
+        document.getElementById('emailHistoryPagination').style.display = 'none';
+        return;
+    }
+    
+    tableBody.innerHTML = emails.map(email => {
+        const statusBadge = email.status === 'sent' 
+            ? '<span class="inline-flex px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Sent</span>'
+            : '<span class="inline-flex px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">Failed</span>';
+        
+        const typeDisplayMap = {
+            'order_confirmation': 'Order Confirmation',
+            'admin_notification': 'Admin Notification',
+            'test_email': 'Test Email',
+            'manual_resend': 'Manual Resend'
+        };
+        
+        const typeDisplay = typeDisplayMap[email.email_type] || email.email_type;
+        
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-4 py-2 text-sm">
+                    ${new Date(email.sent_at).toLocaleString()}
+                </td>
+                <td class="border border-gray-300 px-4 py-2 text-sm">
+                    ${escapeHtml(email.to_email)}
+                </td>
+                <td class="border border-gray-300 px-4 py-2 text-sm">
+                    <div class="max-w-xs truncate" title="${escapeHtml(email.subject)}">
+                        ${escapeHtml(email.subject)}
+                    </div>
+                </td>
+                <td class="border border-gray-300 px-4 py-2 text-sm">
+                    ${typeDisplay}
+                </td>
+                <td class="border border-gray-300 px-4 py-2 text-sm">
+                    ${statusBadge}
+                </td>
+                <td class="border border-gray-300 px-4 py-2 text-sm">
+                    <div class="flex space-x-2">
+                        <button onclick="viewEmailDetails(${email.id})" class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600" title="View Details">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="editAndResendEmail(${email.id})" class="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600" title="Edit & Resend">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Update pagination
+    if (pagination) {
+        document.getElementById('emailHistoryStart').textContent = pagination.start;
+        document.getElementById('emailHistoryEnd').textContent = pagination.end;
+        document.getElementById('emailHistoryTotal').textContent = pagination.total;
+        
+        const prevBtn = document.getElementById('emailHistoryPrevBtn');
+        const nextBtn = document.getElementById('emailHistoryNextBtn');
+        
+        prevBtn.disabled = !pagination.has_prev;
+        nextBtn.disabled = !pagination.has_next;
+        
+        prevBtn.className = pagination.has_prev 
+            ? 'px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm'
+            : 'px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm';
+            
+        nextBtn.className = pagination.has_next
+            ? 'px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm'
+            : 'px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm';
+        
+        document.getElementById('emailHistoryPagination').style.display = 'flex';
+    } else {
+        document.getElementById('emailHistoryPagination').style.display = 'none';
+    }
+}
+
+function loadEmailHistoryPage(direction) {
+    if (direction === 'prev' && currentEmailHistoryPage > 1) {
+        loadEmailHistory(currentEmailHistoryPage - 1);
+    } else if (direction === 'next') {
+        loadEmailHistory(currentEmailHistoryPage + 1);
+    }
+}
+
+function viewEmailDetails(emailId) {
+    fetch('api/get_email_details.php?id=' + emailId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Email Details:\n\n' + 
+                      'To: ' + data.email.to_email + '\n' +
+                      'Subject: ' + data.email.subject + '\n' +
+                      'Sent: ' + new Date(data.email.sent_at).toLocaleString() + '\n' +
+                      'Status: ' + data.email.status + '\n\n' +
+                      'Content:\n' + data.email.content);
+            } else {
+                showNotification('Error', data.error || 'Failed to load email details', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error', 'Failed to load email details', 'error');
+        });
+}
+
+function editAndResendEmail(emailId) {
+    fetch('api/get_email_details.php?id=' + emailId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('originalEmailId').value = emailId;
+                document.getElementById('editEmailTo').value = data.email.to_email;
+                document.getElementById('editEmailSubject').value = data.email.subject;
+                document.getElementById('editEmailContent').value = data.email.content;
+                
+                document.getElementById('emailEditModal').style.display = 'flex';
+            } else {
+                showNotification('Error', data.error || 'Failed to load email for editing', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error', 'Failed to load email for editing', 'error');
+        });
+}
+
+function closeEmailEditModal() {
+    document.getElementById('emailEditModal').style.display = 'none';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
+
+<!-- Email History Modal -->
+<div id="emailHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Email History</h3>
+                <button onclick="closeEmailHistoryModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <!-- Filter Controls -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                        <select id="emailHistoryDateFilter" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Type</label>
+                        <select id="emailHistoryTypeFilter" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                            <option value="all">All Types</option>
+                            <option value="order_confirmation">Order Confirmations</option>
+                            <option value="admin_notification">Admin Notifications</option>
+                            <option value="test_email">Test Emails</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="emailHistoryStatusFilter" class="w-full p-2 border border-gray-300 rounded-md text-sm">
+                            <option value="all">All Status</option>
+                            <option value="sent">Sent Successfully</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadEmailHistory()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium">
+                            Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Email History Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-300 px-4 py-2 text-left text-sm font-medium">Date/Time</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left text-sm font-medium">To</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left text-sm font-medium">Subject</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left text-sm font-medium">Type</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left text-sm font-medium">Status</th>
+                            <th class="border border-gray-300 px-4 py-2 text-left text-sm font-medium">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="emailHistoryTableBody">
+                        <tr>
+                            <td colspan="6" class="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Loading email history...
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div id="emailHistoryPagination" class="flex justify-between items-center mt-4" style="display: none;">
+                <div class="text-sm text-gray-700">
+                    Showing <span id="emailHistoryStart">0</span> to <span id="emailHistoryEnd">0</span> of <span id="emailHistoryTotal">0</span> results
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="loadEmailHistoryPage('prev')" id="emailHistoryPrevBtn" class="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" disabled>
+                        Previous
+                    </button>
+                    <button onclick="loadEmailHistoryPage('next')" id="emailHistoryNextBtn" class="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" disabled>
+                        Next
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Close Button -->
+            <div class="flex justify-end mt-6 pt-4 border-t">
+                <button onclick="closeEmailHistoryModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Email Edit/Resend Modal -->
+<div id="emailEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Edit & Resend Email</h3>
+                <button onclick="closeEmailEditModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <form id="emailEditForm" class="space-y-4">
+                <input type="hidden" id="originalEmailId" name="originalEmailId">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">To Email Address</label>
+                        <input type="email" id="editEmailTo" name="emailTo" class="w-full p-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                        <input type="text" id="editEmailSubject" name="emailSubject" class="w-full p-2 border border-gray-300 rounded-md" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Content</label>
+                    <textarea id="editEmailContent" name="emailContent" rows="15" class="w-full p-2 border border-gray-300 rounded-md font-mono text-sm" required></textarea>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                    <div class="flex">
+                        <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <h4 class="text-yellow-800 font-medium">Important Notice</h4>
+                            <p class="text-yellow-700 text-sm">You are editing and resending an email. The original email record will remain unchanged, and a new email log entry will be created for this resend.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <button type="button" onclick="closeEmailEditModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 font-medium">
+                        Send Email
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Email Configuration Modal -->
+<div id="emailConfigModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Email Configuration</h3>
+                <button onclick="closeEmailConfigModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <form id="emailConfigForm" class="space-y-4">
+                <!-- Basic Settings -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-3">Basic Email Settings</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">From Email Address</label>
+                            <input type="email" id="fromEmail" name="fromEmail" class="w-full p-2 border border-gray-300 rounded-md" placeholder="orders@whimsicalfrog.us" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">From Name</label>
+                            <input type="text" id="fromName" name="fromName" class="w-full p-2 border border-gray-300 rounded-md" placeholder="WhimsicalFrog" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Admin Email</label>
+                            <input type="email" id="adminEmail" name="adminEmail" class="w-full p-2 border border-gray-300 rounded-md" placeholder="admin@whimsicalfrog.us" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">BCC Email (Optional)</label>
+                            <input type="email" id="bccEmail" name="bccEmail" class="w-full p-2 border border-gray-300 rounded-md" placeholder="backup@whimsicalfrog.us">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SMTP Settings -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="flex items-center mb-3">
+                        <input type="checkbox" id="smtpEnabled" name="smtpEnabled" class="mr-2">
+                        <label class="font-semibold text-gray-800">Enable SMTP (Recommended for IONOS)</label>
+                    </div>
+                    <div id="smtpSettings" class="grid grid-cols-1 md:grid-cols-2 gap-4" style="display: none;">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Host</label>
+                            <input type="text" id="smtpHost" name="smtpHost" class="w-full p-2 border border-gray-300 rounded-md" placeholder="smtp.ionos.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Port</label>
+                            <select id="smtpPort" name="smtpPort" class="w-full p-2 border border-gray-300 rounded-md">
+                                <option value="587">587 (TLS - Recommended)</option>
+                                <option value="465">465 (SSL)</option>
+                                <option value="25">25 (Plain)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Username</label>
+                            <input type="text" id="smtpUsername" name="smtpUsername" class="w-full p-2 border border-gray-300 rounded-md" placeholder="orders@whimsicalfrog.us">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Password</label>
+                            <input type="password" id="smtpPassword" name="smtpPassword" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Your email password">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Encryption</label>
+                            <select id="smtpEncryption" name="smtpEncryption" class="w-full p-2 border border-gray-300 rounded-md">
+                                <option value="tls">TLS (Recommended)</option>
+                                <option value="ssl">SSL</option>
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Email -->
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-3">Test Configuration</h4>
+                    <div class="flex gap-2">
+                        <input type="email" id="testEmailAddress" class="flex-1 p-2 border border-gray-300 rounded-md" placeholder="Enter test email address">
+                        <button type="button" onclick="sendTestEmail()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium">
+                            Send Test Email
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <button type="button" onclick="closeEmailConfigModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 font-medium">
+                        Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Custom Notification Modal -->
 <div id="customNotificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">

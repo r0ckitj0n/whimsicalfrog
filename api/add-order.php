@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/email_config.php';
 header('Content-Type: application/json');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -100,6 +101,25 @@ try {
         $updateInv->execute([$qty, $pid]);
     }
     $pdo->commit();
+    
+    // Send order confirmation emails
+    $emailResults = sendOrderConfirmationEmails($orderId, $pdo);
+    
+    // Log email results but don't fail the order if emails fail
+    if ($emailResults) {
+        if ($emailResults['customer']) {
+            error_log("Order $orderId: Customer confirmation email sent successfully");
+        } else {
+            error_log("Order $orderId: Failed to send customer confirmation email");
+        }
+        
+        if ($emailResults['admin']) {
+            error_log("Order $orderId: Admin notification email sent successfully");
+        } else {
+            error_log("Order $orderId: Failed to send admin notification email");
+        }
+    }
+    
     echo json_encode(['success'=>true,'orderId'=>$orderId]);
 } catch (PDOException $e) {
     $pdo->rollBack();

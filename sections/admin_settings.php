@@ -2354,15 +2354,39 @@ function fixSampleEmail() {
     `;
     button.disabled = true;
     
-    fetch('api/fix_sample_email.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
+    // First check session state for debugging
+    fetch('api/debug_session.php')
     .then(response => response.json())
+    .then(sessionData => {
+        console.log('Session Debug Info:', sessionData);
+        
+        if (!sessionData.auth_status.is_authenticated) {
+            showNotification('Error', 'Authentication required. Please refresh the page and try again.', 'error');
+            button.innerHTML = originalText;
+            button.disabled = false;
+            return;
+        }
+        
+        // Proceed with fixing sample email
+        return fetch('api/fix_sample_email.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+    })
+    .then(response => {
+        if (!response) return; // Authentication failed, already handled
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        if (!data) return; // Authentication failed, already handled
+        
         if (data.success) {
             showNotification('Success', data.message, 'success');
             
@@ -2387,7 +2411,7 @@ function fixSampleEmail() {
     })
     .catch(error => {
         console.error('Error fixing sample email:', error);
-        showNotification('Error', 'Network error while fixing sample email', 'error');
+        showNotification('Error', 'Network error while fixing sample email: ' + error.message, 'error');
     })
     .finally(() => {
         // Restore button state

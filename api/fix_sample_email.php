@@ -7,10 +7,27 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 // Start session to verify admin access
 session_start();
 
-// Check if user is admin
-if (!isset($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
+// Check if user is admin - handle different session structures
+$isAdmin = false;
+if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin') {
+    $isAdmin = true;
+} elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    $isAdmin = true;
+} elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+    $isAdmin = true;
+}
+
+if (!$isAdmin) {
+    ob_clean();
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Access denied']);
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Access denied - admin authentication required',
+        'debug' => [
+            'session_keys' => array_keys($_SESSION ?? []),
+            'user_data' => isset($_SESSION['user']) ? array_keys($_SESSION['user']) : 'no user key'
+        ]
+    ]);
     exit;
 }
 

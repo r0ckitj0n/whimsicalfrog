@@ -190,7 +190,6 @@ $messageType = $_GET['type'] ?? '';
                                 <div class="editable-category font-medium text-gray-900" data-original="<?= htmlspecialchars($cat); ?>" title="Click to edit category name">
                                     <?= htmlspecialchars($cat); ?>
                                 </div>
-                                <div class="edit-hint">Click to edit</div>
                             </td>
                             <td><span class="category-code"><?= htmlspecialchars($code); ?></span></td>
                             <td><span class="category-code"><?= htmlspecialchars($exampleSku); ?></span></td>
@@ -279,7 +278,6 @@ document.getElementById('addCategoryForm').addEventListener('submit', async (e) 
                     <div class="editable-category font-medium text-gray-900" data-original="${category}" title="Click to edit category name">
                         ${category}
                     </div>
-                    <div class="edit-hint">Click to edit</div>
                 </td>
                 <td><span class="category-code">${code}</span></td>
                 <td><span class="category-code">${exampleSku}</span></td>

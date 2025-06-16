@@ -789,10 +789,34 @@ async function deleteSavedMap() {
     
     const mapId = selectedOption.value;
     const mapName = selectedOption.textContent;
+    const roomType = document.getElementById('roomMapperSelect').value;
     
-    if (!confirm(`Are you sure you want to delete the map "${mapName}"? This action cannot be undone.`)) {
+    // Check if it's a protected Original map
+    if (mapName.includes('Original') && mapName.includes('🔒')) {
+        showMapperMessage('❌ Original maps are protected and cannot be deleted!', 'error');
         return;
     }
+    
+    // Create a friendly confirmation dialog
+    const isActive = mapName.includes('(ACTIVE)');
+    const activeWarning = isActive ? '\n\n⚠️ This is currently the ACTIVE map for this room!' : '';
+    
+    const confirmMessage = `🗑️ Delete Map Confirmation
+    
+Map: "${mapName.replace(/\s*\(ACTIVE\)\s*/, '').replace(/\s*🔒\s*PROTECTED\s*/, '')}"
+Room: ${roomType}${activeWarning}
+
+Are you sure you want to permanently delete this map? 
+
+This action cannot be undone, and all coordinate data will be lost forever.`;
+    
+    if (!confirm(confirmMessage)) {
+        showMapperMessage('Map deletion cancelled', 'info');
+        return;
+    }
+    
+    // Show deleting message
+    showMapperMessage('🗑️ Deleting map...', 'info');
     
     try {
         const response = await fetch('api/room_maps.php', {
@@ -808,14 +832,21 @@ async function deleteSavedMap() {
         const data = await response.json();
         
         if (data.success) {
-            showMapperMessage('Map deleted successfully!', 'success');
-            loadSavedMapsForRoom(document.getElementById('roomMapperSelect').value);
+            showMapperMessage('🎉 Map deleted successfully! The map has been permanently removed.', 'success');
+            loadSavedMapsForRoom(roomType);
+            
+            // Clear the preview if this map was being previewed
+            clearMapperAreas();
         } else {
-            showMapperMessage('Error deleting map: ' + data.message, 'error');
+            if (data.message && data.message.includes('Original maps cannot be deleted')) {
+                showMapperMessage('🔒 Original maps are protected and cannot be deleted!', 'error');
+            } else {
+                showMapperMessage('❌ Failed to delete map: ' + data.message, 'error');
+            }
         }
     } catch (error) {
         console.error('Error deleting map:', error);
-        showMapperMessage('Error deleting map', 'error');
+        showMapperMessage('❌ Network error occurred while deleting map. Please try again.', 'error');
     }
 }
 
@@ -1043,9 +1074,26 @@ async function previewHistoricalMap(mapId, mapName) {
 }
 
 async function deleteHistoricalMap(mapId, mapName) {
-    if (!confirm(`Are you sure you want to permanently delete the historical map "${mapName}"? This action cannot be undone.`)) {
+    const roomType = document.getElementById('roomMapperSelect').value;
+    
+    // Create a friendly confirmation dialog for historical maps
+    const confirmMessage = `🗑️ Delete Historical Map
+    
+Map: "${mapName}"
+Room: ${roomType}
+Type: Historical/Archived Map
+
+⚠️ This will permanently delete this map from your history!
+
+Are you sure you want to continue? This action cannot be undone, and you won't be able to restore this map version in the future.`;
+    
+    if (!confirm(confirmMessage)) {
+        showMapperMessage('Historical map deletion cancelled', 'info');
         return;
     }
+    
+    // Show deleting message
+    showMapperMessage('🗑️ Deleting historical map...', 'info');
     
     try {
         const response = await fetch('api/room_maps.php', {
@@ -1061,14 +1109,18 @@ async function deleteHistoricalMap(mapId, mapName) {
         const data = await response.json();
         
         if (data.success) {
-            showMapperMessage('Historical map deleted successfully!', 'success');
+            showMapperMessage('🎉 Historical map deleted successfully! The map has been removed from your history.', 'success');
             loadRoomHistory(); // Refresh history
         } else {
-            showMapperMessage('Error deleting historical map: ' + data.message, 'error');
+            if (data.message && data.message.includes('Original maps cannot be deleted')) {
+                showMapperMessage('🔒 Original maps are protected and cannot be deleted!', 'error');
+            } else {
+                showMapperMessage('❌ Failed to delete historical map: ' + data.message, 'error');
+            }
         }
     } catch (error) {
         console.error('Error deleting historical map:', error);
-        showMapperMessage('Error deleting historical map', 'error');
+        showMapperMessage('❌ Network error occurred while deleting historical map. Please try again.', 'error');
     }
 }
 

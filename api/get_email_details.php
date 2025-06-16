@@ -1,9 +1,17 @@
 <?php
+// Prevent any output before JSON
+ob_start();
+error_reporting(0);
+ini_set('display_errors', 0);
+
+header('Content-Type: application/json');
 require_once 'config.php';
 
 // Check if user is logged in
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role']) || 
+    ($_SESSION['user']['role'] !== 'Admin' && $_SESSION['user']['role'] !== 'admin')) {
+    ob_clean();
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Access denied']);
     exit;

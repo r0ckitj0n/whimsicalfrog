@@ -1,17 +1,24 @@
 <?php
+// Prevent any output before JSON
+ob_start();
+error_reporting(0);
+ini_set('display_errors', 0);
+
 require_once 'config.php';
 require_once 'email_config.php';
 
+// Set JSON header
+header('Content-Type: application/json');
+
 // Check if user is logged in
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role']) || 
+    ($_SESSION['user']['role'] !== 'Admin' && $_SESSION['user']['role'] !== 'admin')) {
+    ob_clean();
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Access denied']);
     exit;
 }
-
-// Set JSON header
-header('Content-Type: application/json');
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
@@ -120,7 +127,7 @@ try {
         ':email_type' => 'manual_resend',
         ':status' => $success ? 'sent' : 'failed',
         ':error_message' => $success ? null : $errorMessage,
-        ':created_by' => $_SESSION['user_id']
+        ':created_by' => $_SESSION['user']['userId'] ?? $_SESSION['user']['username'] ?? 'admin'
     ]);
     
     if ($success) {

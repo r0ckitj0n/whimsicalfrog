@@ -1,11 +1,37 @@
 <?php
+// Prevent any output before JSON
+ob_start();
+error_reporting(0);
+ini_set('display_errors', 0);
+
+header('Content-Type: application/json');
 require_once 'config.php';
 
 // Check if user is logged in
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+
+// Debug session for troubleshooting
+$debug = [
+    'session_active' => session_status() === PHP_SESSION_ACTIVE,
+    'session_id' => session_id(),
+    'has_user' => isset($_SESSION['user']),
+    'user_data' => $_SESSION['user'] ?? null,
+    'has_role' => isset($_SESSION['user']['role']) ?? false,
+    'role_value' => $_SESSION['user']['role'] ?? null
+];
+
+// Log debug info for troubleshooting
+error_log("Email history auth debug: " . json_encode($debug));
+
+if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role']) || 
+    ($_SESSION['user']['role'] !== 'Admin' && $_SESSION['user']['role'] !== 'admin')) {
+    ob_clean();
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Access denied']);
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Access denied',
+        'debug' => $debug // Include debug info temporarily
+    ]);
     exit;
 }
 
@@ -118,6 +144,7 @@ try {
         'has_next' => $page < $totalPages
     ];
     
+    ob_clean();
     echo json_encode([
         'success' => true,
         'emails' => $emails,
@@ -126,6 +153,7 @@ try {
     
 } catch (Exception $e) {
     error_log("Email history error: " . $e->getMessage());
+    ob_clean();
     echo json_encode([
         'success' => false,
         'error' => 'Failed to load email history: ' . $e->getMessage()

@@ -1,4 +1,9 @@
 <?php
+// Prevent any output before JSON
+ob_start();
+error_reporting(0); // Suppress PHP errors from being output
+ini_set('display_errors', 0);
+
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -95,16 +100,29 @@ function handleTestEmail() {
     }
     
     // Log the test email
-    require_once 'email_logger.php';
-    session_start();
-    $createdBy = $_SESSION['user_id'] ?? 'admin';
+    try {
+        require_once 'email_logger.php';
+        session_start();
+        $createdBy = $_SESSION['user']['userId'] ?? $_SESSION['user']['username'] ?? 'admin';
+        
+        if ($success) {
+            logTestEmail($testEmail, $fromEmail, $subject, $html, 'sent', null, $createdBy);
+        } else {
+            $logError = $errorMessage ?: 'Email sending failed';
+            logTestEmail($testEmail, $fromEmail, $subject, $html, 'failed', $logError, $createdBy);
+        }
+    } catch (Exception $e) {
+        // Log the logging error but don't fail the response
+        error_log("Email logging error: " . $e->getMessage());
+    }
+    
+    // Clean any buffered output and send JSON response
+    ob_clean();
     
     if ($success) {
-        logTestEmail($testEmail, $fromEmail, $subject, $html, 'sent', null, $createdBy);
         echo json_encode(['success' => true, 'message' => 'Test email sent successfully!']);
     } else {
         $logError = $errorMessage ?: 'Email sending failed';
-        logTestEmail($testEmail, $fromEmail, $subject, $html, 'failed', $logError, $createdBy);
         echo json_encode(['success' => false, 'error' => 'Failed to send test email: ' . $logError]);
     }
 }

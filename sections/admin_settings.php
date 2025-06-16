@@ -50,6 +50,13 @@
                     </svg>
                     Email History
                 </button>
+                <button onclick="fixSampleEmail()" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded" id="fixSampleEmailBtn">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Fix Sample Email
+                </button>
             </div>
         </div>
         <div>
@@ -2332,6 +2339,61 @@ function loadEmailHistoryPage(direction) {
     } else if (direction === 'next') {
         loadEmailHistory(currentEmailHistoryPage + 1);
     }
+}
+
+function fixSampleEmail() {
+    const button = document.getElementById('fixSampleEmailBtn');
+    const originalText = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = `
+        <svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Fixing...
+    `;
+    button.disabled = true;
+    
+    fetch('api/fix_sample_email.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Success', data.message, 'success');
+            
+            // Show debug info if available
+            if (data.debug && data.debug.existing_emails) {
+                console.log('Sample Email Fix Debug Info:', data.debug);
+            }
+            
+            // Refresh email history if it's open
+            const emailHistoryModal = document.getElementById('emailHistoryModal');
+            if (emailHistoryModal && emailHistoryModal.style.display !== 'none') {
+                loadEmailHistory(1);
+            }
+        } else {
+            showNotification('Error', data.error || 'Failed to fix sample email', 'error');
+            
+            // Show debug info for troubleshooting
+            if (data.debug) {
+                console.error('Sample Email Fix Debug Info:', data.debug);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error fixing sample email:', error);
+        showNotification('Error', 'Network error while fixing sample email', 'error');
+    })
+    .finally(() => {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
 }
 
 function viewEmailDetails(emailId) {

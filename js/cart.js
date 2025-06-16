@@ -40,7 +40,7 @@ class ShoppingCart {
                 const freshProduct = products.find(p => p.id === cartItem.id);
                 if (freshProduct) {
                     // Update image path and name with fresh data from database
-                    cartItem.image = freshProduct.primary_image || freshProduct.image || cartItem.image;
+                    cartItem.image = freshProduct.image || cartItem.image;
                     cartItem.name = freshProduct.name || cartItem.name;
                     cartItem.price = parseFloat(freshProduct.price) || cartItem.price;
                     console.log(`Updated cart item ${cartItem.id} with fresh data:`, {

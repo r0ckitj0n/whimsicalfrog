@@ -30,12 +30,8 @@ try {
             // Create placeholders for the IN clause
             $placeholders = str_repeat('?,', count($productIds) - 1) . '?';
             
-            // Query to get specific products with their primary image
-            $sql = "SELECT p.*, 
-                           (SELECT pi.filename 
-                            FROM product_images pi 
-                            WHERE pi.product_id = p.id AND pi.is_primary = 1 
-                            LIMIT 1) as primary_image
+            // Query to get specific products (simplified - no product_images join for now)
+            $sql = "SELECT p.*
                     FROM products p 
                     WHERE p.id IN ($placeholders)";
             
@@ -49,11 +45,9 @@ try {
                     $product['price'] = floatval($product['basePrice']);
                 }
                 
-                // Set the image path - prefer primary_image, fallback to old image field
-                if (!empty($product['primary_image'])) {
-                    $product['image'] = 'images/products/' . $product['primary_image'];
-                } elseif (!empty($product['image'])) {
-                    // Keep existing image path if no primary image found
+                // Set the image path - use existing image field for now
+                if (!empty($product['image'])) {
+                    // Keep existing image path
                     $product['image'] = $product['image'];
                 } else {
                     $product['image'] = 'images/products/placeholder.png';
@@ -62,11 +56,7 @@ try {
         }
     } else {
         // GET request - return all products (for backward compatibility)
-        $sql = "SELECT p.*, 
-                       (SELECT pi.filename 
-                        FROM product_images pi 
-                        WHERE pi.product_id = p.id AND pi.is_primary = 1 
-                        LIMIT 1) as primary_image
+        $sql = "SELECT p.*
                 FROM products p";
         
         $stmt = $pdo->query($sql);
@@ -79,9 +69,7 @@ try {
             }
             
             // Set the image path
-            if (!empty($product['primary_image'])) {
-                $product['image'] = 'images/products/' . $product['primary_image'];
-            } elseif (!empty($product['image'])) {
+            if (!empty($product['image'])) {
                 $product['image'] = $product['image'];
             } else {
                 $product['image'] = 'images/products/placeholder.png';

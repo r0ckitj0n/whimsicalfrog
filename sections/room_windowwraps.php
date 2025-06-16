@@ -668,12 +668,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalImageHeight = 896;
     const roomOverlayWrapper = document.querySelector('#windowWrapsRoomPage .room-overlay-wrapper');
 
-    const baseAreas = [
+    // Default/fallback areas (in case database doesn't have active map)
+    const defaultAreas = [
         { selector: '.area-1', top: 215, left: 238, width: 213, height: 317 },
         { selector: '.area-2', top: 235, left: 550, width: 148, height: 265 },
         { selector: '.area-3', top: 567, left: 1109, width: 43, height: 44 },
         { selector: '.area-4', top: 276, left: 1026, width: 189, height: 198 }
     ];
+    
+    let baseAreas = defaultAreas; // Will be replaced with database coordinates if available
 
     function updateAreaCoordinates() {
         if (!roomOverlayWrapper) {
@@ -717,7 +720,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    updateAreaCoordinates();
+    // Load coordinates from database first, then initialize
+    loadRoomCoordinatesFromDatabase();
+    
+    async function loadRoomCoordinatesFromDatabase() {
+        try {
+            const response = await fetch('api/get_room_coordinates.php?room_type=room_windowwraps');
+            
+            // Check if the response is ok (not 500 error)
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Database not available`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.coordinates && data.coordinates.length > 0) {
+                baseAreas = data.coordinates;
+                console.log('Loaded Window Wraps room coordinates from database:', data.map_name);
+            } else {
+                console.log('Using default Window Wraps room coordinates (no active map found)');
+            }
+        } catch (error) {
+            console.error('Error loading Window Wraps room coordinates from database:', error);
+            console.log('Using default Window Wraps room coordinates (fallback)');
+            // Continue with default coordinates - no need to show error to users
+        }
+        
+        // Initialize coordinates after loading (or using defaults)
+        updateAreaCoordinates();
+    }
+
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);

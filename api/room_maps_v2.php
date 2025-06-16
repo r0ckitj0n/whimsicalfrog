@@ -1,5 +1,5 @@
 <?php
-// Version: 2.0 - With Original map protection
+// Version: 2.0 - With Original map protection - NEW FILE
 require_once 'config.php';
 
 try {
@@ -148,7 +148,7 @@ try {
             
         case 'DELETE':
             if (isset($input['map_id'])) {
-                // Check if this is an "Original" map - these cannot be deleted
+                // PROTECTION: Check if this is an "Original" map - these cannot be deleted
                 $checkStmt = $pdo->prepare("SELECT map_name FROM room_maps WHERE id = ?");
                 $checkStmt->execute([$input['map_id']]);
                 $map = $checkStmt->fetch();

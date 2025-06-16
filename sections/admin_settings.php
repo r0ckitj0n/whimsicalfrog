@@ -226,7 +226,7 @@
                             <option value="landing">Landing Page</option>
                             <option value="room_main">Main Room</option>
                             <option value="room_artwork">Artwork Room</option>
-                            <option value="room_tshirts">T-Shirts Room</option>
+                            <option value="room_tshirts" selected>T-Shirts Room</option>
                             <option value="room_tumblers">Tumblers Room</option>
                             <option value="room_sublimation">Sublimation Room</option>
                             <option value="room_windowwraps">Window Wraps Room</option>
@@ -248,6 +248,23 @@
                         <button onclick="loadSavedMap()" class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded mr-2">Load</button>
                         <button onclick="applySavedMap()" class="px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded mr-2">Apply to Live</button>
                         <button onclick="deleteSavedMap()" class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded">Delete</button>
+                    </div>
+                    
+                    <!-- Map Preview Legend -->
+                    <div class="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded border">
+                        <strong>Preview Colors:</strong>
+                        <span class="inline-flex items-center ml-2">
+                            <span class="w-3 h-3 border-2 border-green-500 bg-green-200 rounded mr-1"></span>
+                            Original (Protected)
+                        </span>
+                        <span class="inline-flex items-center ml-2">
+                            <span class="w-3 h-3 border-2 border-blue-500 bg-blue-200 rounded mr-1"></span>
+                            Active Map
+                        </span>
+                        <span class="inline-flex items-center ml-2">
+                            <span class="w-3 h-3 border-2 border-gray-500 bg-gray-200 rounded mr-1"></span>
+                            Inactive Map
+                        </span>
                     </div>
                 </div>
                 
@@ -298,12 +315,41 @@
     background: rgba(255, 0, 0, 0.2);
     cursor: pointer;
     z-index: 100;
+    transition: all 0.2s ease;
 }
 .room-mapper-clickable-area:hover {
     background: rgba(255, 0, 0, 0.4);
+    transform: scale(1.02);
 }
 .room-mapper-container.grid-active .grid-overlay {
     display: block !important;
+}
+
+/* Map type specific styling */
+.room-mapper-clickable-area.original-map {
+    border: 2px solid #10b981 !important;
+    background: rgba(16, 185, 129, 0.2) !important;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+.room-mapper-clickable-area.original-map:hover {
+    background: rgba(16, 185, 129, 0.4) !important;
+}
+
+.room-mapper-clickable-area.active-map {
+    border: 2px solid #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.2) !important;
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+}
+.room-mapper-clickable-area.active-map:hover {
+    background: rgba(59, 130, 246, 0.4) !important;
+}
+
+.room-mapper-clickable-area.inactive-map {
+    border: 2px solid #6b7280 !important;
+    background: rgba(107, 114, 128, 0.2) !important;
+}
+.room-mapper-clickable-area.inactive-map:hover {
+    background: rgba(107, 114, 128, 0.4) !important;
 }
 </style>
 
@@ -471,21 +517,45 @@ function clearMapperAreas() {
 
 // New room map management functions
 async function loadSavedMapsForRoom(roomType) {
+    console.log(`🔍 Loading saved maps for room: ${roomType}`);
+    
     try {
         const response = await fetch(`api/room_maps.php?room_type=${roomType}`);
+        console.log(`API response status: ${response.status}`);
+        
         const data = await response.json();
+        console.log('API response data:', data);
         
         const savedMapsSelect = document.getElementById('savedMapsSelect');
         savedMapsSelect.innerHTML = '<option value="">Select saved map...</option>';
         
         if (data.success && data.maps) {
+            console.log(`Found ${data.maps.length} maps for ${roomType}`);
             data.maps.forEach(map => {
                 const option = document.createElement('option');
                 option.value = map.id;
-                option.textContent = `${map.map_name}${map.is_active ? ' (ACTIVE)' : ''}`;
+                const protectedText = map.map_name === 'Original' ? ' 🔒 PROTECTED' : '';
+                const activeText = map.is_active ? ' (ACTIVE)' : '';
+                option.textContent = `${map.map_name}${activeText}${protectedText}`;
                 option.dataset.mapData = JSON.stringify(map);
                 savedMapsSelect.appendChild(option);
+                
+                console.log(`Added map to dropdown: ${option.textContent}`);
             });
+            
+            // Add event listener to show bounding boxes when map is selected
+            if (!savedMapsSelect.hasAttribute('data-listener-added')) {
+                savedMapsSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        previewSelectedMap();
+                    } else {
+                        clearMapperAreas();
+                    }
+                });
+                savedMapsSelect.setAttribute('data-listener-added', 'true');
+            }
+        } else {
+            console.log(`No maps found for ${roomType}:`, data);
         }
         
         updateMapStatus(roomType);
@@ -561,12 +631,11 @@ async function saveRoomMap() {
     }
 }
 
-async function loadSavedMap() {
+function previewSelectedMap() {
     const savedMapsSelect = document.getElementById('savedMapsSelect');
     const selectedOption = savedMapsSelect.options[savedMapsSelect.selectedIndex];
     
     if (!selectedOption || !selectedOption.value) {
-        showMapperMessage('Please select a map to load', 'error');
         return;
     }
     
@@ -575,7 +644,7 @@ async function loadSavedMap() {
     // Clear current areas
     clearMapperAreas();
     
-    // Load the coordinates from the saved map
+    // Load the coordinates from the saved map for preview
     if (mapData.coordinates && mapData.coordinates.length > 0) {
         const roomDisplay = document.getElementById('roomMapperDisplay');
         const coordinates = document.getElementById('mapperCoordinates');
@@ -587,6 +656,18 @@ async function loadSavedMap() {
             const area = document.createElement('div');
             area.className = 'room-mapper-clickable-area';
             area.setAttribute('data-area', coord.selector);
+            
+            // Special styling for preview mode
+            const isOriginal = mapData.map_name === 'Original';
+            const isActive = mapData.is_active;
+            
+            if (isOriginal) {
+                area.classList.add('original-map');
+            } else if (isActive) {
+                area.classList.add('active-map');
+            } else {
+                area.classList.add('inactive-map');
+            }
             
             // We need to convert the original coordinates back to display coordinates
             const wrapperWidth = roomDisplay.offsetWidth;
@@ -634,8 +715,25 @@ async function loadSavedMap() {
             `;
         });
         
-        showMapperMessage('Map loaded successfully!', 'success');
+        // Show preview message with color coding
+        const mapType = mapData.map_name === 'Original' ? 'Original 🔒' : mapData.map_name;
+        const status = mapData.is_active ? 'ACTIVE' : 'INACTIVE';
+        showMapperMessage(`Previewing: ${mapType} (${status}) - ${mapData.coordinates.length} areas`, 'info');
     }
+}
+
+async function loadSavedMap() {
+    const savedMapsSelect = document.getElementById('savedMapsSelect');
+    const selectedOption = savedMapsSelect.options[savedMapsSelect.selectedIndex];
+    
+    if (!selectedOption || !selectedOption.value) {
+        showMapperMessage('Please select a map to load', 'error');
+        return;
+    }
+    
+    // Use the preview function but with a different message
+    previewSelectedMap();
+    showMapperMessage('Map loaded for editing!', 'success');
 }
 
 async function applySavedMap() {
@@ -815,10 +913,13 @@ async function loadRoomHistory() {
                                 class="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded">
                             Preview
                         </button>
-                        ${!map.is_active ? `<button onclick="deleteHistoricalMap(${map.id}, '${map.map_name}')" 
+                        ${!map.is_active && map.map_name !== 'Original' ? `<button onclick="deleteHistoricalMap(${map.id}, '${map.map_name}')" 
                                 class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
                             Delete
                         </button>` : ''}
+                        ${map.map_name === 'Original' ? `<span class="px-2 py-1 bg-gray-300 text-gray-600 text-xs rounded cursor-not-allowed">
+                            🔒 Protected
+                        </span>` : ''}
                     </div>
                 `;
                 

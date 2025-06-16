@@ -18,15 +18,15 @@
 
 <script>
     // Wait for both DOM and cart script to be loaded
-    function initializeCart() {
+    async function initializeCart() {
         if (typeof window.cart !== 'undefined') {
             console.log('Cart found, rendering...');
-            window.cart.renderCart();
+            await window.cart.renderCart();
             
             // Listen for cart updates
-            window.addEventListener('cartUpdated', function() {
+            window.addEventListener('cartUpdated', async function() {
                 console.log('Cart updated, re-rendering...');
-                window.cart.renderCart();
+                await window.cart.renderCart();
             });
         } else {
             console.log('Cart not found, retrying in 100ms...');

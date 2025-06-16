@@ -11,6 +11,53 @@ class ShoppingCart {
         window.dispatchEvent(new Event('cartUpdated'));
     }
 
+    async refreshProductData() {
+        console.log('Refreshing product data from database');
+        try {
+            // Get all product IDs in cart
+            const productIds = this.items.map(item => item.id);
+            if (productIds.length === 0) return;
+
+            // Fetch current product data from database
+            const response = await fetch('api/get_products.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_ids: productIds })
+            });
+
+            if (!response.ok) {
+                console.warn('Failed to fetch product data:', response.status);
+                return;
+            }
+
+            const products = await response.json();
+            console.log('Fetched fresh product data:', products);
+
+            // Update cart items with fresh data
+            this.items.forEach(cartItem => {
+                const freshProduct = products.find(p => p.id === cartItem.id);
+                if (freshProduct) {
+                    // Update image path and name with fresh data from database
+                    cartItem.image = freshProduct.primary_image || freshProduct.image || cartItem.image;
+                    cartItem.name = freshProduct.name || cartItem.name;
+                    cartItem.price = parseFloat(freshProduct.price) || cartItem.price;
+                    console.log(`Updated cart item ${cartItem.id} with fresh data:`, {
+                        name: cartItem.name,
+                        image: cartItem.image,
+                        price: cartItem.price
+                    });
+                }
+            });
+
+            // Save updated cart data
+            this.saveCart();
+        } catch (error) {
+            console.warn('Error refreshing product data:', error);
+        }
+    }
+
     addItem(product) {
         console.log('Adding item to cart:', product);
         const quantity = product.quantity || 1; // Use provided quantity or default to 1
@@ -131,7 +178,7 @@ class ShoppingCart {
         }, 4000);
     }
 
-    renderCart() {
+    async renderCart() {
         console.log('Rendering cart');
         const cartContainer = document.getElementById('cartItems');
         if (!cartContainer) {
@@ -143,6 +190,9 @@ class ShoppingCart {
             cartContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Your cart is empty</p>';
             return;
         }
+
+        // Refresh product data from database to get current image paths
+        await this.refreshProductData();
 
         const subtotal = this.getTotal();
         const salesTax = +(subtotal * 0.08).toFixed(2);

@@ -724,3 +724,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<!-- Load dynamic background script -->
+<script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>

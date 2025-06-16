@@ -403,6 +403,11 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             background-image: url('images/room_main.png?v=cb2');
         }
         
+        /* Dynamic background classes - will be set by JavaScript */
+        body.dynamic-bg-loaded {
+            /* Background will be set dynamically */
+        }
+        
         .font-merienda {
             font-family: 'Merienda', cursive;
         }
@@ -733,6 +738,79 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
         var d=document.createElement('div');
         d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==\" onerror=\"document.documentElement.className += \' no-webp\';\" onload=\"document.documentElement.className += \' webp\';\">';
     })();
+</script>
+
+<!-- Dynamic Background Loading -->
+<script>
+    // Load dynamic backgrounds from database
+    async function loadDynamicBackground() {
+        try {
+            // Determine room type based on current page
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPage = urlParams.get('page') || 'landing';
+            
+            let roomType = 'landing';
+            
+            // Map page names to room types
+            switch (currentPage) {
+                case 'main_room':
+                    roomType = 'room_main';
+                    break;
+                case 'tshirts':
+                    roomType = 'room_tshirts';
+                    break;
+                case 'tumblers':
+                    roomType = 'room_tumblers';
+                    break;
+                case 'artwork':
+                    roomType = 'room_artwork';
+                    break;
+                case 'sublimation':
+                    roomType = 'room_sublimation';
+                    break;
+                case 'windowwraps':
+                    roomType = 'room_windowwraps';
+                    break;
+                case 'shop':
+                case 'cart':
+                case 'login':
+                case 'admin':
+                    roomType = 'room_main';
+                    break;
+                default:
+                    roomType = 'landing';
+            }
+            
+            // Fetch active background for this room
+            const response = await fetch(`api/get_background.php?room_type=${roomType}`);
+            const data = await response.json();
+            
+            if (data.success && data.background) {
+                const background = data.background;
+                const body = document.body;
+                
+                // Determine if WebP is supported
+                const supportsWebP = document.documentElement.classList.contains('webp');
+                const imageUrl = supportsWebP && background.webp_filename ? 
+                    `images/${background.webp_filename}` : 
+                    `images/${background.image_filename}`;
+                
+                // Apply the background
+                body.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
+                body.classList.add('dynamic-bg-loaded');
+                
+                console.log(`Dynamic background loaded: ${background.background_name} (${imageUrl})`);
+            } else {
+                console.log('Using fallback background - no dynamic background found');
+            }
+        } catch (error) {
+            console.error('Error loading dynamic background:', error);
+            console.log('Using fallback background due to error');
+        }
+    }
+    
+    // Load background when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadDynamicBackground);
 </script>
 
 <!-- Then load other scripts -->

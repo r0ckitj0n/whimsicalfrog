@@ -57,6 +57,24 @@
                 Room Mapper
             </button>
         </div>
+        <div>
+            <p class="text-sm text-gray-600 mb-3">Manage background images for all rooms. Original backgrounds are protected and cannot be deleted.</p>
+            <button onclick="openBackgroundManagerModal()" class="inline-flex items-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Background Manager
+            </button>
+        </div>
+        <div>
+            <p class="text-sm text-gray-600 mb-3">Assign product categories to numbered rooms for better organization and automatic product filtering.</p>
+            <button onclick="openRoomCategoryManagerModal()" class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Room-Category Assignments
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1128,6 +1146,7 @@ Are you sure you want to continue? This action cannot be undone, and you won't b
 window.onclick = function(event) {
     const idModal = document.getElementById('idLegendModal');
     const mapperModal = document.getElementById('roomMapperModal');
+    const backgroundModal = document.getElementById('backgroundManagerModal');
     
     if (event.target == idModal) {
         closeIdLegendModal();
@@ -1135,5 +1154,833 @@ window.onclick = function(event) {
     if (event.target == mapperModal) {
         closeRoomMapperModal();
     }
+    if (event.target == backgroundModal) {
+        closeBackgroundManagerModal();
+    }
+    
+    const roomCategoryModal = document.getElementById('roomCategoryManagerModal');
+    if (event.target == roomCategoryModal) {
+        closeRoomCategoryManagerModal();
+    }
 }
-</script> 
+
+// Room-Category Manager Functions
+function openRoomCategoryManagerModal() {
+    document.getElementById('roomCategoryManagerModal').style.display = 'flex';
+    loadAvailableCategories();
+    loadRoomCategorySummary();
+    loadRoomCategories();
+    
+    // Add event listener for room selection change
+    document.getElementById('roomCategorySelect').addEventListener('change', loadRoomCategories);
+}
+
+function closeRoomCategoryManagerModal() {
+    document.getElementById('roomCategoryManagerModal').style.display = 'none';
+}
+
+async function loadAvailableCategories() {
+    try {
+        const response = await fetch('api/room_category_assignments.php');
+        const data = await response.json();
+        
+        if (data.success) {
+            const categorySelect = document.getElementById('categorySelect');
+            categorySelect.innerHTML = '<option value="">Select a category...</option>';
+            
+            data.available_categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                if (category.description) {
+                    option.title = category.description;
+                }
+                categorySelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        // Show friendly error in the dropdown
+        const categorySelect = document.getElementById('categorySelect');
+        categorySelect.innerHTML = '<option value="">⚠️ Unable to load categories - please refresh</option>';
+    }
+}
+
+async function loadRoomCategorySummary() {
+    try {
+        const response = await fetch('api/room_category_assignments.php');
+        const data = await response.json();
+        
+        if (data.success) {
+            const summaryDiv = document.getElementById('roomCategorySummary');
+            summaryDiv.innerHTML = '';
+            
+            data.summary.forEach(room => {
+                const roomDiv = document.createElement('div');
+                roomDiv.className = 'bg-white border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow';
+                
+                const primaryBadge = room.primary_category_names ? 
+                    `<span class="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full mb-2">👑 ${room.primary_category_names}</span>` : 
+                    '<span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mb-2">No Primary</span>';
+                
+                roomDiv.innerHTML = `
+                    <div class="mb-2">
+                        <h4 class="font-semibold text-gray-800 text-sm mb-1">Room ${room.room_number}</h4>
+                        <p class="text-xs text-gray-600">${room.room_name}</p>
+                    </div>
+                    <div class="mb-2">
+                        ${primaryBadge}
+                    </div>
+                    <div class="text-xs text-gray-600">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-medium">Categories:</span>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">${room.total_categories}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 truncate" title="${room.all_categories || 'None'}">
+                            ${room.all_categories || 'None'}
+                        </div>
+                    </div>
+                `;
+                
+                summaryDiv.appendChild(roomDiv);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading room category summary:', error);
+        document.getElementById('roomCategorySummary').innerHTML = '<div class="col-span-full"><div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center"><p class="text-red-600">😕 Unable to load room summary</p><p class="text-sm text-red-500 mt-1">Please refresh the page or try again later</p></div></div>';
+    }
+}
+
+async function loadRoomCategories() {
+    const roomNumber = document.getElementById('roomCategorySelect').value;
+    
+    try {
+        const response = await fetch(`api/room_category_assignments.php?room_number=${roomNumber}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const listDiv = document.getElementById('roomCategoriesList');
+            listDiv.innerHTML = '';
+            
+            if (data.assignments.length === 0) {
+                listDiv.innerHTML = '<p class="text-gray-500 italic">No categories assigned to this room</p>';
+                return;
+            }
+            
+            data.assignments.forEach(assignment => {
+                const assignmentDiv = document.createElement('div');
+                assignmentDiv.className = 'bg-white border rounded-lg p-3 flex justify-between items-center';
+                
+                const primaryBadge = assignment.is_primary ? 
+                    '<span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full mr-2">👑 PRIMARY</span>' : 
+                    '<span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full mr-2">Secondary</span>';
+                
+                assignmentDiv.innerHTML = `
+                    <div>
+                        <div class="flex items-center mb-1">
+                            ${primaryBadge}
+                            <span class="font-medium">${assignment.category_name}</span>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            Order: ${assignment.display_order} | Created: ${new Date(assignment.created_at).toLocaleDateString()}
+                        </div>
+                        ${assignment.category_description ? `<div class="text-xs text-gray-400 mt-1">${assignment.category_description}</div>` : ''}
+                    </div>
+                    <div class="flex space-x-2">
+                        ${!assignment.is_primary ? `<button onclick="setPrimaryCategory(${roomNumber}, ${assignment.category_id})" class="text-orange-600 hover:text-orange-800 text-sm">Make Primary</button>` : ''}
+                        <button onclick="removeRoomCategory(${assignment.id})" class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+                    </div>
+                `;
+                
+                listDiv.appendChild(assignmentDiv);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading room categories:', error);
+        document.getElementById('roomCategoriesList').innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center"><p class="text-red-600">😕 Unable to load categories for this room</p><p class="text-sm text-red-500 mt-1">Please try selecting the room again or refresh the page</p></div>';
+    }
+}
+
+async function addRoomCategory() {
+    const roomNumber = parseInt(document.getElementById('roomCategorySelect').value);
+    const categoryId = parseInt(document.getElementById('categorySelect').value);
+    const isPrimary = document.getElementById('isPrimaryCategory').checked;
+    
+    if (!categoryId) {
+        showNotification('Category Required', 'Please select a category to assign to this room.', 'warning');
+        return;
+    }
+    
+    // Get room name from the select option text
+    const roomSelect = document.getElementById('roomCategorySelect');
+    const roomName = roomSelect.options[roomSelect.selectedIndex].text.split(' - ')[1] || 'Unknown Room';
+    
+    try {
+        const response = await fetch('api/room_category_assignments.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'add_assignment',
+                room_number: roomNumber,
+                room_name: roomName,
+                category_id: categoryId,
+                is_primary: isPrimary ? 1 : 0,
+                display_order: 0
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Reset form
+            document.getElementById('categorySelect').value = '';
+            document.getElementById('isPrimaryCategory').checked = false;
+            
+            // Reload data
+            loadRoomCategories();
+            loadRoomCategorySummary();
+            
+            // Get category name for friendly message
+            const categorySelect = document.getElementById('categorySelect');
+            const categoryName = categorySelect.options[categorySelect.selectedIndex]?.text || 'Category';
+            
+            showNotification('Success!', `${categoryName} has been assigned to this room.`, 'success');
+        } else {
+            showNotification('Unable to assign category', data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error adding room category:', error);
+        showNotification('Connection Problem', 'Please check your internet connection and try again.', 'error');
+    }
+}
+
+async function setPrimaryCategory(roomNumber, categoryId) {
+    try {
+        const response = await fetch('api/room_category_assignments.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'set_primary',
+                room_number: roomNumber,
+                category_id: categoryId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            loadRoomCategories();
+            loadRoomCategorySummary();
+            
+            showNotification('Primary Category Updated!', 'This category is now the main category for this room.', 'success');
+        } else {
+            showNotification('Couldn\'t update primary category', data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error setting primary category:', error);
+        showNotification('Connection Issue', 'Please try again in a moment.', 'error');
+    }
+}
+
+async function removeRoomCategory(assignmentId) {
+    // Get the category name from the button's parent element
+    const button = event.target;
+    const assignmentDiv = button.closest('.bg-white');
+    const categoryNameElement = assignmentDiv ? assignmentDiv.querySelector('.font-medium') : null;
+    const categoryName = categoryNameElement ? categoryNameElement.textContent.trim() : 'this category';
+    
+    showConfirmation(
+        `Remove ${categoryName}?`,
+        `This will unassign ${categoryName} from this room. You can always add it back later if needed.`,
+        async () => {
+            try {
+                const response = await fetch('api/room_category_assignments.php', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        assignment_id: assignmentId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loadRoomCategories();
+                    loadRoomCategorySummary();
+                    showNotification('Success!', `${categoryName} removed successfully!`, 'success');
+                } else {
+                    showNotification('Error', `Unable to remove ${categoryName}: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error removing room category:', error);
+                showNotification('Connection Error', 'Please check your internet connection and try again.', 'error');
+            }
+        }
+    );
+}
+
+
+</script>
+
+<!-- Room-Category Manager Modal -->
+<div id="roomCategoryManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">🏠📦 Room-Category Assignments</h2>
+            <button onclick="closeRoomCategoryManagerModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Left Panel: Room Selection & Category Management -->
+                <div>
+                    <div class="mb-4">
+                        <label for="roomCategorySelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
+                        <select id="roomCategorySelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                            <option value="0">Room 0 - Landing Page</option>
+                            <option value="1">Room 1 - Main Room</option>
+                            <option value="2">Room 2 - T-Shirts Room</option>
+                            <option value="3">Room 3 - Tumblers Room</option>
+                            <option value="4">Room 4 - Artwork Room</option>
+                            <option value="5">Room 5 - Sublimation Room</option>
+                            <option value="6">Room 6 - Window Wraps Room</option>
+                        </select>
+                    </div>
+                    
+                    <div class="bg-white border rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">Add Category to Room</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="categorySelect" class="block text-sm font-medium text-gray-700 mb-1">Category:</label>
+                                <select id="categorySelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                                    <option value="">Select a category...</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="isPrimaryCategory" class="mr-2">
+                                <label for="isPrimaryCategory" class="text-sm text-gray-700">Set as primary category for this room</label>
+                            </div>
+                            <button onclick="addRoomCategory()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                                Add Category
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: Categories for Selected Room -->
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">Categories for Selected Room</h3>
+                    <div id="roomCategoriesList" class="space-y-2 max-h-96 overflow-y-auto">
+                        Loading categories...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-6">
+                <h3 class="font-semibold text-blue-800 mb-2">💡 Room-Category Assignment Guide</h3>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p><strong>Numbered Rooms:</strong> Rooms are identified by numbers (0-6) for clearer organization</p>
+                    <p><strong>Primary Category:</strong> The main category associated with a room (only one per room)</p>
+                    <p><strong>Secondary Categories:</strong> Additional categories that can be displayed in a room</p>
+                    <p><strong>Product Categories:</strong> T-Shirts, Tumblers, Artwork, Sublimation, Window Wraps</p>
+                    <p><strong>Use Cases:</strong> Product filtering, automatic room navigation, category organization</p>
+                    <p class="text-xs mt-2 italic">💡 Each room can have multiple categories assigned, but only one primary category for main identification.</p>
+                </div>
+            </div>
+            
+            <!-- All Room-Category Mappings Summary - Full Width at Bottom -->
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-3">All Room-Category Mappings</h3>
+                <div id="roomCategorySummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    Loading summary...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Background Manager Modal -->
+<div id="backgroundManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">🖼️ Background Manager</h2>
+            <button onclick="closeBackgroundManagerModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Panel: Room Selection & Controls (1/3 width) -->
+                <div class="lg:col-span-1">
+                    <div class="mb-4">
+                        <label for="backgroundRoomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
+                        <select id="backgroundRoomSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                            <option value="landing">Landing Page</option>
+                            <option value="room_main">Main Room</option>
+                            <option value="room_artwork">Artwork Room</option>
+                            <option value="room_tshirts">T-Shirts Room</option>
+                            <option value="room_tumblers">Tumblers Room</option>
+                            <option value="room_sublimation">Sublimation Room</option>
+                            <option value="room_windowwraps">Window Wraps Room</option>
+                        </select>
+                    </div>
+                    
+                    <div class="bg-white border rounded-lg p-4 mb-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">Upload New Background</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="backgroundName" class="block text-sm font-medium text-gray-700 mb-1">Background Name:</label>
+                                <input type="text" id="backgroundName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="e.g., Summer Theme">
+                            </div>
+                            <div>
+                                <label for="backgroundFile" class="block text-sm font-medium text-gray-700 mb-1">Image File:</label>
+                                <input type="file" id="backgroundFile" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                <p class="text-xs text-gray-500 mt-1">Supported: JPG, PNG, WebP (Max 10MB)</p>
+                            </div>
+                            <button onclick="uploadBackground()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                                Upload Background
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Available Backgrounds moved here -->
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-3">Available Backgrounds</h3>
+                        <div id="backgroundsList" class="space-y-3 max-h-96 overflow-y-auto">
+                            Loading backgrounds...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: Current Active Background Preview (2/3 width) -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-50 rounded-lg p-4 h-full">
+                        <h3 class="font-semibold text-gray-800 mb-3">Current Active Background</h3>
+                        <div id="currentBackgroundInfo" class="text-sm text-gray-600 mb-4">
+                            Loading...
+                        </div>
+                        <div id="currentBackgroundPreview" class="border rounded-lg overflow-hidden bg-white flex items-center justify-center" style="min-height: 400px; max-height: 80vh;">
+                            <div class="text-gray-400 text-center">
+                                <svg class="w-16 h-16 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                                </svg>
+                                <p>Background preview will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded p-3 mt-4">
+                <h3 class="font-semibold text-blue-800 mb-2">📐 Background Dimension Guidelines</h3>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p><strong>Landing Page:</strong> 1920x1080px (16:9 ratio) - Full screen background</p>
+                    <p><strong>Main Room:</strong> 1920x1080px (16:9 ratio) - Full screen background</p>
+                    <p><strong>Room Pages:</strong> 1280x960px (4:3 ratio) - Room container background</p>
+                    <p class="text-xs mt-2 italic">💡 Images will be automatically scaled to fit these dimensions while maintaining aspect ratio.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Background Manager Functions
+function openBackgroundManagerModal() {
+    document.getElementById('backgroundManagerModal').style.display = 'flex';
+    initializeBackgroundManager();
+}
+
+function closeBackgroundManagerModal() {
+    document.getElementById('backgroundManagerModal').style.display = 'none';
+}
+
+function initializeBackgroundManager() {
+    const roomSelect = document.getElementById('backgroundRoomSelect');
+    
+    // Load backgrounds for initial room
+    loadBackgroundsForRoom(roomSelect.value);
+    
+    // Add event listener for room changes
+    roomSelect.addEventListener('change', function() {
+        loadBackgroundsForRoom(this.value);
+    });
+}
+
+async function loadBackgroundsForRoom(roomType) {
+    try {
+        // Load current active background
+        const activeResponse = await fetch(`api/get_background.php?room_type=${roomType}`);
+        const activeData = await activeResponse.json();
+        
+        const currentInfo = document.getElementById('currentBackgroundInfo');
+        const currentPreview = document.getElementById('currentBackgroundPreview');
+        
+        if (activeData.success && activeData.background) {
+            const bg = activeData.background;
+            currentInfo.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium text-lg">${bg.background_name}</p>
+                        <p class="text-sm text-gray-600">${bg.image_filename}</p>
+                        ${bg.webp_filename ? `<p class="text-sm text-gray-600">WebP: ${bg.webp_filename}</p>` : ''}
+                        ${bg.created_at ? `<p class="text-xs text-gray-400">Created: ${new Date(bg.created_at).toLocaleDateString()}</p>` : ''}
+                    </div>
+                    ${bg.background_name === 'Original' ? '<span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full font-medium">🔒 PROTECTED</span>' : '<span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium">✅ ACTIVE</span>'}
+                </div>
+            `;
+            
+            // Create an actual image element for better scaling
+            const imageUrl = `images/${bg.webp_filename || bg.image_filename}`;
+            
+            // Create image with proper loading and error handling
+            const img = new Image();
+            img.onload = function() {
+                currentPreview.innerHTML = `<img src="${imageUrl}" alt="${bg.background_name}" class="max-w-full h-auto object-contain rounded-lg shadow-lg" style="max-height: 75vh;">`;
+            };
+            img.onerror = function() {
+                currentPreview.innerHTML = `
+                    <div class="text-red-400 text-center">
+                        <svg class="w-16 h-16 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                        </svg>
+                        <p>Error loading background image</p>
+                        <p class="text-xs">${bg.image_filename}</p>
+                    </div>
+                `;
+            };
+            img.src = imageUrl;
+            currentPreview.style.backgroundImage = 'none';
+        } else {
+            currentInfo.innerHTML = '<p class="text-red-500">No active background found</p>';
+            currentPreview.innerHTML = `
+                <div class="text-gray-400 text-center">
+                    <svg class="w-16 h-16 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                    </svg>
+                    <p>No background found</p>
+                </div>
+            `;
+            currentPreview.style.backgroundImage = 'none';
+        }
+        
+        // Load all backgrounds for this room
+        const allResponse = await fetch(`api/backgrounds.php?room_type=${roomType}`);
+        const allData = await allResponse.json();
+        
+        const backgroundsList = document.getElementById('backgroundsList');
+        
+        if (allData.success && allData.backgrounds) {
+            backgroundsList.innerHTML = '';
+            
+            allData.backgrounds.forEach(bg => {
+                const bgItem = document.createElement('div');
+                bgItem.className = `border rounded-lg p-3 ${bg.is_active ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}`;
+                
+                const imageUrl = `images/${bg.webp_filename || bg.image_filename}`;
+                
+                bgItem.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-16 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-medium text-sm truncate">${bg.background_name}</h4>
+                                <div class="flex items-center space-x-1">
+                                    ${bg.background_name === 'Original' ? 
+                                        '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">🔒 PROTECTED</span>' : 
+                                        (bg.is_active ? 
+                                            '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">ACTIVE</span>' : 
+                                            '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">INACTIVE</span>'
+                                        )
+                                    }
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 truncate">${bg.image_filename}</p>
+                            ${bg.created_at ? `<p class="text-xs text-gray-400">${new Date(bg.created_at).toLocaleDateString()}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        ${!bg.is_active ? `<button onclick="applyBackground('${roomType}', ${bg.id})" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-medium">Apply</button>` : ''}
+                        <button onclick="previewBackground('${imageUrl}', '${bg.background_name}')" class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded">Preview</button>
+                        ${bg.background_name !== 'Original' ? `<button onclick="deleteBackground(${bg.id}, '${bg.background_name}')" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">Delete</button>` : ''}
+                    </div>
+                `;
+                
+                backgroundsList.appendChild(bgItem);
+            });
+        } else {
+            backgroundsList.innerHTML = '<p class="text-gray-500 text-sm">No backgrounds found for this room</p>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading backgrounds:', error);
+        document.getElementById('currentBackgroundInfo').innerHTML = '<p class="text-red-500">Error loading background info</p>';
+        document.getElementById('backgroundsList').innerHTML = '<p class="text-red-500">Error loading backgrounds</p>';
+    }
+}
+
+async function applyBackground(roomType, backgroundId) {
+    if (!confirm('Are you sure you want to apply this background? It will become the active background for this room.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/backgrounds.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'apply',
+                room_type: roomType,
+                background_id: backgroundId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showBackgroundMessage('Background applied successfully!', 'success');
+            loadBackgroundsForRoom(roomType);
+        } else {
+            showBackgroundMessage('Error applying background: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error applying background:', error);
+        showBackgroundMessage('Error applying background', 'error');
+    }
+}
+
+async function deleteBackground(backgroundId, backgroundName) {
+    if (!confirm(`Are you sure you want to delete the background "${backgroundName}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('api/backgrounds.php', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                background_id: backgroundId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showBackgroundMessage('Background deleted successfully!', 'success');
+            const roomType = document.getElementById('backgroundRoomSelect').value;
+            loadBackgroundsForRoom(roomType);
+        } else {
+            showBackgroundMessage('Error deleting background: ' + data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting background:', error);
+        showBackgroundMessage('Error deleting background', 'error');
+    }
+}
+
+function previewBackground(imageUrl, backgroundName) {
+    // Create a preview modal
+    const previewModal = document.createElement('div');
+    previewModal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50';
+    previewModal.innerHTML = `
+        <div class="bg-white rounded-lg p-4 max-w-4xl max-h-full overflow-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">Preview: ${backgroundName}</h3>
+                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <img src="${imageUrl}" alt="${backgroundName}" class="max-w-full max-h-96 object-contain mx-auto">
+        </div>
+    `;
+    
+    document.body.appendChild(previewModal);
+}
+
+async function uploadBackground() {
+    const roomType = document.getElementById('backgroundRoomSelect').value;
+    const backgroundName = document.getElementById('backgroundName').value.trim();
+    const fileInput = document.getElementById('backgroundFile');
+    
+    if (!backgroundName) {
+        showBackgroundMessage('Please enter a background name', 'error');
+        return;
+    }
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        showBackgroundMessage('Please select an image file', 'error');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+        showBackgroundMessage('File size must be less than 10MB', 'error');
+        return;
+    }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        showBackgroundMessage('Please select a valid image file', 'error');
+        return;
+    }
+    
+    showBackgroundMessage('Uploading background...', 'info');
+    
+    // For now, show a placeholder message since we need to implement the actual upload
+    showBackgroundMessage('Background upload feature coming soon! For now, manually add images to the images/ folder and use the API to register them.', 'info');
+    
+    // Clear the form
+    document.getElementById('backgroundName').value = '';
+    document.getElementById('backgroundFile').value = '';
+}
+
+function showBackgroundMessage(message, type) {
+    // Create or update message display
+    let messageDiv = document.getElementById('backgroundMessage');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'backgroundMessage';
+        messageDiv.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-medium z-50';
+        document.body.appendChild(messageDiv);
+    }
+    
+    // Set message and styling based on type
+    messageDiv.textContent = message;
+    messageDiv.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-medium z-50';
+    
+    switch (type) {
+        case 'success':
+            messageDiv.classList.add('bg-green-500');
+            break;
+        case 'error':
+            messageDiv.classList.add('bg-red-500');
+            break;
+        case 'info':
+            messageDiv.classList.add('bg-blue-500');
+            break;
+        default:
+            messageDiv.classList.add('bg-gray-500');
+    }
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        if (messageDiv) {
+            messageDiv.remove();
+        }
+    }, 3000);
+}
+
+// Custom notification functions
+function showNotification(title, message, type = 'info') {
+    const modal = document.getElementById('customNotificationModal');
+    const icon = document.getElementById('notificationIcon');
+    const titleEl = document.getElementById('notificationTitle');
+    const messageEl = document.getElementById('notificationMessage');
+    
+    // Set content
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    // Set icon and styling based on type
+    switch (type) {
+        case 'success':
+            icon.textContent = '✅';
+            titleEl.className = 'text-lg font-semibold text-green-800';
+            break;
+        case 'error':
+            icon.textContent = '❌';
+            titleEl.className = 'text-lg font-semibold text-red-800';
+            break;
+        case 'warning':
+            icon.textContent = '⚠️';
+            titleEl.className = 'text-lg font-semibold text-yellow-800';
+            break;
+        case 'info':
+        default:
+            icon.textContent = 'ℹ️';
+            titleEl.className = 'text-lg font-semibold text-blue-800';
+            break;
+    }
+    
+    // Show modal
+    modal.style.display = 'flex';
+}
+
+function closeCustomNotification() {
+    document.getElementById('customNotificationModal').style.display = 'none';
+}
+
+// Custom confirmation dialog
+function showConfirmation(title, message, onConfirm) {
+    const modal = document.getElementById('customNotificationModal');
+    const icon = document.getElementById('notificationIcon');
+    const titleEl = document.getElementById('notificationTitle');
+    const messageEl = document.getElementById('notificationMessage');
+    
+    // Set content
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    icon.textContent = '❓';
+    titleEl.className = 'text-lg font-semibold text-gray-800';
+    
+    // Update buttons for confirmation
+    const buttonContainer = modal.querySelector('.flex.justify-end');
+    buttonContainer.innerHTML = `
+        <button onclick="closeCustomNotification()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors mr-2">
+            Cancel
+        </button>
+        <button onclick="confirmAction()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            Confirm
+        </button>
+    `;
+    
+    // Store the callback
+    window.pendingConfirmAction = onConfirm;
+    
+    // Show modal
+    modal.style.display = 'flex';
+}
+
+function confirmAction() {
+    if (window.pendingConfirmAction) {
+        window.pendingConfirmAction();
+        window.pendingConfirmAction = null;
+    }
+    closeCustomNotification();
+    
+    // Reset buttons back to normal
+    const buttonContainer = document.querySelector('#customNotificationModal .flex.justify-end');
+    buttonContainer.innerHTML = `
+        <button onclick="closeCustomNotification()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            OK
+        </button>
+    `;
+}
+</script>
+
+<!-- Custom Notification Modal -->
+<div id="customNotificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div id="notificationIcon" class="text-2xl mr-3"></div>
+                <h3 id="notificationTitle" class="text-lg font-semibold text-gray-800"></h3>
+            </div>
+            <p id="notificationMessage" class="text-gray-600 mb-6"></p>
+            <div class="flex justify-end">
+                <button onclick="closeCustomNotification()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div> 

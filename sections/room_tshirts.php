@@ -759,4 +759,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resizeTimeout = setTimeout(updateAreaCoordinates, 100);
     });
 });
-</script> 
+</script>
+
+<!-- Load dynamic background script -->
+<script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script> 

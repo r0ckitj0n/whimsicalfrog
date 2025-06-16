@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Manager Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .room-test {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .background-preview {
+            width: 200px;
+            height: 120px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 10px 0;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Background Manager Test</h1>
+        <p>This page tests the Background Manager API functionality.</p>
+        
+        <div class="room-test">
+            <h3>Landing Page Background</h3>
+            <div id="landing-preview" class="background-preview"></div>
+            <div id="landing-info"></div>
+            <button onclick="testRoom('landing')">Test Landing</button>
+        </div>
+        
+        <div class="room-test">
+            <h3>Main Room Background</h3>
+            <div id="room_main-preview" class="background-preview"></div>
+            <div id="room_main-info"></div>
+            <button onclick="testRoom('room_main')">Test Main Room</button>
+        </div>
+        
+        <div class="room-test">
+            <h3>T-Shirts Room Background</h3>
+            <div id="room_tshirts-preview" class="background-preview"></div>
+            <div id="room_tshirts-info"></div>
+            <button onclick="testRoom('room_tshirts')">Test T-Shirts</button>
+        </div>
+        
+        <div class="room-test">
+            <h3>All Backgrounds Summary</h3>
+            <div id="summary-info"></div>
+            <button onclick="testSummary()">Get Summary</button>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function testRoom(roomType) {
+            const preview = document.getElementById(roomType + '-preview');
+            const info = document.getElementById(roomType + '-info');
+            const status = document.getElementById('status');
+            
+            try {
+                status.style.display = 'block';
+                status.className = 'status';
+                status.textContent = `Testing ${roomType}...`;
+                
+                const response = await fetch(`api/get_background.php?room_type=${roomType}`);
+                const data = await response.json();
+                
+                if (data.success && data.background) {
+                    const bg = data.background;
+                    const imageUrl = `images/${bg.webp_filename || bg.image_filename}`;
+                    
+                    preview.style.backgroundImage = `url('${imageUrl}')`;
+                    info.innerHTML = `
+                        <strong>Name:</strong> ${bg.background_name}<br>
+                        <strong>File:</strong> ${bg.image_filename}<br>
+                        ${bg.webp_filename ? `<strong>WebP:</strong> ${bg.webp_filename}<br>` : ''}
+                        <strong>Created:</strong> ${bg.created_at ? new Date(bg.created_at).toLocaleDateString() : 'Unknown'}
+                    `;
+                    
+                    status.className = 'status success';
+                    status.textContent = `✅ ${roomType} background loaded successfully!`;
+                } else {
+                    info.innerHTML = `<span style="color: red;">No background found</span>`;
+                    status.className = 'status error';
+                    status.textContent = `❌ No background found for ${roomType}`;
+                }
+            } catch (error) {
+                console.error('Error testing room:', error);
+                info.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+                status.className = 'status error';
+                status.textContent = `❌ Error testing ${roomType}: ${error.message}`;
+            }
+        }
+        
+        async function testSummary() {
+            const info = document.getElementById('summary-info');
+            const status = document.getElementById('status');
+            
+            try {
+                status.style.display = 'block';
+                status.className = 'status';
+                status.textContent = 'Getting summary...';
+                
+                const response = await fetch('api/backgrounds.php');
+                const data = await response.json();
+                
+                if (data.success && data.summary) {
+                    let html = '<table border="1" style="width: 100%; border-collapse: collapse;">';
+                    html += '<tr><th>Room Type</th><th>Total Backgrounds</th><th>Active Background</th></tr>';
+                    
+                    data.summary.forEach(room => {
+                        html += `<tr>
+                            <td>${room.room_type}</td>
+                            <td>${room.total_count}</td>
+                            <td>${room.active_background || 'None'}</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</table>';
+                    info.innerHTML = html;
+                    
+                    status.className = 'status success';
+                    status.textContent = '✅ Summary loaded successfully!';
+                } else {
+                    info.innerHTML = `<span style="color: red;">No summary data found</span>`;
+                    status.className = 'status error';
+                    status.textContent = '❌ No summary data found';
+                }
+            } catch (error) {
+                console.error('Error getting summary:', error);
+                info.innerHTML = `<span style="color: red;">Error: ${error.message}</span>`;
+                status.className = 'status error';
+                status.textContent = `❌ Error getting summary: ${error.message}`;
+            }
+        }
+        
+        // Auto-test landing page on load
+        document.addEventListener('DOMContentLoaded', function() {
+            testRoom('landing');
+        });
+    </script>
+</body>
+</html> 

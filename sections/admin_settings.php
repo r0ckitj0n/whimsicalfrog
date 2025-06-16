@@ -2591,6 +2591,24 @@ async function loadBackgroundsForRoom(roomType) {
                 
                 const imageUrl = `images/${bg.webp_filename || bg.image_filename}`;
                 
+                // Build status badge
+                const statusBadge = bg.background_name === 'Original' ? 
+                    '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">🔒 PROTECTED</span>' : 
+                    (bg.is_active ? 
+                        '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">ACTIVE</span>' : 
+                        '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">INACTIVE</span>'
+                    );
+                
+                // Build action buttons
+                const applyButton = !bg.is_active ? 
+                    `<button onclick="applyBackground('${roomType}', ${bg.id})" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-medium">Apply</button>` : '';
+                
+                const deleteButton = bg.background_name !== 'Original' ? 
+                    `<button onclick="deleteBackground(${bg.id}, '${bg.background_name}')" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">Delete</button>` : '';
+                
+                const createdDate = bg.created_at ? 
+                    `<p class="text-xs text-gray-400">${new Date(bg.created_at).toLocaleDateString()}</p>` : '';
+                
                 bgItem.innerHTML = `
                     <div class="flex items-center space-x-3">
                         <div class="w-16 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0" style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;"></div>
@@ -2598,23 +2616,17 @@ async function loadBackgroundsForRoom(roomType) {
                             <div class="flex items-center justify-between">
                                 <h4 class="font-medium text-sm truncate">${bg.background_name}</h4>
                                 <div class="flex items-center space-x-1">
-                                    ${bg.background_name === 'Original' ? 
-                                        '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">🔒 PROTECTED</span>' : 
-                                        (bg.is_active ? 
-                                            '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">ACTIVE</span>' : 
-                                            '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">INACTIVE</span>'
-                                        )
-                                    }
+                                    ${statusBadge}
                                 </div>
                             </div>
                             <p class="text-xs text-gray-500 truncate">${bg.image_filename}</p>
-                            ${bg.created_at ? `<p class="text-xs text-gray-400">${new Date(bg.created_at).toLocaleDateString()}</p>` : ''}
+                            ${createdDate}
                         </div>
                     </div>
                     <div class="mt-3 flex space-x-2">
-                        ${!bg.is_active ? `<button onclick="applyBackground('${roomType}', ${bg.id})" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-medium">Apply</button>` : ''}
+                        ${applyButton}
                         <button onclick="previewBackground('${imageUrl}', '${bg.background_name}')" class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded">Preview</button>
-                        ${bg.background_name !== 'Original' ? `<button onclick="deleteBackground(${bg.id}, '${bg.background_name}')" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">Delete</button>` : ''}
+                        ${deleteButton}
                     </div>
                 `;
                 

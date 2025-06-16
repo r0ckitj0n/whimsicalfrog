@@ -2,7 +2,7 @@
 /**
  * Rename Product Images Script
  * 
- * This script renames existing product images from the old Product ID format (P001A.png)
+ * This script renames existing product images from the old category-based format (TS001A.png)
  * to the new SKU format (WF-TS-001A.png) based on the inventory data.
  */
 
@@ -17,15 +17,43 @@ try {
     $results = [];
     $results[] = "Starting image renaming process...";
     
-    // Get all inventory items with their old productId and new SKU
+    // Get all inventory items with their SKUs
     $stmt = $pdo->query("SELECT id, sku, imageUrl FROM inventory WHERE sku IS NOT NULL AND sku != ''");
     $inventoryItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     $results[] = "Found " . count($inventoryItems) . " inventory items to process";
     
+    // Get all existing images
+    $imageDir = __DIR__ . '/../images/products/';
+    $imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
+    $allFiles = scandir($imageDir);
+    $existingImages = [];
+    
+    foreach ($allFiles as $file) {
+        if ($file === '.' || $file === '..') continue;
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (in_array($extension, $imageExtensions)) {
+            $existingImages[] = $file;
+        }
+    }
+    
+    $results[] = "Found " . count($existingImages) . " existing images: " . implode(', ', $existingImages);
+    
     $renamedCount = 0;
     $errorCount = 0;
     $skippedCount = 0;
+    
+    // Create mapping of old format to new SKU format
+    $categoryMapping = [
+        'TS' => 'WF-TS-', // T-Shirts
+        'TU' => 'WF-TU-', // Tumblers
+        'AW' => 'WF-AR-', // Artwork (AR in SKU)
+        'AR' => 'WF-AR-', // Artwork
+        'SU' => 'WF-SU-', // Sublimation
+        'WW' => 'WF-WW-', // Window Wraps
+        'GN' => 'WF-GEN-', // General
+        'MG' => 'WF-GEN-'  // Might be general/misc
+    ];
     
     foreach ($inventoryItems as $item) {
         $sku = $item['sku'];
@@ -33,44 +61,52 @@ try {
         
         $results[] = "\n=== Processing item: {$item['id']} (SKU: {$sku}) ===";
         
-        // Extract potential Product ID from SKU (if it follows WF-XX-### pattern)
-        if (preg_match('/^WF-[A-Z]{2}-(\d{3})$/', $sku, $matches)) {
-            $productIdNumber = $matches[1];
-            $oldProductId = 'P' . $productIdNumber;
+        // Extract category and number from SKU (WF-XX-###)
+        if (preg_match('/^WF-([A-Z]{2})-(\d{3})$/', $sku, $matches)) {
+            $skuCategory = $matches[1];
+            $skuNumber = $matches[2];
             
-            $results[] = "Mapped SKU {$sku} to old Product ID {$oldProductId}";
+            $results[] = "SKU breakdown: Category={$skuCategory}, Number={$skuNumber}";
             
-            // Look for images with the old Product ID pattern
-            $imageDir = __DIR__ . '/../images/products/';
-            $imagePatterns = [
-                $oldProductId . 'A.webp',
-                $oldProductId . 'A.png', 
-                $oldProductId . 'A.jpg',
-                $oldProductId . 'A.jpeg',
-                $oldProductId . '.webp',
-                $oldProductId . '.png',
-                $oldProductId . '.jpg',
-                $oldProductId . '.jpeg'
+            // Find old format images that might match this SKU
+            $possibleOldFormats = [];
+            
+            // Look for direct category match (TS001A.png for WF-TS-001)
+            $directPattern = $skuCategory . $skuNumber;
+            
+            // Also check reverse mapping for special cases (AW -> AR)
+            $reverseMapping = [
+                'AR' => ['AW', 'AR'], // Artwork could be AW or AR
+                'GEN' => ['GN', 'MG'], // General could be GN or MG
+                'TS' => ['TS'],
+                'TU' => ['TU'],
+                'SU' => ['SU'],
+                'WW' => ['WW']
             ];
             
-            $foundImages = [];
-            foreach ($imagePatterns as $pattern) {
-                $oldPath = $imageDir . $pattern;
-                if (file_exists($oldPath)) {
-                    $foundImages[] = $pattern;
+            $oldCategories = $reverseMapping[$skuCategory] ?? [$skuCategory];
+            
+            foreach ($oldCategories as $oldCat) {
+                $basePattern = $oldCat . $skuNumber;
+                
+                // Look for images matching this pattern
+                foreach ($existingImages as $imageName) {
+                    if (preg_match('/^' . preg_quote($basePattern) . '([A-Z]?)\.(png|jpg|jpeg|webp|gif)$/i', $imageName, $imageMatches)) {
+                        $possibleOldFormats[] = $imageName;
+                    }
                 }
             }
             
-            if (empty($foundImages)) {
-                $results[] = "No images found for Product ID {$oldProductId}";
+            if (empty($possibleOldFormats)) {
+                $results[] = "No matching images found for SKU {$sku}";
                 $skippedCount++;
                 continue;
             }
             
-            $results[] = "Found images: " . implode(', ', $foundImages);
+            $results[] = "Found matching images: " . implode(', ', $possibleOldFormats);
             
             // Rename each found image
-            foreach ($foundImages as $oldImageName) {
+            foreach ($possibleOldFormats as $oldImageName) {
                 $oldPath = $imageDir . $oldImageName;
                 
                 // Generate new name based on SKU
@@ -78,7 +114,7 @@ try {
                 $suffix = '';
                 
                 // Extract suffix (A, B, C, etc.) if present
-                if (preg_match('/^' . preg_quote($oldProductId) . '([A-Z]?)\./', $oldImageName, $suffixMatches)) {
+                if (preg_match('/([A-Z])\./', $oldImageName, $suffixMatches)) {
                     $suffix = $suffixMatches[1];
                 }
                 

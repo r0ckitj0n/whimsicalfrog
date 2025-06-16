@@ -24,8 +24,23 @@ $adminToken = $_POST['admin_token'] ?? $_GET['admin_token'] ?? '';
 $validToken = 'whimsical_admin_2024'; // Change this to something secure
 
 if (!$isAdmin && $adminToken !== $validToken) {
+    ob_clean();
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Access denied - admin authentication required']);
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Access denied - admin authentication required',
+        'debug' => [
+            'isAdmin' => $isAdmin,
+            'adminToken' => $adminToken,
+            'validToken' => $validToken,
+            'session_keys' => array_keys($_SESSION ?? []),
+            'session_user' => $_SESSION['user'] ?? 'not set',
+            'session_role' => $_SESSION['role'] ?? 'not set',
+            'session_user_role' => $_SESSION['user_role'] ?? 'not set',
+            'post_data' => $_POST,
+            'get_data' => $_GET
+        ]
+    ]);
     exit;
 }
 

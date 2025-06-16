@@ -2370,6 +2370,7 @@ function fixSampleEmail() {
         // Proceed with fixing sample email using database manager
         const formData = new FormData();
         formData.append('action', 'fix_sample_email');
+        formData.append('admin_token', 'whimsical_admin_2024'); // Fallback auth
         
         return fetch('api/db_manager.php', {
             method: 'POST',
@@ -2383,7 +2384,13 @@ function fixSampleEmail() {
         if (!response) return; // Authentication failed, already handled
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // Try to get error details from response
+            return response.json().then(errorData => {
+                console.error('Database Manager Error Details:', errorData);
+                throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
+            }).catch(() => {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            });
         }
         return response.json();
     })

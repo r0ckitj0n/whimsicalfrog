@@ -1,22 +1,22 @@
 class ShoppingCart {
     constructor() {
         console.log('Initializing ShoppingCart...');
-        this.items = JSON.parse(localStorage.getItem('cart')) || [];
+        this.items = JSON.parse(localStorage.getItem('cart') || '[]');
         console.log('Current cart items:', this.items);
         this.updateCartCount();
     }
 
-    // Helper method to dispatch cart update event
     dispatchCartUpdate() {
-        window.dispatchEvent(new Event('cartUpdated'));
+        // Dispatch custom event for cart updates
+        window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { items: this.items } }));
     }
 
     async refreshProductData() {
         console.log('Refreshing product data from database');
         try {
-            // Get all item IDs in cart
-            const itemIds = this.items.map(item => item.id);
-            if (itemIds.length === 0) return;
+            // Get all SKUs in cart
+            const itemSkus = this.items.map(item => item.sku);
+            if (itemSkus.length === 0) return;
 
             // Fetch current item data from database
             const response = await fetch('api/get_products.php', {
@@ -24,7 +24,7 @@ class ShoppingCart {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ item_ids: itemIds })
+                body: JSON.stringify({ item_ids: itemSkus })
             });
 
             if (!response.ok) {
@@ -37,13 +37,13 @@ class ShoppingCart {
 
             // Update cart items with fresh data
             this.items.forEach(cartItem => {
-                const freshItem = items.find(p => p.id === cartItem.id);
+                const freshItem = items.find(p => p.sku === cartItem.sku);
                 if (freshItem) {
                     // Update image path and name with fresh data from database
                     cartItem.image = freshItem.image || cartItem.image;
                     cartItem.name = freshItem.name || cartItem.name;
                     cartItem.price = parseFloat(freshItem.price) || cartItem.price;
-                    console.log(`Updated cart item ${cartItem.id} with fresh data:`, {
+                    console.log(`Updated cart item ${cartItem.sku} with fresh data:`, {
                         name: cartItem.name,
                         image: cartItem.image,
                         price: cartItem.price
@@ -61,14 +61,14 @@ class ShoppingCart {
     addItem(item) {
         console.log('Adding item to cart:', item);
         const quantity = item.quantity || 1; // Use provided quantity or default to 1
-        const existingItem = this.items.find(cartItem => cartItem.id === item.id);
+        const existingItem = this.items.find(cartItem => cartItem.sku === item.sku);
         
         if (existingItem) {
             existingItem.quantity += quantity;
             console.log('Updated existing item quantity:', existingItem);
         } else {
             this.items.push({
-                id: item.id,
+                sku: item.sku,
                 name: item.name,
                 price: item.price,
                 image: item.image,
@@ -83,22 +83,22 @@ class ShoppingCart {
         this.dispatchCartUpdate();
     }
 
-    removeItem(itemId) {
-        console.log('Removing item from cart:', itemId);
-        this.items = this.items.filter(item => item.id !== itemId);
+    removeItem(itemSku) {
+        console.log('Removing item from cart:', itemSku);
+        this.items = this.items.filter(item => item.sku !== itemSku);
         this.saveCart();
         this.updateCartCount();
         this.showNotification('Item removed from cart');
         this.dispatchCartUpdate();
     }
 
-    updateQuantity(itemId, quantity) {
-        console.log('Updating quantity for item:', itemId, 'to:', quantity);
-        const item = this.items.find(item => item.id === itemId);
+    updateQuantity(itemSku, quantity) {
+        console.log('Updating quantity for item:', itemSku, 'to:', quantity);
+        const item = this.items.find(item => item.sku === itemSku);
         if (item) {
             item.quantity = Math.max(0, quantity);
             if (item.quantity === 0) {
-                this.removeItem(itemId);
+                this.removeItem(itemSku);
             } else {
                 this.saveCart();
                 this.updateCartCount();
@@ -200,7 +200,7 @@ class ShoppingCart {
 
         // Debug cart items and their image paths
         console.log('Cart items with image paths:', this.items.map(item => ({
-            id: item.id,
+            sku: item.sku,
             name: item.name,
             image: item.image
         })));
@@ -217,12 +217,12 @@ class ShoppingCart {
                             </div>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button onclick="cart.updateQuantity('${item.id}', ${item.quantity - 1})" 
+                            <button onclick="cart.updateQuantity('${item.sku}', ${item.quantity - 1})" 
                                     class="px-2 py-1 bg-gray-200 rounded">-</button>
                             <span>${item.quantity}</span>
-                            <button onclick="cart.updateQuantity('${item.id}', ${item.quantity + 1})" 
+                            <button onclick="cart.updateQuantity('${item.sku}', ${item.quantity + 1})" 
                                     class="px-2 py-1 bg-gray-200 rounded">+</button>
-                            <button onclick="cart.removeItem('${item.id}')" 
+                            <button onclick="cart.removeItem('${item.sku}')" 
                                     class="ml-4 text-red-500 hover:text-red-700">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -378,7 +378,7 @@ class ShoppingCart {
             return;
         }
         const customerId = user.userId ? user.userId : user.id;
-        const itemIds = this.items.map(item => item.id);
+        const itemIds = this.items.map(item => item.sku); // Use SKU instead of id
         const quantities = this.items.map(item => item.quantity);
         const status = 'Pending';
         const date = new Date().toISOString().slice(0, 10);
@@ -418,27 +418,18 @@ if (typeof window.cart === 'undefined') {
 
 async function addToCart(sku, name, price, imageUrl = null) {
     try {
-        const cart = getCart();
-        
-        // Check if item already exists in cart
-        const existingItem = cart.find(item => item.sku === sku);
-        
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            cart.push({
+        // Use the global cart instance
+        if (window.cart) {
+            window.cart.addItem({
                 sku: sku,
                 name: name,
                 price: parseFloat(price),
-                quantity: 1,
-                imageUrl: imageUrl || 'images/items/placeholder.png'
+                image: imageUrl || 'images/items/placeholder.png',
+                quantity: 1
             });
+        } else {
+            console.error('Cart not initialized');
         }
-        
-        saveCart(cart);
-        updateCartDisplay();
-        showNotification(`${name} added to cart!`);
-        
     } catch (error) {
         console.error('Error adding item to cart:', error);
         showNotification('Error adding item to cart', 'error');
@@ -446,23 +437,13 @@ async function addToCart(sku, name, price, imageUrl = null) {
 }
 
 function removeFromCart(sku) {
-    const cart = getCart();
-    const updatedCart = cart.filter(item => item.sku !== sku);
-    saveCart(updatedCart);
-    updateCartDisplay();
+    if (window.cart) {
+        window.cart.removeItem(sku);
+    }
 }
 
 function updateQuantity(sku, newQuantity) {
-    const cart = getCart();
-    const item = cart.find(item => item.sku === sku);
-    
-    if (item) {
-        if (newQuantity <= 0) {
-            removeFromCart(sku);
-        } else {
-            item.quantity = parseInt(newQuantity);
-            saveCart(cart);
-            updateCartDisplay();
-        }
+    if (window.cart) {
+        window.cart.updateQuantity(sku, parseInt(newQuantity));
     }
 } 

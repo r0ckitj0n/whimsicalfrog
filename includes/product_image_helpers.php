@@ -19,13 +19,13 @@ function getPrimaryImageBySku($sku) {
     
     // Define possible image extensions in order of preference
     $extensions = ['webp', 'png', 'jpg', 'jpeg'];
-    $imageDir = __DIR__ . '/../images/products/';
+    $imageDir = __DIR__ . '/../images/items/';
     
     // First, try to find the primary image (with 'A' suffix)
     foreach ($extensions as $ext) {
         $imagePath = $imageDir . $sku . 'A.' . $ext;
         if (file_exists($imagePath)) {
-            return 'images/products/' . $sku . 'A.' . $ext;
+            return 'images/items/' . $sku . 'A.' . $ext;
         }
     }
     
@@ -33,7 +33,7 @@ function getPrimaryImageBySku($sku) {
     foreach ($extensions as $ext) {
         $imagePath = $imageDir . $sku . '.' . $ext;
         if (file_exists($imagePath)) {
-            return 'images/products/' . $sku . '.' . $ext;
+            return 'images/items/' . $sku . '.' . $ext;
         }
     }
     
@@ -53,7 +53,7 @@ function getAllImagesBySku($sku) {
     }
     
     $images = [];
-    $imageDir = __DIR__ . '/../images/products/';
+    $imageDir = __DIR__ . '/../images/items/';
     $extensions = ['webp', 'png', 'jpg', 'jpeg'];
     
     // Scan for all images matching the SKU pattern
@@ -64,7 +64,7 @@ function getAllImagesBySku($sku) {
             
             // Check if file matches SKU pattern (SKU.ext or SKUA.ext, SKUB.ext, etc.)
             if (preg_match('/^' . preg_quote($sku) . '([A-Z]?)\.(webp|png|jpg|jpeg)$/i', $file, $matches)) {
-                $images[] = 'images/products/' . $file;
+                $images[] = 'images/items/' . $file;
             }
         }
     }
@@ -110,7 +110,7 @@ function getImageCountBySku($sku) {
  * @return string The placeholder image path
  */
 function getPlaceholderImage() {
-    return 'images/products/placeholder.png';
+    return 'images/items/placeholder.png';
 }
 
 /**
@@ -189,10 +189,10 @@ function getDbConnection() {
 function getFallbackProductImage($sku) {
     // Try common image patterns based on SKU
     $possibleImages = [
-        "images/products/{$sku}A.webp",
-        "images/products/{$sku}A.png",
-        "images/products/{$sku}.webp", 
-        "images/products/{$sku}.png"
+        "images/items/{$sku}A.webp",
+        "images/items/{$sku}A.png",
+        "images/items/{$sku}.webp", 
+        "images/items/{$sku}.png"
     ];
     
     // Also try old Product ID patterns for backward compatibility
@@ -200,10 +200,10 @@ function getFallbackProductImage($sku) {
     if (preg_match('/^WF-[A-Z]{2}-(\d{3})$/', $sku, $matches)) {
         $productId = 'P' . $matches[1];
         $possibleImages = array_merge($possibleImages, [
-            "images/products/{$productId}A.webp",
-            "images/products/{$productId}A.png",
-            "images/products/{$productId}.webp", 
-            "images/products/{$productId}.png"
+            "images/items/{$productId}A.webp",
+            "images/items/{$productId}A.png",
+            "images/items/{$productId}.webp", 
+            "images/items/{$productId}.png"
         ]);
     }
     
@@ -321,7 +321,7 @@ function getProductImagePath($sku, $pdo = null) {
         return $primaryImage['image_path'];
     }
     
-    return 'images/products/placeholder.png';
+    return 'images/items/placeholder.png';
 }
 
 /**
@@ -352,7 +352,7 @@ function renderProductImageDisplay($sku, $options = []) {
     if (empty($images)) {
         // Show placeholder
         return '<div class="product-image-placeholder" style="height: ' . $opts['height'] . '; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
-            <img src="images/products/placeholder.png" alt="No image available" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+            <img src="images/items/placeholder.png" alt="No image available" style="max-width: 100%; max-height: 100%; object-fit: contain;">
         </div>';
     }
     
@@ -363,7 +363,7 @@ function renderProductImageDisplay($sku, $options = []) {
             <img src="' . htmlspecialchars($image['image_path']) . '" 
                  alt="' . htmlspecialchars($image['alt_text'] ?: 'Product image') . '" 
                  style="width: 100%; height: 100%; object-fit: contain; background: white; border-radius: 8px;"
-                 onerror="this.src=\'images/products/placeholder.png\'">
+                 onerror="this.src=\'images/items/placeholder.png\'">
         </div>';
     }
     

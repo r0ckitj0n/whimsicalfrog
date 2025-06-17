@@ -17,7 +17,7 @@
  */
 function getImageTag($originalPath, $altText, $class = '', $style = '') {
     if (empty($originalPath)) {
-        $originalPath = 'images/products/placeholder.png'; // Default placeholder if path is empty
+        $originalPath = 'images/items/placeholder.png'; // Default placeholder if path is empty
     }
     // Corrected WebP path generation - assumes WebP is in the same directory as original but with .webp extension
     $pathInfo = pathinfo($originalPath);

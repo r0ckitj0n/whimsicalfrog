@@ -26,7 +26,7 @@ if(!in_array($ext,$allowed)){
 
 // generate filename unique
 $filename = $baseName.'-'.substr(md5(uniqid()),0,6).'.'.$ext;
-$relPath = 'images/products/'.$filename;
+$relPath = 'images/items/'.$filename;
 $absPath = dirname(__FILE__).'/'.$relPath;
 $dir = dirname($absPath);
 if(!is_dir($dir)){

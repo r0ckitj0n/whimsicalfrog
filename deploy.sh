@@ -81,7 +81,7 @@ cat > verify_deployment.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 open sftp://$USER:$PASS@$HOST
-ls images/products/TS002A.webp
+ls images/items/TS002A.webp
 ls process_multi_image_upload.php
 ls components/image_carousel.php
 bye
@@ -103,7 +103,7 @@ curl -s "https://whimsicalfrog.us/api/fix_permissions.php" > /dev/null 2>&1 || t
 
 # Test image accessibility
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://whimsicalfrog.com/images/products/TS002A.webp")
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://whimsicalfrog.us/images/items/TS002A.webp")
 if [ "$HTTP_CODE" = "200" ]; then
   echo -e "${GREEN}✅ Clown frog image is accessible online!${NC}"
 elif [ "$HTTP_CODE" = "404" ]; then

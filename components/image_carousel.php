@@ -26,7 +26,7 @@ function renderImageCarousel($productId, $images = [], $options = []) {
         return '
         <div class="image-carousel-container ' . $opts['className'] . '" style="height: ' . $opts['height'] . ';">
             <div class="carousel-placeholder">
-                <img src="images/products/placeholder.png" alt="No image available" style="width: 100%; height: 100%; object-fit: contain;">
+                <img src="images/items/placeholder.png" alt="No image available" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
         </div>';
     }
@@ -64,7 +64,7 @@ function renderImageCarousel($productId, $images = [], $options = []) {
                     <img src="<?= htmlspecialchars($image['image_path']) ?>" 
                          alt="<?= htmlspecialchars($image['alt_text'] ?: 'Product image') ?>"
                          style="width: 100%; height: 100%; object-fit: contain; background: white;"
-                         onerror="this.onerror=null; this.src='images/products/placeholder.png';">
+                         onerror="this.onerror=null; this.src='images/items/placeholder.png';">
                     <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin'] && isset($_GET['page']) && strpos($_GET['page'], 'admin') === 0): ?>
                         <div class="primary-badge" style="position: absolute; top: 10px; right: 10px; background: #87ac3a; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
                             Primary
@@ -97,7 +97,7 @@ function renderImageCarousel($productId, $images = [], $options = []) {
                         <img src="<?= htmlspecialchars($image['image_path']) ?>" 
                              alt="Thumbnail <?= $index + 1 ?>"
                              style="width: 100%; height: 100%; object-fit: cover;"
-                             onerror="this.onerror=null; this.src='images/products/placeholder.png';">
+                             onerror="this.onerror=null; this.src='images/items/placeholder.png';">
                         <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin'] && isset($_GET['page']) && strpos($_GET['page'], 'admin') === 0): ?>
                             <div style="position: absolute; top: 2px; right: 2px; background: #87ac3a; color: white; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px;">
                                 ⭐

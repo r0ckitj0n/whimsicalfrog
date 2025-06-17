@@ -276,7 +276,7 @@ require_once __DIR__ . '/../includes/product_image_helpers.php';
                                 if ($primaryImage && $primaryImage['file_exists']) {
                                     echo '<img src="' . htmlspecialchars($primaryImage['image_path']) . '" alt="' . htmlspecialchars($product['name']) . '">';
                                 } else {
-                                    echo getImageTag($product['image'] ?? 'images/products/placeholder.png', $product['name']);
+                                    echo getImageTag($product['image'] ?? 'images/items/placeholder.png', $product['name']);
                                 }
                                 ?>
                             </div>
@@ -364,11 +364,11 @@ function showPopup(element, product) {
             if (data.success && data.primaryImage) {
                 document.getElementById('popupImage').src = data.primaryImage.image_path;
             } else {
-                document.getElementById('popupImage').src = product['image'] || 'images/products/placeholder.png';
+                document.getElementById('popupImage').src = product['image'] || 'images/items/placeholder.png';
             }
         })
         .catch(() => {
-            document.getElementById('popupImage').src = product['image'] || 'images/products/placeholder.png';
+                                document.getElementById('popupImage').src = product['image'] || 'images/items/placeholder.png';
         });
     document.getElementById('popupTitle').textContent = product['name'];
     document.getElementById('popupCategory').textContent = product['productType'] || product['category'] || '';
@@ -558,7 +558,7 @@ async function openQuantityModal() {
     const id = currentProduct['id'];
     let name = currentProduct['name'];
     let price = parseFloat(currentProduct['basePrice'] || currentProduct['price'] || 0);
-    let image = currentProduct['image'] || 'images/products/placeholder.png';
+                let image = currentProduct['image'] || 'images/items/placeholder.png';
     
     // Fetch fresh product data from database to get current image path
     try {

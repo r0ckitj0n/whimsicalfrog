@@ -142,7 +142,7 @@ try {
                 $allowedExt = ['png','jpg','jpeg','webp'];
                 if(in_array($ext, $allowedExt)){
                     $unique = substr(md5(uniqid()),0,6);
-                    $destRel = 'images/products/' . $sku . '-' . $unique . '.' . $ext;
+                    $destRel = 'images/items/' . $sku . '-' . $unique . '.' . $ext;
                     $rootDir = __DIR__;
                     $destAbs = $rootDir . '/' . $destRel;
                     $dir = dirname($destAbs);

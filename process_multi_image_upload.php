@@ -39,10 +39,10 @@ try {
     $uploadedImages = [];
     $errors = [];
     
-    // Ensure products directory exists
-    $productsDir = __DIR__ . '/images/products/';
-    if (!is_dir($productsDir)) {
-        mkdir($productsDir, 0755, true);
+    // Ensure items directory exists
+    $itemsDir = __DIR__ . '/images/items/';
+    if (!is_dir($itemsDir)) {
+        mkdir($itemsDir, 0755, true);
     }
     
     // If this is marked as primary, unset any existing primary images for this product
@@ -107,8 +107,8 @@ try {
         
         $filename = $sku . $suffix . '.' . $ext;
         
-        $relPath = 'images/products/' . $filename;
-        $absPath = $productsDir . $filename;
+        $relPath = 'images/items/' . $filename;
+        $absPath = $itemsDir . $filename;
         
         // If overwriting, remove existing file
         if ($overwrite && file_exists($absPath)) {

@@ -50,7 +50,7 @@ try {
                     // Keep existing image path
                     $product['image'] = $product['image'];
                 } else {
-                    $product['image'] = 'images/products/placeholder.png';
+                    $product['image'] = 'images/items/placeholder.png';
                 }
             }
         }
@@ -72,7 +72,7 @@ try {
             if (!empty($product['image'])) {
                 $product['image'] = $product['image'];
             } else {
-                $product['image'] = 'images/products/placeholder.png';
+                $product['image'] = 'images/items/placeholder.png';
             }
         }
     }

@@ -1830,7 +1830,7 @@ function displayCurrentImages(images, isViewModal = false) {
                 <div class="relative carousel-image-container" style="height: 150px;">
                     <img src="${image.image_path}" alt="${image.alt_text}" 
                          class="w-full h-full object-contain bg-gray-50 carousel-image" 
-                         onerror="this.src='images/products/placeholder.png'"
+                         onerror="this.src='images/items/placeholder.png'"
                          style="object-position: center;">
                 </div>
                 <div class="p-2 bg-gray-50">

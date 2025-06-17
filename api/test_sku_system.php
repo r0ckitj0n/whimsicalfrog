@@ -107,14 +107,14 @@ try {
     // Test order with items query
     $stmt = $pdo->query("
         SELECT 
-            o.orderId,
+            o.id as orderId,
             o.customerName,
             oi.sku,
             oi.quantity,
             oi.price,
             i.name as itemName
         FROM orders o
-        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN order_items oi ON o.id = oi.orderId
         LEFT JOIN items i ON oi.sku = i.sku
         LIMIT 3
     ");

@@ -114,6 +114,24 @@ function getPlaceholderImage() {
 }
 
 /**
+ * Get image URL with fallback to image server if direct access fails
+ */
+function getImageUrlWithFallback($imagePath) {
+    // First try direct path
+    if (empty($imagePath)) {
+        return getPlaceholderImage();
+    }
+    
+    // For IONOS hosting, we'll use the image server as primary method
+    // to avoid permission issues
+    if (strpos($imagePath, 'images/items/') === 0) {
+        return 'api/image_server.php?path=' . urlencode($imagePath);
+    }
+    
+    return $imagePath;
+}
+
+/**
  * Get image with fallback to placeholder
  * 
  * @param string $sku The product SKU

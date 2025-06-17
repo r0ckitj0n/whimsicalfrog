@@ -55,6 +55,8 @@ mirror --reverse --delete --verbose \
   --exclude-glob backup.sql \
   --exclude-glob deploy_commands.txt \
   --exclude-glob fix_clown_frog_image.sql \
+  --exclude-glob images/.htaccess \
+  --exclude-glob images/items/.htaccess \
   --include-glob credentials.json \
   . $REMOTE_PATH
 bye
@@ -99,7 +101,21 @@ rm verify_deployment.txt
 
 # Fix permissions automatically after deployment
 echo -e "${GREEN}🔧 Fixing image permissions on server...${NC}"
-curl -s "https://whimsicalfrog.us/api/fix_permissions.php" > /dev/null 2>&1 || true
+# Remove problematic .htaccess files and fix permissions via SFTP
+cat > fix_permissions.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+rm -f images/.htaccess
+rm -f images/items/.htaccess
+chmod 755 images/
+chmod 755 images/items/
+chmod 644 images/items/*
+bye
+EOL
+
+lftp -f fix_permissions.txt > /dev/null 2>&1 || true
+rm fix_permissions.txt
 
 # Test image accessibility
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"

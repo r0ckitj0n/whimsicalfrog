@@ -4324,6 +4324,88 @@ function escapeHtml(text) {
     </div>
 </div>
 
+<!-- Backup Progress Modal -->
+<div id="backupProgressModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white text-lg">⚡</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Backup in Progress</h3>
+                </div>
+            </div>
+            
+            <!-- Progress Content -->
+            <div id="backupProgressContent" class="px-6 py-6">
+                <!-- Initial Progress State -->
+                <div id="backupProgressState" class="text-center">
+                    <div class="mb-4">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    </div>
+                    <h4 class="text-lg font-medium text-gray-900 mb-2">Creating Backup...</h4>
+                    <p class="text-gray-600 text-sm mb-4">Please wait while we create your website backup</p>
+                    
+                    <!-- Progress Steps -->
+                    <div class="space-y-2 text-left">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span class="text-sm text-gray-700">Collecting website files...</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                            <span class="text-sm text-gray-500">Compressing archive...</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                            <span class="text-sm text-gray-500" id="destinationStep">Preparing destinations...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Success State (hidden initially) -->
+                <div id="backupSuccessState" class="text-center hidden">
+                    <div class="mb-4">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <h4 class="text-lg font-medium text-green-800 mb-2">Backup Complete!</h4>
+                    <div id="backupDetails" class="text-left bg-gray-50 rounded-lg p-4 mb-4">
+                        <!-- Details will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Error State (hidden initially) -->
+                <div id="backupErrorState" class="text-center hidden">
+                    <div class="mb-4">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <h4 class="text-lg font-medium text-red-800 mb-2">Backup Failed</h4>
+                    <p id="backupErrorMessage" class="text-red-600 text-sm mb-4"></p>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                <div class="flex items-center justify-end space-x-3">
+                    <button id="backupProgressCloseBtn" onclick="closeBackupProgressModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors hidden">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // File Explorer JavaScript
 let currentDirectory = '';
@@ -4767,11 +4849,13 @@ async function executeBackup() {
     const downloadToComputer = computerCheckbox.checked;
     const keepOnServer = cloudCheckbox.checked;
     
+    // Close modal first
+    closeBackupModal();
+    
+    // Show detailed progress modal
+    showBackupProgressModal(downloadToComputer, keepOnServer);
+    
     try {
-        // Close modal and show progress
-        closeBackupModal();
-        showNotification('Info', 'Creating backup... This may take a moment.', 'info');
-        
         const response = await fetch('api/backup_website.php', {
             method: 'POST',
             headers: {
@@ -4786,41 +4870,179 @@ async function executeBackup() {
         const result = await response.json();
         
         if (result.success) {
-            let message = `Backup created successfully: ${result.filename}`;
-            
-            // Add destination info
-            const destinations = [];
-            if (downloadToComputer) destinations.push('Downloaded to computer');
-            if (keepOnServer) destinations.push('Stored on server');
-            message += `\n\nDestination(s): ${destinations.join(', ')}`;
-            
-            // Add cleanup info if old backups were deleted
-            if (result.cleanup && result.cleanup.deleted > 0) {
-                message += `\n\nCleanup: ${result.cleanup.deleted} old backup${result.cleanup.deleted > 1 ? 's' : ''} deleted to maintain 10 backup limit.`;
-            }
-            
-            showNotification('Success', message, 'success');
+            // Show success in progress modal
+            showBackupComplete(result, downloadToComputer, keepOnServer);
             
             // Download the backup file if requested
             if (downloadToComputer && result.download_url) {
-                const link = document.createElement('a');
-                link.href = result.download_url;
-                link.download = result.filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Small delay to let user see the success message
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = result.download_url;
+                    link.download = result.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, 1000);
             }
         } else {
-            showNotification('Error', result.error || 'Failed to create backup', 'error');
+            showBackupError(result.error || 'Failed to create backup');
         }
     } catch (error) {
         console.error('Error creating backup:', error);
-        showNotification('Error', 'Failed to create backup', 'error');
+        showBackupError('Network error occurred while creating backup');
     }
 }
 
 // Legacy function for backward compatibility
 async function backupWebsite() {
     showBackupModal();
+}
+
+// Backup Progress Modal Functions
+function showBackupProgressModal(downloadToComputer, keepOnServer) {
+    document.getElementById('backupProgressModal').classList.remove('hidden');
+    
+    // Reset modal to progress state
+    document.getElementById('backupProgressState').classList.remove('hidden');
+    document.getElementById('backupSuccessState').classList.add('hidden');
+    document.getElementById('backupErrorState').classList.add('hidden');
+    document.getElementById('backupProgressCloseBtn').classList.add('hidden');
+    
+    // Update destination step text
+    const destinations = [];
+    if (downloadToComputer) destinations.push('computer download');
+    if (keepOnServer) destinations.push('server storage');
+    document.getElementById('destinationStep').textContent = `Preparing ${destinations.join(' and ')}...`;
+    
+    // Simulate progress steps
+    setTimeout(() => {
+        // Step 1: Files collected
+        const steps = document.querySelectorAll('#backupProgressState .space-y-2 > div');
+        if (steps[0]) {
+            steps[0].querySelector('.w-4').classList.remove('animate-pulse');
+            steps[0].querySelector('.w-4').classList.add('bg-green-500');
+            steps[0].querySelector('span').classList.remove('text-gray-700');
+            steps[0].querySelector('span').classList.add('text-green-700');
+        }
+        
+        // Step 2: Compressing
+        if (steps[1]) {
+            steps[1].querySelector('.w-4').classList.remove('bg-gray-300');
+            steps[1].querySelector('.w-4').classList.add('bg-blue-500', 'animate-pulse');
+            steps[1].querySelector('span').classList.remove('text-gray-500');
+            steps[1].querySelector('span').classList.add('text-gray-700');
+        }
+    }, 500);
+    
+    setTimeout(() => {
+        // Step 2: Compression complete
+        const steps = document.querySelectorAll('#backupProgressState .space-y-2 > div');
+        if (steps[1]) {
+            steps[1].querySelector('.w-4').classList.remove('animate-pulse');
+            steps[1].querySelector('.w-4').classList.add('bg-green-500');
+            steps[1].querySelector('span').classList.add('text-green-700');
+        }
+        
+        // Step 3: Destinations
+        if (steps[2]) {
+            steps[2].querySelector('.w-4').classList.remove('bg-gray-300');
+            steps[2].querySelector('.w-4').classList.add('bg-blue-500', 'animate-pulse');
+            steps[2].querySelector('span').classList.remove('text-gray-500');
+            steps[2].querySelector('span').classList.add('text-gray-700');
+        }
+    }, 1000);
+}
+
+function showBackupComplete(result, downloadToComputer, keepOnServer) {
+    // Hide progress state
+    document.getElementById('backupProgressState').classList.add('hidden');
+    document.getElementById('backupSuccessState').classList.remove('hidden');
+    document.getElementById('backupProgressCloseBtn').classList.remove('hidden');
+    
+    // Format file size
+    const sizeFormatted = result.size_formatted || formatFileSize(result.size || 0);
+    
+    // Build destinations list
+    const destinations = [];
+    if (downloadToComputer) destinations.push('💻 Downloaded to your computer');
+    if (keepOnServer) destinations.push('☁️ Stored on server');
+    
+    // Format creation time
+    const createdTime = new Date(result.created).toLocaleString();
+    
+    // Build details HTML
+    let detailsHTML = `
+        <div class="space-y-3">
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Filename:</span>
+                <span class="text-gray-900 font-mono text-sm">${result.filename}</span>
+            </div>
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Location:</span>
+                <span class="text-gray-900 font-mono text-sm">${result.path}</span>
+            </div>
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Size:</span>
+                <span class="text-gray-900">${sizeFormatted}</span>
+            </div>
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Created:</span>
+                <span class="text-gray-900">${createdTime}</span>
+            </div>
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Destinations:</span>
+                <div class="text-right">
+                    ${destinations.map(dest => `<div class="text-gray-900 text-sm">${dest}</div>`).join('')}
+                </div>
+            </div>
+    `;
+    
+    // Add cleanup info if available
+    if (result.cleanup && result.cleanup.deleted > 0) {
+        detailsHTML += `
+            <div class="flex items-start justify-between pt-2 border-t border-gray-200">
+                <span class="font-medium text-orange-700">Cleanup:</span>
+                <span class="text-orange-900">${result.cleanup.deleted} old backup${result.cleanup.deleted > 1 ? 's' : ''} deleted</span>
+            </div>
+        `;
+    }
+    
+    detailsHTML += '</div>';
+    
+    document.getElementById('backupDetails').innerHTML = detailsHTML;
+    
+    // Auto-close after 10 seconds for server-only backups
+    if (!downloadToComputer && keepOnServer) {
+        setTimeout(() => {
+            closeBackupProgressModal();
+        }, 10000);
+    }
+}
+
+function showBackupError(errorMessage) {
+    // Hide progress state
+    document.getElementById('backupProgressState').classList.add('hidden');
+    document.getElementById('backupErrorState').classList.remove('hidden');
+    document.getElementById('backupProgressCloseBtn').classList.remove('hidden');
+    
+    document.getElementById('backupErrorMessage').textContent = errorMessage;
+}
+
+function closeBackupProgressModal() {
+    document.getElementById('backupProgressModal').classList.add('hidden');
+}
+
+// Helper function for file size formatting (client-side)
+function formatFileSize(bytes) {
+    if (bytes >= 1073741824) {
+        return (bytes / 1073741824).toFixed(2) + ' GB';
+    } else if (bytes >= 1048576) {
+        return (bytes / 1048576).toFixed(2) + ' MB';
+    } else if (bytes >= 1024) {
+        return (bytes / 1024).toFixed(2) + ' KB';
+    } else {
+        return bytes + ' bytes';
+    }
 }
 </script>

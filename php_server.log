@@ -1099,3 +1099,37 @@
 [Tue Jun 17 17:32:23 2025] [::1]:60768 Accepted
 [Tue Jun 17 17:32:23 2025] [::1]:60768 [200]: GET /api/file_manager.php?action=list&path=
 [Tue Jun 17 17:32:23 2025] [::1]:60768 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62504 Accepted
+[Tue Jun 17 17:38:54 2025] Database Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'whimsicalfrog.inventory' doesn't exist
+[Tue Jun 17 17:38:54 2025] [::1]:62504 [200]: GET /?page=admin&section=settings
+[Tue Jun 17 17:38:54 2025] [::1]:62504 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62505 Accepted
+[Tue Jun 17 17:38:54 2025] [::1]:62506 Accepted
+[Tue Jun 17 17:38:54 2025] [::1]:62505 [200]: GET /css/styles.css?v=1750196334
+[Tue Jun 17 17:38:54 2025] [::1]:62506 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 17 17:38:54 2025] [::1]:62505 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62506 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62507 Accepted
+[Tue Jun 17 17:38:54 2025] [::1]:62507 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Tue Jun 17 17:38:54 2025] [::1]:62507 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62508 Accepted
+[Tue Jun 17 17:38:54 2025] [::1]:62508 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 17 17:38:54 2025] [::1]:62508 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62509 Accepted
+[Tue Jun 17 17:38:54 2025] [::1]:62510 Accepted
+[Tue Jun 17 17:38:54 2025] [::1]:62509 [200]: GET /api/get_background.php?room_type=room_main
+[Tue Jun 17 17:38:54 2025] [::1]:62509 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62510 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 17 17:38:54 2025] [::1]:62510 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62511 Accepted
+[Tue Jun 17 17:38:54 2025] [::1]:62511 [200]: GET /images/room_main.webp?v=1750196334988
+[Tue Jun 17 17:38:54 2025] [::1]:62511 Closing
+[Tue Jun 17 17:38:54 2025] [::1]:62512 Accepted
+[Tue Jun 17 17:38:54 2025] [::1]:62512 [200]: GET /favicon.ico
+[Tue Jun 17 17:38:54 2025] [::1]:62512 Closing
+[Tue Jun 17 17:38:58 2025] [::1]:62527 Accepted
+[Tue Jun 17 17:38:58 2025] [::1]:62527 [200]: GET /api/file_manager.php?action=list&path=
+[Tue Jun 17 17:38:58 2025] [::1]:62527 Closing
+[Tue Jun 17 17:39:14 2025] [::1]:62593 Accepted
+[Tue Jun 17 17:39:15 2025] [::1]:62593 [200]: POST /api/backup_website.php
+[Tue Jun 17 17:39:15 2025] [::1]:62593 Closing

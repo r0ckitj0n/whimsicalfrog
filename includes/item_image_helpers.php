@@ -376,7 +376,16 @@ function renderItemImageDisplay($sku, $options = []) {
         </div>';
     }
     
-    // Multiple images - use carousel
-    return renderImageCarousel($sku, $images, $opts);
+    // Multiple images - use simple carousel (simplified implementation)
+    $carouselHtml = '<div class="item-image-carousel" style="height: ' . $opts['height'] . ';">';
+    foreach ($images as $index => $image) {
+        $display = $index === 0 ? 'block' : 'none';
+        $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" 
+                             alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
+                             style="width: 100%; height: 100%; object-fit: contain; background: white; border-radius: 8px; display: ' . $display . ';"
+                             onerror="this.src=\'images/items/placeholder.png\'">';
+    }
+    $carouselHtml .= '</div>';
+    return $carouselHtml;
 }
-?> 
+?>

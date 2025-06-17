@@ -133,16 +133,55 @@ function getDbConnection() {
     static $pdo = null;
     
     if ($pdo === null) {
-        // Include config to get database credentials
-        $configPath = __DIR__ . '/../api/config.php';
-        if (!file_exists($configPath)) {
-            error_log("Config file not found at: " . $configPath);
-            return null;
-        }
-        
-        require_once $configPath;
-        
         try {
+            // Detect environment
+            $isLocalhost = false;
+            
+            // Check if running from command line
+            if (PHP_SAPI === 'cli') {
+                $isLocalhost = true;
+            }
+            
+            // Check HTTP_HOST for localhost indicators
+            if (isset($_SERVER['HTTP_HOST'])) {
+                if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
+                    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false) {
+                    $isLocalhost = true;
+                }
+            }
+            
+            // Check SERVER_NAME for localhost indicators
+            if (isset($_SERVER['SERVER_NAME'])) {
+                if (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || 
+                    strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false) {
+                    $isLocalhost = true;
+                }
+            }
+            
+            // Database configuration based on environment
+            if ($isLocalhost) {
+                // Local database credentials
+                $host = 'localhost';
+                $db   = 'whimsicalfrog';
+                $user = 'root';
+                $pass = 'Palz2516';
+            } else {
+                // Production database credentials - IONOS values
+                $host = 'db5017975223.hosting-data.io';
+                $db   = 'dbs14295502';
+                $user = 'dbu2826619';
+                $pass = 'Palz2516!';
+            }
+            
+            // Create DSN and options
+            $charset = 'utf8mb4';
+            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+            $options = [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+            ];
+            
             $pdo = new PDO($dsn, $user, $pass, $options);
         } catch (PDOException $e) {
             error_log("Database connection error in getDbConnection: " . $e->getMessage());

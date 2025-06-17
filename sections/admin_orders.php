@@ -443,7 +443,7 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th></tr></thead>
                                 <tbody>
                                     <?php
-                                        $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN items p ON oi.itemId = p.id WHERE oi.orderId = ? LIMIT 6");
+                                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.itemId = i.id WHERE oi.orderId = ? LIMIT 6");
                                         $itemStmt->execute([$viewOrderId]);
                                         $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                         foreach ($orderItems as $it): ?>
@@ -742,7 +742,7 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                             <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th><th class="w-8"></th></tr></thead>
                             <tbody>
                                 <?php
-                                                                         $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN items p ON oi.itemId = p.id WHERE oi.orderId = ?");
+                                                                         $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.itemId = i.id WHERE oi.orderId = ?");
                                     $itemStmt->execute([$editOrderId]);
                                     $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                     foreach ($orderItems as $it): ?>
@@ -966,7 +966,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Collect items table rows
             const items=[];
             document.querySelectorAll('#itemsTable tbody tr.item-row').forEach(async tr=>{
-                const pid=tr.dataset.itemId;
+                const iid=tr.dataset.itemId;
                 // Generate streamlined order item ID for frontend use
             let nextItemId = 'OI001'; // Default fallback
             try {
@@ -985,7 +985,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const rowId = tr.dataset.itemId || nextItemId;
                 const qty=parseInt(tr.querySelector('.qty-input').value||'0',10);
-                if(pid && qty>0){ items.push({orderItemId:rowId,itemId:pid,quantity:qty}); }
+                if(iid && qty>0){ items.push({orderItemId:rowId,itemId:iid,quantity:qty}); }
             });
 
             const payload = {
@@ -1080,15 +1080,15 @@ document.addEventListener('DOMContentLoaded', function() {
         addBtn.addEventListener('click', async () => {
             const sel=document.getElementById('addProductSelect');
             const qtyInput=document.getElementById('addQty');
-            const pid=sel.value; const qty=parseInt(qtyInput.value||'0',10);
-            if(!pid||qty<=0){ alert('Select item and qty'); return; }
+            const iid=sel.value; const qty=parseInt(qtyInput.value||'0',10);
+            if(!iid||qty<=0){ alert('Select item and qty'); return; }
             
             const selectedOption = sel.options[sel.selectedIndex];
             const price = parseFloat(selectedOption.dataset.price || 0);
             const name = selectedOption.text.split(' - $')[0]; // Remove price from display name
             
             // If item already exists row, just update qty
-            const existingRow=[...itemsTbody.querySelectorAll('tr')].find(r=>r.dataset.itemId===pid);
+            const existingRow=[...itemsTbody.querySelectorAll('tr')].find(r=>r.dataset.itemId===iid);
             if(existingRow){ 
                 existingRow.querySelector('.qty-input').value = qty; 
                 updateRowTotal(existingRow.querySelector('.qty-input'));
@@ -1096,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', function() {
             else{
                 const tr=document.createElement('tr');
                 tr.className='item-row border-b';
-                tr.dataset.itemId=pid;
+                tr.dataset.itemId=iid;
                 tr.dataset.price=price;
                 // Generate streamlined order item ID for new items
             let nextItemId = 'OI001'; // Default fallback

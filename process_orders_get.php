@@ -31,10 +31,10 @@ try {
     if ($orderId) {
         // Fetch specific order with details
         $stmt = $pdo->prepare('
-            SELECT o.*, oi.*, p.name as product_name, p.image as product_image 
+            SELECT o.*, oi.*, i.name as item_name, i.image as item_image 
             FROM orders o
             LEFT JOIN order_items oi ON o.id = oi.orderId
-            LEFT JOIN products p ON oi.productId = p.id
+            LEFT JOIN items i ON oi.itemId = i.id
             WHERE o.id = ?
         ');
         $stmt->execute([$orderId]);
@@ -60,13 +60,13 @@ try {
             }
             
             // Add item to order
-            if (isset($row['productId'])) {
+            if (isset($row['itemId'])) {
                 $orderData['items'][] = [
-                    'product_id' => $row['productId'],
-                    'product_name' => $row['product_name'],
+                    'item_id' => $row['itemId'],
+                    'item_name' => $row['item_name'],
                     'quantity' => $row['quantity'],
                     'price' => $row['price'],
-                    'product_image' => $row['product_image']
+                    'item_image' => $row['item_image']
                 ];
             }
         }

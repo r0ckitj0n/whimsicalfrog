@@ -71,8 +71,8 @@ try {
             $itemIndex++;
             
             $qty = (int)$row['quantity'];
-            $pid = $row['itemId'];
-            $insert->execute([$itemId, $orderId, $pid, $qty, $pid]);
+            $iid = $row['itemId'];
+            $insert->execute([$itemId, $orderId, $iid, $qty, $iid]);
         }
         // recalc total
         $totalStmt=$pdo->prepare('SELECT SUM(quantity*price) AS total FROM order_items WHERE orderId = ?');

@@ -85,11 +85,11 @@ try {
     for ($i=0;$i<count($itemIds);$i++) {
         $itemSequence = str_pad($itemCount + $i + 1, 3, '0', STR_PAD_LEFT);
         $itemId = 'OI' . $itemSequence;
-        $pid = $itemIds[$i];
+        $iid = $itemIds[$i];
         $qty = (int)$quantities[$i];
         
         // Get the item price
-        $priceStmt->execute([$pid]);
+        $priceStmt->execute([$iid]);
         $itemPrice = $priceStmt->fetchColumn();
         
         // If no price found, use 0.00 as fallback
@@ -97,8 +97,8 @@ try {
             $itemPrice = 0.00;
         }
         
-        $itemStmt->execute([$itemId, $orderId, $pid, $qty, $itemPrice]);
-        $updateInv->execute([$qty, $pid]);
+        $itemStmt->execute([$itemId, $orderId, $iid, $qty, $itemPrice]);
+        $updateInv->execute([$qty, $iid]);
     }
     $pdo->commit();
     

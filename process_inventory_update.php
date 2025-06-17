@@ -72,19 +72,8 @@ try {
         $query = "UPDATE inventory SET $field = ? WHERE id = ?";
         $stmt = $pdo->prepare($query);
         if ($stmt->execute([$value, $itemId])) {
-            // If category was updated, reflect change in products table
-            if (false && $field === 'category') {
-                // Fetch productId for this inventory item
-                $stmtPid = $pdo->prepare("SELECT productId FROM inventory WHERE id = ?");
-                $stmtPid->execute([$itemId]);
-                $pidRow = $stmtPid->fetch(PDO::FETCH_ASSOC);
-                if ($pidRow && !empty($pidRow['productId'])) {
-                    $pid = $pidRow['productId'];
-                    // Update or insert into products
-                    $updProd = $pdo->prepare("UPDATE products SET productType = ? WHERE id = ?");
-                    $updProd->execute([$value, $pid]);
-                }
-            }
+            // Category updates are now handled directly in the items table
+            // No need to sync with products table anymore
             returnSuccess(ucfirst($field) . ' updated successfully');
         } else {
             returnError('Failed to update ' . $field);

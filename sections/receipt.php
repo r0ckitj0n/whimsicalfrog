@@ -16,7 +16,7 @@ try {
     $stmt->execute([$orderId]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$order) throw new Exception('Order not found');
-    $itemStmt = $pdo->prepare('SELECT oi.*, p.name, p.id as productId FROM order_items oi JOIN products p ON oi.productId COLLATE utf8mb4_unicode_ci = p.id COLLATE utf8mb4_unicode_ci WHERE oi.orderId COLLATE utf8mb4_unicode_ci = ?');
+    $itemStmt = $pdo->prepare('SELECT oi.*, i.name, i.id as itemId FROM order_items oi JOIN items i ON oi.itemId COLLATE utf8mb4_unicode_ci = i.id COLLATE utf8mb4_unicode_ci WHERE oi.orderId COLLATE utf8mb4_unicode_ci = ?');
     $itemStmt->execute([$orderId]);
     $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
@@ -35,9 +35,9 @@ $pending = ($order['paymentStatus'] === 'Pending');
     <h1 class="text-2xl font-bold text-center text-[#87ac3a] mb-4">Order Receipt</h1>
     <p class="text-sm text-gray-600 text-center mb-6">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong><br>Date: <?= date('M d, Y', strtotime($order['date'])) ?></p>
 
-    <table class="w-full mb-6 text-sm"><thead><tr class="bg-gray-100"><th class="text-left p-2">Product ID</th><th class="text-left p-2">Item</th><th class="text-center p-2">Qty</th><th class="text-right p-2">Price</th></tr></thead><tbody>
+    <table class="w-full mb-6 text-sm"><thead><tr class="bg-gray-100"><th class="text-left p-2">Item ID</th><th class="text-left p-2">Item</th><th class="text-center p-2">Qty</th><th class="text-right p-2">Price</th></tr></thead><tbody>
         <?php foreach ($items as $it): ?>
-            <tr class="border-b"><td class="p-2 font-mono text-xs"><?= htmlspecialchars($it['productId']) ?></td><td class="p-2"><?= htmlspecialchars($it['name']) ?></td><td class="text-center p-2"><?= $it['quantity'] ?></td><td class="text-right p-2">$<?= number_format($it['price'],2) ?></td></tr>
+            <tr class="border-b"><td class="p-2 font-mono text-xs"><?= htmlspecialchars($it['itemId']) ?></td><td class="p-2"><?= htmlspecialchars($it['name']) ?></td><td class="text-center p-2"><?= $it['quantity'] ?></td><td class="text-right p-2">$<?= number_format($it['price'],2) ?></td></tr>
         <?php endforeach; ?>
     </tbody></table>
     <div class="flex justify-end mb-6 text-lg font-semibold">

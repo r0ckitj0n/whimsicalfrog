@@ -139,27 +139,35 @@ $search = $_GET['search'] ?? '';
 $categoryFilter = $_GET['category'] ?? '';
 $stockFilter = $_GET['stock'] ?? '';
 
-$sql = "SELECT * FROM items WHERE 1=1";
+// Modified query to include image count
+$sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count 
+        FROM items i 
+        LEFT JOIN (
+            SELECT sku, COUNT(*) as image_count 
+            FROM product_images 
+            GROUP BY sku
+        ) img_count ON i.sku = img_count.sku 
+        WHERE 1=1";
 $params = [];
 
 if (!empty($search)) {
-    $sql .= " AND (name LIKE :search OR sku LIKE :search OR description LIKE :search)";
+    $sql .= " AND (i.name LIKE :search OR i.sku LIKE :search OR i.description LIKE :search)";
     $params[':search'] = '%' . $search . '%';
 }
 if (!empty($categoryFilter)) {
-    $sql .= " AND category = :category";
+    $sql .= " AND i.category = :category";
     $params[':category'] = $categoryFilter;
 }
 if (!empty($stockFilter)) {
     if ($stockFilter === 'low') {
-        $sql .= " AND stockLevel <= reorderPoint AND stockLevel > 0";
+        $sql .= " AND i.stockLevel <= i.reorderPoint AND i.stockLevel > 0";
     } elseif ($stockFilter === 'out') {
-        $sql .= " AND stockLevel = 0";
+        $sql .= " AND i.stockLevel = 0";
     } elseif ($stockFilter === 'in') {
-        $sql .= " AND stockLevel > 0";
+        $sql .= " AND i.stockLevel > 0";
     }
 }
-$sql .= " ORDER BY id ASC";
+$sql .= " ORDER BY i.id ASC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -346,12 +354,12 @@ $messageType = $_GET['type'] ?? '';
             <thead>
                 <tr>
                     <th>Image</th><th>Name</th><th>Category</th><th>SKU</th><th>Stock</th>
-                    <th>Reorder Point</th><th>Cost Price</th><th>Retail Price</th><th>Actions</th>
+                    <th>Reorder Point</th><th>Cost Price</th><th>Retail Price</th><th>Images</th><th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($items)): ?>
-                    <tr><td colspan="8" class="text-center py-4">No items found matching your criteria.</td></tr>
+                    <tr><td colspan="9" class="text-center py-4">No items found matching your criteria.</td></tr>
                 <?php else: ?>
                     <?php foreach ($items as $item): ?>
                     <tr data-id="<?= htmlspecialchars($item['id']) ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
@@ -367,6 +375,11 @@ $messageType = $_GET['type'] ?? '';
                         <td class="editable" data-field="reorderPoint"><?= htmlspecialchars($item['reorderPoint']) ?></td>
                         <td class="editable" data-field="costPrice">$<?= number_format(floatval($item['costPrice'] ?? 0), 2) ?></td>
                         <td class="editable" data-field="retailPrice">$<?= number_format(floatval($item['retailPrice'] ?? 0), 2) ?></td>
+                        <td class="text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= ($item['image_count'] > 0) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' ?>">
+                                <?= intval($item['image_count']) ?>
+                            </span>
+                        </td>
                         <td>
                             <a href="?page=admin&section=inventory&view=<?= htmlspecialchars($item['id']) ?>" class="action-btn view-btn" title="View Item">👁️</a>
                             <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($item['id']) ?>" class="action-btn edit-btn" title="Edit Item">✏️</a>

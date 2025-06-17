@@ -443,7 +443,7 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th></tr></thead>
                                 <tbody>
                                     <?php
-                                        $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN items p ON oi.productId = p.id WHERE oi.orderId = ? LIMIT 6");
+                                        $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN items p ON oi.itemId = p.id WHERE oi.orderId = ? LIMIT 6");
                                         $itemStmt->execute([$viewOrderId]);
                                         $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                         foreach ($orderItems as $it): ?>
@@ -742,11 +742,11 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                             <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th><th class="w-8"></th></tr></thead>
                             <tbody>
                                 <?php
-                                    $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN items p ON oi.productId = p.id WHERE oi.orderId = ?");
+                                                                         $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN items p ON oi.itemId = p.id WHERE oi.orderId = ?");
                                     $itemStmt->execute([$editOrderId]);
                                     $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                     foreach ($orderItems as $it): ?>
-                                    <tr class="item-row" data-item-id="<?= htmlspecialchars($it['id']) ?>" data-product-id="<?= htmlspecialchars($it['productId']) ?>" data-price="<?= $it['price'] ?>">
+                                    <tr class="item-row" data-item-id="<?= htmlspecialchars($it['id']) ?>" data-item-id="<?= htmlspecialchars($it['itemId']) ?>" data-price="<?= $it['price'] ?>">
                                         <td><?= htmlspecialchars($it['name']); ?></td>
                                         <td class="text-center">
                                             <input type="number" class="w-16 border-0 bg-transparent text-center qty-input focus:bg-white focus:border focus:border-blue-300 rounded" 
@@ -766,7 +766,7 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="mt-3 pt-2 border-t text-sm">
                             <div class="flex items-center gap-2 mb-2" id="addItemRow">
                                 <select id="addProductSelect" class="flex-1 border rounded px-2 py-1 text-sm max-w-xs">
-                                    <option value="">-- Add Product --</option>
+                                    <option value="">-- Add Item --</option>
                                     <?php foreach($allProducts as $p): ?>
                                         <option value="<?= htmlspecialchars($p['id']) ?>" data-price="<?= $p['basePrice'] ?>"><?= htmlspecialchars($p['name']) ?> ($<?= number_format($p['basePrice'], 2) ?>)</option>
                                     <?php endforeach; ?>
@@ -966,7 +966,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Collect items table rows
             const items=[];
             document.querySelectorAll('#itemsTable tbody tr.item-row').forEach(async tr=>{
-                const pid=tr.dataset.productId;
+                const pid=tr.dataset.itemId;
                 // Generate streamlined order item ID for frontend use
             let nextItemId = 'OI001'; // Default fallback
             try {
@@ -985,7 +985,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const rowId = tr.dataset.itemId || nextItemId;
                 const qty=parseInt(tr.querySelector('.qty-input').value||'0',10);
-                if(pid && qty>0){ items.push({orderItemId:rowId,productId:pid,quantity:qty}); }
+                if(pid && qty>0){ items.push({orderItemId:rowId,itemId:pid,quantity:qty}); }
             });
 
             const payload = {
@@ -1081,14 +1081,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const sel=document.getElementById('addProductSelect');
             const qtyInput=document.getElementById('addQty');
             const pid=sel.value; const qty=parseInt(qtyInput.value||'0',10);
-            if(!pid||qty<=0){ alert('Select product and qty'); return; }
+            if(!pid||qty<=0){ alert('Select item and qty'); return; }
             
             const selectedOption = sel.options[sel.selectedIndex];
             const price = parseFloat(selectedOption.dataset.price || 0);
             const name = selectedOption.text.split(' - $')[0]; // Remove price from display name
             
-            // If product already exists row, just update qty
-            const existingRow=[...itemsTbody.querySelectorAll('tr')].find(r=>r.dataset.productId===pid);
+            // If item already exists row, just update qty
+            const existingRow=[...itemsTbody.querySelectorAll('tr')].find(r=>r.dataset.itemId===pid);
             if(existingRow){ 
                 existingRow.querySelector('.qty-input').value = qty; 
                 updateRowTotal(existingRow.querySelector('.qty-input'));
@@ -1096,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', function() {
             else{
                 const tr=document.createElement('tr');
                 tr.className='item-row border-b';
-                tr.dataset.productId=pid;
+                tr.dataset.itemId=pid;
                 tr.dataset.price=price;
                 // Generate streamlined order item ID for new items
             let nextItemId = 'OI001'; // Default fallback

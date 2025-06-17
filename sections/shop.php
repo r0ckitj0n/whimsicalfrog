@@ -114,11 +114,11 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                 }
                 
                 // Get product details
-                $productName = htmlspecialchars($product['productName']);
-                $productId = isset($product['productId']) ? htmlspecialchars($product['productId']) : '';
-                $sku = isset($product['sku']) ? htmlspecialchars($product['sku']) : $productId;
-                $price = isset($product['price']) ? htmlspecialchars($product['price']) : '';
-                $description = isset($product['description']) ? htmlspecialchars($product['description']) : '';
+                $productName = htmlspecialchars($product['productName'] ?? '');
+                $productId = isset($product['productId']) ? htmlspecialchars($product['productId'] ?? '') : '';
+                $sku = isset($product['sku']) ? htmlspecialchars($product['sku'] ?? '') : $productId;
+                $price = isset($product['price']) ? htmlspecialchars($product['price'] ?? '') : '';
+                $description = isset($product['description']) ? htmlspecialchars($product['description'] ?? '') : '';
                 $stock = isset($product['stock']) ? (int)$product['stock'] : 0;
                 
                 // Format price
@@ -126,7 +126,7 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                 
                 // Get primary image using database-driven system
                 $primaryImageData = getPrimaryProductImage($sku);
-                $imageUrl = ($primaryImageData && $primaryImageData['file_exists']) ? htmlspecialchars($primaryImageData['image_path']) : 'images/items/placeholder.png';
+                $imageUrl = ($primaryImageData && $primaryImageData['file_exists']) ? htmlspecialchars($primaryImageData['image_path'] ?? '') : 'images/items/placeholder.png';
         ?>
         <div class="product-card" data-category="<?php echo htmlspecialchars($category); ?>">
             <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
@@ -134,7 +134,7 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                 // Display product images using database-driven system
                 if ($primaryImageData && $primaryImageData['file_exists']) {
                     echo '<div class="product-image-container" style="height: 192px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; overflow: hidden;">';
-                    echo '<img src="' . htmlspecialchars($primaryImageData['image_path']) . '" alt="' . htmlspecialchars($primaryImageData['alt_text'] ?: $productName) . '" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.onerror=null; this.src=\'images/items/placeholder.png\';">';
+                    echo '<img src="' . htmlspecialchars($primaryImageData['image_path'] ?? '') . '" alt="' . htmlspecialchars($primaryImageData['alt_text'] ?: $productName) . '" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.onerror=null; this.src=\'images/items/placeholder.png\';">';
                     echo '</div>';
                 } else {
                     // Show placeholder if no images

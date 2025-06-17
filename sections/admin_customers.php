@@ -404,7 +404,7 @@ $messageType = $_GET['type'] ?? '';
         <?php if ($modalMode === 'edit'): ?>
         <form id="customerForm" method="POST" action="#" class="flex flex-col flex-grow overflow-hidden">
             <input type="hidden" name="action" value="update">
-            <input type="hidden" name="customerId" value="<?= htmlspecialchars($editCustomer['id']); ?>">
+                                    <input type="hidden" name="customerId" value="<?= htmlspecialchars($editCustomer['id'] ?? ''); ?>">
         <?php endif; ?>
 
         <div class="modal-form-container gap-5">
@@ -582,14 +582,14 @@ $messageType = $_GET['type'] ?? '';
                                 $statusClass = 'status-' . strtolower($order['status'] ?? 'pending');
                             ?>
                             <div class="order-item mb-3 p-2 bg-white rounded border">
-                                <h5 class="font-medium text-sm">Order #<?= htmlspecialchars($order['id']) ?></h5>
+                                <h5 class="font-medium text-sm">Order #<?= htmlspecialchars($order['id'] ?? '') ?></h5>
                                 <div class="text-xs text-gray-600 mt-1">
                                     <div>Date: <?= $orderDate ?></div>
                                     <div>Total: $<?= number_format(floatval($order['total'] ?? $order['totalAmount'] ?? 0), 2) ?></div>
                                     <div>Status: <span class="<?= $statusClass ?>"><?= htmlspecialchars($order['status'] ?? 'Pending') ?></span></div>
                                     <div>Payment: <?= htmlspecialchars($order['paymentMethod'] ?? 'N/A') ?> - <?= htmlspecialchars($order['paymentStatus'] ?? 'N/A') ?></div>
                                     <?php if (!empty($order['shippingMethod'])): ?>
-                                    <div>Shipping: <?= htmlspecialchars($order['shippingMethod']) ?></div>
+                                    <div>Shipping: <?= htmlspecialchars($order['shippingMethod'] ?? 'N/A') ?></div>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -605,7 +605,7 @@ $messageType = $_GET['type'] ?? '';
                 <?= $modalMode === 'edit' ? 'Cancel' : 'Close' ?>
             </a>
             <?php if ($modalMode === 'view'): ?>
-                <a href="?page=admin&section=customers&edit=<?= htmlspecialchars($editCustomer['id']) ?>" class="brand-button px-4 py-2 rounded text-sm">Edit Customer</a>
+                <a href="?page=admin&section=customers&edit=<?= htmlspecialchars($editCustomer['id'] ?? '') ?>" class="brand-button px-4 py-2 rounded text-sm">Edit Customer</a>
             <?php else: ?>
                 <button type="submit" id="saveCustomerBtn" class="brand-button px-4 py-2 rounded text-sm">
                     <span class="button-text">Save Changes</span>

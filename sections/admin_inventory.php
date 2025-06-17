@@ -362,17 +362,17 @@ $messageType = $_GET['type'] ?? '';
                     <tr><td colspan="9" class="text-center py-4">No items found matching your criteria.</td></tr>
                 <?php else: ?>
                     <?php foreach ($items as $item): ?>
-                    <tr data-id="<?= htmlspecialchars($item['id']) ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
+                    <tr data-id="<?= htmlspecialchars($item['id'] ?? '') ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
                         <td>
-                            <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku']) ?>" style="width:40px;height:40px;">
+                            <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" style="width:40px;height:40px;">
                                 <div class="thumbnail-loading" style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">...</div>
                             </div>
                         </td>
-                        <td class="editable" data-field="name"><?= htmlspecialchars($item['name']) ?></td>
-                        <td class="editable" data-field="category"><?= htmlspecialchars($item['category'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($item['sku']) ?></td> <!-- SKU not typically inline editable -->
-                        <td class="editable" data-field="stockLevel"><?= htmlspecialchars($item['stockLevel']) ?></td>
-                        <td class="editable" data-field="reorderPoint"><?= htmlspecialchars($item['reorderPoint']) ?></td>
+                                            <td class="editable" data-field="name"><?= htmlspecialchars($item['name'] ?? '') ?></td>
+                    <td class="editable" data-field="category"><?= htmlspecialchars($item['category'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($item['sku'] ?? '') ?></td> <!-- SKU not typically inline editable -->
+                    <td class="editable" data-field="stockLevel"><?= htmlspecialchars($item['stockLevel'] ?? '0') ?></td>
+                    <td class="editable" data-field="reorderPoint"><?= htmlspecialchars($item['reorderPoint'] ?? '0') ?></td>
                         <td class="editable" data-field="costPrice">$<?= number_format(floatval($item['costPrice'] ?? 0), 2) ?></td>
                         <td class="editable" data-field="retailPrice">$<?= number_format(floatval($item['retailPrice'] ?? 0), 2) ?></td>
                         <td class="text-center">

@@ -46,7 +46,7 @@ $pending = ($order['paymentStatus'] === 'Pending');
 
     <table class="w-full mb-6 text-sm"><thead><tr class="bg-gray-100"><th class="text-left p-2">Item ID</th><th class="text-left p-2">Item</th><th class="text-center p-2">Qty</th><th class="text-right p-2">Price</th></tr></thead><tbody>
         <?php foreach ($orderItems as $it): ?>
-            <tr class="border-b"><td class="p-2 font-mono text-xs"><?= htmlspecialchars($it['sku']) ?></td><td class="p-2"><?= htmlspecialchars($it['itemName']) ?></td><td class="text-center p-2"><?= $it['quantity'] ?></td><td class="text-right p-2">$<?= number_format($it['price'],2) ?></td></tr>
+            <tr class="border-b"><td class="p-2 font-mono text-xs"><?= htmlspecialchars($it['sku'] ?? '') ?></td><td class="p-2"><?= htmlspecialchars($it['itemName'] ?? 'N/A') ?></td><td class="text-center p-2"><?= $it['quantity'] ?? 0 ?></td><td class="text-right p-2">$<?= number_format($it['price'] ?? 0, 2) ?></td></tr>
         <?php endforeach; ?>
     </tbody></table>
     <div class="flex justify-end mb-6 text-lg font-semibold">

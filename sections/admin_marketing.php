@@ -275,7 +275,7 @@ function generateId($prefix, $length = 3) {
                     <?php if (!empty($topProducts)): ?>
                         <?php foreach ($topProducts as $product): ?>
                             <li>
-                                <span class="product-name"><?php echo htmlspecialchars($product['name']); ?></span>
+                                <span class="product-name"><?php echo htmlspecialchars($product['name'] ?? ''); ?></span>
                                 <span class="product-orders"><?php echo $product['units']; ?> units</span>
                             </li>
                         <?php endforeach; ?>
@@ -303,7 +303,7 @@ function generateId($prefix, $length = 3) {
                             <tbody>
                                 <?php foreach ($recentOrders as $order): ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($order['id']); ?></td>
+                                        <td><?php echo htmlspecialchars($order['id'] ?? ''); ?></td>
                                         <td><?php echo htmlspecialchars($order['username'] ?? $order['email'] ?? 'Unknown'); ?></td>
                                         <td>$<?php echo number_format($order['total'], 2); ?></td>
                                         <td><?php echo date('M d, Y', strtotime($order['date'])); ?></td>

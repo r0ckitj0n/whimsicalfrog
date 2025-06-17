@@ -134,8 +134,8 @@ $messageType = $_GET['type'] ?? '';
                 <tbody>
                 <?php foreach ($unfulfilled as $order): ?>
                     <tr class="hover:bg-gray-50">
-                        <td class="font-medium text-gray-900">#<?= htmlspecialchars($order['id']) ?></td>
-                        <td><?= htmlspecialchars($order['username']) ?></td>
+                        <td class="font-medium text-gray-900">#<?= htmlspecialchars($order['id'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
                         <td class="text-sm text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date']))) ?></td>
                         <td class="order-items-cell" title="<?php
                             $items = $pdo->prepare("SELECT oi.*, COALESCE(p.name, oi.productId) AS name FROM order_items oi LEFT JOIN products p ON oi.productId = p.id WHERE oi.orderId = ?");
@@ -153,7 +153,7 @@ $messageType = $_GET['type'] ?? '';
                             ?>
                         </td>
                         <td>
-                            <select class="order-field-select order-field-update" data-field="status" data-order-id="<?= htmlspecialchars($order['id']) ?>">
+                            <select class="order-field-select order-field-update" data-field="status" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
                                 <option value="Pending" <?= ($order['status'] ?? 'Pending') === 'Pending' ? 'selected' : '' ?>>Pending</option>
                                 <option value="Processing" <?= ($order['status'] ?? '') === 'Processing' ? 'selected' : '' ?>>Processing</option>
                                 <option value="Shipped" <?= ($order['status'] ?? '') === 'Shipped' ? 'selected' : '' ?>>Shipped</option>
@@ -162,7 +162,7 @@ $messageType = $_GET['type'] ?? '';
                             </select>
                         </td>
                         <td>
-                            <select class="order-field-select order-field-update" data-field="paymentMethod" data-order-id="<?= htmlspecialchars($order['id']) ?>">
+                            <select class="order-field-select order-field-update" data-field="paymentMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
                                 <option value="Credit Card" <?= ($order['paymentMethod'] ?? 'Credit Card') === 'Credit Card' ? 'selected' : '' ?>>Credit Card</option>
                                 <option value="Cash" <?= ($order['paymentMethod'] ?? '') === 'Cash' ? 'selected' : '' ?>>Cash</option>
                                 <option value="Check" <?= ($order['paymentMethod'] ?? '') === 'Check' ? 'selected' : '' ?>>Check</option>
@@ -172,7 +172,7 @@ $messageType = $_GET['type'] ?? '';
                             </select>
                         </td>
                         <td>
-                            <select class="order-field-select order-field-update" data-field="shippingMethod" data-order-id="<?= htmlspecialchars($order['id']) ?>">
+                            <select class="order-field-select order-field-update" data-field="shippingMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
                                 <option value="Customer Pickup" <?= ($order['shippingMethod'] ?? 'Customer Pickup') === 'Customer Pickup' ? 'selected' : '' ?>>Customer Pickup</option>
                                 <option value="Local Delivery" <?= ($order['shippingMethod'] ?? '') === 'Local Delivery' ? 'selected' : '' ?>>Local Delivery</option>
                                 <option value="USPS" <?= ($order['shippingMethod'] ?? '') === 'USPS' ? 'selected' : '' ?>>USPS</option>
@@ -181,7 +181,7 @@ $messageType = $_GET['type'] ?? '';
                             </select>
                         </td>
                         <td>
-                            <select class="order-field-select order-field-update" data-field="paymentStatus" data-order-id="<?= htmlspecialchars($order['id']) ?>">
+                            <select class="order-field-select order-field-update" data-field="paymentStatus" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
                                 <option value="Pending" <?= ($order['paymentStatus'] ?? 'Pending') === 'Pending' ? 'selected' : '' ?>>Pending</option>
                                 <option value="Received" <?= ($order['paymentStatus'] ?? '') === 'Received' ? 'selected' : '' ?>>Received</option>
                                 <option value="Refunded" <?= ($order['paymentStatus'] ?? '') === 'Refunded' ? 'selected' : '' ?>>Refunded</option>
@@ -209,10 +209,10 @@ $messageType = $_GET['type'] ?? '';
                             <?php
                             $notesBlock = [];
                             if (!empty($order['fulfillmentNotes'])) {
-                                $notesBlock[] = '<span class="font-semibold">Fulfillment:</span> ' . htmlspecialchars($order['fulfillmentNotes']);
-                            }
-                            if (!empty($order['paymentNotes'])) {
-                                $notesBlock[] = '<span class="font-semibold">Payment:</span> ' . htmlspecialchars($order['paymentNotes']);
+                                                            $notesBlock[] = '<span class="font-semibold">Fulfillment:</span> ' . htmlspecialchars($order['fulfillmentNotes'] ?? '');
+                        }
+                        if (!empty($order['paymentNotes'])) {
+                            $notesBlock[] = '<span class="font-semibold">Payment:</span> ' . htmlspecialchars($order['paymentNotes'] ?? '');
                             }
                             echo !empty($notesBlock) ? implode('<br>', $notesBlock) : '-';
                             ?>

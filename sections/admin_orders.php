@@ -337,27 +337,27 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php else: ?>
                     <?php foreach ($orders as $order): ?>
                     <tr>
-                        <td style="font-family: monospace; font-size: 0.85rem;"><?= htmlspecialchars($order['id']) ?></td>
-                        <td><?= htmlspecialchars($order['username']) ?></td>
-                        <td><?= htmlspecialchars(date('M j, Y', strtotime($order['date']))) ?></td>
-                        <td>$<?= number_format(floatval($order['total']), 2) ?></td>
-                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id']) ?>" data-field="status" data-type="select">
-                            <span class="status-badge status-<?= strtolower(htmlspecialchars($order['status'])) ?>">
-                                <?= htmlspecialchars($order['status']) ?>
+                        <td style="font-family: monospace; font-size: 0.85rem;"><?= htmlspecialchars($order['id'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
+                        <td>$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
+                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="status" data-type="select">
+                            <span class="status-badge status-<?= strtolower(htmlspecialchars($order['status'] ?? 'pending')) ?>">
+                                <?= htmlspecialchars($order['status'] ?? 'Pending') ?>
                             </span>
                         </td>
-                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id']) ?>" data-field="paymentMethod" data-type="select"><?= htmlspecialchars($order['paymentMethod']) ?></td>
-                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id']) ?>" data-field="shippingMethod" data-type="select"><?= htmlspecialchars($order['shippingMethod'] ?? 'Standard') ?></td>
-                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id']) ?>" data-field="paymentStatus" data-type="select">
-                            <span class="payment-status-badge payment-status-<?= strtolower(htmlspecialchars($order['paymentStatus'])) ?>">
-                                <?= htmlspecialchars($order['paymentStatus']) ?>
+                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentMethod" data-type="select"><?= htmlspecialchars($order['paymentMethod'] ?? 'N/A') ?></td>
+                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="shippingMethod" data-type="select"><?= htmlspecialchars($order['shippingMethod'] ?? 'Standard') ?></td>
+                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentStatus" data-type="select">
+                            <span class="payment-status-badge payment-status-<?= strtolower(htmlspecialchars($order['paymentStatus'] ?? 'pending')) ?>">
+                                <?= htmlspecialchars($order['paymentStatus'] ?? 'Pending') ?>
                             </span>
                         </td>
-                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id']) ?>" data-field="paymentDate" data-type="date"><?= !empty($order['paymentDate']) ? htmlspecialchars(date('Y-m-d', strtotime($order['paymentDate']))) : '' ?></td>
+                        <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentDate" data-type="date"><?= !empty($order['paymentDate']) ? htmlspecialchars(date('Y-m-d', strtotime($order['paymentDate']))) : '' ?></td>
                         <td>
-                            <a href="?page=admin&section=orders&view=<?= htmlspecialchars($order['id']) ?>" class="action-btn view-btn" title="View Order">👁️</a>
-                            <a href="?page=admin&section=orders&edit=<?= htmlspecialchars($order['id']) ?>" class="action-btn edit-btn" title="Edit Order">✏️</a>
-                            <button class="action-btn delete-btn delete-order" data-id="<?= htmlspecialchars($order['id']) ?>" title="Delete Order">🗑️</button>
+                            <a href="?page=admin&section=orders&view=<?= htmlspecialchars($order['id'] ?? '') ?>" class="action-btn view-btn" title="View Order">👁️</a>
+                            <a href="?page=admin&section=orders&edit=<?= htmlspecialchars($order['id'] ?? '') ?>" class="action-btn edit-btn" title="Edit Order">✏️</a>
+                            <button class="action-btn delete-btn delete-order" data-id="<?= htmlspecialchars($order['id'] ?? '') ?>" title="Delete Order">🗑️</button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -393,21 +393,21 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="order-details-grid">
                                 <div class="order-detail-item">
                                     <div class="order-detail-label">Order ID</div>
-                                    <div class="order-detail-value"><?= htmlspecialchars($orderDetails['id']) ?></div>
+                                    <div class="order-detail-value"><?= htmlspecialchars($orderDetails['id'] ?? '') ?></div>
                                 </div>
                                 <div class="order-detail-item">
                                     <div class="order-detail-label">Date</div>
-                                    <div class="order-detail-value"><?= htmlspecialchars(date('F j, Y', strtotime($orderDetails['date']))) ?></div>
+                                    <div class="order-detail-value"><?= htmlspecialchars(date('F j, Y', strtotime($orderDetails['date'] ?? 'now'))) ?></div>
                                 </div>
                                 <div class="order-detail-item">
                                     <div class="order-detail-label">Customer</div>
-                                    <div class="order-detail-value"><?= htmlspecialchars($orderDetails['username']) ?></div>
+                                    <div class="order-detail-value"><?= htmlspecialchars($orderDetails['username'] ?? 'N/A') ?></div>
                                 </div>
                                 <div class="order-detail-item">
                                     <div class="order-detail-label">Status</div>
                                     <div class="order-detail-value">
-                                        <span class="status-badge status-<?= strtolower(htmlspecialchars($orderDetails['status'])) ?>">
-                                            <?= htmlspecialchars($orderDetails['status']) ?>
+                                        <span class="status-badge status-<?= strtolower(htmlspecialchars($orderDetails['status'] ?? 'pending')) ?>">
+                                            <?= htmlspecialchars($orderDetails['status'] ?? 'Pending') ?>
                                         </span>
                                     </div>
                                 </div>
@@ -435,7 +435,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php if (($orderDetails['paymentMethod'] ?? '') === 'Check' && !empty($orderDetails['checkNumber'])): ?>
                                     <div>
                                         <label class="block text-gray-700 text-sm font-medium mb-1">Check #</label>
-                                        <p class="text-sm text-gray-900 leading-tight"><?= htmlspecialchars($orderDetails['checkNumber']); ?></p>
+                                        <p class="text-sm text-gray-900 leading-tight"><?= htmlspecialchars($orderDetails['checkNumber'] ?? ''); ?></p>
                                     </div>
                                     <?php endif; ?>
                                 </div>
@@ -452,7 +452,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php if (!empty($orderDetails['trackingNumber'])): ?>
                                     <div class="order-detail-item mb-4">
                                         <div class="order-detail-label">Tracking Number</div>
-                                        <div class="order-detail-value"><?= htmlspecialchars($orderDetails['trackingNumber']) ?></div>
+                                        <div class="order-detail-value"><?= htmlspecialchars($orderDetails['trackingNumber'] ?? '') ?></div>
                                     </div>
                                     <?php endif; ?>
                                     <div class="order-detail-item">
@@ -623,15 +623,15 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="order-details-grid">
                                 <div class="order-detail-item">
                                     <div class="order-detail-label">Order ID</div>
-                                    <div class="order-detail-value"><?= htmlspecialchars($orderDetails['id']) ?></div>
+                                    <div class="order-detail-value"><?= htmlspecialchars($orderDetails['id'] ?? '') ?></div>
                                 </div>
                                 <div class="order-detail-item">
                                     <div class="order-detail-label">Date</div>
-                                    <div class="order-detail-value"><?= htmlspecialchars(date('F j, Y', strtotime($orderDetails['date']))) ?></div>
+                                    <div class="order-detail-value"><?= htmlspecialchars(date('F j, Y', strtotime($orderDetails['date'] ?? 'now'))) ?></div>
                                 </div>
                                 <div class="order-detail-item">
                                     <div class="order-detail-label">Customer</div>
-                                    <div class="order-detail-value"><?= htmlspecialchars($orderDetails['username']) ?></div>
+                                    <div class="order-detail-value"><?= htmlspecialchars($orderDetails['username'] ?? 'N/A') ?></div>
                                 </div>
                                 <div class="order-detail-item">
                                     <div class="order-detail-label">Status</div>

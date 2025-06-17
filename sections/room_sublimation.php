@@ -267,14 +267,14 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                         <?php foreach ($sublimationProducts as $index => $product): ?>
                             <?php $area_class = 'area-' . ($index + 1); ?>
                             <div class="product-icon <?php echo $area_class; ?>" 
-                                 data-product-id="<?php echo htmlspecialchars($product['id']); ?>"
+                                 data-product-id="<?php echo htmlspecialchars($product['id'] ?? ''); ?>"
                                  onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
                                  onmouseleave="hidePopup()">
                                 <?php 
                                 // Use new image system with fallback to old system
                                 $primaryImage = getPrimaryProductImage($product['id']);
                                 if ($primaryImage && $primaryImage['file_exists']) {
-                                    echo '<img src="' . htmlspecialchars($primaryImage['image_path']) . '" alt="' . htmlspecialchars($product['name']) . '">';
+                                    echo '<img src="' . htmlspecialchars($primaryImage['image_path'] ?? '') . '" alt="' . htmlspecialchars($product['name'] ?? '') . '">';
                                 } else {
                                     echo getImageTag($product['image'] ?? 'images/items/placeholder.png', $product['name']);
                                 }

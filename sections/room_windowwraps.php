@@ -562,7 +562,7 @@ async function openQuantityModal() {
     
     // Fetch fresh product data from database to get current image path
     try {
-        const response = await fetch('api/get_products.php', {
+        const response = await fetch('api/get_items.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

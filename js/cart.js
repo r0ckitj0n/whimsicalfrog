@@ -19,7 +19,7 @@ class ShoppingCart {
             if (itemSkus.length === 0) return;
 
             // Fetch current item data from database
-            const response = await fetch('api/get_products.php', {
+            const response = await fetch('api/get_items.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

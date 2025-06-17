@@ -16,7 +16,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
 $pdo = new PDO($dsn, $user, $pass, $options);
 
 // Fetch distinct categories used either in products or inventory
-$stmt = $pdo->query("SELECT DISTINCT productType AS category FROM products WHERE productType IS NOT NULL ORDER BY productType");
+$stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
 $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 // Function to generate category code (same as in process_category_action.php)

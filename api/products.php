@@ -19,7 +19,7 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     // Query to get all products
-    $stmt = $pdo->query('SELECT * FROM products');
+            $stmt = $pdo->query('SELECT * FROM items');
     $products = $stmt->fetchAll();
     
     // Format prices as numbers instead of strings

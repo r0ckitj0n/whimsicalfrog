@@ -51,7 +51,7 @@ try {
     $inventoryData = $inventoryStmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Fetch products data directly from database
-    $productsStmt = $pdo->query('SELECT * FROM products');
+    $productsStmt = $pdo->query('SELECT * FROM items');
     $productsData = $productsStmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Close the connection

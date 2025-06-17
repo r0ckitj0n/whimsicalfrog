@@ -32,7 +32,7 @@ try {
             
             // Query to get specific products (simplified - no product_images join for now)
             $sql = "SELECT p.*
-                    FROM products p 
+                    FROM items p 
                     WHERE p.id IN ($placeholders)";
             
             $stmt = $pdo->prepare($sql);
@@ -57,7 +57,7 @@ try {
     } else {
         // GET request - return all products (for backward compatibility)
         $sql = "SELECT p.*
-                FROM products p";
+                FROM items p";
         
         $stmt = $pdo->query($sql);
         $products = $stmt->fetchAll();

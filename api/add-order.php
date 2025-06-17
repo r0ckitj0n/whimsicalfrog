@@ -75,7 +75,7 @@ try {
     $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $orderStatus, $date, $paymentStatus]);
     $itemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, productId, quantity, price) VALUES (?,?,?,?,?)");
     $updateInv = $pdo->prepare("UPDATE inventory SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE productId = ?");
-    $priceStmt = $pdo->prepare("SELECT basePrice FROM products WHERE id = ?");
+            $priceStmt = $pdo->prepare("SELECT retailPrice as basePrice FROM items WHERE id = ?");
     
     // Get the next order item ID sequence number
     $itemCountStmt = $pdo->prepare('SELECT COUNT(*) FROM order_items');

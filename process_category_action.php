@@ -41,7 +41,7 @@ function cat_code($cat) {
 function updateNamingScheme($pdo) {
     try {
         // Get all current categories
-        $stmt = $pdo->query("SELECT DISTINCT productType FROM products WHERE productType IS NOT NULL ORDER BY productType");
+        $stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
         $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
         
         // Generate updated category mapping
@@ -99,7 +99,7 @@ try {
         
     } elseif ($action === 'rename') {
         // Check if new category name already exists
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM products WHERE productType = ?');
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE category = ?');
         $stmt->execute([$newCategory]);
         if ($stmt->fetchColumn() > 0) {
             echo json_encode(['error' => "Category '{$newCategory}' already exists"]);

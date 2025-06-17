@@ -357,7 +357,7 @@ app.post('/api/add-order', async (req, res) => {
 app.get('/api/products', async (req, res) => {
     try {
         const connection = await mysql.createConnection(dbConfig);
-        const [rows] = await connection.execute('SELECT * FROM products');
+        const [rows] = await connection.execute('SELECT * FROM items');
         await connection.end();
         // Add a 'price' field for frontend compatibility (alias for basePrice)
         // and ensure the price is always a number, defaulting to 0 if null.
@@ -416,7 +416,7 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
         if (productId) {
             // Fetch product name from DB for filename
             const connection = await mysql.createConnection(dbConfig);
-            const [rows] = await connection.execute('SELECT name FROM products WHERE id = ?', [id]);
+            const [rows] = await connection.execute('SELECT name FROM items WHERE id = ?', [id]);
             let productName = rows.length > 0 ? rows[0].name : 'unknown';
             await connection.end();
             // Sanitize product name for filename
@@ -529,7 +529,7 @@ app.post('/api/add-inventory', async (req, res) => {
         const connection = await mysql.createConnection(dbConfig);
 
         // Check if product exists
-        const [products] = await connection.execute('SELECT id FROM products WHERE id = ?', [productId]);
+                    const [products] = await connection.execute('SELECT id FROM items WHERE id = ?', [productId]);
         if (products.length === 0) {
             await connection.end();
             return res.status(404).json({ error: 'Product not found' });

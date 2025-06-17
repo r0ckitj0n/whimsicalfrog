@@ -44,7 +44,7 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 
-$prodStmt = $pdo->query("SELECT id, name, basePrice FROM products ORDER BY name");
+$prodStmt = $pdo->query("SELECT id, name, retailPrice as basePrice FROM items ORDER BY name");
 $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -443,7 +443,7 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th></tr></thead>
                                 <tbody>
                                     <?php
-                                        $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.productId = p.id WHERE oi.orderId = ? LIMIT 6");
+                                        $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN items p ON oi.productId = p.id WHERE oi.orderId = ? LIMIT 6");
                                         $itemStmt->execute([$viewOrderId]);
                                         $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                         foreach ($orderItems as $it): ?>
@@ -742,7 +742,7 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                             <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th><th class="w-8"></th></tr></thead>
                             <tbody>
                                 <?php
-                                    $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.productId = p.id WHERE oi.orderId = ?");
+                                    $itemStmt = $pdo->prepare("SELECT oi.*, p.name FROM order_items oi JOIN items p ON oi.productId = p.id WHERE oi.orderId = ?");
                                     $itemStmt->execute([$editOrderId]);
                                     $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                     foreach ($orderItems as $it): ?>

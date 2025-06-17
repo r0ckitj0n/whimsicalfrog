@@ -60,7 +60,7 @@ try {
         $itemCountStmt->execute();
         $itemCount = $itemCountStmt->fetchColumn();
         
-        $insert = $pdo->prepare('INSERT INTO order_items (id, orderId, productId, quantity, price) VALUES (?,?,?,?, (SELECT basePrice FROM products WHERE id = ?))');
+        $insert = $pdo->prepare('INSERT INTO order_items (id, orderId, productId, quantity, price) VALUES (?,?,?,?, (SELECT retailPrice FROM items WHERE id = ?))');
         $itemIndex = 0;
         foreach ($input['items'] as $row) {
             if (empty($row['productId']) || empty($row['quantity'])) continue;

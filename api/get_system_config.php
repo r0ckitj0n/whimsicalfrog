@@ -92,9 +92,9 @@ try {
                 'last_order_date' => $lastOrderDate
             ],
             'database_tables' => [
-                'core_tables' => array_filter($tables, function($table) {
+                'core_tables' => array_values(array_filter($tables, function($table) {
                     return in_array($table, ['items', 'item_images', 'orders', 'order_items']);
-                }),
+                })),
                 'all_tables' => $tables,
                 'cost_breakdown_tables' => $costTables
             ],

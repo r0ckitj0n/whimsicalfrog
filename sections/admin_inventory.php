@@ -26,7 +26,7 @@ unset($_SESSION['field_errors']);
 // Check if we're in view mode
 if (isset($_GET['view']) && !empty($_GET['view'])) {
     $itemIdToView = $_GET['view'];
-    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.sku = i.sku WHERE i.id = ?");
+    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE i.id = ?");
     $stmt->execute([$itemIdToView]);
     $fetchedViewItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -70,7 +70,7 @@ if (isset($_GET['view']) && !empty($_GET['view'])) {
 // Check if we're in edit mode
 elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
     $itemIdToEdit = $_GET['edit'];
-    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.sku = i.sku WHERE i.id = ?");
+    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE i.id = ?");
     $stmt->execute([$itemIdToEdit]);
     $fetchedEditItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -139,7 +139,7 @@ $search = $_GET['search'] ?? '';
 $categoryFilter = $_GET['category'] ?? '';
 $stockFilter = $_GET['stock'] ?? '';
 
-$sql = "SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.sku = i.sku WHERE 1=1";
+$sql = "SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE 1=1";
 $params = [];
 
 if (!empty($search)) {

@@ -41,21 +41,21 @@ try {
     
     // Special handling for category field
     if ($field === 'category') {
-        // Get the SKU for this inventory item
-        $skuStmt = $pdo->prepare("SELECT sku FROM inventory WHERE id = ?");
-        $skuStmt->execute([$inventoryId]);
-        $skuRow = $skuStmt->fetch(PDO::FETCH_ASSOC);
+        // Get the productId for this inventory item
+        $productIdStmt = $pdo->prepare("SELECT productId FROM inventory WHERE id = ?");
+        $productIdStmt->execute([$inventoryId]);
+        $productIdRow = $productIdStmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$skuRow) {
+        if (!$productIdRow) {
             echo json_encode(['success'=>false,'error'=>'Inventory item not found']);
             exit;
         }
         
-        $sku = $skuRow['sku'];
+        $productId = $productIdRow['productId'];
         
         // Update the products table with the new category
-        $prodStmt = $pdo->prepare("UPDATE products SET productType = ? WHERE sku = ?");
-        $prodStmt->execute([$value, $sku]);
+        $prodStmt = $pdo->prepare("UPDATE products SET productType = ? WHERE id = ?");
+        $prodStmt->execute([$value, $productId]);
         
         echo json_encode(['success'=>true,'message'=>'Category updated successfully']);
     } else {

@@ -570,7 +570,10 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                             <button type="button" class="add-cost-btn" onclick="addCostItem('<?= $costType; ?>')">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 mr-1"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                                Add <?= ucfirst(substr($costType, 0, -1)); ?>
+                                Add <?php 
+                                    $labels = ['materials' => 'Material', 'labor' => 'Labor', 'energy' => 'Energy', 'equipment' => 'Equipment'];
+                                    echo $labels[$costType] ?? ucfirst($costType);
+                                ?>
                             </button>
                         </div>
                         <?php endforeach; ?>

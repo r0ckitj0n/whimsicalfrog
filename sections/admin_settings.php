@@ -447,6 +447,211 @@ function closeIdLegendModal() {
 
 function openSystemConfigModal() {
     document.getElementById('systemConfigModal').style.display = 'block';
+    loadSystemConfiguration();
+}
+
+async function loadSystemConfiguration() {
+    const loadingDiv = document.getElementById('systemConfigLoading');
+    const contentDiv = document.getElementById('systemConfigContent');
+    
+    // Show loading state
+    loadingDiv.style.display = 'block';
+    
+    try {
+        const response = await fetch('/api/get_system_config.php');
+        const result = await response.json();
+        
+        if (result.success) {
+            const data = result.data;
+            
+            // Hide loading and populate content
+            loadingDiv.style.display = 'none';
+            contentDiv.innerHTML = generateSystemConfigHTML(data);
+        } else {
+            throw new Error(result.error || 'Failed to load system configuration');
+        }
+    } catch (error) {
+        console.error('Error loading system configuration:', error);
+        loadingDiv.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-red-500 mb-3">⚠️</div>
+                <p class="text-red-600">Failed to load system configuration</p>
+                <p class="text-sm text-gray-500">${error.message}</p>
+                <button onclick="loadSystemConfiguration()" class="mt-3 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+function generateSystemConfigHTML(data) {
+    const lastOrderDate = data.statistics.last_order_date ? 
+        new Date(data.statistics.last_order_date).toLocaleDateString() : 'No orders yet';
+    
+    return `
+        <!-- Current System Architecture -->
+        <div class="bg-green-50 border-l-4 border-green-400 p-4">
+            <h4 class="font-semibold text-green-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+                Current System Architecture (Live Data)
+            </h4>
+            <div class="space-y-3 text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h5 class="font-semibold text-green-700 mb-2">🎯 Primary Identifier</h5>
+                        <p class="text-green-600"><strong>${data.system_info.primary_identifier}</strong> - Human-readable codes</p>
+                        <p class="text-xs text-green-600">Format: ${data.system_info.sku_format}</p>
+                        <p class="text-xs text-green-600">Examples: ${data.sample_skus.slice(0, 3).join(', ')}</p>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold text-green-700 mb-2">🏷️ Main Entity</h5>
+                        <p class="text-green-600"><strong>${data.system_info.main_entity}</strong> (formerly "products")</p>
+                        <p class="text-xs text-green-600">All inventory and shop items</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Statistics -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+            <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Live System Statistics
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div class="text-center p-3 bg-blue-100 rounded">
+                    <div class="font-bold text-2xl text-blue-700">${data.statistics.total_items}</div>
+                    <div class="text-xs text-blue-600">Total Items</div>
+                </div>
+                <div class="text-center p-3 bg-blue-100 rounded">
+                    <div class="font-bold text-2xl text-blue-700">${data.statistics.total_images}</div>
+                    <div class="text-xs text-blue-600">Total Images</div>
+                </div>
+                <div class="text-center p-3 bg-blue-100 rounded">
+                    <div class="font-bold text-2xl text-blue-700">${data.statistics.total_orders}</div>
+                    <div class="text-xs text-blue-600">Total Orders</div>
+                </div>
+                <div class="text-center p-3 bg-blue-100 rounded">
+                    <div class="font-bold text-2xl text-blue-700">${data.statistics.categories_count}</div>
+                    <div class="text-xs text-blue-600">Categories</div>
+                </div>
+            </div>
+            <div class="mt-3 text-xs text-blue-600">
+                <strong>Last Order:</strong> ${lastOrderDate} | 
+                <strong>Database:</strong> ${data.system_info.database_host}
+            </div>
+        </div>
+
+        <!-- Database Schema -->
+        <div class="bg-purple-50 border-l-4 border-purple-400 p-4">
+            <h4 class="font-semibold text-purple-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"></path>
+                </svg>
+                Database Tables & Structure
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h5 class="font-semibold text-purple-700 mb-2">Core Tables</h5>
+                    <ul class="space-y-1 text-purple-600">
+                        ${data.database_tables.core_tables.map(table => 
+                            `<li><code class="bg-purple-100 px-2 py-1 rounded">${table}</code></li>`
+                        ).join('')}
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold text-purple-700 mb-2">Cost Breakdown Tables</h5>
+                    <ul class="space-y-1 text-purple-600 text-xs">
+                        ${Object.entries(data.database_tables.cost_breakdown_tables).map(([table, exists]) => 
+                            `<li><code class="bg-purple-100 px-1 py-0.5 rounded">${table}</code> ${exists ? '✅' : '❌'}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SKU Categories -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <h4 class="font-semibold text-yellow-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                </svg>
+                Active Categories & SKU Codes
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                ${Object.entries(data.category_codes).map(([category, code]) => {
+                    const isActive = data.categories.includes(category);
+                    return `
+                        <div class="text-center p-2 ${isActive ? 'bg-yellow-100' : 'bg-gray-100'} rounded">
+                            <div class="font-semibold ${isActive ? 'text-yellow-700' : 'text-gray-500'}">${code}</div>
+                            <div class="text-xs ${isActive ? 'text-yellow-600' : 'text-gray-400'}">${category}</div>
+                            ${isActive ? '<div class="text-xs text-green-600">✅ Active</div>' : '<div class="text-xs text-gray-400">Inactive</div>'}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+
+        <!-- File Structure -->
+        <div class="bg-indigo-50 border-l-4 border-indigo-400 p-4">
+            <h4 class="font-semibold text-indigo-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path>
+                </svg>
+                File Structure & API Endpoints
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h5 class="font-semibold text-indigo-700 mb-2">Image Storage</h5>
+                    <ul class="space-y-1 text-indigo-600">
+                        <li><code class="bg-indigo-100 px-2 py-1 rounded">${data.system_info.image_directory}</code> - All item images</li>
+                        <li>Format: [SKU][Letter].[ext]</li>
+                        <li>Example: ${data.sample_skus[0] || 'WF-TS-001'}A.webp</li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold text-indigo-700 mb-2">API Endpoints</h5>
+                    <ul class="space-y-1 text-indigo-600 text-xs">
+                        ${data.api_endpoints.map(endpoint => 
+                            `<li><code class="bg-indigo-100 px-1 py-0.5 rounded">${endpoint}</code></li>`
+                        ).join('')}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Migration Status -->
+        <div class="bg-gray-50 border-l-4 border-gray-400 p-4">
+            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Migration Status (Completed)
+            </h4>
+            <div class="text-sm text-gray-600 space-y-2">
+                ${Object.entries(data.migration_status).map(([key, completed]) => {
+                    const labels = {
+                        'products_to_items': 'Database migration: products → items terminology',
+                        'product_images_to_item_images': 'Table rename: product_images → item_images',
+                        'sku_only_system': 'SKU-only system: Removed dual itemId/SKU complexity',
+                        'image_path_migration': 'Image migration: images/products/ → images/items/',
+                        'terminology_cleanup': 'Code updates: All files use item terminology'
+                    };
+                    return `
+                        <div class="flex items-center">
+                            <span class="${completed ? 'text-green-500' : 'text-red-500'} mr-2">${completed ? '✅' : '❌'}</span>
+                            <span>${labels[key] || key}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
 }
 
 function closeSystemConfigModal() {
@@ -3795,159 +4000,14 @@ function escapeHtml(text) {
             </div>
             
             <!-- Modal Content -->
-            <div class="space-y-6">
-                <!-- Current System Architecture -->
-                <div class="bg-green-50 border-l-4 border-green-400 p-4">
-                    <h4 class="font-semibold text-green-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"></path>
-                        </svg>
-                        Current System Architecture (Post-Migration)
-                    </h4>
-                    <div class="space-y-3 text-sm">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <h5 class="font-semibold text-green-700 mb-2">🎯 Primary Identifier</h5>
-                                <p class="text-green-600"><strong>SKU</strong> - Human-readable codes</p>
-                                <p class="text-xs text-green-600">Format: WF-[CATEGORY]-[NUMBER]</p>
-                                <p class="text-xs text-green-600">Examples: WF-TS-001, WF-TU-002</p>
-                            </div>
-                            <div>
-                                <h5 class="font-semibold text-green-700 mb-2">🏷️ Main Entity</h5>
-                                <p class="text-green-600"><strong>Items</strong> (formerly "products")</p>
-                                <p class="text-xs text-green-600">All inventory and shop items</p>
-                            </div>
-                        </div>
-                    </div>
+            <div class="space-y-6" id="systemConfigContent">
+                <!-- Loading state -->
+                <div class="text-center py-8" id="systemConfigLoading">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-3"></div>
+                    <p class="text-gray-600">Loading system configuration...</p>
                 </div>
-
-                <!-- Database Schema -->
-                <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
-                    <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"></path>
-                        </svg>
-                        Database Tables & Structure
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <h5 class="font-semibold text-blue-700 mb-2">Core Tables</h5>
-                            <ul class="space-y-1 text-blue-600">
-                                <li><code class="bg-blue-100 px-2 py-1 rounded">items</code> - Main inventory table</li>
-                                <li><code class="bg-blue-100 px-2 py-1 rounded">item_images</code> - Image management</li>
-                                <li><code class="bg-blue-100 px-2 py-1 rounded">order_items</code> - Order line items</li>
-                                <li><code class="bg-blue-100 px-2 py-1 rounded">orders</code> - Customer orders</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h5 class="font-semibold text-blue-700 mb-2">Key Relationships</h5>
-                            <ul class="space-y-1 text-blue-600 text-xs">
-                                <li>items.sku → order_items.sku</li>
-                                <li>items.sku → item_images.sku</li>
-                                <li>orders.id → order_items.orderId</li>
-                                <li>All foreign keys properly constrained</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SKU Categories -->
-                <div class="bg-purple-50 border-l-4 border-purple-400 p-4">
-                    <h4 class="font-semibold text-purple-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
-                        </svg>
-                        SKU Category Codes
-                    </h4>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                        <div class="text-center p-2 bg-purple-100 rounded">
-                            <div class="font-semibold text-purple-700">TS</div>
-                            <div class="text-xs text-purple-600">T-Shirts</div>
-                        </div>
-                        <div class="text-center p-2 bg-purple-100 rounded">
-                            <div class="font-semibold text-purple-700">TU</div>
-                            <div class="text-xs text-purple-600">Tumblers</div>
-                        </div>
-                        <div class="text-center p-2 bg-purple-100 rounded">
-                            <div class="font-semibold text-purple-700">AR</div>
-                            <div class="text-xs text-purple-600">Artwork</div>
-                        </div>
-                        <div class="text-center p-2 bg-purple-100 rounded">
-                            <div class="font-semibold text-purple-700">SU</div>
-                            <div class="text-xs text-purple-600">Sublimation</div>
-                        </div>
-                        <div class="text-center p-2 bg-purple-100 rounded">
-                            <div class="font-semibold text-purple-700">WW</div>
-                            <div class="text-xs text-purple-600">Window Wraps</div>
-                        </div>
-                        <div class="text-center p-2 bg-purple-100 rounded">
-                            <div class="font-semibold text-purple-700">GN</div>
-                            <div class="text-xs text-purple-600">General</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- File Structure -->
-                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                    <h4 class="font-semibold text-yellow-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path>
-                        </svg>
-                        File Structure & Naming
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <h5 class="font-semibold text-yellow-700 mb-2">Image Storage</h5>
-                            <ul class="space-y-1 text-yellow-600">
-                                <li><code class="bg-yellow-100 px-2 py-1 rounded">images/items/</code> - All item images</li>
-                                <li><code class="bg-yellow-100 px-2 py-1 rounded">placeholder.png</code> - Default fallback</li>
-                                <li>Format: [SKU][Letter].[ext]</li>
-                                <li>Example: WF-TS-001A.webp</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h5 class="font-semibold text-yellow-700 mb-2">API Endpoints</h5>
-                            <ul class="space-y-1 text-yellow-600 text-xs">
-                                <li><code class="bg-yellow-100 px-1 py-0.5 rounded">/api/items</code></li>
-                                <li><code class="bg-yellow-100 px-1 py-0.5 rounded">/api/get_item_images.php</code></li>
-                                <li><code class="bg-yellow-100 px-1 py-0.5 rounded">/api/delete_item_image.php</code></li>
-                                <li><code class="bg-yellow-100 px-1 py-0.5 rounded">/api/set_primary_image.php</code></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Migration Status -->
-                <div class="bg-gray-50 border-l-4 border-gray-400 p-4">
-                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                        </svg>
-                        Migration Status (Completed)
-                    </h4>
-                    <div class="text-sm text-gray-600 space-y-2">
-                        <div class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            <span>Database migration: products → items terminology</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            <span>Table rename: product_images → item_images</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            <span>SKU-only system: Removed dual itemId/SKU complexity</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            <span>Code updates: All files use item terminology</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            <span>Image migration: images/products/ → images/items/</span>
-                        </div>
-                    </div>
-                </div>
+                
+                <!-- Content will be loaded dynamically here -->
             </div>
         </div>
     </div>

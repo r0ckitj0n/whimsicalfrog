@@ -4079,6 +4079,15 @@ function escapeHtml(text) {
                 </button>
             </div>
             
+            <!-- Database Backup Button -->
+            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-center">
+                    <button onclick="showDatabaseBackupModal()" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors duration-200">
+                        🗄️ Backup Website Database
+                    </button>
+                </div>
+            </div>
+            
             <!-- Modal Content -->
             <div class="space-y-6" id="databaseMaintenanceContent">
                 <!-- Loading state -->
@@ -4399,6 +4408,103 @@ function escapeHtml(text) {
                 <div class="flex items-center justify-end space-x-3">
                     <button id="backupProgressCloseBtn" onclick="closeBackupProgressModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors hidden">
                         Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Database Backup Modal -->
+<div id="databaseBackupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white text-lg">🗄️</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900">Backup Website Database</h3>
+                    </div>
+                    <button onclick="closeDatabaseBackupModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Body -->
+            <div class="px-6 py-4">
+                <div class="mb-4">
+                    <p class="text-gray-600 text-sm mb-4">Create a backup of your website database including all tables and data. Choose your backup destination(s):</p>
+                    
+                    <!-- Backup Options -->
+                    <div class="space-y-3 mb-6">
+                        <label class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <input type="checkbox" id="dbBackupToComputer" class="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2" checked onchange="updateDatabaseBackupButton()">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-lg">💻</span>
+                                    <span class="font-medium text-gray-900">Download to Computer</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Database backup will be downloaded to your device</p>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <input type="checkbox" id="dbBackupToCloud" class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" checked onchange="updateDatabaseBackupButton()">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-lg">☁️</span>
+                                    <span class="font-medium text-gray-900">Keep on Server</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Database backup stored on server (max 10 backups)</p>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Info Box -->
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
+                        <div class="flex items-start space-x-2">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div class="text-sm">
+                                <p class="text-purple-800 font-medium">Database Backup Information</p>
+                                <p class="text-purple-700 text-xs mt-1">Includes all database tables, data, and structure. Typical size: ~1-5MB</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Warning for no selection -->
+                    <div id="dbBackupWarning" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 hidden">
+                        <div class="flex items-start space-x-2">
+                            <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div class="text-sm">
+                                <p class="text-red-800 font-medium">No Destination Selected</p>
+                                <p class="text-red-700 text-xs mt-1">Please select at least one backup destination</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                <div class="flex items-center justify-end space-x-3">
+                    <button onclick="closeDatabaseBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="createDatabaseBackupButton" onclick="executeDatabaseBackup()" class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 border border-transparent rounded-md hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="flex items-center space-x-2">
+                            <span>🗄️</span>
+                            <span>Create Database Backup</span>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -5043,6 +5149,248 @@ function formatFileSize(bytes) {
         return (bytes / 1024).toFixed(2) + ' KB';
     } else {
         return bytes + ' bytes';
+    }
+}
+
+// Database Backup Modal Functions
+function showDatabaseBackupModal() {
+    document.getElementById('databaseBackupModal').classList.remove('hidden');
+    updateDatabaseBackupButton();
+}
+
+function closeDatabaseBackupModal() {
+    document.getElementById('databaseBackupModal').classList.add('hidden');
+}
+
+function updateDatabaseBackupButton() {
+    const computerCheckbox = document.getElementById('dbBackupToComputer');
+    const cloudCheckbox = document.getElementById('dbBackupToCloud');
+    const backupButton = document.getElementById('createDatabaseBackupButton');
+    const warningDiv = document.getElementById('dbBackupWarning');
+    
+    const hasSelection = computerCheckbox.checked || cloudCheckbox.checked;
+    
+    if (hasSelection) {
+        backupButton.disabled = false;
+        backupButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        warningDiv.classList.add('hidden');
+    } else {
+        backupButton.disabled = true;
+        backupButton.classList.add('opacity-50', 'cursor-not-allowed');
+        warningDiv.classList.remove('hidden');
+    }
+}
+
+async function executeDatabaseBackup() {
+    const computerCheckbox = document.getElementById('dbBackupToComputer');
+    const cloudCheckbox = document.getElementById('dbBackupToCloud');
+    
+    if (!computerCheckbox.checked && !cloudCheckbox.checked) {
+        showNotification('Error', 'Please select at least one backup destination', 'error');
+        return;
+    }
+    
+    const downloadToComputer = computerCheckbox.checked;
+    const keepOnServer = cloudCheckbox.checked;
+    
+    // Close modal first
+    closeDatabaseBackupModal();
+    
+    // Show detailed progress modal (reuse the same one but with database-specific text)
+    showDatabaseBackupProgressModal(downloadToComputer, keepOnServer);
+    
+    try {
+        const response = await fetch('api/backup_database.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                download_to_computer: downloadToComputer,
+                keep_on_server: keepOnServer
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success in progress modal
+            showDatabaseBackupComplete(result, downloadToComputer, keepOnServer);
+            
+            // Download the backup file if requested
+            if (downloadToComputer && result.download_url) {
+                // Small delay to let user see the success message
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = result.download_url;
+                    link.download = result.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, 1000);
+            }
+        } else {
+            showBackupError(result.error || 'Failed to create database backup');
+        }
+    } catch (error) {
+        console.error('Error creating database backup:', error);
+        showBackupError('Network error occurred while creating database backup');
+    }
+}
+
+function showDatabaseBackupProgressModal(downloadToComputer, keepOnServer) {
+    document.getElementById('backupProgressModal').classList.remove('hidden');
+    
+    // Update modal title for database backup
+    document.querySelector('#backupProgressModal h3').textContent = 'Database Backup in Progress';
+    document.querySelector('#backupProgressModal .w-10 span').textContent = '🗄️';
+    
+    // Reset modal to progress state
+    document.getElementById('backupProgressState').classList.remove('hidden');
+    document.getElementById('backupSuccessState').classList.add('hidden');
+    document.getElementById('backupErrorState').classList.add('hidden');
+    document.getElementById('backupProgressCloseBtn').classList.add('hidden');
+    
+    // Update progress text for database backup
+    document.querySelector('#backupProgressState h4').textContent = 'Creating Database Backup...';
+    document.querySelector('#backupProgressState p').textContent = 'Please wait while we create your database backup';
+    
+    // Update step text for database backup
+    const steps = document.querySelectorAll('#backupProgressState .space-y-2 > div span');
+    if (steps[0]) steps[0].textContent = 'Connecting to database...';
+    if (steps[1]) steps[1].textContent = 'Exporting database structure and data...';
+    
+    // Update destination step text
+    const destinations = [];
+    if (downloadToComputer) destinations.push('computer download');
+    if (keepOnServer) destinations.push('server storage');
+    document.getElementById('destinationStep').textContent = `Preparing ${destinations.join(' and ')}...`;
+    
+    // Reset step styles
+    const stepDots = document.querySelectorAll('#backupProgressState .space-y-2 > div .w-4');
+    stepDots.forEach((dot, index) => {
+        dot.className = 'w-4 h-4 bg-gray-300 rounded-full';
+        if (index === 0) {
+            dot.classList.add('bg-blue-500', 'animate-pulse');
+            dot.classList.remove('bg-gray-300');
+        }
+    });
+    
+    // Simulate progress steps
+    setTimeout(() => {
+        // Step 1: Database connected
+        if (stepDots[0]) {
+            stepDots[0].classList.remove('animate-pulse');
+            stepDots[0].classList.add('bg-green-500');
+            steps[0].classList.add('text-green-700');
+        }
+        
+        // Step 2: Exporting
+        if (stepDots[1]) {
+            stepDots[1].classList.remove('bg-gray-300');
+            stepDots[1].classList.add('bg-blue-500', 'animate-pulse');
+            steps[1].classList.remove('text-gray-500');
+            steps[1].classList.add('text-gray-700');
+        }
+    }, 500);
+    
+    setTimeout(() => {
+        // Step 2: Export complete
+        if (stepDots[1]) {
+            stepDots[1].classList.remove('animate-pulse');
+            stepDots[1].classList.add('bg-green-500');
+            steps[1].classList.add('text-green-700');
+        }
+        
+        // Step 3: Destinations
+        if (stepDots[2]) {
+            stepDots[2].classList.remove('bg-gray-300');
+            stepDots[2].classList.add('bg-blue-500', 'animate-pulse');
+            document.getElementById('destinationStep').classList.remove('text-gray-500');
+            document.getElementById('destinationStep').classList.add('text-gray-700');
+        }
+    }, 1000);
+}
+
+function showDatabaseBackupComplete(result, downloadToComputer, keepOnServer) {
+    // Hide progress state
+    document.getElementById('backupProgressState').classList.add('hidden');
+    document.getElementById('backupSuccessState').classList.remove('hidden');
+    document.getElementById('backupProgressCloseBtn').classList.remove('hidden');
+    
+    // Update success title for database backup
+    document.querySelector('#backupSuccessState h4').textContent = 'Database Backup Complete!';
+    
+    // Format file size
+    const sizeFormatted = result.size_formatted || formatFileSize(result.size || 0);
+    
+    // Build destinations list
+    const destinations = [];
+    if (downloadToComputer) destinations.push('💻 Downloaded to your computer');
+    if (keepOnServer) destinations.push('☁️ Stored on server');
+    
+    // Format creation time
+    const createdTime = new Date(result.created).toLocaleString();
+    
+    // Build details HTML
+    let detailsHTML = `
+        <div class="space-y-3">
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Filename:</span>
+                <span class="text-gray-900 font-mono text-sm">${result.filename}</span>
+            </div>
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Location:</span>
+                <span class="text-gray-900 font-mono text-sm">${result.path}</span>
+            </div>
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Size:</span>
+                <span class="text-gray-900">${sizeFormatted}</span>
+            </div>
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Created:</span>
+                <span class="text-gray-900">${createdTime}</span>
+            </div>
+    `;
+    
+    // Add table count if available
+    if (result.table_count) {
+        detailsHTML += `
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Tables:</span>
+                <span class="text-gray-900">${result.table_count} tables exported</span>
+            </div>
+        `;
+    }
+    
+    detailsHTML += `
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Destinations:</span>
+                <div class="text-right">
+                    ${destinations.map(dest => `<div class="text-gray-900 text-sm">${dest}</div>`).join('')}
+                </div>
+            </div>
+    `;
+    
+    // Add cleanup info if available
+    if (result.cleanup && result.cleanup.deleted > 0) {
+        detailsHTML += `
+            <div class="flex items-start justify-between pt-2 border-t border-gray-200">
+                <span class="font-medium text-purple-700">Cleanup:</span>
+                <span class="text-purple-900">${result.cleanup.deleted} old database backup${result.cleanup.deleted > 1 ? 's' : ''} deleted</span>
+            </div>
+        `;
+    }
+    
+    detailsHTML += '</div>';
+    
+    document.getElementById('backupDetails').innerHTML = detailsHTML;
+    
+    // Auto-close after 10 seconds for server-only backups
+    if (!downloadToComputer && keepOnServer) {
+        setTimeout(() => {
+            closeBackupProgressModal();
+        }, 10000);
     }
 }
 </script>

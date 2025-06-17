@@ -1133,3 +1133,9 @@
 [Tue Jun 17 17:39:14 2025] [::1]:62593 Accepted
 [Tue Jun 17 17:39:15 2025] [::1]:62593 [200]: POST /api/backup_website.php
 [Tue Jun 17 17:39:15 2025] [::1]:62593 Closing
+[Tue Jun 17 17:44:52 2025] [::1]:64039 Accepted
+[Tue Jun 17 17:44:52 2025] [::1]:64039 [200]: GET /api/get_database_info.php
+[Tue Jun 17 17:44:52 2025] [::1]:64039 Closing
+[Tue Jun 17 17:48:05 2025] [::1]:64862 Accepted
+[Tue Jun 17 17:48:05 2025] [::1]:64862 [200]: GET /api/file_manager.php?action=list&path=
+[Tue Jun 17 17:48:05 2025] [::1]:64862 Closing

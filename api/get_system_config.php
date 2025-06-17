@@ -33,10 +33,28 @@ try {
     $stmt = $pdo->query("SELECT sku FROM items ORDER BY sku LIMIT 10");
     $sampleSkus = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
-    // Get recent activity
-    $stmt = $pdo->query("SELECT created_at FROM orders ORDER BY created_at DESC LIMIT 1");
-    $lastOrderResult = $stmt->fetch(PDO::FETCH_ASSOC);
-    $lastOrderDate = $lastOrderResult ? $lastOrderResult['created_at'] : null;
+    // Get recent activity - check what date column exists
+    $lastOrderDate = null;
+    try {
+        // Try different possible date column names
+        $possibleDateColumns = ['created_at', 'date_created', 'order_date', 'timestamp'];
+        foreach ($possibleDateColumns as $column) {
+            try {
+                $stmt = $pdo->query("SELECT $column FROM orders ORDER BY $column DESC LIMIT 1");
+                $lastOrderResult = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($lastOrderResult && $lastOrderResult[$column]) {
+                    $lastOrderDate = $lastOrderResult[$column];
+                    break;
+                }
+            } catch (PDOException $e) {
+                // Column doesn't exist, try next one
+                continue;
+            }
+        }
+    } catch (PDOException $e) {
+        // If all fail, just set to null
+        $lastOrderDate = null;
+    }
     
     // Check if cost breakdown tables exist
     $costTables = [];

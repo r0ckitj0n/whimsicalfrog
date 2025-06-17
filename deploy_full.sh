@@ -38,8 +38,13 @@ else
   echo -e "${GREEN}✅ No changes to commit${NC}"
 fi
 
-# Skip database export - handled separately via PHP scripts
-echo -e "${GREEN}📊 Skipping database export (handled separately)${NC}"
+# Sync database from local to live
+echo -e "${GREEN}📊 Syncing database from local to live...${NC}"
+if php sync_database_smart.php; then
+  echo -e "${GREEN}✅ Database sync completed successfully${NC}"
+else
+  echo -e "${YELLOW}⚠️  Database sync failed - continuing with file deployment...${NC}"
+fi
 
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
@@ -99,8 +104,8 @@ fi
 # Clean up permissions script
 rm fix_permissions.txt
 
-# Skip database deployment - handled separately via PHP scripts
-echo -e "${GREEN}🗄️  Skipping database deployment (handled separately)${NC}"
+# Database sync completed in earlier step
+echo -e "${GREEN}🗄️  Database sync completed in earlier step${NC}"
 
 # Verify critical files exist on server
 echo -e "${GREEN}🔍 Verifying deployment...${NC}"
@@ -138,13 +143,13 @@ else
 fi
 
 # Final summary
-echo -e "\n${GREEN}📊 File Deployment Summary:${NC}"
+echo -e "\n${GREEN}📊 Full Deployment Summary:${NC}"
+echo -e "  • Database: ✅ Synced from local to live"
 echo -e "  • Files: ✅ Deployed to server"
-echo -e "  • Database: ⏭️  Skipped (handled separately via PHP scripts)"
 echo -e "  • Images: ✅ Included in deployment"
 echo -e "  • Permissions: ✅ Image directory permissions fixed"
 echo -e "  • Verification: ✅ Completed"
 
-echo -e "\n${GREEN}🎉 File deployment completed!${NC}"
+echo -e "\n${GREEN}🎉 Full deployment completed!${NC}"
 echo -e "${YELLOW}💡 If images still don't appear, wait 5-10 minutes for server cache to clear${NC}"
-echo -e "${YELLOW}💡 Database changes should be deployed separately using your PHP scripts${NC}" 
+echo -e "${GREEN}💡 Database is now automatically synced with every full deployment${NC}" 

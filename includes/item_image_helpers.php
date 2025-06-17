@@ -11,7 +11,10 @@ require_once __DIR__ . '/../api/config.php';
  */
 function getPrimaryImageBySku($sku) {
     try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        $pdo = getDbConnection();
+        if (!$pdo) {
+            return false;
+        }
         
         $stmt = $pdo->prepare("
             SELECT * FROM item_images 
@@ -45,7 +48,10 @@ function getPrimaryImageBySku($sku) {
  */
 function getAllImagesBySku($sku) {
     try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        $pdo = getDbConnection();
+        if (!$pdo) {
+            return [];
+        }
         
         $stmt = $pdo->prepare("
             SELECT * FROM item_images 

@@ -267,7 +267,7 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                                  onmouseleave="hidePopup()">
                                 <?php 
                                 // Use new image system with fallback to old system
-                                $primaryImage = getPrimaryProductImage($product['id']);
+                                $primaryImage = getPrimaryImageBySku($product['sku']);
                                 if ($primaryImage && $primaryImage['file_exists']) {
                                     echo '<img src="' . htmlspecialchars($primaryImage['image_path'] ?? '') . '" alt="' . htmlspecialchars($product['name'] ?? '') . '">';
                                 } else {

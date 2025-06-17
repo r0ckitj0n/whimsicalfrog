@@ -1,0 +1,331 @@
+/* Global Modal and Confirmation Dialog Styles */
+
+/* Confirmation Modal Overlay */
+.confirmation-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.confirmation-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Confirmation Modal Container */
+.confirmation-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    max-width: 500px;
+    width: 90%;
+    margin: 20px;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.confirmation-modal-overlay.show .confirmation-modal {
+    transform: scale(1) translateY(0);
+}
+
+/* Modal Header */
+.confirmation-modal-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.confirmation-modal-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px auto;
+    font-size: 24px;
+}
+
+.confirmation-modal-icon.warning {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+}
+
+.confirmation-modal-icon.danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.confirmation-modal-icon.info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+}
+
+.confirmation-modal-icon.success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.confirmation-modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.confirmation-modal-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+}
+
+/* Modal Body */
+.confirmation-modal-body {
+    padding: 16px 24px;
+}
+
+.confirmation-modal-message {
+    color: #374151;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.confirmation-modal-details {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+.confirmation-modal-details ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.confirmation-modal-details li {
+    margin: 4px 0;
+    color: #4b5563;
+}
+
+/* Modal Footer */
+.confirmation-modal-footer {
+    padding: 16px 24px 24px 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.confirmation-modal-button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.confirmation-modal-button:focus {
+    ring: 2px solid;
+    ring-offset: 2px;
+}
+
+.confirmation-modal-button.cancel {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.confirmation-modal-button.cancel:hover {
+    background: #e5e7eb;
+}
+
+.confirmation-modal-button.cancel:focus {
+    ring-color: #9ca3af;
+}
+
+.confirmation-modal-button.confirm {
+    background: #10b981;
+    color: white;
+}
+
+.confirmation-modal-button.confirm:hover {
+    background: #059669;
+}
+
+.confirmation-modal-button.confirm:focus {
+    ring-color: #10b981;
+}
+
+.confirmation-modal-button.danger {
+    background: #ef4444;
+    color: white;
+}
+
+.confirmation-modal-button.danger:hover {
+    background: #dc2626;
+}
+
+.confirmation-modal-button.danger:focus {
+    ring-color: #ef4444;
+}
+
+.confirmation-modal-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Global CSS Rules Modal Specific Styles */
+#globalCSSModal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#globalCSSModal.hidden {
+    display: none !important;
+}
+
+.css-category-tab {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.css-category-tab:hover {
+    color: #4f46e5 !important;
+}
+
+.css-category-tab.active {
+    color: #4f46e5 !important;
+    border-color: #4f46e5 !important;
+}
+
+.css-category-content {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.css-category-content.hidden {
+    display: none !important;
+}
+
+.css-rule-input {
+    transition: all 0.2s ease;
+}
+
+.css-rule-input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
+
+.css-rule-input:hover {
+    border-color: #9ca3af;
+}
+
+/* Color picker styling */
+input[type="color"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+}
+
+input[type="color"]::-moz-color-swatch {
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+}
+
+/* Loading spinner */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Animation classes */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in-up {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+/* Admin tab bar styling */
+.admin-tab-bar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px 8px 0 0;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+    .confirmation-modal {
+        margin: 10px;
+        width: calc(100% - 20px);
+    }
+    
+    .confirmation-modal-footer {
+        flex-direction: column;
+    }
+    
+    .confirmation-modal-button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    #globalCSSModal .bg-white {
+        margin: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .grid.grid-cols-1.md\\:grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+} 

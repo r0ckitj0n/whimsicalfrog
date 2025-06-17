@@ -94,7 +94,7 @@ $adminRole = $userData['roleType'] ?? 'Administrator';
         'settings' => ['Settings', 'bg-gray-100', 'text-gray-800'],
     ];
     ?>
-    <div class="flex flex-wrap gap-2 mb-4">
+    <div class="flex flex-wrap gap-2 mb-4 admin-tab-bar p-3 rounded-lg">
         <?php foreach ($tabs as $key => [$label, $bg, $text]): ?>
             <a href="/?page=admin<?php echo $key ? '&section=' . $key : ''; ?>"
                class="px-3 py-1 rounded text-xs font-semibold <?php echo $bg . ' ' . $text; ?> <?php echo ($section === $key || ($key === '' && !$section)) ? 'ring-2 ring-green-400' : 'hover:bg-green-200'; ?>">

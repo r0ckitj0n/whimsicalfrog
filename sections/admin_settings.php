@@ -4148,7 +4148,7 @@ function escapeHtml(text) {
                     </button>
                 </div>
                 <div class="flex items-center">
-                    <button onclick="backupWebsite()" class="px-4 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm font-medium">
+                    <button onclick="showBackupModal()" class="px-4 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm font-medium">
                         💾 Backup Website
                     </button>
                 </div>
@@ -4221,6 +4221,103 @@ function escapeHtml(text) {
                         <span class="font-medium text-gray-700">Type:</span>
                         <span id="fileType" class="text-gray-600">-</span>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Website Modal -->
+<div id="backupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white text-lg">💾</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900">Create Website Backup</h3>
+                    </div>
+                    <button onclick="closeBackupModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Body -->
+            <div class="px-6 py-4">
+                <div class="mb-4">
+                    <p class="text-gray-600 text-sm mb-4">Create a complete backup of your website files and database. Choose your backup destination(s):</p>
+                    
+                    <!-- Backup Options -->
+                    <div class="space-y-3 mb-6">
+                        <label class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <input type="checkbox" id="backupToComputer" class="mt-1 w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2" checked onchange="updateBackupButton()">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-lg">💻</span>
+                                    <span class="font-medium text-gray-900">Download to Computer</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Backup file will be downloaded to your device</p>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            <input type="checkbox" id="backupToCloud" class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" checked onchange="updateBackupButton()">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-lg">☁️</span>
+                                    <span class="font-medium text-gray-900">Keep on Server</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Backup stored on server (max 10 backups)</p>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Info Box -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <div class="flex items-start space-x-2">
+                            <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div class="text-sm">
+                                <p class="text-blue-800 font-medium">Backup Information</p>
+                                <p class="text-blue-700 text-xs mt-1">Includes all website files, database, and configurations. Typical size: ~25MB</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Warning for no selection -->
+                    <div id="backupWarning" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 hidden">
+                        <div class="flex items-start space-x-2">
+                            <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div class="text-sm">
+                                <p class="text-red-800 font-medium">No Destination Selected</p>
+                                <p class="text-red-700 text-xs mt-1">Please select at least one backup destination</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                <div class="flex items-center justify-end space-x-3">
+                    <button onclick="closeBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="createBackupButton" onclick="executeBackup()" class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 border border-transparent rounded-md hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="flex items-center space-x-2">
+                            <span>💾</span>
+                            <span>Create Backup</span>
+                        </span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -4629,25 +4726,73 @@ async function createFile(name) {
     }
 }
 
-async function backupWebsite() {
-    if (!confirm('Create a backup of the entire website?\n\nThis will create a compressed archive of all website files.')) {
+// Backup Modal Functions
+function showBackupModal() {
+    document.getElementById('backupModal').classList.remove('hidden');
+    updateBackupButton();
+}
+
+function closeBackupModal() {
+    document.getElementById('backupModal').classList.add('hidden');
+}
+
+function updateBackupButton() {
+    const computerCheckbox = document.getElementById('backupToComputer');
+    const cloudCheckbox = document.getElementById('backupToCloud');
+    const backupButton = document.getElementById('createBackupButton');
+    const warningDiv = document.getElementById('backupWarning');
+    
+    const hasSelection = computerCheckbox.checked || cloudCheckbox.checked;
+    
+    if (hasSelection) {
+        backupButton.disabled = false;
+        backupButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        warningDiv.classList.add('hidden');
+    } else {
+        backupButton.disabled = true;
+        backupButton.classList.add('opacity-50', 'cursor-not-allowed');
+        warningDiv.classList.remove('hidden');
+    }
+}
+
+async function executeBackup() {
+    const computerCheckbox = document.getElementById('backupToComputer');
+    const cloudCheckbox = document.getElementById('backupToCloud');
+    
+    if (!computerCheckbox.checked && !cloudCheckbox.checked) {
+        showNotification('Error', 'Please select at least one backup destination', 'error');
         return;
     }
     
+    const downloadToComputer = computerCheckbox.checked;
+    const keepOnServer = cloudCheckbox.checked;
+    
     try {
+        // Close modal and show progress
+        closeBackupModal();
         showNotification('Info', 'Creating backup... This may take a moment.', 'info');
         
         const response = await fetch('api/backup_website.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({
+                download_to_computer: downloadToComputer,
+                keep_on_server: keepOnServer
+            })
         });
         
         const result = await response.json();
         
         if (result.success) {
             let message = `Backup created successfully: ${result.filename}`;
+            
+            // Add destination info
+            const destinations = [];
+            if (downloadToComputer) destinations.push('Downloaded to computer');
+            if (keepOnServer) destinations.push('Stored on server');
+            message += `\n\nDestination(s): ${destinations.join(', ')}`;
             
             // Add cleanup info if old backups were deleted
             if (result.cleanup && result.cleanup.deleted > 0) {
@@ -4656,8 +4801,8 @@ async function backupWebsite() {
             
             showNotification('Success', message, 'success');
             
-            // Optionally download the backup file
-            if (result.download_url) {
+            // Download the backup file if requested
+            if (downloadToComputer && result.download_url) {
                 const link = document.createElement('a');
                 link.href = result.download_url;
                 link.download = result.filename;
@@ -4672,5 +4817,10 @@ async function backupWebsite() {
         console.error('Error creating backup:', error);
         showNotification('Error', 'Failed to create backup', 'error');
     }
+}
+
+// Legacy function for backward compatibility
+async function backupWebsite() {
+    showBackupModal();
 }
 </script>

@@ -7,7 +7,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 
 // Include the image carousel component and helpers
 require_once __DIR__ . '/../components/image_carousel.php';
-require_once __DIR__ . '/../includes/product_image_helpers.php';
+require_once __DIR__ . '/../includes/item_image_helpers.php';
 
 // Categories are already loaded in index.php and available in $categories
 ?>

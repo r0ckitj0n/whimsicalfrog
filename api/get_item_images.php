@@ -5,7 +5,7 @@
  * Returns all images for a specific product with primary designation and sort order
  */
 
-require_once '../includes/product_image_helpers.php';
+require_once '../includes/item_image_helpers.php';
 header('Content-Type: application/json');
 
 try {

@@ -774,8 +774,8 @@ function setPrimaryImage(sku, imageId) {
     });
 }
 
-function deleteProductImage(imageId, sku) {
-    console.log('deleteProductImage called with:', imageId, sku);
+function deleteItemImage(imageId, sku) {
+    console.log('deleteItemImage called with:', imageId, sku);
     
     // Show custom confirmation modal
     showImageDeleteConfirmation(imageId, sku);
@@ -844,7 +844,7 @@ function confirmImageDelete(imageId, sku) {
     closeImageDeleteModal();
     
     // Proceed with deletion
-    fetch('/api/delete_product_image.php', {
+    fetch('/api/delete_item_image.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -881,12 +881,12 @@ function confirmImageDelete(imageId, sku) {
 
 // Make functions globally accessible immediately
 window.setPrimaryImage = setPrimaryImage;
-window.deleteProductImage = deleteProductImage;
+window.deleteItemImage = deleteItemImage;
 
 // Debug function availability
 console.log('Functions defined:', {
     setPrimaryImage: typeof window.setPrimaryImage,
-    deleteProductImage: typeof window.deleteProductImage
+    deleteItemImage: typeof window.deleteItemImage
 });
 
 // Add event delegation for image action buttons
@@ -901,8 +901,8 @@ document.addEventListener('click', function(e) {
         e.preventDefault();
         const sku = e.target.dataset.sku;
         const imageId = e.target.dataset.imageId;
-        console.log('Event delegation - deleteProductImage called with:', imageId, sku);
-        deleteProductImage(imageId, sku);
+        console.log('Event delegation - deleteItemImage called with:', imageId, sku);
+        deleteItemImage(imageId, sku);
     }
 });
 
@@ -1731,7 +1731,7 @@ function hideUploadProgress() {
 function loadCurrentImages(sku, isViewModal = false) {
     if (!sku) return;
     
-    fetch(`/api/get_product_images.php?sku=${encodeURIComponent(sku)}`)
+    fetch(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`)
     .then(response => response.json())
     .then(data => {
         if (data.success) {
@@ -1757,7 +1757,7 @@ function loadCurrentImages(sku, isViewModal = false) {
 function loadThumbnailImage(sku, container) {
     if (!sku || !container) return;
     
-    fetch(`/api/get_product_images.php?sku=${encodeURIComponent(sku)}`)
+    fetch(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`)
     .then(response => response.json())
     .then(data => {
         const loadingDiv = container.querySelector('.thumbnail-loading');
@@ -1917,7 +1917,7 @@ function displayCurrentImages(images, isViewModal = false) {
 function loadThumbnailImage(sku, container) {
     if (!sku || !container) return;
     
-    fetch(`/api/get_product_images.php?sku=${encodeURIComponent(sku)}`)
+    fetch(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`)
     .then(response => response.json())
     .then(data => {
         if (data.success && data.images && data.images.length > 0) {

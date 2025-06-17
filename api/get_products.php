@@ -30,7 +30,7 @@ try {
             // Create placeholders for the IN clause
             $placeholders = str_repeat('?,', count($skus) - 1) . '?';
             
-            // Query to get specific items by SKU
+            // Query to get specific items by SKU with primary image from item_images table
             $sql = "SELECT 
                         i.sku,
                         i.name,
@@ -40,8 +40,9 @@ try {
                         i.reorderPoint,
                         i.costPrice,
                         i.retailPrice,
-                        i.imageUrl
+                        img.image_path as imageUrl
                     FROM items i 
+                    LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.sku IN ($placeholders)";
             
             $stmt = $pdo->prepare($sql);
@@ -55,7 +56,7 @@ try {
                     $product['price'] = floatval($product['retailPrice']);
                 }
                 
-                // Set the image path - use imageUrl field
+                // Set the image path - use primary image from item_images table
                 if (!empty($product['imageUrl'])) {
                     $product['image'] = $product['imageUrl'];
                 } else {
@@ -75,8 +76,9 @@ try {
                         i.reorderPoint,
                         i.costPrice,
                         i.retailPrice,
-                        i.imageUrl
+                        img.image_path as imageUrl
                     FROM items i
+                    LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.category = ?";
             
             $stmt = $pdo->prepare($sql);
@@ -92,8 +94,9 @@ try {
                         i.reorderPoint,
                         i.costPrice,
                         i.retailPrice,
-                        i.imageUrl
-                    FROM items i";
+                        img.image_path as imageUrl
+                    FROM items i
+                    LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
@@ -108,7 +111,7 @@ try {
                 $product['price'] = floatval($product['retailPrice']);
             }
             
-            // Set the image path - use imageUrl field
+            // Set the image path - use primary image from item_images table
             if (!empty($product['imageUrl'])) {
                 $product['image'] = $product['imageUrl'];
             } else {

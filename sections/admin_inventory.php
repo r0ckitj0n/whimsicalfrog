@@ -1194,7 +1194,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const originalValue = cell.dataset.originalValue || cell.textContent.trim();
             const field = cell.dataset.field;
-            const itemId = cell.closest('tr').dataset.id;
+            const itemSku = cell.closest('tr').dataset.sku;
             cell.dataset.originalValue = originalValue;
 
             let inputElement;
@@ -1236,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newValue = inputElement.value;
                 cell.classList.remove('editing');
                 if (newValue !== originalValue) { 
-                    saveInlineEdit(itemId, field, newValue, cell, originalValue);
+                    saveInlineEdit(itemSku, field, newValue, cell, originalValue);
                 } else {
                     cell.innerHTML = originalValue; 
                 }
@@ -1295,8 +1295,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Redirect to the inventory page, optionally highlighting the item
                     // This ensures the main table is refreshed and modal is closed.
                     let redirectUrl = '?page=admin&section=inventory';
-                    if (data.itemId) { // itemId is returned by add/update operations
-                        redirectUrl += '&highlight=' + data.itemId;
+                    if (data.sku) { // sku is returned by add/update operations
+                        redirectUrl += '&highlight=' + data.sku;
                     }
                     // Use a short delay to allow toast to be seen before navigation
                     setTimeout(() => {
@@ -1340,10 +1340,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const file = this.files[0];
                 const formData = new FormData();
                 formData.append('image', file);
-                const itemIdField = document.querySelector('input[name="itemId"]');
-                formData.append('itemId', itemIdField ? itemIdField.value : currentItemSku);
-                const skuField=document.getElementById('skuEdit') || document.getElementById('skuDisplay');
-                if(skuField){formData.append('sku',skuField.value);}
+                        formData.append('sku', currentItemSku);
                 
                 const previewDiv = this.parentNode.querySelector('.image-preview');
                 const previewImg = previewDiv ? previewDiv.querySelector('img') : null;
@@ -1399,20 +1396,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const deleteConfirmModalElement = document.getElementById('deleteConfirmModal');
     const confirmDeleteActualBtn = document.getElementById('confirmDeleteBtn');
-    let itemToDeleteId = null;
+    let itemToDeleteSku = null;
 
     document.querySelectorAll('.delete-item').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            itemToDeleteId = this.dataset.id;
+            itemToDeleteSku = this.dataset.sku;
             if(deleteConfirmModalElement) deleteConfirmModalElement.classList.add('show');
         });
     });
 
     if (confirmDeleteActualBtn && deleteConfirmModalElement) {
         confirmDeleteActualBtn.addEventListener('click', function() {
-            if (!itemToDeleteId) return;
-            fetch(`/process_inventory_update.php?action=delete&itemId=${itemToDeleteId}`, {
+            if (!itemToDeleteSku) return;
+            fetch(`/process_inventory_update.php?action=delete&sku=${itemToDeleteSku}`, {
                 method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(response => response.json())
@@ -1454,7 +1451,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const highlightId = urlParams.get('highlight');
     if (highlightId) {
-        const rowToHighlight = document.querySelector(`tr[data-id='${highlightId}']`);
+        const rowToHighlight = document.querySelector(`tr[data-sku='${highlightId}']`);
         if (rowToHighlight) {
             rowToHighlight.classList.add('bg-yellow-100'); 
             rowToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2135,6 +2132,40 @@ function normalizeCarouselImageHeights(trackId) {
 }
 
 
+
+// Function to save inline edits
+function saveInlineEdit(itemSku, field, newValue, cell, originalValue) {
+    const formData = new FormData();
+    formData.append('sku', itemSku);
+    formData.append('field', field);
+    formData.append('value', newValue);
+    
+    fetch('/process_inventory_update.php', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update cell with formatted value
+            if (field === 'costPrice' || field === 'retailPrice') {
+                cell.innerHTML = '$' + parseFloat(newValue).toFixed(2);
+            } else {
+                cell.innerHTML = newValue;
+            }
+            showToast('success', data.message);
+        } else {
+            cell.innerHTML = originalValue; // Restore original value
+            showToast('error', data.error || 'Failed to update field');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating field:', error);
+        cell.innerHTML = originalValue; // Restore original value
+        showToast('error', 'Failed to update field: ' + error.message);
+    });
+}
 
 // Carousel navigation function
 function moveCarousel(type, direction) {

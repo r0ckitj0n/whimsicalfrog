@@ -52,8 +52,8 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     // Handle inline editing (specific field update)
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['itemId']) && isset($_POST['field']) && isset($_POST['value'])) {
-        $itemSku = trim($_POST['itemId']); // This is actually the SKU now
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sku']) && isset($_POST['field']) && isset($_POST['value'])) {
+        $itemSku = trim($_POST['sku']);
         $field = trim($_POST['field']);
         $value = $_POST['value'];
         
@@ -86,7 +86,7 @@ try {
             // Required fields (SKU can be auto-generated)
             $requiredFields = ['name', 'stockLevel', 'reorderPoint', 'costPrice', 'retailPrice'];
             if ($action === 'update') {
-                $requiredFields[] = 'itemId';
+                $requiredFields[] = 'itemSku';
             }
             
             // Check required fields
@@ -159,19 +159,20 @@ try {
                 ]);
                 $itemId = $sku; // For consistency with return data
             } else {
-                // Update existing item
-                $itemSku = trim($_POST['itemId']); // This is actually the SKU now
+                // Update existing item - use itemSku (original SKU) for WHERE clause
+                $originalSku = trim($_POST['itemSku']);
                 
                 // Update query - use sku as primary key
                 $sql = "UPDATE items SET 
-                        name = ?, category = ?, stockLevel = ?, 
+                        name = ?, category = ?, sku = ?, stockLevel = ?, 
                         reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ?, imageUrl = ? 
                         WHERE sku = ?";
                 $stmt = $pdo->prepare($sql);
                 $success = $stmt->execute([
-                    $name, $category, $stockLevel, $reorderPoint, 
-                    $costPrice, $retailPrice, $description, $imageUrl, $itemSku
+                    $name, $category, $sku, $stockLevel, $reorderPoint, 
+                    $costPrice, $retailPrice, $description, $imageUrl, $originalSku
                 ]);
+                $itemSku = $sku; // Use the new SKU for response
             }
             
             // Check if operation was successful
@@ -184,7 +185,7 @@ try {
 
                 $message = "Item " . ($action === 'add' ? "added" : "updated") . " successfully";
                 $returnId = ($action === 'add') ? $sku : $itemSku;
-                returnSuccess($message, ['itemId' => $returnId, 'action' => $action]);
+                returnSuccess($message, ['sku' => $returnId, 'action' => $action]);
             } else {
                 returnError('Failed to ' . $action . ' item');
             }
@@ -204,8 +205,8 @@ try {
             returnError('Invalid JSON format');
         }
         
-        if (isset($data['id']) && isset($data['costPrice'])) {
-            $itemSku = trim($data['id']); // This is actually the SKU now
+        if (isset($data['sku']) && isset($data['costPrice'])) {
+            $itemSku = trim($data['sku']);
             $costPrice = floatval($data['costPrice']);
             
             $query = "UPDATE items SET costPrice = ? WHERE sku = ?";
@@ -224,8 +225,8 @@ try {
     else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         parse_str($_SERVER['QUERY_STRING'], $params);
         
-        if (isset($params['action']) && $params['action'] === 'delete' && isset($params['itemId'])) {
-            $itemSku = trim($params['itemId']); // This is actually the SKU now
+        if (isset($params['action']) && $params['action'] === 'delete' && isset($params['sku'])) {
+            $itemSku = trim($params['sku']);
             
             $stmt = $pdo->prepare("DELETE FROM items WHERE sku = ?");
             if ($stmt->execute([$itemSku])) {

@@ -89,8 +89,15 @@ try {
             }
         }
         
-        // Get top products
-        $topProductsStmt = $pdo->prepare("SELECT p.name, SUM(oi.quantity) as units \n                                        FROM order_items oi\n                                        JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci\n                                        JOIN products p ON oi.productId COLLATE utf8mb4_unicode_ci = p.id COLLATE utf8mb4_unicode_ci\n                                        WHERE DATE(o.date) BETWEEN :start AND :end\n                                        GROUP BY oi.productId, p.name\n                                        ORDER BY units DESC\n                                        LIMIT 5");
+        // Get top items
+        $topProductsStmt = $pdo->prepare("SELECT i.name, SUM(oi.quantity) as units 
+                                        FROM order_items oi
+                                        JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci
+                                        JOIN items i ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci
+                                        WHERE DATE(o.date) BETWEEN :start AND :end
+                                        GROUP BY oi.sku, i.name
+                                        ORDER BY units DESC
+                                        LIMIT 5");
         $topProductsStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
         $topProducts = $topProductsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
@@ -225,7 +232,7 @@ function generateId($prefix, $length = 3) {
                 <i class="fas fa-box"></i>
             </div>
             <div class="stat-info">
-                <h3>Products Sold</h3>
+                <h3>Items Sold</h3>
                 <p class="stat-value"><?php echo $productCount; ?></p>
             </div>
         </div>
@@ -270,7 +277,7 @@ function generateId($prefix, $length = 3) {
             </div>
             
             <div class="dashboard-card">
-                <h3>Top Products</h3>
+                <h3>Top Items</h3>
                 <ul class="top-products-list">
                     <?php if (!empty($topProducts)): ?>
                         <?php foreach ($topProducts as $product): ?>
@@ -280,7 +287,7 @@ function generateId($prefix, $length = 3) {
                             </li>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <li class="no-data">No product data available</li>
+                        <li class="no-data">No item data available</li>
                     <?php endif; ?>
                 </ul>
             </div>

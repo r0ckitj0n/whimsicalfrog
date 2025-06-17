@@ -60,10 +60,10 @@ try {
         $itemCountStmt->execute();
         $itemCount = $itemCountStmt->fetchColumn();
         
-        $insert = $pdo->prepare('INSERT INTO order_items (id, orderId, itemId, quantity, price) VALUES (?,?,?,?, (SELECT retailPrice FROM items WHERE id = ?))');
+        $insert = $pdo->prepare('INSERT INTO order_items (id, orderId, sku, quantity, price) VALUES (?,?,?,?, (SELECT retailPrice FROM items WHERE sku = ?))');
         $itemIndex = 0;
         foreach ($input['items'] as $row) {
-            if (empty($row['itemId']) || empty($row['quantity'])) continue;
+            if (empty($row['sku']) || empty($row['quantity'])) continue;
             
             // Generate streamlined order item ID
             $itemSequence = str_pad($itemCount + $itemIndex + 1, 3, '0', STR_PAD_LEFT);
@@ -71,8 +71,8 @@ try {
             $itemIndex++;
             
             $qty = (int)$row['quantity'];
-            $iid = $row['itemId'];
-            $insert->execute([$itemId, $orderId, $iid, $qty, $iid]);
+            $sku = $row['sku'];
+            $insert->execute([$itemId, $orderId, $sku, $qty, $sku]);
         }
         // recalc total
         $totalStmt=$pdo->prepare('SELECT SUM(quantity*price) AS total FROM order_items WHERE orderId = ?');

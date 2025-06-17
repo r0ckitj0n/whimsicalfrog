@@ -1,8 +1,8 @@
 <?php
 // T-Shirts room page
-$tshirtProducts = [];
+$tshirtItems = [];
 if (isset($categories['T-Shirts'])) {
-    $tshirtProducts = $categories['T-Shirts'];
+    $tshirtItems = $categories['T-Shirts'];
 }
 
 // Include image helpers for room pages
@@ -567,7 +567,7 @@ async function openQuantityModal() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ product_ids: [id] })
+            body: JSON.stringify({ item_ids: [id] })
         });
         
         if (response.ok) {

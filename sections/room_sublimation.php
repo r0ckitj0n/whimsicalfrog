@@ -1,8 +1,8 @@
 <?php
 // Sublimation room page
-$sublimationProducts = [];
+$sublimationItems = [];
 if (isset($categories['Sublimation'])) {
-    $sublimationProducts = $categories['Sublimation'];
+    $sublimationItems = $categories['Sublimation'];
 }
 
 // Include image helpers for room pages
@@ -255,7 +255,7 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                     <p>Discover our unique sublimation designs.</p>
                 </div>
                 
-                <?php if (empty($sublimationProducts)): ?>
+                <?php if (empty($sublimationItems)): ?>
                     <div class="text-center py-8">
                         <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
                             <p class="text-xl text-gray-600">No sublimation items available at the moment.</p>
@@ -264,7 +264,7 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                     </div>
                 <?php else: ?>
                     <div class="shelf-area">
-                        <?php foreach ($sublimationProducts as $index => $product): ?>
+                        <?php foreach ($sublimationItems as $index => $item): ?>
                             <?php $area_class = 'area-' . ($index + 1); ?>
                             <div class="product-icon <?php echo $area_class; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($product['id'] ?? ''); ?>"
@@ -567,21 +567,21 @@ async function openQuantityModal() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ product_ids: [id] })
+            body: JSON.stringify({ item_ids: [id] })
         });
         
         if (response.ok) {
-            const products = await response.json();
-            if (products && products.length > 0) {
-                const freshProduct = products[0];
-                name = freshProduct.name || name;
-                price = parseFloat(freshProduct.price) || price;
-                image = freshProduct.image || image;
-                console.log('Updated product data from database:', { id, name, price, image });
+            const items = await response.json();
+            if (items && items.length > 0) {
+                const freshItem = items[0];
+                name = freshItem.name || name;
+                price = parseFloat(freshItem.price) || price;
+                image = freshItem.image || image;
+                console.log('Updated item data from database:', { id, name, price, image });
             }
         }
     } catch (error) {
-        console.warn('Could not fetch fresh product data, using cached data:', error);
+        console.warn('Could not fetch fresh item data, using cached data:', error);
     }
     
     // Hide popup

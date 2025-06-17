@@ -1,8 +1,8 @@
 <?php
 // Tumblers room page
-$tumblerProducts = [];
+$tumblerItems = [];
 if (isset($categories['Tumblers'])) {
-    $tumblerProducts = $categories['Tumblers'];
+    $tumblerItems = $categories['Tumblers'];
 }
 
 // Include image helpers for room pages
@@ -276,10 +276,10 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Tumblers room product data
-    const tumblerProducts = <?php echo json_encode($tumblerProducts ?? []); ?>;
+    // Tumblers room item data
+    const tumblerItems = <?php echo json_encode($tumblerItems ?? []); ?>;
     
-    console.log('Tumblers room products:', tumblerProducts);
+    console.log('Tumblers room items:', tumblerItems);
     
     // Get room coordinates from API
     fetch('/api/get_room_coordinates.php?room=room_tumblers')
@@ -310,8 +310,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear existing content
             shelfArea.innerHTML = '';
             
-            // Create product icons for each product and coordinate
-            tumblerProducts.forEach((product, index) => {
+                            // Create product icons for each item and coordinate
+            tumblerItems.forEach((item, index) => {
                 if (index < roomCoordinates.length) {
                     const coord = roomCoordinates[index];
                     const productIcon = document.createElement('div');
@@ -322,13 +322,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     productIcon.style.height = coord.height + '%';
                     
                     // Get the image URL using the helper function
-                    const imageUrl = getImageUrlWithFallback(product.image ?? 'images/items/placeholder.png');
+                    const imageUrl = getImageUrlWithFallback(item.image ?? 'images/items/placeholder.png');
                     
-                    productIcon.innerHTML = `<img src="${imageUrl}" alt="${product.name ?? 'Product'}" onerror="this.src='images/items/placeholder.png'; this.onerror=null;">`;
+                    productIcon.innerHTML = `<img src="${imageUrl}" alt="${item.name ?? 'Item'}" onerror="this.src='images/items/placeholder.png'; this.onerror=null;">`;
                     
                     // Add click event for popup
                     productIcon.addEventListener('click', function(e) {
-                        showProductPopup(product, e.pageX, e.pageY);
+                        showProductPopup(item, e.pageX, e.pageY);
                     });
                     
                     shelfArea.appendChild(productIcon);
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             shelfArea.innerHTML = '';
             
             // Create product icons with fallback coordinates
-            tumblerProducts.forEach((product, index) => {
+            tumblerItems.forEach((item, index) => {
                 if (index < fallbackCoordinates.length) {
                     const coord = fallbackCoordinates[index];
                     const productIcon = document.createElement('div');
@@ -363,13 +363,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     productIcon.style.height = coord.height + '%';
                     
                     // Get the image URL using the helper function
-                    const imageUrl = getImageUrlWithFallback(product.image ?? 'images/items/placeholder.png');
+                    const imageUrl = getImageUrlWithFallback(item.image ?? 'images/items/placeholder.png');
                     
-                    productIcon.innerHTML = `<img src="${imageUrl}" alt="${product.name ?? 'Product'}" onerror="this.src='images/items/placeholder.png'; this.onerror=null;">`;
+                    productIcon.innerHTML = `<img src="${imageUrl}" alt="${item.name ?? 'Item'}" onerror="this.src='images/items/placeholder.png'; this.onerror=null;">`;
                     
                     // Add click event for popup
                     productIcon.addEventListener('click', function(e) {
-                        showProductPopup(product, e.pageX, e.pageY);
+                        showProductPopup(item, e.pageX, e.pageY);
                     });
                     
                     shelfArea.appendChild(productIcon);
@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     
-    function showProductPopup(product, x, y) {
+    function showProductPopup(item, x, y) {
         const popup = document.getElementById('productPopup');
         const popupImage = document.getElementById('popupImage');
         const popupCategory = document.getElementById('popupCategory');
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const popupAddBtn = document.getElementById('popupAddBtn');
         
         // Get the image URL using the helper function
-        const imageUrl = getImageUrlWithFallback(product.image ?? 'images/items/placeholder.png');
+        const imageUrl = getImageUrlWithFallback(item.image ?? 'images/items/placeholder.png');
         
         // Populate popup content
         popupImage.src = imageUrl;
@@ -395,10 +395,10 @@ document.addEventListener('DOMContentLoaded', function() {
             this.src = 'images/items/placeholder.png';
             this.onerror = null;
         };
-        popupCategory.textContent = product.category ?? 'Tumblers';
-        popupTitle.textContent = product.name ?? 'Product Name';
-        popupDescription.textContent = product.description ?? 'No description available';
-        popupPrice.textContent = '$' + (parseFloat(product.price ?? product.retailPrice ?? 0)).toFixed(2);
+        popupCategory.textContent = item.category ?? 'Tumblers';
+        popupTitle.textContent = item.name ?? 'Item Name';
+        popupDescription.textContent = item.description ?? 'No description available';
+        popupPrice.textContent = '$' + (parseFloat(item.price ?? item.retailPrice ?? 0)).toFixed(2);
         
         // Position popup
         popup.style.left = Math.min(x, window.innerWidth - 300) + 'px';
@@ -410,9 +410,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add to cart functionality
         popupAddBtn.onclick = function() {
             if (typeof addToCart === 'function') {
-                const sku = product.sku ?? product.id;
-                const name = product.name ?? 'Product';
-                const price = parseFloat(product.price ?? product.retailPrice ?? 0);
+                const sku = item.sku ?? item.id;
+                const name = item.name ?? 'Item';
+                const price = parseFloat(item.price ?? item.retailPrice ?? 0);
                 addToCart(sku, name, price, imageUrl);
             } else {
                 console.error('addToCart function not found');

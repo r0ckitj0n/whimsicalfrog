@@ -1,8 +1,8 @@
 <?php
 // Artwork room page
-$artworkProducts = [];
+$artworkItems = [];
 if (isset($categories['Artwork'])) {
-    $artworkProducts = $categories['Artwork'];
+    $artworkItems = $categories['Artwork'];
 }
 
 // Include image helpers for room pages
@@ -562,7 +562,7 @@ async function openQuantityModal() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ product_ids: [id] })
+            body: JSON.stringify({ item_ids: [id] })
         });
         
         if (response.ok) {

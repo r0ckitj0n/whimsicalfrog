@@ -1,8 +1,8 @@
 <?php
 // Window Wraps room page
-$windowWrapsProducts = [];
+$windowWrapsItems = [];
 if (isset($categories['Window Wraps'])) {
-    $windowWrapsProducts = $categories['Window Wraps'];
+    $windowWrapsItems = $categories['Window Wraps'];
 }
 
 // Include image helpers for room pages
@@ -567,7 +567,7 @@ async function openQuantityModal() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ product_ids: [id] })
+            body: JSON.stringify({ item_ids: [id] })
         });
         
         if (response.ok) {

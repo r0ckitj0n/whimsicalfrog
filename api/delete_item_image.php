@@ -1,8 +1,8 @@
 <?php
 /**
- * Delete Product Image API
+ * Delete Item Image API
  * 
- * Deletes a specific product image and the associated file
+ * Deletes a specific item image and the associated file
  */
 
 require_once __DIR__ . '/../api/config.php';
@@ -65,8 +65,8 @@ try {
             
             $promotedMessage = " The next image has been automatically promoted to primary.";
         } else {
-            // No images left for this product
-            $promotedMessage = " No other images available for this product.";
+            // No images left for this item
+            $promotedMessage = " No other images available for this item.";
         }
     } else {
         $promotedMessage = "";
@@ -85,13 +85,13 @@ try {
     if (isset($pdo)) {
         $pdo->rollBack();
     }
-    error_log("Database error in delete_product_image: " . $e->getMessage());
+    error_log("Database error in delete_item_image: " . $e->getMessage());
     echo json_encode(['success' => false, 'error' => 'Database error occurred']);
 } catch (Exception $e) {
     if (isset($pdo)) {
         $pdo->rollBack();
     }
-    error_log("Error in delete_product_image: " . $e->getMessage());
+    error_log("Error in delete_item_image: " . $e->getMessage());
     echo json_encode(['success' => false, 'error' => 'Failed to delete image']);
 }
 ?> 

@@ -18,10 +18,10 @@ try {
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    $products = [];
+    $items = [];
     
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Get specific products by SKUs
+        // Get specific items by SKUs
         $input = json_decode(file_get_contents('php://input'), true);
         
         if (isset($input['item_ids']) && is_array($input['item_ids']) && !empty($input['item_ids'])) {
@@ -47,25 +47,25 @@ try {
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($skus);
-            $products = $stmt->fetchAll();
+            $items = $stmt->fetchAll();
             
             // Format the data
-            foreach ($products as &$product) {
+            foreach ($items as &$item) {
                 // Use retailPrice as the main price field
-                if (isset($product['retailPrice'])) {
-                    $product['price'] = floatval($product['retailPrice']);
+                if (isset($item['retailPrice'])) {
+                    $item['price'] = floatval($item['retailPrice']);
                 }
                 
                 // Set the image path - use primary image from item_images table
-                if (!empty($product['imageUrl'])) {
-                    $product['image'] = $product['imageUrl'];
+                if (!empty($item['imageUrl'])) {
+                    $item['image'] = $item['imageUrl'];
                 } else {
-                    $product['image'] = 'images/items/placeholder.png';
+                    $item['image'] = 'images/items/placeholder.png';
                 }
             }
         }
     } else {
-        // GET request - return all products or by category
+        // GET request - return all items or by category
         if (isset($_GET['category']) && !empty($_GET['category'])) {
             $sql = "SELECT 
                         i.sku,
@@ -102,26 +102,26 @@ try {
             $stmt->execute();
         }
         
-        $products = $stmt->fetchAll();
+        $items = $stmt->fetchAll();
         
         // Format the data
-        foreach ($products as &$product) {
+        foreach ($items as &$item) {
             // Use retailPrice as the main price field
-            if (isset($product['retailPrice'])) {
-                $product['price'] = floatval($product['retailPrice']);
+            if (isset($item['retailPrice'])) {
+                $item['price'] = floatval($item['retailPrice']);
             }
             
             // Set the image path - use primary image from item_images table
-            if (!empty($product['imageUrl'])) {
-                $product['image'] = $product['imageUrl'];
+            if (!empty($item['imageUrl'])) {
+                $item['image'] = $item['imageUrl'];
             } else {
-                $product['image'] = 'images/items/placeholder.png';
+                $item['image'] = 'images/items/placeholder.png';
             }
         }
     }
     
-    // Return products as JSON
-    echo json_encode($products);
+    // Return items as JSON
+    echo json_encode($items);
     
 } catch (PDOException $e) {
     // Handle database errors

@@ -559,8 +559,8 @@ function generateSystemConfigHTML(data) {
                 <div>
                     <h5 class="font-semibold text-purple-700 mb-2">Core Tables</h5>
                     <ul class="space-y-1 text-purple-600">
-                        ${data.database_tables.core_tables.map(table => 
-                            `<li><code class="bg-purple-100 px-2 py-1 rounded">${table}</code></li>`
+                        ${Object.entries(data.database_tables.core_tables).map(([table, exists]) => 
+                            `<li><code class="bg-purple-100 px-2 py-1 rounded">${table}</code> ${exists ? '✅' : '❌'}</li>`
                         ).join('')}
                     </ul>
                 </div>

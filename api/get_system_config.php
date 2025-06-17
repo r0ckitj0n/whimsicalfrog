@@ -56,6 +56,14 @@ try {
         $lastOrderDate = null;
     }
     
+    // Check if core tables exist
+    $coreTables = [];
+    foreach (['items', 'item_images', 'orders', 'order_items'] as $table) {
+        $stmt = $pdo->query("SHOW TABLES LIKE '$table'");
+        $exists = $stmt->fetch() !== false;
+        $coreTables[$table] = $exists;
+    }
+    
     // Check if cost breakdown tables exist
     $costTables = [];
     foreach (['inventory_materials', 'inventory_labor', 'inventory_energy', 'inventory_equipment'] as $table) {
@@ -92,7 +100,8 @@ try {
                 'last_order_date' => $lastOrderDate
             ],
             'database_tables' => [
-                'core_tables' => array_values(array_filter($tables, function($table) {
+                'core_tables' => $coreTables,
+                'core_tables_list' => array_values(array_filter($tables, function($table) {
                     return in_array($table, ['items', 'item_images', 'orders', 'order_items']);
                 })),
                 'all_tables' => $tables,

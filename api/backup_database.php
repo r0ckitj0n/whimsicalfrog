@@ -33,13 +33,13 @@ function createDatabaseBackup($downloadToComputer = true, $keepOnServer = true) 
         $cleanupInfo = cleanupOldDatabaseBackups();
         
         // Get database credentials from config
-        $host = $GLOBALS['db_host'];
-        $database = $GLOBALS['db_name'];
-        $username = $GLOBALS['db_user'];
-        $password = $GLOBALS['db_pass'];
+        $dbHost = $GLOBALS['host'];
+        $database = $GLOBALS['db'];
+        $username = $GLOBALS['user'];
+        $password = $GLOBALS['pass'];
         
         // Create mysqldump command
-        $command = "mysqldump --host=$host --user=$username --password='$password' --single-transaction --routines --triggers $database > $backupPath";
+        $command = "mysqldump --host=$dbHost --user=$username --password='$password' --single-transaction --routines --triggers $database > $backupPath";
         
         exec($command, $output, $returnCode);
         

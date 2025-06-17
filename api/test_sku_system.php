@@ -104,11 +104,10 @@ try {
     // Test 4: Sample queries
     $results[] = "\n=== Test 4: Sample queries ===";
     
-    // Test order with items query
+    // Test order with items query - simplified to use columns that exist
     $stmt = $pdo->query("
         SELECT 
-            o.id as orderId,
-            o.customerName,
+            o.id,
             oi.sku,
             oi.quantity,
             oi.price,
@@ -122,7 +121,7 @@ try {
     
     if (count($sampleOrders) > 0) {
         $results[] = "✅ Order-items-items JOIN query works";
-        $results[] = "Sample: Order " . $sampleOrders[0]['orderId'] . " has item " . ($sampleOrders[0]['itemName'] ?? 'Unknown');
+        $results[] = "Sample: Order " . $sampleOrders[0]['id'] . " has item " . ($sampleOrders[0]['itemName'] ?? 'Unknown');
     } else {
         $results[] = "❌ Order-items-items JOIN query failed";
     }

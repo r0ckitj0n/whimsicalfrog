@@ -42,20 +42,21 @@
         </div>
         <div>
             <p class="text-sm text-gray-600 mb-3">View information about ID numbering system and current system configuration.</p>
-            <div class="flex gap-2">
-                <button onclick="openIdLegendModal()" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    ID# Legend
-                </button>
-                <button onclick="openSystemConfigModal()" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                    </svg>
-                    System Config
-                </button>
-            </div>
+            <button onclick="openSystemConfigModal()" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+                System Reference
+            </button>
+        </div>
+        <div>
+            <p class="text-sm text-gray-600 mb-3">Browse and manage website files and folders with full create, edit, and delete capabilities.</p>
+            <button onclick="openFileExplorerModal()" class="inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+                </svg>
+                File Explorer
+            </button>
         </div>
         <div>
             <p class="text-sm text-gray-600 mb-3">Map clickable areas on room images for product placement and navigation.</p>
@@ -111,6 +112,15 @@
                 Business Settings
             </button>
         </div>
+        <div>
+            <p class="text-sm text-gray-600 mb-3">View and manage database tables, monitor table sizes, and access comprehensive database information.</p>
+            <button onclick="openDatabaseMaintenanceModal()" class="inline-flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                </svg>
+                Database Maintenance
+            </button>
+        </div>
     </div>
 </div>
 
@@ -137,152 +147,7 @@
     </form>
 </div>
 
-<!-- ID Legend Modal -->
-<div id="idLegendModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
-    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-900">ID Number Legend</h3>
-                <button onclick="closeIdLegendModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Modal Content -->
-            <div class="space-y-6">
-                <!-- Customer IDs -->
-                <div class="bg-purple-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-purple-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                        </svg>
-                        Customer IDs
-                    </h4>
-                    <div class="space-y-2">
-                        <p class="text-sm text-gray-700"><strong>Format:</strong> [MonthLetter][Day][SequenceNumber]</p>
-                        <p class="text-sm text-gray-700"><strong>Example:</strong> <code class="bg-gray-200 px-2 py-1 rounded">F14004</code></p>
-                        <div class="text-sm text-gray-600">
-                            <p>• <strong>F</strong> = June (A=Jan, B=Feb, C=Mar, D=Apr, E=May, F=Jun, G=Jul, H=Aug, I=Sep, J=Oct, K=Nov, L=Dec)</p>
-                            <p>• <strong>14</strong> = 14th day of the month</p>
-                            <p>• <strong>004</strong> = 4th customer registered</p>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Order IDs -->
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM8 15v-3h4v3H8z" clip-rule="evenodd"></path>
-                        </svg>
-                        Order IDs
-                    </h4>
-                    <div class="space-y-2">
-                        <p class="text-sm text-gray-700"><strong>Format:</strong> [CustomerNum][MonthLetter][Day][ShippingCode][RandomNum]</p>
-                        <p class="text-sm text-gray-700"><strong>Example:</strong> <code class="bg-gray-200 px-2 py-1 rounded">01F14P23</code></p>
-                        <div class="text-sm text-gray-600">
-                            <p>• <strong>01</strong> = Last 2 digits of customer number</p>
-                            <p>• <strong>F14</strong> = June 14th (order date)</p>
-                            <p>• <strong>P</strong> = Pickup (P=Pickup, L=Local, U=USPS, F=FedEx, X=UPS)</p>
-                            <p>• <strong>23</strong> = Random 2-digit number for uniqueness</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product/Inventory IDs -->
-                <div class="bg-green-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-green-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
-                        </svg>
-                        Product & Inventory IDs
-                    </h4>
-                    <div class="space-y-2">
-                        <p class="text-sm text-gray-700"><strong>Format:</strong> [CategoryPrefix][SequenceNumber]</p>
-                        <p class="text-sm text-gray-700"><strong>Examples:</strong></p>
-                        <div class="text-sm text-gray-600 space-y-1">
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">I001</code> = Inventory Item #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">TS001</code> = T-Shirt Product #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">TU001</code> = Tumbler Product #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">AW001</code> = Artwork Product #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">MG001</code> = Mug Product #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">GN001</code> = General/Window Wrap Product #1</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order Item IDs -->
-                <div class="bg-yellow-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-yellow-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"></path>
-                        </svg>
-                        Order Item IDs
-                    </h4>
-                    <div class="space-y-2">
-                        <p class="text-sm text-gray-700"><strong>Format:</strong> OI[SequentialNumber]</p>
-                        <p class="text-sm text-gray-700"><strong>Example:</strong> <code class="bg-gray-200 px-2 py-1 rounded">OI001</code></p>
-                        <div class="text-sm text-gray-600">
-                            <p>• <strong>OI</strong> = Order Item prefix</p>
-                            <p>• <strong>001</strong> = Sequential 3-digit number (001, 002, 003, etc.)</p>
-                            <p class="text-xs italic">Simple, clean, and easy to reference!</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Marketing IDs -->
-                <div class="bg-red-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-red-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"></path>
-                        </svg>
-                        Marketing IDs
-                    </h4>
-                    <div class="space-y-2">
-                        <p class="text-sm text-gray-700"><strong>Format:</strong> [TypePrefix][RandomAlphanumeric]</p>
-                        <p class="text-sm text-gray-700"><strong>Examples:</strong></p>
-                        <div class="text-sm text-gray-600 space-y-1">
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">EC001</code> = Email Campaign #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">DC001</code> = Discount Code #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">SP001</code> = Social Post #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">SA001</code> = Social Account #1</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">ES001</code> = Email Subscriber #1</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Legacy IDs -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                        </svg>
-                        Legacy/Admin IDs
-                    </h4>
-                    <div class="space-y-2">
-                        <p class="text-sm text-gray-700"><strong>Format:</strong> [Letter][SequenceNumber]</p>
-                        <p class="text-sm text-gray-700"><strong>Examples:</strong></p>
-                        <div class="text-sm text-gray-600 space-y-1">
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">F13001</code> = Legacy customer/admin account</p>
-                            <p>• <code class="bg-gray-200 px-2 py-1 rounded">U962</code> = Legacy user format (deprecated)</p>
-                        </div>
-                        <p class="text-xs text-gray-500 italic">Note: Legacy formats are maintained for existing records but new records use the current specifications.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="mt-6 flex justify-end">
-                <button onclick="closeIdLegendModal()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Room Mapper Modal -->
 <div id="roomMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
@@ -437,13 +302,7 @@ let mapperAreaCount = 0;
 const mapperOriginalImageWidth = 1280;
 const mapperOriginalImageHeight = 896;
 
-function openIdLegendModal() {
-    document.getElementById('idLegendModal').style.display = 'block';
-}
 
-function closeIdLegendModal() {
-    document.getElementById('idLegendModal').style.display = 'none';
-}
 
 function openSystemConfigModal() {
     document.getElementById('systemConfigModal').style.display = 'block';
@@ -508,55 +367,204 @@ function generateSystemConfigHTML(data) {
                     </div>
                     <div>
                         <h5 class="font-semibold text-green-700 mb-2">🏷️ Main Entity</h5>
-                        <p class="text-green-600"><strong>${data.system_info.main_entity}</strong> (formerly "products")</p>
+                        <p class="text-green-600"><strong>${data.system_info.main_entity}</strong></p>
                         <p class="text-xs text-green-600">All inventory and shop items</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Live Statistics -->
-        <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
-            <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+        <!-- SKU Categories -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <h4 class="font-semibold text-yellow-800 mb-3 flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
                 </svg>
-                Live System Statistics
+                Active Categories & SKU Codes
             </h4>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div class="text-center p-3 bg-blue-100 rounded">
-                    <div class="font-bold text-2xl text-blue-700">${data.statistics.total_items}</div>
-                    <div class="text-xs text-blue-600">Total Items</div>
-                </div>
-                <div class="text-center p-3 bg-blue-100 rounded">
-                    <div class="font-bold text-2xl text-blue-700">${data.statistics.total_images}</div>
-                    <div class="text-xs text-blue-600">Total Images</div>
-                </div>
-                <div class="text-center p-3 bg-blue-100 rounded">
-                    <div class="font-bold text-2xl text-blue-700">${data.statistics.total_orders}</div>
-                    <div class="text-xs text-blue-600">Total Orders</div>
-                </div>
-                <div class="text-center p-3 bg-blue-100 rounded">
-                    <div class="font-bold text-2xl text-blue-700">${data.statistics.categories_count}</div>
-                    <div class="text-xs text-blue-600">Categories</div>
-                </div>
-            </div>
-            <div class="mt-3 text-xs text-blue-600">
-                <strong>Last Order:</strong> ${lastOrderDate} | 
-                <strong>Database:</strong> ${data.system_info.database_host}
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                ${Object.entries(data.category_codes).map(([category, code]) => {
+                    const isActive = data.categories.includes(category);
+                    return `
+                        <div class="text-center p-2 ${isActive ? 'bg-yellow-100' : 'bg-gray-100'} rounded">
+                            <div class="font-semibold ${isActive ? 'text-yellow-700' : 'text-gray-500'}">${code}</div>
+                            <div class="text-xs ${isActive ? 'text-yellow-600' : 'text-gray-400'}">${category}</div>
+                            ${isActive ? '<div class="text-xs text-green-600">✅ Active</div>' : '<div class="text-xs text-gray-400">Inactive</div>'}
+                        </div>
+                    `;
+                }).join('')}
             </div>
         </div>
 
+
+
+        <!-- ID Number Legend -->
+        <div class="bg-orange-50 border-l-4 border-orange-400 p-4">
+            <h4 class="font-semibold text-orange-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+                ID Number Legend & Formats
+            </h4>
+            <div class="space-y-4">
+                <!-- Customer IDs -->
+                <div class="bg-white p-3 rounded-lg border border-orange-200">
+                    <h5 class="font-semibold text-orange-700 mb-2 flex items-center text-sm">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                        </svg>
+                        Customer IDs
+                    </h5>
+                    <div class="text-xs text-orange-600 space-y-1">
+                        <p><strong>Format:</strong> [MonthLetter][Day][SequenceNumber]</p>
+                        ${data.id_formats.recent_customers.length > 0 ? 
+                            `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_customers.map(c => 
+                                `<code class="bg-orange-100 px-1 py-0.5 rounded">${c.id}</code> (${c.username || 'No username'})`
+                            ).join(', ')}</p>` : 
+                            `<p><strong>Example:</strong> <code class="bg-orange-100 px-1 py-0.5 rounded">F14004</code></p>`
+                        }
+                        <div class="text-xs text-orange-500 mt-2">
+                            <p>• <strong>F</strong> = June (A=Jan, B=Feb, C=Mar, D=Apr, E=May, F=Jun, G=Jul, H=Aug, I=Sep, J=Oct, K=Nov, L=Dec)</p>
+                            <p>• <strong>14</strong> = 14th day of the month</p>
+                            <p>• <strong>004</strong> = 4th customer registered</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order IDs -->
+                <div class="bg-white p-3 rounded-lg border border-orange-200">
+                    <h5 class="font-semibold text-orange-700 mb-2 flex items-center text-sm">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM8 15v-3h4v3H8z" clip-rule="evenodd"></path>
+                        </svg>
+                        Order IDs
+                    </h5>
+                    <div class="text-xs text-orange-600 space-y-1">
+                        <p><strong>Format:</strong> [CustomerNum][MonthLetter][Day][ShippingCode][RandomNum]</p>
+                        ${data.id_formats.recent_orders.length > 0 ? 
+                            `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_orders.map(o => 
+                                `<code class="bg-orange-100 px-1 py-0.5 rounded">${o}</code>`
+                            ).join(', ')}</p>` : 
+                            `<p><strong>Example:</strong> <code class="bg-orange-100 px-1 py-0.5 rounded">01F14P23</code></p>`
+                        }
+                        <div class="text-xs text-orange-500 mt-2">
+                            <p>• <strong>01</strong> = Last 2 digits of customer number</p>
+                            <p>• <strong>F14</strong> = June 14th (order date)</p>
+                            <p>• <strong>P</strong> = Pickup (P=Pickup, L=Local, U=USPS, F=FedEx, X=UPS)</p>
+                            <p>• <strong>23</strong> = Random 2-digit number for uniqueness</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product/Inventory IDs (SKUs) -->
+                <div class="bg-white p-3 rounded-lg border border-orange-200">
+                    <h5 class="font-semibold text-orange-700 mb-2 flex items-center text-sm">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                        </svg>
+                        Product & Inventory IDs (SKUs)
+                    </h5>
+                    <div class="text-xs text-orange-600 space-y-1">
+                        <p><strong>Format:</strong> ${data.system_info.sku_format}</p>
+                        ${data.sample_skus.length > 0 ? 
+                            `<p><strong>Current Examples:</strong> ${data.sample_skus.slice(0, 5).map(sku => 
+                                `<code class="bg-orange-100 px-1 py-0.5 rounded">${sku}</code>`
+                            ).join(', ')}</p>` : 
+                            `<p><strong>Examples:</strong> <code class="bg-orange-100 px-1 py-0.5 rounded">WF-TS-001</code>, <code class="bg-orange-100 px-1 py-0.5 rounded">WF-TU-002</code></p>`
+                        }
+                        <div class="text-xs text-orange-500 mt-2">
+                            ${Object.entries(data.category_codes).map(([category, code]) => 
+                                `<p>• <strong>${code}</strong> = ${category}</p>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Item IDs -->
+                <div class="bg-white p-3 rounded-lg border border-orange-200">
+                    <h5 class="font-semibold text-orange-700 mb-2 flex items-center text-sm">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"></path>
+                        </svg>
+                        Order Item IDs
+                    </h5>
+                    <div class="text-xs text-orange-600 space-y-1">
+                        <p><strong>Format:</strong> OI[SequentialNumber]</p>
+                        ${data.id_formats.recent_order_items.length > 0 ? 
+                            `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_order_items.map(oi => 
+                                `<code class="bg-orange-100 px-1 py-0.5 rounded">${oi}</code>`
+                            ).join(', ')}</p>` : 
+                            `<p><strong>Example:</strong> <code class="bg-orange-100 px-1 py-0.5 rounded">OI001</code></p>`
+                        }
+                        <div class="text-xs text-orange-500 mt-2">
+                            <p>• <strong>OI</strong> = Order Item prefix</p>
+                            <p>• <strong>001</strong> = Sequential 3-digit number (001, 002, 003, etc.)</p>
+                            <p class="italic">Simple, clean, and easy to reference!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    `;
+}
+
+function closeSystemConfigModal() {
+    document.getElementById('systemConfigModal').style.display = 'none';
+}
+
+function openDatabaseMaintenanceModal() {
+    document.getElementById('databaseMaintenanceModal').style.display = 'block';
+    loadDatabaseInformation();
+}
+
+async function loadDatabaseInformation() {
+    const loadingDiv = document.getElementById('databaseMaintenanceLoading');
+    const contentDiv = document.getElementById('databaseMaintenanceContent');
+    
+    // Show loading state
+    loadingDiv.style.display = 'block';
+    
+    try {
+        const response = await fetch('/api/get_database_info.php');
+        const result = await response.json();
+        
+        if (result.success) {
+            const data = result.data;
+            
+            // Hide loading and populate content
+            loadingDiv.style.display = 'none';
+            contentDiv.innerHTML = generateDatabaseMaintenanceHTML(data);
+        } else {
+            throw new Error(result.error || 'Failed to load database information');
+        }
+    } catch (error) {
+        console.error('Error loading database information:', error);
+        loadingDiv.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-red-500 mb-3">⚠️</div>
+                <p class="text-red-600">Failed to load database information</p>
+                <p class="text-sm text-gray-500">${error.message}</p>
+                <button onclick="loadDatabaseInformation()" class="mt-3 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+function generateDatabaseMaintenanceHTML(data) {
+    return `
         <!-- Database Schema -->
         <div class="bg-purple-50 border-l-4 border-purple-400 p-4">
             <h4 class="font-semibold text-purple-800 mb-3 flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"></path>
                 </svg>
-                Database Tables & Structure (${data.database_tables.total_active} Active + ${data.database_tables.total_backup} Backup)
+                Database Tables & Structure (${data.total_active} Active + ${data.total_backup} Backup)
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                ${Object.entries(data.database_tables.organized).map(([category, tables]) => {
+                ${Object.entries(data.organized).map(([category, tables]) => {
                     const categoryLabels = {
                         'core_tables': '🏗️ Core Tables',
                         'user_management': '👥 User Management', 
@@ -589,13 +597,13 @@ function generateSystemConfigHTML(data) {
             
             <!-- Backup Tables (Collapsible) -->
             <div class="mt-4">
-                <button onclick="toggleBackupTables()" class="text-xs text-purple-600 hover:text-purple-800 flex items-center">
-                    <span id="backupToggleIcon">▶</span>
-                    <span class="ml-1">Show Backup Tables (${data.database_tables.total_backup})</span>
+                <button onclick="toggleDatabaseBackupTables()" class="text-xs text-purple-600 hover:text-purple-800 flex items-center">
+                    <span id="databaseBackupToggleIcon">▶</span>
+                    <span class="ml-1">Show Backup Tables (${data.total_backup})</span>
                 </button>
-                <div id="backupTablesContainer" class="hidden mt-2 bg-gray-100 rounded p-2">
+                <div id="databaseBackupTablesContainer" class="hidden mt-2 bg-gray-100 rounded p-2">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                        ${data.database_tables.backup_tables.map(table => 
+                        ${data.backup_tables.map(table => 
                             `<button onclick="viewTable('${table}')" 
                                      class="text-left hover:bg-gray-200 rounded px-1 py-0.5 transition-colors">
                                 <code class="bg-gray-200 px-1 py-0.5 rounded">${table}</code>
@@ -605,93 +613,16 @@ function generateSystemConfigHTML(data) {
                 </div>
             </div>
         </div>
-
-        <!-- SKU Categories -->
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <h4 class="font-semibold text-yellow-800 mb-3 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
-                </svg>
-                Active Categories & SKU Codes
-            </h4>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                ${Object.entries(data.category_codes).map(([category, code]) => {
-                    const isActive = data.categories.includes(category);
-                    return `
-                        <div class="text-center p-2 ${isActive ? 'bg-yellow-100' : 'bg-gray-100'} rounded">
-                            <div class="font-semibold ${isActive ? 'text-yellow-700' : 'text-gray-500'}">${code}</div>
-                            <div class="text-xs ${isActive ? 'text-yellow-600' : 'text-gray-400'}">${category}</div>
-                            ${isActive ? '<div class="text-xs text-green-600">✅ Active</div>' : '<div class="text-xs text-gray-400">Inactive</div>'}
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
-
-        <!-- File Structure -->
-        <div class="bg-indigo-50 border-l-4 border-indigo-400 p-4">
-            <h4 class="font-semibold text-indigo-800 mb-3 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path>
-                </svg>
-                File Structure & API Endpoints
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                    <h5 class="font-semibold text-indigo-700 mb-2">Image Storage</h5>
-                    <ul class="space-y-1 text-indigo-600">
-                        <li><code class="bg-indigo-100 px-2 py-1 rounded">${data.system_info.image_directory}</code> - All item images</li>
-                        <li>Format: [SKU][Letter].[ext]</li>
-                        <li>Example: ${data.sample_skus[0] || 'WF-TS-001'}A.webp</li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-semibold text-indigo-700 mb-2">API Endpoints</h5>
-                    <ul class="space-y-1 text-indigo-600 text-xs">
-                        ${data.api_endpoints.map(endpoint => 
-                            `<li><code class="bg-indigo-100 px-1 py-0.5 rounded">${endpoint}</code></li>`
-                        ).join('')}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Migration Status -->
-        <div class="bg-gray-50 border-l-4 border-gray-400 p-4">
-            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
-                Migration Status (Completed)
-            </h4>
-            <div class="text-sm text-gray-600 space-y-2">
-                ${Object.entries(data.migration_status).map(([key, completed]) => {
-                    const labels = {
-                        'products_to_items': 'Database migration: products → items terminology',
-                        'product_images_to_item_images': 'Table rename: product_images → item_images',
-                        'sku_only_system': 'SKU-only system: Removed dual itemId/SKU complexity',
-                        'image_path_migration': 'Image migration: images/products/ → images/items/',
-                        'terminology_cleanup': 'Code updates: All files use item terminology'
-                    };
-                    return `
-                        <div class="flex items-center">
-                            <span class="${completed ? 'text-green-500' : 'text-red-500'} mr-2">${completed ? '✅' : '❌'}</span>
-                            <span>${labels[key] || key}</span>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
     `;
 }
 
-function closeSystemConfigModal() {
-    document.getElementById('systemConfigModal').style.display = 'none';
+function closeDatabaseMaintenanceModal() {
+    document.getElementById('databaseMaintenanceModal').style.display = 'none';
 }
 
-function toggleBackupTables() {
-    const container = document.getElementById('backupTablesContainer');
-    const icon = document.getElementById('backupToggleIcon');
+function toggleDatabaseBackupTables() {
+    const container = document.getElementById('databaseBackupTablesContainer');
+    const icon = document.getElementById('databaseBackupToggleIcon');
     
     if (container.classList.contains('hidden')) {
         container.classList.remove('hidden');
@@ -4112,7 +4043,7 @@ function escapeHtml(text) {
         <div class="mt-3">
             <!-- Modal Header -->
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-900">⚙️ System Configuration Reference</h3>
+                <h3 class="text-lg font-bold text-gray-900">⚙️ System Reference</h3>
                 <button onclick="closeSystemConfigModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -4126,6 +4057,34 @@ function escapeHtml(text) {
                 <div class="text-center py-8" id="systemConfigLoading">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-3"></div>
                     <p class="text-gray-600">Loading system configuration...</p>
+                </div>
+                
+                <!-- Content will be loaded dynamically here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Database Maintenance Modal -->
+<div id="databaseMaintenanceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">🗄️ Database Maintenance</h3>
+                <button onclick="closeDatabaseMaintenanceModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="space-y-6" id="databaseMaintenanceContent">
+                <!-- Loading state -->
+                <div class="text-center py-8" id="databaseMaintenanceLoading">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-3"></div>
+                    <p class="text-gray-600">Loading database information...</p>
                 </div>
                 
                 <!-- Content will be loaded dynamically here -->
@@ -4155,3 +4114,563 @@ function escapeHtml(text) {
         </div>
     </div>
 </div>
+
+<!-- File Explorer Modal -->
+<div id="fileExplorerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
+    <div class="relative top-5 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">📁 File Explorer</h3>
+                <button onclick="closeFileExplorerModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Full Path Display -->
+            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center">
+                    <span class="text-sm font-medium text-blue-800 mr-2">Current Path:</span>
+                    <span id="fullPath" class="text-sm text-blue-700 font-mono break-all">/Users/jongraves/Documents/Websites/WhimsicalFrog</span>
+                </div>
+            </div>
+            
+            <!-- Toolbar -->
+            <div class="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center space-x-2">
+                    <button onclick="navigateUp()" id="upButton" class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm" disabled>
+                        ↑ Up
+                    </button>
+                    <button onclick="refreshDirectory()" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
+                        🔄 Refresh
+                    </button>
+                </div>
+                <div class="flex items-center">
+                    <button onclick="backupWebsite()" class="px-4 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm font-medium">
+                        💾 Backup Website
+                    </button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="showCreateFolderDialog()" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm">
+                        📁+ New Folder
+                    </button>
+                    <button onclick="showCreateFileDialog()" class="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-sm">
+                        📄+ New File
+                    </button>
+                </div>
+            </div>
+            
+            <!-- File List -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Left Panel: File Browser -->
+                <div class="bg-white border rounded-lg">
+                    <div class="p-3 border-b bg-gray-50">
+                        <h4 class="font-semibold text-gray-800">Directory Contents</h4>
+                    </div>
+                    <div id="fileList" class="p-3 max-h-96 overflow-y-auto">
+                        <!-- File list will be loaded here -->
+                        <div class="text-center py-8" id="fileListLoading">
+                            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500 mx-auto mb-2"></div>
+                            <p class="text-gray-600 text-sm">Loading files...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Panel: File Editor -->
+                <div class="bg-white border rounded-lg">
+                    <div class="p-3 border-b bg-gray-50 flex items-center justify-between">
+                        <h4 class="font-semibold text-gray-800">File Editor</h4>
+                        <div id="editorActions" class="hidden space-x-2">
+                            <button onclick="saveFile()" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm">
+                                💾 Save
+                            </button>
+                            <button onclick="closeEditor()" class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm">
+                                ✕ Close
+                            </button>
+                        </div>
+                    </div>
+                    <div id="fileEditor" class="p-3">
+                        <div class="text-center py-8 text-gray-500">
+                            <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p>Select a file to view or edit</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- File Info Panel -->
+            <div id="fileInfoPanel" class="mt-4 p-3 bg-gray-50 rounded-lg hidden">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-700">Size:</span>
+                        <span id="fileSize" class="text-gray-600">-</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Modified:</span>
+                        <span id="fileModified" class="text-gray-600">-</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Permissions:</span>
+                        <span id="filePermissions" class="text-gray-600">-</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Type:</span>
+                        <span id="fileType" class="text-gray-600">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// File Explorer JavaScript
+let currentDirectory = '';
+let currentFile = null;
+let fileExplorerData = {};
+
+function openFileExplorerModal() {
+    document.getElementById('fileExplorerModal').style.display = 'block';
+    // Small delay to ensure DOM elements are rendered
+    setTimeout(() => {
+        loadDirectory('');
+    }, 10);
+}
+
+function closeFileExplorerModal() {
+    document.getElementById('fileExplorerModal').style.display = 'none';
+    closeEditor();
+}
+
+async function loadDirectory(path = '') {
+    try {
+        const response = await fetch(`api/file_manager.php?action=list&path=${encodeURIComponent(path)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            currentDirectory = result.path;
+            fileExplorerData = result;
+            displayFileList(result.items);
+            updatePathDisplay();
+            updateUpButton();
+        } else {
+            showNotification('Error', result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error loading directory:', error);
+        showNotification('Error', 'Failed to load directory', 'error');
+    }
+}
+
+function displayFileList(items) {
+    const fileListDiv = document.getElementById('fileList');
+    const loadingDiv = document.getElementById('fileListLoading');
+    
+    // Safety check to prevent null reference errors
+    if (!fileListDiv) {
+        console.error('File list element not found');
+        return;
+    }
+    
+    if (loadingDiv) {
+        loadingDiv.style.display = 'none';
+    }
+    
+
+    
+    if (items.length === 0) {
+        fileListDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Directory is empty</p>';
+        return;
+    }
+    
+    let html = '<div class="space-y-1">';
+    
+    items.forEach(item => {
+        const icon = item.type === 'directory' ? '📁' : getFileIcon(item.extension);
+        const sizeText = item.type === 'file' ? item.size_formatted : '';
+        const modifiedDate = new Date(item.modified * 1000).toLocaleDateString();
+        
+        html += `
+            <div class="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer" 
+                 onclick="${item.type === 'directory' ? `loadDirectory('${item.path}')` : `selectFile('${item.path}')`}">
+                <div class="flex items-center flex-1">
+                    <span class="mr-2">${icon}</span>
+                    <div class="flex-1">
+                        <div class="font-medium text-gray-800">${item.name}</div>
+                        <div class="text-xs text-gray-500">${sizeText} ${modifiedDate}</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-1">
+                    ${item.type === 'file' && item.viewable ? 
+                        `<button onclick="event.stopPropagation(); viewFile('${item.path}')" 
+                                class="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded">View</button>` : ''}
+                    ${item.type === 'file' && item.editable ? 
+                        `<button onclick="event.stopPropagation(); editFile('${item.path}')" 
+                                class="px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded">Edit</button>` : ''}
+                    <button onclick="event.stopPropagation(); deleteItem('${item.path}', '${item.type}')" 
+                            class="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    fileListDiv.innerHTML = html;
+}
+
+function getFileIcon(extension) {
+    const icons = {
+        'php': '🐘',
+        'js': '📜',
+        'css': '🎨',
+        'html': '🌐',
+        'json': '📋',
+        'txt': '📄',
+        'md': '📝',
+        'png': '🖼️',
+        'jpg': '🖼️',
+        'jpeg': '🖼️',
+        'webp': '🖼️',
+        'svg': '🖼️',
+        'log': '📊',
+        'sh': '⚙️'
+    };
+    return icons[extension] || '📄';
+}
+
+function updatePathDisplay() {
+    const fullPathElement = document.getElementById('fullPath');
+    if (fullPathElement) {
+        const basePath = '/Users/jongraves/Documents/Websites/WhimsicalFrog';
+        const fullPath = currentDirectory === '' ? basePath : basePath + '/' + currentDirectory;
+        fullPathElement.textContent = fullPath;
+    }
+}
+
+function updateUpButton() {
+    const upButton = document.getElementById('upButton');
+    if (upButton) {
+        upButton.disabled = currentDirectory === '';
+    }
+}
+
+function navigateUp() {
+    if (currentDirectory !== '' && fileExplorerData.parent !== null) {
+        loadDirectory(fileExplorerData.parent === '.' ? '' : fileExplorerData.parent);
+    }
+}
+
+function refreshDirectory() {
+    loadDirectory(currentDirectory);
+}
+
+function selectFile(path) {
+    // This is called when clicking on a file (not edit/view buttons)
+    // For now, just show file info
+    showFileInfo(path);
+}
+
+ async function viewFile(path) {
+     try {
+         const response = await fetch(`api/file_manager.php?action=read&path=${encodeURIComponent(path)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            currentFile = {
+                path: result.path,
+                content: result.content,
+                editable: result.editable,
+                readonly: true
+            };
+            displayFileInEditor(result);
+        } else {
+            showNotification('Error', result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error reading file:', error);
+        showNotification('Error', 'Failed to read file', 'error');
+    }
+}
+
+ async function editFile(path) {
+     try {
+         const response = await fetch(`api/file_manager.php?action=read&path=${encodeURIComponent(path)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            currentFile = {
+                path: result.path,
+                content: result.content,
+                editable: result.editable,
+                readonly: false
+            };
+            displayFileInEditor(result);
+        } else {
+            showNotification('Error', result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error reading file:', error);
+        showNotification('Error', 'Failed to read file', 'error');
+    }
+}
+
+function displayFileInEditor(fileData) {
+    const editorDiv = document.getElementById('fileEditor');
+    const actionsDiv = document.getElementById('editorActions');
+    
+    const isReadonly = currentFile.readonly || !fileData.editable;
+    
+    editorDiv.innerHTML = `
+        <div class="mb-2">
+            <div class="flex items-center justify-between">
+                <h5 class="font-medium text-gray-800">${fileData.filename}</h5>
+                <span class="text-xs text-gray-500">${isReadonly ? 'Read-only' : 'Editable'}</span>
+            </div>
+        </div>
+        <textarea id="fileContent" 
+                  class="w-full h-80 p-3 border border-gray-300 rounded font-mono text-sm resize-none"
+                  ${isReadonly ? 'readonly' : ''}
+                  placeholder="File content will appear here...">${fileData.content}</textarea>
+    `;
+    
+    if (!isReadonly) {
+        actionsDiv.classList.remove('hidden');
+    } else {
+        actionsDiv.classList.add('hidden');
+    }
+    
+    showFileInfo(fileData.path, fileData);
+}
+
+function showFileInfo(path, fileData = null) {
+    const infoPanel = document.getElementById('fileInfoPanel');
+    
+    if (fileData && infoPanel) {
+        const fileSizeEl = document.getElementById('fileSize');
+        const fileModifiedEl = document.getElementById('fileModified');
+        const filePermissionsEl = document.getElementById('filePermissions');
+        const fileTypeEl = document.getElementById('fileType');
+        
+        if (fileSizeEl) fileSizeEl.textContent = formatFileSize(fileData.size);
+        if (fileModifiedEl) fileModifiedEl.textContent = new Date(fileData.modified * 1000).toLocaleString();
+        if (filePermissionsEl) filePermissionsEl.textContent = '-';
+        if (fileTypeEl) fileTypeEl.textContent = fileData.filename.split('.').pop().toUpperCase();
+        
+        infoPanel.classList.remove('hidden');
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes >= 1073741824) {
+        return (bytes / 1073741824).toFixed(2) + ' GB';
+    } else if (bytes >= 1048576) {
+        return (bytes / 1048576).toFixed(2) + ' MB';
+    } else if (bytes >= 1024) {
+        return (bytes / 1024).toFixed(2) + ' KB';
+    } else {
+        return bytes + ' bytes';
+    }
+}
+
+async function saveFile() {
+    if (!currentFile || currentFile.readonly) {
+        showNotification('Error', 'No editable file selected', 'error');
+        return;
+    }
+    
+    const content = document.getElementById('fileContent').value;
+    
+         try {
+         const response = await fetch('api/file_manager.php?action=write', {
+             method: 'POST',
+             headers: {
+                 'Content-Type': 'application/json'
+             },
+             body: JSON.stringify({
+                 path: currentFile.path,
+                 content: content
+             })
+         });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Success', 'File saved successfully', 'success');
+            currentFile.content = content;
+        } else {
+            showNotification('Error', result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving file:', error);
+        showNotification('Error', 'Failed to save file', 'error');
+    }
+}
+
+function closeEditor() {
+    const editorDiv = document.getElementById('fileEditor');
+    const actionsDiv = document.getElementById('editorActions');
+    const infoPanel = document.getElementById('fileInfoPanel');
+    
+    editorDiv.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+            <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p>Select a file to view or edit</p>
+        </div>
+    `;
+    
+    actionsDiv.classList.add('hidden');
+    infoPanel.classList.add('hidden');
+    currentFile = null;
+}
+
+async function deleteItem(path, type) {
+    const itemType = type === 'directory' ? 'folder' : 'file';
+    
+    if (!confirm(`Are you sure you want to delete this ${itemType}?\n\n${path}`)) {
+        return;
+    }
+    
+    try {
+                 const response = await fetch(`api/file_manager.php?action=delete&path=${encodeURIComponent(path)}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Success', `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} deleted successfully`, 'success');
+            refreshDirectory();
+            
+            // Close editor if deleted file was open
+            if (currentFile && currentFile.path === path) {
+                closeEditor();
+            }
+        } else {
+            showNotification('Error', result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        showNotification('Error', `Failed to delete ${itemType}`, 'error');
+    }
+}
+
+function showCreateFolderDialog() {
+    const folderName = prompt('Enter folder name:');
+    if (folderName && folderName.trim()) {
+        createFolder(folderName.trim());
+    }
+}
+
+function showCreateFileDialog() {
+    const fileName = prompt('Enter file name (with extension):');
+    if (fileName && fileName.trim()) {
+        createFile(fileName.trim());
+    }
+}
+
+async function createFolder(name) {
+    const path = currentDirectory ? `${currentDirectory}/${name}` : name;
+    
+    try {
+                 const response = await fetch('api/file_manager.php?action=mkdir', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path: path })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Success', 'Folder created successfully', 'success');
+            refreshDirectory();
+        } else {
+            showNotification('Error', result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error creating folder:', error);
+        showNotification('Error', 'Failed to create folder', 'error');
+    }
+}
+
+async function createFile(name) {
+    const path = currentDirectory ? `${currentDirectory}/${name}` : name;
+    
+    try {
+                 const response = await fetch('api/file_manager.php?action=write', {
+             method: 'POST',
+             headers: {
+                 'Content-Type': 'application/json'
+             },
+             body: JSON.stringify({
+                 path: path,
+                 content: ''
+             })
+         });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Success', 'File created successfully', 'success');
+            refreshDirectory();
+        } else {
+            showNotification('Error', result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error creating file:', error);
+        showNotification('Error', 'Failed to create file', 'error');
+    }
+}
+
+async function backupWebsite() {
+    if (!confirm('Create a backup of the entire website?\n\nThis will create a compressed archive of all website files.')) {
+        return;
+    }
+    
+    try {
+        showNotification('Info', 'Creating backup... This may take a moment.', 'info');
+        
+        const response = await fetch('api/backup_website.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            let message = `Backup created successfully: ${result.filename}`;
+            
+            // Add cleanup info if old backups were deleted
+            if (result.cleanup && result.cleanup.deleted > 0) {
+                message += `\n\nCleanup: ${result.cleanup.deleted} old backup${result.cleanup.deleted > 1 ? 's' : ''} deleted to maintain 10 backup limit.`;
+            }
+            
+            showNotification('Success', message, 'success');
+            
+            // Optionally download the backup file
+            if (result.download_url) {
+                const link = document.createElement('a');
+                link.href = result.download_url;
+                link.download = result.filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        } else {
+            showNotification('Error', result.error || 'Failed to create backup', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating backup:', error);
+        showNotification('Error', 'Failed to create backup', 'error');
+    }
+}
+</script>

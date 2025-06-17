@@ -812,11 +812,11 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                             <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th><th class="w-8"></th></tr></thead>
                             <tbody>
                                 <?php
-                                                                         $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.itemId = i.id WHERE oi.orderId = ?");
+                                                                         $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ?");
                                     $itemStmt->execute([$editOrderId]);
                                     $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                     foreach ($orderItems as $it): ?>
-                                    <tr class="item-row" data-item-id="<?= htmlspecialchars($it['id']) ?>" data-item-id="<?= htmlspecialchars($it['itemId']) ?>" data-price="<?= $it['price'] ?>">
+                                    <tr class="item-row" data-item-id="<?= htmlspecialchars($it['id']) ?>" data-sku="<?= htmlspecialchars($it['sku']) ?>" data-price="<?= $it['price'] ?>">
                                         <td><?= htmlspecialchars($it['name']); ?></td>
                                         <td class="text-center">
                                             <input type="number" class="w-16 border-0 bg-transparent text-center qty-input focus:bg-white focus:border focus:border-blue-300 rounded" 
@@ -838,7 +838,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <select id="addProductSelect" class="flex-1 border rounded px-2 py-1 text-sm max-w-xs">
                                     <option value="">-- Add Item --</option>
                                     <?php foreach($allItems as $p): ?>
-                                        <option value="<?= htmlspecialchars($p['id']) ?>" data-price="<?= $p['basePrice'] ?>"><?= htmlspecialchars($p['name']) ?> ($<?= number_format($p['basePrice'], 2) ?>)</option>
+                                        <option value="<?= htmlspecialchars($p['sku']) ?>" data-price="<?= $p['basePrice'] ?>"><?= htmlspecialchars($p['name']) ?> ($<?= number_format($p['basePrice'], 2) ?>)</option>
                                     <?php endforeach; ?>
                                 </select>
                                 <input type="number" id="addQty" class="w-16 border rounded px-2 py-1 text-sm" min="1" value="1">
@@ -1036,26 +1036,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Collect items table rows
             const items=[];
             document.querySelectorAll('#itemsTable tbody tr.item-row').forEach(async tr=>{
-                const iid=tr.dataset.itemId;
-                // Generate streamlined order item ID for frontend use
-            let nextItemId = 'OI001'; // Default fallback
-            try {
-                const response = await fetch('/api/next-order-item-id.php');
-                const responseText = await response.text();
-                        let data;
-                        try {
-                            data = JSON.parse(responseText);
-                        } catch (e) {
-                            console.error("JSON parse error:", e, "Raw response:", responseText);
-                            throw new Error("Invalid response from server");
-                        }
-                nextItemId = data.nextId || 'OI001';
-            } catch (e) {
-                console.warn('Could not fetch next order item ID, using fallback');
-            }
-            const rowId = tr.dataset.itemId || nextItemId;
+                const sku=tr.dataset.sku;
+                const orderItemId=tr.dataset.itemId; // This is the order_items.id
                 const qty=parseInt(tr.querySelector('.qty-input').value||'0',10);
-                if(iid && qty>0){ items.push({orderItemId:rowId,itemId:iid,quantity:qty}); }
+                if(sku && qty>0){ items.push({orderItemId:orderItemId,sku:sku,quantity:qty}); }
             });
 
             const payload = {
@@ -1150,15 +1134,15 @@ document.addEventListener('DOMContentLoaded', function() {
         addBtn.addEventListener('click', async () => {
             const sel=document.getElementById('addProductSelect');
             const qtyInput=document.getElementById('addQty');
-            const iid=sel.value; const qty=parseInt(qtyInput.value||'0',10);
-            if(!iid||qty<=0){ alert('Select item and qty'); return; }
+            const sku=sel.value; const qty=parseInt(qtyInput.value||'0',10);
+            if(!sku||qty<=0){ alert('Select item and qty'); return; }
             
             const selectedOption = sel.options[sel.selectedIndex];
             const price = parseFloat(selectedOption.dataset.price || 0);
-            const name = selectedOption.text.split(' - $')[0]; // Remove price from display name
+            const name = selectedOption.text.split(' ($')[0]; // Remove price from display name
             
             // If item already exists row, just update qty
-            const existingRow=[...itemsTbody.querySelectorAll('tr')].find(r=>r.dataset.itemId===iid);
+            const existingRow=[...itemsTbody.querySelectorAll('tr')].find(r=>r.dataset.sku===sku);
             if(existingRow){ 
                 existingRow.querySelector('.qty-input').value = qty; 
                 updateRowTotal(existingRow.querySelector('.qty-input'));
@@ -1166,25 +1150,9 @@ document.addEventListener('DOMContentLoaded', function() {
             else{
                 const tr=document.createElement('tr');
                 tr.className='item-row border-b';
-                tr.dataset.itemId=iid;
+                tr.dataset.sku=sku;
                 tr.dataset.price=price;
-                // Generate streamlined order item ID for new items
-            let nextItemId = 'OI001'; // Default fallback
-            try {
-                const response = await fetch('/api/next-order-item-id.php');
-                const responseText = await response.text();
-                        let data;
-                        try {
-                            data = JSON.parse(responseText);
-                        } catch (e) {
-                            console.error("JSON parse error:", e, "Raw response:", responseText);
-                            throw new Error("Invalid response from server");
-                        }
-                nextItemId = data.nextId || 'OI001';
-            } catch (e) {
-                console.warn('Could not fetch next order item ID, using fallback');
-            }
-            tr.dataset.itemId = nextItemId;
+                tr.dataset.itemId='new-' + Date.now(); // Temporary ID for new items
                 tr.innerHTML=`<td>${name}</td><td class="text-center"><input type="number" class="w-16 border-0 bg-transparent text-center qty-input focus:bg-white focus:border focus:border-blue-300 rounded" value="${qty}" min="1" onchange="updateRowTotal(this)" style="background: none; outline: none;"></td><td class="text-right line-total">$${(price * qty).toFixed(2)}</td><td class="text-center"><button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="removeItemAndUpdateTotal(this)" title="Remove item">🗑️</button></td>`;
                 itemsTbody.appendChild(tr);
                 updateGrandTotal();

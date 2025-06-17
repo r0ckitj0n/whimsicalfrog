@@ -312,7 +312,7 @@ $messageType = $_GET['type'] ?? '';
 
 <div class="container mx-auto px-4 py-6">
     <div class="flex flex-col md:flex-row justify-between items-center mb-5 gap-4">
-        <h1 class="inventory-title text-2xl font-bold" style="color: #87ac3a !important;">Items Management</h1>
+        <h1 class="inventory-title text-2xl font-bold" style="color: #87ac3a !important;">Inventory Management</h1>
         <form method="GET" action="" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="inventory">
@@ -1216,20 +1216,25 @@ function closeCostModal() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemId:', currentItemId, 'costBreakdown:', costBreakdown);
     
-    // Test if the HTML elements exist
-    console.log('materialsList element:', document.getElementById('materialsList'));
-    console.log('laborList element:', document.getElementById('laborList'));
-    console.log('energyList element:', document.getElementById('energyList'));
-    console.log('equipmentList element:', document.getElementById('equipmentList'));
-    
-    if ((modalMode === 'edit' || modalMode === 'view') && currentItemId && costBreakdown) {
-        console.log('Calling refreshCostBreakdown(true)');
-        refreshCostBreakdown(true); 
-    } else if (modalMode === 'add') {
-        console.log('Calling renderCostBreakdown(null) for add mode');
-        renderCostBreakdown(null); 
+    // Only check for cost breakdown elements if we're in a modal mode
+    if (modalMode === 'edit' || modalMode === 'view' || modalMode === 'add') {
+        // Test if the HTML elements exist
+        console.log('materialsList element:', document.getElementById('materialsList'));
+        console.log('laborList element:', document.getElementById('laborList'));
+        console.log('energyList element:', document.getElementById('energyList'));
+        console.log('equipmentList element:', document.getElementById('equipmentList'));
+        
+        if ((modalMode === 'edit' || modalMode === 'view') && currentItemId && costBreakdown) {
+            console.log('Calling refreshCostBreakdown(true)');
+            refreshCostBreakdown(true); 
+        } else if (modalMode === 'add') {
+            console.log('Calling renderCostBreakdown(null) for add mode');
+            renderCostBreakdown(null); 
+        } else {
+            console.log('Conditions not met - modalMode:', modalMode, 'currentItemId:', currentItemId, 'costBreakdown:', !!costBreakdown);
+        }
     } else {
-        console.log('Conditions not met - modalMode:', modalMode, 'currentItemId:', currentItemId, 'costBreakdown:', !!costBreakdown);
+        console.log('No modal mode active, skipping cost breakdown initialization');
     }
     
     const inventoryTable = document.getElementById('inventoryTable');

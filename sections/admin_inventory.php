@@ -35,25 +35,7 @@ if (isset($_GET['view']) && !empty($_GET['view'])) {
         $editItem = $fetchedViewItem; // Reuse editItem for view mode
 
         // Get cost breakdown data (temporarily disabled during SKU migration)
-        $materials = [];
-        $labor = [];
-        $energy = [];
-        $equipment = [];
-        
-        $materialTotal = 0;
-        $laborTotal = 0;
-        $energyTotal = 0;
-        $equipmentTotal = 0;
-        $suggestedCost = 0;
-        
-        $editCostBreakdown = [
-            'materials' => $materials, 'labor' => $labor, 'energy' => $energy, 'equipment' => $equipment,
-            'totals' => [
-                'materialTotal' => $materialTotal, 'laborTotal' => $laborTotal, 
-                'energyTotal' => $energyTotal, 'equipmentTotal' => $equipmentTotal,
-                'suggestedCost' => $suggestedCost, 'currentCost' => $editItem['costPrice'] ?? 0
-            ]
-        ];
+        $editCostBreakdown = null;
     }
 }
 // Check if we're in edit mode
@@ -68,25 +50,7 @@ elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
         $editItem = $fetchedEditItem; 
 
         // Get cost breakdown data (temporarily disabled during SKU migration)
-        $materials = [];
-        $labor = [];
-        $energy = [];
-        $equipment = [];
-        
-        $materialTotal = 0;
-        $laborTotal = 0;
-        $energyTotal = 0;
-        $equipmentTotal = 0;
-        $suggestedCost = 0;
-        
-        $editCostBreakdown = [
-            'materials' => $materials, 'labor' => $labor, 'energy' => $energy, 'equipment' => $equipment,
-            'totals' => [
-                'materialTotal' => $materialTotal, 'laborTotal' => $laborTotal, 
-                'energyTotal' => $energyTotal, 'equipmentTotal' => $equipmentTotal,
-                'suggestedCost' => $suggestedCost, 'currentCost' => $editItem['costPrice'] ?? 0
-            ]
-        ];
+        $editCostBreakdown = null;
     }
 } elseif (isset($_GET['add']) && $_GET['add'] == 1) {
     $modalMode = 'add';
@@ -959,7 +923,7 @@ function saveCostItem() { // Called by costForm submit
     const payload = { 
         costType: type, cost: parseFloat(cost), 
         name: name, description: description, 
-        inventoryId: currentItemId 
+                        inventoryId: currentItemSku 
     };
     if (id) payload.id = id;
 
@@ -1021,7 +985,7 @@ function confirmCostDeletion() {
     spinner.classList.remove('hidden');
     confirmBtn.disabled = true;
 
-    const url = `/process_cost_breakdown.php?id=${id}&costType=${type}&inventoryId=${currentItemId}`;
+            const url = `/process_cost_breakdown.php?id=${id}&costType=${type}&inventoryId=${currentItemSku}`;
 
     fetch(url, {
         method: 'DELETE',
@@ -1060,7 +1024,7 @@ function closeCostDeleteModal() {
 let isRefreshingCostBreakdown = false; // Prevent multiple simultaneous calls
 
 function refreshCostBreakdown(useExistingData = false) {
-    if (!currentItemId || isRefreshingCostBreakdown) return;
+            if (!currentItemSku || isRefreshingCostBreakdown) return;
     
     if (useExistingData && costBreakdown) {
         renderCostBreakdown(costBreakdown);
@@ -1068,7 +1032,7 @@ function refreshCostBreakdown(useExistingData = false) {
     }
     
     isRefreshingCostBreakdown = true;
-    fetch(`/process_cost_breakdown.php?inventoryId=${currentItemId}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+            fetch(`/process_cost_breakdown.php?inventoryId=${currentItemSku}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
     .then(response => response.json())
     .then(data => {
         if (data.success) {
@@ -1199,7 +1163,7 @@ function closeCostModal() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemId:', currentItemId, 'costBreakdown:', costBreakdown);
+            console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemSku:', currentItemSku, 'costBreakdown:', costBreakdown);
     
     // Only check for cost breakdown elements if we're in a modal mode
     if (modalMode === 'edit' || modalMode === 'view' || modalMode === 'add') {
@@ -1209,14 +1173,14 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('energyList element:', document.getElementById('energyList'));
         console.log('equipmentList element:', document.getElementById('equipmentList'));
         
-        if ((modalMode === 'edit' || modalMode === 'view') && currentItemId && costBreakdown) {
+        if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku && costBreakdown) {
             console.log('Calling refreshCostBreakdown(true)');
             refreshCostBreakdown(true); 
         } else if (modalMode === 'add') {
             console.log('Calling renderCostBreakdown(null) for add mode');
             renderCostBreakdown(null); 
         } else {
-            console.log('Conditions not met - modalMode:', modalMode, 'currentItemId:', currentItemId, 'costBreakdown:', !!costBreakdown);
+            console.log('Conditions not met - modalMode:', modalMode, 'currentItemSku:', currentItemSku, 'costBreakdown:', !!costBreakdown);
         }
     } else {
         console.log('No modal mode active, skipping cost breakdown initialization');
@@ -1377,7 +1341,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData();
                 formData.append('image', file);
                 const itemIdField = document.querySelector('input[name="itemId"]');
-                formData.append('itemId', itemIdField ? itemIdField.value : currentItemId);
+                formData.append('itemId', itemIdField ? itemIdField.value : currentItemSku);
                 const skuField=document.getElementById('skuEdit') || document.getElementById('skuDisplay');
                 if(skuField){formData.append('sku',skuField.value);}
                 

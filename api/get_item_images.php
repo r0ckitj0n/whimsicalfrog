@@ -1,8 +1,8 @@
 <?php
 /**
- * Get Product Images API
+ * Get Item Images API
  * 
- * Returns all images for a specific product with primary designation and sort order
+ * Returns all images for a specific item with primary designation and sort order
  */
 
 require_once '../includes/item_image_helpers.php';
@@ -17,7 +17,7 @@ try {
     }
     
     // Use the helper function which has fallback support
-    $images = getProductImages($sku);
+    $images = getItemImages($sku);
     
     // Add additional file information
     foreach ($images as &$image) {

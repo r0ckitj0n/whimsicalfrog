@@ -60,10 +60,10 @@ try {
         $itemCountStmt->execute();
         $itemCount = $itemCountStmt->fetchColumn();
         
-        $insert = $pdo->prepare('INSERT INTO order_items (id, orderId, productId, quantity, price) VALUES (?,?,?,?, (SELECT retailPrice FROM items WHERE id = ?))');
+        $insert = $pdo->prepare('INSERT INTO order_items (id, orderId, itemId, quantity, price) VALUES (?,?,?,?, (SELECT retailPrice FROM items WHERE id = ?))');
         $itemIndex = 0;
         foreach ($input['items'] as $row) {
-            if (empty($row['productId']) || empty($row['quantity'])) continue;
+            if (empty($row['itemId']) || empty($row['quantity'])) continue;
             
             // Generate streamlined order item ID
             $itemSequence = str_pad($itemCount + $itemIndex + 1, 3, '0', STR_PAD_LEFT);
@@ -71,7 +71,7 @@ try {
             $itemIndex++;
             
             $qty = (int)$row['quantity'];
-            $pid = $row['productId'];
+            $pid = $row['itemId'];
             $insert->execute([$itemId, $orderId, $pid, $qty, $pid]);
         }
         // recalc total

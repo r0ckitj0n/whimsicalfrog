@@ -2,11 +2,11 @@
 /**
  * Image Carousel Component
  * 
- * A reusable carousel component for displaying multiple product images
+ * A reusable carousel component for displaying multiple item images
  * that matches the WhimsicalFrog theme
  */
 
-function renderImageCarousel($productId, $images = [], $options = []) {
+function renderImageCarousel($itemId, $images = [], $options = []) {
     // Default options
     $defaults = [
         'showThumbnails' => true,
@@ -15,7 +15,7 @@ function renderImageCarousel($productId, $images = [], $options = []) {
         'showIndicators' => true,
         'height' => '400px',
         'className' => '',
-        'id' => 'carousel-' . $productId
+        'id' => 'carousel-' . $itemId
     ];
     
     $opts = array_merge($defaults, $options);
@@ -62,7 +62,7 @@ function renderImageCarousel($productId, $images = [], $options = []) {
                      data-slide="<?= $index ?>"
                      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: <?= $index === 0 ? '1' : '0' ?>; transition: opacity 0.3s ease;">
                     <img src="<?= htmlspecialchars($image['image_path']) ?>" 
-                         alt="<?= htmlspecialchars($image['alt_text'] ?: 'Product image') ?>"
+                         alt="<?= htmlspecialchars($image['alt_text'] ?: 'Item image') ?>"
                          style="width: 100%; height: 100%; object-fit: contain; background: white;"
                          onerror="this.onerror=null; this.src='images/items/placeholder.png';">
                     <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin'] && isset($_GET['page']) && strpos($_GET['page'], 'admin') === 0): ?>

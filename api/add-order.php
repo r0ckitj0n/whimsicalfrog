@@ -14,16 +14,16 @@ if (!$input) {
 }
 $pdo = new PDO($dsn, $user, $pass, $options);
 // Validate required fields
-$required = ['customerId','productIds','quantities','paymentMethod','total'];
+$required = ['customerId','itemIds','quantities','paymentMethod','total'];
 foreach ($required as $field) {
     if (!isset($input[$field])) {
         echo json_encode(['success'=>false,'error'=>'Missing field: '.$field]);
         exit;
     }
 }
-$productIds = $input['productIds'];
-$quantities = $input['quantities'];
-if (!is_array($productIds) || !is_array($quantities) || count($productIds)!==count($quantities)) {
+    $itemIds = $input['itemIds'];
+    $quantities = $input['quantities'];
+    if (!is_array($itemIds) || !is_array($quantities) || count($itemIds)!==count($quantities)) {
     echo json_encode(['success'=>false,'error'=>'Invalid items array']);
     exit;
 }
@@ -73,8 +73,8 @@ try {
     // Add shippingMethod to the insert statement
     $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?)");
     $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $orderStatus, $date, $paymentStatus]);
-    $itemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, productId, quantity, price) VALUES (?,?,?,?,?)");
-    $updateInv = $pdo->prepare("UPDATE inventory SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE productId = ?");
+    $itemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, itemId, quantity, price) VALUES (?,?,?,?,?)");
+    $updateInv = $pdo->prepare("UPDATE inventory SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE itemId = ?");
             $priceStmt = $pdo->prepare("SELECT retailPrice as basePrice FROM items WHERE id = ?");
     
     // Get the next order item ID sequence number
@@ -82,22 +82,22 @@ try {
     $itemCountStmt->execute();
     $itemCount = $itemCountStmt->fetchColumn();
     
-    for ($i=0;$i<count($productIds);$i++) {
+    for ($i=0;$i<count($itemIds);$i++) {
         $itemSequence = str_pad($itemCount + $i + 1, 3, '0', STR_PAD_LEFT);
         $itemId = 'OI' . $itemSequence;
-        $pid = $productIds[$i];
+        $pid = $itemIds[$i];
         $qty = (int)$quantities[$i];
         
-        // Get the product price
+        // Get the item price
         $priceStmt->execute([$pid]);
-        $productPrice = $priceStmt->fetchColumn();
+        $itemPrice = $priceStmt->fetchColumn();
         
         // If no price found, use 0.00 as fallback
-        if ($productPrice === false || $productPrice === null) {
-            $productPrice = 0.00;
+        if ($itemPrice === false || $itemPrice === null) {
+            $itemPrice = 0.00;
         }
         
-        $itemStmt->execute([$itemId, $orderId, $pid, $qty, $productPrice]);
+        $itemStmt->execute([$itemId, $orderId, $pid, $qty, $itemPrice]);
         $updateInv->execute([$qty, $pid]);
     }
     $pdo->commit();

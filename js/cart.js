@@ -14,35 +14,35 @@ class ShoppingCart {
     async refreshProductData() {
         console.log('Refreshing product data from database');
         try {
-            // Get all product IDs in cart
-            const productIds = this.items.map(item => item.id);
-            if (productIds.length === 0) return;
+            // Get all item IDs in cart
+            const itemIds = this.items.map(item => item.id);
+            if (itemIds.length === 0) return;
 
-            // Fetch current product data from database
+            // Fetch current item data from database
             const response = await fetch('api/get_products.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ product_ids: productIds })
+                body: JSON.stringify({ item_ids: itemIds })
             });
 
             if (!response.ok) {
-                console.warn('Failed to fetch product data:', response.status);
+                console.warn('Failed to fetch item data:', response.status);
                 return;
             }
 
-            const products = await response.json();
-            console.log('Fetched fresh product data:', products);
+            const items = await response.json();
+            console.log('Fetched fresh item data:', items);
 
             // Update cart items with fresh data
             this.items.forEach(cartItem => {
-                const freshProduct = products.find(p => p.id === cartItem.id);
-                if (freshProduct) {
+                const freshItem = items.find(p => p.id === cartItem.id);
+                if (freshItem) {
                     // Update image path and name with fresh data from database
-                    cartItem.image = freshProduct.image || cartItem.image;
-                    cartItem.name = freshProduct.name || cartItem.name;
-                    cartItem.price = parseFloat(freshProduct.price) || cartItem.price;
+                    cartItem.image = freshItem.image || cartItem.image;
+                    cartItem.name = freshItem.name || cartItem.name;
+                    cartItem.price = parseFloat(freshItem.price) || cartItem.price;
                     console.log(`Updated cart item ${cartItem.id} with fresh data:`, {
                         name: cartItem.name,
                         image: cartItem.image,
@@ -54,24 +54,24 @@ class ShoppingCart {
             // Save updated cart data
             this.saveCart();
         } catch (error) {
-            console.warn('Error refreshing product data:', error);
+            console.warn('Error refreshing item data:', error);
         }
     }
 
-    addItem(product) {
-        console.log('Adding item to cart:', product);
-        const quantity = product.quantity || 1; // Use provided quantity or default to 1
-        const existingItem = this.items.find(item => item.id === product.id);
+    addItem(item) {
+        console.log('Adding item to cart:', item);
+        const quantity = item.quantity || 1; // Use provided quantity or default to 1
+        const existingItem = this.items.find(cartItem => cartItem.id === item.id);
         
         if (existingItem) {
             existingItem.quantity += quantity;
             console.log('Updated existing item quantity:', existingItem);
         } else {
             this.items.push({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.image,
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                image: item.image,
                 quantity: quantity
             });
             console.log('Added new item to cart');
@@ -83,22 +83,22 @@ class ShoppingCart {
         this.dispatchCartUpdate();
     }
 
-    removeItem(productId) {
-        console.log('Removing item from cart:', productId);
-        this.items = this.items.filter(item => item.id !== productId);
+    removeItem(itemId) {
+        console.log('Removing item from cart:', itemId);
+        this.items = this.items.filter(item => item.id !== itemId);
         this.saveCart();
         this.updateCartCount();
         this.showNotification('Item removed from cart');
         this.dispatchCartUpdate();
     }
 
-    updateQuantity(productId, quantity) {
-        console.log('Updating quantity for item:', productId, 'to:', quantity);
-        const item = this.items.find(item => item.id === productId);
+    updateQuantity(itemId, quantity) {
+        console.log('Updating quantity for item:', itemId, 'to:', quantity);
+        const item = this.items.find(item => item.id === itemId);
         if (item) {
             item.quantity = Math.max(0, quantity);
             if (item.quantity === 0) {
-                this.removeItem(productId);
+                this.removeItem(itemId);
             } else {
                 this.saveCart();
                 this.updateCartCount();
@@ -378,7 +378,7 @@ class ShoppingCart {
             return;
         }
         const customerId = user.userId ? user.userId : user.id;
-        const productIds = this.items.map(item => item.id);
+        const itemIds = this.items.map(item => item.id);
         const quantities = this.items.map(item => item.quantity);
         const status = 'Pending';
         const date = new Date().toISOString().slice(0, 10);
@@ -390,7 +390,7 @@ class ShoppingCart {
             const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ customerId, productIds, quantities, status, date, paymentMethod, shippingMethod, subtotal, salesTax, total })
+                body: JSON.stringify({ customerId, itemIds, quantities, status, date, paymentMethod, shippingMethod, subtotal, salesTax, total })
             });
             const data = await response.json();
             if (data.success) {

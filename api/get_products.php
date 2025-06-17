@@ -24,19 +24,19 @@ try {
         // Get specific products by IDs
         $input = json_decode(file_get_contents('php://input'), true);
         
-        if (isset($input['product_ids']) && is_array($input['product_ids']) && !empty($input['product_ids'])) {
-            $productIds = $input['product_ids'];
+        if (isset($input['item_ids']) && is_array($input['item_ids']) && !empty($input['item_ids'])) {
+            $itemIds = $input['item_ids'];
             
             // Create placeholders for the IN clause
-            $placeholders = str_repeat('?,', count($productIds) - 1) . '?';
+            $placeholders = str_repeat('?,', count($itemIds) - 1) . '?';
             
-            // Query to get specific products (simplified - no product_images join for now)
+            // Query to get specific items (simplified - no product_images join for now)
             $sql = "SELECT p.*
                     FROM items p 
                     WHERE p.id IN ($placeholders)";
             
             $stmt = $pdo->prepare($sql);
-            $stmt->execute($productIds);
+            $stmt->execute($itemIds);
             $products = $stmt->fetchAll();
             
             // Format the data

@@ -298,7 +298,7 @@ app.post('/api/add-order', async (req, res) => {
 
         // 3. Insert into `order_items` table
         const itemSql = `
-            INSERT INTO order_items (id, orderId, productId, quantity, price)
+            INSERT INTO order_items (id, orderId, itemId, quantity, price)
             VALUES (?, ?, ?, ?, ?)
         `;
         for (const item of items) {
@@ -318,13 +318,13 @@ app.post('/api/add-order', async (req, res) => {
         }
 
         // 4. (Optional) Update inventory - Throws error if any item fails
-        const inventorySql = 'UPDATE inventory SET stockLevel = stockLevel - ? WHERE productId = ? AND stockLevel >= ?';
+        const inventorySql = 'UPDATE inventory SET stockLevel = stockLevel - ? WHERE itemId = ? AND stockLevel >= ?';
         for (const item of items) {
-            console.log(`Updating inventory for productId: ${item.id}, reducing by ${item.quantity}`);
+            console.log(`Updating inventory for itemId: ${item.id}, reducing by ${item.quantity}`);
             const [result] = await connection.execute(inventorySql, [item.quantity, item.id, item.quantity]);
             if (result.affectedRows === 0) {
-                console.error(`Inventory update failed for productId: ${item.id}. Not enough stock.`);
-                throw new Error(`Insufficient stock for product ID ${item.id}.`);
+                console.error(`Inventory update failed for itemId: ${item.id}. Not enough stock.`);
+                throw new Error(`Insufficient stock for item ID ${item.id}.`);
             }
         }
 
@@ -394,9 +394,9 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
     let category = (req.body.category || 'misc').toLowerCase().trim();
     const bodyKeys = Object.keys(req.body);
     console.log('req.body keys:', bodyKeys);
-    // Robust productId check (case-insensitive, all variants)
-    let productId = req.body.productId || req.body.ProductId || req.body.PRODUCTID || req.body['productid'] || req.body['PRODUCTID'] || null;
-    let id = productId || req.body.artworkId || req.body.tumblerId || req.body.tshirtId || req.body.sublimationId || req.body.windowwrapId || req.body.userId || req.body.miscId || 'unknown';
+    // Robust itemId check (case-insensitive, all variants)
+    let itemId = req.body.itemId || req.body.ItemId || req.body.ITEMID || req.body['itemid'] || req.body['ITEMID'] || null;
+    let id = itemId || req.body.artworkId || req.body.tumblerId || req.body.tshirtId || req.body.sublimationId || req.body.windowwrapId || req.body.userId || req.body.miscId || 'unknown';
     console.log('Category:', category, 'ID:', id);
     try {
         if (!id) {
@@ -413,20 +413,20 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
             fs.mkdirSync(destDir, { recursive: true });
         }
         let destFilename;
-        if (productId) {
-            // Fetch product name from DB for filename
+        if (itemId) {
+            // Fetch item name from DB for filename
             const connection = await mysql.createConnection(dbConfig);
             const [rows] = await connection.execute('SELECT name FROM items WHERE id = ?', [id]);
-            let productName = rows.length > 0 ? rows[0].name : 'unknown';
+            let itemName = rows.length > 0 ? rows[0].name : 'unknown';
             await connection.end();
-            // Sanitize product name for filename
-            const sanitizedProductName = productName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-            destFilename = `product_${sanitizedProductName}${ext}`;
-            console.log('Product name for image:', productName);
+            // Sanitize item name for filename
+            const sanitizedItemName = itemName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            destFilename = `item_${sanitizedItemName}${ext}`;
+            console.log('Item name for image:', itemName);
             console.log('Sanitized filename:', destFilename);
         } else {
-            destFilename = `product_unknown${ext}`;
-            console.error('No productId found in req.body, fallback filename used:', destFilename);
+            destFilename = `item_unknown${ext}`;
+            console.error('No itemId found in req.body, fallback filename used:', destFilename);
         }
         console.log('Final destFilename:', destFilename);
         const destPath = path.join(destDir, destFilename);
@@ -435,8 +435,8 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
         console.log('Final imagePath for DB:', imagePath);
         // Update the correct table/field in DB based on category
         const connection = await mysql.createConnection(dbConfig);
-        if (category === 'products' && productId) {
-            await connection.execute('UPDATE products SET image = ? WHERE id = ?', [imagePath, id]);
+        if (category === 'items' && itemId) {
+            await connection.execute('UPDATE items SET image = ? WHERE id = ?', [imagePath, id]);
         } else if (category === 'artwork' && req.body.artworkId) {
             await connection.execute('UPDATE artwork SET image = ? WHERE id = ?', [imagePath, id]);
         } // Add more categories as needed
@@ -520,19 +520,19 @@ app.post('/api/update-inventory', async (req, res) => {
 // --- Add inventory endpoint ---
 app.post('/api/add-inventory', async (req, res) => {
     try {
-        const { productId, productName, description, sku, stockLevel, reorderPoint } = req.body;
+        const { itemId, itemName, description, sku, stockLevel, reorderPoint } = req.body;
 
-        if (!productId) {
-            return res.status(400).json({ error: 'Product ID is required' });
+        if (!itemId) {
+            return res.status(400).json({ error: 'Item ID is required' });
         }
 
         const connection = await mysql.createConnection(dbConfig);
 
-        // Check if product exists
-                    const [products] = await connection.execute('SELECT id FROM items WHERE id = ?', [productId]);
-        if (products.length === 0) {
+        // Check if item exists
+                    const [items] = await connection.execute('SELECT id FROM items WHERE id = ?', [itemId]);
+        if (items.length === 0) {
             await connection.end();
-            return res.status(404).json({ error: 'Product not found' });
+            return res.status(404).json({ error: 'Item not found' });
         }
 
         // Generate a unique inventory ID
@@ -540,14 +540,14 @@ app.post('/api/add-inventory', async (req, res) => {
 
         // Insert new inventory item
         await connection.execute(
-            'INSERT INTO inventory (id, productId, sku, stockLevel, reorderPoint, description) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO inventory (id, itemId, sku, stockLevel, reorderPoint, description) VALUES (?, ?, ?, ?, ?, ?)',
             [
                 inventoryId,
-                productId,
-                sku || `SKU-${productId}`,
+                itemId,
+                sku || `SKU-${itemId}`,
                 stockLevel || 0,
                 reorderPoint || 5,
-                description || `Inventory for ${productName || productId}`
+                description || `Inventory for ${itemName || itemId}`
             ]
         );
 

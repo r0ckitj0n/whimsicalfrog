@@ -56,21 +56,37 @@ try {
         $lastOrderDate = null;
     }
     
-    // Check if core tables exist
-    $coreTables = [];
-    foreach (['items', 'item_images', 'orders', 'order_items'] as $table) {
-        $stmt = $pdo->query("SHOW TABLES LIKE '$table'");
-        $exists = $stmt->fetch() !== false;
-        $coreTables[$table] = $exists;
+    // Organize tables by category and check existence
+    $tableCategories = [
+        'core_tables' => ['items', 'item_images', 'orders', 'order_items'],
+        'user_management' => ['users'],
+        'inventory_cost' => ['inventory_materials', 'inventory_labor', 'inventory_energy', 'inventory_equipment'],
+        'product_categories' => ['categories'],
+        'room_management' => ['room_maps', 'room_category_assignments', 'area_mappings', 'backgrounds'],
+        'email_system' => ['email_logs', 'email_campaigns', 'email_subscribers', 'email_campaign_sends'],
+        'business_config' => ['business_settings', 'discount_codes'],
+        'social_media' => ['social_accounts', 'social_posts']
+    ];
+    
+    $organizedTables = [];
+    foreach ($tableCategories as $category => $tableList) {
+        $organizedTables[$category] = [];
+        foreach ($tableList as $table) {
+            $stmt = $pdo->query("SHOW TABLES LIKE '$table'");
+            $exists = $stmt->fetch() !== false;
+            $organizedTables[$category][$table] = $exists;
+        }
     }
     
-    // Check if cost breakdown tables exist
-    $costTables = [];
-    foreach (['inventory_materials', 'inventory_labor', 'inventory_energy', 'inventory_equipment'] as $table) {
-        $stmt = $pdo->query("SHOW TABLES LIKE '$table'");
-        $exists = $stmt->fetch() !== false;
-        $costTables[$table] = $exists;
-    }
+    // Get active tables (exclude backup tables)
+    $activeTables = array_filter($tables, function($table) {
+        return !preg_match('/backup|_backup_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}/', $table);
+    });
+    
+    // Get backup tables separately
+    $backupTables = array_filter($tables, function($table) {
+        return preg_match('/backup|_backup_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}/', $table);
+    });
     
     // Get category mapping
     $categoryMap = [
@@ -100,12 +116,12 @@ try {
                 'last_order_date' => $lastOrderDate
             ],
             'database_tables' => [
-                'core_tables' => $coreTables,
-                'core_tables_list' => array_values(array_filter($tables, function($table) {
-                    return in_array($table, ['items', 'item_images', 'orders', 'order_items']);
-                })),
+                'organized' => $organizedTables,
+                'active_tables' => array_values($activeTables),
+                'backup_tables' => array_values($backupTables),
                 'all_tables' => $tables,
-                'cost_breakdown_tables' => $costTables
+                'total_active' => count($activeTables),
+                'total_backup' => count($backupTables)
             ],
             'categories' => $categories,
             'category_codes' => $categoryMap,

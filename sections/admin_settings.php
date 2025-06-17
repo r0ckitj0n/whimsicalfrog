@@ -553,24 +553,55 @@ function generateSystemConfigHTML(data) {
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"></path>
                 </svg>
-                Database Tables & Structure
+                Database Tables & Structure (${data.database_tables.total_active} Active + ${data.database_tables.total_backup} Backup)
             </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                    <h5 class="font-semibold text-purple-700 mb-2">Core Tables</h5>
-                    <ul class="space-y-1 text-purple-600">
-                        ${Object.entries(data.database_tables.core_tables).map(([table, exists]) => 
-                            `<li><code class="bg-purple-100 px-2 py-1 rounded">${table}</code> ${exists ? '✅' : '❌'}</li>`
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                ${Object.entries(data.database_tables.organized).map(([category, tables]) => {
+                    const categoryLabels = {
+                        'core_tables': '🏗️ Core Tables',
+                        'user_management': '👥 User Management', 
+                        'inventory_cost': '💰 Inventory Cost',
+                        'product_categories': '🏷️ Product Categories',
+                        'room_management': '🏠 Room Management',
+                        'email_system': '📧 Email System',
+                        'business_config': '⚙️ Business Config',
+                        'social_media': '📱 Social Media'
+                    };
+                    
+                    return `
+                        <div class="bg-white rounded p-3 border border-purple-200">
+                            <h5 class="font-semibold text-purple-700 mb-2 text-xs">${categoryLabels[category] || category}</h5>
+                            <ul class="space-y-1">
+                                ${Object.entries(tables).map(([table, exists]) => 
+                                    `<li>
+                                        <button onclick="viewTable('${table}')" 
+                                                class="text-left w-full hover:bg-purple-100 rounded px-1 py-0.5 transition-colors">
+                                            <code class="bg-purple-100 px-1 py-0.5 rounded text-xs">${table}</code> 
+                                            ${exists ? '✅' : '❌'}
+                                        </button>
+                                    </li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            
+            <!-- Backup Tables (Collapsible) -->
+            <div class="mt-4">
+                <button onclick="toggleBackupTables()" class="text-xs text-purple-600 hover:text-purple-800 flex items-center">
+                    <span id="backupToggleIcon">▶</span>
+                    <span class="ml-1">Show Backup Tables (${data.database_tables.total_backup})</span>
+                </button>
+                <div id="backupTablesContainer" class="hidden mt-2 bg-gray-100 rounded p-2">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                        ${data.database_tables.backup_tables.map(table => 
+                            `<button onclick="viewTable('${table}')" 
+                                     class="text-left hover:bg-gray-200 rounded px-1 py-0.5 transition-colors">
+                                <code class="bg-gray-200 px-1 py-0.5 rounded">${table}</code>
+                            </button>`
                         ).join('')}
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-semibold text-purple-700 mb-2">Cost Breakdown Tables</h5>
-                    <ul class="space-y-1 text-purple-600 text-xs">
-                        ${Object.entries(data.database_tables.cost_breakdown_tables).map(([table, exists]) => 
-                            `<li><code class="bg-purple-100 px-1 py-0.5 rounded">${table}</code> ${exists ? '✅' : '❌'}</li>`
-                        ).join('')}
-                    </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -656,6 +687,96 @@ function generateSystemConfigHTML(data) {
 
 function closeSystemConfigModal() {
     document.getElementById('systemConfigModal').style.display = 'none';
+}
+
+function toggleBackupTables() {
+    const container = document.getElementById('backupTablesContainer');
+    const icon = document.getElementById('backupToggleIcon');
+    
+    if (container.classList.contains('hidden')) {
+        container.classList.remove('hidden');
+        icon.textContent = '▼';
+    } else {
+        container.classList.add('hidden');
+        icon.textContent = '▶';
+    }
+}
+
+async function viewTable(tableName) {
+    try {
+        // Show loading state
+        const modal = document.getElementById('tableViewModal');
+        const title = document.getElementById('tableViewTitle');
+        const content = document.getElementById('tableViewContent');
+        
+        title.textContent = `Loading ${tableName}...`;
+        content.innerHTML = '<div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>';
+        modal.style.display = 'flex';
+        
+        // Fetch table data
+        const response = await fetch('api/db_manager.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'query',
+                sql: `SELECT * FROM \`${tableName}\` LIMIT 100`,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            title.textContent = `Table: ${tableName} (${data.row_count} records shown, max 100)`;
+            
+            if (data.data.length === 0) {
+                content.innerHTML = '<div class="text-center py-4 text-gray-500">Table is empty</div>';
+                return;
+            }
+            
+            // Create table HTML
+            const columns = Object.keys(data.data[0]);
+            let tableHtml = `
+                <div class="overflow-x-auto max-h-96">
+                    <table class="min-w-full bg-white border border-gray-200 text-xs">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                ${columns.map(col => `<th class="px-2 py-1 border-b text-left font-semibold text-gray-700">${col}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.data.map(row => `
+                                <tr class="hover:bg-gray-50">
+                                    ${columns.map(col => {
+                                        let value = row[col];
+                                        if (value === null) value = '<span class="text-gray-400">NULL</span>';
+                                        else if (typeof value === 'string' && value.length > 50) value = value.substring(0, 50) + '...';
+                                        return `<td class="px-2 py-1 border-b">${value}</td>`;
+                                    }).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            content.innerHTML = tableHtml;
+        } else {
+            title.textContent = `Error loading ${tableName}`;
+            content.innerHTML = `<div class="text-red-600 p-4">Error: ${data.error || 'Failed to load table data'}</div>`;
+        }
+        
+    } catch (error) {
+        console.error('Error viewing table:', error);
+        document.getElementById('tableViewTitle').textContent = `Error loading ${tableName}`;
+        document.getElementById('tableViewContent').innerHTML = `<div class="text-red-600 p-4">Error: ${error.message}</div>`;
+    }
+}
+
+function closeTableViewModal() {
+    document.getElementById('tableViewModal').style.display = 'none';
 }
 
 function openRoomMapperModal() {
@@ -4008,6 +4129,28 @@ function escapeHtml(text) {
                 </div>
                 
                 <!-- Content will be loaded dynamically here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table View Modal -->
+<div id="tableViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="tableViewTitle" class="text-lg font-bold text-gray-900">🗄️ Table View</h3>
+                <button onclick="closeTableViewModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div id="tableViewContent" class="space-y-4">
+                <!-- Table content will be loaded dynamically here -->
             </div>
         </div>
     </div>

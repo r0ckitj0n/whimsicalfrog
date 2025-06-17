@@ -1139,3 +1139,42 @@
 [Tue Jun 17 17:48:05 2025] [::1]:64862 Accepted
 [Tue Jun 17 17:48:05 2025] [::1]:64862 [200]: GET /api/file_manager.php?action=list&path=
 [Tue Jun 17 17:48:05 2025] [::1]:64862 Closing
+[Tue Jun 17 17:52:18 2025] [::1]:49591 Accepted
+[Tue Jun 17 17:52:18 2025] Database Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'whimsicalfrog.inventory' doesn't exist
+[Tue Jun 17 17:52:18 2025] [::1]:49591 [200]: GET /?page=admin&section=settings
+[Tue Jun 17 17:52:18 2025] [::1]:49591 Closing
+[Tue Jun 17 17:52:18 2025] [::1]:49592 Accepted
+[Tue Jun 17 17:52:18 2025] [::1]:49593 Accepted
+[Tue Jun 17 17:52:18 2025] [::1]:49592 [200]: GET /css/styles.css?v=1750197138
+[Tue Jun 17 17:52:18 2025] [::1]:49593 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 17 17:52:18 2025] [::1]:49592 Closing
+[Tue Jun 17 17:52:18 2025] [::1]:49593 Closing
+[Tue Jun 17 17:52:18 2025] [::1]:49594 Accepted
+[Tue Jun 17 17:52:18 2025] [::1]:49594 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Tue Jun 17 17:52:18 2025] [::1]:49594 Closing
+[Tue Jun 17 17:52:18 2025] [::1]:49595 Accepted
+[Tue Jun 17 17:52:18 2025] [::1]:49595 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 17 17:52:18 2025] [::1]:49595 Closing
+[Tue Jun 17 17:52:19 2025] [::1]:49600 Accepted
+[Tue Jun 17 17:52:19 2025] [::1]:49601 Accepted
+[Tue Jun 17 17:52:19 2025] [::1]:49600 [200]: GET /api/get_background.php?room_type=room_main
+[Tue Jun 17 17:52:19 2025] [::1]:49600 Closing
+[Tue Jun 17 17:52:19 2025] [::1]:49601 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 17 17:52:19 2025] [::1]:49601 Closing
+[Tue Jun 17 17:52:19 2025] [::1]:49602 Accepted
+[Tue Jun 17 17:52:19 2025] [::1]:49602 [200]: GET /images/room_main.webp?v=1750197139108
+[Tue Jun 17 17:52:19 2025] [::1]:49602 Closing
+[Tue Jun 17 17:52:19 2025] [::1]:49603 Accepted
+[Tue Jun 17 17:52:19 2025] [::1]:49603 [200]: GET /favicon.ico
+[Tue Jun 17 17:52:19 2025] [::1]:49603 Closing
+[Tue Jun 17 17:52:25 2025] [::1]:49628 Accepted
+[Tue Jun 17 17:52:25 2025] [::1]:49628 [200]: GET /api/get_database_info.php
+[Tue Jun 17 17:52:25 2025] [::1]:49628 Closing
+[Tue Jun 17 17:52:40 2025] [::1]:49693 Accepted
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+[Tue Jun 17 17:52:41 2025] [::1]:49693 [200]: POST /api/backup_database.php
+[Tue Jun 17 17:52:41 2025] Database backup file deleted after download: whimsicalfrog_database_backup_2025-06-17_21-52-40.sql
+[Tue Jun 17 17:52:41 2025] [::1]:49693 Closing
+[Tue Jun 17 17:52:42 2025] [::1]:49698 Accepted
+[Tue Jun 17 17:52:42 2025] [::1]:49698 [404]: GET /backups/whimsicalfrog_database_backup_2025-06-17_21-52-40.sql - No such file or directory
+[Tue Jun 17 17:52:42 2025] [::1]:49698 Closing

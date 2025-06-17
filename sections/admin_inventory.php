@@ -11,9 +11,9 @@ require_once __DIR__ . '/../api/config.php';
 // Database connection
 $pdo = new PDO($dsn, $user, $pass, $options);
 
-// Get inventory items
-$stmt = $pdo->query("SELECT * FROM inventory ORDER BY id");
-$inventoryItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Get items
+$stmt = $pdo->query("SELECT * FROM items ORDER BY id");
+$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Initialize modal state
 $modalMode = ''; // Default to no modal unless 'add', 'edit', or 'view' is in URL
@@ -26,7 +26,7 @@ unset($_SESSION['field_errors']);
 // Check if we're in view mode
 if (isset($_GET['view']) && !empty($_GET['view'])) {
     $itemIdToView = $_GET['view'];
-    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE i.id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM items WHERE id = ?");
     $stmt->execute([$itemIdToView]);
     $fetchedViewItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -70,7 +70,7 @@ if (isset($_GET['view']) && !empty($_GET['view'])) {
 // Check if we're in edit mode
 elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
     $itemIdToEdit = $_GET['edit'];
-    $stmt = $pdo->prepare("SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE i.id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM items WHERE id = ?");
     $stmt->execute([$itemIdToEdit]);
     $fetchedEditItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -113,13 +113,13 @@ elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
 } elseif (isset($_GET['add']) && $_GET['add'] == 1) {
     $modalMode = 'add';
     // For 'add' mode, pre-calculate next IDs
-    $stmt = $pdo->query("SELECT id FROM inventory ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC LIMIT 1");
+    $stmt = $pdo->query("SELECT id FROM items ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC LIMIT 1");
     $lastIdRow = $stmt->fetch(PDO::FETCH_ASSOC);
     $lastIdNum = $lastIdRow ? (int)substr($lastIdRow['id'], 1) : 0;
     $nextItemId = 'I' . str_pad($lastIdNum + 1, 3, '0', STR_PAD_LEFT);
 
     // Generate next SKU for new item
-    $stmtSku = $pdo->query("SELECT sku FROM inventory WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
+    $stmtSku = $pdo->query("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
     $lastSkuRow = $stmtSku->fetch(PDO::FETCH_ASSOC);
     $lastSkuNum = $lastSkuRow ? (int)substr($lastSkuRow['sku'], -3) : 0;
     $nextSku = 'WF-GEN-' . str_pad($lastSkuNum + 1, 3, '0', STR_PAD_LEFT);
@@ -127,8 +127,8 @@ elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
     $editItem = ['id' => $nextItemId, 'sku' => $nextSku];
 }
 
-// Get categories for dropdown from products table to ensure single source of truth
-$stmt = $pdo->query("SELECT DISTINCT productType FROM products WHERE productType IS NOT NULL ORDER BY productType");
+// Get categories for dropdown from items table
+$stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
 $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
 if (!is_array($categories)) {
     $categories = [];
@@ -139,30 +139,30 @@ $search = $_GET['search'] ?? '';
 $categoryFilter = $_GET['category'] ?? '';
 $stockFilter = $_GET['stock'] ?? '';
 
-$sql = "SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId WHERE 1=1";
+$sql = "SELECT * FROM items WHERE 1=1";
 $params = [];
 
 if (!empty($search)) {
-    $sql .= " AND (i.name LIKE :search OR i.sku LIKE :search OR i.description LIKE :search)";
+    $sql .= " AND (name LIKE :search OR sku LIKE :search OR description LIKE :search)";
     $params[':search'] = '%' . $search . '%';
 }
 if (!empty($categoryFilter)) {
-    $sql .= " AND p.productType = :category";
+    $sql .= " AND category = :category";
     $params[':category'] = $categoryFilter;
 }
 if (!empty($stockFilter)) {
     if ($stockFilter === 'low') {
-        $sql .= " AND i.stockLevel <= i.reorderPoint AND i.stockLevel > 0";
+        $sql .= " AND stockLevel <= reorderPoint AND stockLevel > 0";
     } elseif ($stockFilter === 'out') {
-        $sql .= " AND i.stockLevel = 0";
+        $sql .= " AND stockLevel = 0";
     } elseif ($stockFilter === 'in') {
-        $sql .= " AND i.stockLevel > 0";
+        $sql .= " AND stockLevel > 0";
     }
 }
-$sql .= " ORDER BY i.id ASC";
+$sql .= " ORDER BY id ASC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
-$inventoryItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
@@ -312,7 +312,7 @@ $messageType = $_GET['type'] ?? '';
 
 <div class="container mx-auto px-4 py-6">
     <div class="flex flex-col md:flex-row justify-between items-center mb-5 gap-4">
-        <h1 class="inventory-title text-2xl font-bold" style="color: #87ac3a !important;">Inventory Management</h1>
+        <h1 class="inventory-title text-2xl font-bold" style="color: #87ac3a !important;">Items Management</h1>
         <form method="GET" action="" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="inventory">
@@ -350,10 +350,10 @@ $messageType = $_GET['type'] ?? '';
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($inventoryItems)): ?>
-                    <tr><td colspan="8" class="text-center py-4">No inventory items found matching your criteria.</td></tr>
+                <?php if (empty($items)): ?>
+                    <tr><td colspan="8" class="text-center py-4">No items found matching your criteria.</td></tr>
                 <?php else: ?>
-                    <?php foreach ($inventoryItems as $item): ?>
+                    <?php foreach ($items as $item): ?>
                     <tr data-id="<?= htmlspecialchars($item['id']) ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
                         <td>
                             <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku']) ?>" style="width:40px;height:40px;">

@@ -146,13 +146,9 @@ try {
                 'sortOrder' => $sortOrder
             ];
             
-            // Update inventory table with primary image
+            // Update items table with primary image
             if ($isThisPrimary) {
-                $stmt = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE sku = ?");
-                $stmt->execute([$relPath, $sku]);
-                
-                // Update products table with primary image
-                $stmt = $pdo->prepare("UPDATE products SET image = ? WHERE sku = ?");
+                $stmt = $pdo->prepare("UPDATE items SET imageUrl = ? WHERE sku = ?");
                 $stmt->execute([$relPath, $sku]);
             }
             
@@ -172,11 +168,8 @@ try {
             $stmt = $pdo->prepare("UPDATE product_images SET is_primary = 1 WHERE sku = ? AND image_path = ?");
             $stmt->execute([$sku, $firstImage['path']]);
             
-            // Update inventory and products tables
-            $stmt = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE sku = ?");
-            $stmt->execute([$firstImage['path'], $sku]);
-            
-            $stmt = $pdo->prepare("UPDATE products SET image = ? WHERE sku = ?");
+            // Update items table
+            $stmt = $pdo->prepare("UPDATE items SET imageUrl = ? WHERE sku = ?");
             $stmt->execute([$firstImage['path'], $sku]);
             
             $uploadedImages[0]['isPrimary'] = true;

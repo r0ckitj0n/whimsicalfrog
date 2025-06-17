@@ -24,20 +24,20 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     // Build query based on filters
-    $query = "SELECT i.*, p.productType AS category FROM inventory i LEFT JOIN products p ON p.id = i.productId";
+    $query = "SELECT * FROM items";
     $params = [];
     $whereConditions = [];
     
     // Add search filter
     if (isset($_GET['search']) && !empty($_GET['search'])) {
         $search = '%' . $_GET['search'] . '%';
-        $whereConditions[] = "(i.name LIKE ? OR p.productType LIKE ? OR i.sku LIKE ? OR i.description LIKE ?)";
+        $whereConditions[] = "(name LIKE ? OR category LIKE ? OR sku LIKE ? OR description LIKE ?)";
         $params = array_merge($params, [$search, $search, $search, $search]);
     }
     
     // Add category filter
     if (isset($_GET['category']) && !empty($_GET['category'])) {
-        $whereConditions[] = "p.productType = ?";
+        $whereConditions[] = "category = ?";
         $params[] = $_GET['category'];
     }
     
@@ -47,7 +47,7 @@ try {
     }
     
     // Add sorting (using correct column name 'name' instead of 'itemName')
-    $query .= " ORDER BY i.name ASC";
+    $query .= " ORDER BY name ASC";
     
     // Prepare and execute query
     $stmt = $pdo->prepare($query);

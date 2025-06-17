@@ -4,8 +4,8 @@ require_once '../config.php';
 header('Content-Type: application/json');
 
 try {
-    // Get categories from products table to ensure single source of truth
-    $stmt = $pdo->query("SELECT DISTINCT productType FROM products WHERE productType IS NOT NULL ORDER BY productType");
+    // Get categories from items table
+    $stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
     $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
     if (!is_array($categories)) {

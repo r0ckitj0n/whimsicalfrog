@@ -48,12 +48,8 @@ try {
     $primaryImagePath = $stmt->fetchColumn();
     
     if ($primaryImagePath) {
-        // Update inventory table
-        $stmt = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE sku = ?");
-        $stmt->execute([$primaryImagePath, $sku]);
-        
-        // Update products table
-        $stmt = $pdo->prepare("UPDATE products SET image = ? WHERE sku = ?");
+        // Update items table
+        $stmt = $pdo->prepare("UPDATE items SET imageUrl = ? WHERE sku = ?");
         $stmt->execute([$primaryImagePath, $sku]);
     }
     

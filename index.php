@@ -116,8 +116,8 @@ try {
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Fetch inventory data joined with product types - use inventory as primary source
-    $stmt = $pdo->query('SELECT i.id AS inventoryId, i.sku, i.name AS productName, i.stockLevel, i.retailPrice, i.description, p.productType FROM inventory i LEFT JOIN products p ON p.sku = i.sku WHERE i.stockLevel > 0');
+    // Fetch items data - use items as the single source of truth
+    $stmt = $pdo->query('SELECT id AS inventoryId, sku, name AS productName, stockLevel, retailPrice, description, category AS productType FROM items WHERE stockLevel > 0');
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if ($products && is_array($products)) {
@@ -163,12 +163,12 @@ try {
         }
     }
     
-    // Fetch inventory for admin sections that still need it
-    $stmt = $pdo->query('SELECT * FROM inventory');
-    $inventoryItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Fetch items for admin sections that still need it
+    $stmt = $pdo->query('SELECT * FROM items');
+    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Format inventory data to match the expected structure
-    $inventory = $inventoryItems;
+    // Format items data to match the expected structure
+    $inventory = $items;
 
 
 

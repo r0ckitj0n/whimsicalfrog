@@ -26,7 +26,7 @@ function category_code(string $cat): string {
 $code = category_code($category);
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
-    $stmt = $pdo->prepare("SELECT sku FROM inventory WHERE sku LIKE :pat ORDER BY sku DESC LIMIT 1");
+    $stmt = $pdo->prepare("SELECT sku FROM items WHERE sku LIKE :pat ORDER BY sku DESC LIMIT 1");
     $like = 'WF-' . $code . '-%';
     $stmt->execute([':pat' => $like]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);

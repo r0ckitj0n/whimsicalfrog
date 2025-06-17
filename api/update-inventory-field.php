@@ -39,41 +39,20 @@ try {
         }
     }
     
-    // Special handling for category field
-    if ($field === 'category') {
-        // Get the productId for this inventory item
-        $productIdStmt = $pdo->prepare("SELECT productId FROM inventory WHERE id = ?");
-        $productIdStmt->execute([$inventoryId]);
-        $productIdRow = $productIdStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$productIdRow) {
-            echo json_encode(['success'=>false,'error'=>'Inventory item not found']);
-            exit;
-        }
-        
-        $productId = $productIdRow['productId'];
-        
-        // Update the products table with the new category
-        $prodStmt = $pdo->prepare("UPDATE products SET productType = ? WHERE id = ?");
-        $prodStmt->execute([$value, $productId]);
-        
-        echo json_encode(['success'=>true,'message'=>'Category updated successfully']);
+    // Update the field in items table
+    $stmt = $pdo->prepare("UPDATE items SET `$field` = ? WHERE id = ?");
+    $stmt->execute([$value, $inventoryId]);
+    
+    if ($stmt->rowCount() > 0) {
+        echo json_encode(['success'=>true,'message'=>ucfirst($field) . ' updated successfully']);
     } else {
-        // Update the field in inventory table
-        $stmt = $pdo->prepare("UPDATE inventory SET `$field` = ? WHERE id = ?");
-        $stmt->execute([$value, $inventoryId]);
-        
-        if ($stmt->rowCount() > 0) {
-            echo json_encode(['success'=>true,'message'=>ucfirst($field) . ' updated successfully']);
+        // Check if item exists
+        $checkStmt = $pdo->prepare("SELECT id FROM items WHERE id = ?");
+        $checkStmt->execute([$inventoryId]);
+        if ($checkStmt->fetch()) {
+            echo json_encode(['success'=>true,'message'=>'No change needed - ' . ucfirst($field) . ' is already set to that value']);
         } else {
-            // Check if inventory item exists
-            $checkStmt = $pdo->prepare("SELECT id FROM inventory WHERE id = ?");
-            $checkStmt->execute([$inventoryId]);
-            if ($checkStmt->fetch()) {
-                echo json_encode(['success'=>true,'message'=>'No change needed - ' . ucfirst($field) . ' is already set to that value']);
-            } else {
-                echo json_encode(['success'=>false,'error'=>'Inventory item not found']);
-            }
+            echo json_encode(['success'=>false,'error'=>'Item not found']);
         }
     }
     

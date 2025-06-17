@@ -163,17 +163,17 @@ try {
             
             if ($action === 'add') {
                 // Generate new Item ID
-                $stmtId = $pdo->query("SELECT id FROM inventory ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC LIMIT 1");
+                $stmtId = $pdo->query("SELECT id FROM items ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC LIMIT 1");
                 $lastIdRow = $stmtId->fetch(PDO::FETCH_ASSOC);
                 $lastIdNum = $lastIdRow ? (int)substr($lastIdRow['id'], 1) : 0;
                 $itemId = 'I' . str_pad($lastIdNum + 1, 3, '0', STR_PAD_LEFT);
                 
                 // Insert query
-                $sql = "INSERT INTO inventory (id, name, sku, stockLevel, reorderPoint, costPrice, retailPrice, description, imageUrl) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $sql = "INSERT INTO items (id, name, category, sku, stockLevel, reorderPoint, costPrice, retailPrice, description, imageUrl) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $success = $stmt->execute([
-                    $itemId, $name, $sku, $stockLevel, $reorderPoint, 
+                    $itemId, $name, $category, $sku, $stockLevel, $reorderPoint, 
                     $costPrice, $retailPrice, $description, $imageUrl
                 ]);
             } else {
@@ -181,42 +181,20 @@ try {
                 $itemId = trim($_POST['itemId']);
                 
                 // Update query
-                $sql = "UPDATE inventory SET 
-                        name = ?, sku = ?, stockLevel = ?, 
+                $sql = "UPDATE items SET 
+                        name = ?, category = ?, sku = ?, stockLevel = ?, 
                         reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ?, imageUrl = ? 
                         WHERE id = ?";
                 $stmt = $pdo->prepare($sql);
                 $success = $stmt->execute([
-                    $name, $sku, $stockLevel, $reorderPoint, 
+                    $name, $category, $sku, $stockLevel, $reorderPoint, 
                     $costPrice, $retailPrice, $description, $imageUrl, $itemId
                 ]);
             }
             
             // Check if operation was successful
             if ($success) {
-                // Always sync products table category
-                if (!empty($sku) && !empty($category)) {
-                    if ($action === 'add') {
-                        // Insert new product row if not exists
-                        $insProd = $pdo->prepare("INSERT INTO products (sku, name, productType, basePrice, description, image) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE productType = VALUES(productType), name = VALUES(name)");
-                        $insProd->execute([$sku, $name, $category, $retailPrice, $description, $imageUrl]);
-                    } else {
-                        // Update existing product details (type, name and image)
-                        $updProd = $pdo->prepare("UPDATE products SET productType = ?, name = ?, image = ?, description = ?, basePrice = ? WHERE sku = ?");
-                        $updProd->execute([$category, $name, $imageUrl, $description, $retailPrice, $sku]);
-                    }
-                }
-
-                // After update, always sync inventory imageUrl to products.image if products.image is set and not empty
-                if (!empty($sku)) {
-                    $stmtProdImg = $pdo->prepare("SELECT image FROM products WHERE sku = ?");
-                    $stmtProdImg->execute([$sku]);
-                    $prodImgRow = $stmtProdImg->fetch(PDO::FETCH_ASSOC);
-                    if (!empty($prodImgRow['image']) && $prodImgRow['image'] !== $imageUrl) {
-                        $stmtInvImg = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE sku = ?");
-                        $stmtInvImg->execute([$prodImgRow['image'], $sku]);
-                    }
-                }
+                // No need to sync with products table anymore - items table is the single source of truth
 
                 // TEMP LOG
                 error_log("[inventory_update] action=$action itemId=$itemId imageUrl=$imageUrl\n", 3, __DIR__ . '/inventory_errors.log');

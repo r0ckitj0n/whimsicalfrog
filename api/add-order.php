@@ -21,7 +21,7 @@ foreach ($required as $field) {
         exit;
     }
 }
-    $itemIds = $input['itemIds'];
+    $itemIds = $input['itemIds'];  // These are actually SKUs now
     $quantities = $input['quantities'];
     if (!is_array($itemIds) || !is_array($quantities) || count($itemIds)!==count($quantities)) {
     echo json_encode(['success'=>false,'error'=>'Invalid items array']);
@@ -73,33 +73,40 @@ try {
     // Add shippingMethod to the insert statement
     $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?)");
     $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $orderStatus, $date, $paymentStatus]);
-    $itemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, itemId, quantity, price) VALUES (?,?,?,?,?)");
-    $updateInv = $pdo->prepare("UPDATE inventory SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE itemId = ?");
-            $priceStmt = $pdo->prepare("SELECT retailPrice as basePrice FROM items WHERE id = ?");
     
     // Get the next order item ID sequence number
     $itemCountStmt = $pdo->prepare('SELECT COUNT(*) FROM order_items');
     $itemCountStmt->execute();
     $itemCount = $itemCountStmt->fetchColumn();
     
-    for ($i=0;$i<count($itemIds);$i++) {
-        $itemSequence = str_pad($itemCount + $i + 1, 3, '0', STR_PAD_LEFT);
-        $itemId = 'OI' . $itemSequence;
-        $iid = $itemIds[$i];
-        $qty = (int)$quantities[$i];
+    // Prepare statements for order items and stock updates
+    $priceStmt = $pdo->prepare("SELECT retailPrice FROM items WHERE sku = ?");
+    $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price) VALUES (?, ?, ?, ?, ?)");
+    $updateStockStmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");
+    
+    // Process each item (SKU)
+    for ($i = 0; $i < count($itemIds); $i++) {
+        $sku = $itemIds[$i];
+        $quantity = (int)$quantities[$i];
         
-        // Get the item price
-        $priceStmt->execute([$iid]);
-        $itemPrice = $priceStmt->fetchColumn();
+        // Get item price
+        $priceStmt->execute([$sku]);
+        $price = $priceStmt->fetchColumn();
         
-        // If no price found, use 0.00 as fallback
-        if ($itemPrice === false || $itemPrice === null) {
-            $itemPrice = 0.00;
+        if ($price === false || $price === null) {
+            $price = 0.00;  // Fallback price
         }
         
-        $itemStmt->execute([$itemId, $orderId, $iid, $qty, $itemPrice]);
-        $updateInv->execute([$qty, $iid]);
+        // Generate order item ID
+        $orderItemId = 'OI' . str_pad($itemCount + $i + 1, 10, '0', STR_PAD_LEFT);
+        
+        // Insert order item
+        $orderItemStmt->execute([$orderItemId, $orderId, $sku, $quantity, $price]);
+        
+        // Update stock levels
+        $updateStockStmt->execute([$quantity, $sku]);
     }
+    
     $pdo->commit();
     
     // Send order confirmation emails

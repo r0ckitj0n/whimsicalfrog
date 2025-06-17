@@ -16,9 +16,18 @@ try {
     $stmt->execute([$orderId]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$order) throw new Exception('Order not found');
-    $itemStmt = $pdo->prepare('SELECT oi.*, i.name, i.id as itemId FROM order_items oi JOIN items i ON oi.itemId COLLATE utf8mb4_unicode_ci = i.id COLLATE utf8mb4_unicode_ci WHERE oi.orderId COLLATE utf8mb4_unicode_ci = ?');
-    $itemStmt->execute([$orderId]);
-    $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+    $itemsStmt = $pdo->prepare("
+        SELECT 
+            oi.sku,
+            oi.quantity,
+            oi.price,
+            i.name as itemName
+        FROM order_items oi
+        LEFT JOIN items i ON oi.sku = i.sku
+        WHERE oi.orderId = ?
+    ");
+    $itemsStmt->execute([$orderId]);
+    $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Error loading order</h1><p>'.htmlspecialchars($e->getMessage()).'</p></div>';
     return;
@@ -36,8 +45,8 @@ $pending = ($order['paymentStatus'] === 'Pending');
     <p class="text-sm text-gray-600 text-center mb-6">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong><br>Date: <?= date('M d, Y', strtotime($order['date'])) ?></p>
 
     <table class="w-full mb-6 text-sm"><thead><tr class="bg-gray-100"><th class="text-left p-2">Item ID</th><th class="text-left p-2">Item</th><th class="text-center p-2">Qty</th><th class="text-right p-2">Price</th></tr></thead><tbody>
-        <?php foreach ($items as $it): ?>
-            <tr class="border-b"><td class="p-2 font-mono text-xs"><?= htmlspecialchars($it['itemId']) ?></td><td class="p-2"><?= htmlspecialchars($it['name']) ?></td><td class="text-center p-2"><?= $it['quantity'] ?></td><td class="text-right p-2">$<?= number_format($it['price'],2) ?></td></tr>
+        <?php foreach ($orderItems as $it): ?>
+            <tr class="border-b"><td class="p-2 font-mono text-xs"><?= htmlspecialchars($it['sku']) ?></td><td class="p-2"><?= htmlspecialchars($it['itemName']) ?></td><td class="text-center p-2"><?= $it['quantity'] ?></td><td class="text-right p-2">$<?= number_format($it['price'],2) ?></td></tr>
         <?php endforeach; ?>
     </tbody></table>
     <div class="flex justify-end mb-6 text-lg font-semibold">

@@ -205,4 +205,28 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
     <?php
     return ob_get_clean();
 }
+
+function displayImageCarousel($sku, $showPrimaryBadge = false, $extraClasses = '') {
+    global $pdo;
+    
+    try {
+        // Get product images for this SKU
+        $stmt = $pdo->prepare("SELECT * FROM product_images WHERE item_sku = ? ORDER BY is_primary DESC, id ASC");
+        $stmt->execute([$sku]);
+        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (empty($images)) {
+            // No images found, show placeholder
+            echo '<div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center ' . $extraClasses . '">';
+            echo '<img src="images/items/placeholder.png" alt="No image available" class="max-h-full max-w-full object-contain" loading="lazy">';
+            echo '</div>';
+            return;
+        }
+
+        // ... existing code ...
+    } catch (PDOException $e) {
+        // Handle database connection error
+        echo "Database connection error: " . $e->getMessage();
+    }
+}
 ?> 

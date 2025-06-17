@@ -96,7 +96,34 @@ try {
         $totalOrders = $countStmt->fetchColumn();
         
         // Get orders for current page
-        $stmt = $pdo->prepare('SELECT * FROM orders ORDER BY date DESC LIMIT ? OFFSET ?');
+        $stmt = $pdo->prepare("
+            SELECT 
+                o.id,
+                o.orderId,
+                o.customerName,
+                o.customerEmail,
+                o.customerPhone,
+                o.customerAddress,
+                o.paymentMethod,
+                o.paymentStatus,
+                o.orderStatus,
+                o.shippingMethod,
+                o.orderDate,
+                o.totalAmount,
+                o.discountCodeUsed,
+                o.discountAmountApplied,
+                o.taxAmount,
+                o.notes,
+                oi.id as orderItemId,
+                oi.sku,
+                oi.quantity,
+                oi.price,
+                i.name as itemName
+            FROM orders o
+            LEFT JOIN order_items oi ON o.orderId = oi.orderId
+            LEFT JOIN items i ON oi.sku = i.sku
+            ORDER BY o.orderDate DESC
+        ");
         $stmt->bindValue(1, $limit, PDO::PARAM_INT);
         $stmt->bindValue(2, $offset, PDO::PARAM_INT);
         $stmt->execute();

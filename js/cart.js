@@ -414,4 +414,55 @@ if (typeof window.cart === 'undefined') {
     console.log('Cart initialized globally');
 } else {
     console.log('Cart already initialized');
+}
+
+async function addToCart(sku, name, price, imageUrl = null) {
+    try {
+        const cart = getCart();
+        
+        // Check if item already exists in cart
+        const existingItem = cart.find(item => item.sku === sku);
+        
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({
+                sku: sku,
+                name: name,
+                price: parseFloat(price),
+                quantity: 1,
+                imageUrl: imageUrl || 'images/items/placeholder.png'
+            });
+        }
+        
+        saveCart(cart);
+        updateCartDisplay();
+        showNotification(`${name} added to cart!`);
+        
+    } catch (error) {
+        console.error('Error adding item to cart:', error);
+        showNotification('Error adding item to cart', 'error');
+    }
+}
+
+function removeFromCart(sku) {
+    const cart = getCart();
+    const updatedCart = cart.filter(item => item.sku !== sku);
+    saveCart(updatedCart);
+    updateCartDisplay();
+}
+
+function updateQuantity(sku, newQuantity) {
+    const cart = getCart();
+    const item = cart.find(item => item.sku === sku);
+    
+    if (item) {
+        if (newQuantity <= 0) {
+            removeFromCart(sku);
+        } else {
+            item.quantity = parseInt(newQuantity);
+            saveCart(cart);
+            updateCartDisplay();
+        }
+    }
 } 

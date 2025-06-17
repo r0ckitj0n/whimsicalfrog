@@ -10,19 +10,137 @@ $endDate   = $_GET['end_date']   ?? '';
 
 // Get orders within range
 if ($startDate === '' && $endDate === '') {
-    $ordersStmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode \n                                  FROM orders o \n                                  JOIN users u ON o.userId = u.id \n                                  ORDER BY o.date DESC");
-    $ordersStmt->execute();
+    $stmt = $pdo->prepare("
+        SELECT 
+            o.id, 
+            o.orderId, 
+            o.customerName, 
+            o.customerEmail,
+            o.customerPhone,
+            o.customerAddress,
+            o.paymentMethod,
+            o.paymentStatus,
+            o.orderStatus,
+            o.shippingMethod,
+            o.orderDate,
+            o.totalAmount,
+            o.discountCodeUsed,
+            o.discountAmountApplied,
+            o.taxAmount,
+            o.notes,
+            oi.id as orderItemId,
+            oi.sku,
+            oi.quantity,
+            oi.price,
+            i.name as itemName
+        FROM orders o
+        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN items i ON oi.sku = i.sku
+        ORDER BY o.orderDate DESC
+    ");
+    
+    $stmt->execute();
+    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } elseif ($startDate === '') {
-    $ordersStmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode \n                                  FROM orders o JOIN users u ON o.userId = u.id \n                                  WHERE DATE(o.date) <= :end ORDER BY o.date DESC");
-    $ordersStmt->execute([':end'=>$endDate]);
+    $stmt = $pdo->prepare("
+        SELECT 
+            o.id, 
+            o.orderId, 
+            o.customerName, 
+            o.customerEmail,
+            o.customerPhone,
+            o.customerAddress,
+            o.paymentMethod,
+            o.paymentStatus,
+            o.orderStatus,
+            o.shippingMethod,
+            o.orderDate,
+            o.totalAmount,
+            o.discountCodeUsed,
+            o.discountAmountApplied,
+            o.taxAmount,
+            o.notes,
+            oi.id as orderItemId,
+            oi.sku,
+            oi.quantity,
+            oi.price,
+            i.name as itemName
+        FROM orders o
+        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN items i ON oi.sku = i.sku
+        WHERE DATE(o.orderDate) <= :end
+        ORDER BY o.orderDate DESC
+    ");
+    
+    $stmt->execute([':end'=>$endDate]);
+    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } elseif ($endDate === '') {
-    $ordersStmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode \n                                  FROM orders o JOIN users u ON o.userId = u.id \n                                  WHERE DATE(o.date) >= :start ORDER BY o.date DESC");
-    $ordersStmt->execute([':start'=>$startDate]);
+    $stmt = $pdo->prepare("
+        SELECT 
+            o.id, 
+            o.orderId, 
+            o.customerName, 
+            o.customerEmail,
+            o.customerPhone,
+            o.customerAddress,
+            o.paymentMethod,
+            o.paymentStatus,
+            o.orderStatus,
+            o.shippingMethod,
+            o.orderDate,
+            o.totalAmount,
+            o.discountCodeUsed,
+            o.discountAmountApplied,
+            o.taxAmount,
+            o.notes,
+            oi.id as orderItemId,
+            oi.sku,
+            oi.quantity,
+            oi.price,
+            i.name as itemName
+        FROM orders o
+        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN items i ON oi.sku = i.sku
+        WHERE DATE(o.orderDate) >= :start
+        ORDER BY o.orderDate DESC
+    ");
+    
+    $stmt->execute([':start'=>$startDate]);
+    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } else {
-    $ordersStmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode \n                                  FROM orders o JOIN users u ON o.userId = u.id \n                                  WHERE DATE(o.date) BETWEEN :start AND :end ORDER BY o.date DESC");
-    $ordersStmt->execute([':start'=>$startDate, ':end'=>$endDate]);
+    $stmt = $pdo->prepare("
+        SELECT 
+            o.id, 
+            o.orderId, 
+            o.customerName, 
+            o.customerEmail,
+            o.customerPhone,
+            o.customerAddress,
+            o.paymentMethod,
+            o.paymentStatus,
+            o.orderStatus,
+            o.shippingMethod,
+            o.orderDate,
+            o.totalAmount,
+            o.discountCodeUsed,
+            o.discountAmountApplied,
+            o.taxAmount,
+            o.notes,
+            oi.id as orderItemId,
+            oi.sku,
+            oi.quantity,
+            oi.price,
+            i.name as itemName
+        FROM orders o
+        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN items i ON oi.sku = i.sku
+        WHERE DATE(o.orderDate) BETWEEN :start AND :end
+        ORDER BY o.orderDate DESC
+    ");
+    
+    $stmt->execute([':start'=>$startDate, ':end'=>$endDate]);
+    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-$orders = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Initialize modal state
 $modalMode = ''; // Default to no modal

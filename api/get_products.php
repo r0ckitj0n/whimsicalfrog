@@ -21,56 +21,96 @@ try {
     $products = [];
     
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Get specific products by IDs
+        // Get specific products by SKUs
         $input = json_decode(file_get_contents('php://input'), true);
         
         if (isset($input['item_ids']) && is_array($input['item_ids']) && !empty($input['item_ids'])) {
-            $itemIds = $input['item_ids'];
+            $skus = $input['item_ids'];  // Now expecting SKUs instead of IDs
             
             // Create placeholders for the IN clause
-            $placeholders = str_repeat('?,', count($itemIds) - 1) . '?';
+            $placeholders = str_repeat('?,', count($skus) - 1) . '?';
             
-            // Query to get specific items (simplified - no product_images join for now)
-            $sql = "SELECT p.*
-                    FROM items p 
-                    WHERE p.id IN ($placeholders)";
+            // Query to get specific items by SKU
+            $sql = "SELECT 
+                        i.sku,
+                        i.name,
+                        i.category,
+                        i.description,
+                        i.stockLevel,
+                        i.reorderPoint,
+                        i.costPrice,
+                        i.retailPrice,
+                        i.imageUrl
+                    FROM items i 
+                    WHERE i.sku IN ($placeholders)";
             
             $stmt = $pdo->prepare($sql);
-            $stmt->execute($itemIds);
+            $stmt->execute($skus);
             $products = $stmt->fetchAll();
             
             // Format the data
             foreach ($products as &$product) {
-                if (isset($product['basePrice'])) {
-                    $product['price'] = floatval($product['basePrice']);
+                // Use retailPrice as the main price field
+                if (isset($product['retailPrice'])) {
+                    $product['price'] = floatval($product['retailPrice']);
                 }
                 
-                // Set the image path - use existing image field for now
-                if (!empty($product['image'])) {
-                    // Keep existing image path
-                    $product['image'] = $product['image'];
+                // Set the image path - use imageUrl field
+                if (!empty($product['imageUrl'])) {
+                    $product['image'] = $product['imageUrl'];
                 } else {
                     $product['image'] = 'images/items/placeholder.png';
                 }
             }
         }
     } else {
-        // GET request - return all products (for backward compatibility)
-        $sql = "SELECT p.*
-                FROM items p";
+        // GET request - return all products or by category
+        if (isset($_GET['category']) && !empty($_GET['category'])) {
+            $sql = "SELECT 
+                        i.sku,
+                        i.name,
+                        i.category,
+                        i.description,
+                        i.stockLevel,
+                        i.reorderPoint,
+                        i.costPrice,
+                        i.retailPrice,
+                        i.imageUrl
+                    FROM items i
+                    WHERE i.category = ?";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$_GET['category']]);
+        } else {
+            // Return all items if no category specified
+            $sql = "SELECT 
+                        i.sku,
+                        i.name,
+                        i.category,
+                        i.description,
+                        i.stockLevel,
+                        i.reorderPoint,
+                        i.costPrice,
+                        i.retailPrice,
+                        i.imageUrl
+                    FROM items i";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+        }
         
-        $stmt = $pdo->query($sql);
         $products = $stmt->fetchAll();
         
         // Format the data
         foreach ($products as &$product) {
-            if (isset($product['basePrice'])) {
-                $product['price'] = floatval($product['basePrice']);
+            // Use retailPrice as the main price field
+            if (isset($product['retailPrice'])) {
+                $product['price'] = floatval($product['retailPrice']);
             }
             
-            // Set the image path
-            if (!empty($product['image'])) {
-                $product['image'] = $product['image'];
+            // Set the image path - use imageUrl field
+            if (!empty($product['imageUrl'])) {
+                $product['image'] = $product['imageUrl'];
             } else {
                 $product['image'] = 'images/items/placeholder.png';
             }

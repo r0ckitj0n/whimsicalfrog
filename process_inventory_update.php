@@ -53,7 +53,7 @@ try {
     
     // Handle inline editing (specific field update)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['itemId']) && isset($_POST['field']) && isset($_POST['value'])) {
-        $itemId = trim($_POST['itemId']);
+        $itemSku = trim($_POST['itemId']); // This is actually the SKU now
         $field = trim($_POST['field']);
         $value = $_POST['value'];
         
@@ -64,16 +64,14 @@ try {
         }
         
         // Basic validation
-        if (empty($itemId)) {
-            returnError('Item ID cannot be empty');
+        if (empty($itemSku)) {
+            returnError('Item SKU cannot be empty');
         }
         
-        // Prepare and execute update
-        $query = "UPDATE inventory SET $field = ? WHERE id = ?";
+        // Prepare and execute update - use items table with sku as primary key
+        $query = "UPDATE items SET $field = ? WHERE sku = ?";
         $stmt = $pdo->prepare($query);
-        if ($stmt->execute([$value, $itemId])) {
-            // Category updates are now handled directly in the items table
-            // No need to sync with products table anymore
+        if ($stmt->execute([$value, $itemSku])) {
             returnSuccess(ucfirst($field) . ' updated successfully');
         } else {
             returnError('Failed to update ' . $field);
@@ -109,7 +107,7 @@ try {
                     return $map[$cat] ?? strtoupper(substr(preg_replace('/[^A-Za-z]/','',$cat),0,2));
                 }
                 $code=cat_code($category);
-                $stmtSku=$pdo->prepare("SELECT sku FROM inventory WHERE sku LIKE :pat ORDER BY sku DESC LIMIT 1");
+                $stmtSku=$pdo->prepare("SELECT sku FROM items WHERE sku LIKE :pat ORDER BY sku DESC LIMIT 1");
                 $stmtSku->execute([':pat'=>'WF-'.$code.'-%']);
                 $rowSku=$stmtSku->fetch(PDO::FETCH_ASSOC);
                 $num=1;
@@ -151,33 +149,28 @@ try {
             }
             
             if ($action === 'add') {
-                // Generate new Item ID
-                $stmtId = $pdo->query("SELECT id FROM items ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC LIMIT 1");
-                $lastIdRow = $stmtId->fetch(PDO::FETCH_ASSOC);
-                $lastIdNum = $lastIdRow ? (int)substr($lastIdRow['id'], 1) : 0;
-                $itemId = 'I' . str_pad($lastIdNum + 1, 3, '0', STR_PAD_LEFT);
-                
-                // Insert query
-                $sql = "INSERT INTO items (id, name, category, sku, stockLevel, reorderPoint, costPrice, retailPrice, description, imageUrl) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                // Insert query - items table now uses sku as primary key
+                $sql = "INSERT INTO items (sku, name, category, stockLevel, reorderPoint, costPrice, retailPrice, description, imageUrl) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $success = $stmt->execute([
-                    $itemId, $name, $category, $sku, $stockLevel, $reorderPoint, 
+                    $sku, $name, $category, $stockLevel, $reorderPoint, 
                     $costPrice, $retailPrice, $description, $imageUrl
                 ]);
+                $itemId = $sku; // For consistency with return data
             } else {
                 // Update existing item
-                $itemId = trim($_POST['itemId']);
+                $itemSku = trim($_POST['itemId']); // This is actually the SKU now
                 
-                // Update query
+                // Update query - use sku as primary key
                 $sql = "UPDATE items SET 
-                        name = ?, category = ?, sku = ?, stockLevel = ?, 
+                        name = ?, category = ?, stockLevel = ?, 
                         reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ?, imageUrl = ? 
-                        WHERE id = ?";
+                        WHERE sku = ?";
                 $stmt = $pdo->prepare($sql);
                 $success = $stmt->execute([
-                    $name, $category, $sku, $stockLevel, $reorderPoint, 
-                    $costPrice, $retailPrice, $description, $imageUrl, $itemId
+                    $name, $category, $stockLevel, $reorderPoint, 
+                    $costPrice, $retailPrice, $description, $imageUrl, $itemSku
                 ]);
             }
             
@@ -186,10 +179,12 @@ try {
                 // No need to sync with products table anymore - items table is the single source of truth
 
                 // TEMP LOG
-                error_log("[inventory_update] action=$action itemId=$itemId imageUrl=$imageUrl\n", 3, __DIR__ . '/inventory_errors.log');
+                $logId = ($action === 'add') ? $sku : $itemSku;
+                error_log("[inventory_update] action=$action itemSku=$logId imageUrl=$imageUrl\n", 3, __DIR__ . '/inventory_errors.log');
 
                 $message = "Item " . ($action === 'add' ? "added" : "updated") . " successfully";
-                returnSuccess($message, ['itemId' => $itemId, 'action' => $action]);
+                $returnId = ($action === 'add') ? $sku : $itemSku;
+                returnSuccess($message, ['itemId' => $returnId, 'action' => $action]);
             } else {
                 returnError('Failed to ' . $action . ' item');
             }
@@ -210,13 +205,13 @@ try {
         }
         
         if (isset($data['id']) && isset($data['costPrice'])) {
-            $itemId = trim($data['id']);
+            $itemSku = trim($data['id']); // This is actually the SKU now
             $costPrice = floatval($data['costPrice']);
             
-            $query = "UPDATE inventory SET costPrice = ? WHERE id = ?";
+            $query = "UPDATE items SET costPrice = ? WHERE sku = ?";
             $stmt = $pdo->prepare($query);
             
-            if ($stmt->execute([$costPrice, $itemId])) {
+            if ($stmt->execute([$costPrice, $itemSku])) {
                 returnSuccess('Cost price updated successfully');
             } else {
                 returnError('Failed to update cost price');
@@ -230,10 +225,10 @@ try {
         parse_str($_SERVER['QUERY_STRING'], $params);
         
         if (isset($params['action']) && $params['action'] === 'delete' && isset($params['itemId'])) {
-            $itemId = trim($params['itemId']);
+            $itemSku = trim($params['itemId']); // This is actually the SKU now
             
-            $stmt = $pdo->prepare("DELETE FROM inventory WHERE id = ?");
-            if ($stmt->execute([$itemId])) {
+            $stmt = $pdo->prepare("DELETE FROM items WHERE sku = ?");
+            if ($stmt->execute([$itemSku])) {
                 returnSuccess('Item deleted successfully');
             } else {
                 returnError('Failed to delete item');

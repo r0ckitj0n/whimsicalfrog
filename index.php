@@ -216,6 +216,7 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
     <title>Whimsical Frog - Custom Crafts</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
+    <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after {
@@ -628,6 +629,9 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
 <?php if ($page !== 'admin'): ?>
 <script src="js/cart.js?v=<?php echo time(); ?>"></script>
 <?php endif; ?>
+
+<!-- Load global modal system -->
+<script src="js/global-modals.js?v=<?php echo time(); ?>"></script>
 
 <!-- WebP Support Detection -->
 <script>

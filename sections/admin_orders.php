@@ -513,7 +513,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th></tr></thead>
                                 <tbody>
                                     <?php
-                                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ? LIMIT 6");
+                                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci WHERE oi.orderId = ? LIMIT 6");
                                         $itemStmt->execute([$viewOrderId]);
                                         $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                         foreach ($orderItems as $it): ?>

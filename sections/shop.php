@@ -125,7 +125,7 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                 $formattedPrice = '$' . number_format((float)$price, 2);
                 
                 // Get primary image using database-driven system
-                $primaryImageData = getPrimaryProductImage($sku);
+                $primaryImageData = getPrimaryImageBySku($sku);
                 $imageUrl = ($primaryImageData && $primaryImageData['file_exists']) ? htmlspecialchars($primaryImageData['image_path'] ?? '') : 'images/items/placeholder.png';
         ?>
         <div class="product-card" data-category="<?php echo htmlspecialchars($category); ?>">

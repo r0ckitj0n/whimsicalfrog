@@ -104,13 +104,21 @@
         </div>
         <div>
             <p class="text-sm text-gray-600 mb-3">Configure business settings, payment methods, shipping options, brand colors, and other dynamic data.</p>
-            <button onclick="openBusinessSettingsModal()" class="inline-flex items-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                Business Settings
-            </button>
+            <div class="flex gap-2">
+                <button onclick="openBusinessSettingsModal()" class="inline-flex items-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Business Settings
+                </button>
+                <button onclick="openGlobalCSSModal()" class="inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
+                    </svg>
+                    Global CSS Rules
+                </button>
+            </div>
         </div>
         <div>
             <p class="text-sm text-gray-600 mb-3">View and manage database tables, monitor table sizes, and access comprehensive database information.</p>
@@ -577,14 +585,14 @@ function generateDatabaseMaintenanceHTML(data) {
                     };
                     
                     return `
-                        <div class="bg-white rounded p-3 border border-purple-200">
+                        <div class="bg-transparent rounded p-3 border border-purple-200">
                             <h5 class="font-semibold text-purple-700 mb-2 text-xs">${categoryLabels[category] || category}</h5>
                             <ul class="space-y-1">
                                 ${Object.entries(tables).map(([table, exists]) => 
                                     `<li>
                                         <button onclick="viewTable('${table}')" 
                                                 class="text-left w-full hover:bg-purple-100 rounded px-1 py-0.5 transition-colors">
-                                            <code class="bg-purple-100 px-1 py-0.5 rounded text-xs">${table}</code> 
+                                            <code class="bg-transparent border border-purple-200 px-1 py-0.5 rounded text-xs">${table}</code> 
                                             ${exists ? '✅' : '❌'}
                                         </button>
                                     </li>`
@@ -708,6 +716,211 @@ async function viewTable(tableName) {
 
 function closeTableViewModal() {
     document.getElementById('tableViewModal').style.display = 'none';
+}
+
+async function getDatabaseTableCount() {
+    try {
+        const response = await fetch('/api/get_database_info.php');
+        const result = await response.json();
+        if (result.success && result.data) {
+            return result.data.total_active || 'several';
+        }
+        return 'several';
+    } catch (error) {
+        return 'several';
+    }
+}
+
+async function compactRepairDatabase() {
+    // Show pretty confirmation dialog
+    const tableCount = await getDatabaseTableCount();
+    
+    const confirmed = await showConfirmationModal({
+        title: 'Database Compact & Repair',
+        subtitle: 'Optimize and repair your database for better performance',
+        message: 'This operation will create a safety backup first, then optimize and repair all database tables to improve performance and fix any corruption issues.',
+        details: `
+            <ul>
+                <li>✅ Create automatic safety backup before optimization</li>
+                <li>🔧 Optimize ${tableCount} database tables for better performance</li>
+                <li>🛠️ Repair any table corruption or fragmentation issues</li>
+                <li>⚡ Improve database speed and efficiency</li>
+                <li>⏱️ Process typically takes 2-3 minutes</li>
+            </ul>
+        `,
+        icon: '🔧',
+        iconType: 'info',
+        confirmText: 'Start Optimization',
+        cancelText: 'Cancel'
+    });
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    // Show progress modal
+    showBackupProgressModal('🔧 Database Compact & Repair', 'database-repair');
+    
+    const progressSteps = document.getElementById('backupProgressSteps');
+    const progressTitle = document.getElementById('backupProgressTitle');
+    const progressSubtitle = document.getElementById('backupProgressSubtitle');
+    
+    progressTitle.textContent = '🔧 Database Compact & Repair';
+    progressSubtitle.textContent = 'Optimizing and repairing database tables...';
+    
+    try {
+        // Step 1: Create backup first
+        progressSteps.innerHTML = `
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">Creating safety backup...</p>
+                    <p class="text-xs text-gray-500">Backing up database before optimization</p>
+                </div>
+            </div>
+        `;
+        
+        // Create database backup first
+        const backupResponse = await fetch('/api/backup_database.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                destination: 'cloud' // Always backup to server for safety
+            })
+        });
+        
+        const backupResult = await backupResponse.json();
+        if (!backupResult.success) {
+            throw new Error('Failed to create safety backup: ' + (backupResult.error || 'Unknown error'));
+        }
+        
+        // Step 2: Compact and repair
+        progressSteps.innerHTML = `
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">Safety backup created</p>
+                    <p class="text-xs text-gray-500">Database backed up successfully</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">Optimizing database tables...</p>
+                    <p class="text-xs text-gray-500">Running OPTIMIZE and REPAIR operations</p>
+                </div>
+            </div>
+        `;
+        
+        // Run compact and repair operations
+        const repairResponse = await fetch('/api/compact_repair_database.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const repairResult = await repairResponse.json();
+        if (!repairResult.success) {
+            throw new Error('Database optimization failed: ' + (repairResult.error || 'Unknown error'));
+        }
+        
+        // Step 3: Complete
+        progressSteps.innerHTML = `
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">Safety backup created</p>
+                    <p class="text-xs text-gray-500">Database backed up successfully</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">Database optimization complete</p>
+                    <p class="text-xs text-gray-500">${repairResult.tables_processed || 0} tables optimized and repaired</p>
+                </div>
+            </div>
+        `;
+        
+        // Show completion details
+        showBackupCompletionDetails({
+            success: true,
+            filename: backupResult.filename,
+            filepath: backupResult.filepath,
+            size: backupResult.size,
+            timestamp: backupResult.timestamp,
+            destinations: ['Server'],
+            tables_optimized: repairResult.tables_processed || 0,
+            operation_type: 'Database Compact & Repair'
+        });
+        
+        // Refresh database information
+        setTimeout(() => {
+            loadDatabaseInformation();
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Database compact/repair error:', error);
+        
+        // Show error state
+        progressSteps.innerHTML = `
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-red-900">Database optimization failed</p>
+                    <p class="text-xs text-red-600">${error.message}</p>
+                </div>
+            </div>
+        `;
+        
+        // Add retry button
+        const retryButton = document.createElement('button');
+        retryButton.className = 'mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors';
+        retryButton.textContent = 'Retry Operation';
+        retryButton.onclick = () => {
+            closeBackupProgressModal();
+            compactRepairDatabase();
+        };
+        progressSteps.appendChild(retryButton);
+    }
 }
 
 function openRoomMapperModal() {
@@ -4079,11 +4292,14 @@ function escapeHtml(text) {
                 </button>
             </div>
             
-            <!-- Database Backup Button -->
-            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
-                <div class="flex items-center justify-center">
-                    <button onclick="showDatabaseBackupModal()" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors duration-200">
+            <!-- Database Action Buttons -->
+            <div class="mb-4 p-3 bg-transparent rounded-lg">
+                <div class="flex items-center justify-center space-x-4">
+                    <button onclick="showDatabaseBackupModal()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors duration-200">
                         🗄️ Backup Website Database
+                    </button>
+                    <button onclick="compactRepairDatabase()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors duration-200">
+                        🔧 Compact & Repair Database
                     </button>
                 </div>
             </div>
@@ -4157,8 +4373,8 @@ function escapeHtml(text) {
                     </button>
                 </div>
                 <div class="flex items-center">
-                    <button onclick="showBackupModal()" class="px-4 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm font-medium">
-                        💾 Backup Website
+                    <button onclick="showBackupModal()" class="px-4 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-medium">
+                        💾 Backup Website Files
                     </button>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -4244,7 +4460,7 @@ function escapeHtml(text) {
             <div class="px-6 py-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
                             <span class="text-white text-lg">💾</span>
                         </div>
                         <h3 class="text-lg font-semibold text-gray-900">Create Website Backup</h3>
@@ -4265,7 +4481,7 @@ function escapeHtml(text) {
                     <!-- Backup Options -->
                     <div class="space-y-3 mb-6">
                         <label class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <input type="checkbox" id="backupToComputer" class="mt-1 w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2" checked onchange="updateBackupButton()">
+                            <input type="checkbox" id="backupToComputer" class="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked onchange="updateBackupButton()">
                             <div class="flex-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-lg">💻</span>
@@ -4276,7 +4492,7 @@ function escapeHtml(text) {
                         </label>
                         
                         <label class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <input type="checkbox" id="backupToCloud" class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" checked onchange="updateBackupButton()">
+                            <input type="checkbox" id="backupToCloud" class="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked onchange="updateBackupButton()">
                             <div class="flex-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-lg">☁️</span>
@@ -4318,10 +4534,10 @@ function escapeHtml(text) {
             <!-- Footer -->
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
                 <div class="flex items-center justify-end space-x-3">
-                    <button onclick="closeBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                    <button onclick="closeBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
                         Cancel
                     </button>
-                    <button id="createBackupButton" onclick="executeBackup()" class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 border border-transparent rounded-md hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button id="createBackupButton" onclick="executeBackup()" class="px-4 py-2 text-sm font-medium text-white bg-green-500 hover:bg-green-600 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                         <span class="flex items-center space-x-2">
                             <span>💾</span>
                             <span>Create Backup</span>
@@ -4444,7 +4660,7 @@ function escapeHtml(text) {
                     <!-- Backup Options -->
                     <div class="space-y-3 mb-6">
                         <label class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <input type="checkbox" id="dbBackupToComputer" class="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2" checked onchange="updateDatabaseBackupButton()">
+                            <input type="checkbox" id="dbBackupToComputer" class="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked onchange="updateDatabaseBackupButton()">
                             <div class="flex-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-lg">💻</span>
@@ -4455,7 +4671,7 @@ function escapeHtml(text) {
                         </label>
                         
                         <label class="flex items-start space-x-3 cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <input type="checkbox" id="dbBackupToCloud" class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" checked onchange="updateDatabaseBackupButton()">
+                            <input type="checkbox" id="dbBackupToCloud" class="mt-1 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked onchange="updateDatabaseBackupButton()">
                             <div class="flex-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-lg">☁️</span>
@@ -4497,10 +4713,10 @@ function escapeHtml(text) {
             <!-- Footer -->
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
                 <div class="flex items-center justify-end space-x-3">
-                    <button onclick="closeDatabaseBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors">
+                    <button onclick="closeDatabaseBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
                         Cancel
                     </button>
-                    <button id="createDatabaseBackupButton" onclick="executeDatabaseBackup()" class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 border border-transparent rounded-md hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button id="createDatabaseBackupButton" onclick="executeDatabaseBackup()" class="px-4 py-2 text-sm font-medium text-white bg-green-500 hover:bg-green-600 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                         <span class="flex items-center space-x-2">
                             <span>🗄️</span>
                             <span>Create Database Backup</span>
@@ -5393,4 +5609,283 @@ function showDatabaseBackupComplete(result, downloadToComputer, keepOnServer) {
         }, 10000);
     }
 }
+
+// Global CSS Rules Management
+function openGlobalCSSModal() {
+    document.getElementById('globalCSSModal').style.display = 'flex';
+    loadGlobalCSSRules();
+}
+
+function closeGlobalCSSModal() {
+    document.getElementById('globalCSSModal').style.display = 'none';
+}
+
+async function loadGlobalCSSRules() {
+    const loadingDiv = document.getElementById('globalCSSLoading');
+    const contentDiv = document.getElementById('globalCSSContent');
+    
+    loadingDiv.style.display = 'block';
+    contentDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/global_css_rules.php?action=list');
+        const result = await response.json();
+        
+        if (result.success) {
+            loadingDiv.style.display = 'none';
+            contentDiv.style.display = 'block';
+            renderGlobalCSSRules(result.grouped);
+        } else {
+            throw new Error(result.error || 'Failed to load CSS rules');
+        }
+    } catch (error) {
+        console.error('Error loading CSS rules:', error);
+        loadingDiv.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-red-500 mb-3">⚠️</div>
+                <p class="text-red-600">Failed to load CSS rules</p>
+                <p class="text-sm text-gray-500">${error.message}</p>
+                <button onclick="loadGlobalCSSRules()" class="mt-3 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+function renderGlobalCSSRules(groupedRules) {
+    const contentDiv = document.getElementById('globalCSSContent');
+    
+    let html = '<div class="space-y-6">';
+    
+    // Category tabs
+    const categories = Object.keys(groupedRules);
+    html += '<div class="border-b border-gray-200 mb-6">';
+    html += '<nav class="-mb-px flex space-x-8">';
+    
+    categories.forEach((category, index) => {
+        const isActive = index === 0;
+        html += `
+            <button onclick="showCSSCategory('${category}')" 
+                    class="css-category-tab ${isActive ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} 
+                           whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm capitalize"
+                    data-category="${category}">
+                ${category.replace('_', ' ')}
+            </button>
+        `;
+    });
+    
+    html += '</nav></div>';
+    
+    // Category content
+    categories.forEach((category, index) => {
+        const rules = groupedRules[category];
+        const isActive = index === 0;
+        
+        html += `
+            <div id="css-category-${category}" class="css-category-content ${isActive ? '' : 'hidden'}">
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <h4 class="font-semibold text-gray-800 mb-2 capitalize">${category.replace('_', ' ')} Settings</h4>
+                    <p class="text-sm text-gray-600">Adjust ${category.replace('_', ' ')} styles for your website. Changes are applied immediately.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        `;
+        
+        rules.forEach(rule => {
+            html += `
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        ${rule.rule_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </label>
+                    <div class="text-xs text-gray-500 mb-2">${rule.description}</div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" 
+                               class="css-rule-input flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                               data-rule-id="${rule.id}"
+                               data-property="${rule.css_property}"
+                               value="${rule.css_value}"
+                               placeholder="${rule.css_property}">
+                        ${rule.css_property === 'color' || rule.css_property === 'background-color' || rule.css_property === 'border-color' ? 
+                          `<input type="color" class="w-10 h-8 border border-gray-300 rounded cursor-pointer" 
+                                  value="${rule.css_value.startsWith('#') ? rule.css_value : '#87ac3a'}"
+                                  onchange="updateColorValue(this, ${rule.id})">` : ''}
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1">Property: ${rule.css_property}</div>
+                </div>
+            `;
+        });
+        
+        html += '</div></div>';
+    });
+    
+    html += '</div>';
+    
+    // Save button
+    html += `
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
+            <button onclick="closeGlobalCSSModal()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                Cancel
+            </button>
+            <button onclick="saveGlobalCSSRules()" 
+                    class="px-4 py-2 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-md">
+                Save Changes
+            </button>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+}
+
+function showCSSCategory(category) {
+    // Update tab styles
+    document.querySelectorAll('.css-category-tab').forEach(tab => {
+        tab.classList.remove('border-indigo-500', 'text-indigo-600');
+        tab.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    document.querySelector(`[data-category="${category}"]`).classList.remove('border-transparent', 'text-gray-500');
+    document.querySelector(`[data-category="${category}"]`).classList.add('border-indigo-500', 'text-indigo-600');
+    
+    // Show/hide content
+    document.querySelectorAll('.css-category-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    document.getElementById(`css-category-${category}`).classList.remove('hidden');
+}
+
+function updateColorValue(colorInput, ruleId) {
+    const textInput = document.querySelector(`[data-rule-id="${ruleId}"]`);
+    textInput.value = colorInput.value;
+}
+
+async function saveGlobalCSSRules() {
+    const inputs = document.querySelectorAll('.css-rule-input');
+    const rules = [];
+    
+    inputs.forEach(input => {
+        rules.push({
+            id: input.dataset.ruleId,
+            css_value: input.value
+        });
+    });
+    
+    try {
+        const response = await fetch('/api/global_css_rules.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'update_bulk',
+                rules: JSON.stringify(rules),
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Generate and apply CSS
+            await generateAndApplyCSS();
+            
+            // Show success message
+            showAlert('CSS rules updated successfully!', 'success');
+            
+            // Close modal
+            closeGlobalCSSModal();
+        } else {
+            throw new Error(result.error || 'Failed to save CSS rules');
+        }
+    } catch (error) {
+        console.error('Error saving CSS rules:', error);
+        showAlert('Failed to save CSS rules: ' + error.message, 'error');
+    }
+}
+
+async function generateAndApplyCSS() {
+    try {
+        const response = await fetch('/api/global_css_rules.php?action=generate_css');
+        const result = await response.json();
+        
+        if (result.success) {
+            // Remove existing dynamic CSS
+            const existingStyle = document.getElementById('dynamic-global-css');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+            
+            // Add new CSS
+            const style = document.createElement('style');
+            style.id = 'dynamic-global-css';
+            style.textContent = result.css_content;
+            document.head.appendChild(style);
+        }
+    } catch (error) {
+        console.error('Error generating CSS:', error);
+    }
+}
+
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+    }`;
+    alertDiv.textContent = message;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+// Load and apply CSS on page load
+document.addEventListener('DOMContentLoaded', function() {
+    generateAndApplyCSS();
+});
 </script>
+
+<!-- Global CSS Rules Modal -->
+<div id="globalCSSModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-500 to-purple-600">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                            <span class="text-white text-lg">🎨</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Global CSS Rules</h3>
+                            <p class="text-indigo-100 text-sm">Customize your website's appearance</p>
+                        </div>
+                    </div>
+                    <button onclick="closeGlobalCSSModal()" class="text-white hover:text-indigo-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Body -->
+            <div class="overflow-y-auto max-h-[calc(90vh-140px)]">
+                <!-- Loading State -->
+                <div id="globalCSSLoading" class="text-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto mb-3"></div>
+                    <p class="text-gray-600">Loading CSS rules...</p>
+                </div>
+                
+                <!-- Content -->
+                <div id="globalCSSContent" class="p-6" style="display: none;">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

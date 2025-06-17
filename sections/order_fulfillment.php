@@ -136,7 +136,7 @@ $messageType = $_GET['type'] ?? '';
                     <tr class="hover:bg-gray-50">
                         <td class="font-medium text-gray-900">#<?= htmlspecialchars($order['id'] ?? '') ?></td>
                         <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
-                        <td class="text-sm text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date']))) ?></td>
+                        <td class="text-sm text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
                         <td class="order-items-cell" title="<?php
                             $items = $pdo->prepare("SELECT oi.*, COALESCE(p.name, oi.productId) AS name FROM order_items oi LEFT JOIN products p ON oi.productId = p.id WHERE oi.orderId = ?");
                             $items->execute([$order['id']]);

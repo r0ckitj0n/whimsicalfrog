@@ -481,7 +481,7 @@ $messageType = $_GET['type'] ?? '';
                                 <div class="cost-item">
                                     <span class="cost-item-name"><?= htmlspecialchars($costType === 'materials' ? $item_cost['name'] : $item_cost['description']) ?></span>
                                     <div class="cost-item-actions">
-                                        <span class="cost-item-value">$<?= number_format(floatval($item_cost['cost']), 2) ?></span>
+                                        <span class="cost-item-value">$<?= number_format(floatval($item_cost['cost'] ?? 0), 2) ?></span>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>

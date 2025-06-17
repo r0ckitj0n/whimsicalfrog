@@ -507,7 +507,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="order-details-section">
                             <div class="flex justify-between items-center mb-3">
                                 <h3>Items</h3>
-                                <div class="text-lg font-semibold text-green-700">Total: $<?= number_format(floatval($orderDetails['total']), 2) ?></div>
+                                <div class="text-lg font-semibold text-green-700">Total: $<?= number_format(floatval($orderDetails['total'] ?? 0), 2) ?></div>
                             </div>
                             <table class="w-full text-sm">
                                 <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th></tr></thead>
@@ -517,7 +517,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                         $itemStmt->execute([$viewOrderId]);
                                         $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                         foreach ($orderItems as $it): ?>
-                                            <tr><td><?= htmlspecialchars($it['name']); ?></td><td class="text-center"><?= $it['quantity']; ?></td><td class="text-right">$<?= number_format($it['price'] * $it['quantity'], 2); ?></td></tr>
+                                            <tr><td><?= htmlspecialchars($it['name'] ?? ''); ?></td><td class="text-center"><?= $it['quantity'] ?? 0; ?></td><td class="text-right">$<?= number_format(($it['price'] ?? 0) * ($it['quantity'] ?? 0), 2); ?></td></tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
@@ -806,7 +806,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="order-details-section">
                         <div class="flex justify-between items-center mb-3">
                             <h3>Items</h3>
-                            <div class="text-lg font-semibold text-green-700" id="orderTotalDisplay">Total: $<?= number_format(floatval($orderDetails['total']), 2) ?></div>
+                            <div class="text-lg font-semibold text-green-700" id="orderTotalDisplay">Total: $<?= number_format(floatval($orderDetails['total'] ?? 0), 2) ?></div>
                         </div>
                         <table class="w-full text-sm" id="itemsTable">
                             <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th><th class="w-8"></th></tr></thead>
@@ -823,7 +823,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                                    value="<?= $it['quantity'] ?>" min="1" onchange="updateRowTotal(this)" 
                                                    style="background: none; outline: none;">
                                         </td>
-                                        <td class="text-right line-total">$<?= number_format($it['price'] * $it['quantity'], 2) ?></td>
+                                        <td class="text-right line-total">$<?= number_format(($it['price'] ?? 0) * ($it['quantity'] ?? 0), 2) ?></td>
                                         <td class="text-center">
                                             <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="removeItemAndUpdateTotal(this)" title="Remove item">
                                                 🗑️
@@ -838,7 +838,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <select id="addProductSelect" class="flex-1 border rounded px-2 py-1 text-sm max-w-xs">
                                     <option value="">-- Add Item --</option>
                                     <?php foreach($allItems as $p): ?>
-                                        <option value="<?= htmlspecialchars($p['sku']) ?>" data-price="<?= $p['basePrice'] ?>"><?= htmlspecialchars($p['name']) ?> ($<?= number_format($p['basePrice'], 2) ?>)</option>
+                                        <option value="<?= htmlspecialchars($p['sku'] ?? '') ?>" data-price="<?= $p['basePrice'] ?? 0 ?>"><?= htmlspecialchars($p['name'] ?? '') ?> ($<?= number_format($p['basePrice'] ?? 0, 2) ?>)</option>
                                     <?php endforeach; ?>
                                 </select>
                                 <input type="number" id="addQty" class="w-16 border rounded px-2 py-1 text-sm" min="1" value="1">

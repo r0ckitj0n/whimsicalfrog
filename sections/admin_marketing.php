@@ -305,8 +305,8 @@ function generateId($prefix, $length = 3) {
                                     <tr>
                                         <td><?php echo htmlspecialchars($order['id'] ?? ''); ?></td>
                                         <td><?php echo htmlspecialchars($order['username'] ?? $order['email'] ?? 'Unknown'); ?></td>
-                                        <td>$<?php echo number_format($order['total'], 2); ?></td>
-                                        <td><?php echo date('M d, Y', strtotime($order['date'])); ?></td>
+                                        <td>$<?php echo number_format($order['total'] ?? 0, 2); ?></td>
+                                        <td><?php echo date('M d, Y', strtotime($order['date'] ?? 'now')); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -596,7 +596,7 @@ function generateId($prefix, $length = 3) {
                                             if ($code['type'] === 'percentage') {
                                                 echo htmlspecialchars($code['value']) . '%';
                                             } else {
-                                                echo '$' . number_format($code['value'], 2);
+                                                echo '$' . number_format($code['value'] ?? 0, 2);
                                             }
                                             ?>
                                         </td>

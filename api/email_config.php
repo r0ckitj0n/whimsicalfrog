@@ -56,7 +56,7 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
         $customerName = htmlspecialchars($customerData['username'] ?? 'Valued Customer');
     }
     
-    $orderDate = date('F j, Y', strtotime($orderData['date']));
+    $orderDate = date('F j, Y', strtotime($orderData['date'] ?? 'now'));
     $orderTotal = number_format((float)$orderData['total'], 2);
     $paymentMethod = htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified');
     $shippingMethod = htmlspecialchars($orderData['shippingMethod'] ?? 'Not specified');
@@ -221,7 +221,7 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
     $customerEmail = htmlspecialchars($customerData['email'] ?? 'No email');
     $customerPhone = htmlspecialchars($customerData['phoneNumber'] ?? 'No phone');
     
-    $orderDate = date('F j, Y g:i A', strtotime($orderData['date']));
+    $orderDate = date('F j, Y g:i A', strtotime($orderData['date'] ?? 'now'));
     $orderTotal = number_format((float)$orderData['total'], 2);
     $paymentMethod = htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified');
     $shippingMethod = htmlspecialchars($orderData['shippingMethod'] ?? 'Not specified');

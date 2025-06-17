@@ -32,7 +32,7 @@ try {
     echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Error loading order</h1><p>'.htmlspecialchars($e->getMessage()).'</p></div>';
     return;
 }
-$total = number_format($order['total'], 2);
+    $total = number_format($order['total'] ?? 0, 2);
 $pending = ($order['paymentStatus'] === 'Pending');
 ?>
 <style>
@@ -42,7 +42,7 @@ $pending = ($order['paymentStatus'] === 'Pending');
 </style>
 <div class="max-w-2xl mx-auto bg-white shadow-md rounded p-6 mt-6">
     <h1 class="text-2xl font-bold text-center text-[#87ac3a] mb-4">Order Receipt</h1>
-    <p class="text-sm text-gray-600 text-center mb-6">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong><br>Date: <?= date('M d, Y', strtotime($order['date'])) ?></p>
+            <p class="text-sm text-gray-600 text-center mb-6">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong><br>Date: <?= date('M d, Y', strtotime($order['date'] ?? 'now')) ?></p>
 
     <table class="w-full mb-6 text-sm"><thead><tr class="bg-gray-100"><th class="text-left p-2">Item ID</th><th class="text-left p-2">Item</th><th class="text-center p-2">Qty</th><th class="text-right p-2">Price</th></tr></thead><tbody>
         <?php foreach ($orderItems as $it): ?>

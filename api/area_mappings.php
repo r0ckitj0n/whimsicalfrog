@@ -101,10 +101,8 @@ function handleGet($pdo) {
         } elseif ($action === 'get_available_items') {
             // Get available inventory items for mapping
             $stmt = $pdo->prepare("
-                SELECT i.id, i.name, i.description, i.retailPrice, p.productType as category
-                FROM inventory i
-                LEFT JOIN products p ON i.productId = p.id
-                WHERE i.stockLevel > 0
+                SELECT i.sku, i.name, i.description, i.retailPrice, i.category
+                FROM items i
                 ORDER BY i.name
             ");
             $stmt->execute();

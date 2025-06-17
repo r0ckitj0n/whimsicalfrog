@@ -47,12 +47,12 @@ try {
     
     // If this is marked as primary, unset any existing primary images for this product
     if ($isPrimary) {
-        $stmt = $pdo->prepare("UPDATE product_images SET is_primary = 0 WHERE sku = ?");
+        $stmt = $pdo->prepare("UPDATE item_images SET is_primary = 0 WHERE sku = ?");
         $stmt->execute([$sku]);
     }
     
     // Get existing image paths to determine what letter suffixes are already used
-    $stmt = $pdo->prepare("SELECT image_path FROM product_images WHERE sku = ?");
+    $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ?");
     $stmt->execute([$sku]);
     $existingPaths = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
@@ -127,7 +127,7 @@ try {
             
             // Insert into database
             $stmt = $pdo->prepare("
-                INSERT INTO product_images (sku, image_path, is_primary, alt_text, sort_order) 
+                INSERT INTO item_images (sku, image_path, is_primary, alt_text, sort_order)
                 VALUES (?, ?, ?, ?, ?)
             ");
             
@@ -159,13 +159,13 @@ try {
     
     // If no primary image exists for this product, make the first uploaded image primary
     if (!empty($uploadedImages)) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM product_images WHERE sku = ? AND is_primary = 1");
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM item_images WHERE sku = ? AND is_primary = 1");
         $stmt->execute([$sku]);
         $hasPrimary = $stmt->fetchColumn() > 0;
         
         if (!$hasPrimary && !empty($uploadedImages)) {
             $firstImage = $uploadedImages[0];
-            $stmt = $pdo->prepare("UPDATE product_images SET is_primary = 1 WHERE sku = ? AND image_path = ?");
+            $stmt = $pdo->prepare("UPDATE item_images SET is_primary = 1 WHERE sku = ? AND image_path = ?");
             $stmt->execute([$sku, $firstImage['path']]);
             
             // Update items table

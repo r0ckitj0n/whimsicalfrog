@@ -43,8 +43,8 @@ try {
         'primaryImage' => !empty($images) ? $images[0] : null
     ]);
     
-} catch (Exception $e) {
-    error_log("Error in get_product_images: " . $e->getMessage());
+} catch (PDOException $e) {
+    error_log("Error in get_item_images: " . $e->getMessage());
     echo json_encode(['success' => false, 'error' => 'Failed to retrieve images']);
 }
 ?> 

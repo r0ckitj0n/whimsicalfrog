@@ -1,92 +1,76 @@
 <?php
 /**
- * Product Image Helper Functions
- * 
- * This file contains helper functions for managing product images
- * using SKU as the primary identifier.
+ * Item Image Helper Functions
+ * Provides utility functions for managing item images
  */
 
+require_once __DIR__ . '/../api/config.php';
+
 /**
- * Get the primary image for a product by SKU
- * 
- * @param string $sku The product SKU
- * @return string|null The image path or null if not found
+ * Get the primary image for an item by SKU
  */
 function getPrimaryImageBySku($sku) {
-    if (empty($sku)) {
-        return null;
-    }
-    
-    // Define possible image extensions in order of preference
-    $extensions = ['webp', 'png', 'jpg', 'jpeg'];
-    $imageDir = __DIR__ . '/../images/items/';
-    
-    // First, try to find the primary image (with 'A' suffix)
-    foreach ($extensions as $ext) {
-        $imagePath = $imageDir . $sku . 'A.' . $ext;
-        if (file_exists($imagePath)) {
-            return 'images/items/' . $sku . 'A.' . $ext;
+    try {
+        $pdo = new PDO($dsn, $user, $pass, $options);
+        
+        $stmt = $pdo->prepare("
+            SELECT * FROM item_images 
+            WHERE sku = ? AND is_primary = 1 
+            ORDER BY id ASC LIMIT 1
+        ");
+        $stmt->execute([$sku]);
+        $primaryImage = $stmt->fetch();
+        
+        if ($primaryImage) {
+            return $primaryImage;
         }
+        
+        // If no primary image, get the first available image
+        $stmt = $pdo->prepare("
+            SELECT * FROM item_images 
+            WHERE sku = ? 
+            ORDER BY id ASC LIMIT 1
+        ");
+        $stmt->execute([$sku]);
+        return $stmt->fetch();
+        
+    } catch (PDOException $e) {
+        error_log("Database error in getPrimaryImageBySku: " . $e->getMessage());
+        return false;
     }
-    
-    // If no 'A' suffix image found, try without suffix
-    foreach ($extensions as $ext) {
-        $imagePath = $imageDir . $sku . '.' . $ext;
-        if (file_exists($imagePath)) {
-            return 'images/items/' . $sku . '.' . $ext;
-        }
-    }
-    
-    // No image found
-    return null;
 }
 
 /**
- * Get all images for a product by SKU
- * 
- * @param string $sku The product SKU
- * @return array Array of image paths
+ * Get all images for an item by SKU
  */
 function getAllImagesBySku($sku) {
-    if (empty($sku)) {
+    try {
+        $pdo = new PDO($dsn, $user, $pass, $options);
+        
+        $stmt = $pdo->prepare("
+            SELECT * FROM item_images 
+            WHERE sku = ? 
+            ORDER BY is_primary DESC, sort_order ASC, id ASC
+        ");
+        $stmt->execute([$sku]);
+        $images = $stmt->fetchAll();
+        
+        // Convert boolean values
+        foreach ($images as &$image) {
+            $image['is_primary'] = (bool)$image['is_primary'];
+            $image['sort_order'] = (int)$image['sort_order'];
+        }
+        
+        return $images;
+        
+    } catch (PDOException $e) {
+        error_log("Database error in getAllImagesBySku: " . $e->getMessage());
         return [];
     }
-    
-    $images = [];
-    $imageDir = __DIR__ . '/../images/items/';
-    $extensions = ['webp', 'png', 'jpg', 'jpeg'];
-    
-    // Scan for all images matching the SKU pattern
-    if (is_dir($imageDir)) {
-        $files = scandir($imageDir);
-        foreach ($files as $file) {
-            if ($file === '.' || $file === '..') continue;
-            
-            // Check if file matches SKU pattern (SKU.ext or SKUA.ext, SKUB.ext, etc.)
-            if (preg_match('/^' . preg_quote($sku) . '([A-Z]?)\.(webp|png|jpg|jpeg)$/i', $file, $matches)) {
-                $images[] = 'images/items/' . $file;
-            }
-        }
-    }
-    
-    // Sort images so primary (A) comes first
-    usort($images, function($a, $b) {
-        $aHasA = strpos($a, 'A.') !== false;
-        $bHasA = strpos($b, 'A.') !== false;
-        
-        if ($aHasA && !$bHasA) return -1;
-        if (!$aHasA && $bHasA) return 1;
-        return strcmp($a, $b);
-    });
-    
-    return $images;
 }
 
 /**
- * Check if a product has any images
- * 
- * @param string $sku The product SKU
- * @return bool True if images exist, false otherwise
+ * Check if an item has images
  */
 function hasImagesBySku($sku) {
     $images = getAllImagesBySku($sku);
@@ -94,10 +78,7 @@ function hasImagesBySku($sku) {
 }
 
 /**
- * Get image count for a product by SKU
- * 
- * @param string $sku The product SKU
- * @return int Number of images
+ * Get count of images for an item
  */
 function getImageCountBySku($sku) {
     $images = getAllImagesBySku($sku);
@@ -105,41 +86,44 @@ function getImageCountBySku($sku) {
 }
 
 /**
- * Get the fallback/placeholder image path
- * 
- * @return string The placeholder image path
+ * Get placeholder image info
  */
 function getPlaceholderImage() {
-    return 'images/items/placeholder.png';
+    return [
+        'image_path' => 'images/items/placeholder.png',
+        'alt_text' => 'Placeholder image'
+    ];
 }
 
 /**
- * Get image URL with fallback to image server if direct access fails
+ * Get image URL with fallback to image server if needed
  */
 function getImageUrlWithFallback($imagePath) {
-    // First try direct path
-    if (empty($imagePath)) {
-        return getPlaceholderImage();
-    }
+    // Check if we're on IONOS hosting
+    $isIONOS = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] === 'whimsicalfrog.us';
     
-    // For IONOS hosting, we'll use the image server as primary method
-    // to avoid permission issues
-    if (strpos($imagePath, 'images/items/') === 0) {
-        return 'api/image_server.php?path=' . urlencode($imagePath);
+    if ($isIONOS) {
+        // On IONOS, use image server as fallback
+        $imageUrl = '/' . ltrim($imagePath, '/');
+        $fallbackUrl = '/api/image_server.php?image=' . urlencode($imagePath);
+        
+        // Return the image URL with fallback
+        return $imageUrl . '" onerror="this.src=\'' . $fallbackUrl . '\'';  
+    } else {
+        // Local development - direct path
+        return '/' . ltrim($imagePath, '/');
     }
-    
-    return $imagePath;
 }
 
 /**
- * Get image with fallback to placeholder
- * 
- * @param string $sku The product SKU
- * @return string The image path (primary image or placeholder)
+ * Get image with fallback handling
  */
 function getImageWithFallback($sku) {
     $primaryImage = getPrimaryImageBySku($sku);
-    return $primaryImage ?: getPlaceholderImage();
+    if ($primaryImage && !empty($primaryImage['image_path'])) {
+        return $primaryImage['image_path'];
+    }
+    return 'images/items/placeholder.png';
 }
 
 /**
@@ -149,46 +133,14 @@ function getDbConnection() {
     static $pdo = null;
     
     if ($pdo === null) {
-        // Determine environment and set database credentials directly
-        $isLocalhost = false;
-        
-        // Check if running locally
-        if (PHP_SAPI === 'cli' || 
-            (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) ||
-            (isset($_SERVER['SERVER_NAME']) && (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false))) {
-            $isLocalhost = true;
+        // Include config to get database credentials
+        $configPath = __DIR__ . '/../api/config.php';
+        if (!file_exists($configPath)) {
+            error_log("Config file not found at: " . $configPath);
+            return null;
         }
         
-        // Override via environment variable if set
-        if (isset($_SERVER['WHF_ENV']) && $_SERVER['WHF_ENV'] === 'prod') {
-            $isLocalhost = false;
-        }
-        if (isset($_SERVER['WHF_ENV']) && $_SERVER['WHF_ENV'] === 'local') {
-            $isLocalhost = true;
-        }
-        
-        // Set database credentials based on environment
-        if ($isLocalhost) {
-            // Local database credentials
-            $host = 'localhost';
-            $db   = 'whimsicalfrog';
-            $user = 'root';
-            $pass = 'Palz2516';
-        } else {
-            // Production database credentials
-            $host = 'db5017975223.hosting-data.io';
-            $db   = 'dbs14295502';
-            $user = 'dbu2826619';
-            $pass = 'Palz2516!';
-        }
-        
-        $charset = 'utf8mb4';
-        $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-        $options = [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ];
+        require_once $configPath;
         
         try {
             $pdo = new PDO($dsn, $user, $pass, $options);
@@ -204,7 +156,7 @@ function getDbConnection() {
 /**
  * Get fallback image from old system
  */
-function getFallbackProductImage($sku) {
+function getFallbackItemImage($sku) {
     // Try common image patterns based on SKU
     $possibleImages = [
         "images/items/{$sku}A.webp",
@@ -234,7 +186,7 @@ function getFallbackProductImage($sku) {
                 'image_path' => $imagePath,
                 'is_primary' => true,
                 'sort_order' => 0,
-                'alt_text' => "Product image for {$sku}",
+                'alt_text' => "Item image for {$sku}",
                 'file_exists' => true,
                 'created_at' => null,
                 'updated_at' => null
@@ -246,24 +198,24 @@ function getFallbackProductImage($sku) {
 }
 
 /**
- * Get all images for a product
+ * Get all images for an item
  */
-function getProductImages($sku, $pdo = null) {
+function getItemImages($sku, $pdo = null) {
     if (!$pdo) {
         $pdo = getDbConnection();
         if (!$pdo) {
             // Fallback to file system check
-            $fallbackImage = getFallbackProductImage($sku);
+            $fallbackImage = getFallbackItemImage($sku);
             return $fallbackImage ? [$fallbackImage] : [];
         }
     }
     
     try {
-        // Check if product_images table exists
-        $stmt = $pdo->query("SHOW TABLES LIKE 'product_images'");
+        // Check if item_images table exists
+        $stmt = $pdo->query("SHOW TABLES LIKE 'item_images'");
         if ($stmt->rowCount() === 0) {
             // Table doesn't exist, use fallback
-            $fallbackImage = getFallbackProductImage($sku);
+            $fallbackImage = getFallbackItemImage($sku);
             return $fallbackImage ? [$fallbackImage] : [];
         }
         
@@ -277,7 +229,7 @@ function getProductImages($sku, $pdo = null) {
                 alt_text,
                 created_at,
                 updated_at
-            FROM product_images 
+            FROM item_images 
             WHERE sku = ? 
             ORDER BY is_primary DESC, sort_order ASC
         ");
@@ -287,7 +239,7 @@ function getProductImages($sku, $pdo = null) {
         
         // If no images found in database, try fallback
         if (empty($images)) {
-            $fallbackImage = getFallbackProductImage($sku);
+            $fallbackImage = getFallbackItemImage($sku);
             if ($fallbackImage) {
                 return [$fallbackImage];
             }
@@ -306,18 +258,18 @@ function getProductImages($sku, $pdo = null) {
         return $images;
         
     } catch (PDOException $e) {
-        error_log("Database error in getProductImages: " . $e->getMessage());
+        error_log("Database error in getItemImages: " . $e->getMessage());
         // Fallback to file system check
-        $fallbackImage = getFallbackProductImage($sku);
+        $fallbackImage = getFallbackItemImage($sku);
         return $fallbackImage ? [$fallbackImage] : [];
     }
 }
 
 /**
- * Get primary image for a product
+ * Get primary image for an item
  */
-function getPrimaryProductImage($sku, $pdo = null) {
-    $images = getProductImages($sku, $pdo);
+function getPrimaryItemImage($sku, $pdo = null) {
+    $images = getItemImages($sku, $pdo);
     
     foreach ($images as $image) {
         if ($image['is_primary']) {
@@ -330,10 +282,10 @@ function getPrimaryProductImage($sku, $pdo = null) {
 }
 
 /**
- * Get fallback image path for a product (for backward compatibility)
+ * Get fallback image path for an item (for backward compatibility)
  */
-function getProductImagePath($sku, $pdo = null) {
-    $primaryImage = getPrimaryProductImage($sku, $pdo);
+function getItemImagePath($sku, $pdo = null) {
+    $primaryImage = getPrimaryItemImage($sku, $pdo);
     
     if ($primaryImage && $primaryImage['file_exists']) {
         return $primaryImage['image_path'];
@@ -343,18 +295,18 @@ function getProductImagePath($sku, $pdo = null) {
 }
 
 /**
- * Check if a product has multiple images
+ * Check if an item has multiple images
  */
 function hasMultipleImages($sku, $pdo = null) {
-    $images = getProductImages($sku, $pdo);
+    $images = getItemImages($sku, $pdo);
     return count($images) > 1;
 }
 
 /**
- * Render product image display (single image or carousel)
+ * Render item image display (single image or carousel)
  */
-function renderProductImageDisplay($sku, $options = []) {
-    $images = getProductImages($sku);
+function renderItemImageDisplay($sku, $options = []) {
+    $images = getItemImages($sku);
     
     $defaults = [
         'showCarousel' => true,
@@ -369,7 +321,7 @@ function renderProductImageDisplay($sku, $options = []) {
     
     if (empty($images)) {
         // Show placeholder
-        return '<div class="product-image-placeholder" style="height: ' . $opts['height'] . '; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+        return '<div class="item-image-placeholder" style="height: ' . $opts['height'] . '; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
             <img src="images/items/placeholder.png" alt="No image available" style="max-width: 100%; max-height: 100%; object-fit: contain;">
         </div>';
     }
@@ -377,9 +329,9 @@ function renderProductImageDisplay($sku, $options = []) {
     if (count($images) === 1 || !$opts['showCarousel']) {
         // Single image display
         $image = $images[0];
-        return '<div class="product-single-image ' . $opts['className'] . '" style="height: ' . $opts['height'] . ';">
+        return '<div class="item-single-image ' . $opts['className'] . '" style="height: ' . $opts['height'] . ';">
             <img src="' . htmlspecialchars($image['image_path']) . '" 
-                 alt="' . htmlspecialchars($image['alt_text'] ?: 'Product image') . '" 
+                 alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
                  style="width: 100%; height: 100%; object-fit: contain; background: white; border-radius: 8px;"
                  onerror="this.src=\'images/items/placeholder.png\'">
         </div>';

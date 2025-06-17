@@ -211,7 +211,7 @@ function displayImageCarousel($sku, $showPrimaryBadge = false, $extraClasses = '
     
     try {
         // Get product images for this SKU
-        $stmt = $pdo->prepare("SELECT * FROM product_images WHERE item_sku = ? ORDER BY is_primary DESC, id ASC");
+        $stmt = $pdo->prepare("SELECT * FROM item_images WHERE sku = ? ORDER BY is_primary DESC, id ASC");
         $stmt->execute([$sku]);
         $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
         

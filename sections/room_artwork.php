@@ -353,7 +353,7 @@ function showPopup(element, product) {
     
     // Update popup content - use primary image from new system
     const productId = product['id'] || product['productId'];
-    fetch(`api/get_product_images.php?productId=${productId}`)
+                    fetch(`api/get_item_images.php?sku=${productId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success && data.primaryImage) {

@@ -1,15 +1,15 @@
 <?php
 /**
- * Set Primary Image API
- * 
- * Sets a specific image as the primary image for a product
+ * Sets a specific image as the primary image for an item
  */
 
-require_once __DIR__ . '/../api/config.php';
+require_once __DIR__ . '/config.php';
+
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
     exit;
 }
 
@@ -17,61 +17,50 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     $input = json_decode(file_get_contents('php://input'), true);
-    $sku = $input['sku'] ?? '';
-    $imageId = $input['imageId'] ?? '';
     
-    if (empty($sku) || empty($imageId)) {
-        echo json_encode(['success' => false, 'error' => 'SKU and Image ID are required']);
+    if (!isset($input['imageId']) || !isset($input['sku'])) {
+        echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
         exit;
     }
     
-    // Start transaction
+    $imageId = $input['imageId'];
+    $sku = $input['sku'];
+    
     $pdo->beginTransaction();
     
-    // First, unset all primary images for this product
-    $stmt = $pdo->prepare("UPDATE product_images SET is_primary = FALSE WHERE sku = ?");
+    // First, unset all primary images for this item
+    $stmt = $pdo->prepare("UPDATE item_images SET is_primary = FALSE WHERE sku = ?");
     $stmt->execute([$sku]);
     
-    // Set the specified image as primary
-    $stmt = $pdo->prepare("UPDATE product_images SET is_primary = TRUE WHERE id = ? AND sku = ?");
+    // Then set the selected image as primary
+    $stmt = $pdo->prepare("UPDATE item_images SET is_primary = TRUE WHERE id = ? AND sku = ?");
     $stmt->execute([$imageId, $sku]);
     
     if ($stmt->rowCount() === 0) {
         $pdo->rollBack();
-        echo json_encode(['success' => false, 'error' => 'Image not found or does not belong to this product']);
+        echo json_encode(['success' => false, 'error' => 'Image not found or does not belong to this item']);
         exit;
     }
     
-    // Get the new primary image path
-    $stmt = $pdo->prepare("SELECT image_path FROM product_images WHERE id = ? AND sku = ?");
+    // Get the updated image path for response
+    $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE id = ? AND sku = ?");
     $stmt->execute([$imageId, $sku]);
-    $primaryImagePath = $stmt->fetchColumn();
-    
-    if ($primaryImagePath) {
-        // Update items table
-        $stmt = $pdo->prepare("UPDATE items SET imageUrl = ? WHERE sku = ?");
-        $stmt->execute([$primaryImagePath, $sku]);
-    }
+    $imagePath = $stmt->fetchColumn();
     
     $pdo->commit();
     
     echo json_encode([
         'success' => true,
         'message' => 'Primary image updated successfully',
-        'primaryImagePath' => $primaryImagePath
+        'imagePath' => $imagePath
     ]);
     
 } catch (PDOException $e) {
     if (isset($pdo)) {
         $pdo->rollBack();
     }
-    error_log("Database error in set_primary_image: " . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Database error occurred']);
+    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
-    if (isset($pdo)) {
-        $pdo->rollBack();
-    }
-    error_log("Error in set_primary_image: " . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Failed to set primary image']);
+    echo json_encode(['success' => false, 'error' => 'Error: ' . $e->getMessage()]);
 }
 ?> 

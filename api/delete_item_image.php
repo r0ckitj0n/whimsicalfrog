@@ -25,7 +25,7 @@ try {
     }
     
     // Get image details before deletion
-    $stmt = $pdo->prepare("SELECT sku, image_path, is_primary FROM product_images WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT sku, image_path, is_primary FROM item_images WHERE id = ?");
     $stmt->execute([$imageId]);
     $imageData = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -42,7 +42,7 @@ try {
     $pdo->beginTransaction();
     
     // Delete from database
-    $stmt = $pdo->prepare("DELETE FROM product_images WHERE id = ?");
+    $stmt = $pdo->prepare("DELETE FROM item_images WHERE id = ?");
     $stmt->execute([$imageId]);
     
     // Delete physical file
@@ -54,13 +54,13 @@ try {
     // If this was the primary image, automatically promote the next image to primary
     if ($wasPrimary) {
         // Find the next available image for this SKU, ordered by sort_order
-        $stmt = $pdo->prepare("SELECT id, image_path FROM product_images WHERE sku = ? ORDER BY sort_order ASC, id ASC LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, image_path FROM item_images WHERE sku = ? ORDER BY sort_order ASC, id ASC LIMIT 1");
         $stmt->execute([$sku]);
         $newPrimary = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($newPrimary) {
             // Promote the next image to primary
-            $stmt = $pdo->prepare("UPDATE product_images SET is_primary = TRUE WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE item_images SET is_primary = TRUE WHERE id = ?");
             $stmt->execute([$newPrimary['id']]);
             
             $promotedMessage = " The next image has been automatically promoted to primary.";

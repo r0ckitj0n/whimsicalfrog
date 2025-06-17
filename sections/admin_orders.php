@@ -8,26 +8,22 @@ $pdo = new PDO($dsn, $user, $pass, $options);
 $startDate = $_GET['start_date'] ?? '';
 $endDate   = $_GET['end_date']   ?? '';
 
-// Get orders within range
+// Get orders with user information - simplified query for order list
 if ($startDate === '' && $endDate === '') {
     $stmt = $pdo->prepare("
-        SELECT 
-            o.id as orderId, 
+        SELECT DISTINCT
+            o.id, 
             o.userId, 
             o.total,
             o.paymentMethod,
             o.paymentStatus,
-            o.status as orderStatus,
+            o.status,
             o.shippingMethod,
-            o.date as orderDate,
-            oi.id as orderItemId,
-            oi.sku,
-            oi.quantity,
-            oi.price,
-            i.name as itemName
+            o.date,
+            o.paymentDate,
+            u.username
         FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.orderId
-        LEFT JOIN items i ON oi.sku = i.sku
+        LEFT JOIN users u ON o.userId = u.id
         ORDER BY o.date DESC
     ");
     
@@ -35,23 +31,19 @@ if ($startDate === '' && $endDate === '') {
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } elseif ($startDate === '') {
     $stmt = $pdo->prepare("
-        SELECT 
-            o.id as orderId, 
+        SELECT DISTINCT
+            o.id, 
             o.userId, 
             o.total,
             o.paymentMethod,
             o.paymentStatus,
-            o.status as orderStatus,
+            o.status,
             o.shippingMethod,
-            o.date as orderDate,
-            oi.id as orderItemId,
-            oi.sku,
-            oi.quantity,
-            oi.price,
-            i.name as itemName
+            o.date,
+            o.paymentDate,
+            u.username
         FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.orderId
-        LEFT JOIN items i ON oi.sku = i.sku
+        LEFT JOIN users u ON o.userId = u.id
         WHERE DATE(o.date) <= :end
         ORDER BY o.date DESC
     ");
@@ -60,23 +52,19 @@ if ($startDate === '' && $endDate === '') {
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } elseif ($endDate === '') {
     $stmt = $pdo->prepare("
-        SELECT 
-            o.id as orderId, 
+        SELECT DISTINCT
+            o.id, 
             o.userId, 
             o.total,
             o.paymentMethod,
             o.paymentStatus,
-            o.status as orderStatus,
+            o.status,
             o.shippingMethod,
-            o.date as orderDate,
-            oi.id as orderItemId,
-            oi.sku,
-            oi.quantity,
-            oi.price,
-            i.name as itemName
+            o.date,
+            o.paymentDate,
+            u.username
         FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.orderId
-        LEFT JOIN items i ON oi.sku = i.sku
+        LEFT JOIN users u ON o.userId = u.id
         WHERE DATE(o.date) >= :start
         ORDER BY o.date DESC
     ");
@@ -85,23 +73,19 @@ if ($startDate === '' && $endDate === '') {
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } else {
     $stmt = $pdo->prepare("
-        SELECT 
-            o.id as orderId, 
+        SELECT DISTINCT
+            o.id, 
             o.userId, 
             o.total,
             o.paymentMethod,
             o.paymentStatus,
-            o.status as orderStatus,
+            o.status,
             o.shippingMethod,
-            o.date as orderDate,
-            oi.id as orderItemId,
-            oi.sku,
-            oi.quantity,
-            oi.price,
-            i.name as itemName
+            o.date,
+            o.paymentDate,
+            u.username
         FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.orderId
-        LEFT JOIN items i ON oi.sku = i.sku
+        LEFT JOIN users u ON o.userId = u.id
         WHERE DATE(o.date) BETWEEN :start AND :end
         ORDER BY o.date DESC
     ");
@@ -529,7 +513,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th></tr></thead>
                                 <tbody>
                                     <?php
-                                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.itemId = i.id WHERE oi.orderId = ? LIMIT 6");
+                                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ? LIMIT 6");
                                         $itemStmt->execute([$viewOrderId]);
                                         $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                         foreach ($orderItems as $it): ?>

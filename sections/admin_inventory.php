@@ -144,7 +144,7 @@ $sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count
         FROM items i 
         LEFT JOIN (
             SELECT sku, COUNT(*) as image_count 
-            FROM product_images 
+            FROM item_images 
             GROUP BY sku
         ) img_count ON i.sku = img_count.sku 
         WHERE 1=1";
@@ -455,7 +455,7 @@ $messageType = $_GET['type'] ?? '';
                     <label for="description" class="block text-gray-700">Description</label>
                     <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" rows="2" readonly><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                 </div>
-                <!-- Product Images Section - Same layout as edit modal -->
+                                    <!-- Item Images Section - Same layout as edit modal -->
 <div class="images-section-container" id="imagesSection">
                     
                     <!-- Current Images Display -->
@@ -584,7 +584,7 @@ $messageType = $_GET['type'] ?? '';
                         <label for="description" class="block text-gray-700">Description</label>
                         <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="2"><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                     </div>
-                    <!-- Product Images Section - Now spans full width when needed -->
+                    <!-- Item Images Section - Now spans full width when needed -->
                     <div class="images-section-container" id="imagesSection">
                         
                         <!-- Current Images Display -->
@@ -801,7 +801,7 @@ function showImageDeleteConfirmation(imageId, sku) {
                     <p class="text-sm text-gray-500">This action cannot be undone.</p>
                 </div>
             </div>
-            <p class="text-gray-700 mb-6">Are you sure you want to delete this image? It will be permanently removed from the product.</p>
+                            <p class="text-gray-700 mb-6">Are you sure you want to delete this image? It will be permanently removed from the item.</p>
             <div class="flex justify-end space-x-3">
                 <button type="button" onclick="closeImageDeleteModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
                     Cancel

@@ -66,7 +66,7 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
     // Build items list
     $itemsHtml = '';
     foreach ($orderItems as $item) {
-        $itemName = htmlspecialchars($item['name'] ?? 'Product');
+        $itemName = htmlspecialchars($item['name'] ?? 'Item');
         $itemQuantity = (int)($item['quantity'] ?? 1);
         $itemPrice = number_format((float)($item['price'] ?? 0), 2);
         $itemTotal = number_format($itemQuantity * (float)($item['price'] ?? 0), 2);
@@ -232,7 +232,7 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
     $itemsHtml = '';
     $totalQuantity = 0;
     foreach ($orderItems as $item) {
-        $itemName = htmlspecialchars($item['name'] ?? 'Product');
+        $itemName = htmlspecialchars($item['name'] ?? 'Item');
         $itemQuantity = (int)($item['quantity'] ?? 1);
         $itemPrice = number_format((float)($item['price'] ?? 0), 2);
         $itemTotal = number_format($itemQuantity * (float)($item['price'] ?? 0), 2);
@@ -331,7 +331,7 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
                 <table style='width: 100%; border-collapse: collapse;'>
                     <thead>
                         <tr style='background-color: #f5f5f5;'>
-                            <th style='padding: 10px; text-align: left; border-bottom: 2px solid #87ac3a;'>Product</th>
+                            <th style='padding: 10px; text-align: left; border-bottom: 2px solid #87ac3a;'>Item</th>
                             <th style='padding: 10px; text-align: center; border-bottom: 2px solid #87ac3a;'>Qty</th>
                             <th style='padding: 10px; text-align: right; border-bottom: 2px solid #87ac3a;'>Price</th>
                             <th style='padding: 10px; text-align: right; border-bottom: 2px solid #87ac3a;'>Total</th>
@@ -410,11 +410,11 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
             return false;
         }
         
-        // Get order items with product names
+        // Get order items with item names
         $itemsStmt = $pdo->prepare("
-            SELECT oi.*, p.name 
+            SELECT oi.*, i.name as itemName 
             FROM order_items oi 
-            LEFT JOIN products p ON oi.productId = p.id 
+            LEFT JOIN items i ON oi.sku = i.sku 
             WHERE oi.orderId = ?
         ");
         $itemsStmt->execute([$orderId]);

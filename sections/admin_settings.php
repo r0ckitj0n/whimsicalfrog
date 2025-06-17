@@ -41,13 +41,21 @@
             <a href="/?page=admin&section=categories" class="brand-button inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded mr-3" style="color: white !important;">Manage Categories</a>
         </div>
         <div>
-            <p class="text-sm text-gray-600 mb-3">View information about ID numbering system used throughout the platform.</p>
-            <button onclick="openIdLegendModal()" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                ID# Legend
-            </button>
+            <p class="text-sm text-gray-600 mb-3">View information about ID numbering system and current system configuration.</p>
+            <div class="flex gap-2">
+                <button onclick="openIdLegendModal()" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    ID# Legend
+                </button>
+                <button onclick="openSystemConfigModal()" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    System Config
+                </button>
+            </div>
         </div>
         <div>
             <p class="text-sm text-gray-600 mb-3">Map clickable areas on room images for product placement and navigation.</p>
@@ -435,6 +443,14 @@ function openIdLegendModal() {
 
 function closeIdLegendModal() {
     document.getElementById('idLegendModal').style.display = 'none';
+}
+
+function openSystemConfigModal() {
+    document.getElementById('systemConfigModal').style.display = 'block';
+}
+
+function closeSystemConfigModal() {
+    document.getElementById('systemConfigModal').style.display = 'none';
 }
 
 function openRoomMapperModal() {
@@ -3762,4 +3778,177 @@ function escapeHtml(text) {
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+<!-- System Configuration Modal -->
+<div id="systemConfigModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">⚙️ System Configuration Reference</h3>
+                <button onclick="closeSystemConfigModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="space-y-6">
+                <!-- Current System Architecture -->
+                <div class="bg-green-50 border-l-4 border-green-400 p-4">
+                    <h4 class="font-semibold text-green-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        Current System Architecture (Post-Migration)
+                    </h4>
+                    <div class="space-y-3 text-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h5 class="font-semibold text-green-700 mb-2">🎯 Primary Identifier</h5>
+                                <p class="text-green-600"><strong>SKU</strong> - Human-readable codes</p>
+                                <p class="text-xs text-green-600">Format: WF-[CATEGORY]-[NUMBER]</p>
+                                <p class="text-xs text-green-600">Examples: WF-TS-001, WF-TU-002</p>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold text-green-700 mb-2">🏷️ Main Entity</h5>
+                                <p class="text-green-600"><strong>Items</strong> (formerly "products")</p>
+                                <p class="text-xs text-green-600">All inventory and shop items</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Schema -->
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                    <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"></path>
+                        </svg>
+                        Database Tables & Structure
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <h5 class="font-semibold text-blue-700 mb-2">Core Tables</h5>
+                            <ul class="space-y-1 text-blue-600">
+                                <li><code class="bg-blue-100 px-2 py-1 rounded">items</code> - Main inventory table</li>
+                                <li><code class="bg-blue-100 px-2 py-1 rounded">item_images</code> - Image management</li>
+                                <li><code class="bg-blue-100 px-2 py-1 rounded">order_items</code> - Order line items</li>
+                                <li><code class="bg-blue-100 px-2 py-1 rounded">orders</code> - Customer orders</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-blue-700 mb-2">Key Relationships</h5>
+                            <ul class="space-y-1 text-blue-600 text-xs">
+                                <li>items.sku → order_items.sku</li>
+                                <li>items.sku → item_images.sku</li>
+                                <li>orders.id → order_items.orderId</li>
+                                <li>All foreign keys properly constrained</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SKU Categories -->
+                <div class="bg-purple-50 border-l-4 border-purple-400 p-4">
+                    <h4 class="font-semibold text-purple-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                        </svg>
+                        SKU Category Codes
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div class="text-center p-2 bg-purple-100 rounded">
+                            <div class="font-semibold text-purple-700">TS</div>
+                            <div class="text-xs text-purple-600">T-Shirts</div>
+                        </div>
+                        <div class="text-center p-2 bg-purple-100 rounded">
+                            <div class="font-semibold text-purple-700">TU</div>
+                            <div class="text-xs text-purple-600">Tumblers</div>
+                        </div>
+                        <div class="text-center p-2 bg-purple-100 rounded">
+                            <div class="font-semibold text-purple-700">AR</div>
+                            <div class="text-xs text-purple-600">Artwork</div>
+                        </div>
+                        <div class="text-center p-2 bg-purple-100 rounded">
+                            <div class="font-semibold text-purple-700">SU</div>
+                            <div class="text-xs text-purple-600">Sublimation</div>
+                        </div>
+                        <div class="text-center p-2 bg-purple-100 rounded">
+                            <div class="font-semibold text-purple-700">WW</div>
+                            <div class="text-xs text-purple-600">Window Wraps</div>
+                        </div>
+                        <div class="text-center p-2 bg-purple-100 rounded">
+                            <div class="font-semibold text-purple-700">GN</div>
+                            <div class="text-xs text-purple-600">General</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Structure -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                    <h4 class="font-semibold text-yellow-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path>
+                        </svg>
+                        File Structure & Naming
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <h5 class="font-semibold text-yellow-700 mb-2">Image Storage</h5>
+                            <ul class="space-y-1 text-yellow-600">
+                                <li><code class="bg-yellow-100 px-2 py-1 rounded">images/items/</code> - All item images</li>
+                                <li><code class="bg-yellow-100 px-2 py-1 rounded">placeholder.png</code> - Default fallback</li>
+                                <li>Format: [SKU][Letter].[ext]</li>
+                                <li>Example: WF-TS-001A.webp</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-yellow-700 mb-2">API Endpoints</h5>
+                            <ul class="space-y-1 text-yellow-600 text-xs">
+                                <li><code class="bg-yellow-100 px-1 py-0.5 rounded">/api/items</code></li>
+                                <li><code class="bg-yellow-100 px-1 py-0.5 rounded">/api/get_item_images.php</code></li>
+                                <li><code class="bg-yellow-100 px-1 py-0.5 rounded">/api/delete_item_image.php</code></li>
+                                <li><code class="bg-yellow-100 px-1 py-0.5 rounded">/api/set_primary_image.php</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Migration Status -->
+                <div class="bg-gray-50 border-l-4 border-gray-400 p-4">
+                    <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        Migration Status (Completed)
+                    </h4>
+                    <div class="text-sm text-gray-600 space-y-2">
+                        <div class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            <span>Database migration: products → items terminology</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            <span>Table rename: product_images → item_images</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            <span>SKU-only system: Removed dual itemId/SKU complexity</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            <span>Code updates: All files use item terminology</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            <span>Image migration: images/products/ → images/items/</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -34,7 +34,7 @@ app.use(cors());
 app.use(express.json());
 
 // Multer setup for image uploads (store in images/<category>)
-const allowedCategories = ['products', 'artwork', 'tumblers', 'tshirts', 'sublimation', 'windowwraps', 'avatars', 'misc'];
+const allowedCategories = ['items', 'artwork', 'tumblers', 'tshirts', 'sublimation', 'windowwraps', 'avatars', 'misc'];
 const upload = multer({
     storage: multer.diskStorage({
         destination: function (req, file, cb) {
@@ -62,7 +62,7 @@ const upload = multer({
 });
 
 function categoryPrefix(body) {
-    if (body.category === 'products') return 'product_';
+    if (body.category === 'items') return 'item_';
     if (body.category === 'artwork') return 'artwork_';
     if (body.category === 'tumblers') return 'tumbler_';
     if (body.category === 'tshirts') return 'tshirt_';
@@ -353,23 +353,20 @@ app.post('/api/add-order', async (req, res) => {
     }
 });
 
-// --- GET all products endpoint ---
-app.get('/api/products', async (req, res) => {
+// --- GET all items endpoint ---
+app.get('/api/items', async (req, res) => {
     try {
         const connection = await mysql.createConnection(dbConfig);
         const [rows] = await connection.execute('SELECT * FROM items');
         await connection.end();
-        // Add a 'price' field for frontend compatibility (alias for basePrice)
-        // and ensure the price is always a number, defaulting to 0 if null.
-        // This triggers a redeploy on IONOS.
-        const products = rows.map(product => ({
-            ...product,
-            price: Number(product.basePrice) || 0
+        
+        const items = rows.map(item => ({
+            ...item
         }));
-        res.json(products);
+        res.json(items);
     } catch (error) {
-        console.error('Error fetching products:', error);
-        res.status(500).json({ error: 'Failed to fetch products', details: error.message });
+        console.error('Error fetching items:', error);
+        res.status(500).json({ error: 'Failed to fetch items', details: error.message });
     }
 });
 
@@ -467,16 +464,16 @@ app.post('/api/update-product', async (req, res) => {
         const connection = await mysql.createConnection(dbConfig);
 
         await connection.execute(
-            'UPDATE products SET name = ?, basePrice = ?, description = ?, productType = ?, defaultSKU_Base = ? WHERE id = ?',
-            [name, basePrice, description, productType, defaultSKU_Base, id]
+            'UPDATE items SET name = ?, retailPrice = ?, description = ?, category = ? WHERE sku = ?',
+            [name, basePrice, description, productType, id]
         );
 
         await connection.end();
 
-        res.json({ success: true, message: 'Product updated successfully' });
+        res.json({ success: true, message: 'Item updated successfully' });
     } catch (error) {
-        console.error('Error updating product:', error);
-        res.status(500).json({ error: 'Failed to update product', details: error.message });
+        console.error('Error updating item:', error);
+        res.status(500).json({ error: 'Failed to update item', details: error.message });
     }
 });
 

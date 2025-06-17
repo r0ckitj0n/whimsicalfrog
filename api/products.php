@@ -4,7 +4,7 @@ require_once 'config.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
@@ -18,19 +18,19 @@ try {
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Query to get all products
-            $stmt = $pdo->query('SELECT * FROM items');
-    $products = $stmt->fetchAll();
+    // Query to get all items
+    $stmt = $pdo->query("SELECT * FROM items");
+    $items = $stmt->fetchAll();
     
-    // Format prices as numbers instead of strings
-    foreach ($products as &$product) {
-        if (isset($product['basePrice'])) {
-            $product['price'] = floatval($product['basePrice']);
+    // Format the data
+    foreach ($items as &$item) {
+        if (isset($item['retailPrice'])) {
+            $item['price'] = floatval($item['retailPrice']);
         }
     }
     
-    // Return products as JSON
-    echo json_encode($products);
+    // Return items as JSON
+    echo json_encode($items);
     
 } catch (PDOException $e) {
     // Handle database errors

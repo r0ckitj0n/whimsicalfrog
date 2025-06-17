@@ -103,7 +103,7 @@ check_and_restart_node() {
   if ! is_port_in_use $NODE_PORT; then
     log "${YELLOW}Node.js API server is not running. Restarting...${NC}"
     start_node_server
-  elif ! is_server_responding "http://localhost:$NODE_PORT/api/products"; then
+  elif ! is_server_responding "http://localhost:$NODE_PORT/api/items"; then
     log "${YELLOW}Node.js API server is not responding. Restarting...${NC}"
     stop_node_server
     start_node_server
@@ -173,10 +173,10 @@ show_access_info() {
   echo -e "\n${BLUE}=== Access Information ===${NC}"
   echo -e "${GREEN}Website:${NC} http://localhost:$PHP_PORT"
   echo -e "${GREEN}API Endpoints:${NC}"
-  echo -e "  - Products: http://localhost:$NODE_PORT/api/products"
+  echo -e "  - Items: http://localhost:$NODE_PORT/api/items"
   echo -e "  - Users: http://localhost:$NODE_PORT/api/users"
   echo -e "  - Inventory: http://localhost:$NODE_PORT/api/inventory"
-  echo -e "  - Product Groups: http://localhost:$NODE_PORT/api/product-groups"
+  echo -e "  - Item Groups: http://localhost:$NODE_PORT/api/item-groups"
   echo -e "\n${YELLOW}To set up automatic monitoring, add this to your crontab:${NC}"
   echo -e "*/5 * * * * $WEBSITE_DIR/server_monitor.sh monitor >> $LOG_FILE 2>&1"
   echo -e "${YELLOW}This will check your servers every 5 minutes and restart them if needed.${NC}\n"

@@ -12,7 +12,7 @@ require_once __DIR__ . '/../api/config.php';
 $pdo = new PDO($dsn, $user, $pass, $options);
 
 // Get items
-$stmt = $pdo->query("SELECT * FROM items ORDER BY id");
+$stmt = $pdo->query("SELECT * FROM items ORDER BY sku");
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Initialize modal state
@@ -26,7 +26,7 @@ unset($_SESSION['field_errors']);
 // Check if we're in view mode
 if (isset($_GET['view']) && !empty($_GET['view'])) {
     $itemIdToView = $_GET['view'];
-    $stmt = $pdo->prepare("SELECT * FROM items WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM items WHERE sku = ?");
     $stmt->execute([$itemIdToView]);
     $fetchedViewItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -34,35 +34,24 @@ if (isset($_GET['view']) && !empty($_GET['view'])) {
         $modalMode = 'view';
         $editItem = $fetchedViewItem; // Reuse editItem for view mode
 
-        // Get cost breakdown data
-        $materialStmt = $pdo->prepare("SELECT * FROM inventory_materials WHERE inventoryId = ?");
-        $materialStmt->execute([$editItem['id']]);
-        $materials = $materialStmt->fetchAll(PDO::FETCH_ASSOC);
+        // Get cost breakdown data (temporarily disabled during SKU migration)
+        $materials = [];
+        $labor = [];
+        $energy = [];
+        $equipment = [];
         
-        $laborStmt = $pdo->prepare("SELECT * FROM inventory_labor WHERE inventoryId = ?");
-        $laborStmt->execute([$editItem['id']]);
-        $labor = $laborStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $energyStmt = $pdo->prepare("SELECT * FROM inventory_energy WHERE inventoryId = ?");
-        $energyStmt->execute([$editItem['id']]);
-        $energy = $energyStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $equipmentStmt = $pdo->prepare("SELECT * FROM inventory_equipment WHERE inventoryId = ?");
-        $equipmentStmt->execute([$editItem['id']]);
-        $equipment = $equipmentStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $materialTotal = 0; foreach ($materials as $item_cost) { $materialTotal += floatval($item_cost['cost']); }
-        $laborTotal = 0; foreach ($labor as $item_cost) { $laborTotal += floatval($item_cost['cost']); }
-        $energyTotal = 0; foreach ($energy as $item_cost) { $energyTotal += floatval($item_cost['cost']); }
-        $equipmentTotal = 0; foreach ($equipment as $item_cost) { $equipmentTotal += floatval($item_cost['cost']); }
-        $suggestedCost = $materialTotal + $laborTotal + $energyTotal + $equipmentTotal;
+        $materialTotal = 0;
+        $laborTotal = 0;
+        $energyTotal = 0;
+        $equipmentTotal = 0;
+        $suggestedCost = 0;
         
         $editCostBreakdown = [
             'materials' => $materials, 'labor' => $labor, 'energy' => $energy, 'equipment' => $equipment,
             'totals' => [
                 'materialTotal' => $materialTotal, 'laborTotal' => $laborTotal, 
                 'energyTotal' => $energyTotal, 'equipmentTotal' => $equipmentTotal,
-                'suggestedCost' => $suggestedCost, 'currentCost' => $editItem['costPrice']
+                'suggestedCost' => $suggestedCost, 'currentCost' => $editItem['costPrice'] ?? 0
             ]
         ];
     }
@@ -70,7 +59,7 @@ if (isset($_GET['view']) && !empty($_GET['view'])) {
 // Check if we're in edit mode
 elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
     $itemIdToEdit = $_GET['edit'];
-    $stmt = $pdo->prepare("SELECT * FROM items WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT * FROM items WHERE sku = ?");
     $stmt->execute([$itemIdToEdit]);
     $fetchedEditItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -78,53 +67,36 @@ elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
         $modalMode = 'edit';
         $editItem = $fetchedEditItem; 
 
-        // Get cost breakdown data
-        $materialStmt = $pdo->prepare("SELECT * FROM inventory_materials WHERE inventoryId = ?");
-        $materialStmt->execute([$editItem['id']]);
-        $materials = $materialStmt->fetchAll(PDO::FETCH_ASSOC);
+        // Get cost breakdown data (temporarily disabled during SKU migration)
+        $materials = [];
+        $labor = [];
+        $energy = [];
+        $equipment = [];
         
-        $laborStmt = $pdo->prepare("SELECT * FROM inventory_labor WHERE inventoryId = ?");
-        $laborStmt->execute([$editItem['id']]);
-        $labor = $laborStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $energyStmt = $pdo->prepare("SELECT * FROM inventory_energy WHERE inventoryId = ?");
-        $energyStmt->execute([$editItem['id']]);
-        $energy = $energyStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $equipmentStmt = $pdo->prepare("SELECT * FROM inventory_equipment WHERE inventoryId = ?");
-        $equipmentStmt->execute([$editItem['id']]);
-        $equipment = $equipmentStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $materialTotal = 0; foreach ($materials as $item_cost) { $materialTotal += floatval($item_cost['cost']); }
-        $laborTotal = 0; foreach ($labor as $item_cost) { $laborTotal += floatval($item_cost['cost']); }
-        $energyTotal = 0; foreach ($energy as $item_cost) { $energyTotal += floatval($item_cost['cost']); }
-        $equipmentTotal = 0; foreach ($equipment as $item_cost) { $equipmentTotal += floatval($item_cost['cost']); }
-        $suggestedCost = $materialTotal + $laborTotal + $energyTotal + $equipmentTotal;
+        $materialTotal = 0;
+        $laborTotal = 0;
+        $energyTotal = 0;
+        $equipmentTotal = 0;
+        $suggestedCost = 0;
         
         $editCostBreakdown = [
             'materials' => $materials, 'labor' => $labor, 'energy' => $energy, 'equipment' => $equipment,
             'totals' => [
                 'materialTotal' => $materialTotal, 'laborTotal' => $laborTotal, 
                 'energyTotal' => $energyTotal, 'equipmentTotal' => $equipmentTotal,
-                'suggestedCost' => $suggestedCost, 'currentCost' => $editItem['costPrice']
+                'suggestedCost' => $suggestedCost, 'currentCost' => $editItem['costPrice'] ?? 0
             ]
         ];
     }
 } elseif (isset($_GET['add']) && $_GET['add'] == 1) {
     $modalMode = 'add';
-    // For 'add' mode, pre-calculate next IDs
-    $stmt = $pdo->query("SELECT id FROM items ORDER BY CAST(SUBSTRING(id, 2) AS UNSIGNED) DESC LIMIT 1");
-    $lastIdRow = $stmt->fetch(PDO::FETCH_ASSOC);
-    $lastIdNum = $lastIdRow ? (int)substr($lastIdRow['id'], 1) : 0;
-    $nextItemId = 'I' . str_pad($lastIdNum + 1, 3, '0', STR_PAD_LEFT);
-
     // Generate next SKU for new item
     $stmtSku = $pdo->query("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
     $lastSkuRow = $stmtSku->fetch(PDO::FETCH_ASSOC);
     $lastSkuNum = $lastSkuRow ? (int)substr($lastSkuRow['sku'], -3) : 0;
     $nextSku = 'WF-GEN-' . str_pad($lastSkuNum + 1, 3, '0', STR_PAD_LEFT);
     
-    $editItem = ['id' => $nextItemId, 'sku' => $nextSku];
+    $editItem = ['sku' => $nextSku];
 }
 
 // Get categories for dropdown from items table
@@ -167,7 +139,7 @@ if (!empty($stockFilter)) {
         $sql .= " AND i.stockLevel > 0";
     }
 }
-$sql .= " ORDER BY i.id ASC";
+$sql .= " ORDER BY i.sku ASC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -362,7 +334,7 @@ $messageType = $_GET['type'] ?? '';
                     <tr><td colspan="9" class="text-center py-4">No items found matching your criteria.</td></tr>
                 <?php else: ?>
                     <?php foreach ($items as $item): ?>
-                    <tr data-id="<?= htmlspecialchars($item['id'] ?? '') ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['id']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
+                    <tr data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['sku']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
                         <td>
                             <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" style="width:40px;height:40px;">
                                 <div class="thumbnail-loading" style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">...</div>
@@ -381,9 +353,9 @@ $messageType = $_GET['type'] ?? '';
                             </span>
                         </td>
                         <td>
-                            <a href="?page=admin&section=inventory&view=<?= htmlspecialchars($item['id']) ?>" class="action-btn view-btn" title="View Item">👁️</a>
-                            <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($item['id']) ?>" class="action-btn edit-btn" title="Edit Item">✏️</a>
-                            <button class="action-btn delete-btn delete-item" data-id="<?= htmlspecialchars($item['id']) ?>" title="Delete Item">🗑️</button>
+                                                    <a href="?page=admin&section=inventory&view=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="action-btn view-btn" title="View Item">👁️</a>
+                        <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="action-btn edit-btn" title="Edit Item">✏️</a>
+                        <button class="action-btn delete-btn delete-item" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" title="Delete Item">🗑️</button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -506,7 +478,7 @@ $messageType = $_GET['type'] ?? '';
 
         <div class="flex justify-end space-x-3 mt-auto pt-4 border-t">
             <a href="?page=admin&section=inventory" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 inline-block text-sm">Close</a>
-            <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($editItem['id']) ?>" class="brand-button px-4 py-2 rounded text-sm">Edit Item</a>
+                            <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($editItem['sku'] ?? '') ?>" class="brand-button px-4 py-2 rounded text-sm">Edit Item</a>
         </div>
     </div>
 </div>
@@ -522,8 +494,8 @@ $messageType = $_GET['type'] ?? '';
 
         <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col flex-grow overflow-hidden">
             <input type="hidden" name="action" value="<?= $modalMode === 'add' ? 'add' : 'update'; ?>">
-            <?php if ($modalMode === 'edit' && isset($editItem['id'])): ?>
-                <input type="hidden" name="itemId" value="<?= htmlspecialchars($editItem['id']); ?>">
+            <?php if ($modalMode === 'edit' && isset($editItem['sku'])): ?>
+                <input type="hidden" name="itemSku" value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
             <?php endif; ?>
 
             <div class="modal-form-container gap-5">
@@ -729,7 +701,7 @@ $messageType = $_GET['type'] ?? '';
 <script>
 // Initialize variables
 var modalMode = <?= json_encode($modalMode ?? '') ?>;
-var currentItemId = <?= json_encode(isset($editItem['id']) ? $editItem['id'] : '') ?>;
+        var currentItemSku = <?= json_encode(isset($editItem['sku']) ? $editItem['sku'] : '') ?>;
 var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $editCostBreakdown) ? json_encode($editCostBreakdown) : 'null' ?>;
 
 // Initialize global categories array

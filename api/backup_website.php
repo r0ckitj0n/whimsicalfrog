@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Change working directory to parent directory (project root)
 chdir(dirname(__DIR__));
 
-function createBackup() {
+function createBackup($downloadToComputer = true, $keepOnServer = true) {
     try {
         $timestamp = date('Y-m-d_H-i-s');
         $backupName = "whimsicalfrog_backup_$timestamp";
@@ -62,12 +62,24 @@ function createBackup() {
                 'size' => $fileSize,
                 'size_formatted' => $fileSizeFormatted,
                 'created' => date('Y-m-d H:i:s'),
-                'download_url' => $backupPath
+                'download_to_computer' => $downloadToComputer,
+                'keep_on_server' => $keepOnServer
             ];
+            
+            // Only include download URL if downloading to computer
+            if ($downloadToComputer) {
+                $response['download_url'] = $backupPath;
+            }
             
             // Add cleanup info if any files were deleted
             if ($cleanupInfo['deleted'] > 0) {
                 $response['cleanup'] = $cleanupInfo;
+            }
+            
+            // If not keeping on server, delete the backup file after providing download
+            if (!$keepOnServer && $downloadToComputer) {
+                // Note: File will be deleted after response is sent
+                $response['delete_after_download'] = true;
             }
             
             return $response;
@@ -156,7 +168,28 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     
     if ($method === 'POST') {
-        $result = createBackup();
+        // Get request parameters
+        $input = json_decode(file_get_contents('php://input'), true);
+        $downloadToComputer = isset($input['download_to_computer']) ? $input['download_to_computer'] : true;
+        $keepOnServer = isset($input['keep_on_server']) ? $input['keep_on_server'] : true;
+        
+        // Validate that at least one destination is selected
+        if (!$downloadToComputer && !$keepOnServer) {
+            $result = ['success' => false, 'error' => 'At least one backup destination must be selected'];
+        } else {
+            $result = createBackup($downloadToComputer, $keepOnServer);
+            
+            // If successful and we need to delete after download
+            if ($result['success'] && isset($result['delete_after_download']) && $result['delete_after_download']) {
+                // Register shutdown function to delete file after response is sent
+                register_shutdown_function(function() use ($result) {
+                    if (file_exists($result['path'])) {
+                        unlink($result['path']);
+                        error_log("Backup file deleted after download: " . $result['filename']);
+                    }
+                });
+            }
+        }
     } else {
         $result = ['success' => false, 'error' => 'Method not allowed'];
     }

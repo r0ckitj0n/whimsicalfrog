@@ -1050,3 +1050,52 @@
 [Tue Jun 17 17:19:11 2025] [::1]:57367 Accepted
 [Tue Jun 17 17:19:11 2025] [::1]:57367 [200]: GET /api/file_manager.php?action=list&path=
 [Tue Jun 17 17:19:11 2025] [::1]:57367 Closing
+[Tue Jun 17 17:30:20 2025] [::1]:60255 Accepted
+[Tue Jun 17 17:30:20 2025] Database Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'whimsicalfrog.inventory' doesn't exist
+[Tue Jun 17 17:30:20 2025] [::1]:60255 [200]: GET /?page=admin&section=settings
+[Tue Jun 17 17:30:20 2025] [::1]:60255 Closing
+[Tue Jun 17 17:30:20 2025] [::1]:60256 Accepted
+[Tue Jun 17 17:30:20 2025] [::1]:60257 Accepted
+[Tue Jun 17 17:30:20 2025] [::1]:60258 Accepted
+[Tue Jun 17 17:30:20 2025] [::1]:60256 [200]: GET /css/styles.css?v=1750195820
+[Tue Jun 17 17:30:20 2025] [::1]:60257 [200]: GET /images/sign_whimsicalfrog.webp
+[Tue Jun 17 17:30:20 2025] [::1]:60258 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Tue Jun 17 17:30:20 2025] [::1]:60258 Closing
+[Tue Jun 17 17:30:20 2025] [::1]:60256 Closing
+[Tue Jun 17 17:30:20 2025] [::1]:60257 Closing
+[Tue Jun 17 17:30:21 2025] [::1]:60259 Accepted
+[Tue Jun 17 17:30:21 2025] [::1]:60259 [200]: GET /images/room_main.png?v=cb2
+[Tue Jun 17 17:30:21 2025] [::1]:60259 Closing
+[Tue Jun 17 17:30:21 2025] [::1]:60260 Accepted
+[Tue Jun 17 17:30:21 2025] [::1]:60261 Accepted
+[Tue Jun 17 17:30:21 2025] [::1]:60260 [200]: GET /api/get_background.php?room_type=room_main
+[Tue Jun 17 17:30:21 2025] [::1]:60260 Closing
+[Tue Jun 17 17:30:21 2025] [::1]:60261 [200]: GET /images/room_main.webp?v=cb2
+[Tue Jun 17 17:30:21 2025] [::1]:60261 Closing
+[Tue Jun 17 17:30:21 2025] [::1]:60262 Accepted
+[Tue Jun 17 17:30:21 2025] [::1]:60262 [200]: GET /images/room_main.webp?v=1750195821096
+[Tue Jun 17 17:30:21 2025] [::1]:60262 Closing
+[Tue Jun 17 17:30:21 2025] [::1]:60263 Accepted
+[Tue Jun 17 17:30:21 2025] [::1]:60263 [200]: GET /favicon.ico
+[Tue Jun 17 17:30:21 2025] [::1]:60263 Closing
+[Tue Jun 17 17:30:23 2025] [::1]:60276 Accepted
+[Tue Jun 17 17:30:23 2025] [::1]:60276 [200]: GET /api/file_manager.php?action=list&path=
+[Tue Jun 17 17:30:23 2025] [::1]:60276 Closing
+[Tue Jun 17 17:30:33 2025] [::1]:60317 Accepted
+[Tue Jun 17 17:30:33 2025] [::1]:60317 [200]: GET /api/file_manager.php?action=list&path=components
+[Tue Jun 17 17:30:33 2025] [::1]:60317 Closing
+[Tue Jun 17 17:30:38 2025] [::1]:60338 Accepted
+[Tue Jun 17 17:30:38 2025] [::1]:60338 [200]: GET /api/file_manager.php?action=read&path=components%2Fimage_carousel.php
+[Tue Jun 17 17:30:38 2025] [::1]:60338 Closing
+[Tue Jun 17 17:31:16 2025] [::1]:60491 Accepted
+[Tue Jun 17 17:31:16 2025] [::1]:60491 [200]: POST /api/backup_website.php
+[Tue Jun 17 17:31:16 2025] [::1]:60491 Closing
+[Tue Jun 17 17:31:16 2025] [::1]:60496 Accepted
+[Tue Jun 17 17:31:16 2025] [::1]:60496 [200]: GET /backups/whimsicalfrog_backup_2025-06-17_21-31-16.tar.gz
+[Tue Jun 17 17:31:16 2025] [::1]:60496 Closing
+[Tue Jun 17 17:32:13 2025] [::1]:60727 Accepted
+[Tue Jun 17 17:32:13 2025] [::1]:60727 [200]: GET /api/file_manager.php?action=list&path=
+[Tue Jun 17 17:32:13 2025] [::1]:60727 Closing
+[Tue Jun 17 17:32:23 2025] [::1]:60768 Accepted
+[Tue Jun 17 17:32:23 2025] [::1]:60768 [200]: GET /api/file_manager.php?action=list&path=
+[Tue Jun 17 17:32:23 2025] [::1]:60768 Closing

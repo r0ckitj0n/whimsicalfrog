@@ -53,11 +53,11 @@ try {
         // Social posts (references social_accounts)
         'social_posts',
         
-        // Skip inventory cost tables for now (they have old foreign key references)
-        // 'inventory_materials',
-        // 'inventory_labor', 
-        // 'inventory_energy',
-        // 'inventory_equipment',
+        // Inventory cost tables (foreign key constraints will be handled during sync)
+        'inventory_materials',
+        'inventory_labor', 
+        'inventory_energy',
+        'inventory_equipment',
     ];
     
     // Get all available tables

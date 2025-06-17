@@ -65,16 +65,19 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 
     if ($action === 'delete') {
-        // Set category fields to NULL/empty for products
-        $stmt = $pdo->prepare('UPDATE products SET productType = NULL WHERE productType = ?');
+        // Set category fields to NULL/empty for items
+        $stmt = $pdo->prepare('UPDATE items SET category = NULL WHERE category = ?');
         $stmt->execute([$category]);
+        $affectedRows = $stmt->rowCount();
         
         // Update naming scheme after deletion
         $updatedMappings = updateNamingScheme($pdo);
         
         echo json_encode([
-            'success' => true, 
-            'message' => "Category '{$category}' deleted successfully",
+            'success' => true,
+            'message' => 'Category deleted successfully',
+            'affectedItems' => $affectedRows,
+            'redirect' => 'admin_categories',
             'namingSchemeUpdated' => true,
             'categoryMappings' => $updatedMappings
         ]);
@@ -106,8 +109,8 @@ try {
             exit;
         }
         
-        // Update all products with the old category to use the new category name
-        $stmt = $pdo->prepare('UPDATE products SET productType = ? WHERE productType = ?');
+        // Update all items with the old category to use the new category name
+        $stmt = $pdo->prepare('UPDATE items SET category = ? WHERE category = ?');
         $stmt->execute([$newCategory, $category]);
         $affectedRows = $stmt->rowCount();
         
@@ -123,9 +126,37 @@ try {
             'oldCategory' => $category,
             'newCategory' => $newCategory,
             'newCategoryCode' => $newCategoryCode,
-            'affectedProducts' => $affectedRows,
+            'affectedItems' => $affectedRows,
             'namingSchemeUpdated' => true,
             'categoryMappings' => $updatedMappings
+        ]);
+        
+    } elseif ($action === 'update') {
+        // Update category name
+        $categoryId = $input['categoryId'] ?? '';
+        $oldCategoryName = $input['oldCategoryName'] ?? '';
+        $newCategoryName = $input['newCategoryName'] ?? '';
+        
+        if (empty($categoryId) || empty($oldCategoryName) || empty($newCategoryName)) {
+            echo json_encode(['success' => false, 'error' => 'Missing required fields']);
+            exit;
+        }
+        
+        // Update the category in the categories table
+        $stmt = $pdo->prepare('UPDATE categories SET name = ? WHERE id = ?');
+        $stmt->execute([$newCategoryName, $categoryId]);
+        
+        // Update all items with the old category to use the new category name
+        $stmt = $pdo->prepare('UPDATE items SET category = ? WHERE category = ?');
+        $stmt->execute([$newCategoryName, $oldCategoryName]);
+        $affectedRows = $stmt->rowCount();
+        
+        echo json_encode([
+            'success' => true,
+            'message' => 'Category updated successfully',
+            'oldName' => $oldCategoryName,
+            'newName' => $newCategoryName,
+            'affectedItems' => $affectedRows,
         ]);
         
     } else {

@@ -12,31 +12,23 @@ $endDate   = $_GET['end_date']   ?? '';
 if ($startDate === '' && $endDate === '') {
     $stmt = $pdo->prepare("
         SELECT 
-            o.id, 
-            o.orderId, 
-            o.customerName, 
-            o.customerEmail,
-            o.customerPhone,
-            o.customerAddress,
+            o.id as orderId, 
+            o.userId, 
+            o.total,
             o.paymentMethod,
             o.paymentStatus,
-            o.orderStatus,
+            o.status as orderStatus,
             o.shippingMethod,
-            o.orderDate,
-            o.totalAmount,
-            o.discountCodeUsed,
-            o.discountAmountApplied,
-            o.taxAmount,
-            o.notes,
+            o.date as orderDate,
             oi.id as orderItemId,
             oi.sku,
             oi.quantity,
             oi.price,
             i.name as itemName
         FROM orders o
-        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN order_items oi ON o.id = oi.orderId
         LEFT JOIN items i ON oi.sku = i.sku
-        ORDER BY o.orderDate DESC
+        ORDER BY o.date DESC
     ");
     
     $stmt->execute();
@@ -44,32 +36,24 @@ if ($startDate === '' && $endDate === '') {
 } elseif ($startDate === '') {
     $stmt = $pdo->prepare("
         SELECT 
-            o.id, 
-            o.orderId, 
-            o.customerName, 
-            o.customerEmail,
-            o.customerPhone,
-            o.customerAddress,
+            o.id as orderId, 
+            o.userId, 
+            o.total,
             o.paymentMethod,
             o.paymentStatus,
-            o.orderStatus,
+            o.status as orderStatus,
             o.shippingMethod,
-            o.orderDate,
-            o.totalAmount,
-            o.discountCodeUsed,
-            o.discountAmountApplied,
-            o.taxAmount,
-            o.notes,
+            o.date as orderDate,
             oi.id as orderItemId,
             oi.sku,
             oi.quantity,
             oi.price,
             i.name as itemName
         FROM orders o
-        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN order_items oi ON o.id = oi.orderId
         LEFT JOIN items i ON oi.sku = i.sku
-        WHERE DATE(o.orderDate) <= :end
-        ORDER BY o.orderDate DESC
+        WHERE DATE(o.date) <= :end
+        ORDER BY o.date DESC
     ");
     
     $stmt->execute([':end'=>$endDate]);
@@ -77,32 +61,24 @@ if ($startDate === '' && $endDate === '') {
 } elseif ($endDate === '') {
     $stmt = $pdo->prepare("
         SELECT 
-            o.id, 
-            o.orderId, 
-            o.customerName, 
-            o.customerEmail,
-            o.customerPhone,
-            o.customerAddress,
+            o.id as orderId, 
+            o.userId, 
+            o.total,
             o.paymentMethod,
             o.paymentStatus,
-            o.orderStatus,
+            o.status as orderStatus,
             o.shippingMethod,
-            o.orderDate,
-            o.totalAmount,
-            o.discountCodeUsed,
-            o.discountAmountApplied,
-            o.taxAmount,
-            o.notes,
+            o.date as orderDate,
             oi.id as orderItemId,
             oi.sku,
             oi.quantity,
             oi.price,
             i.name as itemName
         FROM orders o
-        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN order_items oi ON o.id = oi.orderId
         LEFT JOIN items i ON oi.sku = i.sku
-        WHERE DATE(o.orderDate) >= :start
-        ORDER BY o.orderDate DESC
+        WHERE DATE(o.date) >= :start
+        ORDER BY o.date DESC
     ");
     
     $stmt->execute([':start'=>$startDate]);
@@ -110,32 +86,24 @@ if ($startDate === '' && $endDate === '') {
 } else {
     $stmt = $pdo->prepare("
         SELECT 
-            o.id, 
-            o.orderId, 
-            o.customerName, 
-            o.customerEmail,
-            o.customerPhone,
-            o.customerAddress,
+            o.id as orderId, 
+            o.userId, 
+            o.total,
             o.paymentMethod,
             o.paymentStatus,
-            o.orderStatus,
+            o.status as orderStatus,
             o.shippingMethod,
-            o.orderDate,
-            o.totalAmount,
-            o.discountCodeUsed,
-            o.discountAmountApplied,
-            o.taxAmount,
-            o.notes,
+            o.date as orderDate,
             oi.id as orderItemId,
             oi.sku,
             oi.quantity,
             oi.price,
             i.name as itemName
         FROM orders o
-        LEFT JOIN order_items oi ON o.orderId = oi.orderId
+        LEFT JOIN order_items oi ON o.id = oi.orderId
         LEFT JOIN items i ON oi.sku = i.sku
-        WHERE DATE(o.orderDate) BETWEEN :start AND :end
-        ORDER BY o.orderDate DESC
+        WHERE DATE(o.date) BETWEEN :start AND :end
+        ORDER BY o.date DESC
     ");
     
     $stmt->execute([':start'=>$startDate, ':end'=>$endDate]);
@@ -162,8 +130,8 @@ if (isset($_GET['edit']) && !empty($_GET['edit'])) {
 $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 
-$prodStmt = $pdo->query("SELECT id, name, retailPrice as basePrice FROM items ORDER BY name");
-$allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
+$itemStmt = $pdo->query("SELECT sku, name, retailPrice as basePrice FROM items ORDER BY name");
+$allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <style>
@@ -885,7 +853,7 @@ $allProducts = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="flex items-center gap-2 mb-2" id="addItemRow">
                                 <select id="addProductSelect" class="flex-1 border rounded px-2 py-1 text-sm max-w-xs">
                                     <option value="">-- Add Item --</option>
-                                    <?php foreach($allProducts as $p): ?>
+                                    <?php foreach($allItems as $p): ?>
                                         <option value="<?= htmlspecialchars($p['id']) ?>" data-price="<?= $p['basePrice'] ?>"><?= htmlspecialchars($p['name']) ?> ($<?= number_format($p['basePrice'], 2) ?>)</option>
                                     <?php endforeach; ?>
                                 </select>

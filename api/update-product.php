@@ -1,6 +1,6 @@
 <?php
 // Include the configuration file
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -26,9 +26,9 @@ try {
     $data = json_decode(file_get_contents('php://input'), true);
     
     // Validate required fields
-    if (!isset($data['id']) || empty($data['id'])) {
+    if (!isset($data['sku']) || empty($data['sku'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Product ID is required']);
+        echo json_encode(['error' => 'Item SKU is required']);
         exit;
     }
     
@@ -37,10 +37,10 @@ try {
     
     // Prepare update fields
     $updateFields = [];
-    $params = ['id' => $data['id']];
+    $params = ['sku' => $data['sku']];
     
     // Check which fields to update
-    $allowedFields = ['name', 'basePrice', 'description', 'productType', 'defaultSKU_Base', 'supplier', 'notes', 'image'];
+    $allowedFields = ['name', 'retailPrice', 'description', 'category', 'stockLevel', 'reorderPoint', 'costPrice', 'imageUrl'];
     
     foreach ($allowedFields as $field) {
         if (isset($data[$field])) {
@@ -52,12 +52,12 @@ try {
     // Only proceed if there are fields to update
     if (empty($updateFields)) {
         http_response_code(400);
-        echo json_encode(['error' => 'No fields to update']);
+        echo json_encode(['error' => 'No valid fields to update']);
         exit;
     }
     
     // Build and execute the update query
-    $sql = "UPDATE products SET " . implode(', ', $updateFields) . " WHERE id = :id";
+    $sql = "UPDATE items SET " . implode(', ', $updateFields) . " WHERE sku = :sku";
     $stmt = $pdo->prepare($sql);
     $result = $stmt->execute($params);
     
@@ -66,18 +66,18 @@ try {
         if ($stmt->rowCount() > 0) {
             echo json_encode([
                 'success' => true,
-                'message' => 'Product updated successfully'
+                'message' => 'Item updated successfully'
             ]);
         } else {
             echo json_encode([
                 'success' => false,
-                'message' => 'No changes made or product not found'
+                'message' => 'No changes made or item not found'
             ]);
         }
     } else {
         http_response_code(500);
         echo json_encode([
-            'error' => 'Failed to update product',
+            'error' => 'Failed to update item',
             'details' => $stmt->errorInfo()
         ]);
     }
@@ -86,7 +86,7 @@ try {
     // Handle database errors
     http_response_code(500);
     echo json_encode([
-        'error' => 'Database error occurred',
+        'error' => 'Failed to update item',
         'details' => $e->getMessage()
     ]);
     exit;

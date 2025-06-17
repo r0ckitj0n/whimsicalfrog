@@ -361,7 +361,7 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                         </td>
                         <td class="editable" data-field="name"><?= htmlspecialchars($item['name']) ?></td>
-                        <td><?= htmlspecialchars($item['category'] ?? '') ?></td>
+                        <td class="editable" data-field="category"><?= htmlspecialchars($item['category'] ?? '') ?></td>
                         <td><?= htmlspecialchars($item['sku']) ?></td> <!-- SKU not typically inline editable -->
                         <td class="editable" data-field="stockLevel"><?= htmlspecialchars($item['stockLevel']) ?></td>
                         <td class="editable" data-field="reorderPoint"><?= htmlspecialchars($item['reorderPoint']) ?></td>
@@ -525,6 +525,21 @@ $messageType = $_GET['type'] ?? '';
                             <label for="name" class="block text-gray-700">Name *</label>
                             <input type="text" id="name" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('name', $field_errors) ? 'field-error-highlight' : '' ?>" required 
                                    value="<?= htmlspecialchars($editItem['name'] ?? ''); ?>">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label for="categoryEdit" class="block text-gray-700">Category *</label>
+                            <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required>
+                                <option value="">Select Category</option>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?= htmlspecialchars($cat); ?>" <?= (isset($editItem['category']) && $editItem['category'] === $cat) ? 'selected' : ''; ?>><?= htmlspecialchars($cat); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <!-- Empty div for grid alignment -->
                         </div>
                     </div>
 
@@ -1498,8 +1513,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Auto fetch SKU when category changes (add mode only)
-    const catSelect=document.getElementById('category');
-    const skuInput=document.getElementById('sku');
+    const catSelect=document.getElementById('categoryEdit');
+    const skuInput=document.getElementById('skuEdit');
     if(catSelect&&skuInput){
         catSelect.addEventListener('change',()=>{
             const cat=catSelect.value;
@@ -1532,7 +1547,7 @@ function refreshCategoryDropdown() {
                 }
                 
                 // Update the edit modal category dropdown
-                const editCategorySelect = document.getElementById('category');
+                const editCategorySelect = document.getElementById('categoryEdit');
                 if (editCategorySelect) {
                     const currentValue = editCategorySelect.value;
                     editCategorySelect.innerHTML = '<option value="">Select Category</option>';
@@ -1981,7 +1996,19 @@ document.addEventListener('DOMContentLoaded', function() {
             let inputElement;
             
             // Create appropriate input element
-            if (field === 'name') {
+            if (field === 'category') {
+                inputElement = document.createElement('select');
+                inputElement.innerHTML = '<option value="">Select Category</option>';
+                
+                // Add categories from global array
+                (window.inventoryCategories || []).forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    if (cat === currentValue) option.selected = true;
+                    inputElement.appendChild(option);
+                });
+            } else if (field === 'name') {
                 inputElement = document.createElement('input');
                 inputElement.type = 'text';
                 inputElement.value = currentValue;

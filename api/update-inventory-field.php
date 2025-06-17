@@ -20,7 +20,7 @@ if (!$inventoryId || !$field) {
 
 try {
     // Validate field and value
-    $allowedFields = ['name', 'stockLevel', 'reorderPoint', 'costPrice', 'retailPrice'];
+    $allowedFields = ['name', 'category', 'stockLevel', 'reorderPoint', 'costPrice', 'retailPrice'];
     if (!in_array($field, $allowedFields)) {
         echo json_encode(['success'=>false,'error'=>'Invalid field']);
         exit;
@@ -39,20 +39,41 @@ try {
         }
     }
     
-    // Update the field
-    $stmt = $pdo->prepare("UPDATE inventory SET `$field` = ? WHERE id = ?");
-    $stmt->execute([$value, $inventoryId]);
-    
-    if ($stmt->rowCount() > 0) {
-        echo json_encode(['success'=>true,'message'=>ucfirst($field) . ' updated successfully']);
-    } else {
-        // Check if inventory item exists
-        $checkStmt = $pdo->prepare("SELECT id FROM inventory WHERE id = ?");
-        $checkStmt->execute([$inventoryId]);
-        if ($checkStmt->fetch()) {
-            echo json_encode(['success'=>true,'message'=>'No change needed - ' . ucfirst($field) . ' is already set to that value']);
-        } else {
+    // Special handling for category field
+    if ($field === 'category') {
+        // Get the SKU for this inventory item
+        $skuStmt = $pdo->prepare("SELECT sku FROM inventory WHERE id = ?");
+        $skuStmt->execute([$inventoryId]);
+        $skuRow = $skuStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$skuRow) {
             echo json_encode(['success'=>false,'error'=>'Inventory item not found']);
+            exit;
+        }
+        
+        $sku = $skuRow['sku'];
+        
+        // Update the products table with the new category
+        $prodStmt = $pdo->prepare("UPDATE products SET productType = ? WHERE sku = ?");
+        $prodStmt->execute([$value, $sku]);
+        
+        echo json_encode(['success'=>true,'message'=>'Category updated successfully']);
+    } else {
+        // Update the field in inventory table
+        $stmt = $pdo->prepare("UPDATE inventory SET `$field` = ? WHERE id = ?");
+        $stmt->execute([$value, $inventoryId]);
+        
+        if ($stmt->rowCount() > 0) {
+            echo json_encode(['success'=>true,'message'=>ucfirst($field) . ' updated successfully']);
+        } else {
+            // Check if inventory item exists
+            $checkStmt = $pdo->prepare("SELECT id FROM inventory WHERE id = ?");
+            $checkStmt->execute([$inventoryId]);
+            if ($checkStmt->fetch()) {
+                echo json_encode(['success'=>true,'message'=>'No change needed - ' . ucfirst($field) . ' is already set to that value']);
+            } else {
+                echo json_encode(['success'=>false,'error'=>'Inventory item not found']);
+            }
         }
     }
     

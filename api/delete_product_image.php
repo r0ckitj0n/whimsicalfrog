@@ -25,7 +25,7 @@ try {
     }
     
     // Get image details before deletion
-    $stmt = $pdo->prepare("SELECT product_id, image_path, is_primary FROM product_images WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT sku, image_path, is_primary FROM product_images WHERE id = ?");
     $stmt->execute([$imageId]);
     $imageData = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -34,7 +34,7 @@ try {
         exit;
     }
     
-    $productId = $imageData['product_id'];
+    $sku = $imageData['sku'];
     $imagePath = $imageData['image_path'];
     $wasPrimary = $imageData['is_primary'];
     
@@ -51,40 +51,34 @@ try {
         unlink($fullPath);
     }
     
-    // If this was the primary image, set another image as primary
+    // If this was the primary image, automatically promote the next image to primary
     if ($wasPrimary) {
-        $stmt = $pdo->prepare("SELECT id, image_path FROM product_images WHERE product_id = ? ORDER BY sort_order ASC LIMIT 1");
-        $stmt->execute([$productId]);
+        // Find the next available image for this SKU, ordered by sort_order
+        $stmt = $pdo->prepare("SELECT id, image_path FROM product_images WHERE sku = ? ORDER BY sort_order ASC, id ASC LIMIT 1");
+        $stmt->execute([$sku]);
         $newPrimary = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($newPrimary) {
-            // Set new primary image
+            // Promote the next image to primary
             $stmt = $pdo->prepare("UPDATE product_images SET is_primary = TRUE WHERE id = ?");
             $stmt->execute([$newPrimary['id']]);
             
-            // Update inventory and products tables
-            $stmt = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE productId = ?");
-            $stmt->execute([$newPrimary['image_path'], $productId]);
-            
-            $stmt = $pdo->prepare("UPDATE products SET image = ? WHERE id = ?");
-            $stmt->execute([$newPrimary['image_path'], $productId]);
+            $promotedMessage = " The next image has been automatically promoted to primary.";
         } else {
-            // No images left, set to placeholder
-            $placeholderPath = 'images/products/placeholder.png';
-            
-            $stmt = $pdo->prepare("UPDATE inventory SET imageUrl = ? WHERE productId = ?");
-            $stmt->execute([$placeholderPath, $productId]);
-            
-            $stmt = $pdo->prepare("UPDATE products SET image = ? WHERE id = ?");
-            $stmt->execute([$placeholderPath, $productId]);
+            // No images left for this product
+            $promotedMessage = " No other images available for this product.";
         }
+    } else {
+        $promotedMessage = "";
     }
     
     $pdo->commit();
     
     echo json_encode([
         'success' => true,
-        'message' => 'Image deleted successfully'
+        'message' => 'Image deleted successfully.' . $promotedMessage,
+        'was_primary' => $wasPrimary,
+        'promoted_new_primary' => $wasPrimary && isset($newPrimary) && $newPrimary
     ]);
     
 } catch (PDOException $e) {

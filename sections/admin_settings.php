@@ -175,11 +175,11 @@
                         <select id="roomMapperSelect" class="px-2 py-1 border border-gray-300 rounded text-sm">
                             <option value="landing" selected>Landing Page</option>
                             <option value="room_main">Main Room</option>
-                            <option value="room_artwork">Artwork Room</option>
-                            <option value="room_tshirts">T-Shirts Room</option>
-                            <option value="room_tumblers">Tumblers Room</option>
-                            <option value="room_sublimation">Sublimation Room</option>
-                            <option value="room_windowwraps">Window Wraps Room</option>
+                            <option value="room4">Artwork Room</option>
+                            <option value="room2">T-Shirts Room</option>
+                            <option value="room3">Tumblers Room</option>
+                            <option value="room5">Sublimation Room</option>
+                            <option value="room6">Window Wraps Room</option>
                         </select>
                     </div>
                     <button onclick="toggleMapperGrid()" class="px-2 py-1 bg-gray-500 text-white rounded text-sm">Grid</button>
@@ -2585,11 +2585,11 @@ async function removeAreaMapping(mappingId) {
                         <select id="backgroundRoomSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                             <option value="landing">Landing Page</option>
                             <option value="room_main">Main Room</option>
-                            <option value="room_artwork">Artwork Room</option>
-                            <option value="room_tshirts">T-Shirts Room</option>
-                            <option value="room_tumblers">Tumblers Room</option>
-                            <option value="room_sublimation">Sublimation Room</option>
-                            <option value="room_windowwraps">Window Wraps Room</option>
+                            <option value="room4">Artwork Room</option>
+                            <option value="room2">T-Shirts Room</option>
+                            <option value="room3">Tumblers Room</option>
+                            <option value="room5">Sublimation Room</option>
+                            <option value="room6">Window Wraps Room</option>
                         </select>
                     </div>
                     

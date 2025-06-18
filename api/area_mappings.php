@@ -136,13 +136,19 @@ function handleGet($pdo) {
             
             // Map room types to display names
             $roomNames = [
+                'room2' => 'T-Shirts Room',
+                'room3' => 'Tumblers Room', 
+                'room4' => 'Artwork Room',
+                'room5' => 'Sublimation Room',
+                'room6' => 'Window Wraps Room',
+                'room_main' => 'Main Room',
+                'landing' => 'Landing Page',
+                // Legacy room names for backward compatibility
                 'room_tshirts' => 'T-Shirts Room',
                 'room_tumblers' => 'Tumblers Room', 
                 'room_artwork' => 'Artwork Room',
                 'room_sublimation' => 'Sublimation Room',
-                'room_windowwraps' => 'Window Wraps Room',
-                'room_main' => 'Main Room',
-                'landing' => 'Landing Page'
+                'room_windowwraps' => 'Window Wraps Room'
             ];
             
             $availableRooms = [];

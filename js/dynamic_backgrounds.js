@@ -43,19 +43,19 @@ function autoLoadRoomBackground() {
         
         switch (roomName.toLowerCase()) {
             case 'artwork':
-                roomType = 'room_artwork';
+                roomType = 'room4';
                 break;
             case 't-shirts':
-                roomType = 'room_tshirts';
+                roomType = 'room2';
                 break;
             case 'tumblers':
-                roomType = 'room_tumblers';
+                roomType = 'room3';
                 break;
             case 'sublimation':
-                roomType = 'room_sublimation';
+                roomType = 'room5';
                 break;
             case 'window wraps':
-                roomType = 'room_windowwraps';
+                roomType = 'room6';
                 break;
             default:
                 // Try to detect from URL
@@ -63,21 +63,21 @@ function autoLoadRoomBackground() {
                 const currentPage = urlParams.get('page') || '';
                 
                 switch (currentPage) {
-                    case 'artwork':
-                        roomType = 'room_artwork';
-                        break;
-                    case 'tshirts':
-                        roomType = 'room_tshirts';
-                        break;
-                    case 'tumblers':
-                        roomType = 'room_tumblers';
-                        break;
-                    case 'sublimation':
-                        roomType = 'room_sublimation';
-                        break;
-                    case 'windowwraps':
-                        roomType = 'room_windowwraps';
-                        break;
+                            case 'room2':
+            roomType = 'room2';
+            break;
+        case 'room3':
+            roomType = 'room3';
+            break;
+        case 'room4':
+            roomType = 'room4';
+            break;
+        case 'room5':
+            roomType = 'room5';
+            break;
+        case 'room6':
+            roomType = 'room6';
+            break;
                 }
         }
         

@@ -112,7 +112,17 @@
 <script>
 function enterRoom(category) {
     console.log('Entering room:', category);
-    window.location.href = `/?page=room_${category}`;
+    // Map category names to room numbers for generic infrastructure
+    const categoryToRoomMap = {
+        'tshirts': 'room2',
+        'tumblers': 'room3', 
+        'artwork': 'room4',
+        'sublimation': 'room5',
+        'windowwraps': 'room6'
+    };
+    
+    const roomPage = categoryToRoomMap[category] || `room_${category}`;
+    window.location.href = `/?page=${roomPage}`;
 }
 
 // Direct positioning script for main room doors

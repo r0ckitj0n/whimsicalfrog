@@ -1,7 +1,7 @@
-[Tue Jun 17 18:51:54 2025] PHP 8.4.7 Development Server (http://localhost:8080) started
-[Tue Jun 17 18:51:56 2025] [::1]:49297 Accepted
-[Tue Jun 17 18:51:56 2025] [::1]:49297 [200]: GET /api/init_global_css_db.php
-[Tue Jun 17 18:51:56 2025] [::1]:49297 Closing
-[Tue Jun 17 18:52:46 2025] [::1]:49305 Accepted
-[Tue Jun 17 18:52:46 2025] [::1]:49305 [200]: GET /api/global_css_rules.php?action=list
-[Tue Jun 17 18:52:46 2025] [::1]:49305 Closing
+[Tue Jun 17 22:28:36 2025] PHP 8.4.7 Development Server (http://localhost:8000) started
+[Tue Jun 17 22:30:00 2025] [::1]:49356 Accepted
+[Tue Jun 17 22:30:00 2025] [::1]:49356 [200]: GET /
+[Tue Jun 17 22:30:00 2025] [::1]:49356 Closing
+[Tue Jun 17 22:30:39 2025] [::1]:49387 Accepted
+[Tue Jun 17 22:30:39 2025] [::1]:49387 [302]: GET /?page=admin
+[Tue Jun 17 22:30:39 2025] [::1]:49387 Closing

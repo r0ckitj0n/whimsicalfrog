@@ -39,23 +39,23 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     // Check if item exists
-    $checkStmt = $pdo->prepare('SELECT COUNT(*) FROM inventory WHERE id = ?');
+    $checkStmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE sku = ?');
     $checkStmt->execute([$id]);
     if ($checkStmt->fetchColumn() == 0) {
         http_response_code(404);
-        echo json_encode(['error' => 'Inventory item not found']);
+        echo json_encode(['error' => 'Item not found']);
         exit;
     }
     
-    // Delete inventory item
-    $stmt = $pdo->prepare('DELETE FROM inventory WHERE id = ?');
+    // Delete item
+    $stmt = $pdo->prepare('DELETE FROM items WHERE sku = ?');
     $result = $stmt->execute([$id]);
     
     if ($result) {
         // Return success response
         echo json_encode([
             'success' => true,
-            'message' => 'Inventory item deleted successfully',
+            'message' => 'Item deleted successfully',
             'id' => $id
         ]);
     } else {

@@ -138,14 +138,14 @@ $messageType = $_GET['type'] ?? '';
                         <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
                         <td class="text-sm text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
                         <td class="order-items-cell" title="<?php
-                            $items = $pdo->prepare("SELECT oi.*, COALESCE(p.name, oi.productId) AS name FROM order_items oi LEFT JOIN products p ON oi.productId = p.id WHERE oi.orderId = ?");
+                            $items = $pdo->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) AS name FROM order_items oi LEFT JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ?");
                             $items->execute([$order['id']]);
                             $itemList = $items->fetchAll(PDO::FETCH_ASSOC);
                             $names = array_map(function($it){ return $it['name'] . ' x' . $it['quantity']; }, $itemList);
                             echo htmlspecialchars(implode(', ', $names));
                         ?>">
                             <?php
-                            $items = $pdo->prepare("SELECT oi.*, COALESCE(p.name, oi.productId) AS name FROM order_items oi LEFT JOIN products p ON oi.productId = p.id WHERE oi.orderId = ?");
+                            $items = $pdo->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) AS name FROM order_items oi LEFT JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ?");
                             $items->execute([$order['id']]);
                             $itemList = $items->fetchAll(PDO::FETCH_ASSOC);
                             $names = array_map(function($it){ return $it['name'] . ' x' . $it['quantity']; }, $itemList);

@@ -1,1 +1,0 @@
-*/1 * * * * echo 'Test cron job at' $(date) >> /Users/jongraves/Documents/Websites/WhimsicalFrog/cron_test.log 2>&1

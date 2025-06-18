@@ -27,7 +27,7 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     // Build query based on filters
-    $query = "SELECT * FROM inventory"; // This will include costPrice and retailPrice fields
+    $query = "SELECT * FROM items"; // This will include costPrice and retailPrice fields
     $params = [];
     $whereConditions = [];
     

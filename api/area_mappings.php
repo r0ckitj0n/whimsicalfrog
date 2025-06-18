@@ -65,7 +65,7 @@ function handleGet($pdo) {
                         ELSE NULL
                     END as item_price
                 FROM area_mappings am
-                LEFT JOIN inventory i ON am.mapping_type = 'item' AND am.item_id = i.id
+                LEFT JOIN items i ON am.mapping_type = 'item' AND am.item_id = i.sku
                 LEFT JOIN categories c ON am.mapping_type = 'category' AND am.category_id = c.id
                 WHERE am.room_type = ? AND am.is_active = 1
                 ORDER BY am.area_selector, am.display_order
@@ -176,7 +176,7 @@ function handleGet($pdo) {
                         SEPARATOR ', '
                     ) as mappings_summary
                 FROM area_mappings am
-                LEFT JOIN inventory i ON am.mapping_type = 'item' AND am.item_id = i.id
+                LEFT JOIN items i ON am.mapping_type = 'item' AND am.item_id = i.sku
                 LEFT JOIN categories c ON am.mapping_type = 'category' AND am.category_id = c.id
                 WHERE am.is_active = 1
                 GROUP BY am.room_type

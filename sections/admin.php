@@ -14,8 +14,8 @@ try {
     // Create a PDO connection
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Fetch inventory data directly from database
-    $stmt = $pdo->query('SELECT * FROM inventory');
+    // Fetch items data directly from database
+    $stmt = $pdo->query('SELECT * FROM items');
     $inventoryData = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Fetch orders data directly from database

@@ -47,7 +47,7 @@ try {
     $customersData = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Fetch inventory data directly from database
-    $inventoryStmt = $pdo->query('SELECT * FROM inventory');
+    $inventoryStmt = $pdo->query('SELECT * FROM items');
     $inventoryData = $inventoryStmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Fetch products data directly from database

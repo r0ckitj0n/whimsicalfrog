@@ -1,2 +1,9 @@
 Server monitoring started successfully after power recovery
 /bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+2025-06-17 22:40:43 - [0;34mStarting WhimsicalFrog PHP server...[0m
+2025-06-17 22:40:43 - [0;34mStarting PHP web server on port 8000...[0m
+2025-06-17 22:40:45 - [0;32mPHP web server started successfully[0m
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted

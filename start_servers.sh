@@ -42,8 +42,8 @@ echo -e "  ./server_monitor.sh restart"
 echo -e "\n${YELLOW}If the servers stop working, simply run this script again.${NC}"
 echo -e "${YELLOW}For automatic monitoring, set up the cron job as shown above.${NC}"
 
-# Keep the terminal window open if double-clicked
+# Auto-close the terminal window after 15 seconds if double-clicked
 if [ -t 0 ]; then
-  echo -e "\n${BLUE}Press Enter to close this window...${NC}"
-  read
+  echo -e "\n${BLUE}This window will close automatically in 15 seconds...${NC}"
+  sleep 15
 fi

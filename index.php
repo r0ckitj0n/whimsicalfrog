@@ -15,8 +15,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'landing';
 $allowed_pages = [
     'landing', 'main_room', 'shop', 'cart', 'login', 'register', 'admin', 'admin_inventory',
     'room2', 'room3', 'room4', 'room5', 'room6',
-    // Legacy room names for backward compatibility
-    'room_tshirts', 'room_tumblers', 'room_artwork', 'room_sublimation', 'room_windowwraps',
     'admin_customers', 'admin_orders', 'admin_reports', 'admin_marketing', 'admin_settings',
     'account_settings', 'receipt' // Added receipt page
 ];
@@ -26,21 +24,7 @@ if (!in_array($page, $allowed_pages)) {
     $page = 'landing'; // Default to landing if invalid
 }
 
-// Legacy URL mapping - redirect old room names to new generic room numbers
-$legacyRoomMapping = [
-    'room_tshirts' => 'room2',
-    'room_tumblers' => 'room3',
-    'room_artwork' => 'room4',
-    'room_sublimation' => 'room5',
-    'room_windowwraps' => 'room6'
-];
 
-if (isset($legacyRoomMapping[$page])) {
-    // Redirect to new generic room number to maintain clean URLs
-    $newRoomPage = $legacyRoomMapping[$page];
-    header("Location: /?page={$newRoomPage}", true, 301); // 301 permanent redirect
-    exit;
-}
 
 // Check if user is logged in and process user data
 $isLoggedIn = isset($_SESSION['user']);

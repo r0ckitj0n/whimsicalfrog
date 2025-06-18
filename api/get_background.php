@@ -22,13 +22,7 @@ try {
         'room3' => ['png' => 'room3.png', 'webp' => 'room3.webp'],
         'room4' => ['png' => 'room4.png', 'webp' => 'room4.webp'],
         'room5' => ['png' => 'room5.png', 'webp' => 'room5.webp'],
-        'room6' => ['png' => 'room6.png', 'webp' => 'room6.webp'],
-        // Legacy room names for backward compatibility
-        'room_artwork' => ['png' => 'room4.png', 'webp' => 'room4.webp'],
-        'room_tshirts' => ['png' => 'room2.png', 'webp' => 'room2.webp'],
-        'room_tumblers' => ['png' => 'room3.png', 'webp' => 'room3.webp'],
-        'room_sublimation' => ['png' => 'room5.png', 'webp' => 'room5.webp'],
-        'room_windowwraps' => ['png' => 'room6.png', 'webp' => 'room6.webp']
+        'room6' => ['png' => 'room6.png', 'webp' => 'room6.webp']
     ];
     
     if (isset($fallbacks[$roomType])) {
@@ -76,13 +70,7 @@ try {
             'room3' => ['png' => 'room3.png', 'webp' => 'room3.webp'],
             'room4' => ['png' => 'room4.png', 'webp' => 'room4.webp'],
             'room5' => ['png' => 'room5.png', 'webp' => 'room5.webp'],
-            'room6' => ['png' => 'room6.png', 'webp' => 'room6.webp'],
-            // Legacy room names for backward compatibility
-            'room_artwork' => ['png' => 'room4.png', 'webp' => 'room4.webp'],
-            'room_tshirts' => ['png' => 'room2.png', 'webp' => 'room2.webp'],
-            'room_tumblers' => ['png' => 'room3.png', 'webp' => 'room3.webp'],
-            'room_sublimation' => ['png' => 'room5.png', 'webp' => 'room5.webp'],
-            'room_windowwraps' => ['png' => 'room6.png', 'webp' => 'room6.webp']
+            'room6' => ['png' => 'room6.png', 'webp' => 'room6.webp']
         ];
         
         if (isset($fallbacks[$roomType])) {

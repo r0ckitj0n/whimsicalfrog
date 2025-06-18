@@ -66,8 +66,8 @@
         <!-- T-Shirts Door -->
     <div class="door-area area-1" onclick="enterRoom('tshirts')">
         <picture class="block">
-            <source srcset="images/sign_door_tshirts.webp" type="image/webp">
-            <img src="images/sign_door_tshirts.png" alt="T-Shirts & Apparel" class="door-sign">
+                            <source srcset="images/sign_door_room2.webp" type="image/webp">
+                <img src="images/sign_door_room2.png" alt="T-Shirts & Apparel" class="door-sign">
         </picture>
             <div class="door-label">T-Shirts & Apparel</div>
         </div>
@@ -75,8 +75,8 @@
         <!-- Tumblers Door -->
     <div class="door-area area-2" onclick="enterRoom('tumblers')">
         <picture class="block">
-            <source srcset="images/sign_door_tumblers.webp" type="image/webp">
-            <img src="images/sign_door_tumblers.png" alt="Tumblers & Drinkware" class="door-sign">
+                            <source srcset="images/sign_door_room3.webp" type="image/webp">
+                <img src="images/sign_door_room3.png" alt="Tumblers & Drinkware" class="door-sign">
         </picture>
             <div class="door-label">Tumblers & Drinkware</div>
         </div>
@@ -84,8 +84,8 @@
         <!-- Artwork Door -->
     <div class="door-area area-3" onclick="enterRoom('artwork')">
         <picture class="block">
-            <source srcset="images/sign_door_artwork.webp" type="image/webp">
-            <img src="images/sign_door_artwork.png" alt="Custom Artwork" class="door-sign">
+                            <source srcset="images/sign_door_room4.webp" type="image/webp">
+                <img src="images/sign_door_room4.png" alt="Custom Artwork" class="door-sign">
         </picture>
             <div class="door-label">Custom Artwork</div>
         </div>
@@ -93,8 +93,8 @@
         <!-- Window Wraps Door -->
     <div class="door-area area-4" onclick="enterRoom('windowwraps')">
         <picture class="block">
-            <source srcset="images/sign_door_windowwraps.webp" type="image/webp">
-            <img src="images/sign_door_windowwraps.png" alt="Window Wraps" class="door-sign">
+                            <source srcset="images/sign_door_room6.webp" type="image/webp">
+                <img src="images/sign_door_room6.png" alt="Window Wraps" class="door-sign">
         </picture>
             <div class="door-label">Window Wraps</div>
         </div>
@@ -102,8 +102,8 @@
     <!-- Sublimation Items Door -->
     <div class="door-area area-5" onclick="enterRoom('sublimation')">
         <picture class="block">
-            <source srcset="images/sign_door_sublimation.webp" type="image/webp">
-            <img src="images/sign_door_sublimation.png" alt="Sublimation Items" class="door-sign">
+                            <source srcset="images/sign_door_room5.webp" type="image/webp">
+                <img src="images/sign_door_room5.png" alt="Sublimation Items" class="door-sign">
         </picture>
         <div class="door-label">Sublimation Items</div>
     </div>

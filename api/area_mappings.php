@@ -142,13 +142,7 @@ function handleGet($pdo) {
                 'room5' => 'Sublimation Room',
                 'room6' => 'Window Wraps Room',
                 'room_main' => 'Main Room',
-                'landing' => 'Landing Page',
-                // Legacy room names for backward compatibility
-                'room_tshirts' => 'T-Shirts Room',
-                'room_tumblers' => 'Tumblers Room', 
-                'room_artwork' => 'Artwork Room',
-                'room_sublimation' => 'Sublimation Room',
-                'room_windowwraps' => 'Window Wraps Room'
+                'landing' => 'Landing Page'
             ];
             
             $availableRooms = [];

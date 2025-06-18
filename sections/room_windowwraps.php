@@ -704,15 +704,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalImageHeight = 896;
     const roomOverlayWrapper = document.querySelector('#windowWrapsRoomPage .room-overlay-wrapper');
 
-    // Default/fallback areas (in case database doesn't have active map)
-    const defaultAreas = [
-        { selector: '.area-1', top: 215, left: 238, width: 213, height: 317 },
-        { selector: '.area-2', top: 235, left: 550, width: 148, height: 265 },
-        { selector: '.area-3', top: 567, left: 1109, width: 43, height: 44 },
-        { selector: '.area-4', top: 276, left: 1026, width: 189, height: 198 }
-    ];
-    
-    let baseAreas = defaultAreas; // Will be replaced with database coordinates if available
+    // Room coordinates loaded from database (database-only system)
+    let baseAreas = []; // Will be loaded from database
 
     function updateAreaCoordinates() {
         if (!roomOverlayWrapper) {
@@ -774,12 +767,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 baseAreas = data.coordinates;
                 console.log('Loaded Window Wraps room coordinates from database:', data.map_name);
             } else {
-                console.log('Using default Window Wraps room coordinates (no active map found)');
+                console.error('No active room map found in database for Window Wraps room');
+                return; // Don't initialize if no coordinates available
             }
         } catch (error) {
             console.error('Error loading Window Wraps room coordinates from database:', error);
-            console.log('Using default Window Wraps room coordinates (fallback)');
-            // Continue with default coordinates - no need to show error to users
+            return; // Don't initialize if database error
         }
         
         // Initialize coordinates after loading (or using defaults)

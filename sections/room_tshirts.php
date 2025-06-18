@@ -704,18 +704,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalImageHeight = 896;
     const roomOverlayWrapper = document.querySelector('#tshirtsRoomPage .room-overlay-wrapper');
 
-    // Default/fallback areas (in case database doesn't have active map)
-    const defaultAreas = [
-        { selector: '.area-1', top: 332, left: 104, width: 121, height: 137 },
-        { selector: '.area-2', top: 345, left: 289, width: 92, height: 122 },
-        { selector: '.area-3', top: 347, left: 385, width: 83, height: 122 },
-        { selector: '.area-4', top: 344, left: 474, width: 90, height: 125 },
-        { selector: '.area-5', top: 345, left: 569, width: 83, height: 124 },
-        { selector: '.area-6', top: 466, left: 911, width: 96, height: 133 },
-        { selector: '.area-7', top: 469, left: 1067, width: 107, height: 149 }
-    ];
-    
-    let baseAreas = defaultAreas; // Will be replaced with database coordinates if available
+    // Room coordinates loaded from database (database-only system)
+    let baseAreas = []; // Will be loaded from database
 
     function updateAreaCoordinates() {
         if (!roomOverlayWrapper) {
@@ -777,12 +767,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 baseAreas = data.coordinates;
                 console.log('Loaded T-shirts room coordinates from database:', data.map_name);
             } else {
-                console.log('Using default T-shirts room coordinates (no active map found)');
+                console.error('No active room map found in database for T-shirts room');
+                return; // Don't initialize if no coordinates available
             }
         } catch (error) {
             console.error('Error loading T-shirts room coordinates from database:', error);
-            console.log('Using default T-shirts room coordinates (fallback)');
-            // Continue with default coordinates - no need to show error to users
+            return; // Don't initialize if database error
         }
         
         // Initialize coordinates after loading (or using defaults)

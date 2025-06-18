@@ -429,6 +429,12 @@ button.hover\\:bg-indigo-700:hover,
     border-color: #6b8e23 !important;
 }
 
+/* Admin Tab Bar - Transparent Background */
+.admin-tab-bar {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
 /* Payment Toggle Button Styles */
 .payment-toggle-btn {
     padding: 0.25rem 0.5rem; /* Corresponds to py-1 px-2 */

@@ -18,7 +18,7 @@ try {
         echo json_encode([
             'success' => true,
             'coordinates' => [],
-            'message' => 'Room maps table not initialized - using default coordinates'
+            'message' => 'Room maps table not initialized - database required'
         ]);
         exit;
     }
@@ -53,7 +53,7 @@ try {
     echo json_encode([
         'success' => true,
         'coordinates' => [],
-        'message' => 'Using default room coordinates'
+        'message' => 'No active room map found in database'
     ]);
 }
 ?> 

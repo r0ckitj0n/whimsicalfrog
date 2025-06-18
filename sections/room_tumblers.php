@@ -287,21 +287,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(coordinatesData => {
             console.log('Tumblers room coordinates:', coordinatesData);
             
-            // Use coordinates from API, or fallback to hardcoded if needed
+            // Use coordinates from database (database-only system)
             let roomCoordinates = [];
             if (coordinatesData.success && coordinatesData.coordinates && coordinatesData.coordinates.length > 0) {
                 roomCoordinates = coordinatesData.coordinates;
                 console.log('Using database coordinates for tumblers room');
             } else {
-                // Fallback coordinates for tumblers room
-                roomCoordinates = [
-                    { x: 15, y: 25, width: 12, height: 15 },
-                    { x: 30, y: 25, width: 12, height: 15 },
-                    { x: 45, y: 25, width: 12, height: 15 },
-                    { x: 60, y: 25, width: 12, height: 15 },
-                    { x: 75, y: 25, width: 12, height: 15 }
-                ];
-                console.log('Using fallback coordinates for tumblers room');
+                console.error('No active room map found in database for Tumblers room');
+                return; // Don't initialize if no coordinates available
             }
             
             const shelfArea = document.getElementById('tumblerShelfArea');
@@ -337,44 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error fetching tumblers room coordinates:', error);
-            // Use fallback coordinates if API fails
-            const fallbackCoordinates = [
-                { x: 15, y: 25, width: 12, height: 15 },
-                { x: 30, y: 25, width: 12, height: 15 },
-                { x: 45, y: 25, width: 12, height: 15 },
-                { x: 60, y: 25, width: 12, height: 15 },
-                { x: 75, y: 25, width: 12, height: 15 }
-            ];
-            
-            const shelfArea = document.getElementById('tumblerShelfArea');
-            
-            // Clear existing content
-            shelfArea.innerHTML = '';
-            
-            // Create product icons with fallback coordinates
-            tumblerItems.forEach((item, index) => {
-                if (index < fallbackCoordinates.length) {
-                    const coord = fallbackCoordinates[index];
-                    const productIcon = document.createElement('div');
-                    productIcon.className = 'product-icon';
-                    productIcon.style.left = coord.x + '%';
-                    productIcon.style.top = coord.y + '%';
-                    productIcon.style.width = coord.width + '%';
-                    productIcon.style.height = coord.height + '%';
-                    
-                    // Get the image URL using the helper function
-                    const imageUrl = getImageUrlWithFallback(item.image ?? 'images/items/placeholder.png');
-                    
-                    productIcon.innerHTML = `<img src="${imageUrl}" alt="${item.name ?? 'Item'}" onerror="this.src='images/items/placeholder.png'; this.onerror=null;">`;
-                    
-                    // Add click event for popup
-                    productIcon.addEventListener('click', function(e) {
-                        showProductPopup(item, e.pageX, e.pageY);
-                    });
-                    
-                    shelfArea.appendChild(productIcon);
-                }
-            });
+            // Don't initialize if database error - database-only system
+            return;
         });
     
     function showProductPopup(item, x, y) {

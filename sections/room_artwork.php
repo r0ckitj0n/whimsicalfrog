@@ -699,16 +699,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalImageHeight = 896;
     const roomOverlayWrapper = document.querySelector('#artworkRoomPage .room-overlay-wrapper');
 
-    const baseAreas = [
-        { selector: '.area-1', top: 235, left: 193, width: 115, height: 77 },
-        { selector: '.area-2', top: 235, left: 378, width: 67, height: 114 },
-        { selector: '.area-3', top: 205, left: 499, width: 103, height: 81 },
-        { selector: '.area-4', top: 399, left: 242, width: 68, height: 97 },
-        { selector: '.area-5', top: 426, left: 375, width: 89, height: 61 },
-        { selector: '.area-6', top: 371, left: 511, width: 54, height: 105 },
-        { selector: '.area-7', top: 339, left: 621, width: 58, height: 77 },
-        { selector: '.area-8', top: 346, left: 1051, width: 90, height: 73 }
-    ];
+    // Room coordinates loaded from database (database-only system)
+    let baseAreas = []; // Will be loaded from database
 
     function updateAreaCoordinates() {
         if (!roomOverlayWrapper) {
@@ -752,7 +744,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    updateAreaCoordinates();
+    // Load coordinates from database first, then initialize
+    loadRoomCoordinatesFromDatabase();
+    
+    async function loadRoomCoordinatesFromDatabase() {
+        try {
+            const response = await fetch('api/get_room_coordinates.php?room_type=room_artwork');
+            
+            // Check if the response is ok (not 500 error)
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Database not available`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.coordinates && data.coordinates.length > 0) {
+                baseAreas = data.coordinates;
+                console.log('Loaded Artwork room coordinates from database:', data.map_name);
+            } else {
+                console.error('No active room map found in database for Artwork room');
+                return; // Don't initialize if no coordinates available
+            }
+        } catch (error) {
+            console.error('Error loading Artwork room coordinates from database:', error);
+            return; // Don't initialize if database error
+        }
+        
+        // Initialize coordinates after loading
+        updateAreaCoordinates();
+    }
+
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);

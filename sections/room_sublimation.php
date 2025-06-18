@@ -704,21 +704,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalImageHeight = 896;
     const roomOverlayWrapper = document.querySelector('#sublimationRoomPage .room-overlay-wrapper');
 
-    const baseAreas = [
-        { selector: '.area-1', top: 242, left: 261, width: 108, height: 47 },
-        { selector: '.area-2', top: 241, left: 375, width: 89, height: 48 },
-        { selector: '.area-3', top: 258, left: 486, width: 65, height: 38 },
-        { selector: '.area-4', top: 303, left: 184, width: 102, height: 60 },
-        { selector: '.area-5', top: 306, left: 293, width: 110, height: 57 },
-        { selector: '.area-6', top: 309, left: 409, width: 160, height: 53 },
-        { selector: '.area-7', top: 385, left: 203, width: 137, height: 54 },
-        { selector: '.area-8', top: 388, left: 346, width: 111, height: 42 },
-        { selector: '.area-9', top: 388, left: 461, width: 105, height: 39 },
-        { selector: '.area-10', top: 300, left: 855, width: 124, height: 35 },
-        { selector: '.area-11', top: 289, left: 990, width: 173, height: 42 },
-        { selector: '.area-12', top: 364, left: 842, width: 140, height: 85 },
-        { selector: '.area-13', top: 367, left: 990, width: 170, height: 91 }
-    ];
+    // Room coordinates loaded from database (database-only system)
+    let baseAreas = []; // Will be loaded from database
 
     function updateAreaCoordinates() {
         if (!roomOverlayWrapper) {
@@ -762,7 +749,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    updateAreaCoordinates();
+    // Load coordinates from database first, then initialize
+    loadRoomCoordinatesFromDatabase();
+    
+    async function loadRoomCoordinatesFromDatabase() {
+        try {
+            const response = await fetch('api/get_room_coordinates.php?room_type=room_sublimation');
+            
+            // Check if the response is ok (not 500 error)
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Database not available`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.coordinates && data.coordinates.length > 0) {
+                baseAreas = data.coordinates;
+                console.log('Loaded Sublimation room coordinates from database:', data.map_name);
+            } else {
+                console.error('No active room map found in database for Sublimation room');
+                return; // Don't initialize if no coordinates available
+            }
+        } catch (error) {
+            console.error('Error loading Sublimation room coordinates from database:', error);
+            return; // Don't initialize if database error
+        }
+        
+        // Initialize coordinates after loading
+        updateAreaCoordinates();
+    }
+
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);

@@ -86,6 +86,15 @@
             </button>
         </div>
         <div>
+            <p class="text-sm text-gray-600 mb-3">Configure room names, door labels, and descriptions that appear dynamically throughout the site.</p>
+            <button onclick="openRoomSettingsModal()" class="inline-flex items-center px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium rounded">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+                </svg>
+                Room Settings
+            </button>
+        </div>
+        <div>
             <p class="text-sm text-gray-600 mb-3">Visual mapper to see room-category relationships and manage clickable area assignments.</p>
             <div class="flex gap-2">
                 <button onclick="openRoomCategoryMapperModal()" class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded">
@@ -3863,6 +3872,332 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+</script>
+
+<!-- Room Settings Modal -->
+<div id="roomSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h2 class="text-xl font-bold text-gray-800">🏠 Room Settings</h2>
+            <button onclick="closeRoomSettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-4">
+            <div class="bg-cyan-50 border border-cyan-200 rounded p-3 mb-6">
+                <h3 class="font-semibold text-cyan-800 mb-2">🏠 Room Settings Guide</h3>
+                <div class="text-sm text-cyan-700 space-y-1">
+                    <p><strong>Dynamic Room Names:</strong> Configure room titles and descriptions that appear throughout the site</p>
+                    <p><strong>Door Labels:</strong> Set the text that appears on door signs in the main room</p>
+                    <p><strong>Display Order:</strong> Control the order rooms appear in navigation and dropdowns</p>
+                    <p><strong>Room Numbers:</strong> Rooms 0-6 are core rooms and cannot be deleted (0=Landing, 1=Main, 2-6=Product Rooms)</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Room List -->
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">Current Rooms</h3>
+                    <div id="roomSettingsList" class="space-y-3">
+                        <!-- Room cards will be loaded here -->
+                        <div class="text-center text-gray-500 py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-2"></div>
+                            Loading rooms...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Form -->
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-3">Edit Room Settings</h3>
+                    <div id="roomEditForm" class="bg-gray-50 rounded-lg p-4">
+                        <div class="text-center text-gray-500 py-8">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+                            </svg>
+                            <p>Select a room to edit its settings</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Room Settings Modal Functions
+let currentEditingRoom = null;
+
+function openRoomSettingsModal() {
+    document.getElementById('roomSettingsModal').style.display = 'flex';
+    loadRoomSettings();
+}
+
+function closeRoomSettingsModal() {
+    document.getElementById('roomSettingsModal').style.display = 'none';
+    currentEditingRoom = null;
+}
+
+async function loadRoomSettings() {
+    try {
+        const response = await fetch('/api/room_settings.php?action=get_all');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayRoomSettingsList(data.rooms);
+        } else {
+            showRoomSettingsError('Failed to load room settings: ' + data.message);
+        }
+    } catch (error) {
+        showRoomSettingsError('Error loading room settings: ' + error.message);
+    }
+}
+
+function displayRoomSettingsList(rooms) {
+    const container = document.getElementById('roomSettingsList');
+    
+    if (rooms.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <p>No rooms found</p>
+                <button onclick="initializeRoomSettings()" class="mt-2 bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded">
+                    Initialize Room Settings
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    rooms.forEach(room => {
+        const roomCard = document.createElement('div');
+        roomCard.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors';
+        roomCard.onclick = () => editRoomSettings(room);
+        
+        const roomTypeLabel = getRoomTypeLabel(room.room_number);
+        const isCore = room.room_number >= 0 && room.room_number <= 6;
+        
+        roomCard.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-sm font-medium text-gray-600">Room ${room.room_number}</span>
+                        ${isCore ? '<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Core</span>' : ''}
+                    </div>
+                    <h4 class="font-semibold text-gray-800">${room.room_name}</h4>
+                    <p class="text-sm text-gray-600 mb-2">${room.door_label}</p>
+                    <p class="text-xs text-gray-500">${room.description || 'No description'}</p>
+                </div>
+                <div class="text-right text-xs text-gray-500">
+                    <div>Order: ${room.display_order}</div>
+                    <div class="mt-1">
+                        <span class="text-cyan-600 hover:text-cyan-800">Edit →</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(roomCard);
+    });
+}
+
+function getRoomTypeLabel(roomNumber) {
+    const labels = {
+        0: 'Landing Page',
+        1: 'Main Room',
+        2: 'T-Shirts',
+        3: 'Tumblers', 
+        4: 'Artwork',
+        5: 'Sublimation',
+        6: 'Window Wraps'
+    };
+    return labels[roomNumber] || `Room ${roomNumber}`;
+}
+
+function editRoomSettings(room) {
+    currentEditingRoom = room;
+    const formContainer = document.getElementById('roomEditForm');
+    
+    const isCore = room.room_number >= 0 && room.room_number <= 6;
+    
+    formContainer.innerHTML = `
+        <form onsubmit="saveRoomSettings(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Room Number ${isCore ? '<span class="text-red-500">*</span>' : ''}
+                </label>
+                <input type="number" id="editRoomNumber" value="${room.room_number}" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg ${isCore ? 'bg-gray-100' : ''}"
+                       ${isCore ? 'readonly' : ''}>
+                ${isCore ? '<p class="text-xs text-gray-500 mt-1">Core rooms cannot change numbers</p>' : ''}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Room Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="editRoomName" value="${room.room_name}" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                <p class="text-xs text-gray-500 mt-1">This appears as the main title in the room</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Door Label <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="editDoorLabel" value="${room.door_label}" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                <p class="text-xs text-gray-500 mt-1">This appears on door signs in the main room</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea id="editRoomDescription" rows="3" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg">${room.description || ''}</textarea>
+                <p class="text-xs text-gray-500 mt-1">This appears as subtitle text in the room</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                <input type="number" id="editDisplayOrder" value="${room.display_order}" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg" min="0">
+                <p class="text-xs text-gray-500 mt-1">Lower numbers appear first in navigation</p>
+            </div>
+            
+            <div class="flex gap-3 pt-4 border-t">
+                <button type="submit" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-lg font-medium">
+                    Save Changes
+                </button>
+                <button type="button" onclick="cancelRoomEdit()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-lg">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    `;
+}
+
+async function saveRoomSettings(event) {
+    event.preventDefault();
+    
+    if (!currentEditingRoom) return;
+    
+    const formData = {
+        action: 'update_room',
+        room_number: parseInt(document.getElementById('editRoomNumber').value),
+        room_name: document.getElementById('editRoomName').value.trim(),
+        door_label: document.getElementById('editDoorLabel').value.trim(),
+        description: document.getElementById('editRoomDescription').value.trim(),
+        display_order: parseInt(document.getElementById('editDisplayOrder').value) || 0
+    };
+    
+    if (!formData.room_name || !formData.door_label) {
+        showRoomSettingsError('Room name and door label are required');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/room_settings.php', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showRoomSettingsSuccess('Room settings updated successfully');
+            loadRoomSettings(); // Reload the list
+            cancelRoomEdit(); // Clear the form
+        } else {
+            showRoomSettingsError('Failed to update room: ' + data.message);
+        }
+    } catch (error) {
+        showRoomSettingsError('Error updating room: ' + error.message);
+    }
+}
+
+function cancelRoomEdit() {
+    currentEditingRoom = null;
+    const formContainer = document.getElementById('roomEditForm');
+    formContainer.innerHTML = `
+        <div class="text-center text-gray-500 py-8">
+            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+            </svg>
+            <p>Select a room to edit its settings</p>
+        </div>
+    `;
+}
+
+async function initializeRoomSettings() {
+    try {
+        const response = await fetch('/api/init_room_settings_db.php');
+        const data = await response.json();
+        
+        if (data.success) {
+            showRoomSettingsSuccess('Room settings initialized successfully');
+            loadRoomSettings();
+        } else {
+            showRoomSettingsError('Failed to initialize: ' + data.message);
+        }
+    } catch (error) {
+        showRoomSettingsError('Error initializing: ' + error.message);
+    }
+}
+
+function showRoomSettingsError(message) {
+    // Create or update error notification
+    let notification = document.getElementById('roomSettingsNotification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'roomSettingsNotification';
+        notification.className = 'fixed top-4 right-4 z-50 max-w-sm';
+        document.body.appendChild(notification);
+    }
+    
+    notification.innerHTML = `
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg">
+            <div class="flex justify-between items-start">
+                <span class="text-sm">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-red-500 hover:text-red-700">&times;</button>
+            </div>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function showRoomSettingsSuccess(message) {
+    // Create or update success notification
+    let notification = document.getElementById('roomSettingsNotification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'roomSettingsNotification';
+        notification.className = 'fixed top-4 right-4 z-50 max-w-sm';
+        document.body.appendChild(notification);
+    }
+    
+    notification.innerHTML = `
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg">
+            <div class="flex justify-between items-start">
+                <span class="text-sm">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-green-500 hover:text-green-700">&times;</button>
+            </div>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 3000);
 }
 </script>
 

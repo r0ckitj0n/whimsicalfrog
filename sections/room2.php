@@ -251,8 +251,8 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
             <a href="/?page=main_room" class="back-button text-[#556B2F]" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
             <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1>The T-Shirt Boutique</h1>
-                    <p>Discover our collection of unique t-shirt designs.</p>
+                    <h1 id="roomTitle">The T-Shirt Boutique</h1>
+                    <p id="roomDescription">Discover our collection of unique t-shirt designs.</p>
                 </div>
                 
                 <?php if (empty($tshirtProducts)): ?>
@@ -788,4 +788,31 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Load dynamic background script -->
-<script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script> 
+<script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>
+
+<!-- Load dynamic room settings -->
+<script>
+// Load room settings for dynamic title and description
+async function loadRoomSettings() {
+    try {
+        const response = await fetch('/api/room_settings.php?action=get_room&room_number=2');
+        const data = await response.json();
+        
+        if (data.success && data.room) {
+            const room = data.room;
+            document.getElementById('roomTitle').textContent = room.room_name;
+            document.getElementById('roomDescription').textContent = room.description;
+            console.log('Loaded room settings for room 2:', room.room_name);
+        } else {
+            console.warn('Failed to load room settings, using defaults');
+        }
+    } catch (error) {
+        console.error('Error loading room settings:', error);
+    }
+}
+
+// Load room settings when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadRoomSettings();
+});
+</script> 

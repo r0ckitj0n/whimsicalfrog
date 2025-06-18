@@ -254,7 +254,8 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
             <a href="/?page=main_room" class="back-button">← Back to Main Room</a>
             
             <div class="room-header">
-                <h1>Tumblers Room</h1>
+                <h1 id="roomTitle">Tumblers Room</h1>
+                <p id="roomDescription" style="color: #556B2F; font-weight: bold; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Discover our collection of custom tumblers and drinkware.</p>
             </div>
             
             <div class="shelf-area" id="tumblerShelfArea">
@@ -390,5 +391,29 @@ document.addEventListener('DOMContentLoaded', function() {
             document.removeEventListener('click', hidePopup);
         }
     }
+});
+
+// Load room settings for dynamic title and description
+async function loadRoomSettings() {
+    try {
+        const response = await fetch('/api/room_settings.php?action=get_room&room_number=3');
+        const data = await response.json();
+        
+        if (data.success && data.room) {
+            const room = data.room;
+            document.getElementById('roomTitle').textContent = room.room_name;
+            document.getElementById('roomDescription').textContent = room.description;
+            console.log('Loaded room settings for room 3:', room.room_name);
+        } else {
+            console.warn('Failed to load room settings, using defaults');
+        }
+    } catch (error) {
+        console.error('Error loading room settings:', error);
+    }
+}
+
+// Load room settings when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadRoomSettings();
 });
 </script> 

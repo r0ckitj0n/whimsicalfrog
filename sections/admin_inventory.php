@@ -849,8 +849,8 @@ $messageType = $_GET['type'] ?? '';
                                         <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="suggestedCostDisplay">$0.00</span>
                                     </div>
                                     <div class="mt-2">
-                                        <button type="button" onclick="applyPriceSuggestionToCost()" class="w-full px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors">
-                                            💰 Apply Price to Cost Field
+                                        <button type="button" onclick="applyCostSuggestionToCost()" class="w-full px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors">
+                                            💰 Apply Costs to Cost Field
                                         </button>
                                     </div>
 
@@ -1862,20 +1862,30 @@ function applyPriceSuggestion() {
     }
 }
 
-function applyPriceSuggestionToCost() {
-    const display = document.getElementById('priceSuggestionDisplay');
+function applyCostSuggestionToCost() {
+    const suggestedCostDisplay = document.getElementById('suggestedCostDisplay');
     const costPriceField = document.getElementById('costPrice');
     
-    if (display && costPriceField && display.dataset.suggestedPrice) {
-        costPriceField.value = parseFloat(display.dataset.suggestedPrice).toFixed(2);
+    if (suggestedCostDisplay && costPriceField) {
+        // Get the suggested cost value from the cost breakdown display
+        const suggestedCostText = suggestedCostDisplay.textContent.replace('$', '');
+        const suggestedCostValue = parseFloat(suggestedCostText) || 0;
         
-        // Add visual feedback with blue color for cost
-        costPriceField.style.backgroundColor = '#dbeafe';
-        setTimeout(() => {
-            costPriceField.style.backgroundColor = '';
-        }, 2000);
-        
-        showToast('success', 'Suggested price applied to Cost Price field!');
+        if (suggestedCostValue > 0) {
+            costPriceField.value = suggestedCostValue.toFixed(2);
+            
+            // Add visual feedback with blue color for cost
+            costPriceField.style.backgroundColor = '#dbeafe';
+            setTimeout(() => {
+                costPriceField.style.backgroundColor = '';
+            }, 2000);
+            
+            showToast('success', 'Suggested cost applied to Cost Price field!');
+        } else {
+            showToast('error', 'No suggested cost available. Please generate a cost suggestion first using "🧮 Get Suggested Cost".');
+        }
+    } else {
+        showToast('error', 'Cost suggestion elements not found. Please refresh the page.');
     }
 }
 

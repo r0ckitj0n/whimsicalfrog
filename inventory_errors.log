@@ -18,3 +18,6 @@
 [inventory_update] action=update itemSku=WF-AR-001 imageUrl=images/items/WF-AR-001A.png
 [inventory_update] action=update itemSku=WF-SU-002 imageUrl=images/items/WF-SU-002A.png
 [inventory_update] action=update itemSku=WF-TU-003 imageUrl=images/items/WF-TU-002A.png
+[inventory_update] action=update itemSku=WF-AR-001 imageUrl=images/items/WF-AR-001A.png
+[inventory_update] action=update itemSku=WF-AR-001 imageUrl=images/items/WF-AR-001A.png
+[inventory_update] action=update itemSku=WF-AR-001 imageUrl=images/items/WF-AR-001A.png

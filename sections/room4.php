@@ -8,6 +8,39 @@ if (isset($categories['Artwork'])) {
 // Include image helpers for room pages
 require_once __DIR__ . '/../includes/item_image_helpers.php';
 ?>
+
+<!-- Include room headers CSS -->
+<link href="css/room-headers.css?v=<?php echo time(); ?>" rel="stylesheet">
+
+<!-- Load Global CSS Variables -->
+<script>
+// Load and inject global CSS variables
+async function loadGlobalCSS() {
+    try {
+        const response = await fetch('/api/global_css_rules.php?action=generate_css');
+        const data = await response.json();
+        
+        if (data.success && data.css_content) {
+            // Create or update global CSS style element
+            let globalStyle = document.getElementById('globalCSSVariables');
+            if (!globalStyle) {
+                globalStyle = document.createElement('style');
+                globalStyle.id = 'globalCSSVariables';
+                document.head.appendChild(globalStyle);
+            }
+            globalStyle.textContent = data.css_content;
+            console.log('Global CSS variables loaded successfully');
+        }
+    } catch (error) {
+        console.warn('Failed to load global CSS variables:', error);
+    }
+}
+
+// Load global CSS when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadGlobalCSS();
+});
+</script>
 <style>
     .room-container {
         /* Removed background-image, it will be on room-overlay-wrapper */
@@ -24,6 +57,31 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
         /* justify-content: center; */
         /* align-items: center; */
     }
+    
+    /* Modal-specific styles */
+    <?php if (isset($_GET['modal'])): ?>
+    body {
+        background: none !important;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .room-container {
+        margin: 0;
+        border-radius: 0;
+        height: 100vh;
+    }
+    
+    .room-overlay-wrapper {
+        border-radius: 0;
+        height: 100%;
+        padding-top: 0;
+    }
+    
+    .room-overlay-content {
+        padding-top: 60px; /* Account for modal header */
+    }
+    <?php endif; ?>
     
     .room-overlay-wrapper { /* New wrapper for aspect ratio and background */
         width: 100%;
@@ -71,6 +129,8 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
         background-color: #fff; /* White background, fully opaque */
         border-radius: 8px; /* Rounded corners */
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+        z-index: 10; /* Ensure icons are above background but below popup */
+        pointer-events: auto; /* Ensure hover events work */
     }
     
     .product-icon:hover {
@@ -84,6 +144,34 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
+    }
+    
+    /* Out of stock badge styling */
+    .out-of-stock-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #dc2626;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 10px;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        z-index: 10;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .product-icon.out-of-stock {
+        opacity: 0.7;
+        filter: grayscale(30%);
+    }
+    
+    .product-icon.out-of-stock:hover {
+        opacity: 0.9;
+        filter: grayscale(10%);
     }
     
     /* Removed Artwork Room Specific Areas CSS positioning to avoid conflict with JavaScript positioning */
@@ -243,15 +331,16 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
 <section id="artworkRoomPage" class="p-2">
     <div class="room-container mx-auto max-w-full" data-room-name="Artwork">
         <div class="room-overlay-wrapper">
+<?php if (!isset($_GET['modal'])): ?>
             <a href="/?page=main_room" class="back-button text-[#556B2F]" onclick="console.log('Back button clicked!'); return true;">← Back to Main Room</a>
+            <?php endif; ?>
             <div class="room-overlay-content">
                 <div class="room-header">
-                    <h1 id="roomTitle">Artwork Gallery</h1>
-                <p id="roomDescription" class="text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Discover our collection of personalized artwork and designs.</p>
-                    <p>Discover our unique artistic creations.</p>
+                    <h1 id="roomTitle" class="room-title">Artwork Gallery</h1>
+                    <p id="roomDescription" class="room-description">Discover our collection of personalized artwork and designs.</p>
                 </div>
                 
-                <?php if (empty($artworkProducts)): ?>
+                <?php if (empty($artworkItems)): ?>
                     <div class="text-center py-8">
                         <div class="bg-white bg-opacity-90 rounded-lg p-6 inline-block">
                             <p class="text-xl text-gray-600">No artwork items available at the moment.</p>
@@ -260,10 +349,15 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                     </div>
                 <?php else: ?>
                     <div class="shelf-area">
-                        <?php foreach ($artworkProducts as $index => $product): ?>
-                            <?php $area_class = 'area-' . ($index + 1); ?>
-                            <div class="product-icon <?php echo $area_class; ?>" 
+                        <?php foreach ($artworkItems as $index => $product): ?>
+                            <?php 
+                            $area_class = 'area-' . ($index + 1);
+                            $stock = (int)($product['stock'] ?? $product['stockLevel'] ?? 0);
+                            $out_of_stock_class = ($stock <= 0) ? ' out-of-stock' : '';
+                            ?>
+                            <div class="product-icon <?php echo $area_class . $out_of_stock_class; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($product['id'] ?? ''); ?>"
+                                 data-stock="<?php echo $stock; ?>"
                                  onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($product)); ?>)"
                                  onmouseleave="hidePopup()">
                                 <?php 
@@ -273,6 +367,11 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                                     echo '<img src="' . htmlspecialchars($primaryImage['image_path'] ?? '') . '" alt="' . htmlspecialchars($product['name'] ?? '') . '">';
                                 } else {
                                     echo getImageTag($product['image'] ?? 'images/items/placeholder.png', $product['name']);
+                                }
+                                
+                                // Add out of stock badge if stock is 0
+                                if ($stock <= 0) {
+                                    echo '<div class="out-of-stock-badge">Out of Stock</div>';
                                 }
                                 ?>
                             </div>
@@ -345,6 +444,13 @@ let popupOpen = false;
 
 function showPopup(element, product) {
     console.log('showPopup called with:', element, product);
+    
+    // Prevent rapid re-triggering of same popup (anti-flashing protection)
+    if (currentProduct && currentProduct.id === product.id) {
+        clearTimeout(popupTimeout);
+        return;
+    }
+    
     clearTimeout(popupTimeout);
     currentProduct = product;
     popupOpen = true;
@@ -392,12 +498,18 @@ function showPopup(element, product) {
 }
 
 function hidePopup() {
+    // Clear any existing timeout
+    clearTimeout(popupTimeout);
+    
+    // Add a small delay before hiding to allow moving mouse to popup
     popupTimeout = setTimeout(() => {
         const popup = document.getElementById('productPopup');
-        popup.classList.remove('show');
-        currentProduct = null;
-        popupOpen = false;
-    }, 100);
+        if (popup && popup.classList.contains('show')) {
+            popup.classList.remove('show');
+            currentProduct = null;
+            popupOpen = false;
+        }
+    }, 200); // Increased delay for stability
 }
 
 // Make functions globally available

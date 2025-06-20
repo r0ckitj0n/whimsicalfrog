@@ -8,7 +8,21 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Security Check: Ensure user is logged in and is an Admin
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
+$isLoggedIn = isset($_SESSION['user']);
+$isAdmin = false;
+
+if ($isLoggedIn) {
+    $userData = $_SESSION['user'];
+    // Handle both string and array formats
+    if (is_string($userData)) {
+        $userData = json_decode($userData, true);
+    }
+    if (is_array($userData)) {
+        $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
+    }
+}
+
+if (!$isLoggedIn || !$isAdmin) {
     http_response_code(403); // Forbidden
     echo json_encode(['success' => false, 'message' => 'Unauthorized access. Admin privileges required.']);
     exit;
@@ -44,31 +58,36 @@ try {
         exit;
     }
 
-    // 2. Delete the order
-    // If you have related tables (e.g., order_items) that should be deleted when an order is deleted,
-    // you would add those DELETE statements here, ideally within a transaction.
-    // For example:
-    // $pdo->beginTransaction();
-    // $stmtDeleteItems = $pdo->prepare("DELETE FROM order_items WHERE order_id = ?");
-    // $stmtDeleteItems->execute([$orderId]);
+    // 2. Delete the order and related items within a transaction
+    $pdo->beginTransaction();
     
-    $stmtDeleteOrder = $pdo->prepare("DELETE FROM orders WHERE id = ?");
-    
-    if ($stmtDeleteOrder->execute([$orderId])) {
-        if ($stmtDeleteOrder->rowCount() > 0) {
-            // If using a transaction: $pdo->commit();
-            echo json_encode(['success' => true, 'message' => 'Order deleted successfully.']);
+    try {
+        // First delete order items (foreign key constraint)
+        $stmtDeleteItems = $pdo->prepare("DELETE FROM order_items WHERE orderId = ?");
+        $stmtDeleteItems->execute([$orderId]);
+        $deletedItems = $stmtDeleteItems->rowCount();
+        
+        // Then delete the order
+        $stmtDeleteOrder = $pdo->prepare("DELETE FROM orders WHERE id = ?");
+        $stmtDeleteOrder->execute([$orderId]);
+        $deletedOrders = $stmtDeleteOrder->rowCount();
+        
+        if ($deletedOrders > 0) {
+            $pdo->commit();
+            echo json_encode([
+                'success' => true, 
+                'message' => "Order deleted successfully. Removed {$deletedItems} order items and 1 order."
+            ]);
         } else {
-            // If using a transaction: $pdo->rollBack();
-            // This case means the order existed (from check above) but wasn't deleted (e.g., deleted by another process between check and delete).
+            $pdo->rollBack();
             http_response_code(409); // Conflict
-            echo json_encode(['success' => false, 'message' => 'Order found but could not be deleted. It might have been deleted by another process or an issue occurred.']);
+            echo json_encode(['success' => false, 'message' => 'Order found but could not be deleted. It might have been deleted by another process.']);
         }
-    } else {
-        // If using a transaction: $pdo->rollBack();
-        error_log("Failed to delete order $orderId: " . implode(", ", $stmtDeleteOrder->errorInfo()));
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        error_log("Failed to delete order $orderId in transaction: " . $e->getMessage());
         http_response_code(500); // Internal Server Error
-        echo json_encode(['success' => false, 'message' => 'Failed to delete order due to a database error.']);
+        echo json_encode(['success' => false, 'message' => 'Failed to delete order due to a database error: ' . $e->getMessage()]);
     }
 
 } catch (PDOException $e) {

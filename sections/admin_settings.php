@@ -10,128 +10,159 @@
     font-weight: bold;
   }
 </style>
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <div class="space-y-3">
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Configure email settings for order confirmations and notifications.</p>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="openEmailConfigModal()" class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                    Email Configuration
-                </button>
-                <button onclick="openEmailHistoryModal()" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Email History
-                </button>
-                <button onclick="fixSampleEmail()" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded" id="fixSampleEmailBtn">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Fix Sample Email
-                </button>
-            </div>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Manage product categories used across inventory and shop.</p>
-            <a href="/?page=admin&section=categories" class="brand-button inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded mr-3" style="color: white !important;">Manage Categories</a>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">View information about ID numbering system and current system configuration.</p>
-            <button onclick="openSystemConfigModal()" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded">
+<!-- Admin Settings Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+    
+    <!-- Content Management -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            Content Management
+        </h3>
+        <div class="space-y-2">
+            <a href="/?page=admin&section=categories" class="w-full brand-button text-white px-3 py-2 rounded text-sm font-medium flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                 </svg>
-                System Reference
-            </button>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Browse and manage website files and folders with full create, edit, and delete capabilities.</p>
-            <button onclick="openFileExplorerModal()" class="inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
-                </svg>
-                File Explorer
-            </button>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Map clickable areas on room images for product placement and navigation.</p>
-            <button onclick="openRoomMapperModal()" class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                </svg>
-                Room Mapper
-            </button>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Manage background images for all rooms. Original backgrounds are protected and cannot be deleted.</p>
-            <button onclick="openBackgroundManagerModal()" class="inline-flex items-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Background Manager
-            </button>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Assign product categories to numbered rooms for better organization and automatic product filtering.</p>
-            <button onclick="openRoomCategoryManagerModal()" class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-                Room-Category Assignments
-            </button>
-        </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Configure room names, door labels, and descriptions that appear dynamically throughout the site.</p>
-            <button onclick="openRoomSettingsModal()" class="inline-flex items-center px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium rounded">
+                Categories
+            </a>
+            <button onclick="openRoomSettingsModal()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
                 </svg>
                 Room Settings
             </button>
+            <button onclick="openRoomCategoryManagerModal()" class="w-full btn-primary text-sm flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Room-Category Links
+            </button>
         </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Visual mapper to see room-category relationships and manage clickable area assignments.</p>
-            <div class="flex gap-2">
-                <button onclick="openRoomCategoryMapperModal()" class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                    </svg>
-                    Room-Category Mapper
+    </div>
+
+    <!-- Room & Visual Tools -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+            </svg>
+            Room & Visual Tools
+        </h3>
+        <div class="space-y-2">
+            <button onclick="openRoomMapperModal()" class="w-full btn-primary text-sm flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                </svg>
+                Room Mapper
+            </button>
+            <button onclick="openBackgroundManagerModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Background Manager
+            </button>
+            <div class="flex gap-1">
+                <button onclick="openRoomCategoryMapperModal()" class="flex-1 bg-teal-500 hover:bg-teal-600 text-white px-2 py-2 rounded text-xs font-medium">
+                    Room Mapper
                 </button>
-                <button onclick="openAreaItemMapperModal()" class="inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                    </svg>
-                    Area-Item Mapper
+                <button onclick="openAreaItemMapperModal()" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-2 rounded text-xs font-medium">
+                    Area Mapper
                 </button>
             </div>
         </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">Configure business settings, payment methods, shipping options, brand colors, and other dynamic data.</p>
-            <div class="flex gap-2">
-                <button onclick="openBusinessSettingsModal()" class="inline-flex items-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium rounded">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Business Settings
-                </button>
-                <button onclick="openGlobalCSSModal()" class="inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
-                    </svg>
-                    Global CSS Rules
-                </button>
-            </div>
+    </div>
+
+    <!-- Business & Design -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            </svg>
+            Business & Design
+        </h3>
+        <div class="space-y-2">
+            <button onclick="openBusinessSettingsModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                </svg>
+                Business Settings
+            </button>
+            <button onclick="openGlobalCSSModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
+                </svg>
+                Global CSS Rules
+            </button>
+            <button onclick="openTemplateManagerModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Template Manager
+            </button>
+            <button onclick="openAnalyticsModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Analytics & Insights
+            </button>
         </div>
-        <div>
-            <p class="text-sm text-gray-600 mb-3">View and manage database tables, monitor table sizes, and access comprehensive database information.</p>
-            <button onclick="openDatabaseMaintenanceModal()" class="inline-flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded">
+    </div>
+
+    <!-- Email & Communications -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+            Email & Communications
+        </h3>
+        <div class="space-y-2">
+            <button onclick="openEmailConfigModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                </svg>
+                Email Configuration
+            </button>
+            <button onclick="openEmailHistoryModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Email History
+            </button>
+            <button onclick="fixSampleEmail()" class="w-full btn-primary text-sm flex items-center" id="fixSampleEmailBtn">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                </svg>
+                Fix Sample Email
+            </button>
+        </div>
+    </div>
+
+    <!-- System & Technical -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+            System & Technical
+        </h3>
+        <div class="space-y-2">
+            <button onclick="openSystemConfigModal()" class="w-full btn-primary text-sm flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+                System Reference
+            </button>
+            <button onclick="openFileExplorerModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+                </svg>
+                File Explorer
+            </button>
+            <button onclick="openDatabaseMaintenanceModal()" class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                 </svg>
@@ -139,29 +170,28 @@
             </button>
         </div>
     </div>
-</div>
 
-<div class="bg-white shadow rounded-lg p-6 mb-6">
-    <h2 class="text-xl font-bold text-gray-800 mb-2">Payment Integration Settings</h2>
-    <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Square Payment Integration</label>
-        <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded">
-            <strong>Coming Soon:</strong> You will be able to connect your Square account here to accept credit card payments online.<br>
-            When available, paste your Square Application ID and Access Token below.<br>
-            <em>(This section is a placeholder. No credentials are stored yet.)</em>
+    <!-- Payment Integration -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            Payment Integration
+        </h3>
+        <div class="space-y-2">
+            <div class="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded text-sm">
+                <strong>Coming Soon:</strong> Square payment integration for online credit card processing.
+            </div>
+            <button type="button" class="w-full bg-gray-400 text-white px-3 py-2 rounded text-sm font-medium cursor-not-allowed" disabled>
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                Configure Square (Coming Soon)
+            </button>
         </div>
     </div>
-    <form>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Square Application ID</label>
-            <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Paste Square Application ID here" disabled>
-        </div>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Square Access Token</label>
-            <input type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Paste Square Access Token here" disabled>
-        </div>
-        <button type="button" class="brand-button px-4 py-2 rounded cursor-not-allowed" disabled>Save (Coming Soon)</button>
-    </form>
+
 </div>
 
 
@@ -5991,85 +6021,219 @@ async function loadGlobalCSSRules() {
 function renderGlobalCSSRules(groupedRules) {
     const contentDiv = document.getElementById('globalCSSContent');
     
-    let html = '<div class="space-y-6">';
-    
-    // Category tabs
-    const categories = Object.keys(groupedRules);
-    html += '<div class="border-b border-gray-200 mb-6">';
-    html += '<nav class="-mb-px flex space-x-8">';
-    
-    categories.forEach((category, index) => {
-        const isActive = index === 0;
-        html += `
-            <button onclick="showCSSCategory('${category}')" 
-                    class="css-category-tab ${isActive ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} 
-                           whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm capitalize"
-                    data-category="${category}">
-                ${category.replace('_', ' ')}
-            </button>
-        `;
-    });
-    
-    html += '</nav></div>';
-    
-    // Category content
-    categories.forEach((category, index) => {
-        const rules = groupedRules[category];
-        const isActive = index === 0;
+    // Create user-friendly sections
+    const sections = {
+        'brand': {
+            title: '🎨 Brand Colors',
+            description: 'Your main brand colors used throughout the website',
+            gradient: 'from-blue-50 to-indigo-50 border-blue-200',
+            titleColor: 'text-blue-800'
+        },
+        'buttons': {
+            title: '🔘 Button Styles', 
+            description: 'How all buttons look and feel',
+            gradient: 'from-green-50 to-emerald-50 border-green-200',
+            titleColor: 'text-green-800'
+        },
+        'typography': {
+            title: '📝 Text & Fonts',
+            description: 'Font styles and text appearance',
+            gradient: 'from-purple-50 to-pink-50 border-purple-200',
+            titleColor: 'text-purple-800'
+        },
+        'layout': {
+            title: '📐 Layout & Spacing',
+            description: 'Page layout, spacing, and structure',
+            gradient: 'from-orange-50 to-yellow-50 border-orange-200',
+            titleColor: 'text-orange-800'
+        },
+        'forms': {
+            title: '📝 Form Elements',
+            description: 'Input fields, dropdowns, and form styling',
+            gradient: 'from-teal-50 to-cyan-50 border-teal-200',
+            titleColor: 'text-teal-800'
+        },
+        'navigation': {
+            title: '🧭 Navigation',
+            description: 'Menu and navigation styling',
+            gradient: 'from-gray-50 to-slate-50 border-gray-200',
+            titleColor: 'text-gray-800'
+        },
+        'modals': {
+            title: '🪟 Popups & Modals',
+            description: 'Popup windows and overlay styling',
+            gradient: 'from-rose-50 to-pink-50 border-rose-200',
+            titleColor: 'text-rose-800'
+        },
+        'admin': {
+            title: '⚙️ Admin Interface',
+            description: 'Admin panel and backend styling',
+            gradient: 'from-violet-50 to-purple-50 border-violet-200',
+            titleColor: 'text-violet-800'
+        }
+    };
+
+    let html = `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    `;
+
+    // Render each section
+    Object.keys(sections).forEach(sectionKey => {
+        const section = sections[sectionKey];
+        const rules = groupedRules[sectionKey] || [];
+        
+        if (rules.length === 0) return; // Skip empty sections
         
         html += `
-            <div id="css-category-${category}" class="css-category-content ${isActive ? '' : 'hidden'}">
-                <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                    <h4 class="font-semibold text-gray-800 mb-2 capitalize">${category.replace('_', ' ')} Settings</h4>
-                    <p class="text-sm text-gray-600">Adjust ${category.replace('_', ' ')} styles for your website. Changes are applied immediately.</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gradient-to-br ${section.gradient} rounded-lg p-6 border">
+                <h4 class="text-lg font-semibold ${section.titleColor} mb-2">
+                    ${section.title}
+                </h4>
+                <p class="text-sm text-gray-600 mb-4">${section.description}</p>
+                <div class="space-y-3">
         `;
         
         rules.forEach(rule => {
+            const friendlyName = getFriendlyName(rule.rule_name);
+            const isColor = rule.css_property.includes('color');
+            
             html += `
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        ${rule.rule_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                <div class="bg-white rounded-lg p-3 border border-white/50">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        ${friendlyName}
                     </label>
-                    <div class="text-xs text-gray-500 mb-2">${rule.description}</div>
-                    <div class="flex items-center space-x-2">
-                        <input type="text" 
-                               class="css-rule-input flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    ${isColor ? 
+                        `<div class="flex items-center space-x-3">
+                            <input type="color" 
+                                   class="w-12 h-8 border border-gray-300 rounded cursor-pointer" 
+                                   value="${rule.css_value.startsWith('#') ? rule.css_value : '#87ac3a'}"
+                                   onchange="updateColorValue(this, ${rule.id})">
+                            <input type="text" 
+                                   class="css-rule-input flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                                   data-rule-id="${rule.id}"
+                                   data-property="${rule.css_property}"
+                                   value="${rule.css_value}"
+                                   placeholder="#87ac3a">
+                            <div class="w-8 h-8 rounded border border-gray-300" style="background-color: ${rule.css_value}"></div>
+                        </div>` :
+                        `<input type="text" 
+                               class="css-rule-input w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                                data-rule-id="${rule.id}"
                                data-property="${rule.css_property}"
                                value="${rule.css_value}"
-                               placeholder="${rule.css_property}">
-                        ${rule.css_property === 'color' || rule.css_property === 'background-color' || rule.css_property === 'border-color' ? 
-                          `<input type="color" class="w-10 h-8 border border-gray-300 rounded cursor-pointer" 
-                                  value="${rule.css_value.startsWith('#') ? rule.css_value : '#87ac3a'}"
-                                  onchange="updateColorValue(this, ${rule.id})">` : ''}
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">Property: ${rule.css_property}</div>
+                               placeholder="${getPlaceholder(rule.css_property)}">`
+                    }
+                    <div class="text-xs text-gray-500 mt-1">${getHelpText(rule.rule_name)}</div>
                 </div>
             `;
         });
         
-        html += '</div></div>';
+        html += `
+                </div>
+            </div>
+        `;
     });
     
-    html += '</div>';
-    
-    // Save button
     html += `
-        <div class="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
-            <button onclick="closeGlobalCSSModal()" 
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                Cancel
-            </button>
-            <button onclick="saveGlobalCSSRules()" 
-                    class="px-4 py-2 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-md">
-                Save Changes
-            </button>
+        </div>
+        
+        <!-- Live Preview Section -->
+        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                👀 Live Preview
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-3">
+                    <p class="text-sm font-medium text-gray-600">Buttons:</p>
+                    <button class="css-preview-button px-4 py-2 rounded font-medium" style="background-color: var(--button-bg-primary, #87ac3a); color: var(--button-text-primary, #ffffff);">Primary Button</button>
+                    <button class="css-preview-button-secondary px-4 py-2 rounded font-medium border" style="border-color: var(--button-bg-primary, #87ac3a); color: var(--button-bg-primary, #87ac3a);">Secondary Button</button>
+                </div>
+                <div class="space-y-3">
+                    <p class="text-sm font-medium text-gray-600">Text:</p>
+                    <h3 class="css-preview-heading" style="color: var(--primary-color, #87ac3a); font-family: var(--font-family-primary, 'Merienda', cursive);">Sample Heading</h3>
+                    <p class="css-preview-text" style="font-family: var(--font-family-primary, 'Merienda', cursive);">Sample paragraph text with your chosen font and colors.</p>
+                </div>
+                <div class="space-y-3">
+                    <p class="text-sm font-medium text-gray-600">Form Elements:</p>
+                    <input type="text" class="css-preview-input w-full px-3 py-2 border rounded" placeholder="Sample input field" style="border-color: var(--input-border-color, #d1d5db);">
+                    <div class="css-preview-card p-3 rounded border" style="background-color: var(--modal-bg-color, #ffffff); border-radius: var(--border-radius-default, 8px);">
+                        <p class="text-sm">Sample card content</p>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
     
     contentDiv.innerHTML = html;
+}
+
+function getFriendlyName(ruleName) {
+    const friendlyNames = {
+        'primary_color': 'Main Brand Color',
+        'primary_color_hover': 'Brand Color (Hover)',
+        'secondary_color': 'Secondary Color',
+        'accent_color': 'Accent Color',
+        'button_bg_primary': 'Button Background',
+        'button_bg_primary_hover': 'Button Background (Hover)',
+        'button_text_primary': 'Button Text Color',
+        'button_padding': 'Button Padding',
+        'button_border_radius': 'Button Roundness',
+        'font_family_primary': 'Main Font',
+        'font_size_base': 'Base Text Size',
+        'font_size_heading': 'Heading Size',
+        'line_height_base': 'Line Spacing',
+        'input_border_color': 'Input Border Color',
+        'input_focus_color': 'Input Focus Color',
+        'input_padding': 'Input Padding',
+        'input_border_radius': 'Input Roundness',
+        'nav_bg_color': 'Navigation Background',
+        'nav_text_color': 'Navigation Text',
+        'nav_link_hover': 'Navigation Hover Color',
+        'modal_bg_color': 'Modal Background',
+        'modal_border_radius': 'Modal Roundness',
+        'modal_shadow': 'Modal Shadow',
+        'admin_bg_color': 'Admin Background',
+        'admin_text_color': 'Admin Text Color',
+        'spacing_small': 'Small Spacing',
+        'spacing_medium': 'Medium Spacing', 
+        'spacing_large': 'Large Spacing',
+        'border_radius_default': 'Default Roundness',
+        'shadow_default': 'Default Shadow'
+    };
+    
+    return friendlyNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getPlaceholder(property) {
+    const placeholders = {
+        'font-family': "'Merienda', cursive",
+        'font-size': '16px',
+        'padding': '10px 20px',
+        'margin': '16px',
+        'border-radius': '8px',
+        'box-shadow': '0 4px 6px rgba(0, 0, 0, 0.1)',
+        'line-height': '1.6',
+        'max-width': '1200px'
+    };
+    
+    return placeholders[property] || property;
+}
+
+function getHelpText(ruleName) {
+    const helpTexts = {
+        'primary_color': 'Main color used for buttons, links, and accents',
+        'button_bg_primary': 'Background color for all primary buttons',
+        'font_family_primary': 'Main font used throughout the website',
+        'font_size_base': 'Standard text size (e.g., 16px)',
+        'button_padding': 'Space inside buttons (e.g., 10px 20px)',
+        'border_radius_default': 'How rounded corners are (e.g., 8px)',
+        'input_border_color': 'Border color for form inputs',
+        'nav_bg_color': 'Background color of navigation menu',
+        'modal_bg_color': 'Background color of popup windows',
+        'spacing_medium': 'Standard spacing between elements'
+    };
+    
+    return helpTexts[ruleName] || 'Customize this style property';
 }
 
 function showCSSCategory(category) {
@@ -6178,6 +6342,38 @@ function showAlert(message, type = 'info') {
     }, 3000);
 }
 
+async function resetToDefaults() {
+    if (!confirm('Are you sure you want to reset all styles to their default values? This cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/global_css_rules.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'reset_defaults',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('Styles reset to defaults successfully!', 'success');
+            loadGlobalCSSRules(); // Reload the interface
+            await generateAndApplyCSS(); // Apply the reset styles
+        } else {
+            throw new Error(result.error || 'Failed to reset styles');
+        }
+    } catch (error) {
+        console.error('Error resetting styles:', error);
+        showAlert('Failed to reset styles: ' + error.message, 'error');
+    }
+}
+
 // Load and apply CSS on page load
 document.addEventListener('DOMContentLoaded', function() {
     generateAndApplyCSS();
@@ -6187,20 +6383,20 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Global CSS Rules Modal -->
 <div id="globalCSSModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
             <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-500 to-purple-600">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
                             <span class="text-white text-lg">🎨</span>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-white">Global CSS Rules</h3>
-                            <p class="text-indigo-100 text-sm">Customize your website's appearance</p>
+                            <h3 class="text-lg font-semibold text-white">Website Style Settings</h3>
+                            <p class="text-green-100 text-sm">Customize colors, fonts, and appearance across your entire website</p>
                         </div>
                     </div>
-                    <button onclick="closeGlobalCSSModal()" class="text-white hover:text-indigo-200 transition-colors">
+                    <button onclick="closeGlobalCSSModal()" class="text-white hover:text-green-200 transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -6209,18 +6405,758 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             
             <!-- Body -->
-            <div class="overflow-y-auto max-h-[calc(90vh-140px)]">
+            <div class="overflow-y-auto max-h-[calc(90vh-200px)]">
                 <!-- Loading State -->
                 <div id="globalCSSLoading" class="text-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto mb-3"></div>
-                    <p class="text-gray-600">Loading CSS rules...</p>
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-3"></div>
+                    <p class="text-gray-600">Loading style settings...</p>
                 </div>
                 
                 <!-- Content -->
                 <div id="globalCSSContent" class="p-6" style="display: none;">
-                    <!-- Content will be loaded dynamically -->
+                    <!-- User-friendly sections will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    💡 Changes apply to your entire website instantly
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="resetToDefaults()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        Reset to Defaults
+                    </button>
+                    <button onclick="closeGlobalCSSModal()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button onclick="saveGlobalCSSRules()" 
+                            class="btn-primary text-sm">
+                        💾 Save Changes
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Template Manager Modal -->
+<div id="templateManagerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                            <span class="text-white text-lg">📋</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Template Manager</h3>
+                            <p class="text-purple-100 text-sm">Manage cost breakdown templates and pricing suggestions</p>
+                        </div>
+                    </div>
+                    <button onclick="closeTemplateManagerModal()" class="text-white hover:text-purple-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Body -->
+            <div class="overflow-y-auto max-h-[calc(90vh-200px)]">
+                <!-- Tab Navigation -->
+                <div class="border-b border-gray-200">
+                    <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                        <button onclick="switchTemplateTab('cost-templates')" 
+                                class="template-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-purple-500 text-purple-600" 
+                                data-tab="cost-templates">
+                            🧮 Cost Breakdown Templates
+                        </button>
+                        <button onclick="switchTemplateTab('suggestion-history')" 
+                                class="template-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" 
+                                data-tab="suggestion-history">
+                            📊 Suggestion History
+                        </button>
+                    </nav>
+                </div>
+                
+                <!-- Cost Breakdown Templates Tab -->
+                <div id="cost-templates-tab" class="template-tab-content p-6">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Cost Breakdown Templates</h4>
+                            <button onclick="createNewCostTemplate()" class="btn-primary text-sm">
+                                + Create New Template
+                            </button>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="costTemplatesLoading" class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-3"></div>
+                            <p class="text-gray-600">Loading templates...</p>
+                        </div>
+                        
+                        <!-- Templates List -->
+                        <div id="costTemplatesList" class="space-y-4" style="display: none;">
+                            <!-- Templates will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Suggestion History Tab -->
+                <div id="suggestion-history-tab" class="template-tab-content p-6 hidden">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Price & Cost Suggestion History</h4>
+                            <div class="flex space-x-2">
+                                <select id="suggestionTypeFilter" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                    <option value="all">All Suggestions</option>
+                                    <option value="price">Price Suggestions</option>
+                                    <option value="cost">Cost Suggestions</option>
+                                </select>
+                                <button onclick="refreshSuggestionHistory()" class="btn-secondary text-sm">
+                                    🔄 Refresh
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="suggestionHistoryLoading" class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-3"></div>
+                            <p class="text-gray-600">Loading suggestion history...</p>
+                        </div>
+                        
+                        <!-- Suggestions List -->
+                        <div id="suggestionHistoryList" class="space-y-4" style="display: none;">
+                            <!-- Suggestions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    💡 Templates help speed up cost calculations and maintain consistency
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="closeTemplateManagerModal()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Template Manager Functions
+function openTemplateManagerModal() {
+    document.getElementById('templateManagerModal').classList.remove('hidden');
+    loadCostTemplates();
+    loadSuggestionHistory();
+}
+
+function closeTemplateManagerModal() {
+    document.getElementById('templateManagerModal').classList.add('hidden');
+}
+
+function switchTemplateTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.template-tab').forEach(tab => {
+        tab.classList.remove('border-purple-500', 'text-purple-600');
+        tab.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-transparent', 'text-gray-500');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('border-purple-500', 'text-purple-600');
+    
+    // Show/hide content
+    document.querySelectorAll('.template-tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+}
+
+async function loadCostTemplates() {
+    const loading = document.getElementById('costTemplatesLoading');
+    const list = document.getElementById('costTemplatesList');
+    
+    loading.style.display = 'block';
+    list.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/cost_breakdown_templates.php?action=list', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            renderCostTemplates(data.templates);
+        } else {
+            throw new Error(data.error || 'Failed to load templates');
+        }
+    } catch (error) {
+        console.error('Error loading cost templates:', error);
+        list.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load templates</div>';
+    } finally {
+        loading.style.display = 'none';
+        list.style.display = 'block';
+    }
+}
+
+function renderCostTemplates(templates) {
+    const list = document.getElementById('costTemplatesList');
+    
+    if (templates.length === 0) {
+        list.innerHTML = '<div class="text-gray-500 text-center py-8">No templates found. Create your first template!</div>';
+        return;
+    }
+    
+    list.innerHTML = templates.map(template => `
+        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <h5 class="font-semibold text-gray-800">${template.template_name}</h5>
+                    <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
+                    <div class="flex items-center mt-2 space-x-4 text-xs text-gray-500">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${template.category}</span>
+                        <span>Created: ${new Date(template.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="editCostTemplate(${template.id})" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                    <button onclick="deleteCostTemplate(${template.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                    <span class="font-medium text-gray-700">Materials:</span>
+                    <span class="text-gray-600">$${calculateTemplateCategoryTotal(template.materials)}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Labor:</span>
+                    <span class="text-gray-600">$${calculateTemplateCategoryTotal(template.labor)}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Energy:</span>
+                    <span class="text-gray-600">$${calculateTemplateCategoryTotal(template.energy)}</span>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Equipment:</span>
+                    <span class="text-gray-600">$${calculateTemplateCategoryTotal(template.equipment)}</span>
+                </div>
+            </div>
+            
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-gray-800">Total Cost:</span>
+                    <span class="font-bold text-lg text-green-600">$${calculateTemplateTotal(template)}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function calculateTemplateCategoryTotal(categoryData) {
+    if (!categoryData || typeof categoryData !== 'object') return '0.00';
+    
+    const items = Array.isArray(categoryData) ? categoryData : Object.values(categoryData);
+    const total = items.reduce((sum, item) => {
+        const cost = typeof item === 'object' ? (item.cost || 0) : item;
+        return sum + parseFloat(cost || 0);
+    }, 0);
+    
+    return total.toFixed(2);
+}
+
+function calculateTemplateTotal(template) {
+    const materials = parseFloat(calculateTemplateCategoryTotal(template.materials));
+    const labor = parseFloat(calculateTemplateCategoryTotal(template.labor));
+    const energy = parseFloat(calculateTemplateCategoryTotal(template.energy));
+    const equipment = parseFloat(calculateTemplateCategoryTotal(template.equipment));
+    
+    return (materials + labor + energy + equipment).toFixed(2);
+}
+
+async function loadSuggestionHistory() {
+    const loading = document.getElementById('suggestionHistoryLoading');
+    const list = document.getElementById('suggestionHistoryList');
+    
+    loading.style.display = 'block';
+    list.style.display = 'none';
+    
+    try {
+        // For now, just show a placeholder since we need to create list endpoints
+        list.innerHTML = '<div class="text-gray-500 text-center py-8">Suggestion history will be displayed here once you start using the cost and price suggestion features.</div>';
+        
+    } catch (error) {
+        console.error('Error loading suggestion history:', error);
+        list.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load suggestion history</div>';
+    } finally {
+        loading.style.display = 'none';
+        list.style.display = 'block';
+    }
+}
+
+function refreshSuggestionHistory() {
+    loadSuggestionHistory();
+}
+</script>
+
+<!-- Analytics & Insights Modal -->
+<div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto m-4">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <svg class="w-8 h-8 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    Analytics & Insights Dashboard
+                </h2>
+                <p class="text-gray-600 mt-1">Comprehensive website analytics and AI-powered optimization suggestions</p>
+            </div>
+            <button onclick="closeAnalyticsModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <div class="p-6">
+            <!-- Tabs -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="switchAnalyticsTab('overview')" data-tab="overview" 
+                            class="analytics-tab border-b-2 border-blue-500 text-blue-600 py-2 px-1 text-sm font-medium">
+                        Overview
+                    </button>
+                    <button onclick="switchAnalyticsTab('behavior')" data-tab="behavior" 
+                            class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        User Behavior
+                    </button>
+                    <button onclick="switchAnalyticsTab('products')" data-tab="products" 
+                            class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        Product Performance
+                    </button>
+                    <button onclick="switchAnalyticsTab('optimization')" data-tab="optimization" 
+                            class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        AI Optimization
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="analytics-tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Key Metrics Cards -->
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-blue-100 text-sm">Total Sessions</p>
+                                <p class="text-3xl font-bold" id="totalSessions">--</p>
+                            </div>
+                            <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-green-100 text-sm">Conversion Rate</p>
+                                <p class="text-3xl font-bold" id="conversionRate">--%</p>
+                            </div>
+                            <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-purple-100 text-sm">Avg. Session Duration</p>
+                                <p class="text-3xl font-bold" id="avgSessionDuration">--</p>
+                            </div>
+                            <svg class="w-8 h-8 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-orange-100 text-sm">Bounce Rate</p>
+                                <p class="text-3xl font-bold" id="bounceRate">--%</p>
+                            </div>
+                            <svg class="w-8 h-8 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Conversion Funnel</h3>
+                        <div id="conversionFunnel" class="space-y-3">
+                            <!-- Funnel visualization will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Pages</h3>
+                        <div id="topPages" class="space-y-2">
+                            <!-- Top pages will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Behavior Tab -->
+            <div id="behavior-tab" class="analytics-tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Device & Browser Analytics</h3>
+                        <div id="deviceAnalytics">
+                            <!-- Device analytics will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">User Flow Analysis</h3>
+                        <div id="userFlow">
+                            <!-- User flow will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Product Performance Tab -->
+            <div id="products-tab" class="analytics-tab-content hidden">
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Product Performance Metrics</h3>
+                    <div id="productPerformance">
+                        <!-- Product performance will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Optimization Tab -->
+            <div id="optimization-tab" class="analytics-tab-content hidden">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">AI-Powered Optimization Suggestions</h3>
+                        <button onclick="generateOptimizationSuggestions()" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                            🤖 Generate New Suggestions
+                        </button>
+                    </div>
+                    
+                    <div id="optimizationSuggestions" class="space-y-4">
+                        <!-- Optimization suggestions will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <select id="analyticsTimeframe" onchange="refreshAnalytics()" class="border border-gray-300 rounded px-3 py-1 text-sm">
+                    <option value="1d">Last 24 Hours</option>
+                    <option value="7d" selected>Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
+                </select>
+                <button onclick="refreshAnalytics()" class="text-blue-500 hover:text-blue-700 text-sm font-medium">
+                    🔄 Refresh Data
+                </button>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="closeAnalyticsModal()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Analytics Modal Functions
+function openAnalyticsModal() {
+    document.getElementById('analyticsModal').classList.remove('hidden');
+    loadAnalyticsData();
+}
+
+function closeAnalyticsModal() {
+    document.getElementById('analyticsModal').classList.add('hidden');
+}
+
+function switchAnalyticsTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.analytics-tab').forEach(tab => {
+        tab.classList.remove('border-blue-500', 'text-blue-600');
+        tab.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-transparent', 'text-gray-500');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('border-blue-500', 'text-blue-600');
+    
+    // Show/hide content
+    document.querySelectorAll('.analytics-tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+}
+
+async function loadAnalyticsData() {
+    const timeframe = document.getElementById('analyticsTimeframe').value;
+    
+    try {
+        // Load analytics report
+        const response = await fetch(`/api/analytics_tracker.php?action=get_analytics_report&timeframe=${timeframe}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            updateAnalyticsDashboard(data.data);
+        } else {
+            throw new Error(data.error || 'Failed to load analytics data');
+        }
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        showAnalyticsError('Failed to load analytics data. Make sure you have visitor data to analyze.');
+    }
+}
+
+function updateAnalyticsDashboard(data) {
+    // Update overview metrics
+    document.getElementById('totalSessions').textContent = data.overall_stats?.total_sessions || '0';
+    document.getElementById('conversionRate').textContent = 
+        data.overall_stats?.total_sessions > 0 ? 
+        ((data.overall_stats.conversions / data.overall_stats.total_sessions) * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('avgSessionDuration').textContent = 
+        data.overall_stats?.avg_session_duration ? 
+        Math.round(data.overall_stats.avg_session_duration) + 's' : '0s';
+    document.getElementById('bounceRate').textContent = 
+        data.overall_stats?.bounce_rate ? 
+        Math.round(data.overall_stats.bounce_rate) + '%' : '0%';
+    
+    // Update conversion funnel
+    updateConversionFunnel(data.conversion_funnel || []);
+    
+    // Update top pages
+    updateTopPages(data.top_pages || []);
+    
+    // Update product performance
+    updateProductPerformance(data.product_performance || []);
+}
+
+function updateConversionFunnel(funnelData) {
+    const container = document.getElementById('conversionFunnel');
+    
+    if (funnelData.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No funnel data available yet. Start getting visitors to see conversion insights!</p>';
+        return;
+    }
+    
+    const stepNames = {
+        'landing': 'Landing Page',
+        'product_view': 'Product Views',
+        'cart_add': 'Add to Cart',
+        'checkout_start': 'Checkout Started',
+        'checkout_complete': 'Purchase Complete'
+    };
+    
+    const maxSessions = Math.max(...funnelData.map(step => step.sessions_count));
+    
+    container.innerHTML = funnelData.map((step, index) => {
+        const percentage = maxSessions > 0 ? (step.sessions_count / maxSessions) * 100 : 0;
+        const dropoff = index > 0 ? 
+            ((funnelData[index-1].sessions_count - step.sessions_count) / funnelData[index-1].sessions_count * 100).toFixed(1) : 0;
+        
+        return `
+            <div class="flex items-center space-x-4">
+                <div class="flex-1">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-medium text-gray-700">${stepNames[step.funnel_step] || step.funnel_step}</span>
+                        <span class="text-sm text-gray-600">${step.sessions_count} sessions</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: ${percentage}%"></div>
+                    </div>
+                    ${index > 0 && dropoff > 0 ? `<p class="text-xs text-red-600 mt-1">${dropoff}% drop-off</p>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateTopPages(topPages) {
+    const container = document.getElementById('topPages');
+    
+    if (topPages.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No page data available yet.</p>';
+        return;
+    }
+    
+    container.innerHTML = topPages.map(page => `
+        <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+            <div>
+                <p class="text-sm font-medium text-gray-800">${page.page_url}</p>
+                <p class="text-xs text-gray-500">${page.page_type}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-medium text-gray-800">${page.views} views</p>
+                <p class="text-xs text-gray-500">${Math.round(page.avg_time)}s avg</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateProductPerformance(productData) {
+    const container = document.getElementById('productPerformance');
+    
+    if (productData.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No product data available yet. Product analytics will appear once you have visitor interactions.</p>';
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cart Adds</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purchases</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conversion</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    ${productData.map(product => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">${product.product_sku}</div>
+                                <div class="text-sm text-gray-500">${product.product_name || 'Unknown'}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.views_count}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.cart_adds_count}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.purchases_count}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.conversion_rate}%</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+async function generateOptimizationSuggestions() {
+    const container = document.getElementById('optimizationSuggestions');
+    container.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div><p class="text-gray-600">Analyzing your website data and generating AI-powered suggestions...</p></div>';
+    
+    try {
+        const response = await fetch('/api/analytics_tracker.php?action=get_optimization_suggestions', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            displayOptimizationSuggestions(data.suggestions);
+        } else {
+            throw new Error(data.error || 'Failed to generate suggestions');
+        }
+    } catch (error) {
+        console.error('Error generating suggestions:', error);
+        container.innerHTML = '<div class="text-red-600 text-center py-4">Failed to generate optimization suggestions. Make sure you have enough visitor data for analysis.</div>';
+    }
+}
+
+function displayOptimizationSuggestions(suggestions) {
+    const container = document.getElementById('optimizationSuggestions');
+    
+    if (suggestions.length === 0) {
+        container.innerHTML = '<div class="text-gray-500 text-center py-8">Great job! No major optimization issues detected. Your website is performing well. Keep monitoring as you get more traffic.</div>';
+        return;
+    }
+    
+    const priorityColors = {
+        'critical': 'bg-red-100 border-red-500 text-red-800',
+        'high': 'bg-orange-100 border-orange-500 text-orange-800',
+        'medium': 'bg-yellow-100 border-yellow-500 text-yellow-800',
+        'low': 'bg-blue-100 border-blue-500 text-blue-800'
+    };
+    
+    const priorityIcons = {
+        'critical': '🚨',
+        'high': '⚠️',
+        'medium': '💡',
+        'low': 'ℹ️'
+    };
+    
+    container.innerHTML = suggestions.map(suggestion => `
+        <div class="border-l-4 ${priorityColors[suggestion.priority]} p-4 rounded-r-lg">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 text-2xl mr-3">
+                    ${priorityIcons[suggestion.priority]}
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-lg font-semibold">${suggestion.title}</h4>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs px-2 py-1 rounded bg-gray-200 text-gray-700">${suggestion.type}</span>
+                            <span class="text-xs px-2 py-1 rounded bg-green-200 text-green-700">${Math.round(suggestion.confidence_score * 100)}% confidence</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-3">${suggestion.description}</p>
+                    <div class="bg-white p-3 rounded border">
+                        <h5 class="font-medium text-gray-800 mb-1">💡 Recommended Action:</h5>
+                        <p class="text-gray-700">${suggestion.suggested_action}</p>
+                    </div>
+                    <div class="flex items-center justify-between mt-3 text-sm text-gray-600">
+                        <span>Impact: ${suggestion.potential_impact}</span>
+                        <span>Priority: ${suggestion.priority.toUpperCase()}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAnalyticsError(message) {
+    const containers = ['totalSessions', 'conversionRate', 'avgSessionDuration', 'bounceRate'];
+    containers.forEach(id => {
+        document.getElementById(id).textContent = '--';
+    });
+    
+    document.getElementById('conversionFunnel').innerHTML = `<p class="text-gray-500 text-center py-4">${message}</p>`;
+    document.getElementById('topPages').innerHTML = `<p class="text-gray-500 text-center py-4">${message}</p>`;
+}
+
+function refreshAnalytics() {
+    loadAnalyticsData();
+}
+</script>

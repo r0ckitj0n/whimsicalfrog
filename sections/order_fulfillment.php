@@ -1,7 +1,62 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
 $pdo = new PDO($dsn, $user, $pass, $options);
-$unfulfilled = $pdo->query("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id WHERE o.status IN ('Pending','Processing') ORDER BY o.date ASC")->fetchAll(PDO::FETCH_ASSOC);
+
+// Get filter parameters
+$filterDate = $_GET['filter_date'] ?? '';
+$filterItems = $_GET['filter_items'] ?? '';
+$filterStatus = $_GET['filter_status'] ?? '';
+$filterPaymentMethod = $_GET['filter_payment_method'] ?? '';
+$filterShippingMethod = $_GET['filter_shipping_method'] ?? '';
+$filterPaymentStatus = $_GET['filter_payment_status'] ?? '';
+
+// Build the WHERE clause based on filters
+$whereConditions = ["o.status IN ('Pending','Processing')"];
+$params = [];
+
+if (!empty($filterDate)) {
+    $whereConditions[] = "DATE(o.date) = ?";
+    $params[] = $filterDate;
+}
+
+if (!empty($filterStatus)) {
+    $whereConditions[] = "o.status = ?";
+    $params[] = $filterStatus;
+}
+
+if (!empty($filterPaymentMethod)) {
+    $whereConditions[] = "o.paymentMethod = ?";
+    $params[] = $filterPaymentMethod;
+}
+
+if (!empty($filterShippingMethod)) {
+    $whereConditions[] = "o.shippingMethod = ?";
+    $params[] = $filterShippingMethod;
+}
+
+if (!empty($filterPaymentStatus)) {
+    $whereConditions[] = "o.paymentStatus = ?";
+    $params[] = $filterPaymentStatus;
+}
+
+// Handle items filter - this requires a subquery since items are in order_items table
+if (!empty($filterItems)) {
+    $whereConditions[] = "EXISTS (SELECT 1 FROM order_items oi LEFT JOIN items i ON oi.sku = i.sku WHERE oi.orderId = o.id AND (COALESCE(i.name, oi.sku) LIKE ? OR oi.sku LIKE ?))";
+    $params[] = "%{$filterItems}%";
+    $params[] = "%{$filterItems}%";
+}
+
+$whereClause = implode(' AND ', $whereConditions);
+
+$stmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id WHERE {$whereClause} ORDER BY o.date ASC");
+$stmt->execute($params);
+$unfulfilled = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get unique values for filter dropdowns
+$statusOptions = $pdo->query("SELECT DISTINCT status FROM orders WHERE status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY status")->fetchAll(PDO::FETCH_COLUMN);
+$paymentMethodOptions = $pdo->query("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod")->fetchAll(PDO::FETCH_COLUMN);
+$shippingMethodOptions = $pdo->query("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod")->fetchAll(PDO::FETCH_COLUMN);
+$paymentStatusOptions = $pdo->query("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus")->fetchAll(PDO::FETCH_COLUMN);
 
 $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
@@ -101,14 +156,139 @@ $messageType = $_GET['type'] ?? '';
         font-size: 0.75rem;
         line-height: 1.2;
     }
+
+    /* Filter styling to match orders page */
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background-color: #f8fafc;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-form label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #87ac3a !important;
+    }
+
+    .filter-form input,
+    .filter-form select {
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        background-color: white;
+    }
+
+    .filter-form input:focus,
+    .filter-form select:focus {
+        outline: none;
+        border-color: #87ac3a;
+        box-shadow: 0 0 0 2px rgba(135, 172, 58, 0.2);
+    }
+
+    .filter-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-clear-link {
+        font-size: 0.875rem;
+        color: #6b7280;
+        text-decoration: underline;
+    }
+
+    .filter-apply-btn {
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        background-color: #87ac3a;
+        color: white;
+        transition: background-color 0.2s;
+        border: none;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .filter-apply-btn:hover {
+        background-color: #a3cc4a;
+    }
+
+         .fulfillment-section-header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+        .fulfillment-section-header {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+    }
+
+    .title-and-button-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 </style>
 
 <div class="container mx-auto px-4 py-6">
-    <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="fulfillment-section-header">
         <h1 class="fulfillment-title text-2xl font-bold" style="color: #87ac3a !important;">Order Fulfillment</h1>
-        <div class="flex gap-2">
-            <a href="/?page=admin&section=orders" class="brand-button px-4 py-2 rounded text-sm">View All Orders</a>
-        </div>
+        
+        <form method="GET" class="filter-form">
+            <input type="hidden" name="page" value="admin">
+            <input type="hidden" name="section" value="order_fulfillment">
+            
+            <label for="filter_date">Date:</label>
+            <input type="date" name="filter_date" id="filter_date" value="<?= htmlspecialchars($filterDate) ?>">
+            
+            <label for="filter_items">Items:</label>
+            <input type="text" name="filter_items" id="filter_items" value="<?= htmlspecialchars($filterItems) ?>" placeholder="Search...">
+            
+            <label for="filter_status">Status:</label>
+            <select name="filter_status" id="filter_status">
+                <option value="">All</option>
+                <?php foreach ($statusOptions as $status): ?>
+                <option value="<?= htmlspecialchars($status) ?>" <?= $filterStatus === $status ? 'selected' : '' ?>><?= htmlspecialchars($status) ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <label for="filter_payment_method">Payment:</label>
+            <select name="filter_payment_method" id="filter_payment_method">
+                <option value="">All</option>
+                <?php foreach ($paymentMethodOptions as $method): ?>
+                <option value="<?= htmlspecialchars($method) ?>" <?= $filterPaymentMethod === $method ? 'selected' : '' ?>><?= htmlspecialchars($method) ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <label for="filter_shipping_method">Shipping:</label>
+            <select name="filter_shipping_method" id="filter_shipping_method">
+                <option value="">All</option>
+                <?php foreach ($shippingMethodOptions as $method): ?>
+                <option value="<?= htmlspecialchars($method) ?>" <?= $filterShippingMethod === $method ? 'selected' : '' ?>><?= htmlspecialchars($method) ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <label for="filter_payment_status">Pay Status:</label>
+            <select name="filter_payment_status" id="filter_payment_status">
+                <option value="">All</option>
+                <?php foreach ($paymentStatusOptions as $status): ?>
+                <option value="<?= htmlspecialchars($status) ?>" <?= $filterPaymentStatus === $status ? 'selected' : '' ?>><?= htmlspecialchars($status) ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <a href="/?page=admin&section=order_fulfillment" class="filter-clear-link">Clear</a>
+            <button type="submit" class="filter-apply-btn">Apply</button>
+        </form>
     </div>
     
     <?php if ($message): ?>

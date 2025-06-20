@@ -6,6 +6,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // Load environment variables
 require_once __DIR__ . '/api/config.php';
+// Load marketing helper for dynamic content
+require_once __DIR__ . '/api/marketing_helper.php';
 // Start or resume session (already started at the top)
 
 // Check if a page is specified in the URL
@@ -118,8 +120,8 @@ try {
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Fetch items data - use items as the single source of truth
-    $stmt = $pdo->query('SELECT id AS inventoryId, sku, name AS productName, stockLevel, retailPrice, description, category AS productType FROM items WHERE stockLevel > 0');
+    // Fetch items data - use items as the single source of truth (show all items, not just in-stock)
+    $stmt = $pdo->query('SELECT sku, sku AS inventoryId, name AS productName, stockLevel, retailPrice, description, category AS productType FROM items');
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if ($products && is_array($products)) {
@@ -209,13 +211,25 @@ foreach ($_SESSION['cart'] as $item) {
 
 // Format cart total
 $formattedCartTotal = '$' . number_format($cartTotal, 2);
+
+// Generate dynamic SEO for current page
+$currentSku = $_GET['product'] ?? null; // For product-specific pages
+$seoData = generatePageSEO($page, $currentSku);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whimsical Frog - Custom Crafts</title>
+    <title><?= htmlspecialchars($seoData['title']) ?></title>
+    <meta name="description" content="<?= htmlspecialchars($seoData['description']) ?>">
+    <meta name="keywords" content="<?= htmlspecialchars($seoData['keywords']) ?>">
+    <meta property="og:title" content="<?= htmlspecialchars($seoData['title']) ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($seoData['description']) ?>">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= htmlspecialchars($seoData['title']) ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($seoData['description']) ?>">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
@@ -635,6 +649,9 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
 <!-- Load global modal system -->
 <script src="js/global-modals.js?v=<?php echo time(); ?>"></script>
 
+<!-- Load analytics tracking system -->
+<script src="js/analytics.js?v=<?php echo time(); ?>"></script>
+
 <!-- WebP Support Detection -->
 <script>
     // Detect WebP support
@@ -652,10 +669,27 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
             // Determine room type based on current page
             const urlParams = new URLSearchParams(window.location.search);
             const currentPage = urlParams.get('page') || 'landing';
+            const fromMain = urlParams.get('from') === 'main';
             
             let roomType = 'landing';
             
-            // Map page names to room types
+            // Check if we're coming from main room - if so, use main room background
+            if (fromMain && ['room2', 'room3', 'room4', 'room5', 'room6'].includes(currentPage)) {
+                roomType = 'room_main';
+                
+                // Apply main room background directly
+                const body = document.body;
+                const supportsWebP = document.documentElement.classList.contains('webp');
+                const imageUrl = supportsWebP ? 'images/room_main.webp' : 'images/room_main.png';
+                
+                body.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
+                body.classList.add('dynamic-bg-loaded');
+                
+                console.log(`Dynamic main room background loaded (from=main): ${imageUrl}`);
+                return;
+            }
+            
+            // Map page names to room types (normal behavior)
             switch (currentPage) {
                 case 'main_room':
                     roomType = 'room_main';

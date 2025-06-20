@@ -81,6 +81,11 @@ class ShoppingCart {
         this.updateCartCount();
         this.showNotification(`${quantity > 1 ? quantity + ' items' : 'Item'} added to cart`);
         this.dispatchCartUpdate();
+        
+        // Track cart action for analytics
+        if (window.analyticsTracker) {
+            window.analyticsTracker.trackCartAction('add', item.sku);
+        }
     }
 
     removeItem(itemSku) {
@@ -90,6 +95,11 @@ class ShoppingCart {
         this.updateCartCount();
         this.showNotification('Item removed from cart');
         this.dispatchCartUpdate();
+        
+        // Track cart action for analytics
+        if (window.analyticsTracker) {
+            window.analyticsTracker.trackCartAction('remove', itemSku);
+        }
     }
 
     updateQuantity(itemSku, quantity) {
@@ -281,6 +291,11 @@ class ShoppingCart {
             this.createPaymentMethodModal();
         }
         document.getElementById('paymentMethodModal').classList.remove('hidden');
+        
+        // Track checkout start for analytics
+        if (window.analyticsTracker) {
+            window.analyticsTracker.trackInteraction('checkout_start', null);
+        }
     }
 
     createPaymentMethodModal() {
@@ -395,6 +410,12 @@ class ShoppingCart {
             const data = await response.json();
             if (data.success) {
                 this.showNotification('Order placed successfully!');
+                
+                // Track conversion for analytics
+                if (window.analyticsTracker) {
+                    window.analyticsTracker.trackConversion(total, data.orderId);
+                }
+                
                 this.clearCart();
                 setTimeout(() => { window.location.href = '/?page=receipt&orderId=' + data.orderId; }, 1000);
             } else {
@@ -439,6 +460,12 @@ async function addToCart(sku, name, price, imageUrl = null) {
 function removeFromCart(sku) {
     if (window.cart) {
         window.cart.removeItem(sku);
+        // Force immediate refresh of cart display if we're on the cart page
+        if (document.getElementById('cartItems')) {
+            setTimeout(() => {
+                window.cart.renderCart();
+            }, 100);
+        }
     }
 }
 

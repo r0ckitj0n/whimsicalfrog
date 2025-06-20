@@ -129,33 +129,12 @@ $adminRole = $userData['roleType'] ?? 'Administrator';
             case 'categories':
                 include 'sections/admin_categories.php';
                 break;
+            case 'order_fulfillment':
+                include 'sections/order_fulfillment.php';
+                break;
             default:
-                // Show dashboard summary (metrics, recent activity, low stock)
-                ?>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                    <div class="bg-white shadow rounded p-3 flex flex-col items-center">
-                        <span class="text-xs text-gray-500">Products</span>
-                        <span class="text-lg font-bold text-green-700"><?php echo $totalProducts; ?></span>
-                    </div>
-                    <div class="bg-white shadow rounded p-3 flex flex-col items-center">
-                        <span class="text-xs text-gray-500">Orders</span>
-                        <span class="text-lg font-bold text-blue-700"><?php echo $totalOrders; ?></span>
-                    </div>
-                    <div class="bg-white shadow rounded p-3 flex flex-col items-center">
-                        <span class="text-xs text-gray-500">Customers</span>
-                        <span class="text-lg font-bold text-purple-700"><?php echo $totalCustomers; ?></span>
-                    </div>
-                    <div class="bg-white shadow rounded p-3 flex flex-col items-center">
-                        <span class="text-xs text-gray-500">Revenue</span>
-                        <span class="text-lg font-bold text-yellow-700"><?php echo $formattedRevenue; ?></span>
-                    </div>
-                </div>
-                <!-- Order Fulfillment quick view -->
-                <?php include __DIR__ . '/order_fulfillment.php'; ?>
-
-                <!-- Recent Activity and Low Stock Alert (as before) -->
-                <?php /* ...existing dashboard summary code... */ ?>
-                <?php
+                // Show dashboard summary without statistics cards
+                include 'sections/order_fulfillment.php';
                 break;
         }
         ?>

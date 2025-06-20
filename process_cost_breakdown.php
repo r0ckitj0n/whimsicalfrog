@@ -132,22 +132,22 @@ try {
                 // Get all cost types
                 
                 // Get materials costs
-                $materialStmt = $pdo->prepare("SELECT * FROM inventory_materials WHERE inventoryId = ?");
+                $materialStmt = $pdo->prepare("SELECT * FROM inventory_materials WHERE sku = ?");
                 $materialStmt->execute([$inventoryId]);
                 $materials = $materialStmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 // Get labor costs
-                $laborStmt = $pdo->prepare("SELECT * FROM inventory_labor WHERE inventoryId = ?");
+                $laborStmt = $pdo->prepare("SELECT * FROM inventory_labor WHERE sku = ?");
                 $laborStmt->execute([$inventoryId]);
                 $labor = $laborStmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 // Get energy costs
-                $energyStmt = $pdo->prepare("SELECT * FROM inventory_energy WHERE inventoryId = ?");
+                $energyStmt = $pdo->prepare("SELECT * FROM inventory_energy WHERE sku = ?");
                 $energyStmt->execute([$inventoryId]);
                 $energy = $energyStmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 // Get equipment costs
-                $equipmentStmt = $pdo->prepare("SELECT * FROM inventory_equipment WHERE inventoryId = ?");
+                $equipmentStmt = $pdo->prepare("SELECT * FROM inventory_equipment WHERE sku = ?");
                 $equipmentStmt->execute([$inventoryId]);
                 $equipment = $equipmentStmt->fetchAll(PDO::FETCH_ASSOC);
                 
@@ -209,7 +209,7 @@ try {
                      echo json_encode(['success' => false, 'error' => 'Internal error: Invalid table for cost type']);
                      exit;
                 }
-                $stmt = $pdo->prepare("SELECT * FROM $tableName WHERE inventoryId = ?");
+                $stmt = $pdo->prepare("SELECT * FROM $tableName WHERE sku = ?");
                 $stmt->execute([$inventoryId]);
                 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
@@ -230,6 +230,42 @@ try {
             break;
             
         case 'POST':
+            // Check if this is a clear_all action
+            if (isset($input['action']) && $input['action'] === 'clear_all') {
+                // Clear all cost breakdown data for this inventory item
+                try {
+                    $pdo->beginTransaction();
+                    
+                    // Delete from all cost tables
+                    $tables = ['inventory_materials', 'inventory_labor', 'inventory_energy', 'inventory_equipment'];
+                    $deletedCount = 0;
+                    
+                    foreach ($tables as $table) {
+                        $stmt = $pdo->prepare("DELETE FROM $table WHERE sku = ?");
+                        $result = $stmt->execute([$inventoryId]);
+                        if ($result) {
+                            $deletedCount += $stmt->rowCount();
+                        }
+                    }
+                    
+                    $pdo->commit();
+                    
+                    echo json_encode([
+                        'success' => true,
+                        'message' => "All cost breakdown data cleared successfully ($deletedCount items removed)",
+                        'deletedCount' => $deletedCount
+                    ]);
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    http_response_code(500);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'Failed to clear cost breakdown data: ' . $e->getMessage()
+                    ]);
+                }
+                break;
+            }
+            
             // Add a new cost item
             // $input is already parsed and validated for JSON structure
             // $inventoryId and $costType are determined globally
@@ -263,10 +299,10 @@ try {
             
             // Insert new cost item
             if ($costType === 'materials') {
-                $stmt = $pdo->prepare("INSERT INTO $tableName (inventoryId, name, cost) VALUES (?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO $tableName (sku, name, cost) VALUES (?, ?, ?)");
                 $result = $stmt->execute([$inventoryId, $input['name'], $input['cost']]);
             } else {
-                $stmt = $pdo->prepare("INSERT INTO $tableName (inventoryId, description, cost) VALUES (?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO $tableName (sku, description, cost) VALUES (?, ?, ?)");
                 $result = $stmt->execute([$inventoryId, $input['description'], $input['cost']]);
             }
             
@@ -334,7 +370,7 @@ try {
             }
             
             // Verify the item exists and belongs to the specified inventory
-            $checkStmt = $pdo->prepare("SELECT id FROM $tableName WHERE id = ? AND inventoryId = ?");
+            $checkStmt = $pdo->prepare("SELECT id FROM $tableName WHERE id = ? AND sku = ?");
             $checkStmt->execute([$id, $inventoryId]);
             if (!$checkStmt->fetch()) {
                 http_response_code(404);
@@ -403,7 +439,7 @@ try {
             }
             
             // Verify the item exists and belongs to the specified inventory
-            $checkStmt = $pdo->prepare("SELECT id FROM $tableName WHERE id = ? AND inventoryId = ?");
+            $checkStmt = $pdo->prepare("SELECT id FROM $tableName WHERE id = ? AND sku = ?");
             $checkStmt->execute([$id, $inventoryId]);
             if (!$checkStmt->fetch()) {
                 http_response_code(404);

@@ -571,85 +571,90 @@ $messageType = $_GET['type'] ?? '';
                 </div>
             </div>
 
-            <div class="modal-form-cost-column">
-                <div class="cost-breakdown">
-                    <h3>Cost Breakdown</h3>
-                    <?php foreach (['materials', 'labor', 'energy', 'equipment'] as $costType): ?>
-                    <div class="cost-breakdown-section <?= $costType !== 'materials' ? 'mt-3' : ''; ?>">
-                        <h4 class="font-semibold text-gray-700 mb-1 text-sm"><?= ucfirst($costType); ?></h4>
-                        <div class="mb-2" id="view_<?= $costType; ?>List" style="max-height: 100px; overflow-y: auto;">
-                            <?php if (!empty($editCostBreakdown[$costType])): ?>
-                                <?php foreach ($editCostBreakdown[$costType] as $item_cost): ?>
-                                <div class="cost-item">
-                                    <span class="cost-item-name"><?= htmlspecialchars($costType === 'materials' ? $item_cost['name'] : $item_cost['description']) ?></span>
-                                    <div class="cost-item-actions">
-                                        <span class="cost-item-value">$<?= number_format(floatval($item_cost['cost'] ?? 0), 2) ?></span>
+            <div class="modal-form-suggestions-column">
+                <div class="suggestions-container">
+                    <!-- Cost Breakdown Section -->
+                    <div class="cost-breakdown-wrapper">
+                        <div class="cost-breakdown">
+                            <h3>Cost Breakdown</h3>
+                            <?php foreach (['materials', 'labor', 'energy', 'equipment'] as $costType): ?>
+                            <div class="cost-breakdown-section <?= $costType !== 'materials' ? 'mt-3' : ''; ?>">
+                                <h4 class="font-semibold text-gray-700 mb-1 text-sm"><?= ucfirst($costType); ?></h4>
+                                <div class="mb-2" id="view_<?= $costType; ?>List" style="max-height: 100px; overflow-y: auto;">
+                                    <?php if (!empty($editCostBreakdown[$costType])): ?>
+                                        <?php foreach ($editCostBreakdown[$costType] as $item_cost): ?>
+                                        <div class="cost-item">
+                                            <span class="cost-item-name"><?= htmlspecialchars($costType === 'materials' ? $item_cost['name'] : $item_cost['description']) ?></span>
+                                            <div class="cost-item-actions">
+                                                <span class="cost-item-value">$<?= number_format(floatval($item_cost['cost'] ?? 0), 2) ?></span>
+                                            </div>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <p class="text-gray-500 text-xs italic px-1">No items added.</p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                            <div class="cost-totals">
+                                <div class="cost-total-row"><span class="cost-label">Materials Total:</span> <span class="cost-item-value">$<?= number_format(floatval($editCostBreakdown['totals']['materialTotal'] ?? 0), 2) ?></span></div>
+                                <div class="cost-total-row"><span class="cost-label">Labor Total:</span> <span class="cost-item-value">$<?= number_format(floatval($editCostBreakdown['totals']['laborTotal'] ?? 0), 2) ?></span></div>
+                                <div class="cost-total-row"><span class="cost-label">Energy Total:</span> <span class="cost-item-value">$<?= number_format(floatval($editCostBreakdown['totals']['energyTotal'] ?? 0), 2) ?></span></div>
+                                <div class="cost-total-row"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value">$<?= number_format(floatval($editCostBreakdown['totals']['equipmentTotal'] ?? 0), 2) ?></span></div>
+                                <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
+                                    <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700">$<?= number_format(floatval($editCostBreakdown['totals']['suggestedCost'] ?? 0), 2) ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Price Suggestion Section for View Modal -->
+                    <div class="price-suggestion-wrapper">
+                        <div class="price-suggestion bg-white border border-gray-200 rounded-lg p-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                                <span class="mr-2">🎯</span> Price Suggestion
+                            </h3>
+                            
+                            <button type="button" onclick="getViewModePriceSuggestion()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4">
+                                🎯 Get Suggested Price
+                            </button>
+                            
+                            <!-- Price Suggestion Display -->
+                            <div id="viewPriceSuggestionDisplay" class="mb-4 hidden">
+                                <div class="flex items-start justify-between mb-3">
+                                    <h4 class="font-medium text-gray-800 text-sm">💡 AI Price Analysis</h4>
+                                    <button type="button" onclick="clearViewPriceSuggestion()" class="text-gray-600 hover:text-gray-800 text-xs">×</button>
+                                </div>
+                                
+                                <!-- Suggested Price Display -->
+                                <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-green-700 font-medium">Suggested Price:</span>
+                                        <span class="font-bold text-green-800 text-lg" id="viewDisplaySuggestedPrice">$0.00</span>
                                     </div>
                                 </div>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <p class="text-gray-500 text-xs italic px-1">No items added.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                    <div class="cost-totals">
-                        <div class="cost-total-row"><span class="cost-label">Materials Total:</span> <span class="cost-item-value">$<?= number_format(floatval($editCostBreakdown['totals']['materialTotal'] ?? 0), 2) ?></span></div>
-                        <div class="cost-total-row"><span class="cost-label">Labor Total:</span> <span class="cost-item-value">$<?= number_format(floatval($editCostBreakdown['totals']['laborTotal'] ?? 0), 2) ?></span></div>
-                        <div class="cost-total-row"><span class="cost-label">Energy Total:</span> <span class="cost-item-value">$<?= number_format(floatval($editCostBreakdown['totals']['energyTotal'] ?? 0), 2) ?></span></div>
-                        <div class="cost-total-row"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value">$<?= number_format(floatval($editCostBreakdown['totals']['equipmentTotal'] ?? 0), 2) ?></span></div>
-                        <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
-                            <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700">$<?= number_format(floatval($editCostBreakdown['totals']['suggestedCost'] ?? 0), 2) ?></span>
-                        </div>
-                    </div>
-                </div>
-            
-                <!-- Price Suggestion Section for View Modal -->
-                <div class="price-suggestion-wrapper mt-4">
-                    <div class="price-suggestion bg-white border border-gray-200 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                            <span class="mr-2">🎯</span> Price Suggestion
-                        </h3>
-                        
-                        <button type="button" onclick="getViewModePriceSuggestion()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4">
-                            🎯 Get Suggested Price
-                        </button>
-                        
-                        <!-- Price Suggestion Display -->
-                        <div id="viewPriceSuggestionDisplay" class="mb-4 hidden">
-                            <div class="flex items-start justify-between mb-3">
-                                <h4 class="font-medium text-gray-800 text-sm">💡 AI Price Analysis</h4>
-                                <button type="button" onclick="clearViewPriceSuggestion()" class="text-gray-600 hover:text-gray-800 text-xs">×</button>
-                            </div>
-                            
-                            <!-- Suggested Price Display -->
-                            <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm text-green-700 font-medium">Suggested Price:</span>
-                                    <span class="font-bold text-green-800 text-lg" id="viewDisplaySuggestedPrice">$0.00</span>
+                                
+                                <!-- Reasoning Section -->
+                                <div class="mb-3">
+                                    <h4 class="font-semibold text-gray-700 mb-1 text-sm">AI Reasoning</h4>
+                                    <div class="mb-2" id="viewReasoningList">
+                                        <!-- Reasoning items will be rendered here by JavaScript -->
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between items-center text-xs mb-3">
+                                    <span class="text-green-600" id="viewDisplayConfidence">Medium confidence</span>
+                                    <span class="text-green-500" id="viewDisplayTimestamp">Just now</span>
                                 </div>
                             </div>
                             
-                            <!-- Reasoning Section -->
-                            <div class="mb-3">
-                                <h4 class="font-semibold text-gray-700 mb-1 text-sm">AI Reasoning</h4>
-                                <div class="mb-2" id="viewReasoningList">
-                                    <!-- Reasoning items will be rendered here by JavaScript -->
+                            <!-- Price Suggestion Placeholder -->
+                            <div id="viewPriceSuggestionPlaceholder" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                <div class="text-center text-gray-500">
+                                    <div class="text-2xl mb-1">🎯</div>
+                                    <div class="text-sm">No price suggestion yet</div>
+                                    <div class="text-xs mt-1 text-gray-400">Click "Get Suggested Price" above to get AI pricing analysis</div>
                                 </div>
-                            </div>
-                            
-                            <div class="flex justify-between items-center text-xs mb-3">
-                                <span class="text-green-600" id="viewDisplayConfidence">Medium confidence</span>
-                                <span class="text-green-500" id="viewDisplayTimestamp">Just now</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Price Suggestion Placeholder -->
-                        <div id="viewPriceSuggestionPlaceholder" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                            <div class="text-center text-gray-500">
-                                <div class="text-2xl mb-1">🎯</div>
-                                <div class="text-sm">No price suggestion yet</div>
-                                <div class="text-xs mt-1 text-gray-400">Click "Get Suggested Price" above to get AI pricing analysis</div>
                             </div>
                         </div>
                     </div>

@@ -2692,15 +2692,17 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- AI Settings Modal -->
-<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="display: none;">
-    <div class="bg-white shadow-xl rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center p-4 border-b">
+<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4" style="display: none;">
+    <div class="bg-white shadow-xl rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
+        <!-- Fixed Header -->
+        <div class="flex justify-between items-center p-4 border-b bg-white rounded-t-lg flex-shrink-0">
             <h2 class="text-xl font-bold text-gray-800">🤖 AI Settings</h2>
             <button onclick="closeAISettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
-        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-            <div id="aiSettingsContent" class="space-y-6">
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div id="aiSettingsContent" class="space-y-4">
                 <div class="text-center text-gray-500 py-8">
                     <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
@@ -2708,15 +2710,16 @@ async function removeAreaMapping(mappingId) {
                     <p>Loading AI settings...</p>
                 </div>
             </div>
-            
-            <div class="bg-purple-50 border border-purple-200 rounded p-4 mt-6">
-                <h3 class="font-semibold text-purple-800 mb-2">🤖 AI Settings Guide</h3>
-                <div class="text-sm text-purple-700 space-y-1">
-                    <p><strong>Temperature Control:</strong> Lower values (0.1-0.5) = more consistent, Higher values (0.6-1.0) = more creative</p>
-                    <p><strong>Conservative Mode:</strong> When enabled, eliminates randomness for predictable results</p>
-                    <p><strong>Base Multipliers:</strong> Apply consistent adjustments to all AI suggestions</p>
-                    <p><strong>Pricing Weights:</strong> Control the influence of different pricing strategies</p>
-                </div>
+        </div>
+        
+        <!-- Fixed Footer with Guide -->
+        <div class="bg-purple-50 border-t border-purple-200 p-3 sm:p-4 rounded-b-lg flex-shrink-0">
+            <h3 class="font-semibold text-purple-800 mb-2 text-sm sm:text-base">🤖 AI Settings Guide</h3>
+            <div class="text-xs sm:text-sm text-purple-700 space-y-1">
+                <p><strong>Temperature:</strong> 0.1-0.5 = consistent, 0.6-1.0 = creative</p>
+                <p><strong>Conservative Mode:</strong> Eliminates randomness</p>
+                <p><strong>Multipliers:</strong> Adjust all AI suggestions</p>
+                <p><strong>Weights:</strong> Control pricing strategy influence</p>
             </div>
         </div>
     </div>
@@ -2763,9 +2766,9 @@ function displayAISettings(settings) {
     }
     
     let html = `
-        <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">AI Configuration Settings</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">AI Configuration Settings</h3>
+            <div class="space-y-3">
     `;
     
     settings.forEach(setting => {
@@ -2774,8 +2777,8 @@ function displayAISettings(settings) {
     
     html += `
             </div>
-            <div class="mt-6 pt-4 border-t">
-                <button onclick="saveAISettings()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+            <div class="pt-4 border-t mt-6 text-center">
+                <button onclick="saveAISettings()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors w-full sm:w-auto">
                     💾 Save AI Settings
                 </button>
             </div>
@@ -2794,10 +2797,10 @@ function createAISettingField(setting) {
         case 'boolean':
             const isChecked = ['true', '1'].includes(setting.setting_value.toLowerCase()) ? 'checked' : '';
             inputField = `
-                <label class="flex items-center">
+                <label class="flex items-center justify-between">
+                    <span class="text-sm text-gray-700 flex-1">${setting.display_name}</span>
                     <input type="checkbox" id="setting_${setting.setting_key}" ${isChecked} 
-                           class="mr-2 h-4 w-4 text-purple-600 border-gray-300 rounded">
-                    <span class="text-sm text-gray-700">Enable conservative mode</span>
+                           class="ml-2 h-4 w-4 text-purple-600 border-gray-300 rounded">
                 </label>
             `;
             break;
@@ -2817,31 +2820,34 @@ function createAISettingField(setting) {
             }
             
             inputField = `
-                <div class="flex items-center space-x-2">
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-medium text-gray-700">${setting.display_name}</label>
+                        <input type="number" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
+                               min="${min}" max="${max}" step="${step}"
+                               class="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                               oninput="document.getElementById('range_${setting.setting_key}').value = this.value">
+                    </div>
                     <input type="range" id="range_${setting.setting_key}" value="${setting.setting_value}" 
                            min="${min}" max="${max}" step="${step}"
-                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                            oninput="document.getElementById('setting_${setting.setting_key}').value = this.value">
-                    <input type="number" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
-                           min="${min}" max="${max}" step="${step}"
-                           class="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm"
-                           oninput="document.getElementById('range_${setting.setting_key}').value = this.value">
                 </div>
             `;
             break;
             
         default: // text
             inputField = `
-                <input type="text" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">${setting.display_name}</label>
+                    <input type="text" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                </div>
             `;
     }
     
     return `
-        <div class="bg-white border border-gray-200 rounded-lg p-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-                ${setting.display_name}
-            </label>
+        <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
             ${inputField}
             ${description}
         </div>

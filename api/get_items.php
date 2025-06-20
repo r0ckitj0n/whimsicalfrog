@@ -40,7 +40,7 @@ try {
                         i.reorderPoint,
                         i.costPrice,
                         i.retailPrice,
-                        img.image_path as imageUrl
+                        COALESCE(img.image_path, i.imageUrl) as imageUrl
                     FROM items i 
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.sku IN ($placeholders)";
@@ -76,7 +76,7 @@ try {
                         i.reorderPoint,
                         i.costPrice,
                         i.retailPrice,
-                        img.image_path as imageUrl
+                        COALESCE(img.image_path, i.imageUrl) as imageUrl
                     FROM items i
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.category = ?";
@@ -94,7 +94,7 @@ try {
                         i.reorderPoint,
                         i.costPrice,
                         i.retailPrice,
-                        img.image_path as imageUrl
+                        COALESCE(img.image_path, i.imageUrl) as imageUrl
                     FROM items i
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1";
             

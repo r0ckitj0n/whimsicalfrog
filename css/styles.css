@@ -368,22 +368,7 @@ body {
 
 /* TARGETED BUTTON STYLING - ONLY BRAND BUTTONS */
 
-/* Brand button class - primary green styling */
-.brand-button {
-    background-color: #87ac3a !important;
-    border-color: #87ac3a !important;
-    color: white !important;
-    border-radius: 0.25rem;
-    padding: 0.5rem 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.brand-button:hover {
-    background-color: #6b8e23 !important;
-    border-color: #6b8e23 !important;
-}
+/* Brand button class - now uses CSS variables (see new implementation below) */
 
 /* Specific admin button IDs that should be green */
 #markPaymentReceivedBtn,
@@ -462,3 +447,224 @@ button.hover\\:bg-indigo-700:hover,
 .payment-toggle-btn.pending:hover {
     background-color: #D97706 !important; /* Darker Yellow/Orange for hover (Tailwind yellow-600) */
 }
+
+/* Global CSS Variables will be injected here by the Global CSS Rules system */
+:root {
+    /* Default fallback values - these will be overridden by the Global CSS Rules system */
+    --primary-color: #87ac3a;
+    --primary-color-hover: #a3cc4a;
+    --secondary-color: #556B2F;
+    --accent-color: #6B8E23;
+    --button-bg-primary: #87ac3a;
+    --button-bg-primary-hover: #a3cc4a;
+    --button-text-primary: #ffffff;
+    --button-padding: 10px 20px;
+    --button-border-radius: 8px;
+    --font-family-primary: 'Merienda', cursive;
+    --font-size-base: 16px;
+    --font-size-heading: 24px;
+    --line-height-base: 1.6;
+    --input-border-color: #d1d5db;
+    --input-focus-color: #87ac3a;
+    --input-padding: 8px 12px;
+    --input-border-radius: 6px;
+    --border-radius-default: 8px;
+    --spacing-small: 8px;
+    --spacing-medium: 16px;
+    --spacing-large: 24px;
+    --shadow-default: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --nav-bg-color: rgba(0, 0, 0, 0.95);
+    --nav-text-color: #ffffff;
+    --nav-link-hover: #87ac3a;
+    --modal-bg-color: #ffffff;
+    --modal-border-radius: 12px;
+    --modal-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --admin-bg-color: #f9fafb;
+    --admin-text-color: #374151;
+}
+
+/* ==============================================
+   UTILITY CLASSES - USE THESE FOR CONSISTENCY
+   ============================================== */
+
+/* Button Classes - Use these instead of hardcoded Tailwind classes */
+.btn-primary {
+    background-color: var(--button-bg-primary) !important;
+    color: var(--button-text-primary) !important;
+    padding: var(--button-padding) !important;
+    border-radius: var(--button-border-radius) !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--button-bg-primary-hover) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-default) !important;
+}
+
+.btn-secondary {
+    background-color: transparent !important;
+    color: var(--button-bg-primary) !important;
+    padding: var(--button-padding) !important;
+    border-radius: var(--button-border-radius) !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    border: 2px solid var(--button-bg-primary) !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+}
+
+.btn-secondary:hover {
+    background-color: var(--button-bg-primary) !important;
+    color: var(--button-text-primary) !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-small {
+    padding: calc(var(--button-padding) * 0.6) !important;
+    font-size: 0.875rem !important;
+}
+
+.btn-large {
+    padding: calc(var(--button-padding) * 1.4) !important;
+    font-size: 1.125rem !important;
+}
+
+.btn-full-width {
+    width: 100% !important;
+}
+
+/* Form Classes */
+.form-input {
+    padding: var(--input-padding) !important;
+    border: 1px solid var(--input-border-color) !important;
+    border-radius: var(--input-border-radius) !important;
+    font-size: var(--font-size-base) !important;
+    font-family: var(--font-family-primary) !important;
+    transition: border-color 0.2s ease !important;
+}
+
+.form-input:focus {
+    outline: none !important;
+    border-color: var(--input-focus-color) !important;
+    box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.1) !important;
+}
+
+/* Text Classes */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.text-secondary {
+    color: var(--secondary-color) !important;
+}
+
+.text-accent {
+    color: var(--accent-color) !important;
+}
+
+.font-primary {
+    font-family: var(--font-family-primary) !important;
+}
+
+.text-base {
+    font-size: var(--font-size-base) !important;
+    line-height: var(--line-height-base) !important;
+}
+
+.text-heading {
+    font-size: var(--font-size-heading) !important;
+    font-weight: 600 !important;
+    color: var(--primary-color) !important;
+}
+
+/* Layout Classes */
+.spacing-small {
+    margin: var(--spacing-small) !important;
+}
+
+.spacing-medium {
+    margin: var(--spacing-medium) !important;
+}
+
+.spacing-large {
+    margin: var(--spacing-large) !important;
+}
+
+.rounded-default {
+    border-radius: var(--border-radius-default) !important;
+}
+
+.shadow-default {
+    box-shadow: var(--shadow-default) !important;
+}
+
+/* Card Classes */
+.card {
+    background-color: var(--modal-bg-color) !important;
+    border-radius: var(--modal-border-radius) !important;
+    box-shadow: var(--shadow-default) !important;
+    padding: var(--spacing-large) !important;
+}
+
+/* Navigation Classes */
+.nav-link {
+    color: var(--nav-text-color) !important;
+    text-decoration: none !important;
+    transition: color 0.2s ease !important;
+}
+
+.nav-link:hover {
+    color: var(--nav-link-hover) !important;
+}
+
+/* Admin Classes */
+.admin-bg {
+    background-color: var(--admin-bg-color) !important;
+}
+
+.admin-text {
+    color: var(--admin-text-color) !important;
+}
+
+/* ==============================================
+   LEGACY CLASSES - BEING PHASED OUT
+   ============================================== */
+
+/* Keep existing brand-button for backward compatibility but update to use CSS variables */
+.brand-button {
+    background-color: var(--button-bg-primary) !important;
+    border-color: var(--button-bg-primary) !important;
+    color: var(--button-text-primary) !important;
+    padding: var(--button-padding) !important;
+    border-radius: var(--button-border-radius) !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    border: 2px solid transparent !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+}
+
+.brand-button:hover {
+    background-color: var(--button-bg-primary-hover) !important;
+    border-color: var(--button-bg-primary-hover) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-default) !important;
+}
+
+/* ==============================================
+   EXISTING STYLES BELOW - PRESERVED
+   ============================================== */

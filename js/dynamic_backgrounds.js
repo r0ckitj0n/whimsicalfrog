@@ -1,7 +1,18 @@
 // Dynamic Background Loading for Room Pages
 async function loadRoomBackground(roomType) {
     try {
-        // Fetch active background for this room
+        // Check if we're coming from main room - if so, use main room background
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromMain = urlParams.get('from') === 'main';
+        
+        if (fromMain) {
+            // When coming from main room, let CSS handle room-specific content 
+            // and let main site background system handle the main room background
+            console.log('Coming from main room - using CSS room background with main room body background');
+            return;
+        }
+        
+        // Normal room background loading
         const response = await fetch(`api/get_background.php?room_type=${roomType}`);
         const data = await response.json();
         

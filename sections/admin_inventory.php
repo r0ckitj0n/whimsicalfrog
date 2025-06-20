@@ -140,12 +140,33 @@ $messageType = $_GET['type'] ?? '';
     .toast-notification.error { background-color: #f56565; } /* Tailwind red-500 */
     .toast-notification.info { background-color: #4299e1; } /* Tailwind blue-500 */
 
-    .inventory-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px; }
+    .inventory-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px; table-layout: fixed; }
     .inventory-table th { background-color: #87ac3a; color: white; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 0.8rem; position: sticky; top: 0; z-index: 10; }
-    .inventory-table td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; }
+    .inventory-table td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; }
     .inventory-table tr:hover { background-color: #f7fafc; }
     .inventory-table th:first-child { border-top-left-radius: 6px; }
     .inventory-table th:last-child { border-top-right-radius: 6px; }
+    
+    /* Fixed column widths to prevent resizing during inline editing */
+    .inventory-table th:nth-child(1), .inventory-table td:nth-child(1) { width: 60px; } /* Image */
+    .inventory-table th:nth-child(2), .inventory-table td:nth-child(2) { width: 180px; } /* Name */
+    .inventory-table th:nth-child(3), .inventory-table td:nth-child(3) { width: 120px; } /* Category */
+    .inventory-table th:nth-child(4), .inventory-table td:nth-child(4) { width: 100px; } /* SKU */
+    .inventory-table th:nth-child(5), .inventory-table td:nth-child(5) { width: 80px; } /* Stock */
+    .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { width: 90px; } /* Reorder Point */
+    .inventory-table th:nth-child(7), .inventory-table td:nth-child(7) { width: 90px; } /* Cost Price */
+    .inventory-table th:nth-child(8), .inventory-table td:nth-child(8) { width: 90px; } /* Retail Price */
+    .inventory-table th:nth-child(9), .inventory-table td:nth-child(9) { width: 70px; } /* Images */
+    .inventory-table th:nth-child(10), .inventory-table td:nth-child(10) { width: 120px; } /* Actions */
+    
+    /* Responsive adjustments for smaller screens */
+    @media (max-width: 1200px) {
+        .inventory-table { table-layout: auto; }
+        .inventory-table th, .inventory-table td { width: auto !important; min-width: 60px; }
+        .inventory-table th:nth-child(2), .inventory-table td:nth-child(2) { min-width: 120px; } /* Name */
+        .inventory-table th:nth-child(5), .inventory-table td:nth-child(5) { min-width: 60px; } /* Stock */
+        .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { min-width: 70px; } /* Reorder Point */
+    }
 
     .action-btn { padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; border: none; }
     .view-btn { background-color: #4299e1; color: white; } .view-btn:hover { background-color: #3182ce; }
@@ -159,7 +180,132 @@ $messageType = $_GET['type'] ?? '';
     .cost-item:last-child { border-bottom: none; }
     .cost-item-name { font-weight: 500; color: #374151; flex-grow: 1; margin-right: 6px; word-break: break-word; }
     .cost-item-value { font-weight: 600; color: #1f2937; white-space: nowrap; }
-    .cost-item-actions { display: flex; align-items: center; margin-left: 6px; }
+    .cost-item-actions { display: flex; align-items: center; margin-left: 6px; gap: 4px; }
+.delete-cost-btn { 
+    background: #f56565; 
+    color: white; 
+    border: none; 
+    border-radius: 3px; 
+    width: 18px; 
+    height: 18px; 
+    font-size: 12px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: background-color 0.2s;
+}
+.delete-cost-btn:hover { background: #e53e3e; }
+
+/* Friendly Delete Cost Dialog */
+.delete-cost-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.delete-cost-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 90%;
+    animation: slideIn 0.3s ease-out;
+}
+
+.delete-cost-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.delete-cost-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.delete-cost-body {
+    padding: 20px 24px;
+}
+
+.delete-cost-body p {
+    margin: 0 0 12px 0;
+    color: #374151;
+    line-height: 1.5;
+}
+
+.delete-cost-note {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.delete-cost-actions {
+    padding: 16px 24px 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.delete-cost-cancel {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.delete-cost-cancel:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.delete-cost-confirm {
+    padding: 8px 16px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.delete-cost-confirm:hover {
+    background: #dc2626;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
     .cost-edit-btn, .cost-delete-btn { padding: 1px; margin-left: 3px; border: none; background: none; border-radius: 3px; cursor: pointer; font-size: 10px; opacity: 0.7; transition: opacity 0.2s; }
     .cost-edit-btn svg, .cost-delete-btn svg { width: 12px; height: 12px; }
     .cost-edit-btn { color: #4299e1; } .cost-delete-btn { color: #f56565; }
@@ -174,11 +320,20 @@ $messageType = $_GET['type'] ?? '';
     .cost-label { font-size: 0.8rem; color: #6b7280; }
     
     .modal-outer { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
-    .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: calc(60rem + 10px); /* Slightly reduced max-width */ max-height: calc(90vh + 10px); display: flex; flex-direction: column; }
+    .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: calc(80rem + 10px); /* Increased max-width for wider modal */ max-height: calc(90vh + 10px); display: flex; flex-direction: column; }
     .modal-form-container { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-right: 0.5rem; /* For scrollbar */ }
     @media (min-width: 768px) { .modal-form-container { flex-direction: row; } }
     .modal-form-main-column { flex: 1; padding-right: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; /* Reduced gap */ }
     @media (max-width: 767px) { .modal-form-main-column { padding-right: 0; } }
+    .modal-form-suggestions-column { width: 100%; padding-left: 0; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    @media (min-width: 768px) { .modal-form-suggestions-column { flex: 0 0 50%; padding-left: 0.75rem; margin-top: 0; } }
+    
+    /* Two-column layout for cost and price suggestions */
+    .suggestions-container { display: flex; flex-direction: column; gap: 0.75rem; }
+    @media (min-width: 1024px) { .suggestions-container { flex-direction: row; gap: 0.75rem; } }
+    .cost-breakdown-wrapper, .price-suggestion-wrapper { flex: 1; }
+    
+    /* Legacy support for single cost column */
     .modal-form-cost-column { width: 100%; padding-left: 0; margin-top: 1rem; }
     @media (min-width: 768px) { .modal-form-cost-column { flex: 0 0 40%; padding-left: 0.75rem; margin-top: 0; } }\
     
@@ -195,11 +350,22 @@ $messageType = $_GET['type'] ?? '';
     .image-preview { position: relative; width: 100%; max-width: 150px; margin-top: 5px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .image-preview img { width: 100%; height: auto; display: block; }
 
-    .editable { position: relative; padding: 6px 8px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+    .editable { position: relative; padding: 6px 8px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
     .editable:hover { background-color: #edf2f7; }
     .editable:hover::after { content: "✏️"; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: 0.5; }
-    .editing { padding: 0 !important; background-color: #ebf8ff !important; }
-    .editing input, .editing select { width: 100%; padding: 6px 8px; border: 1px solid #4299e1; border-radius: 4px; font-size: inherit; font-family: inherit; background-color: white; }
+    .editing { padding: 2px !important; background-color: #ebf8ff !important; }
+    .editing input, .editing select { 
+        width: 100%; 
+        padding: 4px 6px; 
+        border: 1px solid #4299e1; 
+        border-radius: 4px; 
+        font-size: inherit; 
+        font-family: inherit; 
+        background-color: white;
+        box-sizing: border-box;
+        margin: 0;
+        min-width: 0; /* Prevents input from expanding beyond container */
+    }
     
     .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
     .loading-spinner.dark { border: 2px solid rgba(0,0,0,0.1); border-top-color: #333; }
@@ -437,6 +603,57 @@ $messageType = $_GET['type'] ?? '';
                         </div>
                     </div>
                 </div>
+            
+                <!-- Price Suggestion Section for View Modal -->
+                <div class="price-suggestion-wrapper mt-4">
+                    <div class="price-suggestion bg-white border border-gray-200 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                            <span class="mr-2">🎯</span> Price Suggestion
+                        </h3>
+                        
+                        <button type="button" onclick="getViewModePriceSuggestion()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4">
+                            🎯 Get Suggested Price
+                        </button>
+                        
+                        <!-- Price Suggestion Display -->
+                        <div id="viewPriceSuggestionDisplay" class="mb-4 hidden">
+                            <div class="flex items-start justify-between mb-3">
+                                <h4 class="font-medium text-gray-800 text-sm">💡 AI Price Analysis</h4>
+                                <button type="button" onclick="clearViewPriceSuggestion()" class="text-gray-600 hover:text-gray-800 text-xs">×</button>
+                            </div>
+                            
+                            <!-- Suggested Price Display -->
+                            <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-green-700 font-medium">Suggested Price:</span>
+                                    <span class="font-bold text-green-800 text-lg" id="viewDisplaySuggestedPrice">$0.00</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Reasoning Section -->
+                            <div class="mb-3">
+                                <h4 class="font-semibold text-gray-700 mb-1 text-sm">AI Reasoning</h4>
+                                <div class="mb-2" id="viewReasoningList">
+                                    <!-- Reasoning items will be rendered here by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center text-xs mb-3">
+                                <span class="text-green-600" id="viewDisplayConfidence">Medium confidence</span>
+                                <span class="text-green-500" id="viewDisplayTimestamp">Just now</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Price Suggestion Placeholder -->
+                        <div id="viewPriceSuggestionPlaceholder" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                            <div class="text-center text-gray-500">
+                                <div class="text-2xl mb-1">🎯</div>
+                                <div class="text-sm">No price suggestion yet</div>
+                                <div class="text-xs mt-1 text-gray-400">Click "Get Suggested Price" above to get AI pricing analysis</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -487,8 +704,10 @@ $messageType = $_GET['type'] ?? '';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div>
-                            <!-- Empty div for grid alignment -->
+                        <div class="flex items-end">
+                            <button type="button" onclick="openMarketingManager()" class="brand-button px-3 py-2 rounded text-sm">
+                                🎯 Marketing Manager
+                            </button>
                         </div>
                     </div>
 
@@ -518,7 +737,7 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                     <div>
                         <label for="description" class="block text-gray-700">Description</label>
-                        <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="2"><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
+                        <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="3" placeholder="Enter product description or click 'Marketing Manager' for AI-powered suggestions..."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                     </div>
                     <!-- Item Images Section - Now spans full width when needed -->
                     <div class="images-section-container" id="imagesSection">
@@ -559,34 +778,138 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                 </div>
 
-                <div class="modal-form-cost-column">
-                    <div class="cost-breakdown">
-                        <h3>Cost Breakdown</h3>
-                        <?php foreach (['materials', 'labor', 'energy', 'equipment'] as $costType): ?>
-                        <div class="cost-breakdown-section <?= $costType !== 'materials' ? 'mt-3' : ''; ?>">
-                            <h4 class="font-semibold text-gray-700 mb-1 text-sm"><?= ucfirst($costType); ?></h4>
-                            <div class="mb-2" id="<?= $costType; ?>List" style="max-height: 100px; overflow-y: auto;">
-                                <!-- Cost items will be rendered here by JavaScript -->
+                <div class="modal-form-suggestions-column">
+                    <div class="suggestions-container">
+                        <!-- Cost Breakdown Section -->
+                        <div class="cost-breakdown-wrapper">
+                            <div class="cost-breakdown">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                                    <span class="mr-2">💰</span> Cost Breakdown
+                                </h3>
+                                
+                                <button type="button" onclick="useSuggestedCost()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors mb-4">
+                                    🧮 Get Suggested Cost
+                                </button>
+                                
+                                <!-- Template Selection Section -->
+                                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-blue-800 text-sm">📋 Cost Templates</h4>
+                                        <button type="button" onclick="toggleTemplateSection()" class="text-blue-600 hover:text-blue-800 text-xs">
+                                            <span id="templateToggleText">Show Templates</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="templateSection" class="hidden space-y-3">
+                                        <!-- Load Template -->
+                                        <div class="flex gap-2">
+                                            <select id="templateSelect" class="flex-1 px-2 py-1 border border-blue-300 rounded text-xs">
+                                                <option value="">Choose a template...</option>
+                                            </select>
+                                            <button type="button" onclick="loadTemplate()" class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                                                Load
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Save Template -->
+                                        <div class="flex gap-2">
+                                            <input type="text" id="templateName" placeholder="Template name..." class="flex-1 px-2 py-1 border border-blue-300 rounded text-xs">
+                                            <button type="button" onclick="saveAsTemplate()" class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
+                                                Save as Template
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="text-xs text-blue-600">
+                                            💡 Load existing templates or save current breakdown as a reusable template
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <?php foreach (['materials', 'labor', 'energy', 'equipment'] as $costType): ?>
+                                <div class="cost-breakdown-section <?= $costType !== 'materials' ? 'mt-3' : ''; ?>">
+                                    <h4 class="font-semibold text-gray-700 mb-1 text-sm"><?= ucfirst($costType); ?></h4>
+                                    <div class="mb-2" id="<?= $costType; ?>List" style="max-height: 100px; overflow-y: auto;">
+                                        <!-- Cost items will be rendered here by JavaScript -->
+                                    </div>
+                                    <button type="button" class="add-cost-btn" onclick="addCostItem('<?= $costType; ?>')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 mr-1"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                                        Add <?php 
+                                            $labels = ['materials' => 'Material', 'labor' => 'Labor', 'energy' => 'Energy', 'equipment' => 'Equipment'];
+                                            echo $labels[$costType] ?? ucfirst($costType);
+                                        ?>
+                                    </button>
+                                </div>
+                                <?php endforeach; ?>
+                                <div class="cost-totals">
+                                    <div class="cost-total-row"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
+                                    <div class="cost-total-row"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
+                                    <div class="cost-total-row"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
+                                    <div class="cost-total-row"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+                                    <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
+                                        <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="suggestedCostDisplay">$0.00</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" onclick="applyPriceSuggestionToCost()" class="w-full px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors">
+                                            💰 Apply Price to Cost Field
+                                        </button>
+                                    </div>
+
+                                </div>
                             </div>
-                            <button type="button" class="add-cost-btn" onclick="addCostItem('<?= $costType; ?>')">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 mr-1"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                                Add <?php 
-                                    $labels = ['materials' => 'Material', 'labor' => 'Labor', 'energy' => 'Energy', 'equipment' => 'Equipment'];
-                                    echo $labels[$costType] ?? ucfirst($costType);
-                                ?>
-                            </button>
                         </div>
-                        <?php endforeach; ?>
-                        <div class="cost-totals">
-                            <div class="cost-total-row"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
-                            <div class="cost-total-row"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
-                            <div class="cost-total-row"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
-                            <div class="cost-total-row"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
-                            <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
-                                <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="suggestedCostDisplay">$0.00</span>
-                            </div>
-                            <div class="mt-1 text-xs">
-                                <button type="button" onclick="useSuggestedCost()" class="text-blue-600 hover:text-blue-800 underline">Use suggested cost for item</button>
+                        
+                        <!-- Price Suggestion Section -->
+                        <div class="price-suggestion-wrapper">
+                            <div class="price-suggestion bg-white border border-gray-200 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                                    <span class="mr-2">🎯</span> Price Suggestion
+                                </h3>
+                                
+                                <button type="button" onclick="useSuggestedPrice()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4">
+                                    🎯 Get Suggested Price
+                                </button>
+                                
+                                <!-- Price Suggestion Display -->
+                                <div id="priceSuggestionDisplay" class="mb-4 hidden">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <h4 class="font-medium text-gray-800 text-sm">💡 AI Price Analysis</h4>
+                                        <button type="button" onclick="clearPriceSuggestion()" class="text-gray-600 hover:text-gray-800 text-xs">×</button>
+                                    </div>
+                                    
+                                    <!-- Suggested Price Display -->
+                                    <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-green-700 font-medium">Suggested Price:</span>
+                                            <span class="font-bold text-green-800 text-lg" id="displaySuggestedPrice">$0.00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Reasoning Section -->
+                                    <div class="mb-3">
+                                        <h4 class="font-semibold text-gray-700 mb-1 text-sm">AI Reasoning</h4>
+                                        <div class="mb-2" id="reasoningList">
+                                            <!-- Reasoning items will be rendered here by JavaScript -->
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center text-xs mb-3">
+                                        <span class="text-green-600" id="displayConfidence">Medium confidence</span>
+                                        <span class="text-green-500" id="displayTimestamp">Just now</span>
+                                    </div>
+                                    
+                                    <button type="button" onclick="applyPriceSuggestion()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors">
+                                        Apply to Retail Price
+                                    </button>
+                                </div>
+                                
+                                <!-- Price Suggestion Placeholder -->
+                                <div id="priceSuggestionPlaceholder" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                    <div class="text-center text-gray-500">
+                                        <div class="text-2xl mb-1">🎯</div>
+                                        <div class="text-sm">No price suggestion yet</div>
+                                        <div class="text-xs mt-1 text-gray-400">Click "Get Suggested Price" above to get AI pricing analysis</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1088,6 +1411,7 @@ function renderCostList(type, items) {
                     <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
                     <div class="cost-item-actions">
                         <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
+                        <button type="button" class="delete-cost-btn" data-id="${item_cost.id}" data-type="${type}" title="Delete this cost item">×</button>
                     </div>`;
                 listElement.appendChild(itemDiv);
             });
@@ -1139,29 +1463,1641 @@ function updateTotalsDisplay(totals) {
     }
 }
 
-function useSuggestedCost() {
-    if (costBreakdown && costBreakdown.totals && costBreakdown.totals.suggestedCost !== undefined) {
-        const suggested = parseFloat(costBreakdown.totals.suggestedCost).toFixed(2);
-        const costPriceField = document.getElementById('costPrice');
-        
-        if (costPriceField) {
-            costPriceField.value = suggested;
-            // Add visual feedback
-            costPriceField.style.backgroundColor = '#c6f6d5';
-            setTimeout(() => {
-                costPriceField.style.backgroundColor = '';
-            }, 1000);
-            showToast('info', 'Suggested cost applied to Cost Price field. Save the item to persist.');
-        } else {
-            showToast('error', 'Cost Price field not found.');
+function showCostSuggestionChoiceDialog(suggestionData) {
+    // Check if there are existing cost breakdown items
+    const hasExistingCosts = checkForExistingCosts();
+    
+    // Create the modal overlay
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+    modal.id = 'costSuggestionChoiceModal';
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-blue-600 to-green-600 px-6 py-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    🧮 AI Cost Suggestion Ready
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                <!-- AI Analysis Summary -->
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 class="font-semibold text-gray-800 mb-2 flex items-center">
+                        <span class="mr-2">🤖</span> AI Analysis
+                    </h3>
+                    <p class="text-sm text-gray-700 mb-2">${suggestionData.reasoning}</p>
+                    <div class="text-xs text-blue-600">
+                        <strong>Confidence:</strong> ${suggestionData.confidence} • 
+                        <strong>Total Suggested Cost:</strong> $${parseFloat(suggestionData.suggestedCost).toFixed(2)}
+                    </div>
+                </div>
+                
+                <!-- Cost Breakdown Preview -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">💰 Suggested Cost Breakdown</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-red-50 p-3 rounded border border-red-200">
+                            <div class="text-xs text-red-600 font-medium">Materials</div>
+                            <div class="text-lg font-bold text-red-800">$${parseFloat(suggestionData.breakdown.materials || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                            <div class="text-xs text-blue-600 font-medium">Labor</div>
+                            <div class="text-lg font-bold text-blue-800">$${parseFloat(suggestionData.breakdown.labor || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded border border-yellow-200">
+                            <div class="text-xs text-yellow-600 font-medium">Energy</div>
+                            <div class="text-lg font-bold text-yellow-800">$${parseFloat(suggestionData.breakdown.energy || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="bg-purple-50 p-3 rounded border border-purple-200">
+                            <div class="text-xs text-purple-600 font-medium">Equipment</div>
+                            <div class="text-lg font-bold text-purple-800">$${parseFloat(suggestionData.breakdown.equipment || 0).toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 bg-green-50 rounded border border-green-200">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-green-800">Total Cost:</span>
+                            <span class="text-xl font-bold text-green-800">$${parseFloat(suggestionData.suggestedCost).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                ${hasExistingCosts ? `
+                    <div class="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div class="flex items-center mb-2">
+                            <span class="text-amber-600 mr-2">⚠️</span>
+                            <span class="font-medium text-amber-800">Existing Cost Data Found</span>
+                        </div>
+                        <p class="text-sm text-amber-700">
+                            You have existing cost breakdown items. If you choose to use the new figures, 
+                            your current cost data will be cleared and replaced with the AI suggestions.
+                        </p>
+                    </div>
+                ` : ''}
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="applySuggestedCostBreakdown(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                            class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
+                        🎯 Use New AI Figures ${hasExistingCosts ? '(Replace Current)' : ''}
+                    </button>
+                    
+
+                    <button onclick="closeCostSuggestionChoiceDialog()" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200">
+                        ❌ Keep Current Figures
+                    </button>
+                </div>
+                
+                <div class="mt-4 text-xs text-gray-500 text-center">
+                    💡 Tip: You can always generate new suggestions later if needed
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close on overlay click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeCostSuggestionChoiceDialog();
         }
-    } else {
-        showToast('error', 'Suggested cost is not available.');
+    });
+    
+    // Close on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCostSuggestionChoiceDialog();
+        }
+    });
+}
+
+function checkForExistingCosts() {
+    // Check if there are any existing cost breakdown items
+    const categories = ['materials', 'labor', 'energy', 'equipment'];
+    
+    for (const category of categories) {
+        const listElement = document.getElementById(`${category}List`);
+        if (listElement) {
+            const items = listElement.querySelectorAll('.cost-item');
+            if (items.length > 0) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
+function closeCostSuggestionChoiceDialog() {
+    const modal = document.getElementById('costSuggestionChoiceModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function applySuggestedCostBreakdown(buttonElement) {
+    // Get suggestion data from the button's data attribute
+    const suggestionData = JSON.parse(buttonElement.dataset.suggestion);
+    
+    // Close the choice dialog
+    closeCostSuggestionChoiceDialog();
+    
+    // Show loading state
+    showToast('info', 'Applying AI cost breakdown...');
+    
+    try {
+        // Populate the cost breakdown with the suggestion and save to database
+        await populateCostBreakdownFromSuggestion(suggestionData);
+        
+        showToast('success', `✅ AI cost breakdown applied and saved! Total: $${suggestionData.suggestedCost} (${suggestionData.confidence} confidence)`);
+    } catch (error) {
+        console.error('Error applying cost breakdown:', error);
+        showToast('error', 'Failed to apply cost breakdown');
+    }
+}
+
+
+
+async function useSuggestedCost() {
+    const nameField = document.getElementById('name');
+    const descriptionField = document.getElementById('description');
+    const categoryField = document.getElementById('categoryEdit');
+    
+    if (!nameField || !nameField.value.trim()) {
+        showToast('error', 'Item name is required for cost suggestion');
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔍 Analyzing...';
+    button.disabled = true;
+    
+    // Gather item data
+    const itemData = {
+        name: nameField.value.trim(),
+        description: descriptionField ? descriptionField.value.trim() : '',
+        category: categoryField ? categoryField.value : '',
+        sku: currentItemSku || ''
+    };
+    
+    try {
+        // Call the cost suggestion API
+        const response = await fetch('/api/suggest_cost.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(itemData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Show choice dialog with the new figures
+            showCostSuggestionChoiceDialog(data);
+        } else {
+            showToast('error', data.error || 'Failed to get cost suggestion');
+        }
+    } catch (error) {
+        console.error('Error getting cost suggestion:', error);
+        showToast('error', 'Failed to connect to cost suggestion service');
+    } finally {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+function useSuggestedPrice() {
+    const nameField = document.getElementById('name');
+    const descriptionField = document.getElementById('description');
+    const categoryField = document.getElementById('categoryEdit');
+    const costPriceField = document.getElementById('costPrice');
+    
+    if (!nameField || !nameField.value.trim()) {
+        showToast('error', 'Item name is required for price suggestion');
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔍 Analyzing...';
+    button.disabled = true;
+    
+    // Gather item data
+    const itemData = {
+        name: nameField.value.trim(),
+        description: descriptionField ? descriptionField.value.trim() : '',
+        category: categoryField ? categoryField.value : '',
+        costPrice: costPriceField ? parseFloat(costPriceField.value) || 0 : 0,
+        sku: currentItemSku || ''
+    };
+    
+    // Call the price suggestion API
+    fetch('/api/suggest_price.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(itemData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Display the price suggestion inline
+            displayPriceSuggestion({
+                suggestedPrice: data.suggestedPrice,
+                reasoning: data.reasoning,
+                confidence: data.confidence,
+                factors: data.factors,
+                createdAt: new Date().toISOString()
+            });
+            
+            showToast('success', 'Price suggestion generated and saved!');
+        } else {
+            showToast('error', data.error || 'Failed to get price suggestion');
+        }
+    })
+    .catch(error => {
+        console.error('Error getting price suggestion:', error);
+        showToast('error', 'Failed to connect to pricing service');
+    })
+    .finally(() => {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+function displayPriceSuggestion(data) {
+    const display = document.getElementById('priceSuggestionDisplay');
+    const placeholder = document.getElementById('priceSuggestionPlaceholder');
+    const priceElement = document.getElementById('displaySuggestedPrice');
+    const reasoningList = document.getElementById('reasoningList');
+    const confidenceElement = document.getElementById('displayConfidence');
+    const timestampElement = document.getElementById('displayTimestamp');
+    
+    if (display && priceElement && reasoningList && confidenceElement && timestampElement) {
+        priceElement.textContent = '$' + parseFloat(data.suggestedPrice).toFixed(2);
+        
+        // Clear existing reasoning list
+        reasoningList.innerHTML = '';
+        
+        // Use the new components structure if available, otherwise fall back to parsing reasoning
+        if (data.components && data.components.length > 0) {
+            data.components.forEach(component => {
+                const listItem = document.createElement('div');
+                listItem.className = 'cost-item-row flex justify-between items-center p-1 bg-green-50 rounded text-xs mb-1';
+                
+                listItem.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center space-x-2">
+                            <div class="info-icon-container relative">
+                                <span class="info-icon cursor-help w-4 h-4 border border-blue-500 text-blue-500 bg-transparent rounded-full flex items-center justify-center text-xs font-bold hover:bg-blue-50" 
+                                      onclick="showPricingTooltipWithData(event, '${component.type}', ${JSON.stringify(component.explanation)})"
+                                      onmouseenter="showPricingTooltipWithData(event, '${component.type}', ${JSON.stringify(component.explanation)})"
+                                      onmouseleave="hidePricingTooltipDelayed()">i</span>
+                            </div>
+                            <span class="text-green-700">${component.label}</span>
+                        </div>
+                        <span class="text-green-600 font-semibold">$${parseFloat(component.amount).toFixed(2)}</span>
+                    </div>
+                `;
+                reasoningList.appendChild(listItem);
+            });
+        } else {
+            // Fallback to old parsing method
+            const reasoning = data.reasoning || 'No reasoning provided';
+            const reasoningItems = reasoning.split('•').filter(item => item.trim().length > 0);
+            
+            if (reasoningItems.length > 0) {
+                reasoningItems.forEach(item => {
+                    const trimmedItem = item.trim();
+                    if (trimmedItem) {
+                        // Extract dollar amount if it exists
+                        let dollarAmount = '';
+                        let cleanedItem = trimmedItem;
+                        const dollarMatch = cleanedItem.match(/:\s*\$(\d+(?:\.\d{2})?)/);
+                        if (dollarMatch) {
+                            dollarAmount = '$' + dollarMatch[1];
+                            cleanedItem = cleanedItem.replace(/:\s*\$\d+(\.\d{2})?/, ''); // Remove from main text
+                        }
+                        
+                        if (cleanedItem) {
+                            const listItem = document.createElement('div');
+                            listItem.className = 'cost-item-row flex justify-between items-center p-1 bg-green-50 rounded text-xs mb-1';
+                            
+                            listItem.innerHTML = `
+                                <div class="flex items-center justify-between w-full">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="info-icon-container relative">
+                                            <span class="info-icon cursor-help w-4 h-4 border border-blue-500 text-blue-500 bg-transparent rounded-full flex items-center justify-center text-xs font-bold hover:bg-blue-50" 
+                                                  onclick="showPricingTooltip(event, '${cleanedItem.replace(/'/g, "\\'")}')"
+                                                  onmouseenter="showPricingTooltip(event, '${cleanedItem.replace(/'/g, "\\'")}')"
+                                                  onmouseleave="hidePricingTooltipDelayed()">i</span>
+                                        </div>
+                                        <span class="text-green-700">${cleanedItem}</span>
+                                    </div>
+                                    ${dollarAmount ? `<span class="text-green-600 font-semibold">${dollarAmount}</span>` : ''}
+                                </div>
+                            `;
+                            reasoningList.appendChild(listItem);
+                        }
+                    }
+                });
+            } else {
+                reasoningList.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No reasoning provided.</p>';
+            }
+        }
+        
+        confidenceElement.textContent = (data.confidence || 'medium').charAt(0).toUpperCase() + (data.confidence || 'medium').slice(1) + ' confidence';
+        
+        // Format timestamp
+        const date = new Date(data.createdAt);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - date) / (1000 * 60));
+        
+        let timeText;
+        if (diffMinutes < 1) {
+            timeText = 'Just now';
+        } else if (diffMinutes < 60) {
+            timeText = `${diffMinutes} min ago`;
+        } else if (diffMinutes < 1440) {
+            timeText = `${Math.floor(diffMinutes / 60)} hr ago`;
+        } else {
+            timeText = date.toLocaleDateString();
+        }
+        timestampElement.textContent = timeText;
+        
+        // Store the suggested price for apply function
+        display.dataset.suggestedPrice = data.suggestedPrice;
+        
+        // Hide placeholder and show the display
+        if (placeholder) placeholder.classList.add('hidden');
+        display.classList.remove('hidden');
+    }
+}
+
+function applyPriceSuggestion() {
+    const display = document.getElementById('priceSuggestionDisplay');
+    const retailPriceField = document.getElementById('retailPrice');
+    
+    if (display && retailPriceField && display.dataset.suggestedPrice) {
+        retailPriceField.value = parseFloat(display.dataset.suggestedPrice).toFixed(2);
+        
+        // Add visual feedback
+        retailPriceField.style.backgroundColor = '#dcfce7';
+        setTimeout(() => {
+            retailPriceField.style.backgroundColor = '';
+        }, 2000);
+        
+        showToast('success', 'Suggested price applied to Retail Price field!');
+    }
+}
+
+function applyPriceSuggestionToCost() {
+    const display = document.getElementById('priceSuggestionDisplay');
+    const costPriceField = document.getElementById('costPrice');
+    
+    if (display && costPriceField && display.dataset.suggestedPrice) {
+        costPriceField.value = parseFloat(display.dataset.suggestedPrice).toFixed(2);
+        
+        // Add visual feedback with blue color for cost
+        costPriceField.style.backgroundColor = '#dbeafe';
+        setTimeout(() => {
+            costPriceField.style.backgroundColor = '';
+        }, 2000);
+        
+        showToast('success', 'Suggested price applied to Cost Price field!');
+    }
+}
+
+
+
+async function getPricingExplanation(reasoningText) {
+    try {
+        const url = `/api/get_pricing_explanation.php?text=${encodeURIComponent(reasoningText)}`;
+        console.log('Fetching from URL:', url);
+        
+        const response = await fetch(url);
+        console.log('Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            return {
+                title: data.title,
+                explanation: data.explanation
+            };
+        } else {
+            console.log('API returned success=false:', data.error);
+            return {
+                title: 'AI Pricing Analysis',
+                explanation: 'Advanced algorithmic analysis considering multiple market factors and pricing strategies.'
+            };
+        }
+    } catch (error) {
+        console.error('Error fetching pricing explanation:', error);
+        return {
+            title: 'AI Pricing Analysis',
+            explanation: 'Advanced algorithmic analysis considering multiple market factors and pricing strategies.'
+        };
+    }
+}
+
+let tooltipTimeout;
+let currentTooltip;
+
+function hidePricingTooltipDelayed() {
+    tooltipTimeout = setTimeout(() => {
+        if (currentTooltip && currentTooltip.parentNode) {
+            currentTooltip.remove();
+            currentTooltip = null;
+        }
+    }, 300); // 300ms delay
+}
+
+// New function to show tooltip with direct component data
+async function showPricingTooltipWithData(event, componentType, explanation) {
+    event.stopPropagation();
+    
+    // Clear any pending hide timeout
+    if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+        tooltipTimeout = null;
+    }
+    
+    // Remove any existing tooltips
+    const existingTooltip = document.querySelector('.pricing-tooltip');
+    if (existingTooltip) {
+        existingTooltip.remove();
+    }
+    
+    // Show tooltip with direct data
+    const iconContainer = event.target.closest('.info-icon-container');
+    iconContainer.style.position = 'relative';
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'pricing-tooltip absolute z-50 bg-gray-800 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs';
+    tooltip.style.cssText = `
+        left: 25px;
+        top: -10px;
+        white-space: normal;
+        line-height: 1.4;
+        pointer-events: auto;
+    `;
+    
+    // Create title based on component type
+    const titles = {
+        'cost_plus': 'Cost-Plus Pricing',
+        'market_research': 'Market Research Analysis',
+        'competitive_analysis': 'Competitive Analysis',
+        'value_based': 'Value-Based Pricing',
+        'brand_premium': 'Brand Premium',
+        'psychological_pricing': 'Psychological Pricing',
+        'seasonality': 'Seasonal Adjustment',
+        'analysis': 'AI Pricing Analysis'
+    };
+    
+    const title = titles[componentType] || 'Pricing Analysis';
+    
+    tooltip.innerHTML = `
+        <div class="font-semibold mb-1">${title}</div>
+        <div>${explanation}</div>
+    `;
+    
+    // Add hover persistence
+    tooltip.addEventListener('mouseenter', () => {
+        if (tooltipTimeout) {
+            clearTimeout(tooltipTimeout);
+            tooltipTimeout = null;
+        }
+    });
+    
+    tooltip.addEventListener('mouseleave', () => {
+        hidePricingTooltipDelayed();
+    });
+    
+    iconContainer.appendChild(tooltip);
+    currentTooltip = tooltip;
+}
+
+async function showPricingTooltip(event, reasoningText) {
+    event.stopPropagation();
+    
+    // Clear any pending hide timeout
+    if (tooltipTimeout) {
+        clearTimeout(tooltipTimeout);
+        tooltipTimeout = null;
+    }
+    
+    // Remove any existing tooltips
+    const existingTooltip = document.querySelector('.pricing-tooltip');
+    if (existingTooltip) {
+        existingTooltip.remove();
+    }
+    
+    // Show loading tooltip first
+    const iconContainer = event.target.closest('.info-icon-container');
+    iconContainer.style.position = 'relative';
+    
+    const loadingTooltip = document.createElement('div');
+    loadingTooltip.className = 'pricing-tooltip absolute z-50 bg-gray-800 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs';
+    loadingTooltip.style.cssText = `
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100%);
+        word-wrap: break-word;
+        line-height: 1.4;
+    `;
+    loadingTooltip.innerHTML = `
+        <div class="tooltip-arrow absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+        <div class="flex items-center space-x-2">
+            <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+            <span>Loading explanation...</span>
+        </div>
+    `;
+    iconContainer.appendChild(loadingTooltip);
+    
+    try {
+        // Get explanation from database
+        console.log('Fetching explanation for:', reasoningText);
+        const explanationData = await getPricingExplanation(reasoningText);
+        console.log('Received explanation data:', explanationData);
+        
+        // Remove loading tooltip
+        loadingTooltip.remove();
+        
+        // Create actual tooltip with data
+        const tooltip = document.createElement('div');
+        tooltip.className = 'pricing-tooltip absolute z-50 bg-gray-800 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs';
+        tooltip.style.cssText = `
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            word-wrap: break-word;
+            line-height: 1.4;
+        `;
+        tooltip.innerHTML = `
+            <div class="tooltip-arrow absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+            <div class="font-semibold text-blue-200 mb-2">${explanationData.title}</div>
+            <div>${explanationData.explanation}</div>
+        `;
+        
+        // Add hover persistence to tooltip
+        tooltip.addEventListener('mouseenter', () => {
+            if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = null;
+            }
+        });
+        
+        tooltip.addEventListener('mouseleave', () => {
+            hidePricingTooltipDelayed();
+        });
+        
+        iconContainer.appendChild(tooltip);
+        currentTooltip = tooltip;
+        
+        // Auto-hide after 8 seconds or on outside click
+        const hideTooltip = () => {
+            if (tooltip && tooltip.parentNode) {
+                tooltip.remove();
+            }
+            document.removeEventListener('click', outsideClickHandler);
+        };
+        
+        const outsideClickHandler = (e) => {
+            if (!tooltip.contains(e.target) && !iconContainer.contains(e.target)) {
+                hideTooltip();
+            }
+        };
+        
+        setTimeout(hideTooltip, 8000);
+        setTimeout(() => document.addEventListener('click', outsideClickHandler), 100);
+        
+    } catch (error) {
+        console.error('Error showing pricing tooltip:', error);
+        loadingTooltip.remove();
+        
+        // Show error tooltip
+        const errorTooltip = document.createElement('div');
+        errorTooltip.className = 'pricing-tooltip absolute z-50 bg-red-800 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs';
+        errorTooltip.style.cssText = `
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            word-wrap: break-word;
+            line-height: 1.4;
+        `;
+        errorTooltip.innerHTML = `
+            <div class="tooltip-arrow absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-red-800"></div>
+            <div class="font-semibold mb-1">Error Loading Explanation</div>
+            <div>Unable to load pricing explanation. Please try again.</div>
+        `;
+        iconContainer.appendChild(errorTooltip);
+        
+        setTimeout(() => {
+            if (errorTooltip && errorTooltip.parentNode) {
+                errorTooltip.remove();
+            }
+        }, 3000);
+    }
+}
+
+function clearPriceSuggestion() {
+    const display = document.getElementById('priceSuggestionDisplay');
+    const placeholder = document.getElementById('priceSuggestionPlaceholder');
+    const reasoningList = document.getElementById('reasoningList');
+    
+    if (display) {
+        display.classList.add('hidden');
+    }
+    if (placeholder) {
+        placeholder.classList.remove('hidden');
+    }
+    if (reasoningList) {
+        reasoningList.innerHTML = '';
+    }
+}
+
+// View Modal Price Suggestion Functions
+function getViewModePriceSuggestion() {
+    if (!currentItemSku) {
+        showToast('error', 'No item SKU available');
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔍 Analyzing...';
+    button.disabled = true;
+    
+    // Get item data from view modal fields
+    const nameField = document.getElementById('name');
+    const descriptionField = document.getElementById('description');
+    const categoryField = document.getElementById('category');
+    const costPriceField = document.getElementById('costPrice');
+    
+    // Gather item data
+    const itemData = {
+        name: nameField ? nameField.value.trim() : '',
+        description: descriptionField ? descriptionField.value.trim() : '',
+        category: categoryField ? categoryField.value : '',
+        costPrice: costPriceField ? parseFloat(costPriceField.value) || 0 : 0,
+        sku: currentItemSku
+    };
+    
+    // Call the price suggestion API
+    fetch('/api/suggest_price.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(itemData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Display the price suggestion inline for view modal
+            displayViewPriceSuggestion({
+                suggestedPrice: data.suggestedPrice,
+                reasoning: data.reasoning,
+                confidence: data.confidence,
+                factors: data.factors,
+                createdAt: new Date().toISOString()
+            });
+            
+            showToast('success', 'Price suggestion generated and saved!');
+        } else {
+            showToast('error', data.error || 'Failed to get price suggestion');
+        }
+    })
+    .catch(error => {
+        console.error('Error getting price suggestion:', error);
+        showToast('error', 'Failed to connect to pricing service');
+    })
+    .finally(() => {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+function displayViewPriceSuggestion(data) {
+    const display = document.getElementById('viewPriceSuggestionDisplay');
+    const placeholder = document.getElementById('viewPriceSuggestionPlaceholder');
+    const priceElement = document.getElementById('viewDisplaySuggestedPrice');
+    const reasoningList = document.getElementById('viewReasoningList');
+    const confidenceElement = document.getElementById('viewDisplayConfidence');
+    const timestampElement = document.getElementById('viewDisplayTimestamp');
+    
+    if (display && priceElement && reasoningList && confidenceElement && timestampElement) {
+        priceElement.textContent = '$' + parseFloat(data.suggestedPrice).toFixed(2);
+        
+        // Clear existing reasoning list
+        reasoningList.innerHTML = '';
+        
+        // Use the new components structure if available, otherwise fall back to parsing reasoning
+        if (data.components && data.components.length > 0) {
+            data.components.forEach(component => {
+                const listItem = document.createElement('div');
+                listItem.className = 'cost-item-row flex justify-between items-center p-1 bg-green-50 rounded text-xs mb-1';
+                
+                listItem.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center space-x-2">
+                            <div class="info-icon-container relative">
+                                <span class="info-icon cursor-help w-4 h-4 border border-blue-500 text-blue-500 bg-transparent rounded-full flex items-center justify-center text-xs font-bold hover:bg-blue-50" 
+                                      onclick="showPricingTooltipWithData(event, '${component.type}', ${JSON.stringify(component.explanation)})"
+                                      onmouseenter="showPricingTooltipWithData(event, '${component.type}', ${JSON.stringify(component.explanation)})"
+                                      onmouseleave="hidePricingTooltipDelayed()">i</span>
+                            </div>
+                            <span class="text-green-700">${component.label}</span>
+                        </div>
+                        <span class="text-green-600 font-semibold">$${parseFloat(component.amount).toFixed(2)}</span>
+                    </div>
+                `;
+                reasoningList.appendChild(listItem);
+            });
+        } else {
+            // Fallback to old parsing method
+            const reasoning = data.reasoning || 'No reasoning provided';
+            const reasoningItems = reasoning.split('•').filter(item => item.trim().length > 0);
+            
+            if (reasoningItems.length > 0) {
+                reasoningItems.forEach(item => {
+                    const trimmedItem = item.trim();
+                    if (trimmedItem) {
+                        // Extract dollar amount if it exists
+                        let dollarAmount = '';
+                        let cleanedItem = trimmedItem;
+                        const dollarMatch = cleanedItem.match(/:\s*\$(\d+(?:\.\d{2})?)/);
+                        if (dollarMatch) {
+                            dollarAmount = '$' + dollarMatch[1];
+                            cleanedItem = cleanedItem.replace(/:\s*\$\d+(\.\d{2})?/, ''); // Remove from main text
+                        }
+                        
+                        if (cleanedItem) {
+                            const listItem = document.createElement('div');
+                            listItem.className = 'cost-item-row flex justify-between items-center p-1 bg-green-50 rounded text-xs mb-1';
+                            
+                            listItem.innerHTML = `
+                                <div class="flex items-center justify-between w-full">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="info-icon-container relative">
+                                            <span class="info-icon cursor-help w-4 h-4 border border-blue-500 text-blue-500 bg-transparent rounded-full flex items-center justify-center text-xs font-bold hover:bg-blue-50" 
+                                                  onclick="showPricingTooltip(event, '${cleanedItem.replace(/'/g, "\\'")}')"
+                                                  onmouseenter="showPricingTooltip(event, '${cleanedItem.replace(/'/g, "\\'")}')"
+                                                  onmouseleave="hidePricingTooltipDelayed()">i</span>
+                                        </div>
+                                        <span class="text-green-700">${cleanedItem}</span>
+                                    </div>
+                                    ${dollarAmount ? `<span class="text-green-600 font-semibold">${dollarAmount}</span>` : ''}
+                                </div>
+                            `;
+                            reasoningList.appendChild(listItem);
+                        }
+                    }
+                });
+            } else {
+                reasoningList.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No reasoning provided.</p>';
+            }
+        }
+        
+        confidenceElement.textContent = (data.confidence || 'medium').charAt(0).toUpperCase() + (data.confidence || 'medium').slice(1) + ' confidence';
+        
+        // Format timestamp
+        const date = new Date(data.createdAt);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - date) / (1000 * 60));
+        
+        let timeText;
+        if (diffMinutes < 1) {
+            timeText = 'Just now';
+        } else if (diffMinutes < 60) {
+            timeText = `${diffMinutes} min ago`;
+        } else if (diffMinutes < 1440) {
+            timeText = `${Math.floor(diffMinutes / 60)} hr ago`;
+        } else {
+            timeText = date.toLocaleDateString();
+        }
+        timestampElement.textContent = timeText;
+        
+        // Store the suggested price for potential future use
+        display.dataset.suggestedPrice = data.suggestedPrice;
+        
+        // Hide placeholder and show the display
+        if (placeholder) placeholder.classList.add('hidden');
+        display.classList.remove('hidden');
+    }
+}
+
+function clearViewPriceSuggestion() {
+    const display = document.getElementById('viewPriceSuggestionDisplay');
+    const placeholder = document.getElementById('viewPriceSuggestionPlaceholder');
+    const reasoningList = document.getElementById('viewReasoningList');
+    
+    if (display) {
+        display.classList.add('hidden');
+    }
+    if (placeholder) {
+        placeholder.classList.remove('hidden');
+    }
+    if (reasoningList) {
+        reasoningList.innerHTML = '';
+    }
+}
+
+function loadExistingViewPriceSuggestion(sku) {
+    if (!sku) return;
+    
+    fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('View Price suggestion API response:', data); // Debug log
+        if (data.success && data.suggestedPrice) {
+            displayViewPriceSuggestion(data);
+        } else {
+            // Show placeholder if no existing suggestion
+            const placeholder = document.getElementById('viewPriceSuggestionPlaceholder');
+            const display = document.getElementById('viewPriceSuggestionDisplay');
+            if (placeholder) placeholder.classList.remove('hidden');
+            if (display) display.classList.add('hidden');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading view price suggestion:', error);
+        // Show placeholder on error
+        const placeholder = document.getElementById('viewPriceSuggestionPlaceholder');
+        const display = document.getElementById('viewPriceSuggestionDisplay');
+        if (placeholder) placeholder.classList.remove('hidden');
+        if (display) display.classList.add('hidden');
+    });
+}
+
+function loadExistingPriceSuggestion(sku) {
+    if (!sku) return;
+    
+    fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Price suggestion API response:', data); // Debug log
+        if (data.success && data.suggestedPrice) {
+            displayPriceSuggestion(data);
+        } else {
+            // Show placeholder if no existing suggestion
+            const placeholder = document.getElementById('priceSuggestionPlaceholder');
+            const display = document.getElementById('priceSuggestionDisplay');
+            if (placeholder) placeholder.classList.remove('hidden');
+            if (display) display.classList.add('hidden');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading price suggestion:', error);
+        // Show placeholder on error
+        const placeholder = document.getElementById('priceSuggestionPlaceholder');
+        const display = document.getElementById('priceSuggestionDisplay');
+        if (placeholder) placeholder.classList.remove('hidden');
+        if (display) display.classList.add('hidden');
+    });
+}
+
+function loadExistingCostSuggestion(sku) {
+    // This function is kept for potential future use but currently not needed
+    // since we populate the cost breakdown directly instead of showing inline display
+    return;
+}
+
+function loadExistingMarketingSuggestion(sku) {
+    if (!sku) return;
+    
+    fetch(`/api/get_marketing_suggestion.php?sku=${encodeURIComponent(sku)}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.exists) {
+            displayMarketingSuggestionIndicator(data.suggestion);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading marketing suggestion:', error);
+    });
+}
+
+function displayMarketingSuggestionIndicator(suggestion) {
+    // Find the marketing copy button
+    const marketingButton = document.querySelector('button[onclick="generateMarketingCopy(event)"]');
+    if (!marketingButton) return;
+    
+    // Add indicator that previous suggestion exists
+    const existingIndicator = marketingButton.querySelector('.suggestion-indicator');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    const indicator = document.createElement('span');
+    indicator.className = 'suggestion-indicator ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full';
+    indicator.innerHTML = '💾 Previous';
+    indicator.title = `Previous AI analysis available from ${new Date(suggestion.created_at).toLocaleDateString()}`;
+    
+    marketingButton.appendChild(indicator);
+    
+    // Store the suggestion data for potential reuse
+    window.existingMarketingSuggestion = suggestion;
+}
+
+async function populateCostBreakdownFromSuggestion(suggestionData) {
+    // Clear existing cost breakdown from both UI and database
+    await clearCostBreakdownCompletely();
+    
+    // Initialize cost breakdown if not already done
+    if (!costBreakdown) {
+        costBreakdown = {
+            materials: {},
+            labor: {},
+            energy: {},
+            equipment: {},
+            totals: {}
+        };
+    }
+    
+    const currentSku = currentItemSku;
+    
+    // Populate each category from the suggestion breakdown
+    const breakdown = suggestionData.breakdown;
+    
+    // Materials
+    if (breakdown.materials > 0) {
+        const materialId = 'material_' + Date.now();
+        costBreakdown.materials[materialId] = {
+            name: 'Suggested Materials',
+            cost: breakdown.materials
+        };
+        addCostItemToUI('materials', materialId, 'Suggested Materials', breakdown.materials);
+        
+        // Save to database
+        await saveCostItemToDatabase('materials', {
+            inventoryId: currentSku,
+            name: 'Suggested Materials',
+            cost: breakdown.materials
+        });
+    }
+    
+    // Labor
+    if (breakdown.labor > 0) {
+        const laborId = 'labor_' + Date.now();
+        costBreakdown.labor[laborId] = {
+            name: 'Suggested Labor',
+            cost: breakdown.labor
+        };
+        addCostItemToUI('labor', laborId, 'Suggested Labor', breakdown.labor);
+        
+        // Save to database
+        await saveCostItemToDatabase('labor', {
+            inventoryId: currentSku,
+            description: 'Suggested Labor',
+            cost: breakdown.labor
+        });
+    }
+    
+    // Energy
+    if (breakdown.energy > 0) {
+        const energyId = 'energy_' + Date.now();
+        costBreakdown.energy[energyId] = {
+            name: 'Suggested Energy',
+            cost: breakdown.energy
+        };
+        addCostItemToUI('energy', energyId, 'Suggested Energy', breakdown.energy);
+        
+        // Save to database
+        await saveCostItemToDatabase('energy', {
+            inventoryId: currentSku,
+            description: 'Suggested Energy',
+            cost: breakdown.energy
+        });
+    }
+    
+    // Equipment
+    if (breakdown.equipment > 0) {
+        const equipmentId = 'equipment_' + Date.now();
+        costBreakdown.equipment[equipmentId] = {
+            name: 'Suggested Equipment',
+            cost: breakdown.equipment
+        };
+        addCostItemToUI('equipment', equipmentId, 'Suggested Equipment', breakdown.equipment);
+        
+        // Save to database
+        await saveCostItemToDatabase('equipment', {
+            inventoryId: currentSku,
+            description: 'Suggested Equipment',
+            cost: breakdown.equipment
+        });
+    }
+    
+    // Calculate and update totals
+    const totals = {
+        materialTotal: breakdown.materials || 0,
+        laborTotal: breakdown.labor || 0,
+        energyTotal: breakdown.energy || 0,
+        equipmentTotal: breakdown.equipment || 0,
+        suggestedCost: suggestionData.suggestedCost
+    };
+    
+    // Update totals display
+    updateTotalsDisplay(totals);
+    
+    // Show the cost breakdown section if it's hidden
+    const costBreakdownSection = document.getElementById('costBreakdownSection');
+    if (costBreakdownSection && costBreakdownSection.classList.contains('hidden')) {
+        costBreakdownSection.classList.remove('hidden');
+    }
+    
+    // Add a note about the suggestion
+    const noteElement = document.createElement('div');
+    noteElement.className = 'mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800';
+    noteElement.innerHTML = `
+        <strong>💡 AI Suggestion Applied & Saved:</strong> ${suggestionData.reasoning}
+        <br><small>Confidence: ${suggestionData.confidence} • Cost breakdown has been saved to database</small>
+    `;
+    
+    // Remove any existing suggestion note
+    const existingNote = document.querySelector('.cost-suggestion-note');
+    if (existingNote) {
+        existingNote.remove();
+    }
+    
+    // Add the note to the cost breakdown section
+    noteElement.classList.add('cost-suggestion-note');
+    const costTotalsDiv = document.getElementById('costTotals');
+    if (costTotalsDiv) {
+        costTotalsDiv.parentNode.insertBefore(noteElement, costTotalsDiv.nextSibling);
+    }
+}
+
+function clearCostBreakdown() {
+    // Clear the data
+    if (costBreakdown) {
+        costBreakdown.materials = {};
+        costBreakdown.labor = {};
+        costBreakdown.energy = {};
+        costBreakdown.equipment = {};
+        costBreakdown.totals = {};
+    }
+    
+    // Clear the UI lists
+    ['materials', 'labor', 'energy', 'equipment'].forEach(category => {
+        const listElement = document.getElementById(`${category}List`);
+        if (listElement) {
+            listElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added yet.</p>';
+        }
+    });
+    
+    // Clear totals display
+    updateTotalsDisplay({ 
+        materialTotal: 0, 
+        laborTotal: 0, 
+        energyTotal: 0, 
+        equipmentTotal: 0, 
+        suggestedCost: 0 
+    });
+    
+    // Remove any existing suggestion note
+    const existingNote = document.querySelector('.cost-suggestion-note');
+    if (existingNote) {
+        existingNote.remove();
+    }
+}
+
+async function clearCostBreakdownCompletely() {
+    // First clear the UI and local data
+    clearCostBreakdown();
+    
+    // Then clear from database
+    if (currentItemSku) {
+        try {
+            const response = await fetch('process_cost_breakdown.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'clear_all',
+                    inventoryId: currentItemSku
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (!result.success) {
+                console.error('Failed to clear cost breakdown from database:', result.error);
+                showToast('warning', 'UI cleared but database may still contain old cost data');
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error clearing cost breakdown from database:', error);
+            showToast('warning', 'UI cleared but database may still contain old cost data');
+            return false;
+        }
+    }
+}
+
+function addCostItemToUI(category, itemId, itemName, itemCost) {
+    const listElement = document.getElementById(`${category}List`);
+    if (!listElement) {
+        console.error(`Could not find list element for category: ${category}`);
+        return;
+    }
+    
+    // Remove the "No items added yet" message if it exists
+    const noItemsMsg = listElement.querySelector('.text-gray-500');
+    if (noItemsMsg) {
+        noItemsMsg.remove();
+    }
+    
+    // Create the item element
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'cost-item';
+    itemDiv.innerHTML = `
+        <span class="cost-item-name" title="${htmlspecialchars(itemName)}">${htmlspecialchars(itemName)}</span>
+        <div class="cost-item-actions">
+            <span class="cost-item-value">$${parseFloat(itemCost).toFixed(2)}</span>
+            <button type="button" class="delete-cost-btn" data-id="${itemId}" data-type="${category}" title="Delete this cost item">×</button>
+        </div>
+    `;
+    
+    listElement.appendChild(itemDiv);
+}
+
+function updateCostTotals() {
+    // This function is used elsewhere in the code, so we'll create it as an alias
+    // Calculate totals from the current costBreakdown data
+    if (!costBreakdown) {
+        updateTotalsDisplay({ 
+            materialTotal: 0, 
+            laborTotal: 0, 
+            energyTotal: 0, 
+            equipmentTotal: 0, 
+            suggestedCost: 0 
+        });
+        return;
+    }
+    
+    const totals = {
+        materialTotal: Object.values(costBreakdown.materials || {}).reduce((sum, item) => sum + parseFloat(item.cost || 0), 0),
+        laborTotal: Object.values(costBreakdown.labor || {}).reduce((sum, item) => sum + parseFloat(item.cost || 0), 0),
+        energyTotal: Object.values(costBreakdown.energy || {}).reduce((sum, item) => sum + parseFloat(item.cost || 0), 0),
+        equipmentTotal: Object.values(costBreakdown.equipment || {}).reduce((sum, item) => sum + parseFloat(item.cost || 0), 0)
+    };
+    
+    totals.suggestedCost = totals.materialTotal + totals.laborTotal + totals.energyTotal + totals.equipmentTotal;
+    
+    updateTotalsDisplay(totals);
+}
+
+async function saveCostItemToDatabase(costType, data) {
+    try {
+        const response = await fetch('process_cost_breakdown.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                inventoryId: data.inventoryId,
+                costType: costType,
+                name: data.name,
+                description: data.description,
+                cost: data.cost
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            console.error('Failed to save cost item:', result.error);
+            showToast('error', 'Failed to save cost item: ' + result.error);
+            return false;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error saving cost item:', error);
+        showToast('error', 'Error saving cost item: ' + error.message);
+        return false;
+    }
+}
+
+function generateMarketingCopy() {
+    const nameField = document.getElementById('name');
+    const categoryField = document.getElementById('categoryEdit');
+    const descriptionField = document.getElementById('description');
+    
+    if (!nameField || !nameField.value.trim()) {
+        showToast('error', 'Item name is required for marketing copy generation');
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '✨ Generating...';
+    button.disabled = true;
+    
+    // Gather item data
+    const itemData = {
+        name: nameField.value.trim(),
+        category: categoryField ? categoryField.value : '',
+        currentDescription: descriptionField ? descriptionField.value.trim() : ''
+    };
+    
+    // Add SKU to item data
+    itemData.sku = currentItemSku;
+    
+    // Call the AI marketing suggestion API
+    fetch('/api/suggest_marketing.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(itemData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show comprehensive marketing intelligence modal
+            showMarketingIntelligenceModal(data);
+        } else {
+            showToast('error', data.error || 'Failed to generate marketing suggestions');
+        }
+    })
+    .catch(error => {
+        console.error('Error generating marketing suggestions:', error);
+        showToast('error', 'Failed to connect to AI marketing service');
+    })
+    .finally(() => {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+
+function showMarketingIntelligenceModal(data) {
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    overlay.id = 'marketingIntelligenceModal';
+    
+    // Create modal content with comprehensive marketing intelligence
+    overlay.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-7xl mx-4 max-h-[95vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <span class="text-2xl">🧠</span>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-xl font-bold text-gray-900">AI Marketing Intelligence</h3>
+                        <p class="text-sm text-gray-500">Comprehensive marketing analysis and suggestions</p>
+                        <div class="flex items-center mt-1">
+                            <span class="text-xs text-green-600 font-medium">Confidence: ${Math.round(data.confidence * 100)}%</span>
+                            <span class="ml-2 text-xs text-gray-400">• Powered by AI Analysis</span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeMarketingIntelligenceModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Primary Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Enhanced Title & Description -->
+                <div class="space-y-4">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                            <span class="mr-2">🏷️</span> AI-Enhanced Title
+                        </h4>
+                        <div class="p-3 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer" onclick="applyTitle('${data.title.replace(/'/g, "\\'")}')">
+                            <div class="font-medium text-gray-800">${data.title}</div>
+                            <div class="text-xs text-blue-600 mt-1">Click to apply to product name</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                            <span class="mr-2">📝</span> AI-Crafted Description
+                        </h4>
+                        <div class="p-3 bg-white border border-green-200 rounded-lg hover:bg-green-50 cursor-pointer" onclick="applyDescription('${data.description.replace(/'/g, "\\'")}')">
+                            <div class="text-gray-800 text-sm">${data.description}</div>
+                            <div class="text-xs text-green-600 mt-1">Click to apply to product description</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Target Audience & Keywords -->
+                <div class="space-y-4">
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                            <span class="mr-2">🎯</span> Target Audience
+                        </h4>
+                        <p class="text-sm text-gray-700">${data.targetAudience}</p>
+                    </div>
+                    
+                    <div class="bg-yellow-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                            <span class="mr-2">🔍</span> SEO Keywords
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${data.keywords.map(keyword => `
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">${keyword}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Marketing Intelligence Tabs -->
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="showMarketingTab('selling')" class="marketing-tab-btn active py-2 px-1 border-b-2 border-purple-500 font-medium text-sm text-purple-600">
+                        💰 Selling Points
+                    </button>
+                    <button onclick="showMarketingTab('competitive')" class="marketing-tab-btn py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                        ⚡ Competitive Edge
+                    </button>
+                    <button onclick="showMarketingTab('conversion')" class="marketing-tab-btn py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                        🎯 Conversion
+                    </button>
+                    <button onclick="showMarketingTab('channels')" class="marketing-tab-btn py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                        📢 Channels
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- Tab Content -->
+            <div id="marketing-tab-content">
+                <!-- Selling Points Tab -->
+                <div id="tab-selling" class="marketing-tab-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <h5 class="font-semibold text-gray-800 mb-2">💎 Key Selling Points</h5>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                ${data.marketingIntelligence.selling_points.map(point => `
+                                    <li class="flex items-start"><span class="text-green-600 mr-2">•</span>${point}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h5 class="font-semibold text-gray-800 mb-2">🎭 Emotional Triggers</h5>
+                            <div class="flex flex-wrap gap-2">
+                                ${data.marketingIntelligence.emotional_triggers.map(trigger => `
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">${trigger}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Competitive Edge Tab -->
+                <div id="tab-competitive" class="marketing-tab-content hidden">
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <h5 class="font-semibold text-gray-800 mb-3">🏆 Competitive Advantages</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${data.marketingIntelligence.competitive_advantages.map(advantage => `
+                                <div class="bg-white p-3 rounded-lg border border-red-200">
+                                    <div class="font-medium text-gray-800 text-sm">${advantage}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conversion Tab -->
+                <div id="tab-conversion" class="marketing-tab-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-orange-50 rounded-lg p-4">
+                            <h5 class="font-semibold text-gray-800 mb-2">🎯 Call-to-Action Ideas</h5>
+                            <ul class="text-sm text-gray-700 space-y-2">
+                                ${data.marketingIntelligence.call_to_action_suggestions.map(cta => `
+                                    <li class="bg-white p-2 rounded border border-orange-200 font-medium">"${cta}"</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="bg-pink-50 rounded-lg p-4">
+                            <h5 class="font-semibold text-gray-800 mb-2">⚡ Conversion Boosters</h5>
+                            <div class="space-y-2 text-sm text-gray-700">
+                                <div class="bg-white p-2 rounded border border-pink-200">
+                                    <strong>Urgency:</strong> Limited time offer
+                                </div>
+                                <div class="bg-white p-2 rounded border border-pink-200">
+                                    <strong>Social Proof:</strong> Customer testimonials
+                                </div>
+                                <div class="bg-white p-2 rounded border border-pink-200">
+                                    <strong>Guarantee:</strong> Satisfaction promise
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Marketing Channels Tab -->
+                <div id="tab-channels" class="marketing-tab-content hidden">
+                    <div class="bg-indigo-50 rounded-lg p-4">
+                        <h5 class="font-semibold text-gray-800 mb-3">📢 Recommended Marketing Channels</h5>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            ${data.marketingIntelligence.marketing_channels.map(channel => `
+                                <div class="bg-white p-3 rounded-lg border border-indigo-200 text-center">
+                                    <div class="font-medium text-gray-800 text-sm">${channel}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Analysis Summary -->
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+                    <span class="mr-2">🧠</span> AI Analysis Summary
+                </h4>
+                <p class="text-sm text-gray-700">${data.reasoning}</p>
+            </div>
+            
+            <div class="flex justify-between items-center mt-6">
+                <div class="text-xs text-gray-500">
+                    Analysis saved to database • All suggestions are AI-generated recommendations
+                </div>
+                <button type="button" onclick="closeMarketingIntelligenceModal()" class="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium">
+                    Close Analysis
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            closeMarketingIntelligenceModal();
+        }
+    });
+    
+    // Close on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeMarketingIntelligenceModal();
+        }
+    });
+}
+
+function closeMarketingIntelligenceModal() {
+    const modal = document.getElementById('marketingIntelligenceModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function showMarketingTab(tabName) {
+    // Hide all tab content
+    document.querySelectorAll('.marketing-tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.marketing-tab-btn').forEach(btn => {
+        btn.classList.remove('active', 'border-purple-500', 'text-purple-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab
+    const selectedTab = document.getElementById(`tab-${tabName}`);
+    if (selectedTab) {
+        selectedTab.classList.remove('hidden');
+    }
+    
+    // Activate selected button
+    const selectedButton = event.target;
+    selectedButton.classList.add('active', 'border-purple-500', 'text-purple-600');
+    selectedButton.classList.remove('border-transparent', 'text-gray-500');
+}
+
+function applyTitle(title) {
+    const nameField = document.getElementById('name');
+    if (nameField) {
+        nameField.value = title;
+        nameField.style.backgroundColor = '#f3e8ff';
+        setTimeout(() => {
+            nameField.style.backgroundColor = '';
+        }, 2000);
+        showToast('success', 'Title applied! Remember to save your changes.');
+    }
+}
+
+function applyDescription(description) {
+    const descriptionField = document.getElementById('description');
+    if (descriptionField) {
+        descriptionField.value = description;
+        descriptionField.style.backgroundColor = '#f3e8ff';
+        setTimeout(() => {
+            descriptionField.style.backgroundColor = '';
+        }, 2000);
+        showToast('success', 'Description applied! Remember to save your changes.');
     }
 }
 
 function closeCostModal() {
     document.getElementById('costFormModal').classList.remove('show');
+}
+
+function deleteCostItem(id, type) {
+    showDeleteCostDialog(id, type);
+}
+
+function showDeleteCostDialog(id, type) {
+    const typeLabel = type.slice(0, -1); // Remove 's' from end (materials -> material)
+    const modal = document.createElement('div');
+    modal.className = 'delete-cost-modal-overlay';
+    modal.innerHTML = `
+        <div class="delete-cost-modal">
+            <div class="delete-cost-header">
+                <h3>🗑️ Delete ${typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)} Cost</h3>
+            </div>
+            <div class="delete-cost-body">
+                <p>Are you sure you want to remove this ${typeLabel} cost item?</p>
+                <p class="delete-cost-note">This action cannot be undone and will update your cost calculations.</p>
+            </div>
+            <div class="delete-cost-actions">
+                <button type="button" class="delete-cost-cancel">Keep It</button>
+                <button type="button" class="delete-cost-confirm">Yes, Delete</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event listeners
+    modal.querySelector('.delete-cost-cancel').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+    
+    modal.querySelector('.delete-cost-confirm').addEventListener('click', () => {
+        document.body.removeChild(modal);
+        performCostItemDeletion(id, type);
+    });
+    
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
+    
+    // Close on escape key
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            document.body.removeChild(modal);
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+}
+
+function performCostItemDeletion(id, type) {
+    const url = `/process_cost_breakdown.php?id=${id}&costType=${type}&inventoryId=${currentItemSku}`;
+    
+    fetch(url, {
+        method: 'DELETE',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', data.message || 'Cost item deleted successfully');
+            // Refresh the cost breakdown to update the display
+            refreshCostBreakdown(false);
+        } else {
+            showToast('error', data.error || 'Failed to delete cost item');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting cost item:', error);
+        showToast('error', 'Failed to delete cost item');
+    });
 }
 
 
@@ -1176,9 +3112,27 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('energyList element:', document.getElementById('energyList'));
         console.log('equipmentList element:', document.getElementById('equipmentList'));
         
-        if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku && costBreakdown) {
-            console.log('Calling refreshCostBreakdown(true)');
-            refreshCostBreakdown(true); 
+        if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {
+            console.log('Calling refreshCostBreakdown(false) to load data');
+            refreshCostBreakdown(false);
+            
+            // Load existing price suggestion for edit mode
+            if (modalMode === 'edit') {
+                console.log('Loading existing price suggestion for edit mode, SKU:', currentItemSku);
+                loadExistingPriceSuggestion(currentItemSku);
+            }
+            
+            // Load existing price suggestion for view mode
+            if (modalMode === 'view') {
+                console.log('Loading existing price suggestion for view mode, SKU:', currentItemSku);
+                loadExistingViewPriceSuggestion(currentItemSku);
+            }
+            
+            // Load existing marketing suggestion for edit/view mode
+            console.log('Loading existing marketing suggestion for SKU:', currentItemSku);
+            loadExistingMarketingSuggestion(currentItemSku);
+            
+
         } else if (modalMode === 'add') {
             console.log('Calling renderCostBreakdown(null) for add mode');
             renderCostBreakdown(null); 
@@ -1188,6 +3142,15 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.log('No modal mode active, skipping cost breakdown initialization');
     }
+    
+    // Add event listener for delete cost buttons (using event delegation)
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-cost-btn')) {
+            const id = e.target.dataset.id;
+            const type = e.target.dataset.type;
+            deleteCostItem(id, type);
+        }
+    });
     
     const inventoryTable = document.getElementById('inventoryTable');
     if (inventoryTable) {
@@ -1934,10 +3897,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const field = this.dataset.field;
             const currentText = this.textContent.trim();
             const row = this.closest('tr');
-            const inventoryId = row.dataset.id || row.querySelector('a[href*="view="]')?.href.match(/view=([^&]+)/)?.[1];
+            const sku = row.dataset.sku || row.querySelector('a[href*="view="]')?.href.match(/view=([^&]+)/)?.[1];
             
-            if (!inventoryId) {
-                console.error('Could not find inventory ID');
+            if (!sku) {
+                console.error('Could not find item SKU');
                 return;
             }
             
@@ -1978,10 +3941,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             inputElement.className = 'inline-edit-input';
             inputElement.style.width = '100%';
-            inputElement.style.padding = '4px';
-            inputElement.style.border = '2px solid #16a34a';
+            inputElement.style.padding = '4px 6px';
+            inputElement.style.border = '1px solid #4299e1';
             inputElement.style.borderRadius = '4px';
-            inputElement.style.fontSize = '12px';
+            inputElement.style.fontSize = 'inherit';
+            inputElement.style.fontFamily = 'inherit';
+            inputElement.style.backgroundColor = 'white';
+            inputElement.style.boxSizing = 'border-box';
+            inputElement.style.margin = '0';
+            inputElement.style.minWidth = '0';
             
             // Save function
             const saveValue = async () => {
@@ -2000,7 +3968,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 try {
                     const formData = new FormData();
-                    formData.append('inventoryId', inventoryId);
+                    formData.append('sku', sku);
                     formData.append('field', field);
                     formData.append('value', newValue);
                     
@@ -2246,7 +4214,1047 @@ function updateCarouselNavigation(type, totalSlides) {
         console.log(`${type} next button:`, currentPosition >= maxPosition ? 'hidden' : 'visible');
     }
 }
+
+// Cost Breakdown Template Functions
+function toggleTemplateSection() {
+    const section = document.getElementById('templateSection');
+    const toggleText = document.getElementById('templateToggleText');
+    
+    if (section.classList.contains('hidden')) {
+        section.classList.remove('hidden');
+        toggleText.textContent = 'Hide Templates';
+        loadTemplateList();
+    } else {
+        section.classList.add('hidden');
+        toggleText.textContent = 'Show Templates';
+    }
+}
+
+function loadTemplateList() {
+    const select = document.getElementById('templateSelect');
+    const categoryField = document.getElementById('categoryEdit');
+    const category = categoryField ? categoryField.value : '';
+    
+    // Clear existing options
+    select.innerHTML = '<option value="">Choose a template...</option>';
+    
+    // Build URL with optional category filter
+    let url = '/api/cost_breakdown_templates.php?action=list';
+    if (category) {
+        url += `&category=${encodeURIComponent(category)}`;
+    }
+    
+    fetch(url)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.templates) {
+            data.templates.forEach(template => {
+                const option = document.createElement('option');
+                option.value = template.id;
+                option.textContent = `${template.template_name}${template.category ? ` (${template.category})` : ''}`;
+                select.appendChild(option);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading templates:', error);
+        showToast('error', 'Failed to load templates');
+    });
+}
+
+function loadTemplate() {
+    const select = document.getElementById('templateSelect');
+    const templateId = select.value;
+    
+    if (!templateId) {
+        showToast('error', 'Please select a template to load');
+        return;
+    }
+    
+    fetch(`/api/cost_breakdown_templates.php?action=get&id=${templateId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.template) {
+            applyTemplateToBreakdown(data.template);
+            showToast('success', `Template "${data.template.template_name}" loaded successfully!`);
+        } else {
+            showToast('error', data.error || 'Failed to load template');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading template:', error);
+        showToast('error', 'Failed to load template');
+    });
+}
+
+function applyTemplateToBreakdown(template) {
+    // Clear existing cost breakdown
+    ['materials', 'labor', 'energy', 'equipment'].forEach(costType => {
+        const list = document.getElementById(`${costType}List`);
+        if (list) {
+            list.innerHTML = '';
+        }
+    });
+    
+    // Apply template data
+    const costTypes = ['materials', 'labor', 'energy', 'equipment'];
+    costTypes.forEach(costType => {
+        if (template[costType] && Array.isArray(template[costType])) {
+            template[costType].forEach(item => {
+                addCostItemFromTemplate(costType, item);
+            });
+        }
+    });
+    
+    // Recalculate totals
+    updateCostTotals();
+}
+
+function addCostItemFromTemplate(costType, itemData) {
+    const list = document.getElementById(`${costType}List`);
+    if (!list) return;
+    
+    const costItem = document.createElement('div');
+    costItem.className = 'cost-item';
+    
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'cost-item-name';
+    nameSpan.textContent = itemData.name || '';
+    
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'cost-item-actions';
+    
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'cost-item-value';
+    valueSpan.textContent = `$${parseFloat(itemData.cost || 0).toFixed(2)}`;
+    
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'cost-item-edit';
+    editBtn.innerHTML = '✏️';
+    editBtn.onclick = () => editCostItem(costItem, costType);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'cost-item-delete';
+    deleteBtn.innerHTML = '🗑️';
+    deleteBtn.onclick = () => deleteCostItem(costItem);
+    
+    actionsDiv.appendChild(valueSpan);
+    actionsDiv.appendChild(editBtn);
+    actionsDiv.appendChild(deleteBtn);
+    
+    costItem.appendChild(nameSpan);
+    costItem.appendChild(actionsDiv);
+    
+    // Store the data
+    costItem.dataset.name = itemData.name || '';
+    costItem.dataset.cost = itemData.cost || '0';
+    costItem.dataset.unit = itemData.unit || '';
+    
+    list.appendChild(costItem);
+}
+
+function saveAsTemplate() {
+    const templateNameField = document.getElementById('templateName');
+    const categoryField = document.getElementById('categoryEdit');
+    const nameField = document.getElementById('name');
+    
+    const templateName = templateNameField.value.trim();
+    if (!templateName) {
+        showToast('error', 'Please enter a template name');
+        return;
+    }
+    
+    // Gather current cost breakdown data
+    const templateData = {
+        template_name: templateName,
+        description: `Template created from ${nameField ? nameField.value : 'item'}`,
+        category: categoryField ? categoryField.value : '',
+        sku: currentItemSku || '',
+        materials: [],
+        labor: [],
+        energy: [],
+        equipment: []
+    };
+    
+    // Extract cost data from current breakdown
+    ['materials', 'labor', 'energy', 'equipment'].forEach(costType => {
+        const list = document.getElementById(`${costType}List`);
+        if (list) {
+            const items = list.querySelectorAll('.cost-item');
+            items.forEach(item => {
+                templateData[costType].push({
+                    name: item.dataset.name || '',
+                    cost: parseFloat(item.dataset.cost || '0'),
+                    unit: item.dataset.unit || ''
+                });
+            });
+        }
+    });
+    
+    // Save template
+    fetch('/api/cost_breakdown_templates.php?action=save_from_breakdown', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(templateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', `Template "${templateName}" saved successfully!`);
+            templateNameField.value = '';
+            loadTemplateList(); // Refresh the template list
+        } else {
+            showToast('error', data.error || 'Failed to save template');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving template:', error);
+        showToast('error', 'Failed to save template');
+    });
+}
+
+// Marketing Manager Functions
+function openMarketingManager() {
+    const modal = document.getElementById('marketingManagerModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        loadMarketingData();
+    }
+}
+
+function closeMarketingManager() {
+    const modal = document.getElementById('marketingManagerModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function showMarketingManagerTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.marketing-tab').forEach(tab => {
+        tab.classList.remove('bg-white', 'text-purple-600', 'border-purple-600');
+        tab.classList.add('text-gray-600');
+    });
+    
+    const activeTab = document.getElementById(tabName + 'Tab');
+    if (activeTab) {
+        activeTab.classList.add('bg-white', 'text-purple-600', 'border-purple-600');
+        activeTab.classList.remove('text-gray-600');
+    }
+    
+    // Load tab content
+    loadMarketingTabContent(tabName);
+}
+
+function loadMarketingData() {
+    const contentDiv = document.getElementById('marketingManagerContent');
+    contentDiv.innerHTML = `
+        <div class="text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <p class="mt-4 text-gray-600">Loading marketing data...</p>
+        </div>
+    `;
+    
+    // Load content tab by default
+    showMarketingManagerTab('content');
+}
+
+function loadMarketingTabContent(tabName) {
+    const contentDiv = document.getElementById('marketingManagerContent');
+    
+    switch(tabName) {
+        case 'content':
+            loadContentTab(contentDiv);
+            break;
+        case 'audience':
+            loadAudienceTab(contentDiv);
+            break;
+        case 'selling':
+            loadSellingTab(contentDiv);
+            break;
+        case 'seo':
+            loadSEOTab(contentDiv);
+            break;
+        case 'conversion':
+            loadConversionTab(contentDiv);
+            break;
+    }
+}
+
+function loadContentTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4">
+                <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">AI Content Generation</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Brand Voice</label>
+                                <select id="brandVoice" class="w-full p-2 border border-purple-200 rounded">
+                                    <option value="">Select voice...</option>
+                                    <option value="friendly">Friendly & Approachable</option>
+                                    <option value="professional">Professional & Trustworthy</option>
+                                    <option value="playful">Playful & Fun</option>
+                                    <option value="luxurious">Luxurious & Premium</option>
+                                    <option value="casual">Casual & Relaxed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Content Tone</label>
+                                <select id="contentTone" class="w-full p-2 border border-purple-200 rounded">
+                                    <option value="">Select tone...</option>
+                                    <option value="informative">Informative</option>
+                                    <option value="persuasive">Persuasive</option>
+                                    <option value="emotional">Emotional</option>
+                                    <option value="urgent">Urgent</option>
+                                    <option value="conversational">Conversational</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button onclick="saveMarketingFields(['brand_voice', 'content_tone'])" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-2 rounded text-sm">
+                            💾 Save Settings
+                        </button>
+                        <button onclick="generateNewMarketingContent()" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow-lg">
+                            🧠 Generate AI Content for All Tabs
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Product Title</label>
+                    <textarea id="marketingTitle" class="w-full p-3 border border-blue-200 rounded-lg" rows="2" placeholder="Enter enhanced product title..."></textarea>
+                    <div class="mt-2 flex justify-between">
+                        <button onclick="applyMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                            📝 Apply & Save to Product
+                        </button>
+                        <button onclick="saveMarketingField('suggested_title')" class="text-blue-600 hover:text-blue-800 text-sm underline">
+                            Save Draft
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Product Description</label>
+                    <textarea id="marketingDescription" class="w-full p-3 border border-green-200 rounded-lg" rows="4" placeholder="Enter detailed product description..."></textarea>
+                    <div class="mt-2 flex justify-between">
+                        <button onclick="applyMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                            📝 Apply & Save to Product
+                        </button>
+                        <button onclick="saveMarketingField('suggested_description')" class="text-green-600 hover:text-green-800 text-sm underline">
+                            Save Draft
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Load existing data
+    loadExistingMarketingData();
+}
+
+function loadAudienceTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-800">Target Audience Management</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-orange-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Primary Target Audience</label>
+                    <textarea id="targetAudience" class="w-full p-3 border border-orange-200 rounded-lg" rows="3" placeholder="Describe your ideal customer..."></textarea>
+                    <button onclick="saveMarketingField('target_audience')" class="mt-2 text-orange-600 hover:text-orange-800 text-sm">Save</button>
+                </div>
+                
+                <div class="bg-pink-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Demographics</label>
+                    <textarea id="demographics" class="w-full p-3 border border-pink-200 rounded-lg" rows="3" placeholder="Age, gender, income, location..."></textarea>
+                    <button onclick="saveMarketingField('demographic_targeting')" class="mt-2 text-pink-600 hover:text-pink-800 text-sm">Save</button>
+                </div>
+            </div>
+            
+            <div class="bg-indigo-50 rounded-lg p-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Psychographic Profile</label>
+                <textarea id="psychographics" class="w-full p-3 border border-indigo-200 rounded-lg" rows="3" placeholder="Interests, values, lifestyle, personality traits..."></textarea>
+                <button onclick="saveMarketingField('psychographic_profile')" class="mt-2 text-indigo-600 hover:text-indigo-800 text-sm">Save</button>
+            </div>
+        </div>
+    `;
+    
+    loadExistingMarketingData();
+}
+
+function loadSellingTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-800">Selling Points & Advantages</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Key Selling Points</label>
+                        <button onclick="addListItem('selling_points')" class="text-green-600 hover:text-green-800 text-sm">+ Add</button>
+                    </div>
+                    <div id="sellingPointsList" class="space-y-2 mb-3">
+                        <!-- Dynamic content -->
+                    </div>
+                    <input type="text" id="newSellingPoint" placeholder="Enter new selling point..." class="w-full p-2 border border-green-200 rounded" onkeypress="if(event.key==='Enter') addListItem('selling_points')">
+                </div>
+                
+                <div class="bg-red-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Competitive Advantages</label>
+                        <button onclick="addListItem('competitive_advantages')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                    </div>
+                    <div id="competitiveAdvantagesList" class="space-y-2 mb-3">
+                        <!-- Dynamic content -->
+                    </div>
+                    <input type="text" id="newCompetitiveAdvantage" placeholder="What makes you better..." class="w-full p-2 border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('competitive_advantages')">
+                </div>
+            </div>
+            
+            <div class="bg-yellow-50 rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Customer Benefits</label>
+                    <button onclick="addListItem('customer_benefits')" class="text-yellow-600 hover:text-yellow-800 text-sm">+ Add</button>
+                </div>
+                <div id="customerBenefitsList" class="space-y-2 mb-3">
+                    <!-- Dynamic content -->
+                </div>
+                <input type="text" id="newCustomerBenefit" placeholder="What benefit does customer get..." class="w-full p-2 border border-yellow-200 rounded" onkeypress="if(event.key==='Enter') addListItem('customer_benefits')">
+            </div>
+        </div>
+    `;
+    
+    loadExistingMarketingData();
+}
+
+function loadSEOTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-800">SEO & Keywords</h3>
+            
+            <div class="bg-blue-50 rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-gray-700">SEO Keywords</label>
+                    <button onclick="addListItem('seo_keywords')" class="text-blue-600 hover:text-blue-800 text-sm">+ Add</button>
+                </div>
+                <div id="seoKeywordsList" class="space-y-2 mb-3">
+                    <!-- Dynamic content -->
+                </div>
+                <input type="text" id="newSEOKeyword" placeholder="Enter keyword or phrase..." class="w-full p-2 border border-blue-200 rounded" onkeypress="if(event.key==='Enter') addListItem('seo_keywords')">
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-purple-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Intent</label>
+                    <select id="searchIntent" class="w-full p-2 border border-purple-200 rounded">
+                        <option value="">Select intent...</option>
+                        <option value="informational">Informational</option>
+                        <option value="navigational">Navigational</option>
+                        <option value="transactional">Transactional</option>
+                        <option value="commercial">Commercial Investigation</option>
+                    </select>
+                    <button onclick="saveMarketingField('search_intent')" class="mt-2 text-purple-600 hover:text-purple-800 text-sm">Save</button>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Seasonal Relevance</label>
+                    <textarea id="seasonalRelevance" class="w-full p-3 border border-green-200 rounded-lg" rows="3" placeholder="Christmas, summer, back-to-school, etc..."></textarea>
+                    <button onclick="saveMarketingField('seasonal_relevance')" class="mt-2 text-green-600 hover:text-green-800 text-sm">Save</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    loadExistingMarketingData();
+}
+
+function loadConversionTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-800">Conversion Optimization</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-orange-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Call-to-Action Suggestions</label>
+                        <button onclick="addListItem('call_to_action_suggestions')" class="text-orange-600 hover:text-orange-800 text-sm">+ Add</button>
+                    </div>
+                    <div id="callToActionsList" class="space-y-2 mb-3">
+                        <!-- Dynamic content -->
+                    </div>
+                    <input type="text" id="newCallToAction" placeholder="Get Yours Today, Buy Now, etc..." class="w-full p-2 border border-orange-200 rounded" onkeypress="if(event.key==='Enter') addListItem('call_to_action_suggestions')">
+                </div>
+                
+                <div class="bg-red-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Urgency Factors</label>
+                        <button onclick="addListItem('urgency_factors')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                    </div>
+                    <div id="urgencyFactorsList" class="space-y-2 mb-3">
+                        <!-- Dynamic content -->
+                    </div>
+                    <input type="text" id="newUrgencyFactor" placeholder="Limited time, while supplies last..." class="w-full p-2 border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('urgency_factors')">
+                </div>
+            </div>
+            
+            <div class="bg-purple-50 rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Conversion Triggers</label>
+                    <button onclick="addListItem('conversion_triggers')" class="text-purple-600 hover:text-purple-800 text-sm">+ Add</button>
+                </div>
+                <div id="conversionTriggersList" class="space-y-2 mb-3">
+                    <!-- Dynamic content -->
+                </div>
+                <input type="text" id="newConversionTrigger" placeholder="Free shipping, money-back guarantee..." class="w-full p-2 border border-purple-200 rounded" onkeypress="if(event.key==='Enter') addListItem('conversion_triggers')">
+            </div>
+        </div>
+    `;
+    
+    loadExistingMarketingData();
+}
+
+function loadExistingMarketingData() {
+    if (!currentItemSku) return Promise.resolve();
+    
+    return fetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            populateMarketingFields(data.data);
+        }
+        return data;
+    })
+    .catch(error => {
+        console.error('Error loading marketing data:', error);
+        throw error;
+    });
+}
+
+function populateMarketingFields(data) {
+    // Populate text fields
+    const textFields = {
+        'marketingTitle': 'suggested_title',
+        'marketingDescription': 'suggested_description',
+        'targetAudience': 'target_audience',
+        'demographics': 'demographic_targeting',
+        'psychographics': 'psychographic_profile',
+        'brandVoice': 'brand_voice',
+        'contentTone': 'content_tone',
+        'searchIntent': 'search_intent',
+        'seasonalRelevance': 'seasonal_relevance'
+    };
+    
+    Object.keys(textFields).forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field && data[textFields[fieldId]]) {
+            field.value = data[textFields[fieldId]];
+        }
+    });
+    
+    // Populate list fields
+    const listFields = {
+        'sellingPointsList': 'selling_points',
+        'competitiveAdvantagesList': 'competitive_advantages',
+        'customerBenefitsList': 'customer_benefits',
+        'seoKeywordsList': 'seo_keywords',
+        'callToActionsList': 'call_to_action_suggestions',
+        'urgencyFactorsList': 'urgency_factors',
+        'conversionTriggersList': 'conversion_triggers'
+    };
+    
+    Object.keys(listFields).forEach(listId => {
+        const list = document.getElementById(listId);
+        if (list && data[listFields[listId]] && Array.isArray(data[listFields[listId]])) {
+            list.innerHTML = '';
+            data[listFields[listId]].forEach(item => {
+                addListItemToUI(listId, item, listFields[listId]);
+            });
+        }
+    });
+}
+
+function addListItemToUI(listId, item, fieldName) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'flex justify-between items-center bg-white p-2 rounded border';
+    itemDiv.innerHTML = `
+        <span class="text-sm text-gray-700">${item}</span>
+        <button onclick="removeListItem('${fieldName}', '${item}')" class="text-red-500 hover:text-red-700 text-xs">Remove</button>
+    `;
+    
+    list.appendChild(itemDiv);
+}
+
+function addListItem(fieldName) {
+    const inputId = 'new' + fieldName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+    const input = document.getElementById(inputId);
+    
+    if (!input || !input.value.trim()) {
+        showToast('error', 'Please enter a value');
+        return;
+    }
+    
+    const value = input.value.trim();
+    
+    fetch('/api/marketing_manager.php?action=add_list_item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            sku: currentItemSku,
+            field: fieldName,
+            item: value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            const listId = fieldName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('') + 'List';
+            addListItemToUI(listId, value, fieldName);
+            showToast('success', 'Item added successfully');
+        } else {
+            showToast('error', data.error || 'Failed to add item');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding list item:', error);
+        showToast('error', 'Failed to add item');
+    });
+}
+
+function removeListItem(fieldName, item) {
+    fetch('/api/marketing_manager.php?action=remove_list_item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            sku: currentItemSku,
+            field: fieldName,
+            item: item
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadExistingMarketingData(); // Refresh the display
+            showToast('success', 'Item removed successfully');
+        } else {
+            showToast('error', data.error || 'Failed to remove item');
+        }
+    })
+    .catch(error => {
+        console.error('Error removing list item:', error);
+        showToast('error', 'Failed to remove item');
+    });
+}
+
+function saveMarketingField(fieldName) {
+    const fieldId = fieldName === 'suggested_title' ? 'marketingTitle' :
+                   fieldName === 'suggested_description' ? 'marketingDescription' :
+                   fieldName === 'target_audience' ? 'targetAudience' :
+                   fieldName === 'demographic_targeting' ? 'demographics' :
+                   fieldName === 'psychographic_profile' ? 'psychographics' :
+                   fieldName === 'brand_voice' ? 'brandVoice' :
+                   fieldName === 'content_tone' ? 'contentTone' :
+                   fieldName === 'search_intent' ? 'searchIntent' :
+                   fieldName === 'seasonal_relevance' ? 'seasonalRelevance' : fieldName;
+    
+    const field = document.getElementById(fieldId);
+    if (!field) {
+        showToast('error', 'Field not found');
+        return;
+    }
+    
+    const value = field.value.trim();
+    if (!value) {
+        showToast('error', 'Please enter a value');
+        return;
+    }
+    
+    fetch('/api/marketing_manager.php?action=update_field', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            sku: currentItemSku,
+            field: fieldName,
+            value: value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Field saved successfully');
+        } else {
+            showToast('error', data.error || 'Failed to save field');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving field:', error);
+        showToast('error', 'Failed to save field');
+    });
+}
+
+function saveMarketingFields(fieldNames) {
+    if (!Array.isArray(fieldNames) || fieldNames.length === 0) {
+        showToast('error', 'No fields specified');
+        return;
+    }
+    
+    const fieldsData = {};
+    let hasValues = false;
+    
+    // Collect all field values
+    for (const fieldName of fieldNames) {
+        const fieldId = fieldName === 'suggested_title' ? 'marketingTitle' :
+                       fieldName === 'suggested_description' ? 'marketingDescription' :
+                       fieldName === 'target_audience' ? 'targetAudience' :
+                       fieldName === 'demographic_targeting' ? 'demographics' :
+                       fieldName === 'psychographic_profile' ? 'psychographics' :
+                       fieldName === 'brand_voice' ? 'brandVoice' :
+                       fieldName === 'content_tone' ? 'contentTone' :
+                       fieldName === 'search_intent' ? 'searchIntent' :
+                       fieldName === 'seasonal_relevance' ? 'seasonalRelevance' : fieldName;
+        
+        const field = document.getElementById(fieldId);
+        if (field && field.value.trim()) {
+            fieldsData[fieldName] = field.value.trim();
+            hasValues = true;
+        }
+    }
+    
+    if (!hasValues) {
+        showToast('error', 'Please enter values for the fields');
+        return;
+    }
+    
+    // Save all fields
+    const promises = Object.entries(fieldsData).map(([fieldName, value]) => {
+        return fetch('/api/marketing_manager.php?action=update_field', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                sku: currentItemSku,
+                field: fieldName,
+                value: value
+            })
+        }).then(response => response.json());
+    });
+    
+    Promise.all(promises)
+    .then(results => {
+        const allSuccessful = results.every(result => result.success);
+        if (allSuccessful) {
+            showToast('success', `All ${fieldNames.length} fields saved successfully`);
+        } else {
+            const failedCount = results.filter(result => !result.success).length;
+            showToast('warning', `${fieldNames.length - failedCount} fields saved, ${failedCount} failed`);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving fields:', error);
+        showToast('error', 'Failed to save fields');
+    });
+}
+
+function applyMarketingTitle() {
+    const titleField = document.getElementById('marketingTitle');
+    const nameField = document.getElementById('name');
+    
+    if (titleField && nameField && titleField.value.trim()) {
+        const newTitle = titleField.value.trim();
+        nameField.value = newTitle;
+        nameField.style.backgroundColor = '#f3e8ff';
+        
+        // Auto-save the product with the new title
+        const updateData = {
+            sku: currentItemSku,
+            name: newTitle,
+            description: document.getElementById('description')?.value || '',
+            category: document.getElementById('categoryEdit')?.value || '',
+            retailPrice: document.getElementById('retailPrice')?.value || '',
+            costPrice: document.getElementById('costPrice')?.value || '',
+            stockLevel: document.getElementById('stockLevel')?.value || '',
+            reorderPoint: document.getElementById('reorderPoint')?.value || ''
+        };
+        
+        fetch('/api/update-inventory.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Title applied and product saved automatically!');
+            } else {
+                console.error('API error:', data);
+                showToast('error', 'Failed to save: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error auto-saving product:', error);
+            showToast('error', 'Network error: ' + error.message);
+        });
+        
+        setTimeout(() => {
+            nameField.style.backgroundColor = '';
+        }, 2000);
+    }
+}
+
+function applyMarketingDescription() {
+    const descField = document.getElementById('marketingDescription');
+    const productDescField = document.getElementById('description');
+    
+    if (descField && productDescField && descField.value.trim()) {
+        const newDescription = descField.value.trim();
+        productDescField.value = newDescription;
+        productDescField.style.backgroundColor = '#f0fdf4';
+        
+        // Auto-save the product with the new description
+        const updateData = {
+            sku: currentItemSku,
+            name: document.getElementById('name')?.value || '',
+            description: newDescription,
+            category: document.getElementById('categoryEdit')?.value || '',
+            retailPrice: document.getElementById('retailPrice')?.value || '',
+            costPrice: document.getElementById('costPrice')?.value || '',
+            stockLevel: document.getElementById('stockLevel')?.value || '',
+            reorderPoint: document.getElementById('reorderPoint')?.value || ''
+        };
+        
+        fetch('/api/update-inventory.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Description applied and product saved automatically!');
+            } else {
+                console.error('API error:', data);
+                showToast('error', 'Failed to save: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error auto-saving product:', error);
+            showToast('error', 'Network error: ' + error.message);
+        });
+        
+        setTimeout(() => {
+            productDescField.style.backgroundColor = '';
+        }, 2000);
+    }
+}
+
+function addAIContentBadges(tabNames) {
+    tabNames.forEach(tabName => {
+        const tabButton = document.getElementById(tabName + 'Tab');
+        if (tabButton && !tabButton.querySelector('.ai-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'ai-badge ml-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded';
+            badge.textContent = 'AI';
+            badge.title = 'Contains AI-generated content';
+            tabButton.appendChild(badge);
+        }
+    });
+}
+
+function populateAllMarketingTabs(aiData) {
+    if (!aiData || !aiData.marketingIntelligence) return;
+    
+    const intelligence = aiData.marketingIntelligence;
+    
+    // Save all the AI-generated data to the database
+    const fieldsToSave = [
+        // Target Audience tab data
+        { field: 'target_audience', value: aiData.targetAudience || '' },
+        { field: 'demographic_targeting', value: intelligence.demographic_targeting || '' },
+        { field: 'psychographic_profile', value: intelligence.psychographic_profile || '' },
+        
+        // SEO & Keywords tab data
+        { field: 'seo_keywords', value: intelligence.seo_keywords || [] },
+        { field: 'search_intent', value: intelligence.search_intent || '' },
+        { field: 'seasonal_relevance', value: intelligence.seasonal_relevance || '' },
+        
+        // Selling Points tab data
+        { field: 'selling_points', value: intelligence.selling_points || [] },
+        { field: 'competitive_advantages', value: intelligence.competitive_advantages || [] },
+        { field: 'customer_benefits', value: intelligence.customer_benefits || [] },
+        
+        // Conversion tab data
+        { field: 'call_to_action_suggestions', value: intelligence.call_to_action_suggestions || [] },
+        { field: 'urgency_factors', value: intelligence.urgency_factors || [] },
+        { field: 'conversion_triggers', value: intelligence.conversion_triggers || [] }
+    ];
+    
+    // Save all fields to database
+    const savePromises = fieldsToSave.map(item => {
+        return fetch('/api/marketing_manager.php?action=update_field', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                sku: currentItemSku,
+                field: item.field,
+                value: item.value
+            })
+        }).then(response => response.json());
+    });
+    
+    // Wait for all saves to complete
+    Promise.all(savePromises).then(results => {
+        const successCount = results.filter(r => r.success).length;
+        console.log(`Successfully saved ${successCount}/${fieldsToSave.length} marketing fields`);
+        
+                 // Add visual indicators to tabs that now have AI content
+         addAIContentBadges(['audience', 'selling', 'seo', 'conversion']);
+         
+         // If user is currently viewing one of the populated tabs, refresh it
+         const currentTab = document.querySelector('.marketing-tab.bg-white');
+         if (currentTab) {
+             const tabName = currentTab.id.replace('Tab', '');
+             if (['audience', 'selling', 'seo', 'conversion'].includes(tabName)) {
+                 loadMarketingTabContent(tabName);
+             }
+         }
+    }).catch(error => {
+        console.error('Error saving marketing fields:', error);
+    });
+}
+
+function generateNewMarketingContent() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="animate-spin">⏳</span> Generating...';
+    button.disabled = true;
+    
+    // Preserve current brand voice and content tone settings
+    const currentBrandVoice = document.getElementById('brandVoice')?.value || '';
+    const currentContentTone = document.getElementById('contentTone')?.value || '';
+    
+    // Get current item data
+    const itemData = {
+        sku: currentItemSku,
+        name: document.getElementById('name')?.value || '',
+        description: document.getElementById('description')?.value || '',
+        category: document.getElementById('categoryEdit')?.value || '',
+        retailPrice: document.getElementById('retailPrice')?.value || '',
+        // Include brand voice and tone preferences
+        brandVoice: currentBrandVoice,
+        contentTone: currentContentTone
+    };
+    
+    fetch('/api/suggest_marketing.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(itemData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', '🎯 AI content generated for: Target Audience, Selling Points, SEO & Keywords, and Conversion tabs!');
+            
+            // Populate all tabs with AI-generated data
+            populateAllMarketingTabs(data);
+            
+            // Refresh the current tab display but preserve voice/tone settings
+            loadExistingMarketingData().then(() => {
+                // Restore the brand voice and tone settings after loading
+                if (currentBrandVoice) {
+                    const brandVoiceField = document.getElementById('brandVoice');
+                    if (brandVoiceField) brandVoiceField.value = currentBrandVoice;
+                }
+                if (currentContentTone) {
+                    const contentToneField = document.getElementById('contentTone');
+                    if (contentToneField) contentToneField.value = currentContentTone;
+                }
+            });
+        } else {
+            showToast('error', data.error || 'Failed to generate marketing content');
+        }
+    })
+    .catch(error => {
+        console.error('Error generating marketing content:', error);
+        showToast('error', 'Failed to generate marketing content');
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
 </script>
+
+<!-- Marketing Manager Modal -->
+<div id="marketingManagerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[95vh] overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-white">🎯 Marketing Manager</h2>
+            <button onclick="closeMarketingManager()" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="bg-gray-50 px-6 py-2 border-b">
+            <div class="flex space-x-4">
+                <button id="contentTab" class="marketing-tab px-4 py-2 rounded-t-lg bg-white text-purple-600 border-b-2 border-purple-600 font-semibold" onclick="showMarketingManagerTab('content')">Content & Copy</button>
+                <button id="audienceTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600" onclick="showMarketingManagerTab('audience')">Target Audience</button>
+                <button id="sellingTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600" onclick="showMarketingManagerTab('selling')">Selling Points</button>
+                <button id="seoTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600" onclick="showMarketingManagerTab('seo')">SEO & Keywords</button>
+                <button id="conversionTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600" onclick="showMarketingManagerTab('conversion')">Conversion</button>
+            </div>
+        </div>
+        
+        <div class="p-6 overflow-y-auto max-h-[calc(95vh-140px)]">
+            <div id="marketingManagerContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php
 $output = ob_get_clean();

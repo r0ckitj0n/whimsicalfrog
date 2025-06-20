@@ -63,93 +63,71 @@
 </style>
 
 <section id="mainRoomPage" class="p-2">
-    <!-- Dynamic doors will be loaded here -->
-    <div id="dynamicRoomDoors">
-        <!-- Loading placeholder -->
-        <div class="text-center text-gray-500 mt-10">
-            Loading rooms...
-        </div>
+    <!-- T-Shirts Door -->
+    <div class="door-area area-1" onclick="enterRoom(2)">
+        <picture class="block">
+            <source srcset="images/sign_door_room2.webp" type="image/webp">
+            <img src="images/sign_door_room2.png" alt="T-Shirts & Apparel" class="door-sign">
+        </picture>
+        <div class="door-label">T-Shirts & Apparel</div>
+    </div>
+    
+    <!-- Tumblers Door -->
+    <div class="door-area area-2" onclick="enterRoom(3)">
+        <picture class="block">
+            <source srcset="images/sign_door_room3.webp" type="image/webp">
+            <img src="images/sign_door_room3.png" alt="Tumblers & Drinkware" class="door-sign">
+        </picture>
+        <div class="door-label">Tumblers & Drinkware</div>
+    </div>
+    
+    <!-- Artwork Door -->
+    <div class="door-area area-3" onclick="enterRoom(4)">
+        <picture class="block">
+            <source srcset="images/sign_door_room4.webp" type="image/webp">
+            <img src="images/sign_door_room4.png" alt="Custom Artwork" class="door-sign">
+        </picture>
+        <div class="door-label">Custom Artwork</div>
+    </div>
+    
+    <!-- Window Wraps Door -->
+    <div class="door-area area-4" onclick="enterRoom(6)">
+        <picture class="block">
+            <source srcset="images/sign_door_room6.webp" type="image/webp">
+            <img src="images/sign_door_room6.png" alt="Window Wraps" class="door-sign">
+        </picture>
+        <div class="door-label">Window Wraps</div>
+    </div>
+    
+    <!-- Sublimation Door -->
+    <div class="door-area area-5" onclick="enterRoom(5)">
+        <picture class="block">
+            <source srcset="images/sign_door_room5.webp" type="image/webp">
+            <img src="images/sign_door_room5.png" alt="Sublimation Items" class="door-sign">
+        </picture>
+        <div class="door-label">Sublimation Items</div>
     </div>
 </section>
 
 <script>
-let roomsData = [];
-
 function enterRoom(roomNumber) {
     console.log('Entering room:', roomNumber);
-    window.location.href = `/?page=room${roomNumber}`;
-}
-
-// Load room settings and create dynamic doors
-async function loadRoomDoors() {
-    try {
-        const response = await fetch('/api/room_settings.php?action=get_navigation_rooms');
-        const data = await response.json();
-        
-        if (data.success && data.rooms) {
-            roomsData = data.rooms;
-            createDynamicDoors(data.rooms);
-            // Position doors after they're created
-            setTimeout(() => {
-                positionDoors();
-            }, 100);
-        } else {
-            console.error('Failed to load room settings:', data.message);
-            // Fallback to hardcoded doors if API fails
-            createFallbackDoors();
-        }
-    } catch (error) {
-        console.error('Error loading room settings:', error);
-        createFallbackDoors();
-    }
-}
-
-function createDynamicDoors(rooms) {
-    const container = document.getElementById('dynamicRoomDoors');
-    container.innerHTML = '';
-    
-    rooms.forEach((room, index) => {
-        const areaNumber = index + 1;
-        const doorHtml = `
-            <div class="door-area area-${areaNumber}" onclick="enterRoom(${room.room_number})">
-                <picture class="block">
-                    <source srcset="images/sign_door_room${room.room_number}.webp" type="image/webp">
-                    <img src="images/sign_door_room${room.room_number}.png" alt="${room.door_label}" class="door-sign">
-                </picture>
-                <div class="door-label">${room.door_label}</div>
-            </div>
-        `;
-        container.innerHTML += doorHtml;
-    });
-}
-
-function createFallbackDoors() {
-    const fallbackRooms = [
-        { room_number: 2, door_label: 'T-Shirts & Apparel' },
-        { room_number: 3, door_label: 'Tumblers & Drinkware' },
-        { room_number: 4, door_label: 'Custom Artwork' },
-        { room_number: 6, door_label: 'Window Wraps' },
-        { room_number: 5, door_label: 'Sublimation Items' }
-    ];
-    createDynamicDoors(fallbackRooms);
-    setTimeout(() => {
-        positionDoors();
-    }, 100);
+    window.location.href = `/?page=room${roomNumber}&from=main`;
 }
 
 // Direct positioning script for main room doors
-function positionDoors() {
+document.addEventListener('DOMContentLoaded', function() {
     // Original image dimensions
     const originalImageWidth = 1280;
     const originalImageHeight = 896;
     
     // Door coordinates from user
     const doorCoordinates = [
-        { selector: '.area-1', top: 243, left: 30, width: 234, height: 233 }, // Area 1
-        { selector: '.area-2', top: 403, left: 390, width: 202, height: 241 }, // Area 2
-        { selector: '.area-3', top: 271, left: 753, width: 170, height: 235 }, // Area 3
-        { selector: '.area-4', top: 291, left: 1001, width: 197, height: 255 }, // Area 4
-        { selector: '.area-5', top: 157, left: 486, width: 190, height: 230 } // Area 5
+        { selector: '.area-1', top: 243, left: 30, width: 234, height: 233 }, // Area 1 (T-Shirts)
+        { selector: '.area-2', top: 403, left: 390, width: 202, height: 241 }, // Area 2 (Tumblers)
+        { selector: '.area-3', top: 271, left: 753, width: 170, height: 235 }, // Area 3 (Artwork)
+        { selector: '.area-4', top: 291, left: 1001, width: 197, height: 255 }, // Area 4 (Window Wraps)
+        { selector: '.area-5', top: 157, left: 486, width: 190, height: 230 } // Area 5 (Sublimation)
     ];
 
     // Get viewport dimensions - use full viewport
@@ -190,11 +168,10 @@ function positionDoors() {
             console.log(`Positioned ${door.selector}:`, element.style.top, element.style.left);
         }
     });
-}
-
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadRoomDoors();
-    window.addEventListener('resize', positionDoors);
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        location.reload(); // Simple approach - reload page on resize
+    });
 });
 </script> 

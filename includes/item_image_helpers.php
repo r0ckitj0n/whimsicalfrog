@@ -25,6 +25,8 @@ function getPrimaryImageBySku($sku) {
         $primaryImage = $stmt->fetch();
         
         if ($primaryImage) {
+            // Add file existence check
+            $primaryImage['file_exists'] = file_exists($primaryImage['image_path']);
             return $primaryImage;
         }
         
@@ -35,7 +37,15 @@ function getPrimaryImageBySku($sku) {
             ORDER BY id ASC LIMIT 1
         ");
         $stmt->execute([$sku]);
-        return $stmt->fetch();
+        $image = $stmt->fetch();
+        
+        if ($image) {
+            // Add file existence check
+            $image['file_exists'] = file_exists($image['image_path']);
+            return $image;
+        }
+        
+        return false;
         
     } catch (PDOException $e) {
         error_log("Database error in getPrimaryImageBySku: " . $e->getMessage());

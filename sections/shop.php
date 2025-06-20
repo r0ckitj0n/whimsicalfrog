@@ -83,6 +83,38 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
         box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
         transform: translateY(-1px) !important;
     }
+
+    /* Out of stock badge styling for shop page */
+    .product-card {
+        position: relative;
+    }
+    
+    .out-of-stock-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #dc2626;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 4px 8px;
+        border-radius: 12px;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        z-index: 10;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .product-card.out-of-stock .bg-white {
+        opacity: 0.8;
+        filter: grayscale(20%);
+    }
+    
+    .product-card.out-of-stock:hover .bg-white {
+        opacity: 0.9;
+        filter: grayscale(10%);
+    }
 </style>
 
 <section id="shopPage" class="py-6">
@@ -118,21 +150,31 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                 $productId = isset($product['productId']) ? htmlspecialchars($product['productId'] ?? '') : '';
                 $sku = isset($product['sku']) ? htmlspecialchars($product['sku'] ?? '') : $productId;
                 $price = isset($product['price']) ? htmlspecialchars($product['price'] ?? '') : '';
-                $description = isset($product['description']) ? htmlspecialchars($product['description'] ?? '') : '';
                 $stock = isset($product['stock']) ? (int)$product['stock'] : 0;
+                
+                // Use enhanced marketing description if available
+                $description = getEnhancedDescription($sku, $product['description'] ?? '');
+                $description = htmlspecialchars($description);
+                
+                // Get selling points for this product
+                $sellingPoints = getSellingPoints($sku);
+                $callToActions = getCallToActions($sku);
                 
                 // Format price
                 $formattedPrice = '$' . number_format((float)$price, 2);
                 
                 // Get primary image using database-driven system
                 $primaryImageData = getPrimaryImageBySku($sku);
-                $imageUrl = ($primaryImageData && $primaryImageData['file_exists']) ? htmlspecialchars($primaryImageData['image_path'] ?? '') : 'images/items/placeholder.png';
+                $imageUrl = ($primaryImageData && !empty($primaryImageData['image_path'])) ? htmlspecialchars($primaryImageData['image_path'] ?? '') : 'images/items/placeholder.png';
         ?>
-        <div class="product-card" data-category="<?php echo htmlspecialchars($category); ?>">
+        <div class="product-card<?php echo ($stock <= 0) ? ' out-of-stock' : ''; ?>" data-category="<?php echo htmlspecialchars($category); ?>" data-stock="<?php echo $stock; ?>">
+            <?php if ($stock <= 0): ?>
+                <div class="out-of-stock-badge">Out of Stock</div>
+            <?php endif; ?>
             <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
                 <?php 
                 // Display product images using database-driven system
-                if ($primaryImageData && $primaryImageData['file_exists']) {
+                if ($primaryImageData && !empty($primaryImageData['image_path'])) {
                     echo '<div class="product-image-container" style="height: 192px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; overflow: hidden;">';
                     echo '<img src="' . htmlspecialchars($primaryImageData['image_path'] ?? '') . '" alt="' . htmlspecialchars($primaryImageData['alt_text'] ?: $productName) . '" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.onerror=null; this.src=\'images/items/placeholder.png\';">';
                     echo '</div>';
@@ -149,6 +191,19 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                     <p class="text-gray-600 mb-2 text-sm line-clamp-2 flex-grow-0">
                         <?php echo $description; ?>
                     </p>
+                    
+                    <?php if (!empty($sellingPoints) && count($sellingPoints) > 0): ?>
+                    <div class="mb-2">
+                        <div class="flex flex-wrap gap-1">
+                            <?php foreach (array_slice($sellingPoints, 0, 2) as $point): ?>
+                                <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                    ✓ <?php echo htmlspecialchars($point); ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
                     <div class="mt-2 text-sm <?php echo $stock>0 ? 'text-gray-600' : 'text-red-600'; ?>">In stock: <?php echo $stock; ?></div>
                     <div class="flex justify-between items-center mt-auto">
                         <span class="font-bold text-[#87ac3a]"><?php echo $formattedPrice; ?></span>
@@ -158,7 +213,13 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                                 data-product-name="<?php echo $productName; ?>"
                                 data-product-price="<?php echo $price; ?>"
                                 data-product-image="<?php echo $imageUrl; ?>">
-                            <?php echo $stock>0 ? 'Add to Cart' : 'Out of Stock'; ?>
+                            <?php 
+                            if ($stock == 0) {
+                                echo 'Out of Stock';
+                            } else {
+                                echo !empty($callToActions) ? htmlspecialchars($callToActions[0]) : 'Add to Cart';
+                            }
+                            ?>
                         </button>
                     </div>
                 </div>

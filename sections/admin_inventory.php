@@ -888,6 +888,10 @@ $messageType = $_GET['type'] ?? '';
                                         </div>
                                     </div>
                                     
+                                    <button type="button" onclick="applyPriceSuggestion()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors mb-3">
+                                        Apply to Retail Price
+                                    </button>
+                                    
                                     <!-- Reasoning Section -->
                                     <div class="mb-3">
                                         <h4 class="font-semibold text-gray-700 mb-1 text-sm">AI Reasoning</h4>
@@ -900,10 +904,6 @@ $messageType = $_GET['type'] ?? '';
                                         <span class="text-green-600" id="displayConfidence">Medium confidence</span>
                                         <span class="text-green-500" id="displayTimestamp">Just now</span>
                                     </div>
-                                    
-                                    <button type="button" onclick="applyPriceSuggestion()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors">
-                                        Apply to Retail Price
-                                    </button>
                                 </div>
                                 
                                 <!-- Price Suggestion Placeholder -->

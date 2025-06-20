@@ -7063,12 +7063,15 @@ async function loadCategoriesData() {
     
     try {
         const response = await fetch('/api/get_categories.php');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const categories = await response.json();
         
         displayCategoriesData(categories);
     } catch (error) {
         console.error('Error loading categories:', error);
-        contentDiv.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load categories</div>';
+        contentDiv.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load categories: ' + error.message + '</div>';
     }
 }
 

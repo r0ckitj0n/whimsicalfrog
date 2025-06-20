@@ -597,12 +597,12 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                             <?php endforeach; ?>
                             <div class="cost-totals">
-                                <div class="cost-total-row"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="viewMaterialsTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="viewLaborTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="viewEnergyTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="viewEquipmentTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
-                                    <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="viewSuggestedCostDisplay">$0.00</span>
+                                    <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="suggestedCostDisplay">$0.00</span>
                                 </div>
                             </div>
                         </div>
@@ -2361,102 +2361,7 @@ function loadExistingViewPriceSuggestion(sku) {
     });
 }
 
-function loadViewCostBreakdown(sku) {
-    if (!sku) return;
-    
-    console.log('Loading cost breakdown for view mode, SKU:', sku);
-    
-    fetch(`/api/inventory-costs.php?sku=${encodeURIComponent(sku)}`)
-    .then(response => response.json())
-    .then(data => {
-        console.log('View cost breakdown API response:', data);
-        if (data.success) {
-            renderViewCostBreakdown(data);
-        } else {
-            console.log('No cost breakdown data found for SKU:', sku);
-            // Clear view cost breakdown display
-            ['materials', 'labor', 'energy', 'equipment'].forEach(type => {
-                const listElement = document.getElementById(`view_${type}List`);
-                if (listElement) {
-                    listElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added.</p>';
-                }
-            });
-            updateViewTotalsDisplay({ materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 });
-        }
-    })
-    .catch(error => {
-        console.error('Error loading view cost breakdown:', error);
-        // Clear view cost breakdown display on error
-        ['materials', 'labor', 'energy', 'equipment'].forEach(type => {
-            const listElement = document.getElementById(`view_${type}List`);
-            if (listElement) {
-                listElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added.</p>';
-            }
-        });
-        updateViewTotalsDisplay({ materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 });
-    });
-}
-
-function renderViewCostBreakdown(data) {
-    // Clear existing items first
-    ['materials', 'labor', 'energy', 'equipment'].forEach(type => {
-        const listElement = document.getElementById(`view_${type}List`);
-        if (listElement) {
-            listElement.innerHTML = '';
-        }
-    });
-    
-    // Render items for each category
-    ['materials', 'labor', 'energy', 'equipment'].forEach(type => {
-        const items = data[type] || [];
-        const listElement = document.getElementById(`view_${type}List`);
-        
-        if (listElement) {
-            if (items.length > 0) {
-                items.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'cost-item';
-                    
-                    const itemName = type === 'materials' ? (item.name || 'Material') : (item.description || 'Item');
-                    const itemCost = parseFloat(item.cost || 0);
-                    
-                    itemDiv.innerHTML = `
-                        <span class="cost-item-name">${itemName}</span>
-                        <div class="cost-item-actions">
-                            <span class="cost-item-value">$${itemCost.toFixed(2)}</span>
-                        </div>
-                    `;
-                    
-                    listElement.appendChild(itemDiv);
-                });
-            } else {
-                listElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added.</p>';
-            }
-        }
-    });
-    
-    // Update totals
-    const totals = data.totals || { materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 };
-    updateViewTotalsDisplay(totals);
-}
-
-function updateViewTotalsDisplay(totals) {
-    // Update each total display element for view mode
-    const elements = {
-        viewMaterialsTotalDisplay: totals.materialTotal || 0,
-        viewLaborTotalDisplay: totals.laborTotal || 0,
-        viewEnergyTotalDisplay: totals.energyTotal || 0,
-        viewEquipmentTotalDisplay: totals.equipmentTotal || 0,
-        viewSuggestedCostDisplay: totals.suggestedCost || 0
-    };
-    
-    Object.entries(elements).forEach(([elementId, value]) => {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.textContent = '$' + parseFloat(value).toFixed(2);
-        }
-    });
-}
+// View-specific functions removed - view modal now uses same functions as edit modal
 
 function loadExistingPriceSuggestion(sku) {
     if (!sku) return;
@@ -3238,10 +3143,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modalMode === 'view') {
                 console.log('Loading existing price suggestion for view mode, SKU:', currentItemSku);
                 loadExistingViewPriceSuggestion(currentItemSku);
-                
-                // Load cost breakdown for view mode
-                console.log('Loading cost breakdown for view mode, SKU:', currentItemSku);
-                loadViewCostBreakdown(currentItemSku);
             }
             
             // Load existing marketing suggestion for edit/view mode

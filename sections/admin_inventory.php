@@ -577,6 +577,15 @@ $messageType = $_GET['type'] ?? '';
                     <div class="cost-breakdown-wrapper">
                         <div class="cost-breakdown">
                             <h3>Cost Breakdown</h3>
+                            
+                            <!-- Suggested Cost Display - Moved to top with price styling -->
+                            <div class="mb-4 p-2 bg-green-50 rounded border border-green-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-green-700 font-medium">Suggested Cost:</span>
+                                    <span class="font-bold text-green-800 text-lg" id="suggestedCostDisplay">$0.00</span>
+                                </div>
+                            </div>
+                            
                             <?php foreach (['materials', 'labor', 'energy', 'equipment'] as $costType): ?>
                             <div class="cost-breakdown-section <?= $costType !== 'materials' ? 'mt-3' : ''; ?>">
                                 <h4 class="font-semibold text-gray-700 mb-1 text-sm"><?= ucfirst($costType); ?></h4>
@@ -596,14 +605,11 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                             </div>
                             <?php endforeach; ?>
-                            <div class="cost-totals">
+                            <div class="cost-totals" style="display: none;">
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
-                                    <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="suggestedCostDisplay">$0.00</span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -796,6 +802,20 @@ $messageType = $_GET['type'] ?? '';
                                     🧮 Get Suggested Cost
                                 </button>
                                 
+                                <!-- Suggested Cost Display - Moved to top with price styling -->
+                                <div class="mb-4 p-2 bg-green-50 rounded border border-green-200">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-green-700 font-medium">Suggested Cost:</span>
+                                        <span class="font-bold text-green-800 text-lg" id="suggestedCostDisplay">$0.00</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <button type="button" onclick="applyCostSuggestionToCost()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors">
+                                        💰 Apply Costs to Cost Field
+                                    </button>
+                                </div>
+                                
                                 <!-- Template Selection Section -->
                                 <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                     <div class="flex items-center justify-between mb-2">
@@ -845,20 +865,11 @@ $messageType = $_GET['type'] ?? '';
                                     </button>
                                 </div>
                                 <?php endforeach; ?>
-                                                            <div class="cost-totals">
+                                                            <div class="cost-totals" style="display: none;">
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
-                                    <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
-                                        <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="suggestedCostDisplay">$0.00</span>
-                                    </div>
-                                    <div class="mt-2">
-                                        <button type="button" onclick="applyCostSuggestionToCost()" class="w-full px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors">
-                                            💰 Apply Costs to Cost Field
-                                        </button>
-                                    </div>
-
                                 </div>
                             </div>
                         </div>

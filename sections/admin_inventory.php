@@ -1624,10 +1624,20 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                     <h3 class="font-semibold text-gray-800 mb-2 flex items-center">
                         <span class="mr-2">🤖</span> AI Analysis
                     </h3>
-                    <p class="text-sm text-gray-700 mb-2">${suggestionData.reasoning || 'Advanced pricing analysis completed'}</p>
+                    ${suggestionData.components && suggestionData.components.length > 0 ? `
+                        <ul class="text-sm text-gray-700 mb-2 space-y-1">
+                            ${suggestionData.components.map(component => `
+                                <li class="flex justify-between">
+                                    <span>• ${component.label}:</span>
+                                    <span class="font-semibold">$${parseFloat(component.amount).toFixed(2)}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    ` : `
+                        <p class="text-sm text-gray-700 mb-2">${suggestionData.reasoning || 'Advanced pricing analysis completed'}</p>
+                    `}
                     <div class="text-xs text-green-600">
-                        <strong>Confidence:</strong> ${suggestionData.confidence || 'medium'} • 
-                        <strong>Suggested Price:</strong> $${parseFloat(suggestionData.suggestedPrice).toFixed(2)}
+                        <strong>Confidence:</strong> ${suggestionData.confidence || 'medium'}
                     </div>
                 </div>
                 

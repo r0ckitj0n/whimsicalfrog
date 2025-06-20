@@ -175,6 +175,9 @@ try {
 }
 
 function analyzePricing($name, $description, $category, $costPrice, $pdo) {
+    // Load AI settings from database
+    $aiSettings = loadAISettings($pdo);
+    
     // Enhanced AI product analysis (reuse cost analysis functions)
     $productAnalysis = analyzeProductForPricing($name, $description, $category);
     
@@ -182,14 +185,32 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
     $reasoning = [];
     $confidence = 'medium';
     
-    // Enhanced pricing strategy analysis
+    // Enhanced pricing strategy analysis with AI settings
     $pricingStrategies = analyzePricingStrategies($name, $description, $category, $costPrice, $productAnalysis, $pdo);
     
     // Create individual pricing components with dollar amounts
     $pricingComponents = [];
     
+    // Apply AI temperature and conservative mode adjustments
+    $temperature = $aiSettings['ai_price_temperature'];
+    $conservativeMode = $aiSettings['ai_conservative_mode'];
+    $baseMultiplier = $aiSettings['ai_price_multiplier_base'];
+    
+    // Get AI weights for pricing strategies
+    $costPlusWeight = $aiSettings['ai_cost_plus_weight'];
+    $marketWeight = $aiSettings['ai_market_research_weight'];
+    $valueWeight = $aiSettings['ai_value_based_weight'];
+    
     // 1. Cost-Plus Pricing (Foundation)
-    $costPlusPrice = $pricingStrategies['cost_plus_price'];
+    $costPlusPrice = $pricingStrategies['cost_plus_price'] * $baseMultiplier;
+    
+    // Apply temperature-based variation (lower temperature = less variation)
+    if (!$conservativeMode && $temperature > 0.5) {
+        $variation = ($temperature - 0.5) * 0.2; // Max 10% variation at temp 1.0
+        $randomFactor = 1 + (mt_rand(-100, 100) / 1000) * $variation;
+        $costPlusPrice *= $randomFactor;
+    }
+    
     $basePrice = $costPlusPrice;
     $factors['cost_plus'] = $costPlusPrice;
     $pricingComponents['cost_plus'] = [
@@ -199,15 +220,24 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
     ];
     
     // 2. Market Research Pricing
-    $marketPrice = $pricingStrategies['market_research_price'];
+    $marketPrice = $pricingStrategies['market_research_price'] * $baseMultiplier;
     if ($marketPrice > 0) {
+        // Apply temperature-based variation
+        if (!$conservativeMode && $temperature > 0.5) {
+            $variation = ($temperature - 0.5) * 0.15;
+            $randomFactor = 1 + (mt_rand(-100, 100) / 1000) * $variation;
+            $marketPrice *= $randomFactor;
+        }
+        
         $factors['market_research'] = $marketPrice;
         $pricingComponents['market_research'] = [
             'amount' => $marketPrice,
             'label' => 'Market research analysis',
             'explanation' => 'Competitive market analysis and pricing research'
         ];
-        $basePrice = ($basePrice * 0.6) + ($marketPrice * 0.4);
+        
+        // Use AI-configured weights instead of hardcoded values
+        $basePrice = ($basePrice * (1 - $marketWeight)) + ($marketPrice * $marketWeight);
         $confidence = 'high';
     }
     
@@ -225,15 +255,24 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
     }
     
     // 4. Value-Based Pricing
-    $valuePrice = $pricingStrategies['value_based_price'];
+    $valuePrice = $pricingStrategies['value_based_price'] * $baseMultiplier;
     if ($valuePrice > 0) {
+        // Apply temperature-based variation
+        if (!$conservativeMode && $temperature > 0.5) {
+            $variation = ($temperature - 0.5) * 0.25; // Value pricing can be more variable
+            $randomFactor = 1 + (mt_rand(-100, 100) / 1000) * $variation;
+            $valuePrice *= $randomFactor;
+        }
+        
         $factors['value_based'] = $valuePrice;
         $pricingComponents['value_based'] = [
             'amount' => $valuePrice,
             'label' => 'Value-based pricing',
             'explanation' => 'Pricing based on perceived customer value and benefits'
         ];
-        $basePrice = ($basePrice * 0.8) + ($valuePrice * 0.2);
+        
+        // Use AI-configured weight instead of hardcoded value
+        $basePrice = ($basePrice * (1 - $valueWeight)) + ($valuePrice * $valueWeight);
     }
     
     // 5. Brand Premium Analysis
@@ -355,6 +394,47 @@ function calculateProfitMarginAnalysis($retailPrice, $costPrice) {
         $marginPercent,
         $markupPercent
     );
+}
+
+function loadAISettings($pdo) {
+    $settings = [
+        'ai_cost_temperature' => 0.7,
+        'ai_price_temperature' => 0.7,
+        'ai_cost_multiplier_base' => 1.0,
+        'ai_price_multiplier_base' => 1.0,
+        'ai_conservative_mode' => false,
+        'ai_market_research_weight' => 0.3,
+        'ai_cost_plus_weight' => 0.4,
+        'ai_value_based_weight' => 0.3
+    ];
+    
+    try {
+        $stmt = $pdo->prepare("SELECT setting_key, setting_value, setting_type FROM business_settings WHERE category = 'ai'");
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach ($results as $row) {
+            $key = $row['setting_key'];
+            $value = $row['setting_value'];
+            $type = $row['setting_type'];
+            
+            // Convert value based on type
+            switch ($type) {
+                case 'number':
+                    $settings[$key] = (float)$value;
+                    break;
+                case 'boolean':
+                    $settings[$key] = in_array(strtolower($value), ['true', '1']);
+                    break;
+                default:
+                    $settings[$key] = $value;
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Error loading AI settings: " . $e->getMessage());
+    }
+    
+    return $settings;
 }
 
 function getCategoryMarkup($category) {

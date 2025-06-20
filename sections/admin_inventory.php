@@ -1770,7 +1770,7 @@ function displayPriceSuggestion(data) {
         if (data.components && data.components.length > 0) {
             data.components.forEach(component => {
                 const listItem = document.createElement('div');
-                listItem.className = 'cost-item-row flex justify-between items-center p-1 bg-green-50 rounded text-xs mb-1';
+                listItem.className = 'cost-item-row flex justify-between items-center p-1 rounded text-xs mb-1';
                 
                 listItem.innerHTML = `
                     <div class="flex items-center justify-between w-full">
@@ -1808,7 +1808,7 @@ function displayPriceSuggestion(data) {
                         
                         if (cleanedItem) {
                             const listItem = document.createElement('div');
-                            listItem.className = 'cost-item-row flex justify-between items-center p-1 bg-green-50 rounded text-xs mb-1';
+                            listItem.className = 'cost-item-row flex justify-between items-center p-1 rounded text-xs mb-1';
                             
                             listItem.innerHTML = `
                                 <div class="flex items-center justify-between w-full">
@@ -2238,7 +2238,7 @@ function displayViewPriceSuggestion(data) {
         if (data.components && data.components.length > 0) {
             data.components.forEach(component => {
                 const listItem = document.createElement('div');
-                listItem.className = 'cost-item-row flex justify-between items-center p-1 bg-green-50 rounded text-xs mb-1';
+                listItem.className = 'cost-item-row flex justify-between items-center p-1 rounded text-xs mb-1';
                 
                 listItem.innerHTML = `
                     <div class="flex items-center justify-between w-full">
@@ -2276,7 +2276,7 @@ function displayViewPriceSuggestion(data) {
                         
                         if (cleanedItem) {
                             const listItem = document.createElement('div');
-                            listItem.className = 'cost-item-row flex justify-between items-center p-1 bg-green-50 rounded text-xs mb-1';
+                            listItem.className = 'cost-item-row flex justify-between items-center p-1 rounded text-xs mb-1';
                             
                             listItem.innerHTML = `
                                 <div class="flex items-center justify-between w-full">

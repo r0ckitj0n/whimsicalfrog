@@ -621,10 +621,6 @@ $messageType = $_GET['type'] ?? '';
                                 <span class="mr-2">🎯</span> Price Suggestion
                             </h3>
                             
-                            <button type="button" onclick="getViewModePriceSuggestion()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4">
-                                🎯 Get Suggested Price
-                            </button>
-                            
                             <!-- Price Suggestion Display -->
                             <div id="viewPriceSuggestionDisplay" class="mb-4 hidden">
                                 <div class="flex items-start justify-between mb-3">
@@ -654,14 +650,14 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                             </div>
                             
-                            <!-- Price Suggestion Placeholder -->
-                            <div id="viewPriceSuggestionPlaceholder" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                <div class="text-center text-gray-500">
-                                    <div class="text-2xl mb-1">🎯</div>
-                                    <div class="text-sm">No price suggestion yet</div>
-                                    <div class="text-xs mt-1 text-gray-400">Click "Get Suggested Price" above to get AI pricing analysis</div>
-                                </div>
-                            </div>
+                                        <!-- Price Suggestion Placeholder -->
+            <div id="viewPriceSuggestionPlaceholder" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div class="text-center text-gray-500">
+                    <div class="text-2xl mb-1">🎯</div>
+                    <div class="text-sm">No price suggestion available</div>
+                    <div class="text-xs mt-1 text-gray-400">Price suggestions are generated in edit mode</div>
+                </div>
+            </div>
                         </div>
                     </div>
                 </div>

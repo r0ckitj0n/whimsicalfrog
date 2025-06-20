@@ -161,6 +161,9 @@ try {
 }
 
 function analyzeCostStructure($name, $description, $category, $pdo) {
+    // Load AI settings from database
+    $aiSettings = loadAISettings($pdo);
+    
     // Enhanced AI product analysis
     $analysis = analyzeProductEnhanced($name, $description, $category);
     
@@ -176,8 +179,29 @@ function analyzeCostStructure($name, $description, $category, $pdo) {
     // Apply complexity multipliers
     $complexityMultiplier = getComplexityMultiplier($analysis);
     
-    // Calculate total cost
-    $totalCost = ($materialsCost + $laborCost + $energyCost + $equipmentCost) * $complexityMultiplier;
+    // Apply AI settings adjustments
+    $temperature = $aiSettings['ai_cost_temperature'];
+    $conservativeMode = $aiSettings['ai_conservative_mode'];
+    $baseMultiplier = $aiSettings['ai_cost_multiplier_base'];
+    
+    // Apply base multiplier and temperature variations
+    $adjustedMaterialsCost = $materialsCost * $baseMultiplier;
+    $adjustedLaborCost = $laborCost * $baseMultiplier;
+    $adjustedEnergyCost = $energyCost * $baseMultiplier;
+    $adjustedEquipmentCost = $equipmentCost * $baseMultiplier;
+    
+    // Apply temperature-based variation (lower temperature = less variation)
+    if (!$conservativeMode && $temperature > 0.5) {
+        $variation = ($temperature - 0.5) * 0.15; // Max 7.5% variation at temp 1.0
+        
+        $adjustedMaterialsCost *= 1 + (mt_rand(-100, 100) / 1000) * $variation;
+        $adjustedLaborCost *= 1 + (mt_rand(-100, 100) / 1000) * $variation;
+        $adjustedEnergyCost *= 1 + (mt_rand(-100, 100) / 1000) * $variation;
+        $adjustedEquipmentCost *= 1 + (mt_rand(-100, 100) / 1000) * $variation;
+    }
+    
+    // Calculate total cost with adjusted values
+    $totalCost = ($adjustedMaterialsCost + $adjustedLaborCost + $adjustedEnergyCost + $adjustedEquipmentCost) * $complexityMultiplier;
     
     // Determine confidence level
     $confidence = determineConfidence($analysis, $category);
@@ -185,14 +209,14 @@ function analyzeCostStructure($name, $description, $category, $pdo) {
     // Generate enhanced reasoning
     $reasoning = generateEnhancedCostReasoning($materialsCost, $laborCost, $energyCost, $equipmentCost, $complexityMultiplier, $analysis);
     
-    // Create detailed breakdown
+    // Create detailed breakdown using adjusted costs
     $breakdown = [
-        'materials' => round($materialsCost * $complexityMultiplier, 2),
-        'labor' => round($laborCost * $complexityMultiplier, 2),
-        'energy' => round($energyCost * $complexityMultiplier, 2),
-        'equipment' => round($equipmentCost * $complexityMultiplier, 2),
+        'materials' => round($adjustedMaterialsCost * $complexityMultiplier, 2),
+        'labor' => round($adjustedLaborCost * $complexityMultiplier, 2),
+        'energy' => round($adjustedEnergyCost * $complexityMultiplier, 2),
+        'equipment' => round($adjustedEquipmentCost * $complexityMultiplier, 2),
         'complexity_multiplier' => $complexityMultiplier,
-        'base_total' => round($materialsCost + $laborCost + $energyCost + $equipmentCost, 2),
+        'base_total' => round($adjustedMaterialsCost + $adjustedLaborCost + $adjustedEnergyCost + $adjustedEquipmentCost, 2),
         'final_total' => round($totalCost, 2)
     ];
     
@@ -223,6 +247,47 @@ function analyzeCostStructure($name, $description, $category, $pdo) {
         'breakdown' => $breakdown,
         'analysis' => $enhancedAnalysis
     ];
+}
+
+function loadAISettings($pdo) {
+    $settings = [
+        'ai_cost_temperature' => 0.7,
+        'ai_price_temperature' => 0.7,
+        'ai_cost_multiplier_base' => 1.0,
+        'ai_price_multiplier_base' => 1.0,
+        'ai_conservative_mode' => false,
+        'ai_market_research_weight' => 0.3,
+        'ai_cost_plus_weight' => 0.4,
+        'ai_value_based_weight' => 0.3
+    ];
+    
+    try {
+        $stmt = $pdo->prepare("SELECT setting_key, setting_value, setting_type FROM business_settings WHERE category = 'ai'");
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach ($results as $row) {
+            $key = $row['setting_key'];
+            $value = $row['setting_value'];
+            $type = $row['setting_type'];
+            
+            // Convert value based on type
+            switch ($type) {
+                case 'number':
+                    $settings[$key] = (float)$value;
+                    break;
+                case 'boolean':
+                    $settings[$key] = in_array(strtolower($value), ['true', '1']);
+                    break;
+                default:
+                    $settings[$key] = $value;
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Error loading AI settings: " . $e->getMessage());
+    }
+    
+    return $settings;
 }
 
 function analyzeProduct($name, $description) {

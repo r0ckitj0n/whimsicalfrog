@@ -22,19 +22,19 @@
             Content Management
         </h3>
         <div class="space-y-2">
-            <a href="/?page=admin&section=categories" class="w-full brand-button text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openCategoriesModal()" class="w-full btn-primary text-sm flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                 </svg>
                 Categories
-            </a>
-            <button onclick="openRoomSettingsModal()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            </button>
+            <button onclick="openRoomSettingsModal()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
                 </svg>
                 Room Settings
             </button>
-            <button onclick="openRoomCategoryManagerModal()" class="w-full btn-primary text-sm flex items-center">
+            <button onclick="openRoomCategoryManagerModal()" class="w-full btn-primary text-sm flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
@@ -52,26 +52,24 @@
             Room & Visual Tools
         </h3>
         <div class="space-y-2">
-            <button onclick="openRoomMapperModal()" class="w-full btn-primary text-sm flex items-center">
+            <button onclick="openRoomMapperModal()" class="w-full btn-primary text-sm flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
                 Room Mapper
             </button>
-            <button onclick="openBackgroundManagerModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openBackgroundManagerModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
                 Background Manager
             </button>
-            <div class="flex gap-1">
-                <button onclick="openRoomCategoryMapperModal()" class="flex-1 bg-teal-500 hover:bg-teal-600 text-white px-2 py-2 rounded text-xs font-medium">
-                    Room Mapper
-                </button>
-                <button onclick="openAreaItemMapperModal()" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-2 rounded text-xs font-medium">
-                    Area Mapper
-                </button>
-            </div>
+            <button onclick="openAreaItemMapperModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                </svg>
+                Area-Item Mapper
+            </button>
         </div>
     </div>
 
@@ -84,25 +82,25 @@
             Business & Design
         </h3>
         <div class="space-y-2">
-            <button onclick="openAISettingsModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openAISettingsModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
                 AI Settings
             </button>
-            <button onclick="openGlobalCSSModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openGlobalCSSModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
                 </svg>
                 Global CSS Rules
             </button>
-            <button onclick="openTemplateManagerModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openTemplateManagerModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
                 Template Manager
             </button>
-            <button onclick="openAnalyticsModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openAnalyticsModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
@@ -120,19 +118,19 @@
             Email & Communications
         </h3>
         <div class="space-y-2">
-            <button onclick="openEmailConfigModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openEmailConfigModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                 </svg>
                 Email Configuration
             </button>
-            <button onclick="openEmailHistoryModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openEmailHistoryModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 Email History
             </button>
-            <button onclick="fixSampleEmail()" class="w-full btn-primary text-sm flex items-center" id="fixSampleEmailBtn">
+            <button onclick="fixSampleEmail()" class="w-full btn-primary text-sm flex items-center text-left" id="fixSampleEmailBtn">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                 </svg>
@@ -150,19 +148,19 @@
             System & Technical
         </h3>
         <div class="space-y-2">
-            <button onclick="openSystemConfigModal()" class="w-full btn-primary text-sm flex items-center">
+            <button onclick="openSystemConfigModal()" class="w-full btn-primary text-sm flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                 </svg>
                 System Reference
             </button>
-            <button onclick="openFileExplorerModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openFileExplorerModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
                 </svg>
                 File Explorer
             </button>
-            <button onclick="openDatabaseMaintenanceModal()" class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openDatabaseMaintenanceModal()" class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                 </svg>
@@ -7048,4 +7046,189 @@ function showAnalyticsError(message) {
 function refreshAnalytics() {
     loadAnalyticsData();
 }
+
+// Categories Modal Functions
+function openCategoriesModal() {
+    document.getElementById('categoriesModal').style.display = 'flex';
+    loadCategoriesData();
+}
+
+function closeCategoriesModal() {
+    document.getElementById('categoriesModal').style.display = 'none';
+}
+
+async function loadCategoriesData() {
+    const contentDiv = document.getElementById('categoriesContent');
+    contentDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div><p class="text-gray-600">Loading categories...</p></div>';
+    
+    try {
+        const response = await fetch('/api/get_categories.php');
+        const categories = await response.json();
+        
+        displayCategoriesData(categories);
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        contentDiv.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load categories</div>';
+    }
+}
+
+function displayCategoriesData(categories) {
+    const contentDiv = document.getElementById('categoriesContent');
+    
+    // Function to generate category code
+    function catCode(cat) {
+        const map = {
+            'T-Shirts': 'TS',
+            'Tumblers': 'TU', 
+            'Artwork': 'AR',
+            'Sublimation': 'SU',
+            'WindowWraps': 'WW'
+        };
+        return map[cat] || cat.replace(/[^A-Za-z]/g, '').substr(0, 2).toUpperCase();
+    }
+    
+    let html = `
+        <!-- Add Category Form -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Add New Category</h3>
+            <form id="addCategoryForm" class="flex gap-2" onsubmit="addCategory(event)">
+                <input type="text" id="newCategory" name="newCategory" placeholder="Enter category name..." class="border border-gray-300 rounded p-2 flex-grow" required>
+                <button type="submit" class="btn-primary px-4 py-2 rounded">Add Category</button>
+            </form>
+        </div>
+
+        <!-- Categories List -->
+        <div class="bg-white rounded-lg shadow">
+    `;
+    
+    if (categories.length === 0) {
+        html += `
+            <div class="text-center text-gray-500 py-12">
+                <div class="text-4xl mb-4">📂</div>
+                <div class="text-lg font-medium mb-2">No categories found</div>
+                <div class="text-sm">Add your first category above to get started.</div>
+            </div>
+        `;
+    } else {
+        html += `
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Example SKU</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+        `;
+        
+        categories.forEach(cat => {
+            const code = catCode(cat);
+            const exampleSku = `WF-${code}-001`;
+            
+            html += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">${cat}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">${code}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">${exampleSku}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="deleteCategory('${cat}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+    }
+    
+    html += `</div>`;
+    
+    contentDiv.innerHTML = html;
+}
+
+async function addCategory(event) {
+    event.preventDefault();
+    const categoryName = document.getElementById('newCategory').value.trim();
+    
+    if (!categoryName) return;
+    
+    try {
+        const response = await fetch('/process_category_action.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=add&categoryName=${encodeURIComponent(categoryName)}`
+        });
+        
+        const result = await response.text();
+        
+        if (result.includes('successfully')) {
+            document.getElementById('newCategory').value = '';
+            loadCategoriesData(); // Reload the categories
+            showNotification('Category Added', 'Category added successfully', 'success');
+        } else {
+            showNotification('Error', 'Failed to add category', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding category:', error);
+        showNotification('Error', 'Failed to add category', 'error');
+    }
+}
+
+async function deleteCategory(categoryName) {
+    if (!confirm(`Are you sure you want to delete the category "${categoryName}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/process_category_action.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=delete&categoryName=${encodeURIComponent(categoryName)}`
+        });
+        
+        const result = await response.text();
+        
+        if (result.includes('successfully')) {
+            loadCategoriesData(); // Reload the categories
+            showNotification('Category Deleted', 'Category deleted successfully', 'success');
+        } else {
+            showNotification('Error', 'Failed to delete category', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        showNotification('Error', 'Failed to delete category', 'error');
+    }
+}
 </script>
+
+<!-- Categories Modal -->
+<div id="categoriesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white shadow-xl rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4">
+        <div class="flex justify-between items-center p-6 border-b">
+            <h2 class="text-xl font-bold text-gray-800">📂 Category Management</h2>
+            <button onclick="closeCategoriesModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            <div id="categoriesContent">
+                <!-- Categories content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>

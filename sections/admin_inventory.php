@@ -1601,6 +1601,140 @@ function closeCostSuggestionChoiceDialog() {
     }
 }
 
+function showPriceSuggestionChoiceDialog(suggestionData) {
+    // Check if there's an existing price suggestion
+    const hasExistingPrice = checkForExistingPriceSuggestion();
+    
+    // Create the modal overlay
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+    modal.id = 'priceSuggestionChoiceModal';
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 px-6 py-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    🎯 AI Price Suggestion Ready
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                <!-- AI Analysis Summary -->
+                <div class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h3 class="font-semibold text-gray-800 mb-2 flex items-center">
+                        <span class="mr-2">🤖</span> AI Analysis
+                    </h3>
+                    <p class="text-sm text-gray-700 mb-2">${suggestionData.reasoning || 'Advanced pricing analysis completed'}</p>
+                    <div class="text-xs text-green-600">
+                        <strong>Confidence:</strong> ${suggestionData.confidence || 'medium'} • 
+                        <strong>Suggested Price:</strong> $${parseFloat(suggestionData.suggestedPrice).toFixed(2)}
+                    </div>
+                </div>
+                
+                <!-- Price Breakdown Preview -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">💰 Suggested Price Analysis</h3>
+                    <div class="p-4 bg-green-50 rounded border border-green-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-semibold text-green-800">Recommended Price:</span>
+                            <span class="text-2xl font-bold text-green-800">$${parseFloat(suggestionData.suggestedPrice).toFixed(2)}</span>
+                        </div>
+                        ${suggestionData.components && suggestionData.components.length > 0 ? `
+                            <div class="space-y-2">
+                                ${suggestionData.components.map(component => `
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-700">${component.label}</span>
+                                        <span class="font-semibold text-green-600">$${parseFloat(component.amount).toFixed(2)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                ${hasExistingPrice ? `
+                    <div class="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div class="flex items-center mb-2">
+                            <span class="text-amber-600 mr-2">⚠️</span>
+                            <span class="font-medium text-amber-800">Existing Price Suggestion Found</span>
+                        </div>
+                        <p class="text-sm text-amber-700">
+                            You have an existing price suggestion displayed. If you choose to use the new figures, 
+                            your current price suggestion will be replaced with the new AI analysis.
+                        </p>
+                    </div>
+                ` : ''}
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="applySuggestedPriceAnalysis(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                            class="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
+                        🎯 Use New AI Price ${hasExistingPrice ? '(Replace Current)' : ''}
+                    </button>
+                    
+                    <button onclick="closePriceSuggestionChoiceDialog()" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200">
+                        ❌ Keep Current Price
+                    </button>
+                </div>
+                
+                <div class="mt-4 text-xs text-gray-500 text-center">
+                    💡 Tip: You can always generate new price suggestions later if needed
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close on overlay click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closePriceSuggestionChoiceDialog();
+        }
+    });
+    
+    // Close on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePriceSuggestionChoiceDialog();
+        }
+    });
+}
+
+function checkForExistingPriceSuggestion() {
+    // Check if there's an existing price suggestion displayed
+    const display = document.getElementById('priceSuggestionDisplay');
+    return display && !display.classList.contains('hidden');
+}
+
+function closePriceSuggestionChoiceDialog() {
+    const modal = document.getElementById('priceSuggestionChoiceModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function applySuggestedPriceAnalysis(buttonElement) {
+    // Get suggestion data from the button's data attribute
+    const suggestionData = JSON.parse(buttonElement.dataset.suggestion);
+    
+    // Close the choice dialog
+    closePriceSuggestionChoiceDialog();
+    
+    // Display the price suggestion inline
+    displayPriceSuggestion({
+        suggestedPrice: suggestionData.suggestedPrice,
+        reasoning: suggestionData.reasoning,
+        confidence: suggestionData.confidence,
+        factors: suggestionData.factors,
+        components: suggestionData.components,
+        createdAt: new Date().toISOString()
+    });
+    
+    showToast('success', `✅ AI price suggestion applied! Suggested: $${suggestionData.suggestedPrice} (${suggestionData.confidence || 'medium'} confidence)`);
+}
+
 async function applySuggestedCostBreakdown(buttonElement) {
     // Get suggestion data from the button's data attribute
     const suggestionData = JSON.parse(buttonElement.dataset.suggestion);
@@ -1677,7 +1811,7 @@ async function useSuggestedCost() {
     }
 }
 
-function useSuggestedPrice() {
+async function useSuggestedPrice() {
     const nameField = document.getElementById('name');
     const descriptionField = document.getElementById('description');
     const categoryField = document.getElementById('categoryEdit');
@@ -1703,41 +1837,33 @@ function useSuggestedPrice() {
         sku: currentItemSku || ''
     };
     
-    // Call the price suggestion API
-    fetch('/api/suggest_price.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify(itemData)
-    })
-    .then(response => response.json())
-    .then(data => {
+    try {
+        // Call the price suggestion API
+        const response = await fetch('/api/suggest_price.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(itemData)
+        });
+        
+        const data = await response.json();
+        
         if (data.success) {
-            // Display the price suggestion inline
-            displayPriceSuggestion({
-                suggestedPrice: data.suggestedPrice,
-                reasoning: data.reasoning,
-                confidence: data.confidence,
-                factors: data.factors,
-                createdAt: new Date().toISOString()
-            });
-            
-            showToast('success', 'Price suggestion generated and saved!');
+            // Show choice dialog with the new figures
+            showPriceSuggestionChoiceDialog(data);
         } else {
             showToast('error', data.error || 'Failed to get price suggestion');
         }
-    })
-    .catch(error => {
+    } catch (error) {
         console.error('Error getting price suggestion:', error);
         showToast('error', 'Failed to connect to pricing service');
-    })
-    .finally(() => {
+    } finally {
         // Restore button state
         button.innerHTML = originalText;
         button.disabled = false;
-    });
+    }
 }
 
 function displayPriceSuggestion(data) {

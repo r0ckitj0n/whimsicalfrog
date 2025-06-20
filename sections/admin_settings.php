@@ -2899,11 +2899,11 @@ async function saveAISettings() {
 }
 
 function showAISettingsSuccess(message) {
-    showCustomNotification('✅', 'Success', message);
+    showNotification('AI Settings Saved', message, 'success');
 }
 
 function showAISettingsError(message) {
-    showCustomNotification('❌', 'Error', message);
+    showNotification('AI Settings Error', message, 'error');
 }
 
 </script>

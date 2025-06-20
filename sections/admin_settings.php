@@ -2692,8 +2692,8 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- Business Settings Modal -->
-<div id="businessSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+<div id="businessSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="display: none;">
+    <div class="bg-white shadow-xl rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">⚙️ Business Settings</h2>
             <button onclick="closeBusinessSettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>

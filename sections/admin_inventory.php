@@ -804,7 +804,7 @@ $messageType = $_GET['type'] ?? '';
                                 
                                 <div class="mb-4">
                                     <button type="button" onclick="applyCostSuggestionToCost()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors">
-                                        💰 Apply Costs to Cost Field
+                                        💰 Apply to Cost Field
                                     </button>
                                 </div>
                                 

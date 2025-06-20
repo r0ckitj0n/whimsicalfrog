@@ -623,10 +623,6 @@ $messageType = $_GET['type'] ?? '';
                             
                             <!-- Price Suggestion Display -->
                             <div id="viewPriceSuggestionDisplay" class="mb-4 hidden">
-                                <div class="flex items-start justify-between mb-3">
-                                    <h4 class="font-medium text-gray-800 text-sm">💡 AI Price Analysis</h4>
-                                    <button type="button" onclick="clearViewPriceSuggestion()" class="text-gray-600 hover:text-gray-800 text-xs">×</button>
-                                </div>
                                 
                                 <!-- Suggested Price Display -->
                                 <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">
@@ -883,10 +879,6 @@ $messageType = $_GET['type'] ?? '';
                                 
                                 <!-- Price Suggestion Display -->
                                 <div id="priceSuggestionDisplay" class="mb-4 hidden">
-                                    <div class="flex items-start justify-between mb-3">
-                                        <h4 class="font-medium text-gray-800 text-sm">💡 AI Price Analysis</h4>
-                                        <button type="button" onclick="clearPriceSuggestion()" class="text-gray-600 hover:text-gray-800 text-xs">×</button>
-                                    </div>
                                     
                                     <!-- Suggested Price Display -->
                                     <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">

@@ -2708,11 +2708,7 @@ async function removeAreaMapping(mappingId) {
                         <!-- Categories will be loaded here -->
                     </div>
                     
-                    <div class="mt-6">
-                        <button onclick="initializeBusinessSettings()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                            Initialize Settings
-                        </button>
-                    </div>
+
                 </div>
                 
                 <!-- Right Panel: Settings -->
@@ -2993,25 +2989,7 @@ async function saveBusinessSettingsCategory(category) {
     }
 }
 
-async function initializeBusinessSettings() {
-    if (!confirm('This will create the business settings database table and populate it with default values. Continue?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/init_business_settings_db.php');
-        const text = await response.text();
-        
-        if (text.includes('✅')) {
-            showBusinessSettingsSuccess('Business settings initialized successfully!');
-            loadBusinessSettingsCategories();
-        } else {
-            showBusinessSettingsError('Failed to initialize business settings');
-        }
-    } catch (error) {
-        showBusinessSettingsError('Error initializing settings: ' + error.message);
-    }
-}
+
 
 function showBusinessSettingsSuccess(message) {
     showCustomNotification('✅', 'Success', message);

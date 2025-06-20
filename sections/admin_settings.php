@@ -84,11 +84,11 @@
             Business & Design
         </h3>
         <div class="space-y-2">
-            <button onclick="openBusinessSettingsModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
+            <button onclick="openAISettingsModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
-                Business Settings
+                AI Settings
             </button>
             <button onclick="openGlobalCSSModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2691,153 +2691,92 @@ async function removeAreaMapping(mappingId) {
     </div>
 </div>
 
-<!-- Business Settings Modal -->
-<div id="businessSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="display: none;">
-    <div class="bg-white shadow-xl rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+<!-- AI Settings Modal -->
+<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="display: none;">
+    <div class="bg-white shadow-xl rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-4 border-b">
-            <h2 class="text-xl font-bold text-gray-800">⚙️ Business Settings</h2>
-            <button onclick="closeBusinessSettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <h2 class="text-xl font-bold text-gray-800">🤖 AI Settings</h2>
+            <button onclick="closeAISettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
-        <div class="p-4">
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <!-- Left Panel: Categories -->
-                <div class="lg:col-span-1">
-                    <h3 class="font-semibold text-gray-800 mb-3">Setting Categories</h3>
-                    <div id="businessSettingsCategories" class="space-y-2">
-                        <!-- Categories will be loaded here -->
-                    </div>
-                    
-
-                </div>
-                
-                <!-- Right Panel: Settings -->
-                <div class="lg:col-span-3">
-                    <div id="businessSettingsContent" class="space-y-6">
-                        <div class="text-center text-gray-500 py-8">
-                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            <p>Select a category to view and edit settings</p>
-                        </div>
-                    </div>
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            <div id="aiSettingsContent" class="space-y-6">
+                <div class="text-center text-gray-500 py-8">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    <p>Loading AI settings...</p>
                 </div>
             </div>
             
-            <div class="bg-purple-50 border border-purple-200 rounded p-3 mt-6">
-                <h3 class="font-semibold text-purple-800 mb-2">⚙️ Business Settings Guide</h3>
+            <div class="bg-purple-50 border border-purple-200 rounded p-4 mt-6">
+                <h3 class="font-semibold text-purple-800 mb-2">🤖 AI Settings Guide</h3>
                 <div class="text-sm text-purple-700 space-y-1">
-                    <p><strong>Dynamic Configuration:</strong> All hardcoded values are now configurable through this interface</p>
-                    <p><strong>Categories:</strong> Settings are organized by business area (branding, payment, shipping, etc.)</p>
-                    <p><strong>Real-time Updates:</strong> Changes take effect immediately across the entire system</p>
-                    <p><strong>Validation:</strong> Input validation ensures data integrity and proper formatting</p>
-                    <p><strong>Required Settings:</strong> Critical settings cannot be deleted but can be modified</p>
+                    <p><strong>Temperature Control:</strong> Lower values (0.1-0.5) = more consistent, Higher values (0.6-1.0) = more creative</p>
+                    <p><strong>Conservative Mode:</strong> When enabled, eliminates randomness for predictable results</p>
+                    <p><strong>Base Multipliers:</strong> Apply consistent adjustments to all AI suggestions</p>
+                    <p><strong>Pricing Weights:</strong> Control the influence of different pricing strategies</p>
                 </div>
             </div>
-                </div>
+        </div>
     </div>
 </div> 
 
 <script>
-// Business Settings Modal Functions
-let businessSettingsData = {};
-let currentBusinessCategory = '';
+// AI Settings Modal Functions
+let aiSettingsData = {};
 
-function openBusinessSettingsModal() {
-    document.getElementById('businessSettingsModal').style.display = 'flex';
-    loadBusinessSettingsCategories();
+function openAISettingsModal() {
+    document.getElementById('aiSettingsModal').style.display = 'flex';
+    loadAISettings();
 }
 
-function closeBusinessSettingsModal() {
-    document.getElementById('businessSettingsModal').style.display = 'none';
+function closeAISettingsModal() {
+    document.getElementById('aiSettingsModal').style.display = 'none';
 }
 
-async function loadBusinessSettingsCategories() {
+async function loadAISettings() {
     try {
-        const response = await fetch('/api/business_settings.php?action=get_categories');
+        const response = await fetch('/api/business_settings.php?action=get_by_category&category=ai');
         const data = await response.json();
         
         if (data.success) {
-            const categoriesContainer = document.getElementById('businessSettingsCategories');
-            categoriesContainer.innerHTML = '';
-            
-            data.categories.forEach(category => {
-                const categoryButton = document.createElement('button');
-                categoryButton.className = 'w-full text-left px-3 py-2 rounded-lg border hover:bg-gray-50 transition-colors';
-                categoryButton.textContent = category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ');
-                categoryButton.onclick = () => loadBusinessSettingsByCategory(category);
-                categoriesContainer.appendChild(categoryButton);
-            });
+            displayAISettings(data.settings);
         } else {
-            showBusinessSettingsError('Failed to load categories: ' + data.error);
+            showAISettingsError('Failed to load AI settings: ' + data.error);
         }
     } catch (error) {
-        showBusinessSettingsError('Error loading categories: ' + error.message);
+        showAISettingsError('Error loading AI settings: ' + error.message);
     }
 }
 
-async function loadBusinessSettingsByCategory(category) {
-    currentBusinessCategory = category;
-    
-    // Update active category button
-    const buttons = document.querySelectorAll('#businessSettingsCategories button');
-    buttons.forEach(btn => {
-        btn.classList.remove('bg-purple-100', 'border-purple-300');
-        btn.classList.add('border-gray-300');
-    });
-    
-    const activeButton = Array.from(buttons).find(btn => 
-        btn.textContent.toLowerCase().replace(' ', '_') === category
-    );
-    if (activeButton) {
-        activeButton.classList.add('bg-purple-100', 'border-purple-300');
-        activeButton.classList.remove('border-gray-300');
-    }
-    
-    try {
-        const response = await fetch(`/api/business_settings.php?action=get_by_category&category=${category}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayBusinessSettings(data.settings, category);
-        } else {
-            showBusinessSettingsError('Failed to load settings: ' + data.error);
-        }
-    } catch (error) {
-        showBusinessSettingsError('Error loading settings: ' + error.message);
-    }
-}
-
-function displayBusinessSettings(settings, category) {
-    const contentContainer = document.getElementById('businessSettingsContent');
+function displayAISettings(settings) {
+    const contentContainer = document.getElementById('aiSettingsContent');
     
     if (settings.length === 0) {
         contentContainer.innerHTML = `
             <div class="text-center text-gray-500 py-8">
-                <p>No settings found for ${category.replace('_', ' ')}</p>
+                <p>No AI settings found</p>
             </div>
         `;
         return;
     }
     
-    const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ');
-    
     let html = `
         <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">${categoryTitle} Settings</h3>
-            <div class="space-y-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">AI Configuration Settings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     `;
     
     settings.forEach(setting => {
-        html += createBusinessSettingField(setting);
+        html += createAISettingField(setting);
     });
     
     html += `
             </div>
             <div class="mt-6 pt-4 border-t">
-                <button onclick="saveBusinessSettingsCategory('${category}')" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
-                    Save ${categoryTitle} Settings
+                <button onclick="saveAISettings()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                    💾 Save AI Settings
                 </button>
             </div>
         </div>
@@ -2846,74 +2785,48 @@ function displayBusinessSettings(settings, category) {
     contentContainer.innerHTML = html;
 }
 
-function createBusinessSettingField(setting) {
-    const isRequired = setting.is_required ? ' <span class="text-red-500">*</span>' : '';
+function createAISettingField(setting) {
     const description = setting.description ? `<p class="text-xs text-gray-500 mt-1">${setting.description}</p>` : '';
     
     let inputField = '';
     
     switch (setting.setting_type) {
-        case 'color':
-            inputField = `
-                <div class="flex gap-2">
-                    <input type="color" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
-                           class="w-16 h-10 border border-gray-300 rounded cursor-pointer">
-                    <input type="text" value="${setting.setting_value}" 
-                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                           onchange="document.getElementById('setting_${setting.setting_key}').value = this.value"
-                           oninput="document.getElementById('setting_${setting.setting_key}').value = this.value">
-                </div>
-            `;
-            break;
-            
         case 'boolean':
             const isChecked = ['true', '1'].includes(setting.setting_value.toLowerCase()) ? 'checked' : '';
             inputField = `
                 <label class="flex items-center">
                     <input type="checkbox" id="setting_${setting.setting_key}" ${isChecked} 
                            class="mr-2 h-4 w-4 text-purple-600 border-gray-300 rounded">
-                    <span class="text-sm text-gray-700">Enable this setting</span>
+                    <span class="text-sm text-gray-700">Enable conservative mode</span>
                 </label>
             `;
             break;
             
-        case 'json':
-            let jsonValue = setting.setting_value;
-            try {
-                const parsed = JSON.parse(jsonValue);
-                if (Array.isArray(parsed)) {
-                    jsonValue = parsed.join(', ');
-                }
-            } catch (e) {
-                // Keep original value if not valid JSON
-            }
-            inputField = `
-                <textarea id="setting_${setting.setting_key}" rows="3" 
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                          placeholder="Enter comma-separated values">${jsonValue}</textarea>
-                <p class="text-xs text-gray-500 mt-1">For arrays, enter comma-separated values</p>
-            `;
-            break;
-            
         case 'number':
-            inputField = `
-                <input type="number" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
-                       step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-            `;
-            break;
+            // Special handling for temperature and weight fields
+            let step = '0.01';
+            let min = '0';
+            let max = '1';
             
-        case 'email':
-            inputField = `
-                <input type="email" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-            `;
-            break;
+            if (setting.setting_key.includes('temperature')) {
+                min = '0.1';
+                max = '1.0';
+            } else if (setting.setting_key.includes('multiplier')) {
+                min = '0.1';
+                max = '5.0';
+            }
             
-        case 'url':
             inputField = `
-                <input type="text" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                       placeholder="example.com (without https://)">
+                <div class="flex items-center space-x-2">
+                    <input type="range" id="range_${setting.setting_key}" value="${setting.setting_value}" 
+                           min="${min}" max="${max}" step="${step}"
+                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                           oninput="document.getElementById('setting_${setting.setting_key}').value = this.value">
+                    <input type="number" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
+                           min="${min}" max="${max}" step="${step}"
+                           class="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                           oninput="document.getElementById('range_${setting.setting_key}').value = this.value">
+                </div>
             `;
             break;
             
@@ -2927,7 +2840,7 @@ function createBusinessSettingField(setting) {
     return `
         <div class="bg-white border border-gray-200 rounded-lg p-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">
-                ${setting.display_name}${isRequired}
+                ${setting.display_name}
             </label>
             ${inputField}
             ${description}
@@ -2935,7 +2848,7 @@ function createBusinessSettingField(setting) {
     `;
 }
 
-async function saveBusinessSettingsCategory(category) {
+async function saveAISettings() {
     const settings = document.querySelectorAll(`[id^="setting_"]`);
     const updates = [];
     
@@ -2945,16 +2858,6 @@ async function saveBusinessSettingsCategory(category) {
         
         if (setting.type === 'checkbox') {
             value = setting.checked ? 'true' : 'false';
-        } else if (setting.tagName === 'TEXTAREA') {
-            // Handle JSON arrays
-            const textValue = setting.value.trim();
-            if (textValue.includes(',')) {
-                // Convert comma-separated values to JSON array
-                const items = textValue.split(',').map(item => item.trim()).filter(item => item);
-                value = JSON.stringify(items);
-            } else {
-                value = textValue;
-            }
         } else {
             value = setting.value;
         }
@@ -2979,23 +2882,21 @@ async function saveBusinessSettingsCategory(category) {
         
         const failed = results.filter(r => !r.success);
         if (failed.length > 0) {
-            showBusinessSettingsError('Some settings failed to save: ' + failed.map(f => f.error).join(', '));
+            showAISettingsError('Some AI settings failed to save: ' + failed.map(f => f.error).join(', '));
         } else {
-            showBusinessSettingsSuccess(`${category.replace('_', ' ')} settings saved successfully!`);
+            showAISettingsSuccess('AI settings saved successfully!');
         }
         
     } catch (error) {
-        showBusinessSettingsError('Error saving settings: ' + error.message);
+        showAISettingsError('Error saving AI settings: ' + error.message);
     }
 }
 
-
-
-function showBusinessSettingsSuccess(message) {
+function showAISettingsSuccess(message) {
     showCustomNotification('✅', 'Success', message);
 }
 
-function showBusinessSettingsError(message) {
+function showAISettingsError(message) {
     showCustomNotification('❌', 'Error', message);
 }
 

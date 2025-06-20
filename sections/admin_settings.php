@@ -2900,6 +2900,10 @@ async function saveAISettings() {
 
 function showAISettingsSuccess(message) {
     showNotification('AI Settings Saved', message, 'success');
+    // Close the modal after a short delay to allow user to see the success message
+    setTimeout(() => {
+        closeAISettingsModal();
+    }, 1500);
 }
 
 function showAISettingsError(message) {

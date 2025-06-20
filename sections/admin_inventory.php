@@ -597,10 +597,10 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                             <?php endforeach; ?>
                             <div class="cost-totals">
-                                <div class="cost-total-row hidden"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row hidden"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row hidden"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row hidden"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" style="display: none;"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" style="display: none;"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" style="display: none;"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" style="display: none;"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
                                     <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="suggestedCostDisplay">$0.00</span>
                                 </div>
@@ -845,11 +845,11 @@ $messageType = $_GET['type'] ?? '';
                                     </button>
                                 </div>
                                 <?php endforeach; ?>
-                                <div class="cost-totals">
-                                    <div class="cost-total-row hidden"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
-                                    <div class="cost-total-row hidden"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
-                                    <div class="cost-total-row hidden"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
-                                    <div class="cost-total-row hidden"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+                                                            <div class="cost-totals">
+                                <div class="cost-total-row" style="display: none;"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" style="display: none;"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" style="display: none;"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" style="display: none;"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
                                     <div class="cost-total-row border-t border-gray-300 pt-1 mt-1">
                                         <span class="font-semibold">Suggested Cost:</span> <span class="font-bold text-purple-700" id="suggestedCostDisplay">$0.00</span>
                                     </div>

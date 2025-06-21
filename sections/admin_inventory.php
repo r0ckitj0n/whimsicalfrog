@@ -198,15 +198,67 @@ $messageType = $_GET['type'] ?? '';
 .delete-cost-btn:hover { background: #e53e3e; }
 
 /* Friendly Delete Cost Dialog */
-.delete-cost-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
+    /* Navigation Arrow Styling */
+    .nav-arrow {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 60; /* Higher than modal z-index */
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .nav-arrow:hover {
+        background: rgba(0, 0, 0, 0.5);
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    
+    .nav-arrow:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+    
+    .nav-arrow svg {
+        width: 24px;
+        height: 24px;
+        stroke-width: 2.5;
+    }
+    
+    .nav-arrow.left {
+        left: 20px;
+    }
+    
+    .nav-arrow.right {
+        right: 20px;
+    }
+    
+    /* Hide arrows on smaller screens to avoid overlap */
+    @media (max-width: 768px) {
+        .nav-arrow {
+            display: none;
+        }
+    }
+
+    .delete-cost-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
     justify-content: center;
     z-index: 9999;
     animation: fadeIn 0.2s ease-out;
@@ -420,9 +472,9 @@ $messageType = $_GET['type'] ?? '';
     }
 </style>
 
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-2">
     <div class="flex flex-col md:flex-row justify-between items-center mb-5 gap-4">
-        <h1 class="inventory-title text-2xl font-bold" style="color: #87ac3a !important;">Inventory Management</h1>
+        
         <form method="GET" action="" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="inventory">
@@ -497,6 +549,18 @@ $messageType = $_GET['type'] ?? '';
 
 <?php if ($modalMode === 'view' && $editItem): ?>
 <div class="modal-outer" id="inventoryModalOuter">
+    <!-- Navigation Arrows -->
+    <button id="prevItemBtn" onclick="navigateToItem('prev')" class="nav-arrow left" title="Previous item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+        </svg>
+    </button>
+    <button id="nextItemBtn" onclick="navigateToItem('next')" class="nav-arrow right" title="Next item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+        </svg>
+    </button>
+    
     <div class="modal-content-wrapper">
         <div class="flex justify-between items-center mb-3">
             <h2 class="text-lg font-bold text-green-700">View Item: <?= htmlspecialchars($editItem['name'] ?? 'N/A') ?></h2>
@@ -670,6 +734,20 @@ $messageType = $_GET['type'] ?? '';
 
 <?php if ($modalMode === 'add' || ($modalMode === 'edit' && $editItem)): ?>
 <div class="modal-outer" id="inventoryModalOuter">
+    <!-- Navigation Arrows (only show for edit mode, not add mode) -->
+    <?php if ($modalMode === 'edit'): ?>
+    <button id="prevItemBtn" onclick="navigateToItem('prev')" class="nav-arrow left" title="Previous item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+        </svg>
+    </button>
+    <button id="nextItemBtn" onclick="navigateToItem('next')" class="nav-arrow right" title="Next item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+        </svg>
+    </button>
+    <?php endif; ?>
+    
     <div class="modal-content-wrapper">
         <div class="flex justify-between items-center mb-3">
             <h2 class="text-lg font-bold text-green-700"><?= $modalMode === 'add' ? 'Add New Inventory Item' : 'Edit Item (' . htmlspecialchars($editItem['name'] ?? 'N/A') . ')' ?></h2>
@@ -1000,6 +1078,81 @@ var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $
 
 // Initialize global categories array
 window.inventoryCategories = <?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> || [];
+
+// Initialize items list for navigation
+var allItems = <?= json_encode(array_values($items)) ?>;
+var currentItemIndex = -1;
+
+// Find current item index if we're in view/edit mode
+if (currentItemSku && allItems.length > 0) {
+    currentItemIndex = allItems.findIndex(item => item.sku === currentItemSku);
+}
+
+// Navigation functions
+function navigateToItem(direction) {
+    if (allItems.length === 0) return;
+    
+    let newIndex = currentItemIndex;
+    
+    if (direction === 'prev') {
+        newIndex = currentItemIndex > 0 ? currentItemIndex - 1 : allItems.length - 1;
+    } else if (direction === 'next') {
+        newIndex = currentItemIndex < allItems.length - 1 ? currentItemIndex + 1 : 0;
+    }
+    
+    if (newIndex !== currentItemIndex && newIndex >= 0 && newIndex < allItems.length) {
+        const targetItem = allItems[newIndex];
+        const currentMode = modalMode === 'view' ? 'view' : 'edit';
+        let newUrl = `?page=admin&section=inventory&${currentMode}=${encodeURIComponent(targetItem.sku)}`;
+        
+        // Preserve any existing search/filter parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('search')) newUrl += `&search=${encodeURIComponent(urlParams.get('search'))}`;
+        if (urlParams.get('category')) newUrl += `&category=${encodeURIComponent(urlParams.get('category'))}`;
+        if (urlParams.get('stock')) newUrl += `&stock=${encodeURIComponent(urlParams.get('stock'))}`;
+        
+        window.location.href = newUrl;
+    }
+}
+
+// Update navigation button states
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prevItemBtn');
+    const nextBtn = document.getElementById('nextItemBtn');
+    
+    if (prevBtn && nextBtn && allItems.length > 0) {
+        // Always enable buttons for circular navigation
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+        
+        // Add item counter to buttons for better UX
+        const itemCounter = `${currentItemIndex + 1} of ${allItems.length}`;
+        const currentItem = allItems[currentItemIndex];
+        const prevIndex = currentItemIndex > 0 ? currentItemIndex - 1 : allItems.length - 1;
+        const nextIndex = currentItemIndex < allItems.length - 1 ? currentItemIndex + 1 : 0;
+        const prevItem = allItems[prevIndex];
+        const nextItem = allItems[nextIndex];
+        
+        prevBtn.title = `Previous: ${prevItem?.name || 'Unknown'} (${itemCounter})`;
+        nextBtn.title = `Next: ${nextItem?.name || 'Unknown'} (${itemCounter})`;
+    }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    // Only activate in modal mode and when not typing in input fields
+    if ((modalMode === 'view' || modalMode === 'edit') && 
+        !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            navigateToItem('prev');
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            navigateToItem('next');
+        }
+    }
+});
 
 // Define image management functions first
 function setPrimaryImage(sku, imageId) {
@@ -3256,6 +3409,11 @@ function performCostItemDeletion(id, type) {
 document.addEventListener('DOMContentLoaded', function() {
             console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemSku:', currentItemSku, 'costBreakdown:', costBreakdown);
     
+    // Initialize navigation buttons for view/edit modes
+    if (modalMode === 'view' || modalMode === 'edit') {
+        updateNavigationButtons();
+    }
+    
     // Only check for cost breakdown elements if we're in a modal mode
     if (modalMode === 'edit' || modalMode === 'view' || modalMode === 'add') {
         // Test if the HTML elements exist
@@ -4685,12 +4843,9 @@ function loadContentTab(contentDiv) {
                 <div class="bg-blue-50 rounded-lg p-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Product Title</label>
                     <textarea id="marketingTitle" class="w-full p-3 border border-blue-200 rounded-lg" rows="2" placeholder="Enter enhanced product title..."></textarea>
-                    <div class="mt-2 flex justify-between">
-                        <button onclick="applyMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+                    <div class="mt-2 flex justify-center">
+                        <button onclick="applyAndSaveMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">
                             📝 Apply & Save to Product
-                        </button>
-                        <button onclick="saveMarketingField('suggested_title')" class="text-blue-600 hover:text-blue-800 text-sm underline">
-                            Save Draft
                         </button>
                     </div>
                 </div>
@@ -4698,12 +4853,9 @@ function loadContentTab(contentDiv) {
                 <div class="bg-green-50 rounded-lg p-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Product Description</label>
                     <textarea id="marketingDescription" class="w-full p-3 border border-green-200 rounded-lg" rows="4" placeholder="Enter detailed product description..."></textarea>
-                    <div class="mt-2 flex justify-between">
-                        <button onclick="applyMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                    <div class="mt-2 flex justify-center">
+                        <button onclick="applyAndSaveMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium">
                             📝 Apply & Save to Product
-                        </button>
-                        <button onclick="saveMarketingField('suggested_description')" class="text-green-600 hover:text-green-800 text-sm underline">
-                            Save Draft
                         </button>
                     </div>
                 </div>
@@ -4747,42 +4899,44 @@ function loadAudienceTab(contentDiv) {
 
 function loadSellingTab(contentDiv) {
     contentDiv.innerHTML = `
-        <div class="space-y-6">
-            <h3 class="text-lg font-semibold text-gray-800">Selling Points & Advantages</h3>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-green-50 rounded-lg p-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="block text-sm font-medium text-gray-700">Key Selling Points</label>
-                        <button onclick="addListItem('selling_points')" class="text-green-600 hover:text-green-800 text-sm">+ Add</button>
+        <div class="max-h-[60vh] overflow-y-auto pr-2">
+            <div class="space-y-6">
+                <h3 class="text-lg font-semibold text-gray-800">Selling Points & Advantages</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Key Selling Points</label>
+                            <button onclick="addListItem('selling_points')" class="text-green-600 hover:text-green-800 text-sm">+ Add</button>
+                        </div>
+                        <div id="sellingPointsList" class="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                            <!-- Dynamic content -->
+                        </div>
+                        <input type="text" id="newSellingPoint" placeholder="Enter new selling point..." class="w-full p-2 border border-green-200 rounded" onkeypress="if(event.key==='Enter') addListItem('selling_points')">
                     </div>
-                    <div id="sellingPointsList" class="space-y-2 mb-3">
-                        <!-- Dynamic content -->
+                    
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Competitive Advantages</label>
+                            <button onclick="addListItem('competitive_advantages')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                        </div>
+                        <div id="competitiveAdvantagesList" class="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                            <!-- Dynamic content -->
+                        </div>
+                        <input type="text" id="newCompetitiveAdvantage" placeholder="What makes you better..." class="w-full p-2 border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('competitive_advantages')">
                     </div>
-                    <input type="text" id="newSellingPoint" placeholder="Enter new selling point..." class="w-full p-2 border border-green-200 rounded" onkeypress="if(event.key==='Enter') addListItem('selling_points')">
                 </div>
                 
-                <div class="bg-red-50 rounded-lg p-4">
+                <div class="bg-yellow-50 rounded-lg p-4">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="block text-sm font-medium text-gray-700">Competitive Advantages</label>
-                        <button onclick="addListItem('competitive_advantages')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                        <label class="block text-sm font-medium text-gray-700">Customer Benefits</label>
+                        <button onclick="addListItem('customer_benefits')" class="text-yellow-600 hover:text-yellow-800 text-sm">+ Add</button>
                     </div>
-                    <div id="competitiveAdvantagesList" class="space-y-2 mb-3">
+                    <div id="customerBenefitsList" class="space-y-2 mb-3 max-h-40 overflow-y-auto">
                         <!-- Dynamic content -->
                     </div>
-                    <input type="text" id="newCompetitiveAdvantage" placeholder="What makes you better..." class="w-full p-2 border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('competitive_advantages')">
+                    <input type="text" id="newCustomerBenefit" placeholder="What benefit does customer get..." class="w-full p-2 border border-yellow-200 rounded" onkeypress="if(event.key==='Enter') addListItem('customer_benefits')">
                 </div>
-            </div>
-            
-            <div class="bg-yellow-50 rounded-lg p-4">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-sm font-medium text-gray-700">Customer Benefits</label>
-                    <button onclick="addListItem('customer_benefits')" class="text-yellow-600 hover:text-yellow-800 text-sm">+ Add</button>
-                </div>
-                <div id="customerBenefitsList" class="space-y-2 mb-3">
-                    <!-- Dynamic content -->
-                </div>
-                <input type="text" id="newCustomerBenefit" placeholder="What benefit does customer get..." class="w-full p-2 border border-yellow-200 rounded" onkeypress="if(event.key==='Enter') addListItem('customer_benefits')">
             </div>
         </div>
     `;
@@ -4792,37 +4946,39 @@ function loadSellingTab(contentDiv) {
 
 function loadSEOTab(contentDiv) {
     contentDiv.innerHTML = `
-        <div class="space-y-6">
-            <h3 class="text-lg font-semibold text-gray-800">SEO & Keywords</h3>
-            
-            <div class="bg-blue-50 rounded-lg p-4">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-sm font-medium text-gray-700">SEO Keywords</label>
-                    <button onclick="addListItem('seo_keywords')" class="text-blue-600 hover:text-blue-800 text-sm">+ Add</button>
-                </div>
-                <div id="seoKeywordsList" class="space-y-2 mb-3">
-                    <!-- Dynamic content -->
-                </div>
-                <input type="text" id="newSEOKeyword" placeholder="Enter keyword or phrase..." class="w-full p-2 border border-blue-200 rounded" onkeypress="if(event.key==='Enter') addListItem('seo_keywords')">
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-purple-50 rounded-lg p-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Intent</label>
-                    <select id="searchIntent" class="w-full p-2 border border-purple-200 rounded">
-                        <option value="">Select intent...</option>
-                        <option value="informational">Informational</option>
-                        <option value="navigational">Navigational</option>
-                        <option value="transactional">Transactional</option>
-                        <option value="commercial">Commercial Investigation</option>
-                    </select>
-                    <button onclick="saveMarketingField('search_intent')" class="mt-2 text-purple-600 hover:text-purple-800 text-sm">Save</button>
+        <div class="max-h-[60vh] overflow-y-auto pr-2">
+            <div class="space-y-6">
+                <h3 class="text-lg font-semibold text-gray-800">SEO & Keywords</h3>
+                
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">SEO Keywords</label>
+                        <button onclick="addListItem('seo_keywords')" class="text-blue-600 hover:text-blue-800 text-sm">+ Add</button>
+                    </div>
+                    <div id="seoKeywordsList" class="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                        <!-- Dynamic content -->
+                    </div>
+                    <input type="text" id="newSEOKeyword" placeholder="Enter keyword or phrase..." class="w-full p-2 border border-blue-200 rounded" onkeypress="if(event.key==='Enter') addListItem('seo_keywords')">
                 </div>
                 
-                <div class="bg-green-50 rounded-lg p-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Seasonal Relevance</label>
-                    <textarea id="seasonalRelevance" class="w-full p-3 border border-green-200 rounded-lg" rows="3" placeholder="Christmas, summer, back-to-school, etc..."></textarea>
-                    <button onclick="saveMarketingField('seasonal_relevance')" class="mt-2 text-green-600 hover:text-green-800 text-sm">Save</button>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search Intent</label>
+                        <select id="searchIntent" class="w-full p-2 border border-purple-200 rounded">
+                            <option value="">Select intent...</option>
+                            <option value="informational">Informational</option>
+                            <option value="navigational">Navigational</option>
+                            <option value="transactional">Transactional</option>
+                            <option value="commercial">Commercial Investigation</option>
+                        </select>
+                        <button onclick="saveMarketingField('search_intent')" class="mt-2 text-purple-600 hover:text-purple-800 text-sm">Save</button>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Seasonal Relevance</label>
+                        <textarea id="seasonalRelevance" class="w-full p-3 border border-green-200 rounded-lg" rows="3" placeholder="Christmas, summer, back-to-school, etc..."></textarea>
+                        <button onclick="saveMarketingField('seasonal_relevance')" class="mt-2 text-green-600 hover:text-green-800 text-sm">Save</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4833,42 +4989,44 @@ function loadSEOTab(contentDiv) {
 
 function loadConversionTab(contentDiv) {
     contentDiv.innerHTML = `
-        <div class="space-y-6">
-            <h3 class="text-lg font-semibold text-gray-800">Conversion Optimization</h3>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-orange-50 rounded-lg p-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="block text-sm font-medium text-gray-700">Call-to-Action Suggestions</label>
-                        <button onclick="addListItem('call_to_action_suggestions')" class="text-orange-600 hover:text-orange-800 text-sm">+ Add</button>
+        <div class="max-h-[60vh] overflow-y-auto pr-2">
+            <div class="space-y-6">
+                <h3 class="text-lg font-semibold text-gray-800">Conversion Optimization</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Call-to-Action Suggestions</label>
+                            <button onclick="addListItem('call_to_action_suggestions')" class="text-orange-600 hover:text-orange-800 text-sm">+ Add</button>
+                        </div>
+                        <div id="callToActionsList" class="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                            <!-- Dynamic content -->
+                        </div>
+                        <input type="text" id="newCallToAction" placeholder="Get Yours Today, Buy Now, etc..." class="w-full p-2 border border-orange-200 rounded" onkeypress="if(event.key==='Enter') addListItem('call_to_action_suggestions')">
                     </div>
-                    <div id="callToActionsList" class="space-y-2 mb-3">
-                        <!-- Dynamic content -->
+                    
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Urgency Factors</label>
+                            <button onclick="addListItem('urgency_factors')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                        </div>
+                        <div id="urgencyFactorsList" class="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                            <!-- Dynamic content -->
+                        </div>
+                        <input type="text" id="newUrgencyFactor" placeholder="Limited time, while supplies last..." class="w-full p-2 border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('urgency_factors')">
                     </div>
-                    <input type="text" id="newCallToAction" placeholder="Get Yours Today, Buy Now, etc..." class="w-full p-2 border border-orange-200 rounded" onkeypress="if(event.key==='Enter') addListItem('call_to_action_suggestions')">
                 </div>
                 
-                <div class="bg-red-50 rounded-lg p-4">
+                <div class="bg-purple-50 rounded-lg p-4">
                     <div class="flex justify-between items-center mb-2">
-                        <label class="block text-sm font-medium text-gray-700">Urgency Factors</label>
-                        <button onclick="addListItem('urgency_factors')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                        <label class="block text-sm font-medium text-gray-700">Conversion Triggers</label>
+                        <button onclick="addListItem('conversion_triggers')" class="text-purple-600 hover:text-purple-800 text-sm">+ Add</button>
                     </div>
-                    <div id="urgencyFactorsList" class="space-y-2 mb-3">
+                    <div id="conversionTriggersList" class="space-y-2 mb-3 max-h-40 overflow-y-auto">
                         <!-- Dynamic content -->
                     </div>
-                    <input type="text" id="newUrgencyFactor" placeholder="Limited time, while supplies last..." class="w-full p-2 border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('urgency_factors')">
+                    <input type="text" id="newConversionTrigger" placeholder="Free shipping, money-back guarantee..." class="w-full p-2 border border-purple-200 rounded" onkeypress="if(event.key==='Enter') addListItem('conversion_triggers')">
                 </div>
-            </div>
-            
-            <div class="bg-purple-50 rounded-lg p-4">
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-sm font-medium text-gray-700">Conversion Triggers</label>
-                    <button onclick="addListItem('conversion_triggers')" class="text-purple-600 hover:text-purple-800 text-sm">+ Add</button>
-                </div>
-                <div id="conversionTriggersList" class="space-y-2 mb-3">
-                    <!-- Dynamic content -->
-                </div>
-                <input type="text" id="newConversionTrigger" placeholder="Free shipping, money-back guarantee..." class="w-full p-2 border border-purple-200 rounded" onkeypress="if(event.key==='Enter') addListItem('conversion_triggers')">
             </div>
         </div>
     `;
@@ -5238,6 +5396,175 @@ function applyMarketingDescription() {
     }
 }
 
+// Combined functions that apply to product AND save as draft
+function applyAndSaveMarketingTitle() {
+    const titleField = document.getElementById('marketingTitle');
+    const nameField = document.getElementById('name');
+    
+    if (!titleField || !titleField.value.trim()) {
+        showToast('error', 'Please enter a title');
+        return;
+    }
+    
+    const newTitle = titleField.value.trim();
+    
+    // Save as draft first
+    fetch('/api/marketing_manager.php?action=update_field', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            sku: currentItemSku,
+            field: 'suggested_title',
+            value: newTitle
+        })
+    })
+    .then(response => response.json())
+    .then(draftData => {
+        if (draftData.success) {
+            // Draft saved successfully, now apply to product
+            if (nameField) {
+                nameField.value = newTitle;
+                nameField.style.backgroundColor = '#f3e8ff';
+                
+                // Auto-save the product with the new title
+                const updateData = {
+                    sku: currentItemSku,
+                    name: newTitle,
+                    description: document.getElementById('description')?.value || '',
+                    category: document.getElementById('categoryEdit')?.value || '',
+                    retailPrice: document.getElementById('retailPrice')?.value || '',
+                    costPrice: document.getElementById('costPrice')?.value || '',
+                    stockLevel: document.getElementById('stockLevel')?.value || '',
+                    reorderPoint: document.getElementById('reorderPoint')?.value || ''
+                };
+                
+                fetch('/api/update-inventory.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updateData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', 'Title saved as draft and applied to product!');
+                    } else {
+                        console.error('API error:', data);
+                        showToast('error', 'Failed to save product: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error auto-saving product:', error);
+                    showToast('error', 'Failed to save product: ' + error.message);
+                });
+                
+                setTimeout(() => {
+                    nameField.style.backgroundColor = '';
+                }, 2000);
+            }
+        } else {
+            showToast('error', 'Failed to save draft: ' + (draftData.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error saving draft:', error);
+        showToast('error', 'Failed to save draft: ' + error.message);
+    });
+}
+
+function applyAndSaveMarketingDescription() {
+    const descField = document.getElementById('marketingDescription');
+    const productDescField = document.getElementById('description');
+    
+    if (!descField || !descField.value.trim()) {
+        showToast('error', 'Please enter a description');
+        return;
+    }
+    
+    const newDescription = descField.value.trim();
+    
+    // Save as draft first
+    fetch('/api/marketing_manager.php?action=update_field', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            sku: currentItemSku,
+            field: 'suggested_description',
+            value: newDescription
+        })
+    })
+    .then(response => response.json())
+    .then(draftData => {
+        if (draftData.success) {
+            // Draft saved successfully, now apply to product
+            if (productDescField) {
+                productDescField.value = newDescription;
+                productDescField.style.backgroundColor = '#f0fdf4';
+                
+                // Auto-save the product with the new description
+                const updateData = {
+                    sku: currentItemSku,
+                    name: document.getElementById('name')?.value || '',
+                    description: newDescription,
+                    category: document.getElementById('categoryEdit')?.value || '',
+                    retailPrice: document.getElementById('retailPrice')?.value || '',
+                    costPrice: document.getElementById('costPrice')?.value || '',
+                    stockLevel: document.getElementById('stockLevel')?.value || '',
+                    reorderPoint: document.getElementById('reorderPoint')?.value || ''
+                };
+                
+                fetch('/api/update-inventory.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updateData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', 'Description saved as draft and applied to product!');
+                    } else {
+                        console.error('API error:', data);
+                        showToast('error', 'Failed to save product: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error auto-saving product:', error);
+                    showToast('error', 'Failed to save product: ' + error.message);
+                });
+                
+                setTimeout(() => {
+                    productDescField.style.backgroundColor = '';
+                }, 2000);
+            }
+        } else {
+            showToast('error', 'Failed to save draft: ' + (draftData.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error saving draft:', error);
+        showToast('error', 'Failed to save draft: ' + error.message);
+    });
+}
+
 function addAIContentBadges(tabNames) {
     tabNames.forEach(tabName => {
         const tabButton = document.getElementById(tabName + 'Tab');
@@ -5382,25 +5709,27 @@ function generateNewMarketingContent() {
 </script>
 
 <!-- Marketing Manager Modal -->
-<div id="marketingManagerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[95vh] overflow-hidden">
-        <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex justify-between items-center">
-            <h2 class="text-xl font-bold text-white">🎯 Marketing Manager</h2>
+<div id="marketingManagerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden">
+        <!-- Fixed Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-4 sm:px-6 py-4 flex justify-between items-center flex-shrink-0">
+            <h2 class="text-lg sm:text-xl font-bold text-white">🎯 Marketing Manager</h2>
             <button onclick="closeMarketingManager()" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
         </div>
         
-        <!-- Tab Navigation -->
-        <div class="bg-gray-50 px-6 py-2 border-b">
-            <div class="flex space-x-4">
-                <button id="contentTab" class="marketing-tab px-4 py-2 rounded-t-lg bg-white text-purple-600 border-b-2 border-purple-600 font-semibold" onclick="showMarketingManagerTab('content')">Content & Copy</button>
-                <button id="audienceTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600" onclick="showMarketingManagerTab('audience')">Target Audience</button>
-                <button id="sellingTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600" onclick="showMarketingManagerTab('selling')">Selling Points</button>
-                <button id="seoTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600" onclick="showMarketingManagerTab('seo')">SEO & Keywords</button>
-                <button id="conversionTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600" onclick="showMarketingManagerTab('conversion')">Conversion</button>
+        <!-- Fixed Tab Navigation -->
+        <div class="bg-gray-50 px-4 sm:px-6 py-2 border-b flex-shrink-0">
+            <div class="flex space-x-2 sm:space-x-4 overflow-x-auto">
+                <button id="contentTab" class="marketing-tab px-3 sm:px-4 py-2 rounded-t-lg bg-white text-purple-600 border-b-2 border-purple-600 font-semibold whitespace-nowrap" onclick="showMarketingManagerTab('content')">Content & Copy</button>
+                <button id="audienceTab" class="marketing-tab px-3 sm:px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600 whitespace-nowrap" onclick="showMarketingManagerTab('audience')">Target Audience</button>
+                <button id="sellingTab" class="marketing-tab px-3 sm:px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600 whitespace-nowrap" onclick="showMarketingManagerTab('selling')">Selling Points</button>
+                <button id="seoTab" class="marketing-tab px-3 sm:px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600 whitespace-nowrap" onclick="showMarketingManagerTab('seo')">SEO & Keywords</button>
+                <button id="conversionTab" class="marketing-tab px-3 sm:px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600 whitespace-nowrap" onclick="showMarketingManagerTab('conversion')">Conversion</button>
             </div>
         </div>
         
-        <div class="p-6 overflow-y-auto max-h-[calc(95vh-140px)]">
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
             <div id="marketingManagerContent">
                 <!-- Content will be loaded dynamically -->
             </div>

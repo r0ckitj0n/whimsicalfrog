@@ -258,10 +258,8 @@ $lowStockProducts = array_filter($inventoryData, function($product) {
   }
 </style>
 
-<!-- Top bar: Heading + Date Range Selector -->
-<div class="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <h2 class="text-2xl font-bold flex-shrink-0" style="color:#87ac3a !important;">Reports <span class="text-base font-medium ml-2" style="color:#87ac3a !important;">Year-to-Date Performance</span></h2>
-    <!-- Back link removed -->
+<!-- Top bar: Date Range Selector -->
+<div class="mb-4 flex justify-start">
     <form action="" method="GET" class="flex flex-row items-center gap-2 mb-0">
         <input type="hidden" name="page" value="admin">
         <input type="hidden" name="section" value="reports">

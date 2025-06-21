@@ -1,27 +1,40 @@
 <?php
-// Handle AJAX requests for category create/delete
+// Handle AJAX requests for category create/delete/update
 require_once __DIR__ . '/api/config.php';
 session_start();
-header('Content-Type: application/json');
+header('Content-Type: text/plain');
 
 // Only admin allowed
 if (!isset($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'Admin') {
-    echo json_encode(['error' => 'Unauthorized']);
+    echo 'Unauthorized';
     exit;
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-$action   = $input['action']   ?? '';
-$category = trim($input['category'] ?? '');
-$newCategory = trim($input['newCategory'] ?? '');
+// Handle both JSON and form-encoded data
+$input = [];
+if ($_SERVER['CONTENT_TYPE'] === 'application/json') {
+    $input = json_decode(file_get_contents('php://input'), true);
+} else {
+    $input = $_POST;
+}
 
-if (!$category) {
-    echo json_encode(['error' => 'Category required']);
+$action = $input['action'] ?? '';
+$category = trim($input['category'] ?? $input['categoryName'] ?? '');
+$newCategory = trim($input['newCategory'] ?? $input['newName'] ?? '');
+$oldName = trim($input['oldName'] ?? '');
+
+if (!$category && $action !== 'update') {
+    echo 'Category required';
     exit;
 }
 
 if ($action === 'rename' && !$newCategory) {
-    echo json_encode(['error' => 'New category name required']);
+    echo 'New category name required';
+    exit;
+}
+
+if ($action === 'update' && (!$oldName || !$newCategory)) {
+    echo 'Old name and new name required for update';
     exit;
 }
 
@@ -73,16 +86,9 @@ try {
         // Update naming scheme after deletion
         $updatedMappings = updateNamingScheme($pdo);
         
-        echo json_encode([
-            'success' => true,
-            'message' => 'Category deleted successfully',
-            'affectedItems' => $affectedRows,
-            'redirect' => 'admin_categories',
-            'namingSchemeUpdated' => true,
-            'categoryMappings' => $updatedMappings
-        ]);
+        echo 'Category deleted successfully';
         
-    } elseif ($action === 'create') {
+    } elseif ($action === 'add' || $action === 'create') {
         // For creation, we don't need to insert anything since categories are implicit
         // But we should validate the category name and update the naming scheme
         
@@ -92,20 +98,39 @@ try {
         // Update naming scheme after creation
         $updatedMappings = updateNamingScheme($pdo);
         
-        echo json_encode([
-            'success' => true, 
-            'message' => "Category '{$category}' created successfully",
-            'categoryCode' => $categoryCode,
-            'namingSchemeUpdated' => true,
-            'categoryMappings' => $updatedMappings
-        ]);
+        echo "Category '{$category}' created successfully";
+        
+    } elseif ($action === 'update') {
+        // Use oldName and newName for the update action
+        $oldCategory = $oldName;
+        $newCategoryName = $newCategory;
+        
+        // Check if new category name already exists (and is different from old name)
+        if ($oldCategory !== $newCategoryName) {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE category = ?');
+            $stmt->execute([$newCategoryName]);
+            if ($stmt->fetchColumn() > 0) {
+                echo "Category '{$newCategoryName}' already exists";
+                exit;
+            }
+        }
+        
+        // Update all items with the old category to use the new category name
+        $stmt = $pdo->prepare('UPDATE items SET category = ? WHERE category = ?');
+        $stmt->execute([$newCategoryName, $oldCategory]);
+        $affectedRows = $stmt->rowCount();
+        
+        // Update naming scheme after rename
+        $updatedMappings = updateNamingScheme($pdo);
+        
+        echo "Category renamed from '{$oldCategory}' to '{$newCategoryName}' successfully";
         
     } elseif ($action === 'rename') {
         // Check if new category name already exists
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE category = ?');
         $stmt->execute([$newCategory]);
         if ($stmt->fetchColumn() > 0) {
-            echo json_encode(['error' => "Category '{$newCategory}' already exists"]);
+            echo "Category '{$newCategory}' already exists";
             exit;
         }
         
@@ -120,49 +145,12 @@ try {
         // Update naming scheme after rename
         $updatedMappings = updateNamingScheme($pdo);
         
-        echo json_encode([
-            'success' => true, 
-            'message' => "Category renamed from '{$category}' to '{$newCategory}' successfully",
-            'oldCategory' => $category,
-            'newCategory' => $newCategory,
-            'newCategoryCode' => $newCategoryCode,
-            'affectedItems' => $affectedRows,
-            'namingSchemeUpdated' => true,
-            'categoryMappings' => $updatedMappings
-        ]);
-        
-    } elseif ($action === 'update') {
-        // Update category name
-        $categoryId = $input['categoryId'] ?? '';
-        $oldCategoryName = $input['oldCategoryName'] ?? '';
-        $newCategoryName = $input['newCategoryName'] ?? '';
-        
-        if (empty($categoryId) || empty($oldCategoryName) || empty($newCategoryName)) {
-            echo json_encode(['success' => false, 'error' => 'Missing required fields']);
-            exit;
-        }
-        
-        // Update the category in the categories table
-        $stmt = $pdo->prepare('UPDATE categories SET name = ? WHERE id = ?');
-        $stmt->execute([$newCategoryName, $categoryId]);
-        
-        // Update all items with the old category to use the new category name
-        $stmt = $pdo->prepare('UPDATE items SET category = ? WHERE category = ?');
-        $stmt->execute([$newCategoryName, $oldCategoryName]);
-        $affectedRows = $stmt->rowCount();
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Category updated successfully',
-            'oldName' => $oldCategoryName,
-            'newName' => $newCategoryName,
-            'affectedItems' => $affectedRows,
-        ]);
+        echo "Category renamed from '{$category}' to '{$newCategory}' successfully";
         
     } else {
-        echo json_encode(['error' => 'Invalid action']);
+        echo 'Invalid action';
     }
 } catch (PDOException $e) {
     error_log('Category action error: ' . $e->getMessage());
-    echo json_encode(['error' => 'Database error']);
+    echo 'Database error';
 } 

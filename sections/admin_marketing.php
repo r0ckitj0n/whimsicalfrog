@@ -182,8 +182,7 @@ function generateId($prefix, $length = 3) {
 }
 ?>
 
-<div class="admin-section-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-    <h2 class="text-2xl font-bold" style="color:#87ac3a !important;">Marketing Dashboard <span class="text-base font-medium ml-2" style="color:#87ac3a !important;">Performance (<?php echo htmlspecialchars($marketingStartInput ?: 'All'); ?> – <?php echo htmlspecialchars($marketingEndInput ?: 'All'); ?>)</span></h2>
+<div class="admin-section-header flex justify-start gap-4 mb-4">
     <form class="flex items-center gap-2" method="get" action="">
         <input type="hidden" name="page" value="admin">
         <input type="hidden" name="section" value="marketing">

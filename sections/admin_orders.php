@@ -292,11 +292,63 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
         border-color: #87ac3a;
         box-shadow: 0 0 0 2px rgba(135, 172, 58, 0.2);
     }
+
+    /* Navigation Arrow Styling */
+    .nav-arrow {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 60; /* Higher than modal z-index */
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .nav-arrow:hover {
+        background: rgba(0, 0, 0, 0.5);
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    
+    .nav-arrow:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+    
+    .nav-arrow svg {
+        width: 24px;
+        height: 24px;
+        stroke-width: 2.5;
+    }
+    
+    .nav-arrow.left {
+        left: 20px;
+    }
+    
+    .nav-arrow.right {
+        right: 20px;
+    }
+    
+    /* Hide arrows on smaller screens to avoid overlap */
+    @media (max-width: 768px) {
+        .nav-arrow {
+            display: none;
+        }
+    }
 </style>
 
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-2">
     <div class="orders-section-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-        <h1 class="orders-title text-2xl font-bold" style="color:#87ac3a !important;">Orders Management</h1>
+        
         <form action="" method="GET" class="flex items-center gap-2">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="orders">
@@ -322,6 +374,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Order ID</th>
                     <th>Customer</th>
                     <th>Date</th>
+                    <th>Items</th>
                     <th>Total</th>
                     <th>Status</th>
                     <th>Payment Method</th>
@@ -333,13 +386,35 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
             </thead>
             <tbody>
                 <?php if (empty($orders)): ?>
-                    <tr><td colspan="9" class="text-center py-4">No orders found.</td></tr>
+                    <tr><td colspan="11" class="text-center py-4">No orders found.</td></tr>
                 <?php else: ?>
-                    <?php foreach ($orders as $order): ?>
+                    <?php foreach ($orders as $order): 
+                        // Get order items for this order
+                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ? LIMIT 3");
+                        $itemStmt->execute([$order['id']]);
+                        $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        // Count total items
+                        $totalItemsStmt = $pdo->prepare("SELECT COUNT(*) as total FROM order_items WHERE orderId = ?");
+                        $totalItemsStmt->execute([$order['id']]);
+                        $totalItemsCount = $totalItemsStmt->fetchColumn();
+                    ?>
                     <tr>
                         <td style="font-family: monospace; font-size: 0.85rem;"><?= htmlspecialchars($order['id'] ?? '') ?></td>
                         <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
                         <td><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
+                        <td style="font-size: 0.8rem; max-width: 200px;">
+                            <?php if (empty($orderItems)): ?>
+                                <span class="text-gray-500 italic">No items</span>
+                            <?php else: ?>
+                                <?php foreach ($orderItems as $index => $item): ?>
+                                    <div class="truncate"><?= htmlspecialchars($item['name'] ?? 'Unknown') ?> (<?= $item['quantity'] ?? 0 ?>)</div>
+                                <?php endforeach; ?>
+                                <?php if ($totalItemsCount > 3): ?>
+                                    <div class="text-gray-500 text-xs">+<?= $totalItemsCount - 3 ?> more...</div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </td>
                         <td>$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
                         <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="status" data-type="select">
                             <span class="status-badge status-<?= strtolower(htmlspecialchars($order['status'] ?? 'pending')) ?>">
@@ -378,6 +453,18 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
     if ($orderDetails):
     ?>
     <div class="modal-outer" id="viewOrderModal">
+        <!-- Navigation Arrows -->
+        <button id="prevOrderBtn" onclick="navigateToOrder('prev')" class="nav-arrow left" title="Previous order">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </button>
+        <button id="nextOrderBtn" onclick="navigateToOrder('next')" class="nav-arrow right" title="Next order">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+        
         <div class="modal-content-wrapper">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-green-700">Order Details: <?= htmlspecialchars($viewOrderId) ?></h2>
@@ -513,12 +600,29 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th></tr></thead>
                                 <tbody>
                                     <?php
-                                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci WHERE oi.orderId = ? LIMIT 6");
-                                        $itemStmt->execute([$viewOrderId]);
-                                        $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
-                                        foreach ($orderItems as $it): ?>
-                                            <tr><td><?= htmlspecialchars($it['name'] ?? ''); ?></td><td class="text-center"><?= $it['quantity'] ?? 0; ?></td><td class="text-right">$<?= number_format(($it['price'] ?? 0) * ($it['quantity'] ?? 0), 2); ?></td></tr>
-                                    <?php endforeach; ?>
+                                        // Try the query with collation first, then fallback without collation
+                                        try {
+                                            $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ?");
+                                            $itemStmt->execute([$viewOrderId]);
+                                            $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+                                        } catch (Exception $e) {
+                                            // Fallback: get order items without item names
+                                            $itemStmt = $pdo->prepare("SELECT * FROM order_items WHERE orderId = ?");
+                                            $itemStmt->execute([$viewOrderId]);
+                                            $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+                                        }
+                                        
+                                        if (empty($orderItems)): ?>
+                                            <tr><td colspan="3" class="text-center text-gray-500 italic py-4">No items found for this order</td></tr>
+                                        <?php else:
+                                            foreach ($orderItems as $it): ?>
+                                                <tr>
+                                                    <td><?= htmlspecialchars($it['name'] ?? $it['sku'] ?? 'Unknown Item'); ?></td>
+                                                    <td class="text-center"><?= $it['quantity'] ?? 0; ?></td>
+                                                    <td class="text-right">$<?= number_format(($it['price'] ?? 0) * ($it['quantity'] ?? 0), 2); ?></td>
+                                                </tr>
+                                            <?php endforeach; 
+                                        endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -600,6 +704,18 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
     if ($orderDetails):
     ?>
     <div class="modal-outer" id="editOrderModal">
+        <!-- Navigation Arrows -->
+        <button id="prevOrderBtn" onclick="navigateToOrder('prev')" class="nav-arrow left" title="Previous order">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </button>
+        <button id="nextOrderBtn" onclick="navigateToOrder('next')" class="nav-arrow right" title="Next order">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+        
         <div class="modal-content-wrapper">
             <div class="flex justify-between items-start mb-3">
                 <h2 class="text-lg font-bold text-green-700">Edit Order: <?= htmlspecialchars($editOrderId) ?></h2>
@@ -812,25 +928,38 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                             <thead><tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Total</th><th class="w-8"></th></tr></thead>
                             <tbody>
                                 <?php
-                                                                         $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ?");
-                                    $itemStmt->execute([$editOrderId]);
-                                    $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
-                                    foreach ($orderItems as $it): ?>
-                                    <tr class="item-row" data-item-id="<?= htmlspecialchars($it['id']) ?>" data-sku="<?= htmlspecialchars($it['sku']) ?>" data-price="<?= $it['price'] ?>">
-                                        <td><?= htmlspecialchars($it['name']); ?></td>
-                                        <td class="text-center">
-                                            <input type="number" class="w-16 border-0 bg-transparent text-center qty-input focus:bg-white focus:border focus:border-blue-300 rounded" 
-                                                   value="<?= $it['quantity'] ?>" min="1" onchange="updateRowTotal(this)" 
-                                                   style="background: none; outline: none;">
-                                        </td>
-                                        <td class="text-right line-total">$<?= number_format(($it['price'] ?? 0) * ($it['quantity'] ?? 0), 2) ?></td>
-                                        <td class="text-center">
-                                            <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="removeItemAndUpdateTotal(this)" title="Remove item">
-                                                🗑️
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                    // Try the query with JOIN first, then fallback without
+                                    try {
+                                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ?");
+                                        $itemStmt->execute([$editOrderId]);
+                                        $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+                                    } catch (Exception $e) {
+                                        // Fallback: get order items without item names
+                                        $itemStmt = $pdo->prepare("SELECT * FROM order_items WHERE orderId = ?");
+                                        $itemStmt->execute([$editOrderId]);
+                                        $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
+                                    }
+                                    
+                                    if (empty($orderItems)): ?>
+                                        <tr><td colspan="4" class="text-center text-gray-500 italic py-4">No items found for this order</td></tr>
+                                    <?php else:
+                                        foreach ($orderItems as $it): ?>
+                                        <tr class="item-row" data-item-id="<?= htmlspecialchars($it['id']) ?>" data-sku="<?= htmlspecialchars($it['sku']) ?>" data-price="<?= $it['price'] ?>">
+                                            <td><?= htmlspecialchars($it['name'] ?? $it['sku'] ?? 'Unknown Item'); ?></td>
+                                            <td class="text-center">
+                                                <input type="number" class="w-16 border-0 bg-transparent text-center qty-input focus:bg-white focus:border focus:border-blue-300 rounded" 
+                                                       value="<?= $it['quantity'] ?>" min="1" onchange="updateRowTotal(this)" 
+                                                       style="background: none; outline: none;">
+                                            </td>
+                                            <td class="text-right line-total">$<?= number_format(($it['price'] ?? 0) * ($it['quantity'] ?? 0), 2) ?></td>
+                                            <td class="text-center">
+                                                <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="removeItemAndUpdateTotal(this)" title="Remove item">
+                                                    🗑️
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; 
+                                    endif; ?>
                             </tbody>
                         </table>
                         <div class="mt-3 pt-2 border-t text-sm">
@@ -923,7 +1052,93 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <script>
+// Initialize variables
+var modalMode = <?= json_encode($modalMode ?? '') ?>;
+var currentOrderId = <?= json_encode($viewOrderId ?: ($editOrderId ?: '')) ?>;
+
+// Initialize orders list for navigation
+var allOrders = <?= json_encode(array_values($orders)) ?>;
+var currentOrderIndex = -1;
+
+// Find current order index if we're in view/edit mode
+if (currentOrderId && allOrders.length > 0) {
+    currentOrderIndex = allOrders.findIndex(order => order.id === currentOrderId);
+}
+
+// Navigation functions
+function navigateToOrder(direction) {
+    if (allOrders.length === 0) return;
+    
+    let newIndex = currentOrderIndex;
+    
+    if (direction === 'prev') {
+        newIndex = currentOrderIndex > 0 ? currentOrderIndex - 1 : allOrders.length - 1;
+    } else if (direction === 'next') {
+        newIndex = currentOrderIndex < allOrders.length - 1 ? currentOrderIndex + 1 : 0;
+    }
+    
+    if (newIndex !== currentOrderIndex && newIndex >= 0 && newIndex < allOrders.length) {
+        const targetOrder = allOrders[newIndex];
+        const currentMode = modalMode === 'view' ? 'view' : 'edit';
+        let newUrl = `?page=admin&section=orders&${currentMode}=${encodeURIComponent(targetOrder.id)}`;
+        
+        // Preserve any existing date filter parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('start_date')) newUrl += `&start_date=${encodeURIComponent(urlParams.get('start_date'))}`;
+        if (urlParams.get('end_date')) newUrl += `&end_date=${encodeURIComponent(urlParams.get('end_date'))}`;
+        
+        window.location.href = newUrl;
+    }
+}
+
+// Update navigation button states
+function updateOrderNavigationButtons() {
+    const prevBtn = document.getElementById('prevOrderBtn');
+    const nextBtn = document.getElementById('nextOrderBtn');
+    
+    if (prevBtn && nextBtn && allOrders.length > 0) {
+        // Always enable buttons for circular navigation
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+        
+        // Add order counter to buttons for better UX
+        const orderCounter = `${currentOrderIndex + 1} of ${allOrders.length}`;
+        const currentOrder = allOrders[currentOrderIndex];
+        const prevIndex = currentOrderIndex > 0 ? currentOrderIndex - 1 : allOrders.length - 1;
+        const nextIndex = currentOrderIndex < allOrders.length - 1 ? currentOrderIndex + 1 : 0;
+        const prevOrder = allOrders[prevIndex];
+        const nextOrder = allOrders[nextIndex];
+        
+        const prevOrderText = `Order ${prevOrder?.id || 'Unknown'}`;
+        const nextOrderText = `Order ${nextOrder?.id || 'Unknown'}`;
+        
+        prevBtn.title = `Previous: ${prevOrderText} (${orderCounter})`;
+        nextBtn.title = `Next: ${nextOrderText} (${orderCounter})`;
+    }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    // Only activate in modal mode and when not typing in input fields
+    if ((modalMode === 'view' || modalMode === 'edit') && 
+        !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            navigateToOrder('prev');
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            navigateToOrder('next');
+        }
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize navigation buttons for view/edit modes
+    if (modalMode === 'view' || modalMode === 'edit') {
+        updateOrderNavigationButtons();
+    }
+    
     // Toggle check number field based on payment method
     window.toggleCheckNumberField = function() {
         const paymentMethodEl = document.getElementById('paymentMethod');

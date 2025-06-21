@@ -75,8 +75,8 @@ $filterRole = isset($_GET['role']) ? $_GET['role'] : 'all';
 // Filter customers based on search term
 if (!empty($searchTerm)) {
     $customersData = array_filter($customersData, function($customer) use ($searchTerm) {
-        $firstName = $customer['first_name'] ?? '';
-        $lastName = $customer['last_name'] ?? '';
+        $firstName = $customer['firstName'] ?? '';
+        $lastName = $customer['lastName'] ?? '';
         $email = $customer['email'] ?? '';
         $username = $customer['username'] ?? '';
         
@@ -101,8 +101,8 @@ $sortDir = isset($_GET['dir']) ? $_GET['dir'] : 'asc';
 usort($customersData, function($a, $b) use ($sortBy, $sortDir) {
     switch($sortBy) {
         case 'name':
-            $aName = ($a['first_name'] ?? '') . ' ' . ($a['last_name'] ?? '');
-            $bName = ($b['first_name'] ?? '') . ' ' . ($b['last_name'] ?? '');
+            $aName = ($a['firstName'] ?? '') . ' ' . ($a['lastName'] ?? '');
+            $bName = ($b['firstName'] ?? '') . ' ' . ($b['lastName'] ?? '');
             $valA = $aName;
             $valB = $bName;
             break;
@@ -260,11 +260,11 @@ $messageType = $_GET['type'] ?? '';
 
     .modal-outer { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
     .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: 60rem; max-height: 90vh; display: flex; flex-direction: column; }
-    .modal-form-container { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-right: 0.5rem; }
+    .modal-form-container { flex-grow: 1; display: flex; flex-direction: column; padding-right: 0.5rem; min-height: 0; }
     @media (min-width: 768px) { .modal-form-container { flex-direction: row; } }
-    .modal-form-main-column { flex: 1; padding-right: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .modal-form-main-column { flex: 1; padding-right: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; min-height: 0; }
     @media (max-width: 767px) { .modal-form-main-column { padding-right: 0; } }
-    .modal-form-side-column { width: 100%; padding-left: 0; margin-top: 1rem; }
+    .modal-form-side-column { width: 100%; padding-left: 0; margin-top: 1rem; min-height: 0; }
     @media (min-width: 768px) { .modal-form-side-column { flex: 0 0 40%; padding-left: 0.75rem; margin-top: 0; } }
 
     .cost-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
@@ -285,11 +285,63 @@ $messageType = $_GET['type'] ?? '';
     .status-shipped { background-color: #dcfce7; color: #166534; }
     .status-delivered { background-color: #d1fae5; color: #065f46; }
     .status-cancelled { background-color: #fee2e2; color: #991b1b; }
+
+    /* Navigation Arrow Styling */
+    .nav-arrow {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 60; /* Higher than modal z-index */
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .nav-arrow:hover {
+        background: rgba(0, 0, 0, 0.5);
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    
+    .nav-arrow:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+    
+    .nav-arrow svg {
+        width: 24px;
+        height: 24px;
+        stroke-width: 2.5;
+    }
+    
+    .nav-arrow.left {
+        left: 20px;
+    }
+    
+    .nav-arrow.right {
+        right: 20px;
+    }
+    
+    /* Hide arrows on smaller screens to avoid overlap */
+    @media (max-width: 768px) {
+        .nav-arrow {
+            display: none;
+        }
+    }
 </style>
 
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-2">
     <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 class="customers-title text-2xl font-bold" style="color: #87ac3a !important;">Customer Management</h1>
+        
         <form method="GET" action="" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="customers">
@@ -322,12 +374,12 @@ $messageType = $_GET['type'] ?? '';
                 <?php else: ?>
                     <?php foreach ($paginatedCustomers as $customer): 
                         $customerId = $customer['id'] ?? '';
-                        $firstName = $customer['first_name'] ?? '';
-                        $lastName = $customer['last_name'] ?? '';
+                        $firstName = $customer['firstName'] ?? '';
+                        $lastName = $customer['lastName'] ?? '';
                         $email = $customer['email'] ?? '';
                         $role = $customer['role'] ?? '';
-                        $customerOrders = getCustomerOrders($customerId, $ordersData);
-                        $orderCount = count($customerOrders);
+                        $customerOrdersForCount = getCustomerOrders($customerId, $ordersData);
+                        $orderCount = count($customerOrdersForCount);
                     ?>
                     <tr class="hover:bg-gray-50" data-customer-id="<?= htmlspecialchars($customerId) ?>">
                         <td>
@@ -392,11 +444,23 @@ $messageType = $_GET['type'] ?? '';
 
 <?php if (($modalMode === 'view' || $modalMode === 'edit') && $editCustomer): ?>
 <div class="modal-outer" id="customerModalOuter">
+    <!-- Navigation Arrows -->
+    <button id="prevCustomerBtn" onclick="navigateToCustomer('prev')" class="nav-arrow left" title="Previous customer">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+        </svg>
+    </button>
+    <button id="nextCustomerBtn" onclick="navigateToCustomer('next')" class="nav-arrow right" title="Next customer">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+        </svg>
+    </button>
+    
     <div class="modal-content-wrapper">
         <div class="flex justify-between items-center mb-3">
             <h2 class="text-lg font-bold text-green-700">
                 <?= $modalMode === 'view' ? 'View Customer: ' : 'Edit Customer: ' ?>
-                <?= htmlspecialchars(($editCustomer['first_name'] ?? '') . ' ' . ($editCustomer['last_name'] ?? '')) ?>
+                <?= htmlspecialchars(($editCustomer['firstName'] ?? '') . ' ' . ($editCustomer['lastName'] ?? '')) ?>
             </h2>
             <a href="?page=admin&section=customers" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
@@ -410,8 +474,8 @@ $messageType = $_GET['type'] ?? '';
         <div class="modal-form-container gap-5">
             <div class="modal-form-main-column">
                 <?php
-                $firstName = $editCustomer['first_name'] ?? '';
-                $lastName = $editCustomer['last_name'] ?? '';
+                $firstName = $editCustomer['firstName'] ?? '';
+                $lastName = $editCustomer['lastName'] ?? '';
                 $email = $editCustomer['email'] ?? '';
                 $username = $editCustomer['username'] ?? '';
                 $role = $editCustomer['role'] ?? '';
@@ -505,7 +569,7 @@ $messageType = $_GET['type'] ?? '';
                                    value="<?= htmlspecialchars($phoneNumber) ?>">
                         <?php else: ?>
                             <input type="tel" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
-                                   value="<?= htmlspecialchars($phoneNumber ?: 'Not provided') ?>">
+                                   value="<?= htmlspecialchars($phoneNumber) ?>">
                         <?php endif; ?>
                     </div>
                 </div>
@@ -521,7 +585,7 @@ $messageType = $_GET['type'] ?? '';
                                value="<?= htmlspecialchars($addressLine1) ?>">
                     <?php else: ?>
                         <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
-                               value="<?= htmlspecialchars($addressLine1 ?: 'Not provided') ?>">
+                               value="<?= htmlspecialchars($addressLine1) ?>">
                     <?php endif; ?>
                 </div>
 
@@ -532,7 +596,7 @@ $messageType = $_GET['type'] ?? '';
                                value="<?= htmlspecialchars($addressLine2) ?>">
                     <?php else: ?>
                         <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
-                               value="<?= htmlspecialchars($addressLine2 ?: 'Not provided') ?>">
+                               value="<?= htmlspecialchars($addressLine2) ?>">
                     <?php endif; ?>
                 </div>
 
@@ -544,7 +608,7 @@ $messageType = $_GET['type'] ?? '';
                                    value="<?= htmlspecialchars($city) ?>">
                         <?php else: ?>
                             <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
-                                   value="<?= htmlspecialchars($city ?: 'Not provided') ?>">
+                                   value="<?= htmlspecialchars($city) ?>">
                         <?php endif; ?>
                     </div>
                     <div>
@@ -554,7 +618,7 @@ $messageType = $_GET['type'] ?? '';
                                    value="<?= htmlspecialchars($state) ?>">
                         <?php else: ?>
                             <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
-                                   value="<?= htmlspecialchars($state ?: 'Not provided') ?>">
+                                   value="<?= htmlspecialchars($state) ?>">
                         <?php endif; ?>
                     </div>
                     <div>
@@ -564,7 +628,7 @@ $messageType = $_GET['type'] ?? '';
                                    value="<?= htmlspecialchars($zipCode) ?>">
                         <?php else: ?>
                             <input type="text" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
-                                   value="<?= htmlspecialchars($zipCode ?: 'Not provided') ?>">
+                                   value="<?= htmlspecialchars($zipCode) ?>">
                         <?php endif; ?>
                     </div>
                 </div>
@@ -573,7 +637,7 @@ $messageType = $_GET['type'] ?? '';
             <div class="modal-form-side-column">
                 <div class="bg-gray-50 border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0; height: 100%; display: flex; flex-direction: column;">
                     <h3 class="color: #374151; font-size: 1rem; font-weight: 600; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #d1d5db;">Order History</h3>
-                    <div style="flex-grow: 1; overflow-y: auto; max-height: 300px;">
+                    <div style="flex-grow: 1; overflow-y: auto; min-height: 200px; max-height: 600px;">
                         <?php if (empty($customerOrders)): ?>
                             <p class="text-gray-500 italic text-sm">No orders found for this customer.</p>
                         <?php else: ?>
@@ -626,6 +690,83 @@ $messageType = $_GET['type'] ?? '';
 var modalMode = <?= json_encode($modalMode ?? '') ?>;
 var currentCustomerId = <?= json_encode(isset($editCustomer['id']) ? $editCustomer['id'] : '') ?>;
 
+// Initialize customers list for navigation
+var allCustomers = <?= json_encode(array_values($customersData)) ?>;
+var currentCustomerIndex = -1;
+
+// Find current customer index if we're in view/edit mode
+if (currentCustomerId && allCustomers.length > 0) {
+    currentCustomerIndex = allCustomers.findIndex(customer => customer.id === currentCustomerId);
+}
+
+// Navigation functions
+function navigateToCustomer(direction) {
+    if (allCustomers.length === 0) return;
+    
+    let newIndex = currentCustomerIndex;
+    
+    if (direction === 'prev') {
+        newIndex = currentCustomerIndex > 0 ? currentCustomerIndex - 1 : allCustomers.length - 1;
+    } else if (direction === 'next') {
+        newIndex = currentCustomerIndex < allCustomers.length - 1 ? currentCustomerIndex + 1 : 0;
+    }
+    
+    if (newIndex !== currentCustomerIndex && newIndex >= 0 && newIndex < allCustomers.length) {
+        const targetCustomer = allCustomers[newIndex];
+        const currentMode = modalMode === 'view' ? 'view' : 'edit';
+        let newUrl = `?page=admin&section=customers&${currentMode}=${encodeURIComponent(targetCustomer.id)}`;
+        
+        // Preserve any existing search/filter parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('search')) newUrl += `&search=${encodeURIComponent(urlParams.get('search'))}`;
+        if (urlParams.get('role')) newUrl += `&role=${encodeURIComponent(urlParams.get('role'))}`;
+        
+        window.location.href = newUrl;
+    }
+}
+
+// Update navigation button states
+function updateCustomerNavigationButtons() {
+    const prevBtn = document.getElementById('prevCustomerBtn');
+    const nextBtn = document.getElementById('nextCustomerBtn');
+    
+    if (prevBtn && nextBtn && allCustomers.length > 0) {
+        // Always enable buttons for circular navigation
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+        
+        // Add customer counter to buttons for better UX
+        const customerCounter = `${currentCustomerIndex + 1} of ${allCustomers.length}`;
+        const currentCustomer = allCustomers[currentCustomerIndex];
+        const prevIndex = currentCustomerIndex > 0 ? currentCustomerIndex - 1 : allCustomers.length - 1;
+        const nextIndex = currentCustomerIndex < allCustomers.length - 1 ? currentCustomerIndex + 1 : 0;
+        const prevCustomer = allCustomers[prevIndex];
+        const nextCustomer = allCustomers[nextIndex];
+        
+        const prevName = (prevCustomer?.firstName || '') + ' ' + (prevCustomer?.lastName || '');
+        const nextName = (nextCustomer?.firstName || '') + ' ' + (nextCustomer?.lastName || '');
+        
+        prevBtn.title = `Previous: ${prevName.trim() || 'Unknown'} (${customerCounter})`;
+        nextBtn.title = `Next: ${nextName.trim() || 'Unknown'} (${customerCounter})`;
+    }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    // Only activate in modal mode and when not typing in input fields
+    if ((modalMode === 'view' || modalMode === 'edit') && 
+        !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            navigateToCustomer('prev');
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            navigateToCustomer('next');
+        }
+    }
+});
+
 function showToast(type, message) {
     const existingToast = document.getElementById('toast-notification');
     if (existingToast) {
@@ -656,6 +797,11 @@ function closeModal() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize navigation buttons for view/edit modes
+    if (modalMode === 'view' || modalMode === 'edit') {
+        updateCustomerNavigationButtons();
+    }
+    
     // Handle customer form submission for edit mode
     const customerForm = document.getElementById('customerForm');
     if (customerForm) {

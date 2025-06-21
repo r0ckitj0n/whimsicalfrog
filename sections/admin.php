@@ -94,13 +94,34 @@ $adminRole = $userData['roleType'] ?? 'Administrator';
         'settings' => ['Settings', 'bg-gray-100', 'text-gray-800'],
     ];
     ?>
-    <div class="flex flex-wrap gap-2 mb-4 admin-tab-bar p-3 rounded-lg">
-        <?php foreach ($tabs as $key => [$label, $bg, $text]): ?>
-            <a href="/?page=admin<?php echo $key ? '&section=' . $key : ''; ?>"
-               class="px-3 py-1 rounded text-xs font-semibold <?php echo $bg . ' ' . $text; ?> <?php echo ($section === $key || ($key === '' && !$section)) ? 'ring-2 ring-green-400' : 'hover:bg-green-200'; ?>">
-                <?php echo $label; ?>
-            </a>
-        <?php endforeach; ?>
+    <div class="flex justify-between items-center mb-1 admin-tab-bar p-2 rounded-lg">
+        <!-- Left side: Navigation tabs -->
+        <div class="flex flex-wrap gap-2">
+            <?php foreach ($tabs as $key => [$label, $bg, $text]): ?>
+                <a href="/?page=admin<?php echo $key ? '&section=' . $key : ''; ?>"
+                   class="px-3 py-1 rounded text-xs font-semibold <?php echo $bg . ' ' . $text; ?> <?php echo ($section === $key || ($key === '' && !$section)) ? 'ring-2 ring-green-400' : 'hover:bg-green-200'; ?>">
+                    <?php echo $label; ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        
+        <!-- Right side: Page title -->
+        <div class="text-lg font-semibold bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200" style="color: #87ac3a !important;">
+            <?php 
+            $pageTitles = [
+                '' => 'Dashboard',
+                'customers' => 'Customers',
+                'inventory' => 'Inventory',
+                'orders' => 'Orders',
+                'reports' => 'Reports',
+                'marketing' => 'Marketing',
+                'settings' => 'Settings',
+                'categories' => 'Categories',
+                'order_fulfillment' => 'Order Fulfillment'
+            ];
+            echo htmlspecialchars($pageTitles[$section] ?? 'Admin Panel');
+            ?>
+        </div>
     </div>
 
     <!-- Section Content: Show only the selected section below the tabs -->

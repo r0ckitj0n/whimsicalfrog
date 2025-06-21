@@ -3,6 +3,7 @@
 ob_start();
 header('Content-Type: application/json');
 require_once 'config.php';
+require_once 'ai_providers.php';
 
 // Turn off error display for this API to prevent HTML in JSON response
 ini_set('display_errors', 0);
@@ -67,8 +68,14 @@ try {
     $costPrice = floatval($input['costPrice'] ?? 0);
     $sku = trim($input['sku'] ?? '');
     
-    // Initialize pricing analysis
-    $pricingData = analyzePricing($name, $description, $category, $costPrice, $pdo);
+    // Initialize pricing analysis using AI provider system
+    try {
+        $pricingData = generateAIPricingSuggestion($name, $description, $category, $costPrice);
+    } catch (Exception $e) {
+        // Fallback to local AI if external API fails
+        error_log("AI Provider failed for pricing, using local fallback: " . $e->getMessage());
+        $pricingData = analyzePricing($name, $description, $category, $costPrice, $pdo);
+    }
     
     // Save enhanced price suggestion to database (create table if needed)
     if (!empty($sku)) {

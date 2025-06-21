@@ -3,6 +3,7 @@
 ob_start();
 header('Content-Type: application/json');
 require_once 'config.php';
+require_once 'ai_providers.php';
 
 // Turn off error display for this API to prevent HTML in JSON response
 ini_set('display_errors', 0);
@@ -113,8 +114,14 @@ try {
     
     $pdo->exec($createTableSql);
     
-    // Generate comprehensive marketing intelligence
-    $marketingData = generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice, $preferredContentTone);
+    // Generate comprehensive marketing intelligence using AI provider system
+    try {
+        $marketingData = generateAIMarketingContent($name, $description, $category, $preferredBrandVoice, $preferredContentTone);
+    } catch (Exception $e) {
+        // Fallback to local AI if external API fails
+        error_log("AI Provider failed, using local fallback: " . $e->getMessage());
+        $marketingData = generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice, $preferredContentTone);
+    }
     
     // Save marketing suggestion to database
     if (!empty($sku)) {

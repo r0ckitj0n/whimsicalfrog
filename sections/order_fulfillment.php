@@ -240,9 +240,9 @@ $messageType = $_GET['type'] ?? '';
     }
 </style>
 
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-2">
     <div class="fulfillment-section-header">
-        <h1 class="fulfillment-title text-2xl font-bold" style="color: #87ac3a !important;">Order Fulfillment</h1>
+        
         
         <form method="GET" class="filter-form">
             <input type="hidden" name="page" value="admin">

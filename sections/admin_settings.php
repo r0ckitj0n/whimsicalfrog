@@ -9,20 +9,18 @@
     color: #c00 !important;
     font-weight: bold;
   }
+
 </style>
+
+
+
 <!-- Admin Settings Grid Layout -->
 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
     
     <!-- Content Management -->
     <div class="bg-white shadow rounded-lg p-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            Content Management
-        </h3>
         <div class="space-y-2">
-            <button onclick="openCategoriesModal()" class="w-full btn-primary text-sm flex items-center text-left">
+            <button onclick="openCategoriesModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                 </svg>
@@ -34,7 +32,7 @@
                 </svg>
                 Room Settings
             </button>
-            <button onclick="openRoomCategoryManagerModal()" class="w-full btn-primary text-sm flex items-center text-left">
+            <button onclick="openRoomCategoryManagerModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
@@ -45,14 +43,8 @@
 
     <!-- Room & Visual Tools -->
     <div class="bg-white shadow rounded-lg p-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-            </svg>
-            Room & Visual Tools
-        </h3>
         <div class="space-y-2">
-            <button onclick="openRoomMapperModal()" class="w-full btn-primary text-sm flex items-center text-left">
+            <button onclick="openRoomMapperModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
@@ -75,12 +67,6 @@
 
     <!-- Business & Design -->
     <div class="bg-white shadow rounded-lg p-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-            </svg>
-            Business & Design
-        </h3>
         <div class="space-y-2">
             <button onclick="openAISettingsModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,12 +97,6 @@
 
     <!-- Email & Communications -->
     <div class="bg-white shadow rounded-lg p-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-            </svg>
-            Email & Communications
-        </h3>
         <div class="space-y-2">
             <button onclick="openEmailConfigModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +110,7 @@
                 </svg>
                 Email History
             </button>
-            <button onclick="fixSampleEmail()" class="w-full btn-primary text-sm flex items-center text-left" id="fixSampleEmailBtn">
+            <button onclick="fixSampleEmail()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left" id="fixSampleEmailBtn">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                 </svg>
@@ -141,14 +121,8 @@
 
     <!-- System & Technical -->
     <div class="bg-white shadow rounded-lg p-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-            </svg>
-            System & Technical
-        </h3>
         <div class="space-y-2">
-            <button onclick="openSystemConfigModal()" class="w-full btn-primary text-sm flex items-center text-left">
+            <button onclick="openSystemConfigModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                 </svg>
@@ -171,18 +145,12 @@
 
     <!-- Payment Integration -->
     <div class="bg-white shadow rounded-lg p-4">
-        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-            <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-            Payment Integration
-        </h3>
         <div class="space-y-2">
             <div class="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded text-sm">
                 <strong>Coming Soon:</strong> Square payment integration for online credit card processing.
             </div>
-            <button type="button" class="w-full bg-gray-400 text-white px-3 py-2 rounded text-sm font-medium cursor-not-allowed" disabled>
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" class="w-full bg-gray-400 text-white px-3 py-2 rounded text-sm font-medium cursor-not-allowed flex items-center text-left" disabled>
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
                 Configure Square (Coming Soon)
@@ -2566,7 +2534,10 @@ async function removeAreaMapping(mappingId) {
                                 <input type="checkbox" id="isPrimaryCategory" class="mr-2">
                                 <label for="isPrimaryCategory" class="text-sm text-gray-700">Set as primary category for this room</label>
                             </div>
-                            <button onclick="addRoomCategory()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                            <button onclick="addRoomCategory()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center text-left">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
                                 Add Category
                             </button>
                         </div>
@@ -2642,7 +2613,10 @@ async function removeAreaMapping(mappingId) {
                                 <input type="file" id="backgroundFile" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                                 <p class="text-xs text-gray-500 mt-1">Supported: JPG, PNG, WebP (Max 10MB)</p>
                             </div>
-                            <button onclick="uploadBackground()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                            <button onclick="uploadBackground()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center text-left">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
                                 Upload Background
                             </button>
                         </div>
@@ -2730,6 +2704,7 @@ let aiSettingsData = {};
 function openAISettingsModal() {
     document.getElementById('aiSettingsModal').style.display = 'flex';
     loadAISettings();
+    loadAIProviders();
 }
 
 function closeAISettingsModal() {
@@ -2738,7 +2713,7 @@ function closeAISettingsModal() {
 
 async function loadAISettings() {
     try {
-        const response = await fetch('/api/business_settings.php?action=get_by_category&category=ai');
+        const response = await fetch('/api/ai_settings.php?action=get_settings');
         const data = await response.json();
         
         if (data.success) {
@@ -2751,39 +2726,366 @@ async function loadAISettings() {
     }
 }
 
+async function loadAIProviders() {
+    try {
+        const response = await fetch('/api/ai_settings.php?action=get_providers');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAIProviders(data.providers);
+        } else {
+            console.error('Failed to load AI providers:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading AI providers:', error.message);
+    }
+}
+
 function displayAISettings(settings) {
     const contentContainer = document.getElementById('aiSettingsContent');
     
-    if (settings.length === 0) {
-        contentContainer.innerHTML = `
-            <div class="text-center text-gray-500 py-8">
-                <p>No AI settings found</p>
-            </div>
-        `;
-        return;
-    }
-    
     let html = `
-        <div class="space-y-4">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">AI Configuration Settings</h3>
-            <div class="space-y-3">
-    `;
-    
-    settings.forEach(setting => {
-        html += createAISettingField(setting);
-    });
-    
-    html += `
+        <div class="space-y-6">
+            <div class="text-center">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">🤖 AI Provider Configuration</h3>
+                <p class="text-gray-600 text-sm">Configure AI providers for marketing and pricing suggestions</p>
             </div>
-            <div class="pt-4 border-t mt-6 text-center">
-                <button onclick="saveAISettings()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors w-full sm:w-auto">
-                    💾 Save AI Settings
+            
+            <!-- AI Provider Selection -->
+            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('ai-provider-selection')">
+                    <h4 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
+                        <span>🤖 AI Provider Selection</span>
+                        <span id="ai-provider-selection-icon" class="text-gray-500 transition-transform duration-200">▼</span>
+                    </h4>
+                </div>
+                <div id="ai-provider-selection-content" class="hidden px-4 pb-4">
+                <div class="space-y-2">
+                    <label class="flex items-center space-x-3">
+                        <input type="radio" name="ai_provider" value="local" ${settings.ai_provider === 'local' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <div>
+                            <span class="font-medium">Local AI (Algorithm-based)</span>
+                            <p class="text-sm text-gray-600">Fast, reliable, cost-free algorithm-based AI</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center space-x-3">
+                        <input type="radio" name="ai_provider" value="openai" ${settings.ai_provider === 'openai' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <div>
+                            <span class="font-medium">OpenAI (ChatGPT)</span>
+                            <p class="text-sm text-gray-600">Advanced language model - requires API key</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center space-x-3">
+                        <input type="radio" name="ai_provider" value="anthropic" ${settings.ai_provider === 'anthropic' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <div>
+                            <span class="font-medium">Anthropic (Claude)</span>
+                            <p class="text-sm text-gray-600">Helpful, harmless AI assistant - requires API key</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center space-x-3">
+                        <input type="radio" name="ai_provider" value="google" ${settings.ai_provider === 'google' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <div>
+                            <span class="font-medium">Google AI (Gemini)</span>
+                            <p class="text-sm text-gray-600">Google's multimodal AI model - requires API key</p>
+                        </div>
+                    </label>
+                </div>
+                </div>
+            </div>
+            
+            <!-- OpenAI Section -->
+            <div id="openai_section" class="bg-yellow-50 rounded-lg p-4 border border-yellow-200" style="display: none;">
+                <h4 class="text-lg font-semibold text-gray-800 mb-3">🔑 OpenAI Configuration</h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">OpenAI API Key</label>
+                        <input type="password" id="openai_api_key" value="${settings.openai_api_key || ''}" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                               placeholder="sk-...">
+                        <p class="text-xs text-gray-500 mt-1">Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" class="text-blue-600 hover:underline">OpenAI Platform</a></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">OpenAI Model</label>
+                        <select id="openai_model" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">Loading models...</option>
+                        </select>
+                        <button onclick="refreshModels('openai')" class="text-xs text-blue-600 hover:underline mt-1">🔄 Refresh Models</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Anthropic Section -->
+            <div id="anthropic_section" class="bg-yellow-50 rounded-lg p-4 border border-yellow-200" style="display: none;">
+                <h4 class="text-lg font-semibold text-gray-800 mb-3">🔑 Anthropic Configuration</h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Anthropic API Key</label>
+                        <input type="password" id="anthropic_api_key" value="${settings.anthropic_api_key || ''}" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                               placeholder="sk-ant-...">
+                        <p class="text-xs text-gray-500 mt-1">Get your API key from <a href="https://console.anthropic.com/" target="_blank" class="text-blue-600 hover:underline">Anthropic Console</a></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Anthropic Model</label>
+                        <select id="anthropic_model" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">Loading models...</option>
+                        </select>
+                        <button onclick="refreshModels('anthropic')" class="text-xs text-blue-600 hover:underline mt-1">🔄 Refresh Models</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Google AI Section -->
+            <div id="google_section" class="bg-yellow-50 rounded-lg p-4 border border-yellow-200" style="display: none;">
+                <h4 class="text-lg font-semibold text-gray-800 mb-3">🔑 Google AI Configuration</h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Google AI API Key</label>
+                        <input type="password" id="google_api_key" value="${settings.google_api_key || ''}" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                               placeholder="AI...">
+                        <p class="text-xs text-gray-500 mt-1">Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-blue-600 hover:underline">Google AI Studio</a></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Google Model</label>
+                        <select id="google_model" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">Loading models...</option>
+                        </select>
+                        <button onclick="refreshModels('google')" class="text-xs text-blue-600 hover:underline mt-1">🔄 Refresh Models</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Parameters -->
+            <div class="bg-green-50 rounded-lg border border-green-200">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('ai-parameters')">
+                    <h4 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
+                        <span>⚙️ AI Parameters</span>
+                        <span id="ai-parameters-icon" class="text-gray-500 transition-transform duration-200">▼</span>
+                    </h4>
+                </div>
+                <div id="ai-parameters-content" class="hidden px-4 pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Temperature (Creativity)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="ai_temperature" min="0.1" max="1.0" step="0.1" value="${settings.ai_temperature || 0.7}" 
+                                   class="flex-1" oninput="document.getElementById('temp_value').textContent = this.value">
+                            <span id="temp_value" class="text-sm font-mono w-8">${settings.ai_temperature || 0.7}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Lower = more consistent, Higher = more creative</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Max Tokens</label>
+                        <input type="number" id="ai_max_tokens" value="${settings.ai_max_tokens || 1000}" min="100" max="4000" step="100"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <p class="text-xs text-gray-500 mt-1">Maximum response length</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Timeout (seconds)</label>
+                        <input type="number" id="ai_timeout" value="${settings.ai_timeout || 30}" min="10" max="120" step="5"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <p class="text-xs text-gray-500 mt-1">API request timeout</p>
+                    </div>
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="fallback_to_local" ${settings.fallback_to_local ? 'checked' : ''} class="text-purple-600">
+                            <span class="text-sm font-medium text-gray-700">Fallback to Local AI</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">Use local AI if external API fails</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+            
+            <!-- Advanced AI Temperature & Configuration -->
+            <div class="bg-purple-50 rounded-lg border border-purple-200">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('advanced-ai-config')">
+                    <h4 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
+                        <span>🎯 Advanced AI Configuration</span>
+                        <span id="advanced-ai-config-icon" class="text-gray-500 transition-transform duration-200">▼</span>
+                    </h4>
+                </div>
+                <div id="advanced-ai-config-content" class="hidden px-4 pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Cost & Price Temperature Controls -->
+                    <div class="col-span-full">
+                        <h5 class="text-md font-medium text-gray-700 mb-3">Temperature Controls</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Cost Temperature</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="ai_cost_temperature" min="0.1" max="1.0" step="0.1" value="${settings.ai_cost_temperature || 0.7}" 
+                                           class="flex-1" oninput="document.getElementById('cost_temp_value').textContent = this.value">
+                                    <span id="cost_temp_value" class="text-sm font-mono w-8">${settings.ai_cost_temperature || 0.7}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Controls AI creativity for cost suggestions</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Price Temperature</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="ai_price_temperature" min="0.1" max="1.0" step="0.1" value="${settings.ai_price_temperature || 0.7}" 
+                                           class="flex-1" oninput="document.getElementById('price_temp_value').textContent = this.value">
+                                    <span id="price_temp_value" class="text-sm font-mono w-8">${settings.ai_price_temperature || 0.7}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Controls AI creativity for price suggestions</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Base Multipliers -->
+                    <div class="col-span-full">
+                        <h5 class="text-md font-medium text-gray-700 mb-3">Base Multipliers</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Cost Base Multiplier</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="ai_cost_multiplier_base" min="0.5" max="2.0" step="0.1" value="${settings.ai_cost_multiplier_base || 1.0}" 
+                                           class="flex-1" oninput="document.getElementById('cost_mult_value').textContent = this.value">
+                                    <span id="cost_mult_value" class="text-sm font-mono w-8">${settings.ai_cost_multiplier_base || 1.0}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Base multiplier for all cost calculations</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Price Base Multiplier</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="ai_price_multiplier_base" min="0.5" max="2.0" step="0.1" value="${settings.ai_price_multiplier_base || 1.0}" 
+                                           class="flex-1" oninput="document.getElementById('price_mult_value').textContent = this.value">
+                                    <span id="price_mult_value" class="text-sm font-mono w-8">${settings.ai_price_multiplier_base || 1.0}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Base multiplier for all price calculations</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pricing Strategy Weights -->
+                    <div class="col-span-full">
+                        <h5 class="text-md font-medium text-gray-700 mb-3">Pricing Strategy Weights</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Market Research Weight</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="ai_market_research_weight" min="0.0" max="1.0" step="0.1" value="${settings.ai_market_research_weight || 0.3}" 
+                                           class="flex-1" oninput="document.getElementById('market_weight_value').textContent = this.value">
+                                    <span id="market_weight_value" class="text-sm font-mono w-8">${settings.ai_market_research_weight || 0.3}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Weight given to market research</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Cost-Plus Weight</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="ai_cost_plus_weight" min="0.0" max="1.0" step="0.1" value="${settings.ai_cost_plus_weight || 0.4}" 
+                                           class="flex-1" oninput="document.getElementById('cost_plus_weight_value').textContent = this.value">
+                                    <span id="cost_plus_weight_value" class="text-sm font-mono w-8">${settings.ai_cost_plus_weight || 0.4}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Weight given to cost-plus pricing</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Value-Based Weight</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="range" id="ai_value_based_weight" min="0.0" max="1.0" step="0.1" value="${settings.ai_value_based_weight || 0.3}" 
+                                           class="flex-1" oninput="document.getElementById('value_weight_value').textContent = this.value">
+                                    <span id="value_weight_value" class="text-sm font-mono w-8">${settings.ai_value_based_weight || 0.3}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Weight given to value-based pricing</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Conservative Mode -->
+                    <div class="col-span-full">
+                        <div class="bg-yellow-100 rounded-lg p-3 border border-yellow-300">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="ai_conservative_mode" ${settings.ai_conservative_mode ? 'checked' : ''} class="text-purple-600">
+                                <span class="text-sm font-medium text-gray-700">Conservative Mode</span>
+                            </label>
+                            <p class="text-xs text-gray-600 mt-1">When enabled, reduces variability and makes suggestions more conservative (eliminates randomness)</p>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            
+            <!-- Content Preferences -->
+            <div class="bg-orange-50 rounded-lg border border-orange-200">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('content-preferences')">
+                    <h4 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
+                        <span>📝 Content Preferences</span>
+                        <span id="content-preferences-icon" class="text-gray-500 transition-transform duration-200">▼</span>
+                    </h4>
+                </div>
+                <div id="content-preferences-content" class="hidden px-4 pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Brand Voice</label>
+                        <input type="text" id="ai_brand_voice" value="${settings.ai_brand_voice || ''}" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                               placeholder="e.g., Friendly, Professional, Casual">
+                        <p class="text-xs text-gray-500 mt-1">Default brand voice for content generation</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Content Tone</label>
+                        <select id="ai_content_tone" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="professional" ${settings.ai_content_tone === 'professional' ? 'selected' : ''}>Professional</option>
+                            <option value="friendly" ${settings.ai_content_tone === 'friendly' ? 'selected' : ''}>Friendly</option>
+                            <option value="casual" ${settings.ai_content_tone === 'casual' ? 'selected' : ''}>Casual</option>
+                            <option value="energetic" ${settings.ai_content_tone === 'energetic' ? 'selected' : ''}>Energetic</option>
+                            <option value="sophisticated" ${settings.ai_content_tone === 'sophisticated' ? 'selected' : ''}>Sophisticated</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Default tone for generated content</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                <button onclick="testAIProvider()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center text-left">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Test Current Provider
+                </button>
+                <button onclick="initializeAISettings()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center text-left">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    </svg>
+                    Initialize Settings
+                </button>
+                <button onclick="saveAISettings()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex-1 flex items-center text-left">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                    </svg>
+                    Save AI Settings
                 </button>
             </div>
         </div>
     `;
     
     contentContainer.innerHTML = html;
+    
+    // Show the correct provider section based on current selection
+    toggleProviderSections();
+    
+    // Load models for the currently selected provider only
+    loadModelsForCurrentProvider(settings);
+}
+
+function toggleSection(sectionId) {
+    const content = document.getElementById(sectionId + '-content');
+    const icon = document.getElementById(sectionId + '-icon');
+    
+    if (content.classList.contains('hidden')) {
+        // Expand
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+        icon.textContent = '▲';
+    } else {
+        // Collapse
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+        icon.textContent = '▼';
+    }
 }
 
 function createAISettingField(setting) {
@@ -2853,42 +3155,44 @@ function createAISettingField(setting) {
 }
 
 async function saveAISettings() {
-    const settings = document.querySelectorAll(`[id^="setting_"]`);
-    const updates = [];
-    
-    for (const setting of settings) {
-        const settingKey = setting.id.replace('setting_', '');
-        let value = '';
-        
-        if (setting.type === 'checkbox') {
-            value = setting.checked ? 'true' : 'false';
-        } else {
-            value = setting.value;
-        }
-        
-        updates.push({
-            setting_key: settingKey,
-            setting_value: value
-        });
-    }
+    const settings = {
+        ai_provider: document.querySelector('input[name="ai_provider"]:checked')?.value || 'local',
+        openai_api_key: document.getElementById('openai_api_key')?.value || '',
+        openai_model: document.getElementById('openai_model')?.value || 'gpt-3.5-turbo',
+        anthropic_api_key: document.getElementById('anthropic_api_key')?.value || '',
+        anthropic_model: document.getElementById('anthropic_model')?.value || 'claude-3-haiku-20240307',
+        google_api_key: document.getElementById('google_api_key')?.value || '',
+        google_model: document.getElementById('google_model')?.value || 'gemini-pro',
+        ai_temperature: parseFloat(document.getElementById('ai_temperature')?.value || 0.7),
+        ai_max_tokens: parseInt(document.getElementById('ai_max_tokens')?.value || 1000),
+        ai_timeout: parseInt(document.getElementById('ai_timeout')?.value || 30),
+        fallback_to_local: document.getElementById('fallback_to_local')?.checked || false,
+        ai_brand_voice: document.getElementById('ai_brand_voice')?.value || '',
+        ai_content_tone: document.getElementById('ai_content_tone')?.value || 'professional',
+        // Advanced AI Temperature & Configuration Settings
+        ai_cost_temperature: parseFloat(document.getElementById('ai_cost_temperature')?.value || 0.7),
+        ai_price_temperature: parseFloat(document.getElementById('ai_price_temperature')?.value || 0.7),
+        ai_cost_multiplier_base: parseFloat(document.getElementById('ai_cost_multiplier_base')?.value || 1.0),
+        ai_price_multiplier_base: parseFloat(document.getElementById('ai_price_multiplier_base')?.value || 1.0),
+        ai_conservative_mode: document.getElementById('ai_conservative_mode')?.checked || false,
+        ai_market_research_weight: parseFloat(document.getElementById('ai_market_research_weight')?.value || 0.3),
+        ai_cost_plus_weight: parseFloat(document.getElementById('ai_cost_plus_weight')?.value || 0.4),
+        ai_value_based_weight: parseFloat(document.getElementById('ai_value_based_weight')?.value || 0.3)
+    };
     
     try {
-        const promises = updates.map(update => 
-            fetch('/api/business_settings.php', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(update)
-            })
-        );
+        const response = await fetch('/api/ai_settings.php?action=update_settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        });
         
-        const responses = await Promise.all(promises);
-        const results = await Promise.all(responses.map(r => r.json()));
+        const result = await response.json();
         
-        const failed = results.filter(r => !r.success);
-        if (failed.length > 0) {
-            showAISettingsError('Some AI settings failed to save: ' + failed.map(f => f.error).join(', '));
-        } else {
+        if (result.success) {
             showAISettingsSuccess('AI settings saved successfully!');
+        } else {
+            showAISettingsError('Failed to save AI settings: ' + result.error);
         }
         
     } catch (error) {
@@ -2906,6 +3210,383 @@ function showAISettingsSuccess(message) {
 
 function showAISettingsError(message) {
     showNotification('AI Settings Error', message, 'error');
+}
+
+function displayAIProviders(providers) {
+    // Store providers data for reference
+    window.aiProviders = providers;
+}
+
+async function testAIProvider() {
+    const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'local';
+    
+    try {
+        showNotification('Testing AI Provider', `Testing ${selectedProvider} provider...`, 'info');
+        
+        const response = await fetch(`/api/ai_settings.php?action=test_provider&provider=${selectedProvider}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('AI Provider Test', `✅ ${selectedProvider} provider test successful!`, 'success');
+        } else {
+            showNotification('AI Provider Test', `❌ ${selectedProvider} provider test failed: ${result.message}`, 'error');
+        }
+        
+    } catch (error) {
+        showNotification('AI Provider Test', `❌ Test failed: ${error.message}`, 'error');
+    }
+}
+
+async function initializeAISettings() {
+    try {
+        showNotification('Initializing AI Settings', 'Setting up default AI configuration...', 'info');
+        
+        const response = await fetch('/api/ai_settings.php?action=init_ai_settings', {
+            method: 'POST'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('AI Settings Initialized', `✅ Initialized ${result.inserted} AI settings`, 'success');
+            // Reload the settings
+            loadAISettings();
+        } else {
+            showNotification('AI Settings Error', `❌ Failed to initialize: ${result.error}`, 'error');
+        }
+        
+    } catch (error) {
+        showNotification('AI Settings Error', `❌ Initialization failed: ${error.message}`, 'error');
+    }
+}
+
+// AI Model Loading Functions
+let availableModels = {};
+
+async function loadAllModels() {
+    try {
+        const response = await fetch('/api/get_ai_models.php?provider=all');
+        const result = await response.json();
+        
+        if (result.success) {
+            availableModels = result.models;
+            
+            // Populate all model dropdowns
+            populateModelDropdown('openai', availableModels.openai);
+            populateModelDropdown('anthropic', availableModels.anthropic);
+            populateModelDropdown('google', availableModels.google);
+            
+            console.log('✅ All AI models loaded successfully');
+        } else {
+            console.error('❌ Failed to load AI models:', result.error);
+            // Load fallback models
+            loadFallbackModels();
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading AI models:', error.message);
+        loadFallbackModels();
+    }
+}
+
+async function loadAllModelsWithSelection(settings) {
+    try {
+        const response = await fetch('/api/get_ai_models.php?provider=all');
+        const result = await response.json();
+        
+        if (result.success) {
+            availableModels = result.models;
+            
+            // Populate all model dropdowns with current selections
+            populateModelDropdownWithSelection('openai', availableModels.openai, settings.openai_model);
+            populateModelDropdownWithSelection('anthropic', availableModels.anthropic, settings.anthropic_model);
+            populateModelDropdownWithSelection('google', availableModels.google, settings.google_model);
+            
+            console.log('✅ All AI models loaded successfully with current selections');
+        } else {
+            console.error('❌ Failed to load AI models:', result.error);
+            // Load fallback models with selections
+            loadFallbackModelsWithSelection(settings);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading AI models:', error.message);
+        loadFallbackModelsWithSelection(settings);
+    }
+}
+
+async function loadModelsForCurrentProvider(settings) {
+    const selectedProvider = settings.ai_provider || 'local';
+    
+    // Local AI doesn't need model loading
+    if (selectedProvider === 'local') {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/get_ai_models.php?provider=${selectedProvider}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            availableModels[selectedProvider] = result.models;
+            
+            // Populate the specific provider's model dropdown
+            const modelKey = `${selectedProvider}_model`;
+            populateModelDropdownWithSelection(selectedProvider, result.models, settings[modelKey]);
+            
+            console.log(`✅ ${selectedProvider} models loaded successfully`);
+        } else {
+            console.error(`❌ Failed to load ${selectedProvider} models:`, result.error);
+            // Load fallback models for this provider
+            loadFallbackModelsForProviderWithSelection(selectedProvider, settings);
+        }
+        
+    } catch (error) {
+        console.error(`❌ Error loading ${selectedProvider} models:`, error.message);
+        loadFallbackModelsForProviderWithSelection(selectedProvider, settings);
+    }
+}
+
+async function refreshModels(provider) {
+    try {
+        showNotification('Refreshing Models', `Loading ${provider} models...`, 'info');
+        
+        const response = await fetch(`/api/get_ai_models.php?provider=${provider}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            availableModels[provider] = result.models;
+            populateModelDropdown(provider, result.models);
+            showNotification('Models Refreshed', `✅ ${provider} models updated`, 'success');
+        } else {
+            showNotification('Models Error', `❌ Failed to load ${provider} models: ${result.error}`, 'error');
+            // Load fallback for this provider
+            loadFallbackModelsForProvider(provider);
+        }
+        
+    } catch (error) {
+        showNotification('Models Error', `❌ Error loading ${provider} models: ${error.message}`, 'error');
+        loadFallbackModelsForProvider(provider);
+    }
+}
+
+function populateModelDropdown(provider, models) {
+    const selectElement = document.getElementById(`${provider}_model`);
+    if (!selectElement) return;
+    
+    // Get current selected value
+    const currentValue = selectElement.value;
+    
+    // Clear existing options
+    selectElement.innerHTML = '';
+    
+    if (!models || models.length === 0) {
+        selectElement.innerHTML = '<option value="">No models available</option>';
+        return;
+    }
+    
+    // Add model options
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = `${model.name} - ${model.description}`;
+        option.title = model.description; // Tooltip
+        selectElement.appendChild(option);
+    });
+    
+    // Restore previous selection if it exists in the new list
+    if (currentValue && selectElement.querySelector(`option[value="${currentValue}"]`)) {
+        selectElement.value = currentValue;
+    } else {
+        // Select first option as default
+        selectElement.selectedIndex = 0;
+    }
+}
+
+function populateModelDropdownWithSelection(provider, models, selectedValue) {
+    const selectElement = document.getElementById(`${provider}_model`);
+    if (!selectElement) return;
+    
+    // Clear existing options
+    selectElement.innerHTML = '';
+    
+    if (!models || models.length === 0) {
+        selectElement.innerHTML = '<option value="">No models available</option>';
+        return;
+    }
+    
+    // Add model options
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = `${model.name} - ${model.description}`;
+        option.title = model.description; // Tooltip
+        
+        // Select if this matches the saved setting
+        if (model.id === selectedValue) {
+            option.selected = true;
+        }
+        
+        selectElement.appendChild(option);
+    });
+    
+    // If no selection was made and we have models, select the first one
+    if (!selectedValue || !selectElement.querySelector(`option[value="${selectedValue}"]`)) {
+        selectElement.selectedIndex = 0;
+    }
+}
+
+function loadFallbackModels() {
+    // Fallback models when API is unavailable
+    const fallbackModels = {
+        openai: [
+            { id: 'gpt-4o', name: 'GPT-4o', description: 'Latest and most capable model' },
+            { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Fast and capable' },
+            { id: 'gpt-4', name: 'GPT-4', description: 'Highly capable model' },
+            { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast and affordable' }
+        ],
+        anthropic: [
+            { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: 'Most intelligent model' },
+            { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Fastest model' },
+            { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable for reasoning' },
+            { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanced performance' },
+            { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Fast and affordable' }
+        ],
+        google: [
+            { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Most capable Gemini model' },
+            { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
+            { id: 'gemini-pro', name: 'Gemini Pro', description: 'Balanced performance' },
+            { id: 'gemini-pro-vision', name: 'Gemini Pro Vision', description: 'Multimodal capabilities' }
+        ]
+    };
+    
+    availableModels = fallbackModels;
+    
+    populateModelDropdown('openai', fallbackModels.openai);
+    populateModelDropdown('anthropic', fallbackModels.anthropic);
+    populateModelDropdown('google', fallbackModels.google);
+    
+    console.log('⚠️ Using fallback models due to API unavailability');
+}
+
+function loadFallbackModelsForProvider(provider) {
+    const fallbackModels = {
+        openai: [
+            { id: 'gpt-4o', name: 'GPT-4o', description: 'Latest and most capable model' },
+            { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Fast and capable' },
+            { id: 'gpt-4', name: 'GPT-4', description: 'Highly capable model' },
+            { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast and affordable' }
+        ],
+        anthropic: [
+            { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: 'Most intelligent model' },
+            { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Fastest model' },
+            { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable for reasoning' },
+            { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanced performance' },
+            { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Fast and affordable' }
+        ],
+        google: [
+            { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Most capable Gemini model' },
+            { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
+            { id: 'gemini-pro', name: 'Gemini Pro', description: 'Balanced performance' },
+            { id: 'gemini-pro-vision', name: 'Gemini Pro Vision', description: 'Multimodal capabilities' }
+        ]
+    };
+    
+    if (fallbackModels[provider]) {
+        availableModels[provider] = fallbackModels[provider];
+        populateModelDropdown(provider, fallbackModels[provider]);
+        console.log(`⚠️ Using fallback models for ${provider} due to API unavailability`);
+    }
+}
+
+function loadFallbackModelsWithSelection(settings) {
+    // Fallback models when API is unavailable
+    const fallbackModels = {
+        openai: [
+            { id: 'gpt-4o', name: 'GPT-4o', description: 'Latest and most capable model' },
+            { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Fast and capable' },
+            { id: 'gpt-4', name: 'GPT-4', description: 'Highly capable model' },
+            { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast and affordable' }
+        ],
+        anthropic: [
+            { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: 'Most intelligent model' },
+            { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Fastest model' },
+            { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable for reasoning' },
+            { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanced performance' },
+            { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Fast and affordable' }
+        ],
+        google: [
+            { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Most capable Gemini model' },
+            { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
+            { id: 'gemini-pro', name: 'Gemini Pro', description: 'Balanced performance' },
+            { id: 'gemini-pro-vision', name: 'Gemini Pro Vision', description: 'Multimodal capabilities' }
+        ]
+    };
+    
+    availableModels = fallbackModels;
+    
+    populateModelDropdownWithSelection('openai', fallbackModels.openai, settings.openai_model);
+    populateModelDropdownWithSelection('anthropic', fallbackModels.anthropic, settings.anthropic_model);
+    populateModelDropdownWithSelection('google', fallbackModels.google, settings.google_model);
+    
+    console.log('⚠️ Using fallback models due to API unavailability');
+}
+
+function loadFallbackModelsForProviderWithSelection(provider, settings) {
+    const fallbackModels = {
+        openai: [
+            { id: 'gpt-4o', name: 'GPT-4o', description: 'Latest and most capable model' },
+            { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Fast and capable' },
+            { id: 'gpt-4', name: 'GPT-4', description: 'Highly capable model' },
+            { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast and affordable' }
+        ],
+        anthropic: [
+            { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: 'Most intelligent model' },
+            { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Fastest model' },
+            { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable for reasoning' },
+            { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', description: 'Balanced performance' },
+            { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', description: 'Fast and affordable' }
+        ],
+        google: [
+            { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Most capable Gemini model' },
+            { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
+            { id: 'gemini-pro', name: 'Gemini Pro', description: 'Balanced performance' },
+            { id: 'gemini-pro-vision', name: 'Gemini Pro Vision', description: 'Multimodal capabilities' }
+        ]
+    };
+    
+    if (fallbackModels[provider]) {
+        availableModels[provider] = fallbackModels[provider];
+        const modelKey = `${provider}_model`;
+        populateModelDropdownWithSelection(provider, fallbackModels[provider], settings[modelKey]);
+        console.log(`⚠️ Using fallback models for ${provider} due to API unavailability`);
+    }
+}
+
+// Toggle provider sections based on selection
+function toggleProviderSections() {
+    const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'local';
+    
+    // Hide all provider sections
+    const sections = ['openai_section', 'anthropic_section', 'google_section'];
+    sections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.style.display = 'none';
+        }
+    });
+    
+    // Show the selected provider section (if not local)
+    if (selectedProvider !== 'local') {
+        const activeSection = document.getElementById(`${selectedProvider}_section`);
+        if (activeSection) {
+            activeSection.style.display = 'block';
+            
+            // Load models for the selected provider if not already loaded
+            if (!availableModels[selectedProvider]) {
+                refreshModels(selectedProvider);
+            }
+        }
+    }
 }
 
 </script>
@@ -3182,13 +3863,13 @@ function showBackgroundMessage(message, type) {
     if (!messageDiv) {
         messageDiv = document.createElement('div');
         messageDiv.id = 'backgroundMessage';
-        messageDiv.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-medium z-50';
+        messageDiv.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-medium z-[9999]';
         document.body.appendChild(messageDiv);
     }
     
     // Set message and styling based on type
     messageDiv.textContent = message;
-    messageDiv.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-medium z-50';
+    messageDiv.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-medium z-[9999]';
     
     switch (type) {
         case 'success':
@@ -3214,42 +3895,120 @@ function showBackgroundMessage(message, type) {
 
 // Custom notification functions
 function showNotification(title, message, type = 'info') {
+    // First try the existing modal system
     const modal = document.getElementById('customNotificationModal');
-    const icon = document.getElementById('notificationIcon');
-    const titleEl = document.getElementById('notificationTitle');
-    const messageEl = document.getElementById('notificationMessage');
-    
-    // Set content
-    titleEl.textContent = title;
-    messageEl.textContent = message;
-    
-    // Set icon and styling based on type
-    switch (type) {
-        case 'success':
-            icon.textContent = '✅';
-            titleEl.className = 'text-lg font-semibold text-green-800';
-            break;
-        case 'error':
-            icon.textContent = '❌';
-            titleEl.className = 'text-lg font-semibold text-red-800';
-            break;
-        case 'warning':
-            icon.textContent = '⚠️';
-            titleEl.className = 'text-lg font-semibold text-yellow-800';
-            break;
-        case 'info':
-        default:
-            icon.textContent = 'ℹ️';
-            titleEl.className = 'text-lg font-semibold text-blue-800';
-            break;
+    if (modal) {
+        const icon = document.getElementById('notificationIcon');
+        const titleEl = document.getElementById('notificationTitle');
+        const messageEl = document.getElementById('notificationMessage');
+        
+        // Set content
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        
+        // Set icon and styling based on type
+        switch (type) {
+            case 'success':
+                icon.textContent = '✅';
+                titleEl.className = 'text-lg font-semibold text-green-800';
+                break;
+            case 'error':
+                icon.textContent = '❌';
+                titleEl.className = 'text-lg font-semibold text-red-800';
+                break;
+            case 'warning':
+                icon.textContent = '⚠️';
+                titleEl.className = 'text-lg font-semibold text-yellow-800';
+                break;
+            case 'info':
+            default:
+                icon.textContent = 'ℹ️';
+                titleEl.className = 'text-lg font-semibold text-blue-800';
+                break;
+        }
+        
+        // Force the modal to appear on top with inline styles
+        modal.style.display = 'flex';
+        modal.style.zIndex = '99999';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.right = '0';
+        modal.style.bottom = '0';
+        
+        // Auto-close after 3 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                closeCustomNotification();
+            }, 3000);
+        }
+    } else {
+        // Fallback: Create a simple toast notification
+        createToastNotification(title, message, type);
+    }
+}
+
+// Fallback toast notification function
+function createToastNotification(title, message, type = 'info') {
+    // Remove any existing toast
+    const existingToast = document.getElementById('fallbackToast');
+    if (existingToast) {
+        existingToast.remove();
     }
     
-    // Show modal
-    modal.style.display = 'flex';
+    const toast = document.createElement('div');
+    toast.id = 'fallbackToast';
+    toast.style.cssText = `
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        z-index: 999999 !important;
+        max-width: 400px !important;
+        background: white !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        padding: 16px !important;
+        border-left: 4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'} !important;
+        font-family: system-ui, -apple-system, sans-serif !important;
+        pointer-events: auto !important;
+    `;
+    
+    toast.innerHTML = `
+        <div style="display: flex; align-items: start; gap: 12px;">
+            <div style="font-size: 20px; flex-shrink: 0;">
+                ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">${title}</div>
+                <div style="color: #6b7280; font-size: 14px; line-height: 1.4;">${message}</div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" 
+                    style="background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">&times;</button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
 }
 
 function closeCustomNotification() {
-    document.getElementById('customNotificationModal').style.display = 'none';
+    const modal = document.getElementById('customNotificationModal');
+    if (modal) {
+        modal.style.display = 'none';
+        // Reset any inline styles we may have added
+        modal.style.zIndex = '';
+        modal.style.position = '';
+        modal.style.top = '';
+        modal.style.left = '';
+        modal.style.right = '';
+        modal.style.bottom = '';
+    }
 }
 
 // Custom confirmation dialog
@@ -3877,7 +4636,10 @@ function displayRoomSettingsList(rooms) {
         container.innerHTML = `
             <div class="text-center text-gray-500 py-8">
                 <p>No rooms found</p>
-                <button onclick="initializeRoomSettings()" class="mt-2 bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded">
+                <button onclick="initializeRoomSettings()" class="mt-2 bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded flex items-center text-left">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    </svg>
                     Initialize Room Settings
                 </button>
             </div>
@@ -3983,10 +4745,16 @@ function editRoomSettings(room) {
             </div>
             
             <div class="flex gap-3 pt-4 border-t">
-                <button type="submit" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-lg font-medium">
+                <button type="submit" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-lg font-medium flex items-center text-left">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                    </svg>
                     Save Changes
                 </button>
-                <button type="button" onclick="cancelRoomEdit()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-lg">
+                <button type="button" onclick="cancelRoomEdit()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-lg flex items-center text-left">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                     Cancel
                 </button>
             </div>
@@ -4071,7 +4839,7 @@ function showRoomSettingsError(message) {
     if (!notification) {
         notification = document.createElement('div');
         notification.id = 'roomSettingsNotification';
-        notification.className = 'fixed top-4 right-4 z-50 max-w-sm';
+        notification.className = 'fixed top-4 right-4 z-[9999] max-w-sm';
         document.body.appendChild(notification);
     }
     
@@ -4097,7 +4865,7 @@ function showRoomSettingsSuccess(message) {
     if (!notification) {
         notification = document.createElement('div');
         notification.id = 'roomSettingsNotification';
-        notification.className = 'fixed top-4 right-4 z-50 max-w-sm';
+        notification.className = 'fixed top-4 right-4 z-[9999] max-w-sm';
         document.body.appendChild(notification);
     }
     
@@ -4354,10 +5122,16 @@ function showRoomSettingsSuccess(message) {
 
                 <!-- Action Buttons -->
                 <div class="flex justify-end space-x-3 pt-4 border-t">
-                    <button type="button" onclick="closeEmailConfigModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+                    <button type="button" onclick="closeEmailConfigModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 flex items-center text-left">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 font-medium">
+                    <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 font-medium flex items-center text-left">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg>
                         Save Configuration
                     </button>
                 </div>
@@ -4367,7 +5141,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Custom Notification Modal -->
-<div id="customNotificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+<div id="customNotificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" style="display: none;">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
         <div class="p-6">
             <div class="flex items-center mb-4">
@@ -4376,7 +5150,10 @@ function showRoomSettingsSuccess(message) {
             </div>
             <p id="notificationMessage" class="text-gray-600 mb-6"></p>
             <div class="flex justify-end">
-                <button onclick="closeCustomNotification()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                <button onclick="closeCustomNotification()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center text-left">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
                     OK
                 </button>
             </div>
@@ -4471,7 +5248,10 @@ function showRoomSettingsSuccess(message) {
                                     <option value="">Select category...</option>
                                 </select>
                             </div>
-                            <button onclick="addAreaMapping()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
+                            <button onclick="addAreaMapping()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center text-left">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
                                 Add Mapping
                             </button>
                         </div>
@@ -4547,11 +5327,17 @@ function showRoomSettingsSuccess(message) {
             <!-- Database Action Buttons -->
             <div class="mb-4 p-3 bg-transparent rounded-lg">
                 <div class="flex items-center justify-center space-x-4">
-                    <button onclick="showDatabaseBackupModal()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors duration-200">
-                        🗄️ Backup Website Database
+                    <button onclick="showDatabaseBackupModal()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center text-left">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                        </svg>
+                        Backup Website Database
                     </button>
-                    <button onclick="compactRepairDatabase()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors duration-200">
-                        🔧 Compact & Repair Database
+                    <button onclick="compactRepairDatabase()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center text-left">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        </svg>
+                        Compact & Repair Database
                     </button>
                 </div>
             </div>
@@ -6215,7 +7001,7 @@ async function generateAndApplyCSS() {
 
 function showAlert(message, type = 'info') {
     const alertDiv = document.createElement('div');
-    alertDiv.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg ${
+    alertDiv.className = `fixed top-4 right-4 z-[9999] px-4 py-3 rounded-lg shadow-lg ${
         type === 'success' ? 'bg-green-500 text-white' : 
         type === 'error' ? 'bg-red-500 text-white' : 
         'bg-blue-500 text-white'
@@ -6320,8 +7106,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         Cancel
                     </button>
                     <button onclick="saveGlobalCSSRules()" 
-                            class="btn-primary text-sm">
-                        💾 Save Changes
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium flex items-center text-left">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg>
+                        Save Changes
                     </button>
                 </div>
             </div>
@@ -6376,8 +7165,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mb-6">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="text-lg font-semibold text-gray-800">Cost Breakdown Templates</h4>
-                            <button onclick="createNewCostTemplate()" class="btn-primary text-sm">
-                                + Create New Template
+                            <button onclick="createNewCostTemplate()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Create New Template
                             </button>
                         </div>
                         
@@ -7096,7 +7888,12 @@ function displayCategoriesData(categories) {
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Add New Category</h3>
             <form id="addCategoryForm" class="flex gap-2" onsubmit="addCategory(event)">
                 <input type="text" id="newCategory" name="newCategory" placeholder="Enter category name..." class="border border-gray-300 rounded p-2 flex-grow" required>
-                <button type="submit" class="btn-primary px-4 py-2 rounded">Add Category</button>
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium flex items-center text-left">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Category
+                </button>
             </form>
         </div>
 
@@ -7133,7 +7930,12 @@ function displayCategoriesData(categories) {
             html += `
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium text-gray-900">${cat}</div>
+                        <div class="editable-category font-medium text-gray-900 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors" 
+                             data-original="${cat}" 
+                             onclick="startEditCategory(this)" 
+                             title="Click to edit category name">
+                            ${cat}
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">${code}</span>
@@ -7217,6 +8019,90 @@ async function deleteCategory(categoryName) {
         console.error('Error deleting category:', error);
         showNotification('Error', 'Failed to delete category', 'error');
     }
+}
+
+function startEditCategory(element) {
+    const originalName = element.dataset.original;
+    const currentName = element.textContent.trim();
+    
+    // Create input field
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.className = 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-green-500';
+    input.dataset.original = originalName;
+    
+    // Replace the div with input
+    element.innerHTML = '';
+    element.appendChild(input);
+    element.onclick = null; // Remove click handler temporarily
+    
+    // Focus and select text
+    input.focus();
+    input.select();
+    
+    // Handle save on Enter or blur
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            saveCategoryEdit(element, input);
+        } else if (e.key === 'Escape') {
+            cancelCategoryEdit(element, originalName);
+        }
+    });
+    
+    input.addEventListener('blur', function() {
+        saveCategoryEdit(element, input);
+    });
+}
+
+async function saveCategoryEdit(element, input) {
+    const originalName = input.dataset.original;
+    const newName = input.value.trim();
+    
+    if (newName === '') {
+        showNotification('Error', 'Category name cannot be empty', 'error');
+        cancelCategoryEdit(element, originalName);
+        return;
+    }
+    
+    if (newName === originalName) {
+        // No change, just restore
+        cancelCategoryEdit(element, originalName);
+        return;
+    }
+    
+    try {
+        const response = await fetch('/process_category_action.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=update&oldName=${encodeURIComponent(originalName)}&newName=${encodeURIComponent(newName)}`
+        });
+        
+        const result = await response.text();
+        
+        if (result.includes('successfully')) {
+            // Update the display
+            element.textContent = newName;
+            element.dataset.original = newName;
+            element.onclick = function() { startEditCategory(element); };
+            
+            showNotification('Category Updated', `Category renamed from "${originalName}" to "${newName}"`, 'success');
+        } else {
+            showNotification('Error', 'Failed to update category', 'error');
+            cancelCategoryEdit(element, originalName);
+        }
+    } catch (error) {
+        console.error('Error updating category:', error);
+        showNotification('Error', 'Failed to update category', 'error');
+        cancelCategoryEdit(element, originalName);
+    }
+}
+
+function cancelCategoryEdit(element, originalName) {
+    element.textContent = originalName;
+    element.onclick = function() { startEditCategory(element); };
 }
 </script>
 

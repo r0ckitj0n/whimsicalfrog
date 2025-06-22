@@ -61,7 +61,7 @@ if ($isLoggedIn) {
     // If still logged in after processing and data is valid
     if ($isLoggedIn && $processedUserData !== null) {
         $userData = $processedUserData; 
-        $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
+        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
         
         // Welcome message with user's name if available
         if (isset($userData['firstName']) || isset($userData['lastName'])) {

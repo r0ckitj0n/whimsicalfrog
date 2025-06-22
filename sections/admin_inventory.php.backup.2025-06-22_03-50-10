@@ -515,30 +515,6 @@ $messageType = $_GET['type'] ?? '';
     z-index: 2147483648 !important;
     position: relative !important;
 }
-
-/* Custom scrollbar styles for cost suggestion modal */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #f7fafc;
-    border-radius: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 4px;
-    border: 1px solid #e2e8f0;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-}
-
-.custom-scrollbar::-webkit-scrollbar-corner {
-    background: #f7fafc;
-}
 </style>
 
 <div class="container mx-auto px-4 py-2">
@@ -1124,25 +1100,22 @@ $messageType = $_GET['type'] ?? '';
 <div id="deleteCostConfirmModal" class="cost-modal">
 
 <!-- Marketing Manager Modal -->
-<div id="marketingManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="z-index: 2147483647; display: none;">
+<div id="marketingManagerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4" style="z-index: 2147483647;">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
         <!-- Modal Header -->
-        <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 flex justify-between items-center flex-shrink-0" style="background: linear-gradient(to right, #87ac3a, #6b8e23);">
-            <div class="flex items-center">
-                <h2 class="text-xl font-bold text-white mr-3">🎯 Marketing Manager</h2>
-                <span class="text-green-100 text-sm font-medium px-2 py-1 bg-green-800 bg-opacity-30 rounded">Currently editing: <span id="currentEditingSku"></span></span>
-            </div>
-            <button onclick="closeMarketingManager()" class="text-white hover:text-green-200 text-2xl font-bold transition-colors duration-200">&times;</button>
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex justify-between items-center flex-shrink-0">
+            <h2 class="text-xl font-bold text-white">🎯 Marketing Manager</h2>
+            <button onclick="closeMarketingManager()" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
         </div>
         
         <!-- Tab Navigation -->
-        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-3 border-b border-gray-200 flex-shrink-0">
+        <div class="bg-gray-50 px-6 py-2 border-b flex-shrink-0">
             <div class="flex space-x-4 overflow-x-auto">
-                <button id="contentTab" class="marketing-tab px-4 py-2 rounded-lg bg-white text-green-600 border-2 border-green-600 font-semibold whitespace-nowrap shadow-sm transition-all duration-200 hover:bg-green-50" onclick="showMarketingManagerTab('content')">📝 Content</button>
-                <button id="audienceTab" class="marketing-tab px-4 py-2 rounded-lg text-gray-600 border-2 border-gray-300 hover:text-green-600 hover:border-green-300 whitespace-nowrap transition-all duration-200 hover:bg-gray-50" onclick="showMarketingManagerTab('audience')">👥 Target Audience</button>
-                <button id="sellingTab" class="marketing-tab px-4 py-2 rounded-lg text-gray-600 border-2 border-gray-300 hover:text-green-600 hover:border-green-300 whitespace-nowrap transition-all duration-200 hover:bg-gray-50" onclick="showMarketingManagerTab('selling')">⭐ Selling Points</button>
-                <button id="seoTab" class="marketing-tab px-4 py-2 rounded-lg text-gray-600 border-2 border-gray-300 hover:text-green-600 hover:border-green-300 whitespace-nowrap transition-all duration-200 hover:bg-gray-50" onclick="showMarketingManagerTab('seo')">🔍 SEO & Keywords</button>
-                <button id="conversionTab" class="marketing-tab px-4 py-2 rounded-lg text-gray-600 border-2 border-gray-300 hover:text-green-600 hover:border-green-300 whitespace-nowrap transition-all duration-200 hover:bg-gray-50" onclick="showMarketingManagerTab('conversion')">💰 Conversion</button>
+                <button id="contentTab" class="marketing-tab px-4 py-2 rounded-t-lg bg-white text-purple-600 border-b-2 border-purple-600 font-semibold whitespace-nowrap" onclick="showMarketingManagerTab('content')">Content</button>
+                <button id="audienceTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600 whitespace-nowrap" onclick="showMarketingManagerTab('audience')">Target Audience</button>
+                <button id="sellingTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600 whitespace-nowrap" onclick="showMarketingManagerTab('selling')">Selling Points</button>
+                <button id="seoTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600 whitespace-nowrap" onclick="showMarketingManagerTab('seo')">SEO & Keywords</button>
+                <button id="conversionTab" class="marketing-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-purple-600 whitespace-nowrap" onclick="showMarketingManagerTab('conversion')">Conversion</button>
             </div>
         </div>
         
@@ -1154,88 +1127,15 @@ $messageType = $_GET['type'] ?? '';
         </div>
         
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex justify-between items-center flex-shrink-0">
-            <div class="flex items-center text-sm text-gray-600">
-                <span class="mr-2">💡</span>
-                <span>Use AI to automatically generate marketing content for all tabs</span>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center flex-shrink-0">
+            <div class="text-sm text-gray-600">
+                💡 Use AI to automatically generate marketing content for all tabs
             </div>
             <div class="flex space-x-3">
                 <button onclick="closeMarketingManager()" 
-                        class="px-6 py-2 text-sm font-medium text-white rounded-md transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                        style="background: linear-gradient(to right, #87ac3a, #6b8e23); border: none;">
-                    ✓ Close
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    Close
                 </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- AI Content Comparison Modal -->
-<div id="aiComparisonModal" class="fixed inset-0 bg-black bg-opacity-50 z-[70] hidden flex items-center justify-center p-2 sm:p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
-        <!-- Fixed Header -->
-        <div class="bg-gradient-to-r from-green-600 to-blue-600 px-4 sm:px-6 py-4 flex justify-between items-center flex-shrink-0">
-            <h2 class="text-lg sm:text-xl font-bold text-white">🤖 AI Content Comparison & Selection</h2>
-            <button onclick="closeAIComparisonModal()" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
-        </div>
-        
-        <!-- AI Analysis Progress Section (Collapsible) -->
-        <div id="aiAnalysisProgressSection" class="bg-gradient-to-r from-blue-50 to-purple-50 border-b flex-shrink-0 transition-all duration-500 overflow-hidden" style="max-height: 200px;">
-            <div class="px-4 sm:px-6 py-4">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2">
-                        <div id="aiProgressSpinner" class="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-                        <span class="text-sm font-semibold text-gray-800">AI Analysis in Progress</span>
-                    </div>
-                    <span id="aiProgressText" class="text-xs text-gray-600">Initializing...</span>
-                </div>
-                
-                <!-- Progress Bar -->
-                <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
-                    <div id="aiProgressBar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-                
-                <!-- Detailed Progress Steps -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                    <div id="step1-analyze" class="flex items-center gap-1 p-2 rounded bg-white/50">
-                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-                        <span>Analyzing Content</span>
-                    </div>
-                    <div id="step2-extract-insights" class="flex items-center gap-1 p-2 rounded bg-white/50">
-                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-                        <span>Extracting Insights</span>
-                    </div>
-                    <div id="step3-generate-content" class="flex items-center gap-1 p-2 rounded bg-white/50">
-                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-                        <span>Generating Content</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Scrollable Content Area -->
-        <div class="flex-1 overflow-y-scroll min-h-0">
-            <div class="p-4 sm:p-6">
-                <div id="aiComparisonContent" class="space-y-4">
-                    <div class="text-center text-gray-500 py-8">AI analysis in progress...</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Fixed Footer -->
-        <div class="bg-gray-50 px-4 sm:px-6 py-4 border-t flex-shrink-0">
-            <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-600">
-                    <span id="statusText">Ready to generate AI content...</span>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="applySelectedChanges()" id="applyChangesBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium hidden">
-                        Apply Selected Changes
-                    </button>
-                    <button onclick="closeAIComparisonModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium">
-                        Close
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -1820,8 +1720,7 @@ function updateTotalsDisplay(totals) {
 }
 
 function showCostSuggestionChoiceDialog(suggestionData) {
-    // Get current cost breakdown values for comparison
-    const currentCosts = getCurrentCostBreakdown();
+    // Check if there are existing cost breakdown items
     const hasExistingCosts = checkForExistingCosts();
     
     // Create the modal overlay
@@ -1830,14 +1729,14 @@ function showCostSuggestionChoiceDialog(suggestionData) {
     modal.id = 'costSuggestionChoiceModal';
     
     modal.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="bg-gradient-to-r from-blue-600 to-green-600 px-6 py-4 flex-shrink-0">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-blue-600 to-green-600 px-6 py-4">
                 <h2 class="text-xl font-bold text-white flex items-center">
-                    🧮 AI Cost Suggestion - Side by Side Comparison
+                    🧮 AI Cost Suggestion Ready
                 </h2>
             </div>
             
-            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
+            <div class="p-6">
                 <!-- AI Analysis Summary -->
                 <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <h3 class="font-semibold text-gray-800 mb-2 flex items-center">
@@ -1850,172 +1749,64 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                     </div>
                 </div>
                 
-                <!-- Side by Side Comparison -->
+                <!-- Cost Breakdown Preview -->
                 <div class="mb-6">
-                    <h3 class="font-semibold text-gray-800 mb-3">💰 Cost Breakdown Comparison</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Current Values Column -->
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <h4 class="font-semibold text-gray-700 mb-3 text-center">📊 Current Values</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center p-2 bg-white rounded border">
-                                    <span class="text-sm font-medium text-gray-600">Materials:</span>
-                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.materials || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center p-2 bg-white rounded border">
-                                    <span class="text-sm font-medium text-gray-600">Labor:</span>
-                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.labor || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center p-2 bg-white rounded border">
-                                    <span class="text-sm font-medium text-gray-600">Energy:</span>
-                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.energy || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center p-2 bg-white rounded border">
-                                    <span class="text-sm font-medium text-gray-600">Equipment:</span>
-                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.equipment || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-gray-100 rounded border-2 border-gray-300">
-                                    <span class="font-semibold text-gray-700">Total:</span>
-                                    <span class="text-lg font-bold text-gray-800">$${parseFloat(currentCosts.total || 0).toFixed(2)}</span>
-                                </div>
-                            </div>
+                    <h3 class="font-semibold text-gray-800 mb-3">💰 Suggested Cost Breakdown</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-red-50 p-3 rounded border border-red-200">
+                            <div class="text-xs text-red-600 font-medium">Materials</div>
+                            <div class="text-lg font-bold text-red-800">$${parseFloat(suggestionData.breakdown.materials || 0).toFixed(2)}</div>
                         </div>
-                        
-                        <!-- AI Suggested Values Column -->
-                        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                            <h4 class="font-semibold text-green-700 mb-3 text-center">🤖 AI Suggested Values</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center p-2 bg-white rounded border border-green-200">
-                                    <span class="text-sm font-medium text-green-600">Materials:</span>
-                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.materials || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center p-2 bg-white rounded border border-green-200">
-                                    <span class="text-sm font-medium text-green-600">Labor:</span>
-                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.labor || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center p-2 bg-white rounded border border-green-200">
-                                    <span class="text-sm font-medium text-green-600">Energy:</span>
-                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.energy || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center p-2 bg-white rounded border border-green-200">
-                                    <span class="text-sm font-medium text-green-600">Equipment:</span>
-                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.equipment || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-green-100 rounded border-2 border-green-300">
-                                    <span class="font-semibold text-green-700">Total:</span>
-                                    <span class="text-lg font-bold text-green-800">$${parseFloat(suggestionData.suggestedCost).toFixed(2)}</span>
-                                </div>
-                            </div>
+                        <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                            <div class="text-xs text-blue-600 font-medium">Labor</div>
+                            <div class="text-lg font-bold text-blue-800">$${parseFloat(suggestionData.breakdown.labor || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="bg-yellow-50 p-3 rounded border border-yellow-200">
+                            <div class="text-xs text-yellow-600 font-medium">Energy</div>
+                            <div class="text-lg font-bold text-yellow-800">$${parseFloat(suggestionData.breakdown.energy || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="bg-purple-50 p-3 rounded border border-purple-200">
+                            <div class="text-xs text-purple-600 font-medium">Equipment</div>
+                            <div class="text-lg font-bold text-purple-800">$${parseFloat(suggestionData.breakdown.equipment || 0).toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 bg-green-50 rounded border border-green-200">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-green-800">Total Cost:</span>
+                            <span class="text-xl font-bold text-green-800">$${parseFloat(suggestionData.suggestedCost).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Individual Field Selection -->
-                <div class="mb-6">
-                    <h3 class="font-semibold text-gray-800 mb-3">🎯 Choose Which Values to Apply</h3>
-                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
-                        <p class="text-sm text-yellow-800">
-                            <span class="font-semibold">💡 Pro Tip:</span> Select individual fields below to apply only the AI suggestions you want to keep. 
-                            Unselected fields will retain their current values.
+                ${hasExistingCosts ? `
+                    <div class="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <div class="flex items-center mb-2">
+                            <span class="text-amber-600 mr-2">⚠️</span>
+                            <span class="font-medium text-amber-800">Existing Cost Data Found</span>
+                        </div>
+                        <p class="text-sm text-amber-700">
+                            You have existing cost breakdown items. If you choose to use the new figures, 
+                            your current cost data will be cleared and replaced with the AI suggestions.
                         </p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-3">
-                            <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                                <input type="checkbox" id="applyMaterials" class="mr-3 text-green-600 focus:ring-green-500" 
-                                       ${Math.abs(parseFloat(currentCosts.materials || 0) - parseFloat(suggestionData.breakdown.materials || 0)) > 0.01 ? 'checked' : ''}>
-                                <div class="flex-1">
-                                    <div class="font-medium text-gray-800">Materials Cost</div>
-                                    <div class="text-sm text-gray-600">
-                                        ${parseFloat(currentCosts.materials || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.materials || 0).toFixed(2)}
-                                        <span class="ml-2 text-xs ${parseFloat(suggestionData.breakdown.materials || 0) > parseFloat(currentCosts.materials || 0) ? 'text-red-600' : 'text-green-600'}">
-                                            (${parseFloat(suggestionData.breakdown.materials || 0) > parseFloat(currentCosts.materials || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.materials || 0) - parseFloat(currentCosts.materials || 0)).toFixed(2)})
-                                        </span>
-                                    </div>
-                                </div>
-                            </label>
-                            
-                            <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                                <input type="checkbox" id="applyLabor" class="mr-3 text-green-600 focus:ring-green-500"
-                                       ${Math.abs(parseFloat(currentCosts.labor || 0) - parseFloat(suggestionData.breakdown.labor || 0)) > 0.01 ? 'checked' : ''}>
-                                <div class="flex-1">
-                                    <div class="font-medium text-gray-800">Labor Cost</div>
-                                    <div class="text-sm text-gray-600">
-                                        $${parseFloat(currentCosts.labor || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.labor || 0).toFixed(2)}
-                                        <span class="ml-2 text-xs ${parseFloat(suggestionData.breakdown.labor || 0) > parseFloat(currentCosts.labor || 0) ? 'text-red-600' : 'text-green-600'}">
-                                            (${parseFloat(suggestionData.breakdown.labor || 0) > parseFloat(currentCosts.labor || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.labor || 0) - parseFloat(currentCosts.labor || 0)).toFixed(2)})
-                                        </span>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                        
-                        <div class="space-y-3">
-                            <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                                <input type="checkbox" id="applyEnergy" class="mr-3 text-green-600 focus:ring-green-500"
-                                       ${Math.abs(parseFloat(currentCosts.energy || 0) - parseFloat(suggestionData.breakdown.energy || 0)) > 0.01 ? 'checked' : ''}>
-                                <div class="flex-1">
-                                    <div class="font-medium text-gray-800">Energy Cost</div>
-                                    <div class="text-sm text-gray-600">
-                                        $${parseFloat(currentCosts.energy || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.energy || 0).toFixed(2)}
-                                        <span class="ml-2 text-xs ${parseFloat(suggestionData.breakdown.energy || 0) > parseFloat(currentCosts.energy || 0) ? 'text-red-600' : 'text-green-600'}">
-                                            (${parseFloat(suggestionData.breakdown.energy || 0) > parseFloat(currentCosts.energy || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.energy || 0) - parseFloat(currentCosts.energy || 0)).toFixed(2)})
-                                        </span>
-                                    </div>
-                                </div>
-                            </label>
-                            
-                            <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                                <input type="checkbox" id="applyEquipment" class="mr-3 text-green-600 focus:ring-green-500"
-                                       ${Math.abs(parseFloat(currentCosts.equipment || 0) - parseFloat(suggestionData.breakdown.equipment || 0)) > 0.01 ? 'checked' : ''}>
-                                <div class="flex-1">
-                                    <div class="font-medium text-gray-800">Equipment Cost</div>
-                                    <div class="text-sm text-gray-600">
-                                        $${parseFloat(currentCosts.equipment || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.equipment || 0).toFixed(2)}
-                                        <span class="ml-2 text-xs ${parseFloat(suggestionData.breakdown.equipment || 0) > parseFloat(currentCosts.equipment || 0) ? 'text-red-600' : 'text-green-600'}">
-                                            (${parseFloat(suggestionData.breakdown.equipment || 0) > parseFloat(currentCosts.equipment || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.equipment || 0) - parseFloat(currentCosts.equipment || 0)).toFixed(2)})
-                                        </span>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Quick Select Options -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <h4 class="font-medium text-gray-800 mb-3">⚡ Quick Select Options</h4>
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="selectAllCostFields(true)" class="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
-                            ✅ Select All
-                        </button>
-                        <button onclick="selectAllCostFields(false)" class="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors">
-                            ❌ Select None
-                        </button>
-                        <button onclick="selectOnlyHigherValues()" class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
-                            📈 Only Higher Values
-                        </button>
-                        <button onclick="selectOnlyLowerValues()" class="px-3 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
-                            📉 Only Lower Values
-                        </button>
-                    </div>
-                </div>
+                ` : ''}
                 
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <button onclick="applySelectedCostFields(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                    <button onclick="applySuggestedCostBreakdown(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                             class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
-                        🎯 Apply Selected Changes
+                        🎯 Use New AI Figures ${hasExistingCosts ? '(Replace Current)' : ''}
                     </button>
                     
+
                     <button onclick="closeCostSuggestionChoiceDialog()" 
                             class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200">
-                        ❌ Cancel
+                        ❌ Keep Current Figures
                     </button>
                 </div>
                 
                 <div class="mt-4 text-xs text-gray-500 text-center">
-                    💡 Tip: Only selected fields will be updated. Unselected fields keep their current values.
+                    💡 Tip: You can always generate new suggestions later if needed
                 </div>
             </div>
         </div>
@@ -2038,47 +1829,6 @@ function showCostSuggestionChoiceDialog(suggestionData) {
     });
 }
 
-function getCurrentCostBreakdown() {
-    // Get current cost totals from the displayed values
-    const currentCosts = {
-        materials: 0,
-        labor: 0,
-        energy: 0,
-        equipment: 0,
-        total: 0
-    };
-    
-    // Try to get values from totals display elements
-    const materialsTotal = document.getElementById('materialsTotalDisplay');
-    const laborTotal = document.getElementById('laborTotalDisplay');
-    const energyTotal = document.getElementById('energyTotalDisplay');
-    const equipmentTotal = document.getElementById('equipmentTotalDisplay');
-    const suggestedTotal = document.getElementById('suggestedCostDisplay');
-    
-    if (materialsTotal) {
-        currentCosts.materials = parseFloat(materialsTotal.textContent.replace('$', '')) || 0;
-    }
-    if (laborTotal) {
-        currentCosts.labor = parseFloat(laborTotal.textContent.replace('$', '')) || 0;
-    }
-    if (energyTotal) {
-        currentCosts.energy = parseFloat(energyTotal.textContent.replace('$', '')) || 0;
-    }
-    if (equipmentTotal) {
-        currentCosts.equipment = parseFloat(equipmentTotal.textContent.replace('$', '')) || 0;
-    }
-    if (suggestedTotal) {
-        currentCosts.total = parseFloat(suggestedTotal.textContent.replace('$', '')) || 0;
-    }
-    
-    // If no total from display, calculate it
-    if (currentCosts.total === 0) {
-        currentCosts.total = currentCosts.materials + currentCosts.labor + currentCosts.energy + currentCosts.equipment;
-    }
-    
-    return currentCosts;
-}
-
 function checkForExistingCosts() {
     // Check if there are any existing cost breakdown items
     const categories = ['materials', 'labor', 'energy', 'equipment'];
@@ -2094,172 +1844,6 @@ function checkForExistingCosts() {
     }
     
     return false;
-}
-
-// Quick select functions for cost field selection
-function selectAllCostFields(selectAll) {
-    const checkboxes = ['applyMaterials', 'applyLabor', 'applyEnergy', 'applyEquipment'];
-    checkboxes.forEach(id => {
-        const checkbox = document.getElementById(id);
-        if (checkbox) checkbox.checked = selectAll;
-    });
-}
-
-function selectOnlyHigherValues() {
-    // This function will be called with current data available in the modal context
-    // We need to parse the suggestion data from the button
-    const modal = document.getElementById('costSuggestionChoiceModal');
-    if (!modal) return;
-    
-    const button = modal.querySelector('[data-suggestion]');
-    if (!button) return;
-    
-    try {
-        const suggestionData = JSON.parse(button.getAttribute('data-suggestion').replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
-        const currentCosts = getCurrentCostBreakdown();
-        
-        // Select only fields where AI suggestion is higher than current
-        document.getElementById('applyMaterials').checked = 
-            parseFloat(suggestionData.breakdown.materials || 0) > parseFloat(currentCosts.materials || 0);
-        document.getElementById('applyLabor').checked = 
-            parseFloat(suggestionData.breakdown.labor || 0) > parseFloat(currentCosts.labor || 0);
-        document.getElementById('applyEnergy').checked = 
-            parseFloat(suggestionData.breakdown.energy || 0) > parseFloat(currentCosts.energy || 0);
-        document.getElementById('applyEquipment').checked = 
-            parseFloat(suggestionData.breakdown.equipment || 0) > parseFloat(currentCosts.equipment || 0);
-    } catch (e) {
-        console.error('Error in selectOnlyHigherValues:', e);
-    }
-}
-
-function selectOnlyLowerValues() {
-    // This function will be called with current data available in the modal context
-    const modal = document.getElementById('costSuggestionChoiceModal');
-    if (!modal) return;
-    
-    const button = modal.querySelector('[data-suggestion]');
-    if (!button) return;
-    
-    try {
-        const suggestionData = JSON.parse(button.getAttribute('data-suggestion').replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
-        const currentCosts = getCurrentCostBreakdown();
-        
-        // Select only fields where AI suggestion is lower than current
-        document.getElementById('applyMaterials').checked = 
-            parseFloat(suggestionData.breakdown.materials || 0) < parseFloat(currentCosts.materials || 0);
-        document.getElementById('applyLabor').checked = 
-            parseFloat(suggestionData.breakdown.labor || 0) < parseFloat(currentCosts.labor || 0);
-        document.getElementById('applyEnergy').checked = 
-            parseFloat(suggestionData.breakdown.energy || 0) < parseFloat(currentCosts.energy || 0);
-        document.getElementById('applyEquipment').checked = 
-            parseFloat(suggestionData.breakdown.equipment || 0) < parseFloat(currentCosts.equipment || 0);
-    } catch (e) {
-        console.error('Error in selectOnlyLowerValues:', e);
-    }
-}
-
-// Apply only selected cost fields
-function applySelectedCostFields(button) {
-    try {
-        const suggestionData = JSON.parse(button.getAttribute('data-suggestion').replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
-        
-        // Get which fields are selected
-        const applyMaterials = document.getElementById('applyMaterials').checked;
-        const applyLabor = document.getElementById('applyLabor').checked;
-        const applyEnergy = document.getElementById('applyEnergy').checked;
-        const applyEquipment = document.getElementById('applyEquipment').checked;
-        
-        // Create a modified suggestion data with only selected fields
-        const selectedData = {
-            ...suggestionData,
-            breakdown: {
-                materials: applyMaterials ? suggestionData.breakdown.materials : null,
-                labor: applyLabor ? suggestionData.breakdown.labor : null,
-                energy: applyEnergy ? suggestionData.breakdown.energy : null,
-                equipment: applyEquipment ? suggestionData.breakdown.equipment : null
-            },
-            selectedFields: {
-                materials: applyMaterials,
-                labor: applyLabor,
-                energy: applyEnergy,
-                equipment: applyEquipment
-            }
-        };
-        
-        // Close the dialog
-        closeCostSuggestionChoiceDialog();
-        
-        // Apply the selected changes
-        applySelectedCostBreakdown(selectedData);
-        
-    } catch (e) {
-        console.error('Error applying selected cost fields:', e);
-        showToast('Error applying selected cost fields. Please try again.', 'error');
-    }
-}
-
-// Apply selected cost breakdown (modified version)
-function applySelectedCostBreakdown(selectedData) {
-    console.log('Applying selected cost breakdown:', selectedData);
-    
-    // Show loading state
-    showToast('Applying selected cost changes...', 'info');
-    
-    // Clear existing cost breakdown if any fields are selected
-    const hasSelections = selectedData.selectedFields.materials || 
-                         selectedData.selectedFields.labor || 
-                         selectedData.selectedFields.energy || 
-                         selectedData.selectedFields.equipment;
-    
-    if (hasSelections) {
-        // Apply only selected fields
-        const categories = ['materials', 'labor', 'energy', 'equipment'];
-        
-        categories.forEach(category => {
-            if (selectedData.selectedFields[category] && selectedData.breakdown[category] !== null) {
-                // Add a cost item for this category with the AI suggested value
-                const cost = parseFloat(selectedData.breakdown[category]);
-                if (cost > 0) {
-                    addCostItemDirectly(category, `AI Suggested ${category.charAt(0).toUpperCase() + category.slice(1)}`, cost);
-                }
-            }
-        });
-        
-        // Refresh the cost breakdown display
-        setTimeout(() => {
-            refreshCostBreakdown();
-            showToast('Selected cost fields applied successfully!', 'success');
-        }, 500);
-    } else {
-        showToast('No fields were selected to apply.', 'warning');
-    }
-}
-
-// Helper function to add cost item directly
-function addCostItemDirectly(type, description, cost) {
-    const url = `process_cost_breakdown.php`;
-    const formData = new FormData();
-    formData.append('inventoryId', currentItemSku);
-    formData.append('costType', type);
-    formData.append('description', description);
-    formData.append('cost', cost.toFixed(2));
-    
-    fetch(url, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (!result.success) {
-            console.error(`Failed to add ${type} cost:`, result.error);
-        }
-    })
-    .catch(error => {
-        console.error(`Error adding ${type} cost:`, error);
-    });
 }
 
 function closeCostSuggestionChoiceDialog() {
@@ -2433,6 +2017,8 @@ async function applySuggestedCostBreakdown(buttonElement) {
         showToast('error', 'Failed to apply cost breakdown');
     }
 }
+
+
 
 async function useSuggestedCost() {
     const nameField = document.getElementById('name');
@@ -2698,6 +2284,8 @@ function applyCostSuggestionToCost() {
         showToast('error', 'Cost suggestion elements not found. Please refresh the page.');
     }
 }
+
+
 
 async function getPricingExplanation(reasoningText) {
     try {
@@ -4955,6 +4543,8 @@ function normalizeCarouselImageHeights(trackId) {
     });
 }
 
+
+
 // Function to save inline edits
 function saveInlineEdit(itemSku, field, newValue, cell, originalValue) {
     const formData = new FormData();
@@ -5567,19 +5157,24 @@ function openMarketingManager() {
         return;
     }
     
-    // Get the modal
-    const modal = document.getElementById('marketingManagerModal');
-    console.log('Marketing Manager: Modal element found:', !!modal);
+    // Hide the edit modal if present
+    const editModal = document.querySelector('.modal-outer');
+    if (editModal) {
+        console.log('Marketing Manager: Found edit modal, hiding it temporarily');
+        editModal.style.display = 'none';
+    }
     
+    // Get the original Marketing Manager modal
+    const modal = document.getElementById('marketingManagerModal');
     if (!modal) {
         console.error('Marketing Manager modal not found');
         return;
     }
     
-    // Remove any existing classes that might hide it
-    modal.className = '';
+    // Remove hidden class first
+    showMarketingModal();
     
-    // Professional styling with guaranteed visibility
+    // Apply the WORKING modal approach (same as the successful new modal)
     modal.style.cssText = `
         position: fixed !important;
         top: 0 !important;
@@ -5588,59 +5183,86 @@ function openMarketingManager() {
         bottom: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
-        background: rgba(0, 0, 0, 0.75) !important;
+        background-color: rgba(0, 0, 0, 0.8) !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        z-index: 50000 !important;
+        z-index: 2147483647 !important;
         visibility: visible !important;
         opacity: 1 !important;
-        padding: 1rem !important;
+        pointer-events: auto !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
     `;
     
-    // Professional modal content styling
+    // Apply working styling to the modal content
     const modalContent = modal.querySelector('.bg-white');
     if (modalContent) {
         modalContent.style.cssText = `
             background: white !important;
-            border-radius: 0.75rem !important;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
+            border-radius: 8px !important;
             width: 100% !important;
-            max-width: 72rem !important;
-            max-height: 95vh !important;
+            max-width: 1200px !important;
+            height: 90vh !important;
             display: flex !important;
             flex-direction: column !important;
-            overflow: hidden !important;
             visibility: visible !important;
             opacity: 1 !important;
+            pointer-events: auto !important;
             position: relative !important;
-            z-index: 50001 !important;
+            z-index: 2147483647 !important;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3) !important;
+            overflow: hidden !important;
         `;
-        console.log('Marketing Manager: Professional modal content styled');
     }
     
-    // Force it to the front of the DOM (this was the key fix!)
-    document.body.appendChild(modal);
+    // Ensure all child elements are visible and properly styled
+    const allChildren = modal.querySelectorAll('*');
+    allChildren.forEach(child => {
+        child.style.setProperty('visibility', 'visible', 'important');
+        child.style.setProperty('opacity', '1', 'important');
+        child.style.setProperty('pointer-events', 'auto', 'important');
+    });
     
-    // Update the SKU indicator in the header
-    const skuIndicator = document.getElementById('currentEditingSku');
-    if (skuIndicator) {
-        skuIndicator.textContent = currentItemSku;
+    // Hide competing modals (reuse the editModal variable already declared above)
+    if (editModal) {
+        editModal.style.setProperty('display', 'none', 'important');
     }
     
-    console.log('Marketing Manager: Modal opened with professional styling');
-    
-    // Load marketing data and show content tab
-    loadMarketingData();
+        // Load the first tab (Content)
     showMarketingManagerTab('content');
+    
+    console.log('Marketing Manager: Modal opened with enhanced visibility fixes');
 }
 
 function closeMarketingManager() {
     const modal = document.getElementById('marketingManagerModal');
     if (modal) {
-        modal.style.display = 'none';
-        console.log('Marketing Manager: Modal closed');
+        hideMarketingModal();
+        modal.style.cssText = '';
         
+        // Reset modal content styling
+        const modalContent = modal.querySelector('.bg-white');
+        if (modalContent) {
+            modalContent.style.cssText = '';
+        }
+        
+        // Remove any test elements
+        const testElements = document.querySelectorAll('[onclick*="closeMarketingManager"]');
+        testElements.forEach(el => {
+            if (el.parentElement && el.parentElement.innerHTML.includes('MARKETING MANAGER TEST')) {
+                el.parentElement.remove();
+            }
+        });
+        
+        // Restore the edit modal if it was hidden
+        const editModalRestore = document.querySelector('.modal-outer');
+        if (editModalRestore && editModalRestore.style.display === 'none') {
+            console.log('Marketing Manager: Restoring edit modal');
+            editModalRestore.style.display = '';
+        }
+        
+        console.log('Marketing Manager: Modal closed');
         // Clear any unsaved changes warning if needed
         hasMarketingChanges = false;
         hasTitleChanges = false;
@@ -5649,124 +5271,20 @@ function closeMarketingManager() {
 }
 
 
-function testModalVisibility() {
-    console.log("🧪 Testing modal visibility...");
-    
-    const modal = document.getElementById("marketingManagerModal");
-    if (!modal) {
-        console.error("❌ Modal not found!");
-        return;
-    }
-    
-    console.log("✅ Modal found:", modal);
-    console.log("📍 Modal position:", modal.getBoundingClientRect());
-    console.log("🎨 Modal computed styles:", {
-        display: window.getComputedStyle(modal).display,
-        visibility: window.getComputedStyle(modal).visibility,
-        opacity: window.getComputedStyle(modal).opacity,
-        zIndex: window.getComputedStyle(modal).zIndex,
-        position: window.getComputedStyle(modal).position,
-        top: window.getComputedStyle(modal).top,
-        left: window.getComputedStyle(modal).left,
-        width: window.getComputedStyle(modal).width,
-        height: window.getComputedStyle(modal).height
-    });
-    
-    // Check if modal is actually in the viewport
-    const rect = modal.getBoundingClientRect();
-    const inViewport = rect.top >= 0 && rect.left >= 0 && 
-                      rect.bottom <= window.innerHeight && 
-                      rect.right <= window.innerWidth;
-    
-    console.log("📱 Modal in viewport:", inViewport);
-    console.log("📐 Viewport size:", {width: window.innerWidth, height: window.innerHeight});
-    
-    // Check parent elements that might be hiding it
-    let parent = modal.parentElement;
-    let level = 0;
-    while (parent && level < 5) {
-        const parentStyles = window.getComputedStyle(parent);
-        console.log(`👨‍👦 Parent ${level}:`, {
-            tagName: parent.tagName,
-            id: parent.id,
-            className: parent.className,
-            display: parentStyles.display,
-            visibility: parentStyles.visibility,
-            opacity: parentStyles.opacity,
-            overflow: parentStyles.overflow,
-            zIndex: parentStyles.zIndex
-        });
-        parent = parent.parentElement;
-        level++;
-    }
-    
-    // Try to make it super visible
-    modal.style.cssText = `
-        position: fixed !important;
-        top: 50px !important;
-        left: 50px !important;
-        width: 90vw !important;
-        height: 90vh !important;
-        background: red !important;
-        display: block !important;
-        z-index: 999999 !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        border: 10px solid yellow !important;
-    `;
-    
-    console.log("🚨 Modal forced to be super visible with red background and yellow border");
-    
-    setTimeout(() => {
-        const newRect = modal.getBoundingClientRect();
-        console.log("📍 New modal position:", newRect);
-        console.log("🔍 Is modal visible now?", newRect.width > 0 && newRect.height > 0);
-    }, 100);
-}
-
-// Add test button to the page
-function addTestButton() {
-    const testBtn = document.createElement("button");
-    testBtn.innerHTML = "🧪 Test Modal Visibility";
-    testBtn.style.cssText = `
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        background: orange;
-        color: white;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        z-index: 999999;
-        cursor: pointer;
-        font-weight: bold;
-    `;
-    testBtn.onclick = testModalVisibility;
-    document.body.appendChild(testBtn);
-    console.log("🧪 Test button added to page");
-}
-
-// Add test when page loads
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", addTestButton);
-} else {
-    addTestButton();
-}
 
 
 
 function showMarketingManagerTab(tabName) {
-    // Update tab buttons - remove active styles from all tabs
+    // Update tab buttons
     document.querySelectorAll('.marketing-tab').forEach(tab => {
-        tab.classList.remove('bg-white', 'text-green-600', 'border-2', 'border-green-600', 'font-semibold', 'shadow-sm');
-        tab.classList.add('text-gray-600', 'border-2', 'border-gray-300', 'hover:text-green-600', 'hover:border-green-300');
+        tab.classList.remove('bg-white', 'text-purple-600', 'border-purple-600');
+        tab.classList.add('text-gray-600');
     });
     
-    // Apply active styles to selected tab
     const activeTab = document.getElementById(tabName + 'Tab');
     if (activeTab) {
-        activeTab.classList.remove('text-gray-600', 'border-gray-300', 'hover:text-green-600', 'hover:border-green-300');
-        activeTab.classList.add('bg-white', 'text-green-600', 'border-2', 'border-green-600', 'font-semibold', 'shadow-sm');
+        activeTab.classList.add('bg-white', 'text-purple-600', 'border-purple-600');
+        activeTab.classList.remove('text-gray-600');
     }
     
     // Load tab content
@@ -5780,12 +5298,12 @@ function loadMarketingData() {
     
     if (contentDiv) {
         contentDiv.innerHTML = '<div class="text-center py-8">' +
-            '<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>' +
+            '<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>' +
             '<p class="mt-4 text-gray-600">Loading marketing data...</p>' +
         '</div>';
         
-        // Force content div to be visible with clean styling
-        contentDiv.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
+        // Force content div to be visible
+        contentDiv.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; background-color: yellow !important; padding: 20px !important; border: 3px solid red !important;';
         
         console.log('Marketing Manager: Content div styled and populated');
     }
@@ -5834,61 +5352,74 @@ function loadContentTab(contentDiv) {
                 '</div>' +
             '</div>' +
         '</div>' +
-        '<div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-3 mb-4">' +
-            '<div class="grid grid-cols-1 lg:grid-cols-4 gap-3 items-end">' +
-                '<div>' +
-                    '<label class="block text-xs text-gray-600 mb-1">Brand Voice</label>' +
-                    '<select id="brandVoice" class="w-full p-2 border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'brand_voice\', this.value)">' +
-                        '<option value="">Select voice...</option>' +
-                        '<option value="friendly">Friendly</option>' +
-                        '<option value="professional">Professional</option>' +
-                        '<option value="playful">Playful</option>' +
-                        '<option value="luxurious">Luxurious</option>' +
-                        '<option value="casual">Casual</option>' +
-                    '</select>' +
+        '<div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4">' +
+            '<div class="flex flex-col lg:flex-row lg:items-end gap-4">' +
+                '<div class="flex-1">' +
+                    '<h3 class="text-lg font-semibold text-gray-800 mb-3">AI Content Generation</h3>' +
+                    '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">' +
+                        '<div class="flex items-center gap-2 mb-2">' +
+                            '<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+                            '</svg>' +
+                            '<span class="text-sm font-medium text-blue-800">Global Marketing Settings</span>' +
+                        '</div>' +
+                        '<p class="text-xs text-blue-700">These settings apply to all items and can be changed in Admin Settings → Website Configuration.</p>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' +
+                        '<div>' +
+                            '<label class="block text-xs text-gray-600 mb-1">Brand Voice (Global Setting)</label>' +
+                            '<select id="brandVoice" class="w-full p-2 border border-purple-200 rounded bg-gray-50" onchange="updateGlobalMarketingDefault(\'brand_voice\', this.value)">' +
+                                '<option value="">Select voice...</option>' +
+                                '<option value="friendly">Friendly & Approachable</option>' +
+                                '<option value="professional">Professional & Trustworthy</option>' +
+                                '<option value="playful">Playful & Fun</option>' +
+                                '<option value="luxurious">Luxurious & Premium</option>' +
+                                '<option value="casual">Casual & Relaxed</option>' +
+                            '</select>' +
+                        '</div>' +
+                        '<div>' +
+                            '<label class="block text-xs text-gray-600 mb-1">Content Tone (Global Setting)</label>' +
+                            '<select id="contentTone" class="w-full p-2 border border-purple-200 rounded bg-gray-50" onchange="updateGlobalMarketingDefault(\'content_tone\', this.value)">' +
+                                '<option value="">Select tone...</option>' +
+                                '<option value="informative">Informative</option>' +
+                                '<option value="persuasive">Persuasive</option>' +
+                                '<option value="emotional">Emotional</option>' +
+                                '<option value="urgent">Urgent</option>' +
+                                '<option value="conversational">Conversational</option>' +
+                            '</select>' +
+                        '</div>' +
+                    '</div>' +
                 '</div>' +
-                '<div>' +
-                    '<label class="block text-xs text-gray-600 mb-1">Content Tone</label>' +
-                    '<select id="contentTone" class="w-full p-2 border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'content_tone\', this.value)">' +
-                        '<option value="">Select tone...</option>' +
-                        '<option value="informative">Informative</option>' +
-                        '<option value="persuasive">Persuasive</option>' +
-                        '<option value="emotional">Emotional</option>' +
-                        '<option value="urgent">Urgent</option>' +
-                        '<option value="conversational">Conversational</option>' +
-                    '</select>' +
-                '</div>' +
-                '<div>' +
-                    '<button onclick="generateAllMarketingContent()" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded text-xs font-medium">' +
-                        '🧠 Generate AI' +
+                '<div class="flex flex-col sm:flex-row gap-2">' +
+                    '<button onclick="generateAllMarketingContent()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-medium">' +
+                        '🧠 Generate AI Content for All Tabs' +
+                    '</button>' +
+                    '<button onclick="generateFreshMarketingComparison()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-sm font-medium">' +
+                        '🔥 Force Fresh Comparison' +
                     '</button>' +
                 '</div>' +
-                '<div>' +
-                    '<button onclick="generateFreshMarketingComparison()" class="w-full bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded text-xs font-medium">' +
-                        '🔥 Fresh Start' +
-                    '</button>' +
+                '<div class="mt-2 text-center">' +
+                    '<p class="text-xs text-gray-600">💡 Each generation creates fresh, unique content based on your current voice & tone settings</p>' +
+                    '<p class="text-xs text-orange-600 mt-1">🔥 Force Fresh shows what AI would generate if starting from scratch (ignores existing marketing data)</p>' +
                 '</div>' +
-            '</div>' +
-            '<div class="mt-2 text-center">' +
-                '<p class="text-xs text-gray-500">💡 Global settings • AI generates content for all tabs based on voice & tone</p>' +
             '</div>' +
         '</div>' +
-        '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">' +
+        '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">' +
             '<div class="bg-blue-50 rounded-lg p-4">' +
-                '<label class="block text-sm font-medium text-gray-800 mb-2">📝 Product Title</label>' +
-                '<textarea id="marketingTitle" class="w-full p-3 border border-blue-300 rounded-lg text-sm resize-none" rows="2" placeholder="Enter enhanced product title..."></textarea>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-2">Product Title</label>' +
+                '<textarea id="marketingTitle" class="w-full p-3 border border-blue-200 rounded-lg" rows="2" placeholder="Enter enhanced product title..."></textarea>' +
                 '<div class="mt-2 flex justify-center">' +
-                    '<button onclick="applyAndSaveMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-medium" style="display: none;">' +
-                        '📝 Apply & Save' +
+                    '<button onclick="applyAndSaveMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium" style="display: none;">' +
+                        '📝 Apply & Save to Product' +
                     '</button>' +
                 '</div>' +
             '</div>' +
             '<div class="bg-green-50 rounded-lg p-4">' +
-                '<label class="block text-sm font-medium text-gray-800 mb-2">📄 Product Description</label>' +
-                '<textarea id="marketingDescription" class="w-full p-3 border border-green-300 rounded-lg text-sm resize-none" rows="4" placeholder="Enter detailed product description..."></textarea>' +
+                '<label class="block text-sm font-medium text-gray-700 mb-2">Product Description</label>' +
+                '<textarea id="marketingDescription" class="w-full p-3 border border-green-200 rounded-lg" rows="4" placeholder="Enter detailed product description..."></textarea>' +
                 '<div class="mt-2 flex justify-center">' +
-                    '<button onclick="applyAndSaveMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-xs font-medium" style="display: none;">' +
-                        '📝 Apply & Save' +
+                    '<button onclick="applyAndSaveMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium" style="display: none;">' +
+                        '📝 Apply & Save to Product' +
                     '</button>' +
                 '</div>' +
             '</div>' +
@@ -6925,97 +6456,6 @@ function generateNewMarketingContent() {
     });
 }
 
-// Generate fresh marketing comparison (ignores existing data)
-function generateFreshMarketingComparison() {
-    if (!currentItemSku) {
-        showToast('error', 'No item selected for marketing generation');
-        return;
-    }
-
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '🔥 Generating...';
-    button.disabled = true;
-
-    // Get basic item data from the edit form
-    const nameField = document.getElementById('name');
-    const categoryField = document.getElementById('categoryEdit');
-    const descriptionField = document.getElementById('description');
-
-    if (!nameField || !nameField.value.trim()) {
-        showToast('error', 'Item name is required for marketing generation');
-        button.innerHTML = originalText;
-        button.disabled = false;
-        return;
-    }
-
-    // Get current global settings
-    const brandVoiceField = document.getElementById('brandVoice');
-    const contentToneField = document.getElementById('contentTone');
-
-    // Prepare data for fresh generation (no existing marketing data)
-    const itemData = {
-        sku: currentItemSku,
-        name: nameField.value.trim(),
-        category: categoryField ? categoryField.value : '',
-        description: descriptionField ? descriptionField.value.trim() : '',
-        brand_voice: brandVoiceField ? brandVoiceField.value : '',
-        content_tone: contentToneField ? contentToneField.value : '',
-        fresh_start: true  // This tells the API to ignore existing marketing data
-    };
-
-    console.log('Fresh Marketing Generation: Generating fresh content for SKU:', currentItemSku);
-
-    fetch('/api/suggest_marketing.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify(itemData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('success', '🔥 Fresh marketing content generated! All fields updated with brand new AI suggestions.');
-            
-            // Populate all tabs with fresh AI-generated data
-            populateAllMarketingTabs(data);
-            
-            // Clear any cached content and reload with fresh data
-            clearMarketingFields();
-            
-            // Load the fresh data
-            setTimeout(() => {
-                loadExistingMarketingData().then(() => {
-                    // Restore the global settings
-                    if (brandVoiceField && itemData.brand_voice) {
-                        brandVoiceField.value = itemData.brand_voice;
-                    }
-                    if (contentToneField && itemData.content_tone) {
-                        contentToneField.value = itemData.content_tone;
-                    }
-                    
-                    // Mark as having changes
-                    hasMarketingChanges = true;
-                    updateMarketingSaveButtonVisibility();
-                });
-            }, 500);
-            
-        } else {
-            showToast('error', data.error || 'Failed to generate fresh marketing content');
-        }
-    })
-    .catch(error => {
-        console.error('Error generating fresh marketing content:', error);
-        showToast('error', 'Failed to generate fresh marketing content');
-    })
-    .finally(() => {
-        button.innerHTML = originalText;
-        button.disabled = false;
-    });
-}
-
 // Load global marketing defaults
 async function loadGlobalMarketingDefaults() {
     try {
@@ -7082,403 +6522,8 @@ async function updateGlobalMarketingDefault(settingType, value) {
         showToast('error', 'Failed to update global setting');
     }
 }
-
-// AI Content Generation with Comparison Modal
-function generateAllMarketingContent() {
-    console.log('generateAllMarketingContent called');
-    
-    if (!currentItemSku) {
-        showToast('error', 'No item selected for marketing content generation');
-        return;
-    }
-    
-    // Show the comparison modal
-    showAIComparisonModal();
-    
-    // Start the AI analysis process
-    startAIAnalysisProcess();
-}
-
-function showAIComparisonModal() {
-    console.log('showAIComparisonModal called');
-    const modal = document.getElementById('aiComparisonModal');
-    const progressSection = document.getElementById('aiAnalysisProgressSection');
-    
-    if (modal) {
-        console.log('AI Comparison Modal found, applying visibility fixes');
-        
-        // Remove hidden class
-        modal.classList.remove('hidden');
-        
-        // Clear any existing CSS classes that might hide it
-        modal.className = '';
-        
-        // Apply aggressive CSS styling to force visibility (same as Marketing Manager fix)
-        modal.style.cssText = `
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background-color: rgba(0, 0, 0, 0.75) !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            z-index: 2147483647 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            padding: 8px !important;
-        `;
-        
-        // Force it to the front of the DOM (same fix as Marketing Manager)
-        document.body.appendChild(modal);
-        
-        console.log('AI Comparison Modal visibility forced');
-    } else {
-        console.error('AI Comparison Modal not found!');
-    }
-    
-    if (progressSection) {
-        progressSection.style.display = 'block';
-        progressSection.style.maxHeight = '200px';
-        progressSection.style.opacity = '1';
-        progressSection.style.paddingTop = '';
-        progressSection.style.paddingBottom = '';
-    }
-    
-    const contentDiv = document.getElementById('aiComparisonContent');
-    if (contentDiv) {
-        contentDiv.innerHTML = '<div class="text-center text-gray-500 py-8">AI analysis in progress...</div>';
-    }
-    
-    console.log('AI Comparison Modal setup complete');
-}
-
-function closeAIComparisonModal() {
-    const modal = document.getElementById('aiComparisonModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-function startAIAnalysisProcess() {
-    // Initialize progress
-    updateAIAnalysisProgress('initializing', 'Initializing AI analysis...');
-    setStepStatus('step1-analyze', 'waiting');
-    setStepStatus('step2-extract-insights', 'waiting');
-    setStepStatus('step3-generate-content', 'waiting');
-    updateAIProgressBar(0);
-    
-    // Get current brand voice and tone
-    const brandVoice = document.getElementById('brandVoice')?.value || 'friendly';
-    const contentTone = document.getElementById('contentTone')?.value || 'conversational';
-    
-    // Prepare item data for AI generation
-    const itemData = {
-        sku: currentItemSku,
-        name: document.getElementById('name')?.value || '',
-        description: document.getElementById('description')?.value || '',
-        category: document.getElementById('categoryEdit')?.value || '',
-        retailPrice: document.getElementById('retailPrice')?.value || '',
-        brandVoice: brandVoice,
-        contentTone: contentTone,
-        useImages: true
-    };
-    
-    // Step 1: Start analysis
-    setTimeout(() => {
-        updateAIAnalysisProgress('starting', 'Starting AI content analysis...');
-        setStepStatus('step1-analyze', 'active');
-        updateAIProgressBar(10);
-        
-        // Step 2: Extract insights
-        setTimeout(() => {
-            setStepStatus('step1-analyze', 'completed');
-            updateAIProgressBar(40);
-            updateAIAnalysisProgress('extracting', 'Extracting marketing insights...');
-            setStepStatus('step2-extract-insights', 'active');
-            
-            // Step 3: Generate content
-            setTimeout(() => {
-                setStepStatus('step2-extract-insights', 'completed');
-                updateAIProgressBar(70);
-                updateAIAnalysisProgress('generating', 'Generating enhanced content...');
-                setStepStatus('step3-generate-content', 'active');
-                
-                // Make the actual API call
-                fetch('/api/suggest_marketing.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify(itemData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    setStepStatus('step3-generate-content', 'completed');
-                    updateAIProgressBar(100);
-                    updateAIAnalysisProgress('completed', '✅ AI analysis completed successfully!');
-                    
-                    if (data.success) {
-                        // Show comparison results
-                        setTimeout(() => {
-                            collapseAIProgressSection();
-                            showComparisonResults(data);
-                        }, 1500);
-                    } else {
-                        showToast('error', data.error || 'Failed to generate marketing content');
-                        closeAIComparisonModal();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error generating marketing content:', error);
-                    setStepStatus('step3-generate-content', 'error');
-                    updateAIAnalysisProgress('error', '❌ Error generating content');
-                    showToast('error', 'Failed to generate marketing content');
-                });
-            }, 1000);
-        }, 1000);
-    }, 500);
-}
-
-function updateAIAnalysisProgress(stage, message) {
-    const progressText = document.getElementById('aiProgressText');
-    const spinner = document.getElementById('aiProgressSpinner');
-    
-    if (progressText) {
-        progressText.textContent = message;
-    }
-    
-    if (spinner) {
-        if (stage === 'completed') {
-            spinner.classList.remove('animate-spin');
-            spinner.innerHTML = '✅';
-            spinner.classList.add('text-green-600');
-        } else if (stage === 'error') {
-            spinner.classList.remove('animate-spin');
-            spinner.innerHTML = '❌';
-            spinner.classList.add('text-red-600');
-        }
-    }
-}
-
-function setStepStatus(stepId, status) {
-    const stepElement = document.getElementById(stepId);
-    if (!stepElement) return;
-    
-    const indicator = stepElement.querySelector('div');
-    
-    // Reset classes
-    indicator.className = 'w-3 h-3 rounded-full';
-    
-    switch (status) {
-        case 'waiting':
-            indicator.classList.add('bg-gray-300');
-            break;
-        case 'active':
-            indicator.classList.add('bg-blue-500', 'animate-pulse');
-            break;
-        case 'completed':
-            indicator.classList.add('bg-green-500');
-            break;
-        case 'error':
-            indicator.classList.add('bg-red-500');
-            break;
-    }
-}
-
-function updateAIProgressBar(percentage) {
-    const progressBar = document.getElementById('aiProgressBar');
-    if (progressBar) {
-        progressBar.style.width = `${percentage}%`;
-    }
-}
-
-function collapseAIProgressSection() {
-    const progressSection = document.getElementById('aiAnalysisProgressSection');
-    if (progressSection) {
-        progressSection.style.maxHeight = '0px';
-        progressSection.style.opacity = '0';
-        progressSection.style.paddingTop = '0';
-        progressSection.style.paddingBottom = '0';
-        
-        setTimeout(() => {
-            progressSection.style.display = 'none';
-        }, 500);
-    }
-}
-
-function showComparisonResults(data) {
-    const contentDiv = document.getElementById('aiComparisonContent');
-    const applyBtn = document.getElementById('applyChangesBtn');
-    
-    if (!contentDiv) return;
-    
-    // Store the AI data globally
-    aiComparisonData = data;
-    selectedChanges = {};
-    
-    // Build comparison interface
-    let html = '<div class="space-y-6">';
-    html += '<div class="text-center mb-6">';
-    html += '<h3 class="text-lg font-semibold text-gray-800">🎯 AI Content Comparison</h3>';
-    html += '<p class="text-sm text-gray-600">Review and select which AI-generated content to apply to your product</p>';
-    html += '</div>';
-    
-    // Title comparison
-    if (data.marketing_suggestions?.suggested_title) {
-        const currentTitle = document.getElementById('name')?.value || '';
-        const suggestedTitle = data.marketing_suggestions.suggested_title;
-        
-        if (currentTitle !== suggestedTitle) {
-            html += createComparisonCard('title', 'Product Title', currentTitle, suggestedTitle);
-        }
-    }
-    
-    // Description comparison
-    if (data.marketing_suggestions?.suggested_description) {
-        const currentDesc = document.getElementById('description')?.value || '';
-        const suggestedDesc = data.marketing_suggestions.suggested_description;
-        
-        if (currentDesc !== suggestedDesc) {
-            html += createComparisonCard('description', 'Product Description', currentDesc, suggestedDesc);
-        }
-    }
-    
-    // Marketing fields comparison
-    const marketingFields = [
-        { key: 'target_audience', label: 'Target Audience', current: document.getElementById('targetAudience')?.value || '' },
-        { key: 'demographic_targeting', label: 'Demographics', current: document.getElementById('demographics')?.value || '' },
-        { key: 'psychographic_profile', label: 'Psychographics', current: document.getElementById('psychographics')?.value || '' }
-    ];
-    
-    marketingFields.forEach(field => {
-        if (data.marketing_suggestions?.[field.key] && field.current !== data.marketing_suggestions[field.key]) {
-            html += createComparisonCard(field.key, field.label, field.current, data.marketing_suggestions[field.key]);
-        }
-    });
-    
-    html += '</div>';
-    
-    contentDiv.innerHTML = html;
-    
-    // Show apply button
-    if (applyBtn) {
-        applyBtn.classList.remove('hidden');
-    }
-}
-
-function createComparisonCard(fieldKey, fieldLabel, currentValue, suggestedValue) {
-    const cardId = `comparison-${fieldKey}`;
-    return `
-        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <h4 class="font-medium text-gray-800">${fieldLabel}</h4>
-                <label class="flex items-center">
-                    <input type="checkbox" id="${cardId}-checkbox" class="mr-2" onchange="toggleComparison('${fieldKey}')">
-                    <span class="text-sm text-gray-600">Apply AI suggestion</span>
-                </label>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-gray-50 p-3 rounded">
-                    <h5 class="text-sm font-medium text-gray-600 mb-2">Current</h5>
-                    <p class="text-sm text-gray-800">${currentValue || '<em>No current value</em>'}</p>
-                </div>
-                <div class="bg-green-50 p-3 rounded">
-                    <h5 class="text-sm font-medium text-green-600 mb-2">AI Suggested</h5>
-                    <p class="text-sm text-gray-800">${suggestedValue}</p>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function toggleComparison(fieldKey) {
-    const checkbox = document.getElementById(`comparison-${fieldKey}-checkbox`);
-    if (checkbox.checked) {
-        selectedChanges[fieldKey] = aiComparisonData.marketing_suggestions[fieldKey];
-    } else {
-        delete selectedChanges[fieldKey];
-    }
-    
-    // Update apply button text
-    const applyBtn = document.getElementById('applyChangesBtn');
-    const selectedCount = Object.keys(selectedChanges).length;
-    if (applyBtn) {
-        applyBtn.textContent = selectedCount > 0 ? `Apply ${selectedCount} Selected Changes` : 'Apply Selected Changes';
-    }
-}
-
-function applySelectedChanges() {
-    if (Object.keys(selectedChanges).length === 0) {
-        showToast('warning', 'Please select at least one change to apply');
-        return;
-    }
-    
-    // Apply changes to form fields
-    Object.entries(selectedChanges).forEach(([fieldKey, value]) => {
-        let targetField = null;
-        
-        switch (fieldKey) {
-            case 'title':
-                targetField = document.getElementById('name');
-                break;
-            case 'description':
-                targetField = document.getElementById('description');
-                break;
-            case 'target_audience':
-                targetField = document.getElementById('targetAudience');
-                break;
-            case 'demographic_targeting':
-                targetField = document.getElementById('demographics');
-                break;
-            case 'psychographic_profile':
-                targetField = document.getElementById('psychographics');
-                break;
-        }
-        
-        if (targetField) {
-            targetField.value = value;
-            targetField.style.backgroundColor = '#f0fdf4'; // Light green highlight
-        }
-    });
-    
-    // Auto-save the changes
-    const selectedCount = Object.keys(selectedChanges).length;
-    showToast('success', `${selectedCount} changes applied successfully!`);
-    
-    // Close the modal
-    closeAIComparisonModal();
-    
-    // Remove highlights after a delay
-    setTimeout(() => {
-        Object.keys(selectedChanges).forEach(fieldKey => {
-            let targetField = null;
-            switch (fieldKey) {
-                case 'title':
-                    targetField = document.getElementById('name');
-                    break;
-                case 'description':
-                    targetField = document.getElementById('description');
-                    break;
-                case 'target_audience':
-                    targetField = document.getElementById('targetAudience');
-                    break;
-                case 'demographic_targeting':
-                    targetField = document.getElementById('demographics');
-                    break;
-                case 'psychographic_profile':
-                    targetField = document.getElementById('psychographics');
-                    break;
-            }
-            if (targetField) {
-                targetField.style.backgroundColor = '';
-            }
-        });
-    }, 3000);
-}
 </script>
+
 <script>
 // AI Content Comparison Modal Functions (cleaned up)
 let aiComparisonData = {};
@@ -7492,6 +6537,10 @@ function getNestedValue(obj, path) {
     }
     return path.split('.').reduce((current, key) => current && current[key], obj);
 }
+
+
+
+
 
 function handleModalBackdropClick(event, modalId) {
     // Only close if clicking on the backdrop (not on the modal content)
@@ -7517,24 +6566,23 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 // Make functions globally accessible
-window.openMarketingManager = openMarketingManager;
-window.closeMarketingManager = closeMarketingManager;
+if (typeof openMarketingManager !== "undefined") {
+    }
+if (typeof closeMarketingManager !== "undefined") {
+    }
 
 
-// Clean Marketing Manager Event Listener (single instance) 
+// Clean Marketing Manager Event Listener (single instance)
 document.addEventListener("click", function(event) {
     if (event.target && event.target.id === "open-marketing-manager-btn") {
         event.preventDefault();
         event.stopPropagation();
         console.log("Marketing Manager button clicked - opening modal");
-        
-        // Don't close the edit modal - just open Marketing Manager on top
         if (typeof openMarketingManager === "function") {
             openMarketingManager();
         } else {
             console.error("openMarketingManager function not found");
         }
-        return false; // Prevent any other event handlers
     }
 });
 

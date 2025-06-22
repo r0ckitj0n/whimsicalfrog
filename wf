@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# WhimsicalFrog Quick Commands
+# Simple wrapper for common server operations
+
+# Change to the WhimsicalFrog directory
+cd /Users/jongraves/Documents/Websites/WhimsicalFrog
+
+case "$1" in
+    start)
+        echo "🐸 Starting WhimsicalFrog with monitoring..."
+        ./start_servers.sh
+        ;;
+    stop)
+        echo "🐸 Stopping WhimsicalFrog servers and monitor..."
+        ./server_monitor.sh stop
+        pkill -f 'server_monitor.sh daemon' 2>/dev/null
+        echo "✅ All servers stopped"
+        ;;
+    restart)
+        echo "🐸 Restarting WhimsicalFrog..."
+        ./server_monitor.sh stop
+        pkill -f 'server_monitor.sh daemon' 2>/dev/null
+        sleep 2
+        ./start_servers.sh
+        ;;
+    status)
+        echo "🐸 WhimsicalFrog Server Status:"
+        ./server_monitor.sh status
+        echo ""
+        echo "Monitor Status:"
+        MONITOR_PID=$(pgrep -f "server_monitor.sh daemon")
+        if [ -n "$MONITOR_PID" ]; then
+            echo "✅ Monitor daemon running (PID: $MONITOR_PID)"
+        else
+            echo "❌ Monitor daemon not running"
+        fi
+        ;;
+    logs)
+        echo "🐸 Recent server logs:"
+        echo "=== PHP Server Log (last 20 lines) ==="
+        tail -20 php_server.log 2>/dev/null || echo "No PHP server log found"
+        echo ""
+        echo "=== Monitor Log (last 20 lines) ==="
+        tail -20 monitor.log 2>/dev/null || echo "No monitor log found"
+        ;;
+    *)
+        echo "🐸 WhimsicalFrog Quick Commands"
+        echo ""
+        echo "Usage: ./wf {start|stop|restart|status|logs}"
+        echo ""
+        echo "  start   - Start server with automatic monitoring"
+        echo "  stop    - Stop all servers and monitoring"
+        echo "  restart - Restart everything"
+        echo "  status  - Check server and monitor status"
+        echo "  logs    - Show recent server logs"
+        echo ""
+        echo "Website: http://localhost:8000"
+        echo "Admin: admin / Pass.123"
+        ;;
+esac 

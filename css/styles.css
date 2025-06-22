@@ -452,11 +452,11 @@ button.hover\\:bg-indigo-700:hover,
 :root {
     /* Default fallback values - these will be overridden by the Global CSS Rules system */
     --primary-color: #87ac3a;
-    --primary-color-hover: #a3cc4a;
+    --primary-color-hover: #6b8e23;
     --secondary-color: #556B2F;
     --accent-color: #6B8E23;
     --button-bg-primary: #87ac3a;
-    --button-bg-primary-hover: #a3cc4a;
+    --button-bg-primary-hover: #6b8e23;
     --button-text-primary: #ffffff;
     --button-padding: 10px 20px;
     --button-border-radius: 8px;
@@ -501,12 +501,18 @@ button.hover\\:bg-indigo-700:hover,
     align-items: center !important;
     justify-content: center !important;
     text-decoration: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .btn-primary:hover {
     background-color: var(--button-bg-primary-hover) !important;
     transform: translateY(-1px) !important;
-    box-shadow: var(--shadow-default) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-primary:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .btn-secondary {
@@ -522,12 +528,19 @@ button.hover\\:bg-indigo-700:hover,
     align-items: center !important;
     justify-content: center !important;
     text-decoration: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
 
 .btn-secondary:hover {
     background-color: var(--button-bg-primary) !important;
     color: var(--button-text-primary) !important;
     transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-secondary:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
 
 .btn-small {
@@ -650,19 +663,25 @@ button.hover\\:bg-indigo-700:hover,
     border-radius: var(--button-border-radius) !important;
     font-weight: 500 !important;
     transition: all 0.2s ease !important;
-    border: 2px solid transparent !important;
+    border: none !important;
     cursor: pointer !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     text-decoration: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .brand-button:hover {
     background-color: var(--button-bg-primary-hover) !important;
     border-color: var(--button-bg-primary-hover) !important;
     transform: translateY(-1px) !important;
-    box-shadow: var(--shadow-default) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.brand-button:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* ==============================================

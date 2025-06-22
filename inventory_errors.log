@@ -29,3 +29,9 @@
 [inventory_update] action=update itemSku=WF-SU-002 imageUrl=images/items/WF-SU-002A.png
 [inventory_update] action=update itemSku=WF-TS-001 imageUrl=images/items/WF-TS-001A.png
 [inventory_update] action=update itemSku=WF-TS-001 imageUrl=images/items/WF-TS-001A.png
+[21-Jun-2025 17:08:35 UTC] Database error in process_inventory_update.php: SQLSTATE[HY000]: General error: 1364 Field 'id' doesn't have a default value
+[inventory_update] action=add itemSku=WF-TS-002 imageUrl=
+[inventory_update] action=add itemSku=WF-TS-003 imageUrl=
+[21-Jun-2025 17:13:12 UTC] PHP Warning:  Cannot modify header information - headers already sent by (output started at /Users/jongraves/Documents/Websites/WhimsicalFrog/test_add_item.php:18) in /Users/jongraves/Documents/Websites/WhimsicalFrog/process_inventory_update.php on line 23
+[inventory_update] action=update itemSku=WF-GEN-001 imageUrl=images/items/WF-GEN-001B.png
+[inventory_update] action=update itemSku=WF-TS-002 imageUrl=

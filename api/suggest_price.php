@@ -67,10 +67,37 @@ try {
     $category = trim($input['category'] ?? '');
     $costPrice = floatval($input['costPrice'] ?? 0);
     $sku = trim($input['sku'] ?? '');
+    $useImages = $input['useImages'] ?? false;
+    
+    // Get item images if using image support
+    $images = [];
+    if ($useImages && !empty($sku)) {
+        try {
+            $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? ORDER BY display_order ASC LIMIT 3");
+            $stmt->execute([$sku]);
+            $imageRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($imageRows as $row) {
+                $imagePath = __DIR__ . '/../' . $row['image_path'];
+                if (file_exists($imagePath)) {
+                    $images[] = $imagePath;
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Failed to load images for pricing: " . $e->getMessage());
+        }
+    }
     
     // Initialize pricing analysis using AI provider system
     try {
-        $pricingData = generateAIPricingSuggestion($name, $description, $category, $costPrice);
+        if (!empty($images) && $useImages) {
+            // Use image-enhanced AI generation
+            $aiProviders = new AIProviders();
+            $pricingData = $aiProviders->generatePricingSuggestionWithImages($name, $description, $category, $costPrice, $images);
+        } else {
+            // Use standard text-only generation
+            $pricingData = generateAIPricingSuggestion($name, $description, $category, $costPrice);
+        }
     } catch (Exception $e) {
         // Fallback to local AI if external API fails
         error_log("AI Provider failed for pricing, using local fallback: " . $e->getMessage());

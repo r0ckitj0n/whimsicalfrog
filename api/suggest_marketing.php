@@ -9,6 +9,10 @@ require_once 'ai_providers.php';
 ini_set('display_errors', 0);
 error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 
+// Increase execution time limit for AI API calls
+set_time_limit(120); // 2 minutes for complex AI operations
+ini_set('max_execution_time', 120);
+
 // Start session if not already started
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -25,7 +29,7 @@ if ($isLoggedIn) {
         $userData = json_decode($userData, true);
     }
     if (is_array($userData)) {
-        $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
+        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
     }
 }
 
@@ -60,6 +64,17 @@ $sku = trim($input['sku'] ?? '');
 // Extract brand voice and content tone preferences
 $preferredBrandVoice = trim($input['brandVoice'] ?? '');
 $preferredContentTone = trim($input['contentTone'] ?? '');
+
+// Debug: Log the voice and tone values
+error_log("Marketing API - Brand Voice: '$preferredBrandVoice', Content Tone: '$preferredContentTone'");
+
+// Add timestamp for cache busting and ensuring different AI results
+$timestamp = microtime(true);
+$requestId = uniqid('mkt_', true);
+error_log("Marketing API Request ID: $requestId - Timestamp: $timestamp");
+
+// Extract image support flag
+$useImages = $input['useImages'] ?? false;
 
 if (empty($name)) {
     http_response_code(400);
@@ -114,13 +129,78 @@ try {
     
     $pdo->exec($createTableSql);
     
-    // Generate comprehensive marketing intelligence using AI provider system
+    // Get item images if using image support
+    $images = [];
+    if ($useImages && !empty($sku)) {
+        try {
+            $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? ORDER BY display_order ASC LIMIT 3");
+            $stmt->execute([$sku]);
+            $imageRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($imageRows as $row) {
+                $imagePath = __DIR__ . '/../' . $row['image_path'];
+                if (file_exists($imagePath)) {
+                    $images[] = $imagePath;
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Failed to load images for marketing: " . $e->getMessage());
+        }
+    }
+    
+    // Generate comprehensive marketing intelligence using sequential AI analysis
     try {
-        $marketingData = generateAIMarketingContent($name, $description, $category, $preferredBrandVoice, $preferredContentTone);
+        $aiProviders = new AIProviders();
+        
+        // Step 1: Analyze images first (if available)
+        $imageAnalysisData = [];
+        $imageInsights = '';
+        if (!empty($images) && $useImages) {
+            error_log("Step 1: Analyzing images for enhanced marketing intelligence");
+            try {
+                $imageAnalysisData = $aiProviders->analyzeImagesForAltText($images, $name, $description, $category);
+                // Extract insights from image analysis for marketing use
+                $imageInsights = $aiProviders->extractMarketingInsightsFromImages($imageAnalysisData, $name, $category);
+                error_log("Image insights extracted: " . substr($imageInsights, 0, 200) . "...");
+            } catch (Exception $e) {
+                error_log("Image analysis failed, continuing without image insights: " . $e->getMessage());
+                $imageInsights = '';
+            }
+        }
+        
+        // Step 2: Generate enhanced marketing content using image insights
+        error_log("Step 2: Generating marketing content with image insights");
+        error_log("AI Parameters - Name: '$name', Category: '$category', Voice: '$preferredBrandVoice', Tone: '$preferredContentTone', Request ID: $requestId");
+        
+        // Set a shorter timeout for the main AI call to allow fallback
+        set_time_limit(90);
+        
+        $marketingData = $aiProviders->generateEnhancedMarketingContent(
+            $name, 
+            $description, 
+            $category, 
+            $imageInsights, 
+            $preferredBrandVoice, 
+            $preferredContentTone
+        );
+        
+        error_log("AI Response received for Request ID: $requestId - Title: '" . substr($marketingData['title'], 0, 50) . "...'");
+        
     } catch (Exception $e) {
         // Fallback to local AI if external API fails
-        error_log("AI Provider failed, using local fallback: " . $e->getMessage());
+        error_log("External AI Provider failed, using local fallback: " . $e->getMessage());
+        
+        // Restore execution time for local processing
+        set_time_limit(60);
+        
         $marketingData = generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice, $preferredContentTone);
+        
+        // Generate basic image analysis for fallback
+        if (!empty($images) && $useImages) {
+            $imageAnalysisData = generateFallbackAltText($images, $name, $category);
+        }
+        
+        error_log("Local fallback completed for Request ID: $requestId");
     }
     
     // Save marketing suggestion to database
@@ -214,6 +294,9 @@ try {
         }
     }
     
+    // Image analysis is now integrated into the sequential AI process above
+    $imageAnalysis = $imageAnalysisData;
+    
     // Clear any buffered output and send clean JSON
     ob_clean();
     echo json_encode([
@@ -222,6 +305,7 @@ try {
         'description' => $marketingData['description'],
         'keywords' => $marketingData['keywords'],
         'targetAudience' => $marketingData['target_audience'],
+        'imageAnalysis' => $imageAnalysis, // New field for image analysis
         'marketingIntelligence' => [
             // Target Audience data
             'demographic_targeting' => $marketingData['demographic_targeting'],
@@ -258,12 +342,18 @@ try {
 }
 
 function generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice = '', $preferredContentTone = '') {
+    // Debug: Log the voice and tone values in local AI
+    error_log("Local AI - Preferred Brand Voice: '$preferredBrandVoice', Preferred Content Tone: '$preferredContentTone'");
+    
     // Comprehensive product analysis
     $analysis = analyzeProductForMarketing($name, $description, $category);
     
     // Use preferred brand voice and content tone, or determine from analysis
     $brandVoice = !empty($preferredBrandVoice) ? $preferredBrandVoice : determineBrandVoice($category, $analysis);
     $contentTone = !empty($preferredContentTone) ? $preferredContentTone : determineContentTone($category, $analysis);
+    
+    // Debug: Log the final voice and tone values
+    error_log("Local AI - Final Brand Voice: '$brandVoice', Final Content Tone: '$contentTone'");
     
     // Generate enhanced title with brand voice influence
     $title = generateEnhancedTitle($name, $category, $analysis, $brandVoice);
@@ -959,5 +1049,18 @@ function generateContentThemes($category, $analysis) { return []; }
 function identifyPainPoints($category, $analysis) { return []; }
 function analyzeLifestyleAlignment($category, $analysis) { return []; }
 function analyzeMarketTrends($category, $analysis) { return []; }
+
+function generateFallbackAltText($images, $name, $category) {
+    $altTexts = [];
+    foreach ($images as $index => $imagePath) {
+        $filename = basename($imagePath);
+        $altTexts[] = [
+            'image_path' => str_replace(__DIR__ . '/../', '', $imagePath),
+            'alt_text' => "Custom {$category} - {$name}" . ($index > 0 ? " (View " . ($index + 1) . ")" : ""),
+            'description' => "High-quality {$category} featuring {$name}. Professional product photography showcasing the design and craftsmanship."
+        ];
+    }
+    return $altTexts;
+}
 
 ?> 

@@ -20,7 +20,7 @@
     <!-- Content Management -->
     <div class="bg-white shadow rounded-lg p-4">
         <div class="space-y-2">
-            <button onclick="openCategoriesModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+            <button onclick="openCategoriesModal()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                 </svg>
@@ -32,7 +32,7 @@
                 </svg>
                 Room Settings
             </button>
-            <button onclick="openRoomCategoryManagerModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+            <button onclick="openRoomCategoryManagerModal()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
@@ -44,7 +44,7 @@
     <!-- Room & Visual Tools -->
     <div class="bg-white shadow rounded-lg p-4">
         <div class="space-y-2">
-            <button onclick="openRoomMapperModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+            <button onclick="openRoomMapperModal()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                 </svg>
@@ -86,6 +86,12 @@
                 </svg>
                 Template Manager
             </button>
+            <button onclick="openWebsiteConfigModal()" class="w-full bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                </svg>
+                Website Configuration
+            </button>
             <button onclick="openAnalyticsModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -110,7 +116,7 @@
                 </svg>
                 Email History
             </button>
-            <button onclick="fixSampleEmail()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left" id="fixSampleEmailBtn">
+            <button onclick="fixSampleEmail()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium" id="fixSampleEmailBtn">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                 </svg>
@@ -122,7 +128,7 @@
     <!-- System & Technical -->
     <div class="bg-white shadow rounded-lg p-4">
         <div class="space-y-2">
-            <button onclick="openSystemConfigModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+            <button onclick="openSystemConfigModal()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                 </svg>
@@ -163,8 +169,8 @@
 
 
 <!-- Room Mapper Modal -->
-<div id="roomMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+<div id="roomMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeRoomMapperModal()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
             <button onclick="closeRoomMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -304,6 +310,43 @@
 }
 .room-mapper-clickable-area.inactive-map:hover {
     background: rgba(107, 114, 128, 0.4) !important;
+}
+
+/* Global CSS Modal Scrollbar Styling */
+#globalCSSScrollContainer {
+    scrollbar-width: thin;
+    scrollbar-color: #9ca3af #f3f4f6;
+}
+
+#globalCSSScrollContainer::-webkit-scrollbar {
+    width: 12px;
+}
+
+#globalCSSScrollContainer::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 6px;
+}
+
+#globalCSSScrollContainer::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 6px;
+    border: 2px solid #f3f4f6;
+}
+
+#globalCSSScrollContainer::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* Force scrollbar to always be visible */
+#globalCSSScrollContainer {
+    overflow-y: scroll !important;
+    height: calc(90vh - 160px) !important;
+}
+
+/* Make sure content has enough height to scroll */
+#globalCSSContent {
+    min-height: calc(90vh - 100px);
+    padding-bottom: 100px;
 }
 </style>
 
@@ -2497,8 +2540,8 @@ async function removeAreaMapping(mappingId) {
 </script>
 
 <!-- Room-Category Manager Modal -->
-<div id="roomCategoryManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+<div id="roomCategoryManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeRoomCategoryManagerModal()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠📦 Room-Category Assignments</h2>
             <button onclick="closeRoomCategoryManagerModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -2577,8 +2620,8 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- Background Manager Modal -->
-<div id="backgroundManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+<div id="backgroundManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeBackgroundManagerModal()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🖼️ Background Manager</h2>
             <button onclick="closeBackgroundManagerModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -2664,8 +2707,8 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- AI Settings Modal -->
-<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4" style="display: none;">
-    <div class="bg-white shadow-xl rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
+<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4" style="display: none;" onclick="closeAISettingsModal()">
+    <div class="bg-white shadow-xl rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col" onclick="event.stopPropagation()">
         <!-- Fixed Header -->
         <div class="flex justify-between items-center p-4 border-b bg-white rounded-t-lg flex-shrink-0">
             <h2 class="text-xl font-bold text-gray-800">🤖 AI Settings</h2>
@@ -2684,14 +2727,30 @@ async function removeAreaMapping(mappingId) {
             </div>
         </div>
         
-        <!-- Fixed Footer with Guide -->
+        <!-- Fixed Footer with Guide and Buttons -->
         <div class="bg-purple-50 border-t border-purple-200 p-3 sm:p-4 rounded-b-lg flex-shrink-0">
             <h3 class="font-semibold text-purple-800 mb-2 text-sm sm:text-base">🤖 AI Settings Guide</h3>
-            <div class="text-xs sm:text-sm text-purple-700 space-y-1">
+            <div class="text-xs sm:text-sm text-purple-700 space-y-1 mb-4">
                 <p><strong>Temperature:</strong> 0.1-0.5 = consistent, 0.6-1.0 = creative</p>
                 <p><strong>Conservative Mode:</strong> Eliminates randomness</p>
                 <p><strong>Multipliers:</strong> Adjust all AI suggestions</p>
                 <p><strong>Weights:</strong> Control pricing strategy influence</p>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <button onclick="testAIProvider()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Test Provider
+                </button>
+                <button onclick="saveAISettings()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex-1 flex items-center justify-center text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                    </svg>
+                    Save AI Settings
+                </button>
             </div>
         </div>
     </div>
@@ -2789,6 +2848,13 @@ function displayAISettings(settings) {
                             <p class="text-sm text-gray-600">Google's multimodal AI model - requires API key</p>
                         </div>
                     </label>
+                    <label class="flex items-center space-x-3">
+                        <input type="radio" name="ai_provider" value="meta" ${settings.ai_provider === 'meta' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <div>
+                            <span class="font-medium">Meta AI (Llama)</span>
+                            <p class="text-sm text-gray-600">Open-source models via OpenRouter - requires API key</p>
+                        </div>
+                    </label>
                 </div>
                 </div>
             </div>
@@ -2852,6 +2918,27 @@ function displayAISettings(settings) {
                             <option value="">Loading models...</option>
                         </select>
                         <button onclick="refreshModels('google')" class="text-xs text-blue-600 hover:underline mt-1">🔄 Refresh Models</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Meta AI Section -->
+            <div id="meta_section" class="bg-yellow-50 rounded-lg p-4 border border-yellow-200" style="display: none;">
+                <h4 class="text-lg font-semibold text-gray-800 mb-3">🔑 Meta AI Configuration</h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">OpenRouter API Key</label>
+                        <input type="password" id="meta_api_key" value="${settings.meta_api_key || ''}" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                               placeholder="sk-or-...">
+                        <p class="text-xs text-gray-500 mt-1">Get your API key from <a href="https://openrouter.ai/keys" target="_blank" class="text-blue-600 hover:underline">OpenRouter</a></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Meta Model</label>
+                        <select id="meta_model" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">Loading models...</option>
+                        </select>
+                        <button onclick="refreshModels('meta')" class="text-xs text-blue-600 hover:underline mt-1">🔄 Refresh Models</button>
                     </div>
                 </div>
             </div>
@@ -3039,26 +3126,7 @@ function displayAISettings(settings) {
             </div>
             
             <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                <button onclick="testAIProvider()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center text-left">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Test Current Provider
-                </button>
-                <button onclick="initializeAISettings()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex items-center text-left">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    </svg>
-                    Initialize Settings
-                </button>
-                <button onclick="saveAISettings()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors flex-1 flex items-center text-left">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                    </svg>
-                    Save AI Settings
-                </button>
-            </div>
+
         </div>
     `;
     
@@ -3163,6 +3231,8 @@ async function saveAISettings() {
         anthropic_model: document.getElementById('anthropic_model')?.value || 'claude-3-haiku-20240307',
         google_api_key: document.getElementById('google_api_key')?.value || '',
         google_model: document.getElementById('google_model')?.value || 'gemini-pro',
+        meta_api_key: document.getElementById('meta_api_key')?.value || '',
+        meta_model: document.getElementById('meta_model')?.value || 'meta-llama/llama-3.1-70b-instruct',
         ai_temperature: parseFloat(document.getElementById('ai_temperature')?.value || 0.7),
         ai_max_tokens: parseInt(document.getElementById('ai_max_tokens')?.value || 1000),
         ai_timeout: parseInt(document.getElementById('ai_timeout')?.value || 30),
@@ -3237,27 +3307,7 @@ async function testAIProvider() {
     }
 }
 
-async function initializeAISettings() {
-    try {
-        showNotification('Initializing AI Settings', 'Setting up default AI configuration...', 'info');
-        
-        const response = await fetch('/api/ai_settings.php?action=init_ai_settings', {
-            method: 'POST'
-        });
-        const result = await response.json();
-        
-        if (result.success) {
-            showNotification('AI Settings Initialized', `✅ Initialized ${result.inserted} AI settings`, 'success');
-            // Reload the settings
-            loadAISettings();
-        } else {
-            showNotification('AI Settings Error', `❌ Failed to initialize: ${result.error}`, 'error');
-        }
-        
-    } catch (error) {
-        showNotification('AI Settings Error', `❌ Initialization failed: ${error.message}`, 'error');
-    }
-}
+
 
 // AI Model Loading Functions
 let availableModels = {};
@@ -3274,6 +3324,7 @@ async function loadAllModels() {
             populateModelDropdown('openai', availableModels.openai);
             populateModelDropdown('anthropic', availableModels.anthropic);
             populateModelDropdown('google', availableModels.google);
+            populateModelDropdown('meta', availableModels.meta);
             
             console.log('✅ All AI models loaded successfully');
         } else {
@@ -3300,6 +3351,7 @@ async function loadAllModelsWithSelection(settings) {
             populateModelDropdownWithSelection('openai', availableModels.openai, settings.openai_model);
             populateModelDropdownWithSelection('anthropic', availableModels.anthropic, settings.anthropic_model);
             populateModelDropdownWithSelection('google', availableModels.google, settings.google_model);
+            populateModelDropdownWithSelection('meta', availableModels.meta, settings.meta_model);
             
             console.log('✅ All AI models loaded successfully with current selections');
         } else {
@@ -3456,6 +3508,13 @@ function loadFallbackModels() {
             { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
             { id: 'gemini-pro', name: 'Gemini Pro', description: 'Balanced performance' },
             { id: 'gemini-pro-vision', name: 'Gemini Pro Vision', description: 'Multimodal capabilities' }
+        ],
+        meta: [
+            { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B', description: 'Most capable model' },
+            { id: 'meta-llama/llama-3.1-70b-instruct', name: 'Llama 3.1 70B', description: 'Balanced performance' },
+            { id: 'meta-llama/llama-3.1-8b-instruct', name: 'Llama 3.1 8B', description: 'Fast and affordable' },
+            { id: 'meta-llama/llama-3-70b-instruct', name: 'Llama 3 70B', description: 'Previous generation' },
+            { id: 'meta-llama/llama-3-8b-instruct', name: 'Llama 3 8B', description: 'Lightweight' }
         ]
     };
     
@@ -3464,6 +3523,7 @@ function loadFallbackModels() {
     populateModelDropdown('openai', fallbackModels.openai);
     populateModelDropdown('anthropic', fallbackModels.anthropic);
     populateModelDropdown('google', fallbackModels.google);
+    populateModelDropdown('meta', fallbackModels.meta);
     
     console.log('⚠️ Using fallback models due to API unavailability');
 }
@@ -3519,6 +3579,13 @@ function loadFallbackModelsWithSelection(settings) {
             { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
             { id: 'gemini-pro', name: 'Gemini Pro', description: 'Balanced performance' },
             { id: 'gemini-pro-vision', name: 'Gemini Pro Vision', description: 'Multimodal capabilities' }
+        ],
+        meta: [
+            { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B', description: 'Most capable model' },
+            { id: 'meta-llama/llama-3.1-70b-instruct', name: 'Llama 3.1 70B', description: 'Balanced performance' },
+            { id: 'meta-llama/llama-3.1-8b-instruct', name: 'Llama 3.1 8B', description: 'Fast and affordable' },
+            { id: 'meta-llama/llama-3-70b-instruct', name: 'Llama 3 70B', description: 'Previous generation' },
+            { id: 'meta-llama/llama-3-8b-instruct', name: 'Llama 3 8B', description: 'Lightweight' }
         ]
     };
     
@@ -3527,6 +3594,7 @@ function loadFallbackModelsWithSelection(settings) {
     populateModelDropdownWithSelection('openai', fallbackModels.openai, settings.openai_model);
     populateModelDropdownWithSelection('anthropic', fallbackModels.anthropic, settings.anthropic_model);
     populateModelDropdownWithSelection('google', fallbackModels.google, settings.google_model);
+    populateModelDropdownWithSelection('meta', fallbackModels.meta, settings.meta_model);
     
     console.log('⚠️ Using fallback models due to API unavailability');
 }
@@ -3551,6 +3619,13 @@ function loadFallbackModelsForProviderWithSelection(provider, settings) {
             { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and efficient' },
             { id: 'gemini-pro', name: 'Gemini Pro', description: 'Balanced performance' },
             { id: 'gemini-pro-vision', name: 'Gemini Pro Vision', description: 'Multimodal capabilities' }
+        ],
+        meta: [
+            { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B', description: 'Most capable model' },
+            { id: 'meta-llama/llama-3.1-70b-instruct', name: 'Llama 3.1 70B', description: 'Balanced performance' },
+            { id: 'meta-llama/llama-3.1-8b-instruct', name: 'Llama 3.1 8B', description: 'Fast and affordable' },
+            { id: 'meta-llama/llama-3-70b-instruct', name: 'Llama 3 70B', description: 'Previous generation' },
+            { id: 'meta-llama/llama-3-8b-instruct', name: 'Llama 3 8B', description: 'Lightweight' }
         ]
     };
     
@@ -3567,7 +3642,7 @@ function toggleProviderSections() {
     const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'local';
     
     // Hide all provider sections
-    const sections = ['openai_section', 'anthropic_section', 'google_section'];
+    const sections = ['openai_section', 'anthropic_section', 'google_section', 'meta_section'];
     sections.forEach(sectionId => {
         const section = document.getElementById(sectionId);
         if (section) {
@@ -4552,8 +4627,8 @@ function escapeHtml(text) {
 </script>
 
 <!-- Room Settings Modal -->
-<div id="roomSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto">
+<div id="roomSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeRoomSettingsModal()">
+    <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠 Room Settings</h2>
             <button onclick="closeRoomSettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -4887,8 +4962,8 @@ function showRoomSettingsSuccess(message) {
 </script>
 
 <!-- Email History Modal -->
-<div id="emailHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+<div id="emailHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeEmailHistoryModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-800">Email History</h3>
@@ -4986,8 +5061,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Email Edit/Resend Modal -->
-<div id="emailEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+<div id="emailEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeEmailEditModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-800">Edit & Resend Email</h3>
@@ -5039,8 +5114,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Email Configuration Modal -->
-<div id="emailConfigModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+<div id="emailConfigModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeEmailConfigModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-800">Email Configuration</h3>
@@ -5141,8 +5216,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Custom Notification Modal -->
-<div id="customNotificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" style="display: none;">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+<div id="customNotificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" style="display: none;" onclick="event.target === event.currentTarget && closeCustomNotification()">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex items-center mb-4">
                 <div id="notificationIcon" class="text-2xl mr-3"></div>
@@ -5162,8 +5237,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Room-Category Visual Mapper Modal -->
-<div id="roomCategoryMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+<div id="roomCategoryMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeRoomCategoryMapperModal()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🗺️ Room-Category Visual Mapper</h2>
             <button onclick="closeRoomCategoryMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -5194,8 +5269,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Area-Item Mapper Modal -->
-<div id="areaItemMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+<div id="areaItemMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeAreaItemMapperModal()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🎯 Area-Item Mapper</h2>
             <button onclick="closeAreaItemMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -5283,8 +5358,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- System Configuration Modal -->
-<div id="systemConfigModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
-    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+<div id="systemConfigModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;" onclick="closeSystemConfigModal()">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
             <div class="flex items-center justify-between mb-4">
@@ -5311,8 +5386,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Maintenance Modal -->
-<div id="databaseMaintenanceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
-    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+<div id="databaseMaintenanceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;" onclick="closeDatabaseMaintenanceModal()">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
             <div class="flex items-center justify-between mb-4">
@@ -5357,8 +5432,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Table View Modal -->
-<div id="tableViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
-    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+<div id="tableViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;" onclick="closeTableViewModal()">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
             <div class="flex items-center justify-between mb-4">
@@ -5379,8 +5454,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- File Explorer Modal -->
-<div id="fileExplorerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
-    <div class="relative top-5 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-md bg-white">
+<div id="fileExplorerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;" onclick="closeFileExplorerModal()">
+    <div class="relative top-5 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
             <div class="flex items-center justify-between mb-4">
@@ -5491,8 +5566,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Backup Website Modal -->
-<div id="backupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
+<div id="backupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeBackupModal()">
+    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
             <!-- Header -->
             <div class="px-6 py-4 border-b border-gray-200">
@@ -5670,8 +5745,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Backup Modal -->
-<div id="databaseBackupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
+<div id="databaseBackupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeDatabaseBackupModal()">
+    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
             <!-- Header -->
             <div class="px-6 py-4 border-b border-gray-200">
@@ -6648,14 +6723,138 @@ function showDatabaseBackupComplete(result, downloadToComputer, keepOnServer) {
     }
 }
 
+// Global change tracking system for admin settings modals
+let originalSettingsData = {};
+let hasSettingsChanges = false;
+
+// Initialize change tracking for settings modals
+function initializeSettingsChangeTracking() {
+    originalSettingsData = {};
+    hasSettingsChanges = false;
+    updateSettingsSaveButtonVisibility();
+}
+
+// Track changes in settings fields
+function trackSettingsFieldChange(fieldSelector, value = null) {
+    const field = document.querySelector(fieldSelector);
+    if (!field) return;
+    
+    const currentValue = value !== null ? value : field.value;
+    const originalValue = originalSettingsData[fieldSelector] || '';
+    
+    // Check if value has changed from original
+    const hasChanged = currentValue !== originalValue;
+    
+    // Update global change state
+    if (hasChanged && !hasSettingsChanges) {
+        hasSettingsChanges = true;
+        updateSettingsSaveButtonVisibility();
+    } else if (!hasChanged) {
+        // Check if any other fields have changes
+        checkAllSettingsFieldsForChanges();
+    }
+}
+
+// Check all tracked fields for changes
+function checkAllSettingsFieldsForChanges() {
+    const trackedSelectors = ['.css-rule-input'];
+    
+    let anyChanges = false;
+    trackedSelectors.forEach(selector => {
+        const fields = document.querySelectorAll(selector);
+        fields.forEach(field => {
+            const currentValue = field.value;
+            const originalValue = originalSettingsData[selector + '[data-rule-id="' + field.dataset.ruleId + '"]'] || '';
+            if (currentValue !== originalValue) {
+                anyChanges = true;
+            }
+        });
+    });
+    
+    hasSettingsChanges = anyChanges;
+    updateSettingsSaveButtonVisibility();
+}
+
+// Update save button visibility based on changes
+function updateSettingsSaveButtonVisibility() {
+    // Settings save buttons
+    const saveButtons = document.querySelectorAll([
+        '[onclick*="saveGlobalCSSRules"]',
+        '[onclick*="saveRoomMap"]',
+        '[onclick*="saveAISettings"]'
+    ].join(','));
+    
+    saveButtons.forEach(button => {
+        if (hasSettingsChanges) {
+            button.style.display = '';
+            button.classList.add('animate-pulse');
+        } else {
+            button.style.display = 'none';
+            button.classList.remove('animate-pulse');
+        }
+    });
+    
+    // Add visual indicator for unsaved changes to modal headers
+    const modals = ['globalCSSModal', 'roomMapperModal', 'aiSettingsModal'];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            const header = modal.querySelector('.bg-gradient-to-r, .bg-purple-600, .bg-green-600');
+            if (header) {
+                if (hasSettingsChanges) {
+                    header.classList.add('bg-orange-600');
+                    header.classList.remove('bg-purple-600', 'bg-green-600');
+                } else {
+                    header.classList.remove('bg-orange-600');
+                    header.classList.add('bg-purple-600');
+                }
+            }
+        }
+    });
+}
+
+// Store original form data when loading
+function storeOriginalSettingsData() {
+    const trackedFields = document.querySelectorAll('.css-rule-input');
+    
+    trackedFields.forEach(field => {
+        const key = '.css-rule-input[data-rule-id="' + field.dataset.ruleId + '"]';
+        originalSettingsData[key] = field.value;
+    });
+    
+    hasSettingsChanges = false;
+    updateSettingsSaveButtonVisibility();
+}
+
+// Add event listeners to form fields
+function addSettingsChangeListeners() {
+    const trackedFields = document.querySelectorAll('.css-rule-input');
+    
+    trackedFields.forEach(field => {
+        const key = '.css-rule-input[data-rule-id="' + field.dataset.ruleId + '"]';
+        field.addEventListener('input', () => trackSettingsFieldChange(key));
+        field.addEventListener('change', () => trackSettingsFieldChange(key));
+    });
+}
+
+// Reset change tracking after successful save
+function resetSettingsChangeTracking() {
+    storeOriginalSettingsData();
+}
+
 // Global CSS Rules Management
 function openGlobalCSSModal() {
-    document.getElementById('globalCSSModal').style.display = 'flex';
+    const modal = document.getElementById('globalCSSModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
     loadGlobalCSSRules();
+    initializeSettingsChangeTracking();
 }
 
 function closeGlobalCSSModal() {
-    document.getElementById('globalCSSModal').style.display = 'none';
+    const modal = document.getElementById('globalCSSModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
 }
 
 async function loadGlobalCSSRules() {
@@ -6838,6 +7037,12 @@ function renderGlobalCSSRules(groupedRules) {
     `;
     
     contentDiv.innerHTML = html;
+    
+    // Set up change tracking after rendering
+    setTimeout(() => {
+        storeOriginalSettingsData();
+        addSettingsChangeListeners();
+    }, 100);
 }
 
 function getFriendlyName(ruleName) {
@@ -6965,6 +7170,9 @@ async function saveGlobalCSSRules() {
             // Show success message
             showAlert('CSS rules updated successfully!', 'success');
             
+            // Reset change tracking
+            resetSettingsChangeTracking();
+            
             // Close modal
             closeGlobalCSSModal();
         } else {
@@ -7054,8 +7262,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Global CSS Rules Modal -->
-<div id="globalCSSModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
+<div id="globalCSSModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeGlobalCSSModal()">
+    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
         <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
             <!-- Header -->
             <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600">
@@ -7078,7 +7286,12 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             
             <!-- Body -->
-            <div class="overflow-y-auto max-h-[calc(90vh-200px)]">
+            <div class="overflow-y-scroll max-h-[calc(90vh-160px)]" style="
+                scrollbar-width: thin; 
+                scrollbar-color: #9ca3af #f3f4f6;
+                -webkit-overflow-scrolling: touch;
+                min-height: calc(90vh - 160px);
+            " id="globalCSSScrollContainer">
                 <!-- Loading State -->
                 <div id="globalCSSLoading" class="text-center py-8">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-3"></div>
@@ -7106,7 +7319,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         Cancel
                     </button>
                     <button onclick="saveGlobalCSSRules()" 
-                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium flex items-center text-left">
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium flex items-center text-left" style="display: none;">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
                         </svg>
@@ -7119,8 +7332,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Template Manager Modal -->
-<div id="templateManagerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
+<div id="templateManagerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeTemplateManagerModal()">
+    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
         <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
             <!-- Header -->
             <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600">
@@ -7394,8 +7607,8 @@ function refreshSuggestionHistory() {
 </script>
 
 <!-- Analytics & Insights Modal -->
-<div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto m-4">
+<div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" onclick="closeAnalyticsModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-6 border-b border-gray-200">
             <div>
                 <h2 class="text-2xl font-bold text-gray-800 flex items-center">
@@ -8104,11 +8317,364 @@ function cancelCategoryEdit(element, originalName) {
     element.textContent = originalName;
     element.onclick = function() { startEditCategory(element); };
 }
+
+// Website Configuration Modal Functions
+function openWebsiteConfigModal() {
+    document.getElementById('websiteConfigModal').classList.remove('hidden');
+    showWebsiteConfigTab('marketingDefaults');
+}
+
+function closeWebsiteConfigModal() {
+    document.getElementById('websiteConfigModal').classList.add('hidden');
+}
+
+function showWebsiteConfigTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.website-config-tab').forEach(tab => {
+        tab.classList.remove('bg-white', 'text-teal-600', 'border-teal-600');
+        tab.classList.add('text-gray-600');
+    });
+    
+    const activeTab = document.getElementById(tabName + 'Tab');
+    if (activeTab) {
+        activeTab.classList.add('bg-white', 'text-teal-600', 'border-teal-600');
+        activeTab.classList.remove('text-gray-600');
+    }
+    
+    // Load tab content
+    loadWebsiteConfigTabContent(tabName);
+}
+
+function loadWebsiteConfigTabContent(tabName) {
+    const contentDiv = document.getElementById('websiteConfigContent');
+    
+    switch(tabName) {
+        case 'marketingDefaults':
+            loadMarketingDefaultsTab(contentDiv);
+            break;
+        case 'cssVariables':
+            loadCSSVariablesTab(contentDiv);
+            break;
+        case 'uiComponents':
+            loadUIComponentsTab(contentDiv);
+            break;
+        case 'generalConfig':
+            loadGeneralConfigTab(contentDiv);
+            break;
+    }
+}
+
+function loadMarketingDefaultsTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Global Marketing Defaults</h3>
+                <p class="text-sm text-gray-600 mb-4">These settings apply to all items and are used by the AI when generating marketing content.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Default Brand Voice</label>
+                        <select id="globalBrandVoice" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="">Select voice...</option>
+                            <option value="friendly">Friendly & Approachable</option>
+                            <option value="professional">Professional & Trustworthy</option>
+                            <option value="playful">Playful & Fun</option>
+                            <option value="luxurious">Luxurious & Premium</option>
+                            <option value="casual">Casual & Relaxed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Default Content Tone</label>
+                        <select id="globalContentTone" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="">Select tone...</option>
+                            <option value="informative">Informative</option>
+                            <option value="persuasive">Persuasive</option>
+                            <option value="emotional">Emotional</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="conversational">Conversational</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="autoApplyDefaults" class="mr-2">
+                        <span class="text-sm text-gray-700">Automatically apply these defaults to new items</span>
+                    </label>
+                </div>
+                
+                <div class="mt-4">
+                    <button onclick="saveMarketingDefaults()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-semibold">
+                        💾 Save Marketing Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Load current settings
+    loadCurrentMarketingDefaults();
+}
+
+function loadCSSVariablesTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">CSS Variables Management</h3>
+                <p class="text-sm text-gray-600 mb-4">Customize the visual appearance of your website with CSS variables.</p>
+                
+                <div id="cssVariablesContent">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                        <p class="mt-2 text-gray-600">Loading CSS variables...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Load CSS variables
+    loadCSSVariables();
+}
+
+function loadUIComponentsTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">UI Components Configuration</h3>
+                <p class="text-sm text-gray-600 mb-4">Configure the appearance and behavior of UI components.</p>
+                
+                <div id="uiComponentsContent">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                        <p class="mt-2 text-gray-600">Loading UI components...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Load UI components
+    loadUIComponents();
+}
+
+function loadGeneralConfigTab(contentDiv) {
+    contentDiv.innerHTML = `
+        <div class="space-y-6">
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">General Website Configuration</h3>
+                <p class="text-sm text-gray-600 mb-4">Configure general website settings and preferences.</p>
+                
+                <div id="generalConfigContent">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
+                        <p class="mt-2 text-gray-600">Loading configuration...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Load general config
+    loadGeneralConfig();
+}
+
+async function loadCurrentMarketingDefaults() {
+    try {
+        const response = await fetch('/api/website_config.php?action=get_marketing_defaults');
+        const data = await response.json();
+        
+        if (data.success) {
+            const defaults = data.data;
+            
+            const brandVoiceField = document.getElementById('globalBrandVoice');
+            const contentToneField = document.getElementById('globalContentTone');
+            const autoApplyField = document.getElementById('autoApplyDefaults');
+            
+            if (brandVoiceField && defaults.default_brand_voice) {
+                brandVoiceField.value = defaults.default_brand_voice;
+            }
+            
+            if (contentToneField && defaults.default_content_tone) {
+                contentToneField.value = defaults.default_content_tone;
+            }
+            
+            if (autoApplyField) {
+                autoApplyField.checked = defaults.auto_apply_defaults === 'true';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading marketing defaults:', error);
+    }
+}
+
+async function saveMarketingDefaults() {
+    try {
+        const brandVoice = document.getElementById('globalBrandVoice').value;
+        const contentTone = document.getElementById('globalContentTone').value;
+        const autoApply = document.getElementById('autoApplyDefaults').checked;
+        
+        if (!brandVoice || !contentTone) {
+            showToast('error', 'Please select both brand voice and content tone');
+            return;
+        }
+        
+        const response = await fetch('/api/website_config.php?action=update_marketing_defaults', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                default_brand_voice: brandVoice,
+                default_content_tone: contentTone,
+                auto_apply_defaults: autoApply ? 'true' : 'false'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', 'Marketing defaults saved successfully!');
+        } else {
+            showToast('error', data.error || 'Failed to save marketing defaults');
+        }
+    } catch (error) {
+        console.error('Error saving marketing defaults:', error);
+        showToast('error', 'Failed to save marketing defaults');
+    }
+}
+
+async function loadCSSVariables() {
+    try {
+        const response = await fetch('/api/website_config.php?action=get_css_variables');
+        const data = await response.json();
+        
+        if (data.success) {
+            const variables = data.data;
+            const contentDiv = document.getElementById('cssVariablesContent');
+            
+            let html = '';
+            
+            Object.keys(variables).forEach(category => {
+                html += `
+                    <div class="mb-6">
+                        <h4 class="text-md font-semibold text-gray-800 mb-3 capitalize">${category}</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                `;
+                
+                variables[category].forEach(variable => {
+                    const isColor = variable.variable_value.startsWith('#') || variable.variable_value.includes('rgb');
+                    html += `
+                        <div class="border border-gray-200 rounded-lg p-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">${variable.variable_name}</label>
+                            <div class="flex gap-2">
+                                ${isColor ? `<input type="color" value="${variable.variable_value}" class="w-12 h-8 border border-gray-300 rounded" onchange="updateCSSVariable('${variable.variable_name}', this.value, '${category}')">` : ''}
+                                <input type="text" value="${variable.variable_value}" class="flex-1 p-2 border border-gray-300 rounded text-sm" onchange="updateCSSVariable('${variable.variable_name}', this.value, '${category}')">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">${variable.description || ''}</p>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contentDiv.innerHTML = html;
+        }
+    } catch (error) {
+        console.error('Error loading CSS variables:', error);
+        document.getElementById('cssVariablesContent').innerHTML = '<p class="text-red-600">Error loading CSS variables</p>';
+    }
+}
+
+async function updateCSSVariable(variableName, value, category) {
+    try {
+        const response = await fetch('/api/website_config.php?action=update_css_variable', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                variable_name: variableName,
+                variable_value: value,
+                category: category
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', `Updated ${variableName}`);
+        } else {
+            showToast('error', data.error || 'Failed to update CSS variable');
+        }
+    } catch (error) {
+        console.error('Error updating CSS variable:', error);
+        showToast('error', 'Failed to update CSS variable');
+    }
+}
+
+async function loadUIComponents() {
+    // Placeholder for UI components loading
+    document.getElementById('uiComponentsContent').innerHTML = `
+        <div class="text-center py-8 text-gray-600">
+            <p>UI Components configuration coming soon...</p>
+        </div>
+    `;
+}
+
+async function loadGeneralConfig() {
+    // Placeholder for general config loading
+    document.getElementById('generalConfigContent').innerHTML = `
+        <div class="text-center py-8 text-gray-600">
+            <p>General configuration options coming soon...</p>
+        </div>
+    `;
+}
+
 </script>
 
+<!-- Website Configuration Modal -->
+<div id="websiteConfigModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 flex justify-between items-center flex-shrink-0">
+            <h2 class="text-xl font-bold text-white">🌐 Website Configuration</h2>
+            <button onclick="closeWebsiteConfigModal()" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="bg-gray-50 px-6 py-2 border-b flex-shrink-0">
+            <div class="flex space-x-4 overflow-x-auto">
+                <button id="marketingDefaultsTab" class="website-config-tab px-4 py-2 rounded-t-lg bg-white text-teal-600 border-b-2 border-teal-600 font-semibold whitespace-nowrap" onclick="showWebsiteConfigTab('marketingDefaults')">Marketing Defaults</button>
+                <button id="cssVariablesTab" class="website-config-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-teal-600 whitespace-nowrap" onclick="showWebsiteConfigTab('cssVariables')">CSS Variables</button>
+                <button id="uiComponentsTab" class="website-config-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-teal-600 whitespace-nowrap" onclick="showWebsiteConfigTab('uiComponents')">UI Components</button>
+                <button id="generalConfigTab" class="website-config-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-teal-600 whitespace-nowrap" onclick="showWebsiteConfigTab('generalConfig')">General Config</button>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <div id="websiteConfigContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="bg-gray-50 px-6 py-4 border-t flex justify-end space-x-2 flex-shrink-0">
+            <button onclick="closeWebsiteConfigModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- Categories Modal -->
-<div id="categoriesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-    <div class="bg-white shadow-xl rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4">
+<div id="categoriesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeCategoriesModal()">
+    <div class="bg-white shadow-xl rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-6 border-b">
             <h2 class="text-xl font-bold text-gray-800">📂 Category Management</h2>
             <button onclick="closeCategoriesModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>

@@ -2165,7 +2165,7 @@ function selectOnlyLowerValues() {
 }
 
 // Apply only selected cost fields
-function applySelectedCostFields(button) {
+async function applySelectedCostFields(button) {
     try {
         const suggestionData = JSON.parse(button.getAttribute('data-suggestion').replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
         
@@ -2196,7 +2196,7 @@ function applySelectedCostFields(button) {
         closeCostSuggestionChoiceDialog();
         
         // Apply the selected changes
-        applySelectedCostBreakdown(selectedData);
+        await applySelectedCostBreakdown(selectedData);
         
     } catch (e) {
         console.error('Error applying selected cost fields:', e);
@@ -2205,7 +2205,7 @@ function applySelectedCostFields(button) {
 }
 
 // Apply selected cost breakdown (modified version)
-function applySelectedCostBreakdown(selectedData) {
+async function applySelectedCostBreakdown(selectedData) {
     console.log('Applying selected cost breakdown:', selectedData);
     
     // Show loading state
@@ -2218,42 +2218,136 @@ function applySelectedCostBreakdown(selectedData) {
                          selectedData.selectedFields.equipment;
     
     if (hasSelections) {
-        // Apply only selected fields
-        const categories = ['materials', 'labor', 'energy', 'equipment'];
-        const promises = [];
-        
-        categories.forEach(category => {
-            if (selectedData.selectedFields[category] && selectedData.breakdown[category] !== null) {
-                // Add a cost item for this category with the AI suggested value
-                const cost = parseFloat(selectedData.breakdown[category]);
-                if (cost > 0) {
-                    console.log(`Queuing ${category} cost addition:`, cost);
-                    promises.push(addCostItemDirectly(category, `AI Suggested ${category.charAt(0).toUpperCase() + category.slice(1)}`, cost));
+        try {
+            // First, clear existing cost items for selected categories
+            const categoriesToClear = [];
+            const categories = ['materials', 'labor', 'energy', 'equipment'];
+            
+            categories.forEach(category => {
+                if (selectedData.selectedFields[category] && selectedData.breakdown[category] !== null) {
+                    categoriesToClear.push(category);
                 }
-            }
-        });
-        
-        // Wait for all cost items to be added, then refresh
-        if (promises.length > 0) {
-            Promise.all(promises)
-                .then(results => {
+            });
+            
+            if (categoriesToClear.length > 0) {
+                console.log('Clearing existing cost items for categories:', categoriesToClear);
+                await clearExistingCostItems(categoriesToClear);
+                
+                // Wait a moment for the clearing to complete
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Now add the new cost items
+                const addPromises = [];
+                
+                categories.forEach(category => {
+                    if (selectedData.selectedFields[category] && selectedData.breakdown[category] !== null) {
+                        const cost = parseFloat(selectedData.breakdown[category]);
+                        if (cost > 0) {
+                            console.log(`Queuing ${category} cost addition:`, cost);
+                            addPromises.push(addCostItemDirectly(category, `AI Suggested ${category.charAt(0).toUpperCase() + category.slice(1)}`, cost));
+                        }
+                    }
+                });
+                
+                if (addPromises.length > 0) {
+                    const results = await Promise.all(addPromises);
                     console.log('All cost items added successfully:', results);
+                    
                     // Refresh the cost breakdown display
                     setTimeout(() => {
                         refreshCostBreakdown();
                         showToast('Selected cost fields applied successfully!', 'success');
                     }, 1000);
-                })
-                .catch(error => {
-                    console.error('Error adding cost items:', error);
-                    showToast('Error applying some cost fields. Please check the console for details.', 'error');
-                });
-        } else {
-            showToast('No valid cost values to apply.', 'warning');
+                } else {
+                    showToast('No valid cost values to apply.', 'warning');
+                }
+            }
+        } catch (error) {
+            console.error('Error applying cost breakdown:', error);
+            showToast('Error applying cost fields. Please check the console for details.', 'error');
         }
     } else {
         showToast('No fields were selected to apply.', 'warning');
     }
+}
+
+// Helper function to clear existing cost items for specific categories
+async function clearExistingCostItems(categories) {
+    console.log('Clearing existing cost items for categories:', categories);
+    
+    try {
+        // First, get the current cost breakdown to find item IDs to delete
+        const response = await fetch(`process_cost_breakdown.php?inventoryId=${currentItemSku}&costType=all`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch cost breakdown: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(`Failed to get cost breakdown: ${data.error}`);
+        }
+        
+        const deletePromises = [];
+        
+        // Delete items for each selected category
+        categories.forEach(category => {
+            if (data.data[category] && Array.isArray(data.data[category])) {
+                data.data[category].forEach(item => {
+                    if (item.id) {
+                        console.log(`Queuing deletion of ${category} item ID ${item.id}`);
+                        deletePromises.push(deleteCostItem(category, item.id));
+                    }
+                });
+            }
+        });
+        
+        if (deletePromises.length > 0) {
+            const results = await Promise.all(deletePromises);
+            console.log('All existing cost items cleared:', results);
+        } else {
+            console.log('No existing cost items found to clear');
+        }
+        
+    } catch (error) {
+        console.error('Error clearing existing cost items:', error);
+        throw error;
+    }
+}
+
+// Helper function to delete a single cost item
+function deleteCostItem(type, itemId) {
+    console.log(`Deleting ${type} cost item ID ${itemId}`);
+    
+    const url = `process_cost_breakdown.php?inventoryId=${currentItemSku}&costType=${type}&id=${itemId}`;
+    
+    return fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log(`Delete ${type} item ${itemId} response status:`, response.status);
+        return response.json();
+    })
+    .then(result => {
+        console.log(`Delete ${type} item ${itemId} result:`, result);
+        if (!result.success) {
+            console.error(`Failed to delete ${type} cost item ${itemId}:`, result.error);
+            throw new Error(`Failed to delete ${type} cost item: ${result.error}`);
+        }
+        return result;
+    })
+    .catch(error => {
+        console.error(`Error deleting ${type} cost item ${itemId}:`, error);
+        throw error;
+    });
 }
 
 // Helper function to add cost item directly

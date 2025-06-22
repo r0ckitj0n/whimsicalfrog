@@ -517,19 +517,25 @@ $messageType = $_GET['type'] ?? '';
 }
 
 /* Custom scrollbar styles for cost suggestion modal */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
+    width: 12px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
     background: #f7fafc;
-    border-radius: 4px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #cbd5e0;
-    border-radius: 4px;
-    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    border: 2px solid #f7fafc;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -1837,7 +1843,7 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                 </h2>
             </div>
             
-            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar" style="max-height: 70vh;">
                 <!-- AI Analysis Summary -->
                 <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <h3 class="font-semibold text-gray-800 mb-2 flex items-center">

@@ -2261,25 +2261,30 @@ function addCostItemDirectly(type, description, cost) {
     console.log(`Adding ${type} cost:`, {type, description, cost, currentItemSku});
     
     const url = `process_cost_breakdown.php`;
-    const formData = new FormData();
-    formData.append('inventoryId', currentItemSku);
-    formData.append('costType', type);
-    formData.append('description', description);
-    formData.append('cost', cost.toFixed(2));
     
-    console.log(`Sending cost request to ${url} with data:`, {
+    // Create the data object based on cost type
+    let requestData = {
         inventoryId: currentItemSku,
         costType: type,
-        description: description,
-        cost: cost.toFixed(2)
-    });
+        cost: parseFloat(cost.toFixed(2))
+    };
+    
+    // Add type-specific fields
+    if (type === 'materials') {
+        requestData.name = description;
+    } else {
+        requestData.description = description;
+    }
+    
+    console.log(`Sending cost request to ${url} with JSON data:`, requestData);
     
     return fetch(url, {
         method: 'POST',
-        body: formData,
         headers: {
+            'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
-        }
+        },
+        body: JSON.stringify(requestData)
     })
     .then(response => {
         console.log(`Cost ${type} response status:`, response.status);

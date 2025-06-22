@@ -40,13 +40,14 @@
 2025-06-22 10:18:28 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:19:28 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:20:28 - [0;32mPHP web server is running correctly[0m
-icalFrog/server_monitor.sh: Operation not permitted
-2025-06-22 10:05:23 - [0;32mPHP web server is running correctly[0m
-2025-06-22 10:06:23 - [0;32mPHP web server is running correctly[0m
-2025-06-22 10:07:24 - [0;32mPHP web server is running correctly[0m
-2025-06-22 10:08:24 - [0;32mPHP web server is running correctly[0m
-2025-06-22 10:09:24 - [0;32mPHP web server is running correctly[0m
-/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+2025-06-22 10:21:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:22:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:23:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:24:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:25:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:26:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:27:28 - [0;32mPHP web server is running correctly[0m
+ion not permitted
 2025-06-22 10:10:24 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:11:24 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:12:24 - [0;32mPHP web server is running correctly[0m
@@ -63,3 +64,11 @@ icalFrog/server_monitor.sh: Operation not permitted
 2025-06-22 10:19:38 - [0;32mPHP web server started successfully[0m
 /bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
 2025-06-22 10:20:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:21:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:22:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:23:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:24:28 - [0;32mPHP web server is running correctly[0m
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+2025-06-22 10:25:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:26:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:27:28 - [0;32mPHP web server is running correctly[0m

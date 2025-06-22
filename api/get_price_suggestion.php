@@ -152,6 +152,7 @@ function parseReasoningIntoComponents($reasoningText, $dbData) {
     // Split reasoning by bullet points or similar separators
     $reasoningItems = preg_split('/[•·]|\s+•\s+/', $reasoningText);
     
+    $foundComponents = false;
     foreach ($reasoningItems as $item) {
         $item = trim($item);
         if (empty($item)) continue;
@@ -170,7 +171,19 @@ function parseReasoningIntoComponents($reasoningText, $dbData) {
                 'type' => $componentData['type'],
                 'explanation' => $componentData['explanation']
             ];
+            $foundComponents = true;
         }
+    }
+    
+    // If no structured components found, create a single component from the full reasoning
+    if (!$foundComponents && !empty($reasoningText)) {
+        $suggestedPrice = floatval($dbData['suggested_price'] ?? 0);
+        $components[] = [
+            'label' => 'AI Pricing Analysis',
+            'amount' => $suggestedPrice,
+            'type' => 'comprehensive_analysis',
+            'explanation' => $reasoningText
+        ];
     }
     
     return $components;
@@ -226,6 +239,14 @@ function determineComponentTypeAndExplanation($label, $amount, $dbData) {
         return [
             'type' => 'seasonality',
             'explanation' => 'Seasonal pricing adjustments based on demand patterns. Considers seasonal trends, holiday demand, and market timing to optimize pricing.'
+        ];
+    }
+    
+    // Handle comprehensive analysis type
+    if ($labelLower === 'ai pricing analysis' || $labelLower === 'comprehensive analysis') {
+        return [
+            'type' => 'comprehensive_analysis',
+            'explanation' => 'Comprehensive AI pricing analysis considering multiple market factors, competitive positioning, and strategic pricing approaches to determine optimal pricing.'
         ];
     }
     

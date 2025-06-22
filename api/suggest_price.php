@@ -25,7 +25,7 @@ if ($isLoggedIn) {
         $userData = json_decode($userData, true);
     }
     if (is_array($userData)) {
-        $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
+        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
     }
 }
 

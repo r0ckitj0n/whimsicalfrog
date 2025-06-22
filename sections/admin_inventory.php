@@ -2276,7 +2276,8 @@ function closeCostSuggestionChoiceDialog() {
 }
 
 function showPriceSuggestionChoiceDialog(suggestionData) {
-    // Check if there's an existing price suggestion
+    // Get current pricing values for comparison
+    const currentPrice = getCurrentPrice();
     const hasExistingPrice = checkForExistingPriceSuggestion();
     
     // Create the modal overlay
@@ -2285,54 +2286,122 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
     modal.id = 'priceSuggestionChoiceModal';
     
     modal.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="bg-gradient-to-r from-green-600 to-blue-600 px-6 py-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 px-6 py-4 flex-shrink-0">
                 <h2 class="text-xl font-bold text-white flex items-center">
-                    🎯 AI Price Suggestion Ready
+                    🎯 AI Price Suggestion - Side by Side Comparison
                 </h2>
             </div>
             
-            <div class="p-6">
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar" style="max-height: 70vh;">
                 <!-- AI Analysis Summary -->
                 <div class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
                     <h3 class="font-semibold text-gray-800 mb-2 flex items-center">
-                        <span class="mr-2">🤖</span> AI Analysis
+                        <span class="mr-2">🤖</span> AI Pricing Analysis
                     </h3>
-                    ${suggestionData.components && suggestionData.components.length > 0 ? `
-                        <ul class="text-sm text-gray-700 mb-2 space-y-1">
-                            ${suggestionData.components.map(component => `
-                                <li class="flex justify-between">
-                                    <span>• ${component.label}:</span>
-                                    <span class="font-semibold">$${parseFloat(component.amount).toFixed(2)}</span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    ` : `
-                        <p class="text-sm text-gray-700 mb-2">${suggestionData.reasoning || 'Advanced pricing analysis completed'}</p>
-                    `}
+                    <p class="text-sm text-gray-700 mb-2">${suggestionData.reasoning || 'Advanced pricing analysis completed'}</p>
                     <div class="text-xs text-green-600">
-                        <strong>Confidence:</strong> ${suggestionData.confidence || 'medium'}
+                        <strong>Confidence:</strong> ${suggestionData.confidence || 'medium'} • 
+                        <strong>Suggested Price:</strong> $${parseFloat(suggestionData.suggestedPrice).toFixed(2)}
                     </div>
                 </div>
                 
-                <!-- Price Breakdown Preview -->
+                <!-- Side by Side Comparison -->
                 <div class="mb-6">
-                    <h3 class="font-semibold text-gray-800 mb-3">💰 Suggested Price Analysis</h3>
-                    <div class="p-4 bg-green-50 rounded border border-green-200">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="font-semibold text-green-800">Recommended Price:</span>
-                            <span class="text-2xl font-bold text-green-800">$${parseFloat(suggestionData.suggestedPrice).toFixed(2)}</span>
-                        </div>
-                        ${suggestionData.components && suggestionData.components.length > 0 ? `
-                            <div class="space-y-2">
-                                ${suggestionData.components.map(component => `
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-700">${component.label}</span>
-                                        <span class="font-semibold text-green-600">$${parseFloat(component.amount).toFixed(2)}</span>
-                                    </div>
-                                `).join('')}
+                    <h3 class="font-semibold text-gray-800 mb-3">💰 Price Comparison</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Current Price Column -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-semibold text-gray-700 mb-3 text-center">📊 Current Price</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-white rounded border">
+                                    <span class="text-sm font-medium text-gray-600">Retail Price:</span>
+                                    <span class="font-semibold text-gray-800">$${parseFloat(currentPrice.retail || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-white rounded border">
+                                    <span class="text-sm font-medium text-gray-600">Cost Price:</span>
+                                    <span class="font-semibold text-gray-800">$${parseFloat(currentPrice.cost || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-100 rounded border-2 border-gray-300">
+                                    <span class="font-semibold text-gray-700">Profit Margin:</span>
+                                    <span class="text-lg font-bold text-gray-800">${currentPrice.retail > 0 ? (((currentPrice.retail - currentPrice.cost) / currentPrice.retail) * 100).toFixed(1) : '0.0'}%</span>
+                                </div>
                             </div>
-                        ` : ''}
+                        </div>
+                        
+                        <!-- AI Suggested Price Column -->
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                            <h4 class="font-semibold text-green-700 mb-3 text-center">🤖 AI Suggested Price</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-white rounded border border-green-200">
+                                    <span class="text-sm font-medium text-green-600">Suggested Price:</span>
+                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.suggestedPrice).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-white rounded border border-green-200">
+                                    <span class="text-sm font-medium text-green-600">Cost Price:</span>
+                                    <span class="font-semibold text-green-800">$${parseFloat(currentPrice.cost || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-green-100 rounded border-2 border-green-300">
+                                    <span class="font-semibold text-green-700">Profit Margin:</span>
+                                    <span class="text-lg font-bold text-green-800">${suggestionData.suggestedPrice > 0 ? (((suggestionData.suggestedPrice - currentPrice.cost) / suggestionData.suggestedPrice) * 100).toFixed(1) : '0.0'}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pricing Components Breakdown -->
+                ${suggestionData.components && suggestionData.components.length > 0 ? `
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">🔍 Pricing Components Analysis</h3>
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div class="space-y-3">
+                            ${suggestionData.components.map(component => `
+                                <div class="flex justify-between items-center p-2 bg-white rounded border">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-800">${component.label}</div>
+                                        <div class="text-xs text-gray-600">${component.explanation || ''}</div>
+                                    </div>
+                                    <span class="font-semibold text-blue-800">$${parseFloat(component.amount).toFixed(2)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <!-- Price Selection -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">🎯 Choose Your Pricing Strategy</h3>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+                        <p class="text-sm text-yellow-800">
+                            <span class="font-semibold">💡 Pro Tip:</span> You can apply the AI suggested price or keep your current price. 
+                            The AI analysis provides valuable insights for your pricing decision.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="priceChoice" value="suggested" id="applySuggestedPrice" class="mr-3 text-green-600 focus:ring-green-500" checked>
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-800">Use AI Suggested Price</div>
+                                <div class="text-sm text-gray-600">
+                                    $${parseFloat(suggestionData.suggestedPrice).toFixed(2)} 
+                                    <span class="ml-2 text-xs ${suggestionData.suggestedPrice > currentPrice.retail ? 'text-green-600' : 'text-red-600'}">
+                                        (${suggestionData.suggestedPrice > currentPrice.retail ? '+' : ''}${(suggestionData.suggestedPrice - currentPrice.retail).toFixed(2)} vs current)
+                                    </span>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="priceChoice" value="current" id="keepCurrentPrice" class="mr-3 text-gray-600 focus:ring-gray-500">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-800">Keep Current Price</div>
+                                <div class="text-sm text-gray-600">
+                                    $${parseFloat(currentPrice.retail || 0).toFixed(2)} (no change)
+                                </div>
+                            </div>
+                        </label>
                     </div>
                 </div>
                 
@@ -2343,27 +2412,26 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                             <span class="font-medium text-amber-800">Existing Price Suggestion Found</span>
                         </div>
                         <p class="text-sm text-amber-700">
-                            You have an existing price suggestion displayed. If you choose to use the new figures, 
-                            your current price suggestion will be replaced with the new AI analysis.
+                            You have an existing price suggestion displayed. This new analysis will replace the previous suggestion.
                         </p>
                     </div>
                 ` : ''}
                 
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <button onclick="applySuggestedPriceAnalysis(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                    <button onclick="applySelectedPriceChoice(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                             class="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
-                        🎯 Use New AI Price ${hasExistingPrice ? '(Replace Current)' : ''}
+                        🎯 Apply Selected Choice
                     </button>
                     
                     <button onclick="closePriceSuggestionChoiceDialog()" 
                             class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200">
-                        ❌ Keep Current Price
+                        ❌ Cancel
                     </button>
                 </div>
                 
                 <div class="mt-4 text-xs text-gray-500 text-center">
-                    💡 Tip: You can always generate new price suggestions later if needed
+                    💡 Tip: The AI analysis will be saved for reference even if you keep your current price
                 </div>
             </div>
         </div>
@@ -2399,24 +2467,57 @@ function closePriceSuggestionChoiceDialog() {
     }
 }
 
-function applySuggestedPriceAnalysis(buttonElement) {
+function getCurrentPrice() {
+    // Get current pricing values from form fields
+    const retailPriceField = document.getElementById('retailPrice');
+    const costPriceField = document.getElementById('costPrice');
+    
+    return {
+        retail: parseFloat(retailPriceField ? retailPriceField.value : 0) || 0,
+        cost: parseFloat(costPriceField ? costPriceField.value : 0) || 0
+    };
+}
+
+function applySelectedPriceChoice(buttonElement) {
     // Get suggestion data from the button's data attribute
     const suggestionData = JSON.parse(buttonElement.dataset.suggestion);
+    
+    // Get selected choice
+    const selectedChoice = document.querySelector('input[name="priceChoice"]:checked').value;
     
     // Close the choice dialog
     closePriceSuggestionChoiceDialog();
     
-    // Display the price suggestion inline
+    if (selectedChoice === 'suggested') {
+        // Apply the AI suggested price to the retail price field
+        const retailPriceField = document.getElementById('retailPrice');
+        if (retailPriceField) {
+            retailPriceField.value = parseFloat(suggestionData.suggestedPrice).toFixed(2);
+            
+            // Trigger change event to update any dependencies
+            retailPriceField.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        
+        showToast('success', `✅ AI suggested price applied! New price: $${suggestionData.suggestedPrice} (${suggestionData.confidence || 'medium'} confidence)`);
+    } else {
+        showToast('info', '📋 Current price kept. AI analysis saved for reference.');
+    }
+    
+    // Always display the price suggestion inline for reference
     displayPriceSuggestion({
         suggestedPrice: suggestionData.suggestedPrice,
         reasoning: suggestionData.reasoning,
         confidence: suggestionData.confidence,
         factors: suggestionData.factors,
         components: suggestionData.components,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        applied: selectedChoice === 'suggested'
     });
-    
-    showToast('success', `✅ AI price suggestion applied! Suggested: $${suggestionData.suggestedPrice} (${suggestionData.confidence || 'medium'} confidence)`);
+}
+
+function applySuggestedPriceAnalysis(buttonElement) {
+    // Legacy function - redirect to new function for backward compatibility
+    applySelectedPriceChoice(buttonElement);
 }
 
 async function applySuggestedCostBreakdown(buttonElement) {

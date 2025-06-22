@@ -1599,6 +1599,7 @@ Consider materials, labor, market demand, and competition for custom craft items
             'reasoning' => 'AI-generated pricing',
             'confidence' => 'medium',
             'factors' => [],
+            'components' => [], // Add components to defaults
             'analysis' => [
                 'pricing_strategy' => 'value_based',
                 'market_positioning' => 'standard',
@@ -1608,7 +1609,21 @@ Consider materials, labor, market demand, and competition for custom craft items
             ]
         ];
         
-        return array_merge($defaults, $data);
+        $result = array_merge($defaults, $data);
+        
+        // If no components were provided but we have reasoning, create a fallback component
+        if (empty($result['components']) && !empty($result['reasoning'])) {
+            $result['components'] = [
+                [
+                    'type' => 'ai_pricing_analysis',
+                    'label' => 'AI Pricing Analysis',
+                    'amount' => $result['price'],
+                    'explanation' => $result['reasoning']
+                ]
+            ];
+        }
+        
+        return $result;
     }
     
     /**

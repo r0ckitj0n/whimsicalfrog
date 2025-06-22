@@ -717,7 +717,7 @@ class AIProviders {
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a pricing expert for custom crafts. Respond only with valid JSON.'
+                    'content' => 'You are a pricing expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed, specific reasoning and comprehensive component breakdowns for pricing analysis.'
                 ],
                 [
                     'role' => 'user',
@@ -759,6 +759,7 @@ class AIProviders {
             'model' => $this->settings['anthropic_model'],
             'max_tokens' => (int)$this->settings['ai_max_tokens'],
             'temperature' => (float)$this->settings['ai_temperature'],
+            'system' => 'You are a pricing expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed, specific reasoning and comprehensive component breakdowns for pricing analysis.',
             'messages' => [
                 [
                     'role' => 'user',
@@ -808,11 +809,14 @@ class AIProviders {
         
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
         
+        // Add system instruction for Google
+        $enhancedPrompt = "You are a pricing expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed, specific reasoning and comprehensive component breakdowns for pricing analysis.\n\n" . $prompt;
+        
         $data = [
             'contents' => [
                 [
                     'parts' => [
-                        ['text' => $prompt]
+                        ['text' => $enhancedPrompt]
                     ]
                 ]
             ],
@@ -850,7 +854,7 @@ class AIProviders {
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a pricing expert for custom crafts. Respond only with valid JSON.'
+                    'content' => 'You are a pricing expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed, specific reasoning and comprehensive component breakdowns for pricing analysis.'
                 ],
                 [
                     'role' => 'user',
@@ -1475,21 +1479,68 @@ Focus on custom crafts, personalized items, and handmade quality. Make it compel
      * Build pricing prompt for AI
      */
     private function buildPricingPrompt($name, $description, $category, $costPrice) {
-        return "Analyze pricing for a custom craft item. Return ONLY valid JSON with this exact structure:
+        return "You are a pricing expert for custom crafts and handmade items. Analyze the pricing for this item and provide comprehensive reasoning with detailed breakdown components.
+
+Return ONLY valid JSON with this EXACT structure (no additional text):
 
 {
   \"price\": 25.99,
-  \"reasoning\": \"detailed pricing explanation\",
+  \"reasoning\": \"Comprehensive explanation of pricing strategy and rationale\",
   \"confidence\": \"high\",
-  \"factors\": [\"factor1\", \"factor2\", \"factor3\"],
+  \"factors\": [\"market_demand\", \"material_costs\", \"labor_time\", \"competition\", \"brand_positioning\"],
+  \"components\": [
+    {
+      \"type\": \"cost_plus_pricing\",
+      \"label\": \"Cost-Plus Analysis\",
+      \"amount\": 18.50,
+      \"explanation\": \"Base cost plus markup for materials and direct labor\"
+    },
+    {
+      \"type\": \"market_research\",
+      \"label\": \"Market Research Analysis\",
+      \"amount\": 22.00,
+      \"explanation\": \"Price based on comparable items in the market\"
+    },
+    {
+      \"type\": \"competitive_analysis\",
+      \"label\": \"Competitive Analysis\",
+      \"amount\": 24.00,
+      \"explanation\": \"Pricing relative to direct competitors\"
+    },
+    {
+      \"type\": \"value_based_pricing\",
+      \"label\": \"Value-Based Pricing\",
+      \"amount\": 28.00,
+      \"explanation\": \"Price based on perceived customer value\"
+    },
+    {
+      \"type\": \"brand_premium\",
+      \"label\": \"Brand Premium\",
+      \"amount\": 26.50,
+      \"explanation\": \"Premium for brand quality and reputation\"
+    },
+    {
+      \"type\": \"psychological_pricing\",
+      \"label\": \"Psychological Pricing\",
+      \"amount\": 25.99,
+      \"explanation\": \"Price point optimized for customer psychology\"
+    }
+  ],
   \"analysis\": {
     \"pricing_strategy\": \"value_based\",
     \"market_positioning\": \"premium\",
-    \"profit_margin_analysis\": \"margin details\",
+    \"profit_margin_analysis\": \"Detailed margin breakdown and justification\",
     \"competitive_price_range\": \"$20-$30\",
-    \"psychological_pricing_notes\": \"pricing psychology\"
+    \"psychological_pricing_notes\": \"Why this specific price point works psychologically\"
   }
 }
+
+CRITICAL REQUIREMENTS:
+1. The \"components\" array MUST contain 4-6 different pricing approaches with detailed explanations
+2. Each component must have a realistic \"amount\" that reflects that pricing method
+3. The \"reasoning\" field must be a comprehensive 2-3 sentence explanation
+4. All explanations must be specific to this product, not generic
+5. Consider the cost price of \${$costPrice} as your baseline
 
 Product Details:
 - Name: {$name}
@@ -1497,7 +1548,15 @@ Product Details:
 - Category: {$category}
 - Cost Price: \${$costPrice}
 
-Consider materials, labor, market demand, and competition for custom craft items.";
+Analyze this as a custom craft item considering:
+- Materials and labor costs
+- Market demand for {$category} items
+- Competition in the custom crafts market
+- Value proposition for personalized/handmade items
+- Profit margins typical for small craft businesses
+- Customer willingness to pay for quality and customization
+
+Provide detailed, specific reasoning for each pricing component based on the actual product details provided.";
     }
     
     /**

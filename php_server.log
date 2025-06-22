@@ -1,31 +1,19 @@
-[Sun Jun 22 10:36:12 2025] PHP 8.4.7 Development Server (http://localhost:8000) started
-[Sun Jun 22 10:36:29 2025] [::1]:51562 Accepted
-[Sun Jun 22 10:36:29 2025] [::1]:51562 [200]: GET /
-[Sun Jun 22 10:36:29 2025] [::1]:51562 Closing
-[Sun Jun 22 10:36:33 2025] [::1]:51579 Accepted
-[Sun Jun 22 10:36:33 2025] [::1]:51579 [200]: POST /api/analytics_tracker.php?action=track_page_view
-[Sun Jun 22 10:36:33 2025] [::1]:51579 Closing
-[Sun Jun 22 10:37:03 2025] [::1]:51702 Accepted
-[Sun Jun 22 10:37:03 2025] [::1]:51702 [200]: POST /api/analytics_tracker.php?action=track_page_view
-[Sun Jun 22 10:37:03 2025] [::1]:51702 Closing
-[Sun Jun 22 10:37:29 2025] [::1]:51808 Accepted
-[Sun Jun 22 10:37:29 2025] [::1]:51808 [200]: GET /
-[Sun Jun 22 10:37:29 2025] [::1]:51808 Closing
-[Sun Jun 22 10:37:33 2025] [::1]:51825 Accepted
-[Sun Jun 22 10:37:33 2025] [::1]:51825 [200]: POST /api/analytics_tracker.php?action=track_page_view
-[Sun Jun 22 10:37:33 2025] [::1]:51825 Closing
-[Sun Jun 22 10:38:03 2025] [::1]:51971 Accepted
-[Sun Jun 22 10:38:03 2025] [::1]:51971 [200]: POST /api/analytics_tracker.php?action=track_page_view
-[Sun Jun 22 10:38:03 2025] [::1]:51971 Closing
-[Sun Jun 22 10:38:15 2025] [::1]:52020 Accepted
-[Sun Jun 22 10:38:15 2025] [::1]:52020 [200]: GET /
-[Sun Jun 22 10:38:15 2025] [::1]:52020 Closing
-[Sun Jun 22 10:38:29 2025] [::1]:52077 Accepted
-[Sun Jun 22 10:38:29 2025] [::1]:52077 [200]: GET /
-[Sun Jun 22 10:38:29 2025] [::1]:52077 Closing
-[Sun Jun 22 10:38:29 2025] [::1]:52078 Accepted
-[Sun Jun 22 10:38:29 2025] [::1]:52078 [403]: POST /api/suggest_price.php
-[Sun Jun 22 10:38:29 2025] [::1]:52078 Closing
-[Sun Jun 22 10:38:33 2025] [::1]:52095 Accepted
-[Sun Jun 22 10:38:33 2025] [::1]:52095 [200]: POST /api/analytics_tracker.php?action=track_page_view
-[Sun Jun 22 10:38:33 2025] [::1]:52095 Closing
+[Sun Jun 22 10:42:57 2025] PHP 8.4.7 Development Server (http://localhost:8000) started
+[Sun Jun 22 10:43:10 2025] [::1]:53304 Accepted
+[Sun Jun 22 10:43:10 2025] [::1]:53304 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 10:43:10 2025] [::1]:53304 Closing
+[Sun Jun 22 10:43:29 2025] [::1]:53382 Accepted
+[Sun Jun 22 10:43:29 2025] [::1]:53382 [200]: GET /
+[Sun Jun 22 10:43:29 2025] [::1]:53382 Closing
+[Sun Jun 22 10:43:40 2025] [::1]:53430 Accepted
+[Sun Jun 22 10:43:40 2025] [::1]:53430 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 10:43:40 2025] [::1]:53430 Closing
+[Sun Jun 22 10:44:10 2025] [::1]:53576 Accepted
+[Sun Jun 22 10:44:10 2025] [::1]:53576 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 10:44:10 2025] [::1]:53576 Closing
+[Sun Jun 22 10:44:29 2025] [::1]:53652 Accepted
+[Sun Jun 22 10:44:29 2025] [::1]:53652 [200]: GET /
+[Sun Jun 22 10:44:29 2025] [::1]:53652 Closing
+[Sun Jun 22 10:44:40 2025] [::1]:53698 Accepted
+[Sun Jun 22 10:44:40 2025] [::1]:53698 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 10:44:40 2025] [::1]:53698 Closing

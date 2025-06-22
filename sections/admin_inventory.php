@@ -2008,20 +2008,30 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                 </div>
                 
                 <!-- Action Buttons -->
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <button onclick="applySelectedCostFields(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
-                            class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
-                        🎯 Apply Selected Changes
+                <div class="flex flex-col gap-3">
+                    <!-- Primary Action: Replace All -->
+                    <button onclick="replaceAllCostValues(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                            class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
+                        🔄 Replace Current Cost Values
                     </button>
                     
-                    <button onclick="closeCostSuggestionChoiceDialog()" 
-                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200">
-                        ❌ Cancel
-                    </button>
+                    <!-- Secondary Actions -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="applySelectedCostFields(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                                class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
+                            ➕ Add as Additional Costs
+                        </button>
+                        
+                        <button onclick="closeCostSuggestionChoiceDialog()" 
+                                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200">
+                            ❌ Cancel
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="mt-4 text-xs text-gray-500 text-center">
-                    💡 Tip: Only selected fields will be updated. Unselected fields keep their current values.
+                <div class="mt-4 text-xs text-gray-500 text-center space-y-1">
+                    <div>🔄 <strong>Replace:</strong> Deletes all current cost items and creates new ones with AI values</div>
+                    <div>➕ <strong>Add:</strong> Only selected fields will be added. Unselected fields keep their current values.</div>
                 </div>
             </div>
         </div>
@@ -2161,6 +2171,55 @@ function selectOnlyLowerValues() {
             parseFloat(suggestionData.breakdown.equipment || 0) < parseFloat(currentCosts.equipment || 0);
     } catch (e) {
         console.error('Error in selectOnlyLowerValues:', e);
+    }
+}
+
+// Replace all current cost values with AI suggestions
+async function replaceAllCostValues(button) {
+    try {
+        const suggestionData = JSON.parse(button.getAttribute('data-suggestion').replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+        
+        // Close the dialog
+        closeCostSuggestionChoiceDialog();
+        
+        // Show loading state
+        showToast('Replacing all cost values with AI suggestions...', 'info');
+        
+        // Clear ALL existing cost items first
+        const allCategories = ['materials', 'labor', 'energy', 'equipment'];
+        console.log('Clearing all existing cost items for complete replacement');
+        await clearExistingCostItems(allCategories);
+        
+        // Wait a moment for the clearing to complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Add all AI suggested values
+        const addPromises = [];
+        
+        allCategories.forEach(category => {
+            const cost = parseFloat(suggestionData.breakdown[category] || 0);
+            if (cost > 0) {
+                console.log(`Queuing ${category} cost addition (replace mode):`, cost);
+                addPromises.push(addCostItemDirectly(category, `AI Suggested ${category.charAt(0).toUpperCase() + category.slice(1)}`, cost));
+            }
+        });
+        
+        if (addPromises.length > 0) {
+            const results = await Promise.all(addPromises);
+            console.log('All AI cost values applied (replace mode):', results);
+            
+            // Refresh the cost breakdown display
+            setTimeout(() => {
+                refreshCostBreakdown();
+                showToast('✅ All cost values replaced with AI suggestions!', 'success');
+            }, 1000);
+        } else {
+            showToast('No valid AI cost values to apply.', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('Error replacing all cost values:', error);
+        showToast('Error replacing cost values. Please check the console for details.', 'error');
     }
 }
 

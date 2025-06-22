@@ -73,10 +73,11 @@
 2025-06-22 10:51:30 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:52:30 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:53:30 - [0;32mPHP web server is running correctly[0m
- 10:28:28 - [0;32mPHP web server is running correctly[0m
-2025-06-22 10:29:28 - [0;32mPHP web server is running correctly[0m
-/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
-2025-06-22 10:30:28 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:54:30 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:55:30 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:56:30 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:57:30 - [0;32mPHP web server is running correctly[0m
+is running correctly[0m
 2025-06-22 10:31:29 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:32:29 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:33:29 - [0;32mPHP web server is running correctly[0m
@@ -104,3 +105,8 @@
 2025-06-22 10:51:30 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:52:30 - [0;32mPHP web server is running correctly[0m
 2025-06-22 10:53:30 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:54:30 - [0;32mPHP web server is running correctly[0m
+/bin/bash: /Users/jongraves/Documents/Websites/WhimsicalFrog/server_monitor.sh: Operation not permitted
+2025-06-22 10:55:30 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:56:30 - [0;32mPHP web server is running correctly[0m
+2025-06-22 10:57:30 - [0;32mPHP web server is running correctly[0m

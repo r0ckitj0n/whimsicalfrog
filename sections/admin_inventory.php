@@ -2220,22 +2220,37 @@ function applySelectedCostBreakdown(selectedData) {
     if (hasSelections) {
         // Apply only selected fields
         const categories = ['materials', 'labor', 'energy', 'equipment'];
+        const promises = [];
         
         categories.forEach(category => {
             if (selectedData.selectedFields[category] && selectedData.breakdown[category] !== null) {
                 // Add a cost item for this category with the AI suggested value
                 const cost = parseFloat(selectedData.breakdown[category]);
                 if (cost > 0) {
-                    addCostItemDirectly(category, `AI Suggested ${category.charAt(0).toUpperCase() + category.slice(1)}`, cost);
+                    console.log(`Queuing ${category} cost addition:`, cost);
+                    promises.push(addCostItemDirectly(category, `AI Suggested ${category.charAt(0).toUpperCase() + category.slice(1)}`, cost));
                 }
             }
         });
         
-        // Refresh the cost breakdown display
-        setTimeout(() => {
-            refreshCostBreakdown();
-            showToast('Selected cost fields applied successfully!', 'success');
-        }, 500);
+        // Wait for all cost items to be added, then refresh
+        if (promises.length > 0) {
+            Promise.all(promises)
+                .then(results => {
+                    console.log('All cost items added successfully:', results);
+                    // Refresh the cost breakdown display
+                    setTimeout(() => {
+                        refreshCostBreakdown();
+                        showToast('Selected cost fields applied successfully!', 'success');
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error adding cost items:', error);
+                    showToast('Error applying some cost fields. Please check the console for details.', 'error');
+                });
+        } else {
+            showToast('No valid cost values to apply.', 'warning');
+        }
     } else {
         showToast('No fields were selected to apply.', 'warning');
     }
@@ -2243,6 +2258,8 @@ function applySelectedCostBreakdown(selectedData) {
 
 // Helper function to add cost item directly
 function addCostItemDirectly(type, description, cost) {
+    console.log(`Adding ${type} cost:`, {type, description, cost, currentItemSku});
+    
     const url = `process_cost_breakdown.php`;
     const formData = new FormData();
     formData.append('inventoryId', currentItemSku);
@@ -2250,21 +2267,35 @@ function addCostItemDirectly(type, description, cost) {
     formData.append('description', description);
     formData.append('cost', cost.toFixed(2));
     
-    fetch(url, {
+    console.log(`Sending cost request to ${url} with data:`, {
+        inventoryId: currentItemSku,
+        costType: type,
+        description: description,
+        cost: cost.toFixed(2)
+    });
+    
+    return fetch(url, {
         method: 'POST',
         body: formData,
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log(`Cost ${type} response status:`, response.status);
+        return response.json();
+    })
     .then(result => {
+        console.log(`Cost ${type} result:`, result);
         if (!result.success) {
             console.error(`Failed to add ${type} cost:`, result.error);
+            throw new Error(`Failed to add ${type} cost: ${result.error}`);
         }
+        return result;
     })
     .catch(error => {
         console.error(`Error adding ${type} cost:`, error);
+        throw error;
     });
 }
 

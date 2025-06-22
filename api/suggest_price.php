@@ -198,6 +198,7 @@ try {
         'reasoning' => $pricingData['reasoning'],
         'confidence' => $pricingData['confidence'],
         'factors' => $pricingData['factors'],
+        'components' => $pricingData['components'],
         'analysis' => $pricingData['analysis']
     ]);
     
@@ -341,6 +342,17 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
     $finalPrice = validatePriceRange($basePrice, $costPrice);
     $factors['final'] = $finalPrice;
     
+    // Convert pricingComponents to the format expected by frontend
+    $components = [];
+    foreach ($pricingComponents as $key => $component) {
+        $components[] = [
+            'type' => $key,
+            'label' => $component['label'],
+            'amount' => $component['amount'],
+            'explanation' => $component['explanation']
+        ];
+    }
+    
     // Enhanced analysis data with individual components
     $enhancedAnalysis = [
         'detected_materials' => $productAnalysis['materials'] ?? [],
@@ -376,7 +388,7 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
         'confidence' => $confidence,
         'factors' => $factors,
         'analysis' => $enhancedAnalysis,
-        'components' => $pricingComponents  // Separate components for easier access
+        'components' => $components  // Use the properly formatted components array
     ];
 }
 

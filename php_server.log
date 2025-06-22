@@ -196,3 +196,151 @@
 [Sun Jun 22 11:12:35 2025] [::1]:61199 Accepted
 [Sun Jun 22 11:12:35 2025] [::1]:61199 [200]: POST /api/analytics_tracker.php?action=track_page_view
 [Sun Jun 22 11:12:35 2025] [::1]:61199 Closing
+[Sun Jun 22 11:13:05 2025] [::1]:61346 Accepted
+[Sun Jun 22 11:13:05 2025] [::1]:61346 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 11:13:05 2025] [::1]:61346 Closing
+[Sun Jun 22 11:13:31 2025] [::1]:61458 Accepted
+[Sun Jun 22 11:13:31 2025] [::1]:61458 [200]: GET /
+[Sun Jun 22 11:13:31 2025] [::1]:61458 Closing
+[Sun Jun 22 11:13:35 2025] [::1]:61472 Accepted
+[Sun Jun 22 11:13:35 2025] [::1]:61472 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 11:13:35 2025] [::1]:61472 Closing
+[Sun Jun 22 11:13:58 2025] [::1]:61571 Accepted
+[Sun Jun 22 11:13:58 2025] [::1]:61571 [200]: POST /api/analytics_tracker.php?action=track_interaction
+[Sun Jun 22 11:13:58 2025] [::1]:61571 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61580 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61581 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61580 [200]: GET /?page=admin&section=inventory&edit=WF-AR-001
+[Sun Jun 22 11:14:00 2025] [::1]:61580 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61581 [200]: POST /api/analytics_tracker.php
+[Sun Jun 22 11:14:00 2025] [::1]:61581 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61582 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61582 [200]: POST /api/analytics_tracker.php
+[Sun Jun 22 11:14:00 2025] [::1]:61582 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61583 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61584 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61585 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61586 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61583 [200]: GET /css/styles.css?v=1750605240
+[Sun Jun 22 11:14:00 2025] [::1]:61583 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61584 [200]: GET /css/global-modals.css?v=1750605240
+[Sun Jun 22 11:14:00 2025] [::1]:61585 [200]: GET /images/sign_whimsicalfrog.webp
+[Sun Jun 22 11:14:00 2025] [::1]:61584 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61585 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61586 [200]: GET /js/global-modals.js?v=1750605240
+[Sun Jun 22 11:14:00 2025] [::1]:61586 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61587 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61588 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61587 [200]: GET /.well-known/appspecific/com.chrome.devtools.json
+[Sun Jun 22 11:14:00 2025] [::1]:61587 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61588 [200]: GET /js/analytics.js?v=1750605240
+[Sun Jun 22 11:14:00 2025] [::1]:61588 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61589 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61589 [200]: GET /images/room_main.png?v=cb2
+[Sun Jun 22 11:14:00 2025] [::1]:61589 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61594 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61595 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61596 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61594 [200]: GET /process_cost_breakdown.php?inventoryId=WF-AR-001
+[Sun Jun 22 11:14:00 2025] [::1]:61594 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61597 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61595 [200]: GET /api/get_price_suggestion.php?sku=WF-AR-001&_t=1750605240762
+[Sun Jun 22 11:14:00 2025] [::1]:61595 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61596 [200]: GET /api/get_marketing_suggestion.php?sku=WF-AR-001
+[Sun Jun 22 11:14:00 2025] [::1]:61596 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61598 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61597 [200]: POST /api/analytics_tracker.php?action=track_visit
+[Sun Jun 22 11:14:00 2025] [::1]:61597 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61599 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61598 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 11:14:00 2025] [::1]:61598 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61600 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61599 [200]: GET /api/get_background.php?room_type=room_main
+[Sun Jun 22 11:14:00 2025] [::1]:61599 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61600 [200]: GET /images/room_main.webp?v=cb2
+[Sun Jun 22 11:14:00 2025] [::1]:61600 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61601 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61601 [200]: GET /api/get_item_images.php?sku=WF-AR-001
+[Sun Jun 22 11:14:00 2025] [::1]:61601 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61602 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61602 [200]: GET /images/room_main.webp?v=1750605240779
+[Sun Jun 22 11:14:00 2025] [::1]:61602 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61603 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61603 [200]: GET /favicon.ico
+[Sun Jun 22 11:14:00 2025] [::1]:61603 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61604 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61604 [200]: GET /images/items/WF-AR-001A.png
+[Sun Jun 22 11:14:00 2025] [::1]:61604 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61605 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61605 [200]: GET /api/get_item_images.php?sku=WF-SU-002
+[Sun Jun 22 11:14:00 2025] [::1]:61605 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61606 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61606 [200]: GET /images/items/WF-SU-002A.png
+[Sun Jun 22 11:14:00 2025] [::1]:61606 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61607 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61608 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61607 [200]: GET /api/get_item_images.php?sku=WF-AR-001
+[Sun Jun 22 11:14:00 2025] [::1]:61607 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61608 [200]: GET /api/get_item_images.php?sku=WF-TS-001
+[Sun Jun 22 11:14:00 2025] [::1]:61608 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61609 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61609 [200]: GET /images/items/WF-TS-001A.png
+[Sun Jun 22 11:14:00 2025] [::1]:61609 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61610 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61610 [200]: GET /api/get_item_images.php?sku=WF-TS-002
+[Sun Jun 22 11:14:00 2025] [::1]:61610 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61611 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61611 [200]: GET /images/items/WF-TS-002B.png
+[Sun Jun 22 11:14:00 2025] [::1]:61611 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61612 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61612 [200]: GET /api/get_item_images.php?sku=WF-TU-001
+[Sun Jun 22 11:14:00 2025] [::1]:61612 Closing
+[Sun Jun 22 11:14:00 2025] [::1]:61613 Accepted
+[Sun Jun 22 11:14:00 2025] [::1]:61613 [200]: GET /images/items/WF-TU-001A.png
+[Sun Jun 22 11:14:00 2025] [::1]:61613 Closing
+[Sun Jun 22 11:14:01 2025] [::1]:61614 Accepted
+[Sun Jun 22 11:14:01 2025] [::1]:61614 [200]: GET /api/get_item_images.php?sku=WF-TU-002
+[Sun Jun 22 11:14:01 2025] [::1]:61614 Closing
+[Sun Jun 22 11:14:01 2025] [::1]:61615 Accepted
+[Sun Jun 22 11:14:01 2025] [::1]:61615 [200]: GET /images/items/WF-TU-002A.png
+[Sun Jun 22 11:14:01 2025] [::1]:61615 Closing
+[Sun Jun 22 11:14:01 2025] [::1]:61616 Accepted
+[Sun Jun 22 11:14:01 2025] [::1]:61616 [200]: GET /api/get_item_images.php?sku=WF-TU-003
+[Sun Jun 22 11:14:01 2025] [::1]:61616 Closing
+[Sun Jun 22 11:14:01 2025] [::1]:61617 Accepted
+[Sun Jun 22 11:14:01 2025] [::1]:61617 [200]: GET /images/items/WF-TU-003A.webp
+[Sun Jun 22 11:14:01 2025] [::1]:61617 Closing
+[Sun Jun 22 11:14:01 2025] [::1]:61618 Accepted
+[Sun Jun 22 11:14:01 2025] [::1]:61618 [200]: GET /api/get_item_images.php?sku=WF-WW-001
+[Sun Jun 22 11:14:01 2025] [::1]:61618 Closing
+[Sun Jun 22 11:14:01 2025] [::1]:61619 Accepted
+[Sun Jun 22 11:14:01 2025] [::1]:61619 [200]: GET /images/items/WF-WW-001A.png
+[Sun Jun 22 11:14:01 2025] [::1]:61619 Closing
+[Sun Jun 22 11:14:03 2025] [::1]:61632 Accepted
+[Sun Jun 22 11:14:03 2025] [::1]:61633 Accepted
+[Sun Jun 22 11:14:11 2025] Error saving cost suggestion: SQLSTATE[01000]: Warning: 1265 Data truncated for column 'production_time_estimate' at row 1
+[Sun Jun 22 11:14:11 2025] [::1]:61632 [200]: POST /api/suggest_cost.php
+[Sun Jun 22 11:14:11 2025] [::1]:61632 Closing
+[Sun Jun 22 11:14:11 2025] [::1]:61633 [200]: POST /api/analytics_tracker.php?action=track_interaction
+[Sun Jun 22 11:14:11 2025] [::1]:61633 Closing
+[Sun Jun 22 11:14:24 2025] [::1]:61720 Accepted
+[Sun Jun 22 11:14:24 2025] [::1]:61721 Accepted
+[Sun Jun 22 11:14:24 2025] [::1]:61720 [200]: POST /api/analytics_tracker.php?action=track_interaction
+[Sun Jun 22 11:14:24 2025] [::1]:61720 Closing
+[Sun Jun 22 11:14:24 2025] [::1]:61721 [200]: GET /process_cost_breakdown.php?inventoryId=WF-AR-001&costType=all
+[Sun Jun 22 11:14:24 2025] [::1]:61721 Closing
+[Sun Jun 22 11:14:30 2025] [::1]:61742 Accepted
+[Sun Jun 22 11:14:30 2025] [::1]:61742 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 11:14:30 2025] [::1]:61742 Closing
+[Sun Jun 22 11:14:31 2025] [::1]:61751 Accepted
+[Sun Jun 22 11:14:31 2025] [::1]:61751 [200]: GET /
+[Sun Jun 22 11:14:31 2025] [::1]:61751 Closing
+[Sun Jun 22 11:15:00 2025] [::1]:61891 Accepted
+[Sun Jun 22 11:15:00 2025] [::1]:61891 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 11:15:00 2025] [::1]:61891 Closing
+[Sun Jun 22 11:15:30 2025] [::1]:62012 Accepted
+[Sun Jun 22 11:15:30 2025] [::1]:62012 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Sun Jun 22 11:15:30 2025] [::1]:62012 Closing
+[Sun Jun 22 11:15:32 2025] [::1]:62021 Accepted
+[Sun Jun 22 11:15:32 2025] [::1]:62021 [200]: GET /
+[Sun Jun 22 11:15:32 2025] [::1]:62021 Closing

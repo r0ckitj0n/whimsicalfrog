@@ -2360,7 +2360,7 @@ async function clearExistingCostItems(categories) {
                 data.data[category].forEach(item => {
                     if (item.id) {
                         console.log(`Queuing deletion of ${category} item ID ${item.id}`);
-                        deletePromises.push(deleteCostItem(category, item.id));
+                        deletePromises.push(deleteCostItemDirect(category, item.id));
                     }
                 });
             }
@@ -2379,8 +2379,8 @@ async function clearExistingCostItems(categories) {
     }
 }
 
-// Helper function to delete a single cost item
-function deleteCostItem(type, itemId) {
+// Helper function to delete a single cost item directly via API
+function deleteCostItemDirect(type, itemId) {
     console.log(`Deleting ${type} cost item ID ${itemId}`);
     
     const url = `process_cost_breakdown.php?inventoryId=${currentItemSku}&costType=${type}&id=${itemId}`;

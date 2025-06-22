@@ -3,6 +3,7 @@
 ob_start();
 header('Content-Type: application/json');
 require_once 'config.php';
+require_once 'ai_providers.php';
 
 // Turn off error display for this API to prevent HTML in JSON response
 ini_set('display_errors', 0);
@@ -65,8 +66,14 @@ if (empty($name)) {
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    // Initialize cost analysis
-    $costData = analyzeCostStructure($name, $description, $category, $pdo);
+    // Initialize cost analysis using AI provider system
+    try {
+        $costData = generateAICostSuggestion($name, $description, $category);
+    } catch (Exception $e) {
+        // Fallback to local algorithmic analysis if AI fails
+        error_log("AI Cost Provider failed, using local fallback: " . $e->getMessage());
+        $costData = analyzeCostStructure($name, $description, $category, $pdo);
+    }
     
     // Save cost suggestion to database (create table if needed)
     if (!empty($sku)) {

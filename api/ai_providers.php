@@ -182,6 +182,39 @@ class AIProviders {
     }
     
     /**
+     * Generate cost suggestions using selected AI provider
+     */
+    public function generateCostSuggestion($name, $description, $category) {
+        $provider = $this->settings['ai_provider'];
+        
+        try {
+            switch ($provider) {
+                case 'openai':
+                    return $this->generateCostWithOpenAI($name, $description, $category);
+                case 'anthropic':
+                    return $this->generateCostWithAnthropic($name, $description, $category);
+                case 'google':
+                    return $this->generateCostWithGoogle($name, $description, $category);
+                case 'meta':
+                    return $this->generateCostWithMeta($name, $description, $category);
+                case 'local':
+                default:
+                    return $this->generateCostWithLocal($name, $description, $category);
+            }
+        } catch (Exception $e) {
+            error_log("AI Cost Provider Error ($provider): " . $e->getMessage());
+            
+            // Fallback to local if enabled
+            if ($this->settings['fallback_to_local'] && $provider !== 'local') {
+                error_log("Falling back to local cost AI");
+                return $this->generateCostWithLocal($name, $description, $category);
+            }
+            
+            throw $e;
+        }
+    }
+
+    /**
      * Generate pricing suggestions using selected AI provider
      */
     public function generatePricingSuggestion($name, $description, $category, $costPrice) {
@@ -884,6 +917,196 @@ class AIProviders {
     }
     
     /**
+     * Cost Suggestion AI Integration Methods
+     */
+    
+    /**
+     * Local Cost Integration
+     */
+    private function generateCostWithLocal($name, $description, $category) {
+        // Use the existing local cost analysis from suggest_cost.php
+        return analyzeCostStructure($name, $description, $category, $this->pdo);
+    }
+    
+    /**
+     * OpenAI Cost Integration
+     */
+    private function generateCostWithOpenAI($name, $description, $category) {
+        $apiKey = $this->settings['openai_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("OpenAI API key not configured");
+        }
+        
+        $prompt = $this->buildCostPrompt($name, $description, $category);
+        
+        $data = [
+            'model' => $this->settings['openai_model'],
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'You are a cost analysis expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed cost breakdowns for materials, labor, energy, and equipment.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ],
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'max_tokens' => (int)$this->settings['ai_max_tokens']
+        ];
+        
+        $response = $this->makeAPICall(
+            'https://api.openai.com/v1/chat/completions',
+            $data,
+            [
+                'Authorization: Bearer ' . $apiKey,
+                'Content-Type: application/json'
+            ]
+        );
+        
+        if (!$response || !isset($response['choices'][0]['message']['content'])) {
+            throw new Exception("Invalid OpenAI cost response");
+        }
+        
+        return $this->parseCostResponse($response['choices'][0]['message']['content']);
+    }
+    
+    /**
+     * Anthropic Cost Integration
+     */
+    private function generateCostWithAnthropic($name, $description, $category) {
+        $apiKey = $this->settings['anthropic_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Anthropic API key not configured");
+        }
+        
+        $prompt = $this->buildCostPrompt($name, $description, $category);
+        
+        $data = [
+            'model' => $this->settings['anthropic_model'],
+            'max_tokens' => (int)$this->settings['ai_max_tokens'],
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'system' => 'You are a cost analysis expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed cost breakdowns for materials, labor, energy, and equipment.',
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ]
+        ];
+        
+        $response = $this->makeAPICall(
+            'https://api.anthropic.com/v1/messages',
+            $data,
+            [
+                'x-api-key: ' . $apiKey,
+                'Content-Type: application/json',
+                'anthropic-version: 2023-06-01'
+            ]
+        );
+        
+        if (!$response) {
+            throw new Exception("No response from Anthropic cost API");
+        }
+        
+        if (isset($response['error'])) {
+            $errorMsg = $response['error']['message'] ?? 'Unknown Anthropic API error';
+            throw new Exception("Anthropic Cost API Error: " . $errorMsg);
+        }
+        
+        if (!isset($response['content'][0]['text'])) {
+            throw new Exception("Invalid Anthropic cost response format");
+        }
+        
+        return $this->parseCostResponse($response['content'][0]['text']);
+    }
+    
+    /**
+     * Google Cost Integration
+     */
+    private function generateCostWithGoogle($name, $description, $category) {
+        $apiKey = $this->settings['google_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Google API key not configured");
+        }
+        
+        $prompt = $this->buildCostPrompt($name, $description, $category);
+        
+        // Add system instruction for Google
+        $enhancedPrompt = "You are a cost analysis expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed cost breakdowns for materials, labor, energy, and equipment.\n\n" . $prompt;
+        
+        $data = [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $enhancedPrompt]
+                    ]
+                ]
+            ],
+            'generationConfig' => [
+                'temperature' => (float)$this->settings['ai_temperature'],
+                'maxOutputTokens' => (int)$this->settings['ai_max_tokens']
+            ]
+        ];
+        
+        $model = $this->settings['google_model'];
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+        
+        $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
+        
+        if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
+            throw new Exception("Invalid Google cost response");
+        }
+        
+        return $this->parseCostResponse($response['candidates'][0]['content']['parts'][0]['text']);
+    }
+    
+    /**
+     * Meta Cost Integration
+     */
+    private function generateCostWithMeta($name, $description, $category) {
+        $apiKey = $this->settings['meta_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Meta API key not configured");
+        }
+        
+        $prompt = $this->buildCostPrompt($name, $description, $category);
+        
+        $data = [
+            'model' => $this->settings['meta_model'],
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'You are a cost analysis expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed cost breakdowns for materials, labor, energy, and equipment.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ],
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'max_tokens' => (int)$this->settings['ai_max_tokens']
+        ];
+        
+        $response = $this->makeAPICall(
+            'https://openrouter.ai/api/v1/chat/completions',
+            $data,
+            [
+                'Authorization: Bearer ' . $apiKey,
+                'Content-Type: application/json',
+                'HTTP-Referer: https://whimsicalfrog.us',
+                'X-Title: WhimsicalFrog AI Assistant'
+            ]
+        );
+        
+        if (!$response || !isset($response['choices'][0]['message']['content'])) {
+            throw new Exception("Invalid Meta cost response");
+        }
+        
+        return $this->parseCostResponse($response['choices'][0]['message']['content']);
+    }
+    
+    /**
      * OpenAI Integration with Images
      */
     private function generateWithOpenAIImages($name, $description, $category, $images, $brandVoice, $contentTone) {
@@ -1560,6 +1783,69 @@ Provide detailed, specific reasoning for each pricing component based on the act
     }
     
     /**
+     * Build cost prompt for AI
+     */
+    private function buildCostPrompt($name, $description, $category) {
+        return "You are a cost analysis expert for custom crafts and handmade items. Analyze the cost structure for this item and provide comprehensive breakdown with detailed components.
+
+Return ONLY valid JSON with this EXACT structure (no additional text):
+
+{
+  \"cost\": 12.50,
+  \"reasoning\": \"Comprehensive explanation of cost analysis and breakdown rationale\",
+  \"confidence\": \"high\",
+  \"breakdown\": {
+    \"materials\": 6.25,
+    \"labor\": 4.50,
+    \"energy\": 0.75,
+    \"equipment\": 1.00
+  },
+  \"analysis\": {
+    \"detected_materials\": [\"material1\", \"material2\"],
+    \"detected_features\": [\"feature1\", \"feature2\"],
+    \"size_analysis\": {\"size\": \"medium\", \"dimensions\": \"estimated\"},
+    \"complexity_score\": 0.7,
+    \"production_time_estimate\": \"2-3 hours\",
+    \"skill_level_required\": \"intermediate\",
+    \"market_positioning\": \"standard\",
+    \"eco_friendly_score\": 0.6,
+    \"material_cost_factors\": [\"factor1\", \"factor2\"],
+    \"labor_complexity_factors\": [\"factor1\", \"factor2\"],
+    \"energy_usage_factors\": [\"factor1\", \"factor2\"],
+    \"equipment_requirements\": [\"tool1\", \"tool2\"],
+    \"material_confidence\": 0.8,
+    \"labor_confidence\": 0.75,
+    \"energy_confidence\": 0.7,
+    \"equipment_confidence\": 0.85
+  }
+}
+
+CRITICAL REQUIREMENTS:
+1. The \"breakdown\" object MUST contain realistic costs for materials, labor, energy, and equipment
+2. Each cost component must be justified in the reasoning
+3. The \"reasoning\" field must be a comprehensive 2-3 sentence explanation
+4. All analysis must be specific to this product, not generic
+5. Consider typical costs for {$category} items in the custom crafts market
+
+Product Details:
+- Name: {$name}
+- Description: {$description}
+- Category: {$category}
+
+Analyze this as a custom craft item considering:
+- Raw material costs (fabric, paint, wood, etc.)
+- Labor time and skill level required
+- Energy costs (electricity, heating, etc.)
+- Equipment and tool usage costs
+- Complexity of production process
+- Quality standards for handmade items
+- Overhead and indirect costs
+- Market rates for similar custom craft production
+
+Provide detailed, specific cost breakdown based on the actual product details provided.";
+    }
+    
+    /**
      * Make API call to external service
      */
     private function makeAPICall($url, $data, $headers, $method = 'POST') {
@@ -1680,6 +1966,69 @@ Provide detailed, specific reasoning for each pricing component based on the act
                     'explanation' => $result['reasoning']
                 ]
             ];
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Parse AI cost response
+     */
+    private function parseCostResponse($content) {
+        // Clean up response
+        $content = preg_replace('/```json\s*|\s*```/', '', $content);
+        $content = trim($content);
+        
+        $data = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Failed to parse cost response as JSON: " . json_last_error_msg());
+        }
+        
+        // Ensure required fields exist with defaults
+        $defaults = [
+            'cost' => 10.00,
+            'reasoning' => 'AI-generated cost analysis',
+            'confidence' => 'medium',
+            'breakdown' => [
+                'materials' => 5.00,
+                'labor' => 3.50,
+                'energy' => 0.75,
+                'equipment' => 0.75
+            ],
+            'analysis' => [
+                'detected_materials' => [],
+                'detected_features' => [],
+                'size_analysis' => ['size' => 'medium', 'dimensions' => 'estimated'],
+                'complexity_score' => 0.5,
+                'production_time_estimate' => '2-3 hours',
+                'skill_level_required' => 'intermediate',
+                'market_positioning' => 'standard',
+                'eco_friendly_score' => 0.5,
+                'material_cost_factors' => [],
+                'labor_complexity_factors' => [],
+                'energy_usage_factors' => [],
+                'equipment_requirements' => [],
+                'material_confidence' => 0.7,
+                'labor_confidence' => 0.7,
+                'energy_confidence' => 0.7,
+                'equipment_confidence' => 0.7
+            ]
+        ];
+        
+        $result = array_merge($defaults, $data);
+        
+        // Ensure breakdown is properly structured
+        if (!is_array($result['breakdown'])) {
+            $result['breakdown'] = $defaults['breakdown'];
+        } else {
+            $result['breakdown'] = array_merge($defaults['breakdown'], $result['breakdown']);
+        }
+        
+        // Ensure analysis is properly structured
+        if (!is_array($result['analysis'])) {
+            $result['analysis'] = $defaults['analysis'];
+        } else {
+            $result['analysis'] = array_merge($defaults['analysis'], $result['analysis']);
         }
         
         return $result;
@@ -2294,6 +2643,10 @@ function generateAIMarketingContent($name, $description, $category, $brandVoice 
 
 function generateAIPricingSuggestion($name, $description, $category, $costPrice) {
     return $GLOBALS['aiProviders']->generatePricingSuggestion($name, $description, $category, $costPrice);
+}
+
+function generateAICostSuggestion($name, $description, $category) {
+    return $GLOBALS['aiProviders']->generateCostSuggestion($name, $description, $category);
 }
 
 ?> 

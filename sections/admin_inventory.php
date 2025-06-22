@@ -3150,7 +3150,7 @@ function clearViewPriceSuggestion() {
 function loadExistingViewPriceSuggestion(sku) {
     if (!sku) return;
     
-    fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}`)
+    fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`)
     .then(response => response.json())
     .then(data => {
         console.log('View Price suggestion API response:', data); // Debug log
@@ -3179,7 +3179,7 @@ function loadExistingViewPriceSuggestion(sku) {
 function loadExistingPriceSuggestion(sku) {
     if (!sku) return;
     
-    fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}`)
+    fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`)
     .then(response => response.json())
     .then(data => {
         console.log('Price suggestion API response:', data); // Debug log

@@ -1,107 +1,75 @@
 <?php
 // Business Settings API
-// Handles CRUD operations for business settings
+// Handles comprehensive business configuration for website customization
 
 require_once 'config.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+    exit(0);
 }
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
-    $method = $_SERVER['REQUEST_METHOD'];
-    $action = $_GET['action'] ?? '';
+    $action = $_GET['action'] ?? $_POST['action'] ?? '';
     
-    switch ($method) {
-        case 'GET':
-            handleGet($pdo, $action);
-            break;
-        case 'POST':
-            handlePost($pdo);
-            break;
-        case 'PUT':
-            handlePut($pdo);
-            break;
-        case 'DELETE':
-            handleDelete($pdo);
-            break;
-        default:
-            http_response_code(405);
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    }
-    
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-}
-
-function handleGet($pdo, $action) {
     switch ($action) {
-        case 'get_all':
+        case 'get_all_settings':
             getAllSettings($pdo);
             break;
-        case 'get_by_category':
-            getSettingsByCategory($pdo);
-            break;
+            
         case 'get_setting':
-            getSingleSetting($pdo);
+            getSetting($pdo);
             break;
-        case 'get_categories':
-            getCategories($pdo);
+            
+        case 'update_setting':
+            updateSetting($pdo);
             break;
+            
+        case 'update_multiple_settings':
+            updateMultipleSettings($pdo);
+            break;
+            
+        case 'reset_to_defaults':
+            resetToDefaults($pdo);
+            break;
+            
+        case 'get_by_category':
+            getByCategory($pdo);
+            break;
+            
         default:
-            getAllSettings($pdo);
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            break;
     }
+    
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 
 function getAllSettings($pdo) {
-    $stmt = $pdo->query("SELECT * FROM business_settings ORDER BY category, display_order");
+    $stmt = $pdo->query("SELECT * FROM business_settings ORDER BY category, display_order, setting_key");
     $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Group by category
-    $grouped = [];
-    foreach ($settings as $setting) {
-        $grouped[$setting['category']][] = $setting;
-    }
     
     echo json_encode([
         'success' => true,
         'settings' => $settings,
-        'grouped' => $grouped
+        'count' => count($settings)
     ]);
 }
 
-function getSettingsByCategory($pdo) {
-    $category = $_GET['category'] ?? '';
-    if (empty($category)) {
-        echo json_encode(['success' => false, 'error' => 'Category is required']);
-        return;
-    }
-    
-    $stmt = $pdo->prepare("SELECT * FROM business_settings WHERE category = ? ORDER BY display_order");
-    $stmt->execute([$category]);
-    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    echo json_encode([
-        'success' => true,
-        'category' => $category,
-        'settings' => $settings
-    ]);
-}
-
-function getSingleSetting($pdo) {
+function getSetting($pdo) {
     $key = $_GET['key'] ?? '';
+    
     if (empty($key)) {
-        echo json_encode(['success' => false, 'error' => 'Setting key is required']);
+        echo json_encode(['success' => false, 'message' => 'Setting key is required']);
         return;
     }
     
@@ -109,262 +77,175 @@ function getSingleSetting($pdo) {
     $stmt->execute([$key]);
     $setting = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if (!$setting) {
-        echo json_encode(['success' => false, 'error' => 'Setting not found']);
-        return;
+    if ($setting) {
+        echo json_encode(['success' => true, 'setting' => $setting]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Setting not found']);
     }
-    
-    echo json_encode([
-        'success' => true,
-        'setting' => $setting
-    ]);
 }
 
-function getCategories($pdo) {
-    $stmt = $pdo->query("SELECT DISTINCT category FROM business_settings ORDER BY category");
-    $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+function updateSetting($pdo) {
+    $key = $_POST['key'] ?? '';
+    $value = $_POST['value'] ?? '';
     
-    echo json_encode([
-        'success' => true,
-        'categories' => $categories
-    ]);
+    if (empty($key)) {
+        echo json_encode(['success' => false, 'message' => 'Setting key is required']);
+        return;
+    }
+    
+    $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
+    $result = $stmt->execute([$value, $key]);
+    
+    if ($result && $stmt->rowCount() > 0) {
+        echo json_encode(['success' => true, 'message' => 'Setting updated successfully']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to update setting or setting not found']);
+    }
 }
 
-function handlePost($pdo) {
-    $input = json_decode(file_get_contents('php://input'), true);
+function updateMultipleSettings($pdo) {
+    $settingsJson = $_POST['settings'] ?? '';
     
-    if (!$input) {
-        echo json_encode(['success' => false, 'error' => 'Invalid JSON input']);
+    if (empty($settingsJson)) {
+        echo json_encode(['success' => false, 'message' => 'Settings data is required']);
         return;
     }
     
-    $required = ['setting_key', 'setting_value', 'setting_type', 'category', 'display_name'];
-    foreach ($required as $field) {
-        if (!isset($input[$field]) || $input[$field] === '') {
-            echo json_encode(['success' => false, 'error' => "Missing required field: $field"]);
-            return;
-        }
-    }
-    
-    // Validate setting_type
-    $validTypes = ['text', 'color', 'email', 'url', 'number', 'json', 'boolean'];
-    if (!in_array($input['setting_type'], $validTypes)) {
-        echo json_encode(['success' => false, 'error' => 'Invalid setting type']);
+    $settings = json_decode($settingsJson, true);
+    if (!$settings) {
+        echo json_encode(['success' => false, 'message' => 'Invalid settings data']);
         return;
     }
     
-    // Validate setting_value based on type
-    $validationResult = validateSettingValue($input['setting_value'], $input['setting_type']);
-    if (!$validationResult['valid']) {
-        echo json_encode(['success' => false, 'error' => $validationResult['error']]);
-        return;
-    }
+    $pdo->beginTransaction();
     
     try {
-        $stmt = $pdo->prepare("
-            INSERT INTO business_settings 
-            (setting_key, setting_value, setting_type, category, display_name, description, is_required, display_order) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ");
+        $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
+        $updatedCount = 0;
         
-        $stmt->execute([
-            $input['setting_key'],
-            $input['setting_value'],
-            $input['setting_type'],
-            $input['category'],
-            $input['display_name'],
-            $input['description'] ?? '',
-            $input['is_required'] ?? false,
-            $input['display_order'] ?? 0
-        ]);
+        foreach ($settings as $key => $value) {
+            if ($stmt->execute([$value, $key])) {
+                $updatedCount++;
+            }
+        }
+        
+        $pdo->commit();
         
         echo json_encode([
-            'success' => true,
-            'message' => 'Setting created successfully',
-            'setting_id' => $pdo->lastInsertId()
+            'success' => true, 
+            'message' => "Updated {$updatedCount} settings successfully",
+            'updated_count' => $updatedCount
         ]);
-        
-    } catch (PDOException $e) {
-        if ($e->getCode() == 23000) { // Duplicate key
-            echo json_encode(['success' => false, 'error' => 'Setting key already exists']);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
-        }
-    }
-}
-
-function handlePut($pdo) {
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    if (!$input || !isset($input['setting_key'])) {
-        echo json_encode(['success' => false, 'error' => 'Setting key is required']);
-        return;
-    }
-    
-    $settingKey = $input['setting_key'];
-    
-    // Get current setting to validate type
-    $stmt = $pdo->prepare("SELECT * FROM business_settings WHERE setting_key = ?");
-    $stmt->execute([$settingKey]);
-    $currentSetting = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$currentSetting) {
-        echo json_encode(['success' => false, 'error' => 'Setting not found']);
-        return;
-    }
-    
-    // Validate new value if provided
-    if (isset($input['setting_value'])) {
-        $validationResult = validateSettingValue($input['setting_value'], $currentSetting['setting_type']);
-        if (!$validationResult['valid']) {
-            echo json_encode(['success' => false, 'error' => $validationResult['error']]);
-            return;
-        }
-    }
-    
-    // Build update query dynamically
-    $updateFields = [];
-    $params = [];
-    
-    $allowedFields = ['setting_value', 'display_name', 'description', 'is_required', 'display_order'];
-    foreach ($allowedFields as $field) {
-        if (isset($input[$field])) {
-            $updateFields[] = "$field = ?";
-            $params[] = $input[$field];
-        }
-    }
-    
-    if (empty($updateFields)) {
-        echo json_encode(['success' => false, 'error' => 'No fields to update']);
-        return;
-    }
-    
-    $params[] = $settingKey; // For WHERE clause
-    
-    try {
-        $stmt = $pdo->prepare("UPDATE business_settings SET " . implode(', ', $updateFields) . " WHERE setting_key = ?");
-        $stmt->execute($params);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Setting updated successfully'
-        ]);
-        
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
-    }
-}
-
-function handleDelete($pdo) {
-    $settingKey = $_GET['key'] ?? '';
-    if (empty($settingKey)) {
-        echo json_encode(['success' => false, 'error' => 'Setting key is required']);
-        return;
-    }
-    
-    // Check if setting is required
-    $stmt = $pdo->prepare("SELECT is_required FROM business_settings WHERE setting_key = ?");
-    $stmt->execute([$settingKey]);
-    $setting = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$setting) {
-        echo json_encode(['success' => false, 'error' => 'Setting not found']);
-        return;
-    }
-    
-    if ($setting['is_required']) {
-        echo json_encode(['success' => false, 'error' => 'Cannot delete required setting']);
-        return;
-    }
-    
-    try {
-        $stmt = $pdo->prepare("DELETE FROM business_settings WHERE setting_key = ?");
-        $stmt->execute([$settingKey]);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Setting deleted successfully'
-        ]);
-        
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
-    }
-}
-
-function validateSettingValue($value, $type) {
-    switch ($type) {
-        case 'email':
-            if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                return ['valid' => false, 'error' => 'Invalid email format'];
-            }
-            break;
-            
-        case 'url':
-            // Allow domain without protocol
-            if (!empty($value) && !preg_match('/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $value)) {
-                return ['valid' => false, 'error' => 'Invalid domain format'];
-            }
-            break;
-            
-        case 'color':
-            if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $value)) {
-                return ['valid' => false, 'error' => 'Invalid color format (use #RRGGBB)'];
-            }
-            break;
-            
-        case 'number':
-            if (!is_numeric($value)) {
-                return ['valid' => false, 'error' => 'Value must be a number'];
-            }
-            break;
-            
-        case 'json':
-            $decoded = json_decode($value);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return ['valid' => false, 'error' => 'Invalid JSON format'];
-            }
-            break;
-            
-        case 'boolean':
-            if (!in_array(strtolower($value), ['true', 'false', '1', '0'])) {
-                return ['valid' => false, 'error' => 'Boolean value must be true/false or 1/0'];
-            }
-            break;
-    }
-    
-    return ['valid' => true];
-}
-
-// Helper function to get a single setting value (for use in other files)
-function getBusinessSetting($key, $default = null) {
-    global $pdo;
-    
-    try {
-        $stmt = $pdo->prepare("SELECT setting_value, setting_type FROM business_settings WHERE setting_key = ?");
-        $stmt->execute([$key]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$result) {
-            return $default;
-        }
-        
-        $value = $result['setting_value'];
-        
-        // Convert based on type
-        switch ($result['setting_type']) {
-            case 'boolean':
-                return in_array(strtolower($value), ['true', '1']);
-            case 'number':
-                return is_numeric($value) ? (float)$value : $default;
-            case 'json':
-                $decoded = json_decode($value, true);
-                return $decoded !== null ? $decoded : $default;
-            default:
-                return $value;
-        }
         
     } catch (Exception $e) {
-        return $default;
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Failed to update settings: ' . $e->getMessage()]);
     }
+}
+
+function resetToDefaults($pdo) {
+    try {
+        // Get the default settings from the initialization file
+        $defaultSettings = [
+            // Website Branding & Identity
+            ['site_name', 'text', 'Whimsical Frog', 'branding', 'Main website name/title'],
+            ['site_tagline', 'text', 'Custom Crafts & Creative Designs', 'branding', 'Website tagline/subtitle'],
+            ['site_logo_url', 'url', '/images/WhimsicalFrog_Logo.webp', 'branding', 'Main logo image URL'],
+            ['site_favicon_url', 'url', '/favicon.ico', 'branding', 'Favicon URL'],
+            ['brand_primary_color', 'color', '#87ac3a', 'branding', 'Primary brand color'],
+            ['brand_secondary_color', 'color', '#556B2F', 'branding', 'Secondary brand color'],
+            ['brand_accent_color', 'color', '#6B8E23', 'branding', 'Accent brand color'],
+            
+            // Business Information
+            ['business_name', 'text', 'Whimsical Frog LLC', 'business_info', 'Legal business name'],
+            ['business_description', 'text', 'We create custom crafts, personalized gifts, and unique creative designs for every occasion.', 'business_info', 'Business description'],
+            ['business_address', 'text', '123 Craft Lane, Creative City, CC 12345', 'business_info', 'Business address'],
+            ['business_phone', 'text', '(555) 123-FROG', 'business_info', 'Business phone number'],
+            ['business_email', 'email', 'hello@whimsicalfrog.us', 'business_info', 'Primary business email'],
+            ['business_hours', 'text', 'Mon-Fri: 9AM-6PM, Sat: 10AM-4PM, Closed Sundays', 'business_info', 'Business operating hours'],
+            ['business_social_facebook', 'url', 'https://facebook.com/whimsicalfrog', 'business_info', 'Facebook page URL'],
+            ['business_social_instagram', 'url', 'https://instagram.com/whimsicalfrog', 'business_info', 'Instagram profile URL'],
+            ['business_social_twitter', 'url', 'https://twitter.com/whimsicalfrog', 'business_info', 'Twitter profile URL'],
+            
+            // Room/Category Configuration
+            ['room_system_enabled', 'boolean', 'true', 'rooms', 'Enable the room-based navigation system'],
+            ['room_main_title', 'text', 'Welcome to Our Creative Workshop', 'rooms', 'Main room title'],
+            ['room_main_description', 'text', 'Explore our different departments by clicking on the doors', 'rooms', 'Main room description'],
+            ['room_2_category', 'text', 'T-Shirts', 'rooms', 'Room 2 category name'],
+            ['room_3_category', 'text', 'Tumblers', 'rooms', 'Room 3 category name'],
+            ['room_4_category', 'text', 'Artwork', 'rooms', 'Room 4 category name'],
+            ['room_5_category', 'text', 'Sublimation', 'rooms', 'Room 5 category name'],
+            ['room_6_category', 'text', 'Window Wraps', 'rooms', 'Room 6 category name'],
+            
+            // E-commerce Settings
+            ['currency_symbol', 'text', '$', 'ecommerce', 'Currency symbol'],
+            ['currency_code', 'text', 'USD', 'ecommerce', 'Currency code'],
+            ['tax_rate', 'number', '0.08', 'ecommerce', 'Tax rate (decimal, e.g., 0.08 for 8%)'],
+            ['shipping_enabled', 'boolean', 'true', 'ecommerce', 'Enable shipping options'],
+            ['local_pickup_enabled', 'boolean', 'true', 'ecommerce', 'Enable local pickup option'],
+            ['min_order_amount', 'number', '10.00', 'ecommerce', 'Minimum order amount'],
+            ['free_shipping_threshold', 'number', '50.00', 'ecommerce', 'Free shipping threshold'],
+            
+            // Email Configuration
+            ['email_from_name', 'text', 'Whimsical Frog', 'email', 'Email sender name'],
+            ['email_from_address', 'email', 'noreply@whimsicalfrog.us', 'email', 'Email sender address'],
+            ['email_support_address', 'email', 'support@whimsicalfrog.us', 'email', 'Support email address'],
+            ['email_order_notifications', 'boolean', 'true', 'email', 'Send order notification emails'],
+            ['email_welcome_enabled', 'boolean', 'true', 'email', 'Send welcome emails to new customers'],
+            
+            // Site Features
+            ['enable_user_accounts', 'boolean', 'true', 'site', 'Enable user registration and accounts'],
+            ['enable_guest_checkout', 'boolean', 'true', 'site', 'Allow checkout without account'],
+            ['enable_search', 'boolean', 'true', 'site', 'Enable product search'],
+            ['items_per_page', 'number', '12', 'site', 'Items per page in shop/category views'],
+            ['enable_ai_features', 'boolean', 'true', 'site', 'Enable AI-powered features']
+        ];
+        
+        $pdo->beginTransaction();
+        
+        $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
+        $resetCount = 0;
+        
+        foreach ($defaultSettings as $setting) {
+            $key = $setting[0];
+            $value = $setting[2];
+            
+            if ($stmt->execute([$value, $key])) {
+                $resetCount++;
+            }
+        }
+        
+        $pdo->commit();
+        
+        echo json_encode([
+            'success' => true, 
+            'message' => "Reset {$resetCount} settings to default values",
+            'reset_count' => $resetCount
+        ]);
+        
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Failed to reset settings: ' . $e->getMessage()]);
+    }
+}
+
+function getByCategory($pdo) {
+    $category = $_GET['category'] ?? '';
+    
+    if (empty($category)) {
+        echo json_encode(['success' => false, 'message' => 'Category is required']);
+        return;
+    }
+    
+    $stmt = $pdo->prepare("SELECT * FROM business_settings WHERE category = ? ORDER BY display_order, setting_key");
+    $stmt->execute([$category]);
+    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode([
+        'success' => true,
+        'settings' => $settings,
+        'category' => $category,
+        'count' => count($settings)
+    ]);
 }
 ?> 

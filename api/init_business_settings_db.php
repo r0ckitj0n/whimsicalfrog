@@ -32,73 +32,137 @@ try {
     
     // Default business settings
     $defaultSettings = [
+        // Website Branding & Identity
+        ['site_name', 'text', 'Whimsical Frog', 'branding', 'Main website name/title'],
+        ['site_tagline', 'text', 'Custom Crafts & Creative Designs', 'branding', 'Website tagline/subtitle'],
+        ['site_logo_url', 'url', '/images/WhimsicalFrog_Logo.webp', 'branding', 'Main logo image URL'],
+        ['site_favicon_url', 'url', '/favicon.ico', 'branding', 'Favicon URL'],
+        ['brand_primary_color', 'color', '#87ac3a', 'branding', 'Primary brand color'],
+        ['brand_secondary_color', 'color', '#556B2F', 'branding', 'Secondary brand color'],
+        ['brand_accent_color', 'color', '#6B8E23', 'branding', 'Accent brand color'],
+        
         // Business Information
-        ['business_name', 'WhimsicalFrog', 'text', 'business_info', 'Business Name', 'The name of your business', true, 1],
-        ['business_domain', 'whimsicalfrog.us', 'url', 'business_info', 'Business Domain', 'Your website domain (without https://)', true, 2],
-        ['business_email', 'orders@whimsicalfrog.us', 'email', 'business_info', 'Business Email', 'Primary business email address', true, 3],
-        ['admin_email', 'admin@whimsicalfrog.us', 'email', 'business_info', 'Admin Email', 'Admin notification email address', true, 4],
-        ['support_email', 'orders@whimsicalfrog.us', 'email', 'business_info', 'Support Email', 'Customer support email address', true, 5],
-        ['business_phone', '', 'text', 'business_info', 'Business Phone', 'Business phone number', false, 6],
-        ['business_address', '', 'text', 'business_info', 'Business Address', 'Physical business address', false, 7],
+        ['business_name', 'text', 'Whimsical Frog LLC', 'business_info', 'Legal business name'],
+        ['business_description', 'text', 'We create custom crafts, personalized gifts, and unique creative designs for every occasion.', 'business_info', 'Business description'],
+        ['business_address', 'text', '123 Craft Lane, Creative City, CC 12345', 'business_info', 'Business address'],
+        ['business_phone', 'text', '(555) 123-FROG', 'business_info', 'Business phone number'],
+        ['business_email', 'email', 'hello@whimsicalfrog.us', 'business_info', 'Primary business email'],
+        ['business_hours', 'text', 'Mon-Fri: 9AM-6PM, Sat: 10AM-4PM, Closed Sundays', 'business_info', 'Business operating hours'],
+        ['business_social_facebook', 'url', 'https://facebook.com/whimsicalfrog', 'business_info', 'Facebook page URL'],
+        ['business_social_instagram', 'url', 'https://instagram.com/whimsicalfrog', 'business_info', 'Instagram profile URL'],
+        ['business_social_twitter', 'url', 'https://twitter.com/whimsicalfrog', 'business_info', 'Twitter profile URL'],
         
-        // Brand Colors
-        ['primary_color', '#87ac3a', 'color', 'branding', 'Primary Brand Color', 'Main brand color used throughout the site', true, 1],
-        ['secondary_color', '#6b8e23', 'color', 'branding', 'Secondary Brand Color', 'Secondary brand color for hover states', true, 2],
-        ['accent_color', '#a3cc4a', 'color', 'branding', 'Accent Color', 'Accent color for highlights', false, 3],
-        ['text_color', '#333333', 'color', 'branding', 'Text Color', 'Primary text color', false, 4],
-        ['background_color', '#ffffff', 'color', 'branding', 'Background Color', 'Main background color', false, 5],
+        // Room/Category Configuration
+        ['room_system_enabled', 'boolean', 'true', 'rooms', 'Enable the room-based navigation system'],
+        ['room_main_title', 'text', 'Welcome to Our Creative Workshop', 'rooms', 'Main room title'],
+        ['room_main_description', 'text', 'Explore our different departments by clicking on the doors', 'rooms', 'Main room description'],
+        ['room_2_category', 'text', 'T-Shirts', 'rooms', 'Room 2 category name'],
+        ['room_3_category', 'text', 'Tumblers', 'rooms', 'Room 3 category name'],
+        ['room_4_category', 'text', 'Artwork', 'rooms', 'Room 4 category name'],
+        ['room_5_category', 'text', 'Sublimation', 'rooms', 'Room 5 category name'],
+        ['room_6_category', 'text', 'Window Wraps', 'rooms', 'Room 6 category name'],
         
-        // Payment Methods
-        ['payment_methods', '["Credit Card", "PayPal", "Check", "Cash", "Venmo"]', 'json', 'payment', 'Payment Methods', 'Available payment methods for customers', true, 1],
-        ['default_payment_method', 'Credit Card', 'text', 'payment', 'Default Payment Method', 'Default payment method selection', true, 2],
-        ['payment_statuses', '["Pending", "Processing", "Received", "Refunded", "Failed"]', 'json', 'payment', 'Payment Statuses', 'Available payment status options', true, 3],
-        ['default_payment_status', 'Pending', 'text', 'payment', 'Default Payment Status', 'Default payment status for new orders', true, 4],
+        // E-commerce Settings
+        ['currency_symbol', 'text', '$', 'ecommerce', 'Currency symbol'],
+        ['currency_code', 'text', 'USD', 'ecommerce', 'Currency code'],
+        ['tax_rate', 'number', '0.08', 'ecommerce', 'Tax rate (decimal, e.g., 0.08 for 8%)'],
+        ['shipping_enabled', 'boolean', 'true', 'ecommerce', 'Enable shipping options'],
+        ['local_pickup_enabled', 'boolean', 'true', 'ecommerce', 'Enable local pickup option'],
+        ['min_order_amount', 'number', '10.00', 'ecommerce', 'Minimum order amount'],
+        ['free_shipping_threshold', 'number', '50.00', 'ecommerce', 'Free shipping threshold'],
         
-        // Shipping Methods
-        ['shipping_methods', '["Customer Pickup", "Local Delivery", "USPS", "FedEx", "UPS"]', 'json', 'shipping', 'Shipping Methods', 'Available shipping methods for customers', true, 1],
-        ['default_shipping_method', 'Customer Pickup', 'text', 'shipping', 'Default Shipping Method', 'Default shipping method selection', true, 2],
-        ['shipping_statuses', '["Pending", "Processing", "Shipped", "Delivered", "Cancelled"]', 'json', 'shipping', 'Shipping Statuses', 'Available shipping status options', true, 3],
-        ['default_shipping_status', 'Pending', 'text', 'shipping', 'Default Shipping Status', 'Default shipping status for new orders', true, 4],
-        
-        // Order Settings
-        ['order_statuses', '["Pending", "Processing", "Completed", "Cancelled", "Refunded"]', 'json', 'orders', 'Order Statuses', 'Available order status options', true, 1],
-        ['default_order_status', 'Pending', 'text', 'orders', 'Default Order Status', 'Default order status for new orders', true, 2],
-        ['order_id_prefix', '', 'text', 'orders', 'Order ID Prefix', 'Prefix for order IDs (optional)', false, 3],
-        ['auto_order_confirmation', 'true', 'boolean', 'orders', 'Auto Order Confirmation', 'Automatically send order confirmation emails', true, 4],
-        
-        // Tax Settings
-        ['tax_rate', '0.00', 'number', 'tax', 'Tax Rate', 'Default tax rate (as decimal, e.g., 0.08 for 8%)', true, 1],
-        ['tax_enabled', 'false', 'boolean', 'tax', 'Tax Enabled', 'Enable tax calculation on orders', true, 2],
-        ['tax_name', 'Sales Tax', 'text', 'tax', 'Tax Name', 'Display name for tax (e.g., "Sales Tax", "VAT")', false, 3],
-        
-        // Email Settings
-        ['email_subject_prefix', '', 'text', 'email', 'Email Subject Prefix', 'Prefix for all email subjects (optional)', false, 1],
-        ['email_footer_text', 'Thank you for shopping with us!', 'text', 'email', 'Email Footer Text', 'Footer text for all emails', false, 2],
-        ['email_signature', 'Best regards,<br>The Team', 'text', 'email', 'Email Signature', 'Email signature for all emails', false, 3],
-        
-        // Site Settings
-        ['site_title', 'WhimsicalFrog', 'text', 'site', 'Site Title', 'Website title shown in browser tab', true, 1],
-        ['site_description', 'Custom products and creative designs', 'text', 'site', 'Site Description', 'Website description for SEO', false, 2],
-        ['site_keywords', 'custom products, designs, t-shirts, tumblers', 'text', 'site', 'Site Keywords', 'Website keywords for SEO', false, 3],
-        ['maintenance_mode', 'false', 'boolean', 'site', 'Maintenance Mode', 'Enable maintenance mode to hide site from customers', false, 4],
+        // Email Configuration
+        ['email_from_name', 'text', 'Whimsical Frog', 'email', 'Email sender name'],
+        ['email_from_address', 'email', 'noreply@whimsicalfrog.us', 'email', 'Email sender address'],
+        ['email_support_address', 'email', 'support@whimsicalfrog.us', 'email', 'Support email address'],
+        ['email_order_notifications', 'boolean', 'true', 'email', 'Send order notification emails'],
+        ['email_welcome_enabled', 'boolean', 'true', 'email', 'Send welcome emails to new customers'],
         
         // Inventory Settings
-        ['low_stock_threshold', '5', 'number', 'inventory', 'Low Stock Threshold', 'Default threshold for low stock warnings', true, 1],
-        ['auto_reorder_point', '10', 'number', 'inventory', 'Auto Reorder Point', 'Default reorder point for new inventory items', true, 2],
-        ['default_markup_percentage', '100', 'number', 'inventory', 'Default Markup %', 'Default markup percentage for pricing (100 = double cost)', true, 3],
+        ['low_stock_threshold', 'number', '5', 'inventory', 'Low stock warning threshold'],
+        ['out_of_stock_behavior', 'text', 'show_disabled', 'inventory', 'How to handle out of stock items (hide/show_disabled/show_normal)'],
+        ['auto_sku_generation', 'boolean', 'true', 'inventory', 'Automatically generate SKUs for new items'],
+        ['sku_prefix', 'text', 'WF', 'inventory', 'SKU prefix for auto-generation'],
+        ['enable_backorders', 'boolean', 'false', 'inventory', 'Allow orders when items are out of stock'],
+        
+        // Order Management
+        ['order_id_prefix', 'text', '', 'orders', 'Order ID prefix'],
+        ['order_confirmation_required', 'boolean', 'true', 'orders', 'Require order confirmation'],
+        ['auto_order_status', 'text', 'pending', 'orders', 'Default order status'],
+        ['payment_methods', 'json', '["Credit Card", "PayPal", "Check", "Cash", "Venmo"]', 'orders', 'Available payment methods'],
+        ['order_statuses', 'json', '["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]', 'orders', 'Available order statuses'],
+        
+        // Payment Settings
+        ['payment_gateway', 'text', 'manual', 'payment', 'Payment gateway (manual/stripe/paypal/square)'],
+        ['payment_instructions', 'text', 'Payment instructions will be provided after order confirmation.', 'payment', 'Payment instructions for customers'],
+        ['accept_cash', 'boolean', 'true', 'payment', 'Accept cash payments'],
+        ['accept_checks', 'boolean', 'true', 'payment', 'Accept check payments'],
+        
+        // Shipping Configuration
+        ['shipping_methods', 'json', '["Customer Pickup", "Local Delivery", "USPS", "FedEx", "UPS"]', 'shipping', 'Available shipping methods'],
+        ['local_delivery_radius', 'number', '25', 'shipping', 'Local delivery radius in miles'],
+        ['local_delivery_fee', 'number', '5.00', 'shipping', 'Local delivery fee'],
+        ['standard_shipping_fee', 'number', '8.99', 'shipping', 'Standard shipping fee'],
+        ['expedited_shipping_fee', 'number', '15.99', 'shipping', 'Expedited shipping fee'],
+        
+        // Site Features
+        ['enable_user_accounts', 'boolean', 'true', 'site', 'Enable user registration and accounts'],
+        ['enable_guest_checkout', 'boolean', 'true', 'site', 'Allow checkout without account'],
+        ['enable_wishlist', 'boolean', 'false', 'site', 'Enable wishlist functionality'],
+        ['enable_reviews', 'boolean', 'false', 'site', 'Enable product reviews'],
+        ['enable_search', 'boolean', 'true', 'site', 'Enable product search'],
+        ['items_per_page', 'number', '12', 'site', 'Items per page in shop/category views'],
+        ['enable_ai_features', 'boolean', 'true', 'site', 'Enable AI-powered features'],
+        
+        // SEO & Metadata
+        ['meta_title', 'text', 'Whimsical Frog - Custom Crafts & Creative Designs', 'seo', 'Default page title'],
+        ['meta_description', 'text', 'Discover unique custom crafts, personalized gifts, and creative designs at Whimsical Frog. Quality handmade items for every occasion.', 'seo', 'Default meta description'],
+        ['meta_keywords', 'text', 'custom crafts, personalized gifts, creative designs, handmade, custom t-shirts, tumblers, artwork', 'seo', 'Default meta keywords'],
+        ['google_analytics_id', 'text', '', 'seo', 'Google Analytics tracking ID'],
+        ['facebook_pixel_id', 'text', '', 'seo', 'Facebook Pixel ID'],
+        
+        // Tax Configuration
+        ['tax_enabled', 'boolean', 'true', 'tax', 'Enable tax calculations'],
+        ['tax_name', 'text', 'Sales Tax', 'tax', 'Tax display name'],
+        ['tax_inclusive', 'boolean', 'false', 'tax', 'Prices include tax'],
+        ['tax_based_on', 'text', 'billing', 'tax', 'Tax calculation based on (billing/shipping/store)'],
+        
+        // Admin Interface
+        ['admin_items_per_page', 'number', '25', 'admin', 'Items per page in admin views'],
+        ['admin_auto_save', 'boolean', 'true', 'admin', 'Auto-save admin form changes'],
+        ['admin_session_timeout', 'number', '3600', 'admin', 'Admin session timeout in seconds'],
+        ['enable_admin_notifications', 'boolean', 'true', 'admin', 'Enable admin email notifications'],
+        
+        // Performance & Caching
+        ['enable_image_optimization', 'boolean', 'true', 'performance', 'Enable automatic image optimization'],
+        ['image_quality', 'number', '90', 'performance', 'Image compression quality (1-100)'],
+        ['enable_css_minification', 'boolean', 'false', 'performance', 'Enable CSS minification'],
+        ['enable_js_minification', 'boolean', 'false', 'performance', 'Enable JavaScript minification'],
+        ['cache_duration', 'number', '3600', 'performance', 'Cache duration in seconds']
     ];
     
     // Insert default settings
     $insertSQL = "INSERT IGNORE INTO business_settings 
-                  (setting_key, setting_value, setting_type, category, display_name, description, is_required, display_order) 
+                  (setting_key, setting_type, setting_value, category, display_name, description, is_required, display_order) 
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $pdo->prepare($insertSQL);
     
     $insertedCount = 0;
+    $displayOrder = 1;
     foreach ($defaultSettings as $setting) {
-        if ($stmt->execute($setting)) {
+        // New format: [key, type, value, category, description]
+        $key = $setting[0];
+        $type = $setting[1];
+        $value = $setting[2];
+        $category = $setting[3];
+        $description = $setting[4];
+        $displayName = ucwords(str_replace('_', ' ', $key));
+        $isRequired = in_array($category, ['branding', 'business_info', 'ecommerce']) ? 1 : 0;
+        
+        if ($stmt->execute([$key, $type, $value, $category, $displayName, $description, $isRequired, $displayOrder])) {
             $insertedCount++;
         }
+        $displayOrder++;
     }
     
     echo "✅ Inserted {$insertedCount} default business settings<br>";

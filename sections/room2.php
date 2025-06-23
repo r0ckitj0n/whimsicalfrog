@@ -10,8 +10,9 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
 require_once __DIR__ . '/../api/business_settings_helper.php';
 ?>
 
-<!-- Include room headers CSS -->
+<!-- Include room headers and popup CSS -->
 <link href="css/room-headers.css?v=<?php echo time(); ?>" rel="stylesheet">
+<link href="css/room-popups.css?v=<?php echo time(); ?>" rel="stylesheet">
 
 <!-- Load Global CSS Variables -->
 <script>

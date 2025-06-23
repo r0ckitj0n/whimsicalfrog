@@ -8469,7 +8469,7 @@ function loadGeneralConfigTab(contentDiv) {
         <div class="space-y-6">
             <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
                 <h3 class="text-lg font-semibold text-gray-800 mb-3">General Website Configuration</h3>
-                <p class="text-sm text-gray-600 mb-4">Configure general website settings and preferences.</p>
+                <p class="text-sm text-gray-600 mb-4">Configure general website settings and business information to make this site completely customizable for any business.</p>
                 
                 <div id="generalConfigContent">
                     <div class="text-center py-8">
@@ -8635,12 +8635,263 @@ async function loadUIComponents() {
 }
 
 async function loadGeneralConfig() {
-    // Placeholder for general config loading
-    document.getElementById('generalConfigContent').innerHTML = `
-        <div class="text-center py-8 text-gray-600">
-            <p>General configuration options coming soon...</p>
-        </div>
-    `;
+    try {
+        const response = await fetch('/api/business_settings.php?action=get_all_settings');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load settings');
+        }
+        
+        const settings = data.settings;
+        const categories = {};
+        
+        // Group settings by category
+        settings.forEach(setting => {
+            if (!categories[setting.category]) {
+                categories[setting.category] = [];
+            }
+            categories[setting.category].push(setting);
+        });
+        
+        let html = '<div class="space-y-6">';
+        
+        // Category order for better UX
+        const categoryOrder = ['branding', 'business_info', 'rooms', 'ecommerce', 'email', 'payment', 'shipping', 'site', 'seo', 'tax', 'inventory', 'orders', 'admin', 'performance'];
+        
+        categoryOrder.forEach(categoryKey => {
+            if (categories[categoryKey]) {
+                const categoryName = categoryKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                html += `
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                            ${getCategoryIcon(categoryKey)}
+                            ${categoryName}
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                `;
+                
+                categories[categoryKey].forEach(setting => {
+                    html += generateSettingField(setting);
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        html += `
+            <div class="flex justify-end space-x-3 pt-4 border-t">
+                <button onclick="resetAllSettingsToDefaults()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                    🔄 Reset All to Defaults
+                </button>
+                <button onclick="saveAllBusinessSettings()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-semibold">
+                    💾 Save All Settings
+                </button>
+            </div>
+        </div>`;
+        
+        document.getElementById('generalConfigContent').innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading general config:', error);
+        document.getElementById('generalConfigContent').innerHTML = `
+            <div class="text-center py-8 text-red-600">
+                <p>Error loading configuration: ${error.message}</p>
+                <button onclick="loadGeneralConfig()" class="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                    Try Again
+                </button>
+            </div>
+        `;
+    }
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        'branding': '🎨',
+        'business_info': '🏢',
+        'rooms': '🏠',
+        'ecommerce': '🛒',
+        'email': '📧',
+        'payment': '💳',
+        'shipping': '📦',
+        'site': '🌐',
+        'seo': '🔍',
+        'tax': '💰',
+        'inventory': '📊',
+        'orders': '📋',
+        'admin': '⚙️',
+        'performance': '🚀'
+    };
+    return `<span class="mr-2">${icons[category] || '📝'}</span>`;
+}
+
+function generateSettingField(setting) {
+    const fieldId = `setting_${setting.setting_key}`;
+    let fieldHtml = '';
+    
+    switch (setting.setting_type) {
+        case 'boolean':
+            fieldHtml = `
+                <div>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="${fieldId}" ${setting.setting_value === 'true' ? 'checked' : ''} 
+                               class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                        <span class="text-sm font-medium text-gray-700">${setting.display_name}</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1">${setting.description}</p>
+                </div>
+            `;
+            break;
+            
+        case 'color':
+            fieldHtml = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">${setting.display_name}</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="color" id="${fieldId}" value="${setting.setting_value}" 
+                               class="h-8 w-16 rounded border border-gray-300">
+                        <input type="text" value="${setting.setting_value}" 
+                               class="flex-1 p-2 border border-gray-300 rounded text-sm"
+                               onchange="document.getElementById('${fieldId}').value = this.value">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">${setting.description}</p>
+                </div>
+            `;
+            break;
+            
+        case 'number':
+            fieldHtml = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">${setting.display_name}</label>
+                    <input type="number" id="${fieldId}" value="${setting.setting_value}" step="0.01"
+                           class="w-full p-2 border border-gray-300 rounded text-sm">
+                    <p class="text-xs text-gray-500 mt-1">${setting.description}</p>
+                </div>
+            `;
+            break;
+            
+        case 'json':
+            const jsonValue = setting.setting_value;
+            let displayValue = jsonValue;
+            try {
+                const parsed = JSON.parse(jsonValue);
+                if (Array.isArray(parsed)) {
+                    displayValue = parsed.join(', ');
+                }
+            } catch (e) {
+                // Keep original value if not valid JSON
+            }
+            
+            fieldHtml = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">${setting.display_name}</label>
+                    <textarea id="${fieldId}" rows="2" 
+                              class="w-full p-2 border border-gray-300 rounded text-sm"
+                              placeholder="Enter comma-separated values">${displayValue}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">${setting.description}</p>
+                </div>
+            `;
+            break;
+            
+        default: // text, email, url
+            fieldHtml = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">${setting.display_name}</label>
+                    <input type="${setting.setting_type === 'email' ? 'email' : setting.setting_type === 'url' ? 'url' : 'text'}" 
+                           id="${fieldId}" value="${setting.setting_value}" 
+                           class="w-full p-2 border border-gray-300 rounded text-sm">
+                    <p class="text-xs text-gray-500 mt-1">${setting.description}</p>
+                </div>
+            `;
+            break;
+    }
+    
+    return fieldHtml;
+}
+
+async function saveAllBusinessSettings() {
+    try {
+        const formData = new FormData();
+        formData.append('action', 'update_multiple_settings');
+        
+        // Collect all setting values
+        const settings = {};
+        document.querySelectorAll('[id^="setting_"]').forEach(field => {
+            const key = field.id.replace('setting_', '');
+            let value;
+            
+            if (field.type === 'checkbox') {
+                value = field.checked ? 'true' : 'false';
+            } else if (field.tagName === 'TEXTAREA') {
+                // Handle JSON fields - convert comma-separated to JSON array if needed
+                const textValue = field.value.trim();
+                if (textValue.includes(',') && !textValue.startsWith('[')) {
+                    // Convert comma-separated to JSON array
+                    const items = textValue.split(',').map(item => item.trim()).filter(item => item);
+                    value = JSON.stringify(items);
+                } else {
+                    value = textValue;
+                }
+            } else {
+                value = field.value;
+            }
+            
+            settings[key] = value;
+        });
+        
+        formData.append('settings', JSON.stringify(settings));
+        
+        const response = await fetch('/api/business_settings.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', `Updated ${Object.keys(settings).length} business settings successfully!`);
+        } else {
+            throw new Error(data.message || 'Failed to save settings');
+        }
+        
+    } catch (error) {
+        console.error('Error saving business settings:', error);
+        showToast('error', 'Failed to save business settings: ' + error.message);
+    }
+}
+
+async function resetAllSettingsToDefaults() {
+    if (!confirm('Are you sure you want to reset ALL business settings to their default values? This cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/business_settings.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'action=reset_to_defaults'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', 'All business settings reset to defaults!');
+            // Reload the configuration
+            loadGeneralConfig();
+        } else {
+            throw new Error(data.message || 'Failed to reset settings');
+        }
+        
+    } catch (error) {
+        console.error('Error resetting settings:', error);
+        showToast('error', 'Failed to reset settings: ' + error.message);
+    }
 }
 
 // Cart Button Text Management Functions

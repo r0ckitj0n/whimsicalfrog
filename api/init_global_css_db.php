@@ -47,6 +47,36 @@ try {
         ['button_border_radius', 'border-radius', '8px', 'buttons', 'Button border radius'],
         ['button_padding', 'padding', '10px 20px', 'buttons', 'Button padding'],
         
+        // Popups - Standard System
+        ['popup_bg_color', 'background-color', '#ffffff', 'popups', 'Popup background color'],
+        ['popup_border_color', 'border-color', '#8B4513', 'popups', 'Popup border color'],
+        ['popup_border_width', 'border-width', '3px', 'popups', 'Popup border width'],
+        ['popup_border_radius', 'border-radius', '15px', 'popups', 'Popup border radius'],
+        ['popup_shadow', 'box-shadow', '0 8px 25px rgba(0, 0, 0, 0.3)', 'popups', 'Popup shadow'],
+        ['popup_padding', 'padding', '15px', 'popups', 'Popup padding'],
+        ['popup_min_width', 'min-width', '280px', 'popups', 'Popup minimum width'],
+        ['popup_max_width', 'max-width', '450px', 'popups', 'Popup maximum width'],
+        ['popup_z_index', 'z-index', '200', 'popups', 'Popup z-index'],
+        
+        // Popup Text Elements
+        ['popup_title_color', 'color', '#556B2F', 'popups', 'Popup title color'],
+        ['popup_title_size', 'font-size', '16px', 'popups', 'Popup title font size'],
+        ['popup_title_weight', 'font-weight', 'bold', 'popups', 'Popup title font weight'],
+        ['popup_category_color', 'color', '#6B8E23', 'popups', 'Popup category color'],
+        ['popup_category_size', 'font-size', '12px', 'popups', 'Popup category font size'],
+        ['popup_description_color', 'color', '#666666', 'popups', 'Popup description color'],
+        ['popup_description_size', 'font-size', '12px', 'popups', 'Popup description font size'],
+        ['popup_price_color', 'color', '#6B8E23', 'popups', 'Popup price color'],
+        ['popup_price_size', 'font-size', '18px', 'popups', 'Popup price font size'],
+        
+        // Enhanced Popups System
+        ['popup_enhanced_bg_color', 'background-color', '#ffffff', 'popups_enhanced', 'Enhanced popup background'],
+        ['popup_enhanced_border_radius', 'border-radius', '20px', 'popups_enhanced', 'Enhanced popup border radius'],
+        ['popup_enhanced_shadow', 'box-shadow', '0 12px 40px rgba(0, 0, 0, 0.4)', 'popups_enhanced', 'Enhanced popup shadow'],
+        ['popup_enhanced_min_width', 'min-width', '400px', 'popups_enhanced', 'Enhanced popup minimum width'],
+        ['popup_enhanced_max_width', 'max-width', '600px', 'popups_enhanced', 'Enhanced popup maximum width'],
+        ['popup_enhanced_padding', 'padding', '20px', 'popups_enhanced', 'Enhanced popup padding'],
+        
         // Layout
         ['container_max_width', 'max-width', '1200px', 'layout', 'Maximum container width'],
         ['border_radius_default', 'border-radius', '8px', 'layout', 'Default border radius'],
@@ -71,6 +101,17 @@ try {
         ['modal_overlay_color', 'background-color', 'rgba(0, 0, 0, 0.5)', 'modals', 'Modal overlay color'],
         ['modal_border_radius', 'border-radius', '12px', 'modals', 'Modal border radius'],
         ['modal_shadow', 'box-shadow', '0 25px 50px -12px rgba(0, 0, 0, 0.25)', 'modals', 'Modal shadow'],
+        
+        // Room Headers - Make room titles/descriptions configurable
+        ['room_title_font_family', 'font-family', "'Merienda', cursive", 'room_headers', 'Room title font family'],
+        ['room_title_font_size', 'font-size', '2.5rem', 'room_headers', 'Room title font size'],
+        ['room_title_color', 'color', '#ffffff', 'room_headers', 'Room title color'],
+        ['room_title_text_stroke', 'text-stroke', '2px #556B2F', 'room_headers', 'Room title text stroke'],
+        ['room_title_text_shadow', 'text-shadow', '2px 2px 0px #556B2F, -2px -2px 0px #556B2F, 2px -2px 0px #556B2F, -2px 2px 0px #556B2F, 0px 2px 0px #556B2F, 2px 0px 0px #556B2F, 0px -2px 0px #556B2F, -2px 0px 0px #556B2F', 'room_headers', 'Room title text shadow'],
+        ['room_description_font_size', 'font-size', '1rem', 'room_headers', 'Room description font size'],
+        ['room_description_color', 'color', '#ffffff', 'room_headers', 'Room description color'],
+        ['room_description_text_stroke', 'text-stroke', '2px #556B2F', 'room_headers', 'Room description text stroke'],
+        ['room_description_text_shadow', 'text-shadow', '2px 2px 0px #556B2F, -2px -2px 0px #556B2F, 2px -2px 0px #556B2F, -2px 2px 0px #556B2F, 0px 2px 0px #556B2F, 2px 0px 0px #556B2F, 0px -2px 0px #556B2F, -2px 0px 0px #556B2F', 'room_headers', 'Room description text shadow'],
         
         // Admin Interface
         ['admin_bg_color', 'background-color', '#f9fafb', 'admin', 'Admin interface background'],

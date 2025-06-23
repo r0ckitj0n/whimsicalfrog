@@ -2,3 +2,32 @@ credentials.json
 .DS_Store
 *.DS_Store 
 node_modules
+
+# Backup files
+*.backup
+*.backup.*
+*backup*
+backups/
+*.tar.gz
+*.zip
+*.bak
+*.old
+*.orig
+*.tmp
+
+# Log files
+*.log
+monitor.log
+php_server.log
+server.log
+inventory_errors.log
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

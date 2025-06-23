@@ -318,7 +318,7 @@ class AIProviders {
     /**
      * Check if current model supports images
      */
-    private function currentModelSupportsImages() {
+    public function currentModelSupportsImages() {
         try {
             $pdo = $this->getPDO();
             $provider = $this->settings['ai_provider'];

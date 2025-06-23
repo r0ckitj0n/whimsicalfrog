@@ -109,8 +109,8 @@ class AIProviders {
         // Combine insights into a comprehensive description
         $combinedInsights = "Visual analysis reveals: " . implode(" Additionally, ", $insights);
         
-        // Add context about the product
-        $contextualInsights = "Based on the product images for '{$name}' in the {$category} category: {$combinedInsights}";
+        // Add context about the item
+        $contextualInsights = "Based on the item images for '{$name}' in the {$category} category: {$combinedInsights}";
         
         return $contextualInsights;
     }
@@ -2421,7 +2421,7 @@ Provide detailed, specific cost breakdown based on the actual product details pr
             $imageExtension = pathinfo($imagePath, PATHINFO_EXTENSION);
             $mimeType = "image/" . ($imageExtension === 'jpg' ? 'jpeg' : $imageExtension);
 
-            $prompt = "Analyze this product image and generate a descriptive alt text for accessibility and SEO. The product is: {$name} (Category: {$category}). Description: {$description}. 
+            $prompt = "Analyze this item image and generate a descriptive alt text for accessibility and SEO. The item is: {$name} (Category: {$category}). Description: {$description}. 
 
 Respond with JSON in this format:
 {

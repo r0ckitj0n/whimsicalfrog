@@ -900,7 +900,12 @@ $messageType = $_GET['type'] ?? '';
                         
                         <!-- Current Images Display -->
                         <div id="currentImagesContainer" class="current-images-section">
-                            <div class="text-sm text-gray-600 mb-2">Current Images:</div>
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-sm text-gray-600">Current Images:</div>
+                                <button type="button" id="processExistingImagesBtn" onclick="processExistingImagesWithAI()" class="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
+                                    🎨 AI Process All
+                                </button>
+                            </div>
                             <div id="currentImagesList" class="w-full">
                                 <!-- Current images will be loaded here with dynamic layout -->
                             </div>
@@ -917,6 +922,15 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                                 <div class="text-xs text-gray-500 mt-1">
                                     Maximum file size: 10MB per image. Supported formats: PNG, JPG, JPEG, WebP, GIF
+                                </div>
+                                <div class="mt-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="useAIProcessing" name="useAIProcessing" class="mr-2" checked>
+                                        <span class="text-sm font-medium text-gray-700">🎨 Auto-crop to edges with AI</span>
+                                    </label>
+                                    <div class="text-xs text-gray-500 mt-1 ml-6">
+                                        Automatically detect and crop to the outermost edges of objects in your images
+                                    </div>
                                 </div>
                                 <div id="uploadProgress" class="mt-2 hidden">
                                     <div class="text-sm text-gray-600 mb-2">Uploading images...</div>
@@ -1082,6 +1096,7 @@ $messageType = $_GET['type'] ?? '';
 </div>
 <?php endif; ?>
 
+<?php include __DIR__ . '/../components/ai_processing_modal.php'; ?>
 
 <div id="costFormModal" class="cost-modal">
     <div class="cost-modal-content">
@@ -4723,6 +4738,7 @@ function autoUploadImages(files) {
     
     formData.append('sku', sku);
     formData.append('altText', document.getElementById('name')?.value || '');
+    formData.append('useAIProcessing', document.getElementById('useAIProcessing')?.checked ? 'true' : 'false');
     
     console.log('FormData prepared, starting upload...');
     
@@ -4792,6 +4808,71 @@ function hideUploadProgress() {
     const progressBar = document.getElementById('uploadProgressBar');
     progressContainer.classList.add('hidden');
     progressBar.style.width = '0%';
+}
+
+// AI Processing Functions
+async function processExistingImagesWithAI() {
+    const sku = (document.getElementById('skuEdit') || document.getElementById('skuDisplay'))?.value;
+    
+    if (!sku) {
+        showToast('error', 'SKU is required');
+        return;
+    }
+    
+    try {
+        // Set up completion callback
+        window.aiProcessingModal.onComplete = function() {
+            // Refresh current images display
+            loadCurrentImages(sku);
+            showToast('success', 'AI processing completed! Images have been updated.');
+        };
+        
+        // Set up cancel callback
+        window.aiProcessingModal.onCancel = function() {
+            showToast('info', 'AI processing was cancelled.');
+        };
+        
+        // Start processing
+        const response = await fetch('/api/process_image_ai.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'process_uploaded_image',
+                sku: sku,
+                options: {
+                    convertToWebP: true,
+                    quality: 90,
+                    preserveTransparency: true,
+                    useAI: true,
+                    fallbackTrimPercent: 0.05
+                }
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Processing failed');
+        }
+        
+        // Show results
+        window.aiProcessingModal.show();
+        window.aiProcessingModal.showSuccess(
+            `Successfully processed ${data.processed_images} image(s)`,
+            [`Processed ${data.processed_images} images`, 'All images optimized with AI edge detection']
+        );
+        
+    } catch (error) {
+        console.error('AI processing error:', error);
+        showToast('error', 'AI processing failed: ' + error.message);
+    }
 }
 
 function loadCurrentImages(sku, isViewModal = false) {

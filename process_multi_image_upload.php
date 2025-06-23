@@ -24,6 +24,7 @@ try {
     $isPrimary = isset($_POST['isPrimary']) && $_POST['isPrimary'] === 'true';
     $altText = $_POST['altText'] ?? '';
     $overwrite = isset($_POST['overwrite']) && $_POST['overwrite'] === 'true';
+    $useAIProcessing = isset($_POST['useAIProcessing']) && $_POST['useAIProcessing'] === 'true';
     
     if (empty($sku)) {
         echo json_encode(['success' => false, 'error' => 'SKU is required']);
@@ -119,6 +120,41 @@ try {
         if (move_uploaded_file($tmpPath, $absPath)) {
             chmod($absPath, 0644);
             
+            $finalPath = $relPath;
+            $aiProcessed = false;
+            
+            // Apply AI processing if requested
+            if ($useAIProcessing) {
+                try {
+                    require_once __DIR__ . '/api/ai_image_processor.php';
+                    $processor = new AIImageProcessor();
+                    
+                    $processingOptions = [
+                        'convertToWebP' => true,
+                        'quality' => 90,
+                        'preserveTransparency' => true,
+                        'useAI' => true,
+                        'fallbackTrimPercent' => 0.05
+                    ];
+                    
+                    $result = $processor->processImage($absPath, $processingOptions);
+                    
+                    if ($result['success'] && !empty($result['processed_path'])) {
+                        // Use processed image path
+                        $finalPath = str_replace(__DIR__ . '/', '', $result['processed_path']);
+                        $aiProcessed = true;
+                        
+                        // Remove original file if different from processed
+                        if ($result['processed_path'] !== $absPath) {
+                            unlink($absPath);
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log("AI processing failed for {$filename}: " . $e->getMessage());
+                    // Continue with original image if AI processing fails
+                }
+            }
+            
             // Determine if this should be primary
             $isThisPrimary = ($isPrimary && $i === 0) ? 1 : 0; // Only first image can be primary if multiple uploaded
             
@@ -127,29 +163,33 @@ try {
             
             // Insert into database
             $stmt = $pdo->prepare("
-                INSERT INTO item_images (sku, image_path, is_primary, alt_text, sort_order)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO item_images (sku, image_path, is_primary, alt_text, sort_order, processed_with_ai, original_path, processing_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
             $stmt->execute([
                 $sku,
-                $relPath,
+                $finalPath,
                 $isThisPrimary,
                 $altText ?: $originalName,
-                $sortOrder
+                $sortOrder,
+                $aiProcessed ? 1 : 0,
+                $aiProcessed ? $relPath : null,
+                $aiProcessed ? date('Y-m-d H:i:s') : null
             ]);
             
             $uploadedImages[] = [
                 'filename' => $filename,
-                'path' => $relPath,
+                'path' => $finalPath,
                 'isPrimary' => $isThisPrimary == 1,
-                'sortOrder' => $sortOrder
+                'sortOrder' => $sortOrder,
+                'aiProcessed' => $aiProcessed
             ];
             
             // Update items table with primary image
             if ($isThisPrimary) {
                 $stmt = $pdo->prepare("UPDATE items SET imageUrl = ? WHERE sku = ?");
-                $stmt->execute([$relPath, $sku]);
+                $stmt->execute([$finalPath, $sku]);
             }
             
         } else {

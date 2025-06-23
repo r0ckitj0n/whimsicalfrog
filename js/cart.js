@@ -35,7 +35,8 @@ class ShoppingCart {
             const items = await response.json();
             console.log('Fetched fresh item data:', items);
 
-            // Update cart items with fresh data
+            // Filter out items that no longer exist in the database
+            const validItems = [];
             this.items.forEach(cartItem => {
                 const freshItem = items.find(p => p.sku === cartItem.sku);
                 if (freshItem) {
@@ -43,16 +44,26 @@ class ShoppingCart {
                     cartItem.image = freshItem.image || cartItem.image;
                     cartItem.name = freshItem.name || cartItem.name;
                     cartItem.price = parseFloat(freshItem.price) || cartItem.price;
+                    validItems.push(cartItem);
                     console.log(`Updated cart item ${cartItem.sku} with fresh data:`, {
                         name: cartItem.name,
                         image: cartItem.image,
                         price: cartItem.price
                     });
+                } else {
+                    console.warn(`Removing invalid item from cart: ${cartItem.sku} - item no longer exists in database`);
+                    this.showNotification(`Removed unavailable item: ${cartItem.name || cartItem.sku}`);
                 }
             });
 
-            // Save updated cart data
-            this.saveCart();
+            // Update cart with only valid items
+            if (validItems.length !== this.items.length) {
+                this.items = validItems;
+                this.saveCart();
+                this.updateCartCount();
+                console.log(`Cart cleaned: removed ${this.items.length - validItems.length} invalid items`);
+            }
+
         } catch (error) {
             console.warn('Error refreshing item data:', error);
         }
@@ -392,9 +403,29 @@ class ShoppingCart {
             this.showNotification('Your cart is empty!');
             return;
         }
+        
+        // Refresh cart data and filter out invalid items before checkout
+        await this.refreshProductData();
+        
+        if (this.items.length === 0) {
+            this.showNotification('All items in your cart are no longer available!');
+            return;
+        }
+        
         const customerId = user.userId ? user.userId : user.id;
-        const itemIds = this.items.map(item => item.sku); // Use SKU instead of id
+        
+        // Validate all SKUs before sending
+        const itemIds = this.items.map(item => item.sku).filter(sku => sku && sku.trim() !== '');
         const quantities = this.items.map(item => item.quantity);
+        
+        if (itemIds.length !== this.items.length) {
+            console.error('Invalid SKUs found in cart:', this.items);
+            this.showNotification('Some items in your cart are invalid. Please refresh the page and try again.');
+            return;
+        }
+        
+        console.log('Checkout data:', { customerId, itemIds, quantities, paymentMethod, shippingMethod });
+        
         const status = 'Pending';
         const date = new Date().toISOString().slice(0, 10);
         const apiEndpoint = window.location.origin + '/api/add-order.php';

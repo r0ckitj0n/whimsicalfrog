@@ -2,8 +2,8 @@
 /**
  * Multi-Image Upload Processor
  * 
- * Handles multiple image uploads per product with:
- * - Images named after product ID (P001A.jpg, P001B.jpg, P001C.jpg, etc.)
+ * Handles multiple image uploads per item with:
+ * - Images named after item SKU (WF-TS-001A.jpg, WF-TS-001B.jpg, WF-TS-001C.jpg, etc.)
  * - Primary image designation
  * - Overwrite existing images option
  * - Support for multiple formats
@@ -45,7 +45,7 @@ try {
         mkdir($itemsDir, 0755, true);
     }
     
-    // If this is marked as primary, unset any existing primary images for this product
+    // If this is marked as primary, unset any existing primary images for this item
     if ($isPrimary) {
         $stmt = $pdo->prepare("UPDATE item_images SET is_primary = 0 WHERE sku = ?");
         $stmt->execute([$sku]);
@@ -101,7 +101,7 @@ try {
         }
         
         if ($suffix === null) {
-            $errors[] = "Too many images for product $sku (max 26)";
+            $errors[] = "Too many images for item $sku (max 26)";
             continue;
         }
         
@@ -157,7 +157,7 @@ try {
         }
     }
     
-    // If no primary image exists for this product, make the first uploaded image primary
+    // If no primary image exists for this item, make the first uploaded image primary
     if (!empty($uploadedImages)) {
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM item_images WHERE sku = ? AND is_primary = 1");
         $stmt->execute([$sku]);

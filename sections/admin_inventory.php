@@ -6683,7 +6683,7 @@ function applyMarketingTitle() {
         nameField.value = newTitle;
         nameField.style.backgroundColor = '#f3e8ff';
         
-        // Auto-save the product with the new title
+        // Auto-save the item with the new title
         const updateData = {
             sku: currentItemSku,
             name: newTitle,
@@ -6813,7 +6813,7 @@ function applyAndSaveMarketingTitle() {
                 nameField.value = newTitle;
                 nameField.style.backgroundColor = '#f3e8ff';
                 
-                // Auto-save the product with the new title
+                // Auto-save the item with the new title
                 const updateData = {
                     sku: currentItemSku,
                     name: newTitle,

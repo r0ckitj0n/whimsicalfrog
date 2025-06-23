@@ -1039,7 +1039,7 @@ function calculateMarketResearchPrice($name, $description, $category, $itemAnaly
     
     $price = $basePrice['price'];
     
-    // Adjust based on product analysis
+            // Adjust based on item analysis
     foreach ($itemAnalysis['materials'] as $material) {
         $price *= $material['price_premium'];
     }

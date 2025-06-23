@@ -924,7 +924,7 @@ function identifyCompetitiveAdvantages($category, $analysis) {
         'Window Wraps' => ['Local installation support', 'Custom sizing available', 'Direct communication with designer']
     ];
     
-    return $categoryAdvantages[$category] ?? ['Personalized service', 'Local business support', 'Unique products'];
+    return $categoryAdvantages[$category] ?? ['Personalized service', 'Local business support', 'Unique items'];
 }
 
 function generateUrgencyFactors($category, $analysis, $contentTone = '') {
@@ -969,7 +969,7 @@ function generateAdvancedSEOKeywords($name, $category, $analysis) {
         'Window Wraps' => ['window graphics', 'vehicle wraps', 'custom decals', 'storefront graphics']
     ];
     
-    $baseKeywords = $categoryKeywords[$category] ?? ['custom items', 'personalized products'];
+    $baseKeywords = $categoryKeywords[$category] ?? ['custom items', 'personalized items'];
     
     // Add location keywords
     $locationKeywords = ['local', 'custom', 'personalized', 'handmade', 'small business'];
@@ -978,7 +978,7 @@ function generateAdvancedSEOKeywords($name, $category, $analysis) {
 }
 
 function analyzeSearchIntent($name, $category, $analysis) {
-    // Most custom products have transactional intent
+    // Most custom items have transactional intent
     return 'transactional';
 }
 
@@ -991,7 +991,7 @@ function identifyCustomerBenefits($category, $analysis) {
         'Window Wraps' => ['Increase business visibility', 'Professional appearance', 'Weather protection', 'Brand recognition']
     ];
     
-    return $categoryBenefits[$category] ?? ['High quality product', 'Great value', 'Customer satisfaction'];
+    return $categoryBenefits[$category] ?? ['High quality item', 'Great value', 'Customer satisfaction'];
 }
 
 function generatePsychographicProfile($category, $analysis) {
@@ -1003,7 +1003,7 @@ function generatePsychographicProfile($category, $analysis) {
         'Window Wraps' => 'Business owners and professionals who understand the importance of visual marketing and brand presence.'
     ];
     
-    return $profiles[$category] ?? 'Quality-conscious consumers who appreciate personalized products and local craftsmanship.';
+    return $profiles[$category] ?? 'Quality-conscious consumers who appreciate personalized items and local craftsmanship.';
 }
 
 function generateDemographicTargeting($category, $analysis) {
@@ -1057,7 +1057,7 @@ function generateFallbackAltText($images, $name, $category) {
         $altTexts[] = [
             'image_path' => str_replace(__DIR__ . '/../', '', $imagePath),
             'alt_text' => "Custom {$category} - {$name}" . ($index > 0 ? " (View " . ($index + 1) . ")" : ""),
-            'description' => "High-quality {$category} featuring {$name}. Professional product photography showcasing the design and craftsmanship."
+            'description' => "High-quality {$category} featuring {$name}. Professional item photography showcasing the design and craftsmanship."
         ];
     }
     return $altTexts;

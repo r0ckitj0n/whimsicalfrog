@@ -47,10 +47,14 @@ try {
             echo json_encode(['success' => false, 'error' => 'Invalid action specified.']);
     }
     
+} catch (PDOException $e) {
+    error_log("Analytics tracker PDO error: " . $e->getMessage());
+    // Don't fail completely - just return success to prevent breaking the site
+    echo json_encode(['success' => true, 'note' => 'Analytics temporarily unavailable']);
 } catch (Exception $e) {
-    error_log("Error in analytics_tracker.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    error_log("Analytics tracker error: " . $e->getMessage());
+    // Don't fail completely - just return success to prevent breaking the site
+    echo json_encode(['success' => true, 'note' => 'Analytics temporarily unavailable']);
 }
 
 function initializeAnalyticsTables($pdo) {

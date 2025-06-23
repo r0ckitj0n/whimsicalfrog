@@ -2,6 +2,12 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/email_config.php';
 header('Content-Type: application/json');
+
+// Add debugging
+error_log("add-order.php: Received request");
+error_log("add-order.php: Request method: " . $_SERVER['REQUEST_METHOD']);
+error_log("add-order.php: Raw input: " . file_get_contents('php://input'));
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success'=>false,'error'=>'Method not allowed']);
@@ -12,6 +18,10 @@ if (!$input) {
     echo json_encode(['success'=>false,'error'=>'Invalid JSON']);
     exit;
 }
+
+// Debug the parsed input
+error_log("add-order.php: Parsed input: " . print_r($input, true));
+
 $pdo = new PDO($dsn, $user, $pass, $options);
 // Validate required fields
 $required = ['customerId','itemIds','quantities','paymentMethod','total'];
@@ -23,6 +33,11 @@ foreach ($required as $field) {
 }
     $itemIds = $input['itemIds'];  // These are actually SKUs now
     $quantities = $input['quantities'];
+    
+    // Debug the itemIds array
+    error_log("add-order.php: itemIds array: " . print_r($itemIds, true));
+    error_log("add-order.php: quantities array: " . print_r($quantities, true));
+    
     if (!is_array($itemIds) || !is_array($quantities) || count($itemIds)!==count($quantities)) {
     echo json_encode(['success'=>false,'error'=>'Invalid items array']);
     exit;
@@ -89,11 +104,21 @@ try {
         $sku = $itemIds[$i];
         $quantity = (int)$quantities[$i];
         
+        // Debug each SKU being processed
+        error_log("add-order.php: Processing item $i: SKU='$sku', Quantity=$quantity");
+        
+        // Check if SKU is null or empty
+        if (empty($sku)) {
+            error_log("add-order.php: ERROR - SKU is empty for item $i");
+            throw new Exception("SKU is empty for item at index $i");
+        }
+        
         // Get item price
         $priceStmt->execute([$sku]);
         $price = $priceStmt->fetchColumn();
         
         if ($price === false || $price === null) {
+            error_log("add-order.php: WARNING - No price found for SKU '$sku', using 0.00");
             $price = 0.00;  // Fallback price
         }
         
@@ -101,6 +126,7 @@ try {
         $orderItemId = 'OI' . str_pad($itemCount + $i + 1, 10, '0', STR_PAD_LEFT);
         
         // Insert order item
+        error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$sku, Qty=$quantity, Price=$price");
         $orderItemStmt->execute([$orderItemId, $orderId, $sku, $quantity, $price]);
         
         // Update stock levels
@@ -127,9 +153,16 @@ try {
         }
     }
     
+    error_log("add-order.php: Order created successfully: $orderId");
     echo json_encode(['success'=>true,'orderId'=>$orderId]);
 } catch (PDOException $e) {
     $pdo->rollBack();
+    error_log("add-order.php: Database error: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success'=>false,'error'=>$e->getMessage()]);
+} catch (Exception $e) {
+    $pdo->rollBack();
+    error_log("add-order.php: General error: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['success'=>false,'error'=>$e->getMessage()]);
 }

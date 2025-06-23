@@ -111,7 +111,7 @@ try {
             
             $stmt = $pdo->prepare("
                 INSERT INTO price_suggestions (
-                    sku, suggested_price, reasoning, confidence, factors,
+                    sku, suggested_price, reasoning, confidence, factors, components,
                     detected_materials, detected_features, market_intelligence, pricing_strategy,
                     competitive_analysis, demand_indicators, target_audience, seasonality_factors,
                     brand_premium_factor, price_elasticity_estimate, value_proposition, market_positioning,
@@ -120,12 +120,13 @@ try {
                     trend_alignment_score, uniqueness_score, demand_score, market_saturation_level,
                     recommended_pricing_tier, profit_margin_analysis, pricing_elasticity_notes
                 ) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE 
                 suggested_price = VALUES(suggested_price),
                 reasoning = VALUES(reasoning),
                 confidence = VALUES(confidence),
                 factors = VALUES(factors),
+                components = VALUES(components),
                 detected_materials = VALUES(detected_materials),
                 detected_features = VALUES(detected_features),
                 market_intelligence = VALUES(market_intelligence),
@@ -159,6 +160,7 @@ try {
                 $pricingData['reasoning'],
                 $pricingData['confidence'],
                 json_encode($pricingData['factors']),
+                json_encode($pricingData['components']),
                 json_encode($pricingData['analysis']['detected_materials'] ?? []),
                 json_encode($pricingData['analysis']['detected_features'] ?? []),
                 json_encode($pricingData['analysis']['competitor_analysis'] ?? []),

@@ -54,6 +54,7 @@ try {
             reasoning,
             confidence,
             factors,
+            components,
             detected_materials,
             detected_features,
             market_intelligence,
@@ -89,9 +90,12 @@ try {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($result) {
-        // Parse the reasoning to extract individual components with dollar amounts
+        // Get components from database first, fallback to parsing if not available
+        $storedComponents = json_decode($result['components'] ?? '[]', true);
         $reasoningText = $result['reasoning'] ?? '';
-        $components = parseReasoningIntoComponents($reasoningText, $result);
+        
+        // Use stored components if available, otherwise parse from reasoning text
+        $components = !empty($storedComponents) ? $storedComponents : parseReasoningIntoComponents($reasoningText, $result);
         
         echo json_encode([
             'success' => true,

@@ -335,6 +335,13 @@ class AIProviders {
     }
     
     /**
+     * Get AI settings
+     */
+    public function getSettings() {
+        return $this->settings;
+    }
+    
+    /**
      * Convert image file to base64 for API calls
      */
     private function imageToBase64($imagePath) {

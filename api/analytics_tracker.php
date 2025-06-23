@@ -36,7 +36,8 @@ try {
             getOptimizationSuggestions($pdo);
             break;
         case 'track_product_view':
-            trackProductView($pdo);
+        case 'track_item_view':
+            trackItemView($pdo);
             break;
         case 'track_cart_action':
             trackCartAction($pdo);
@@ -84,14 +85,14 @@ function initializeAnalyticsTables($pdo) {
         page_url VARCHAR(500),
         page_title VARCHAR(255),
         page_type VARCHAR(100),
-        product_sku VARCHAR(50),
+        item_sku VARCHAR(50),
         time_on_page INT DEFAULT 0,
         scroll_depth INT DEFAULT 0,
         viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         exit_page BOOLEAN DEFAULT FALSE,
         INDEX idx_session_id (session_id),
         INDEX idx_page_type (page_type),
-        INDEX idx_product_sku (product_sku),
+        INDEX idx_item_sku (item_sku),
         INDEX idx_viewed_at (viewed_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     
@@ -104,19 +105,19 @@ function initializeAnalyticsTables($pdo) {
         element_type VARCHAR(100),
         element_id VARCHAR(255),
         element_text TEXT,
-        product_sku VARCHAR(50),
+        item_sku VARCHAR(50),
         interaction_data JSON,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_session_id (session_id),
         INDEX idx_interaction_type (interaction_type),
-        INDEX idx_product_sku (product_sku),
+        INDEX idx_item_sku (item_sku),
         INDEX idx_timestamp (timestamp)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     
-    // Product analytics table
-    $productAnalyticsTable = "CREATE TABLE IF NOT EXISTS product_analytics (
+    // Item analytics table
+    $itemAnalyticsTable = "CREATE TABLE IF NOT EXISTS item_analytics (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        product_sku VARCHAR(50) NOT NULL,
+        item_sku VARCHAR(50) NOT NULL,
         views_count INT DEFAULT 0,
         unique_views_count INT DEFAULT 0,
         cart_adds_count INT DEFAULT 0,
@@ -127,16 +128,16 @@ function initializeAnalyticsTables($pdo) {
         conversion_rate DECIMAL(5,2) DEFAULT 0,
         revenue_generated DECIMAL(10,2) DEFAULT 0,
         last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_sku (product_sku)
+        UNIQUE KEY unique_sku (item_sku)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     
     // Conversion funnels table
     $conversionFunnelsTable = "CREATE TABLE IF NOT EXISTS conversion_funnels (
         id INT AUTO_INCREMENT PRIMARY KEY,
         session_id VARCHAR(128) NOT NULL,
-        funnel_step ENUM('landing', 'product_view', 'cart_add', 'checkout_start', 'checkout_complete') NOT NULL,
+        funnel_step ENUM('landing', 'item_view', 'cart_add', 'checkout_start', 'checkout_complete') NOT NULL,
         page_url VARCHAR(500),
-        product_sku VARCHAR(50),
+        item_sku VARCHAR(50),
         step_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         time_to_next_step INT,
         dropped_off BOOLEAN DEFAULT FALSE,
@@ -168,7 +169,7 @@ function initializeAnalyticsTables($pdo) {
     $pdo->exec($sessionsTable);
     $pdo->exec($pageViewsTable);
     $pdo->exec($interactionsTable);
-    $pdo->exec($productAnalyticsTable);
+    $pdo->exec($itemAnalyticsTable);
     $pdo->exec($conversionFunnelsTable);
     $pdo->exec($optimizationTable);
 }
@@ -217,16 +218,16 @@ function trackPageView($pdo) {
     $pageUrl = $input['page_url'] ?? '';
     $pageTitle = $input['page_title'] ?? '';
     $pageType = $input['page_type'] ?? '';
-    $productSku = $input['product_sku'] ?? null;
+    $itemSku = $input['item_sku'] ?? $input['product_sku'] ?? null; // Support both for backward compatibility
     $timeOnPage = $input['time_on_page'] ?? 0;
     $scrollDepth = $input['scroll_depth'] ?? 0;
     
     // Insert page view
     $stmt = $pdo->prepare("
-        INSERT INTO page_views (session_id, page_url, page_title, page_type, product_sku, time_on_page, scroll_depth) 
+        INSERT INTO page_views (session_id, page_url, page_title, page_type, item_sku, time_on_page, scroll_depth) 
         VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$sessionId, $pageUrl, $pageTitle, $pageType, $productSku, $timeOnPage, $scrollDepth]);
+    $stmt->execute([$sessionId, $pageUrl, $pageTitle, $pageType, $itemSku, $timeOnPage, $scrollDepth]);
     
     // Update session stats
     $stmt = $pdo->prepare("
@@ -239,8 +240,8 @@ function trackPageView($pdo) {
     $stmt->execute([$sessionId]);
     
     // Track conversion funnel
-    if ($pageType === 'product' || $pageType === 'shop') {
-        trackFunnelStep($pdo, $sessionId, 'product_view', $pageUrl, $productSku);
+    if ($pageType === 'item' || $pageType === 'product' || $pageType === 'shop') {
+        trackFunnelStep($pdo, $sessionId, 'item_view', $pageUrl, $itemSku);
     }
     
     echo json_encode(['success' => true]);
@@ -255,23 +256,23 @@ function trackInteraction($pdo) {
     $elementType = $input['element_type'] ?? '';
     $elementId = $input['element_id'] ?? '';
     $elementText = $input['element_text'] ?? '';
-    $productSku = $input['product_sku'] ?? null;
+    $itemSku = $input['item_sku'] ?? $input['product_sku'] ?? null; // Support both for backward compatibility
     $interactionData = json_encode($input['interaction_data'] ?? []);
     
     // Insert interaction
     $stmt = $pdo->prepare("
-        INSERT INTO user_interactions (session_id, page_url, interaction_type, element_type, element_id, element_text, product_sku, interaction_data) 
+        INSERT INTO user_interactions (session_id, page_url, interaction_type, element_type, element_id, element_text, item_sku, interaction_data) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$sessionId, $pageUrl, $interactionType, $elementType, $elementId, $elementText, $productSku, $interactionData]);
+    $stmt->execute([$sessionId, $pageUrl, $interactionType, $elementType, $elementId, $elementText, $itemSku, $interactionData]);
     
     // Track specific funnel steps
     if ($interactionType === 'cart_add') {
-        trackFunnelStep($pdo, $sessionId, 'cart_add', $pageUrl, $productSku);
+        trackFunnelStep($pdo, $sessionId, 'cart_add', $pageUrl, $itemSku);
     } elseif ($interactionType === 'checkout_start') {
-        trackFunnelStep($pdo, $sessionId, 'checkout_start', $pageUrl, $productSku);
+        trackFunnelStep($pdo, $sessionId, 'checkout_start', $pageUrl, $itemSku);
     } elseif ($interactionType === 'checkout_complete') {
-        trackFunnelStep($pdo, $sessionId, 'checkout_complete', $pageUrl, $productSku);
+        trackFunnelStep($pdo, $sessionId, 'checkout_complete', $pageUrl, $itemSku);
         
         // Mark session as converted
         $stmt = $pdo->prepare("UPDATE user_sessions SET converted = TRUE WHERE session_id = ?");
@@ -281,25 +282,25 @@ function trackInteraction($pdo) {
     echo json_encode(['success' => true]);
 }
 
-function trackFunnelStep($pdo, $sessionId, $step, $pageUrl, $productSku) {
+function trackFunnelStep($pdo, $sessionId, $step, $pageUrl, $itemSku) {
     $stmt = $pdo->prepare("
-        INSERT INTO conversion_funnels (session_id, funnel_step, page_url, product_sku) 
+        INSERT INTO conversion_funnels (session_id, funnel_step, page_url, item_sku) 
         VALUES (?, ?, ?, ?)
     ");
-    $stmt->execute([$sessionId, $step, $pageUrl, $productSku]);
+    $stmt->execute([$sessionId, $step, $pageUrl, $itemSku]);
 }
 
-function trackProductView($pdo) {
+function trackItemView($pdo) {
     $input = json_decode(file_get_contents('php://input'), true);
-    $productSku = $input['product_sku'] ?? '';
+    $itemSku = $input['item_sku'] ?? $input['product_sku'] ?? ''; // Support both for backward compatibility
     $timeOnPage = $input['time_on_page'] ?? 0;
     
-    if (!$productSku) {
-        echo json_encode(['success' => false, 'error' => 'Product SKU required']);
+    if (!$itemSku) {
+        echo json_encode(['success' => false, 'error' => 'Item SKU required']);
         return;
     }
     
-    // Update or insert product analytics
+    // Update or insert item analytics (note: table name remains product_analytics for now)
     $stmt = $pdo->prepare("
         INSERT INTO product_analytics (product_sku, views_count, unique_views_count, avg_time_on_page) 
         VALUES (?, 1, 1, ?) 
@@ -307,18 +308,18 @@ function trackProductView($pdo) {
             views_count = views_count + 1,
             avg_time_on_page = (avg_time_on_page * (views_count - 1) + ?) / views_count
     ");
-    $stmt->execute([$productSku, $timeOnPage, $timeOnPage]);
+    $stmt->execute([$itemSku, $timeOnPage, $timeOnPage]);
     
     echo json_encode(['success' => true]);
 }
 
 function trackCartAction($pdo) {
     $input = json_decode(file_get_contents('php://input'), true);
-    $productSku = $input['product_sku'] ?? '';
+    $itemSku = $input['item_sku'] ?? $input['product_sku'] ?? ''; // Support both for backward compatibility
     $action = $input['action'] ?? ''; // 'add' or 'remove'
     
-    if (!$productSku || !$action) {
-        echo json_encode(['success' => false, 'error' => 'Product SKU and action required']);
+    if (!$itemSku || !$action) {
+        echo json_encode(['success' => false, 'error' => 'Item SKU and action required']);
         return;
     }
     
@@ -329,7 +330,7 @@ function trackCartAction($pdo) {
         VALUES (?, 1) 
         ON DUPLICATE KEY UPDATE {$field} = {$field} + 1
     ");
-    $stmt->execute([$productSku]);
+    $stmt->execute([$itemSku]);
     
     echo json_encode(['success' => true]);
 }

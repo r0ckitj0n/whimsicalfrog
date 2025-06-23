@@ -265,10 +265,9 @@ document.addEventListener('DOMContentLoaded', function() {
         line-height: 1.4;
         margin: 4px 0;
         flex-grow: 1;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        max-height: 200px;
+        overflow-y: auto;
+        word-wrap: break-word;
     }
     
     .popup-price-enhanced {

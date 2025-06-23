@@ -39,10 +39,10 @@ try {
     
     // Get item images
     $stmt = $pdo->prepare("
-        SELECT image_path, alt_text, is_primary, display_order
+        SELECT image_path, alt_text, is_primary, sort_order
         FROM item_images 
-        WHERE item_sku = ? 
-        ORDER BY is_primary DESC, display_order ASC
+        WHERE sku = ? 
+        ORDER BY is_primary DESC, sort_order ASC
     ");
     $stmt->execute([$sku]);
     $images = $stmt->fetchAll(PDO::FETCH_ASSOC);

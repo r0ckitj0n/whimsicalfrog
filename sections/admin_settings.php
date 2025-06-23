@@ -7948,7 +7948,7 @@ function updateProductPerformance(productData) {
                     ${productData.map(product => `
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">${product.product_sku}</div>
+                                <div class="text-sm font-medium text-gray-900">${product.item_sku}</div>
                                 <div class="text-sm text-gray-500">${product.product_name || 'Unknown'}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.views_count}</td>

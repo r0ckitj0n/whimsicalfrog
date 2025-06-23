@@ -300,9 +300,9 @@ function trackItemView($pdo) {
         return;
     }
     
-    // Update or insert item analytics (note: table name remains product_analytics for now)
+    // Update or insert item analytics
     $stmt = $pdo->prepare("
-        INSERT INTO product_analytics (product_sku, views_count, unique_views_count, avg_time_on_page) 
+        INSERT INTO item_analytics (item_sku, views_count, unique_views_count, avg_time_on_page) 
         VALUES (?, 1, 1, ?) 
         ON DUPLICATE KEY UPDATE 
             views_count = views_count + 1,
@@ -326,7 +326,7 @@ function trackCartAction($pdo) {
     $field = $action === 'add' ? 'cart_adds_count' : 'cart_removes_count';
     
     $stmt = $pdo->prepare("
-        INSERT INTO product_analytics (product_sku, {$field}) 
+        INSERT INTO item_analytics (item_sku, {$field}) 
         VALUES (?, 1) 
         ON DUPLICATE KEY UPDATE {$field} = {$field} + 1
     ");
@@ -365,23 +365,23 @@ function getAnalyticsReport($pdo) {
     $stmt->execute([$dateFilter]);
     $topPages = $stmt->fetchAll();
     
-    // Product performance
+    // Item performance
     $stmt = $pdo->prepare("
         SELECT 
-            p.product_sku,
-            i.name as product_name,
+            p.item_sku,
+            i.name as item_name,
             p.views_count,
             p.cart_adds_count,
             p.purchases_count,
             p.conversion_rate,
             p.revenue_generated
-        FROM product_analytics p
-        LEFT JOIN items i ON p.product_sku = i.sku
+        FROM item_analytics p
+        LEFT JOIN items i ON p.item_sku = i.sku
         ORDER BY p.views_count DESC
         LIMIT 10
     ");
     $stmt->execute();
-    $productPerformance = $stmt->fetchAll();
+    $itemPerformance = $stmt->fetchAll();
     
     // Conversion funnel
     $stmt = $pdo->prepare("
@@ -391,7 +391,7 @@ function getAnalyticsReport($pdo) {
         FROM conversion_funnels 
         WHERE step_timestamp >= ?
         GROUP BY funnel_step
-        ORDER BY FIELD(funnel_step, 'landing', 'product_view', 'cart_add', 'checkout_start', 'checkout_complete')
+        ORDER BY FIELD(funnel_step, 'landing', 'item_view', 'cart_add', 'checkout_start', 'checkout_complete')
     ");
     $stmt->execute([$dateFilter]);
     $conversionFunnel = $stmt->fetchAll();
@@ -401,7 +401,7 @@ function getAnalyticsReport($pdo) {
         'data' => [
             'overall_stats' => $overallStats,
             'top_pages' => $topPages,
-            'product_performance' => $productPerformance,
+            'item_performance' => $itemPerformance,
             'conversion_funnel' => $conversionFunnel,
             'timeframe' => $timeframe
         ]
@@ -495,26 +495,26 @@ function getOptimizationSuggestions($pdo) {
         ];
     }
     
-    // Analyze product performance
+    // Analyze item performance
     $stmt = $pdo->prepare("
-        SELECT product_sku, views_count, cart_adds_count, 
+        SELECT item_sku, views_count, cart_adds_count, 
                (cart_adds_count / views_count) * 100 as conversion_rate
-        FROM product_analytics 
+        FROM item_analytics 
         WHERE views_count >= 20
         HAVING conversion_rate < 5
         ORDER BY views_count DESC
         LIMIT 3
     ");
     $stmt->execute();
-    $poorPerformingProducts = $stmt->fetchAll();
+    $poorPerformingItems = $stmt->fetchAll();
     
-    foreach ($poorPerformingProducts as $product) {
+    foreach ($poorPerformingItems as $item) {
         $suggestions[] = [
-            'type' => 'product',
+            'type' => 'item',
             'priority' => 'medium',
-            'title' => 'Low Conversion Product: ' . $product['product_sku'],
-            'description' => "Product has {$product['views_count']} views but only {$product['conversion_rate']}% conversion rate.",
-            'suggested_action' => 'Review product images, improve description, adjust pricing, or enhance marketing copy.',
+            'title' => 'Low Conversion Item: ' . $item['item_sku'],
+            'description' => "Item has {$item['views_count']} views but only {$item['conversion_rate']}% conversion rate.",
+            'suggested_action' => 'Review item images, improve description, adjust pricing, or enhance marketing copy.',
             'confidence_score' => 0.80,
             'potential_impact' => 'medium'
         ];

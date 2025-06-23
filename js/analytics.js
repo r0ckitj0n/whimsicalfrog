@@ -48,7 +48,7 @@ class AnalyticsTracker {
             page_url: window.location.href,
             page_title: document.title,
             page_type: this.getPageType(),
-            product_sku: this.getProductSku(),
+            item_sku: this.getItemSku(),
             timestamp: Date.now()
         };
         
@@ -69,19 +69,20 @@ class AnalyticsTracker {
         return 'other';
     }
     
-    getProductSku() {
-        // Try to extract product SKU from various sources
+    getItemSku() {
+        // Try to extract item SKU from various sources
         const params = new URLSearchParams(window.location.search);
         
         // Check URL parameters
         if (params.get('product')) return params.get('product');
         if (params.get('sku')) return params.get('sku');
+        if (params.get('item')) return params.get('item');
         if (params.get('edit')) return params.get('edit');
         
-        // Check for product elements on page
-        const productElements = document.querySelectorAll('[data-product-id], [data-sku]');
-        if (productElements.length > 0) {
-            return productElements[0].dataset.productId || productElements[0].dataset.sku;
+        // Check for item elements on page
+        const itemElements = document.querySelectorAll('[data-product-id], [data-sku], [data-item-sku]');
+        if (itemElements.length > 0) {
+            return itemElements[0].dataset.productId || itemElements[0].dataset.sku || itemElements[0].dataset.itemSku;
         }
         
         return null;
@@ -120,8 +121,8 @@ class AnalyticsTracker {
         // Track cart actions
         this.setupCartTracking();
         
-        // Track product interactions
-        this.setupProductTracking();
+        // Track item interactions
+        this.setupItemTracking();
     }
     
     setupCartTracking() {
@@ -136,7 +137,7 @@ class AnalyticsTracker {
                 const productSku = button.dataset.productId || button.dataset.sku;
                 
                 this.trackCartAction('add', productSku);
-                this.trackInteraction('cart_add', e, { product_sku: productSku });
+                this.trackInteraction('cart_add', e, { item_sku: productSku });
             }
         });
         
@@ -151,7 +152,7 @@ class AnalyticsTracker {
                 const productSku = button.dataset.productId || button.dataset.sku;
                 
                 this.trackCartAction('remove', productSku);
-                this.trackInteraction('cart_remove', e, { product_sku: productSku });
+                this.trackInteraction('cart_remove', e, { item_sku: productSku });
             }
         });
         
@@ -164,14 +165,14 @@ class AnalyticsTracker {
         });
     }
     
-    setupProductTracking() {
-        // Track product views with time spent
-        const productElements = document.querySelectorAll('.product-card, .product-item');
+    setupItemTracking() {
+        // Track item views with time spent
+        const itemElements = document.querySelectorAll('.product-card, .product-item, .item-card, .item-item');
         
-        productElements.forEach(element => {
+        itemElements.forEach(element => {
             let viewStartTime = null;
             
-            // Track when product comes into view
+            // Track when item comes into view
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -181,7 +182,7 @@ class AnalyticsTracker {
                         const productSku = element.dataset.productId || element.dataset.sku;
                         
                         if (productSku && viewTime > 1000) { // Only track if viewed for more than 1 second
-                            this.trackProductView(productSku, viewTime);
+                            this.trackItemView(productSku, viewTime);
                         }
                         viewStartTime = null;
                     }
@@ -191,15 +192,15 @@ class AnalyticsTracker {
             observer.observe(element);
         });
         
-        // Track product clicks
+        // Track item clicks
         document.addEventListener('click', (e) => {
-            const productElement = e.target.closest('.product-card, .product-item');
-            if (productElement) {
-                const productSku = productElement.dataset.productId || productElement.dataset.sku;
+            const itemElement = e.target.closest('.product-card, .product-item, .item-card, .item-item');
+            if (itemElement) {
+                const productSku = itemElement.dataset.productId || itemElement.dataset.sku;
                 if (productSku) {
                     this.trackInteraction('click', e, { 
-                        product_sku: productSku,
-                        element_type: 'product'
+                        item_sku: productSku,
+                        element_type: 'item'
                     });
                 }
             }
@@ -230,7 +231,7 @@ class AnalyticsTracker {
                 page_y: event?.clientY || 0,
                 ...additionalData
             },
-            product_sku: additionalData.product_sku || this.getProductSku()
+            item_sku: additionalData.item_sku || this.getItemSku()
         };
         
         this.sendData('track_interaction', data);
@@ -257,20 +258,20 @@ class AnalyticsTracker {
         }
     }
     
-    trackProductView(productSku, timeSpent) {
+    trackItemView(productSku, timeSpent) {
         const data = {
-            product_sku: productSku,
+            item_sku: productSku,
             time_on_page: Math.round(timeSpent / 1000) // Convert to seconds
         };
         
-        this.sendData('track_product_view', data);
+        this.sendData('track_item_view', data);
     }
     
     trackCartAction(action, productSku) {
         if (!productSku) return;
         
         const data = {
-            product_sku: productSku,
+            item_sku: productSku,
             action: action
         };
         
@@ -301,7 +302,7 @@ class AnalyticsTracker {
             page_url: window.location.href,
             time_on_page: timeOnPage,
             scroll_depth: this.maxScrollDepth,
-            product_sku: this.getProductSku()
+            item_sku: this.getItemSku()
         };
         
         // Use sendBeacon for reliable exit tracking

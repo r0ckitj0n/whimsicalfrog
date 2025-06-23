@@ -118,7 +118,7 @@ class MarketingHelper {
         return $result;
     }
     
-    public function generatePageSEO($pageType, $productSku = null) {
+    public function generatePageSEO($pageType, $itemSku = null) {
         $seoSettings = $this->getSEOSettings($pageType);
         $seo = [];
         
@@ -127,24 +127,24 @@ class MarketingHelper {
         $seo['description'] = $seoSettings['meta_description'] ?? $seoSettings['site_description'] ?? '';
         $seo['keywords'] = $seoSettings['site_keywords'] ?? '';
         
-        // If product-specific page, enhance with product marketing data
-        if ($productSku) {
-            $marketingData = $this->getMarketingData($productSku);
+        // If item-specific page, enhance with item marketing data
+        if ($itemSku) {
+            $marketingData = $this->getMarketingData($itemSku);
             if ($marketingData) {
-                // Enhance title with product name
+                // Enhance title with item name
                 if (!empty($marketingData['suggested_title'])) {
                     $seo['title'] = $marketingData['suggested_title'] . ' | ' . ($seoSettings['site_title'] ?? 'Whimsical Frog');
                 }
                 
-                // Use product description
+                // Use item description
                 if (!empty($marketingData['suggested_description'])) {
                     $seo['description'] = $marketingData['suggested_description'];
                 }
                 
-                // Add product keywords
+                // Add item keywords
                 if (!empty($marketingData['seo_keywords'])) {
-                    $productKeywords = implode(', ', $marketingData['seo_keywords']);
-                    $seo['keywords'] = $productKeywords . ', ' . $seo['keywords'];
+                    $itemKeywords = implode(', ', $marketingData['seo_keywords']);
+                    $seo['keywords'] = $itemKeywords . ', ' . $seo['keywords'];
                 }
             }
         }
@@ -199,12 +199,12 @@ function getSellingPoints($sku) {
     return $GLOBALS['marketingHelper']->getSellingPoints($sku);
 }
 
-function getProductKeywords($sku) {
+function getItemKeywords($sku) {
     return $GLOBALS['marketingHelper']->getKeywords($sku);
 }
 
-function generatePageSEO($pageType, $productSku = null) {
-    return $GLOBALS['marketingHelper']->generatePageSEO($pageType, $productSku);
+function generatePageSEO($pageType, $itemSku = null) {
+    return $GLOBALS['marketingHelper']->generatePageSEO($pageType, $itemSku);
 }
 
 function getCallToActions($sku) {

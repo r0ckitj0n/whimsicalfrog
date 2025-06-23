@@ -18,9 +18,9 @@ class SEOEnhancer {
     }
     
     /**
-     * Generate JSON-LD structured data for products
+     * Generate JSON-LD structured data for items
      */
-    public function generateProductStructuredData($sku, $product) {
+    public function generateItemStructuredData($sku, $item) {
         $marketingData = $this->marketingHelper->getMarketingData($sku);
         $sellingPoints = $this->marketingHelper->getSellingPoints($sku);
         $keywords = $this->marketingHelper->getKeywords($sku);
@@ -28,8 +28,8 @@ class SEOEnhancer {
         $structuredData = [
             "@context" => "https://schema.org/",
             "@type" => "Product",
-            "name" => $marketingData['suggested_title'] ?? $product['name'],
-            "description" => $marketingData['suggested_description'] ?? $product['description'],
+            "name" => $marketingData['suggested_title'] ?? $item['name'],
+            "description" => $marketingData['suggested_description'] ?? $item['description'],
             "sku" => $sku,
             "brand" => [
                 "@type" => "Brand",
@@ -37,10 +37,10 @@ class SEOEnhancer {
             ],
             "offers" => [
                 "@type" => "Offer",
-                "url" => "https://whimsicalfrog.us/?page=shop&product=" . $sku,
+                "url" => "https://whimsicalfrog.us/?page=shop&item=" . $sku,
                 "priceCurrency" => "USD",
-                "price" => $product['price'] ?? "0.00",
-                "availability" => ($product['stock'] ?? 0) > 0 ? 
+                "price" => $item['price'] ?? "0.00",
+                "availability" => ($item['stock'] ?? 0) > 0 ? 
                     "https://schema.org/InStock" : "https://schema.org/OutOfStock",
                 "seller" => [
                     "@type" => "Organization",
@@ -50,8 +50,8 @@ class SEOEnhancer {
         ];
         
         // Add category if available
-        if (!empty($product['category'])) {
-            $structuredData["category"] = $product['category'];
+        if (!empty($item['category'])) {
+            $structuredData["category"] = $item['category'];
         }
         
         // Add features from selling points
@@ -107,7 +107,7 @@ class SEOEnhancer {
     /**
      * Generate breadcrumb structured data
      */
-    public function generateBreadcrumbStructuredData($page, $productName = null) {
+    public function generateBreadcrumbStructuredData($page, $itemName = null) {
         $breadcrumbs = [
             "@context" => "https://schema.org",
             "@type" => "BreadcrumbList",
@@ -129,12 +129,12 @@ class SEOEnhancer {
                 "item" => "https://whimsicalfrog.us/?page=shop"
             ];
             
-            if ($productName) {
+            if ($itemName) {
                 $breadcrumbs["itemListElement"][] = [
                     "@type" => "ListItem",
                     "position" => 3,
-                    "name" => $productName,
-                    "item" => "https://whimsicalfrog.us/?page=shop&product=" . $_GET['product']
+                    "name" => $itemName,
+                    "item" => "https://whimsicalfrog.us/?page=shop&item=" . ($_GET['item'] ?? $_GET['product'] ?? $_GET['sku'])
                 ];
             }
         }
@@ -145,8 +145,8 @@ class SEOEnhancer {
     /**
      * Generate enhanced meta tags with marketing data
      */
-    public function generateEnhancedMetaTags($page, $productSku = null) {
-        $seoData = $this->marketingHelper->generatePageSEO($page, $productSku);
+    public function generateEnhancedMetaTags($page, $itemSku = null) {
+        $seoData = $this->marketingHelper->generatePageSEO($page, $itemSku);
         $metaTags = [];
         
         // Basic meta tags
@@ -157,7 +157,7 @@ class SEOEnhancer {
         // Open Graph tags
         $metaTags[] = '<meta property="og:title" content="' . htmlspecialchars($seoData['title']) . '">';
         $metaTags[] = '<meta property="og:description" content="' . htmlspecialchars($seoData['description']) . '">';
-        $metaTags[] = '<meta property="og:type" content="' . ($productSku ? 'product' : 'website') . '">';
+        $metaTags[] = '<meta property="og:type" content="' . ($itemSku ? 'product' : 'website') . '">';
         $metaTags[] = '<meta property="og:url" content="https://whimsicalfrog.us' . $_SERVER['REQUEST_URI'] . '">';
         $metaTags[] = '<meta property="og:site_name" content="Whimsical Frog">';
         
@@ -171,16 +171,16 @@ class SEOEnhancer {
         $metaTags[] = '<meta name="author" content="Whimsical Frog">';
         $metaTags[] = '<link rel="canonical" href="https://whimsicalfrog.us' . $_SERVER['REQUEST_URI'] . '">';
         
-        // Product-specific tags
-        if ($productSku) {
-            $marketingData = $this->marketingHelper->getMarketingData($productSku);
+        // Item-specific tags
+        if ($itemSku) {
+            $marketingData = $this->marketingHelper->getMarketingData($itemSku);
             if ($marketingData) {
                 $metaTags[] = '<meta property="product:brand" content="Whimsical Frog">';
                 $metaTags[] = '<meta property="product:availability" content="in stock">';
                 $metaTags[] = '<meta property="product:condition" content="new">';
                 
                 // Add selling points as additional meta tags
-                $sellingPoints = $this->marketingHelper->getSellingPoints($productSku);
+                $sellingPoints = $this->marketingHelper->getSellingPoints($itemSku);
                 if (!empty($sellingPoints)) {
                     $metaTags[] = '<meta name="product:features" content="' . htmlspecialchars(implode(', ', array_slice($sellingPoints, 0, 3))) . '">';
                 }
@@ -193,7 +193,7 @@ class SEOEnhancer {
     /**
      * Generate all structured data for a page
      */
-    public function generateAllStructuredData($page, $productSku = null, $productData = null) {
+    public function generateAllStructuredData($page, $itemSku = null, $itemData = null) {
         $structuredDataScripts = [];
         
         // Always include LocalBusiness data
@@ -201,14 +201,14 @@ class SEOEnhancer {
             $this->generateLocalBusinessStructuredData() . '</script>';
         
         // Add breadcrumb data
-        $productName = $productData['name'] ?? null;
+        $itemName = $itemData['name'] ?? null;
         $structuredDataScripts[] = '<script type="application/ld+json">' . 
-            $this->generateBreadcrumbStructuredData($page, $productName) . '</script>';
+            $this->generateBreadcrumbStructuredData($page, $itemName) . '</script>';
         
-        // Add product data if available
-        if ($productSku && $productData) {
+        // Add item data if available
+        if ($itemSku && $itemData) {
             $structuredDataScripts[] = '<script type="application/ld+json">' . 
-                $this->generateProductStructuredData($productSku, $productData) . '</script>';
+                $this->generateItemStructuredData($itemSku, $itemData) . '</script>';
         }
         
         return implode("\n    ", $structuredDataScripts);
@@ -239,12 +239,12 @@ class SEOEnhancer {
 $GLOBALS['seoEnhancer'] = new SEOEnhancer();
 
 // Helper functions
-function generateEnhancedMetaTags($page, $productSku = null) {
-    return $GLOBALS['seoEnhancer']->generateEnhancedMetaTags($page, $productSku);
+function generateEnhancedMetaTags($page, $itemSku = null) {
+    return $GLOBALS['seoEnhancer']->generateEnhancedMetaTags($page, $itemSku);
 }
 
-function generateAllStructuredData($page, $productSku = null, $productData = null) {
-    return $GLOBALS['seoEnhancer']->generateAllStructuredData($page, $productSku, $productData);
+function generateAllStructuredData($page, $itemSku = null, $itemData = null) {
+    return $GLOBALS['seoEnhancer']->generateAllStructuredData($page, $itemSku, $itemData);
 }
 
 function optimizeImageAltTag($sku, $defaultAlt = '') {

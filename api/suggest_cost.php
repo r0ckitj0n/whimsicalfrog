@@ -171,8 +171,8 @@ function analyzeCostStructure($name, $description, $category, $pdo) {
     // Load AI settings from database
     $aiSettings = loadAISettings($pdo);
     
-    // Enhanced AI product analysis
-    $analysis = analyzeProductEnhanced($name, $description, $category);
+    // Enhanced AI item analysis
+    $analysis = analyzeItemEnhanced($name, $description, $category);
     
     // Get category-specific base costs
     $baseCosts = getCategoryBaseCosts($category);
@@ -297,7 +297,7 @@ function loadAISettings($pdo) {
     return $settings;
 }
 
-function analyzeProduct($name, $description) {
+function analyzeItem($name, $description) {
     $text = strtolower($name . ' ' . $description);
     
     // Detect materials
@@ -636,10 +636,10 @@ function generateCostReasoning($materials, $labor, $energy, $equipment, $multipl
 }
 
 // Enhanced AI Analysis Functions
-function analyzeProductEnhanced($name, $description, $category) {
+function analyzeItemEnhanced($name, $description, $category) {
     $text = strtolower($name . ' ' . $description);
     
-    // Enhanced material detection with quality analysis
+    // Enhanced material detection
     $materials = detectMaterialsEnhanced($text);
     
     // Enhanced feature detection
@@ -648,11 +648,11 @@ function analyzeProductEnhanced($name, $description, $category) {
     // Size and dimension analysis
     $sizeAnalysis = analyzeSizeAndDimensions($text, $category);
     
-    // Complexity scoring (0.1 to 2.0)
+    // Calculate complexity score
     $complexityScore = calculateComplexityScore($materials, $features, $sizeAnalysis, $category);
     
     // Production time estimation (in minutes)
-    $productionTime = estimateProductionTime($materials, $features, $complexityScore, $category);
+    $productionTime = estimateItemProductionTime($materials, $features, $complexityScore, $category);
     
     // Skill level assessment
     $skillLevel = assessSkillLevel($features, $complexityScore, $category);
@@ -907,7 +907,7 @@ function calculateComplexityScore($materials, $features, $sizeAnalysis, $categor
     return min(2.0, max(0.1, $baseScore));
 }
 
-function estimateProductionTime($materials, $features, $complexityScore, $category) {
+function estimateItemProductionTime($materials, $features, $complexityScore, $category) {
     // Base time by category (in minutes)
     $baseTimes = [
         'T-Shirts' => 15,

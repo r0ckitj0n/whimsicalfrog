@@ -345,8 +345,8 @@ function generateMarketingIntelligence($name, $description, $category, $pdo, $pr
     // Debug: Log the voice and tone values in local AI
     error_log("Local AI - Preferred Brand Voice: '$preferredBrandVoice', Preferred Content Tone: '$preferredContentTone'");
     
-    // Comprehensive product analysis
-    $analysis = analyzeProductForMarketing($name, $description, $category);
+    // Comprehensive item analysis
+    $analysis = analyzeItemForMarketing($name, $description, $category);
     
     // Use preferred brand voice and content tone, or determine from analysis
     $brandVoice = !empty($preferredBrandVoice) ? $preferredBrandVoice : determineBrandVoice($category, $analysis);
@@ -398,7 +398,7 @@ function generateMarketingIntelligence($name, $description, $category, $pdo, $pr
     ];
 }
 
-function analyzeProductForMarketing($name, $description, $category) {
+function analyzeItemForMarketing($name, $description, $category) {
     $text = strtolower($name . ' ' . $description);
     
     return [

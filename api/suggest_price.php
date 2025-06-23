@@ -96,7 +96,7 @@ try {
             $pricingData = $aiProviders->generatePricingSuggestionWithImages($name, $description, $category, $costPrice, $images);
         } else {
             // Use standard text-only generation
-            $pricingData = generateAIPricingSuggestion($name, $description, $category, $costPrice);
+            $pricingData = analyzeItemForPricing($name, $description, $category);
         }
     } catch (Exception $e) {
         // Fallback to local AI if external API fails
@@ -215,15 +215,15 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
     // Load AI settings from database
     $aiSettings = loadAISettings($pdo);
     
-    // Enhanced AI product analysis (reuse cost analysis functions)
-    $productAnalysis = analyzeProductForPricing($name, $description, $category);
+    // Enhanced AI item analysis (reuse cost analysis functions)
+    $itemAnalysis = analyzeItemForPricing($name, $description, $category);
     
     $factors = [];
     $reasoning = [];
     $confidence = 'medium';
     
     // Enhanced pricing strategy analysis with AI settings
-    $pricingStrategies = analyzePricingStrategies($name, $description, $category, $costPrice, $productAnalysis, $pdo);
+    $pricingStrategies = analyzePricingStrategies($name, $description, $category, $costPrice, $itemAnalysis, $pdo);
     
     // Create individual pricing components with dollar amounts
     $pricingComponents = [];
@@ -357,27 +357,27 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
     
     // Enhanced analysis data with individual components
     $enhancedAnalysis = [
-        'detected_materials' => $productAnalysis['materials'] ?? [],
-        'detected_features' => $productAnalysis['features'] ?? [],
+        'detected_materials' => $itemAnalysis['materials'] ?? [],
+        'detected_features' => $itemAnalysis['features'] ?? [],
         'competitor_analysis' => $pricingStrategies['competitive_analysis'] ?? [],
         'pricing_strategy' => determinePrimaryStrategy($pricingStrategies),
-        'demand_indicators' => $productAnalysis['demand_indicators'] ?? [],
-        'target_audience' => $productAnalysis['target_audience'] ?? [],
-        'seasonality_factors' => $productAnalysis['seasonality_factors'] ?? [],
+        'demand_indicators' => $itemAnalysis['demand_indicators'] ?? [],
+        'target_audience' => $itemAnalysis['target_audience'] ?? [],
+        'seasonality_factors' => $itemAnalysis['seasonality_factors'] ?? [],
         'brand_premium' => $brandPremium,
         'pricing_elasticity' => $pricingStrategies['pricing_elasticity'] ?? 0.5,
-        'value_proposition' => $productAnalysis['value_proposition'] ?? '',
-        'market_positioning' => $productAnalysis['market_positioning'] ?? 'standard',
+        'value_proposition' => $itemAnalysis['value_proposition'] ?? '',
+        'market_positioning' => $itemAnalysis['market_positioning'] ?? 'standard',
         'pricing_confidence_breakdown' => $pricingStrategies['confidence_metrics'] ?? [],
         'cost_plus_multiplier' => $pricingStrategies['cost_plus_multiplier'] ?? 2.5,
         'market_research_data' => $pricingStrategies['market_research_data'] ?? [],
         'competitive_price_range' => $pricingStrategies['competitive_price_range'] ?? '',
         'value_based_factors' => $pricingStrategies['value_based_factors'] ?? [],
         'psychological_pricing_notes' => $pricingStrategies['psychological_pricing_notes'] ?? '',
-        'trend_alignment_score' => $productAnalysis['trend_alignment_score'] ?? 0.5,
-        'uniqueness_score' => $productAnalysis['uniqueness_score'] ?? 0.5,
-        'demand_score' => $productAnalysis['demand_score'] ?? 0.5,
-        'market_saturation_level' => $productAnalysis['market_saturation_level'] ?? 'medium',
+        'trend_alignment_score' => $itemAnalysis['trend_alignment_score'] ?? 0.5,
+        'uniqueness_score' => $itemAnalysis['uniqueness_score'] ?? 0.5,
+        'demand_score' => $itemAnalysis['demand_score'] ?? 0.5,
+        'market_saturation_level' => $itemAnalysis['market_saturation_level'] ?? 'medium',
         'recommended_pricing_tier' => determinePricingTier($finalPrice, $category),
         'profit_margin_analysis' => calculateProfitMarginAnalysis($finalPrice, $costPrice),
         'pricing_elasticity_notes' => $pricingStrategies['pricing_elasticity_notes'] ?? '',
@@ -688,50 +688,41 @@ function extractKeywords($text) {
 }
 
 // Enhanced Pricing Analysis Functions
-function analyzeProductForPricing($name, $description, $category) {
+function analyzeItemForPricing($name, $description, $category) {
     $text = strtolower($name . ' ' . $description);
     
-    // Reuse material and feature detection from cost analysis
-    $materials = detectMaterialsForPricing($text);
-    $features = detectFeaturesForPricing($text);
-    $sizeAnalysis = analyzeSizeForPricing($text, $category);
-    
-    // Pricing-specific analysis
-    $complexityScore = calculatePricingComplexity($materials, $features, $sizeAnalysis, $category);
-    $marketPositioning = analyzeMarketPositioning($text, $features, $category);
-    $targetAudience = analyzeTargetAudience($text, $category, $features);
-    $seasonalityFactor = calculateSeasonalityFactor($text, $category);
-    $brandPremium = calculateBrandPremium($text, $features, $marketPositioning);
-    $demandIndicators = analyzeDemandIndicators($text, $category);
-    $pricingElasticity = estimatePricingElasticity($category, $features, $marketPositioning);
-    
     return [
-        'detected_materials' => $materials,
-        'detected_features' => $features,
-        'size_analysis' => $sizeAnalysis,
-        'complexity_score' => $complexityScore,
-        'market_positioning' => $marketPositioning,
-        'target_audience' => $targetAudience,
-        'seasonality_factor' => $seasonalityFactor,
-        'brand_premium' => $brandPremium,
-        'demand_indicators' => $demandIndicators,
-        'pricing_elasticity' => $pricingElasticity
+        'materials' => detectMaterialsForPricing($text),
+        'features' => detectFeaturesForPricing($text),
+        'size_analysis' => analyzeSizeForPricing($text, $category),
+        'complexity_score' => calculatePricingComplexity([], [], [], $category),
+        'target_audience' => analyzeTargetAudience($text, $category, []),
+        'seasonality_factors' => calculateSeasonalityFactor($text, $category),
+        'brand_premium_indicators' => calculateBrandPremium($text, [], 'standard'),
+        'demand_indicators' => analyzeDemandIndicators($text, $category),
+        'pricing_elasticity' => estimatePricingElasticity($category, [], 'standard'),
+        'value_proposition' => 'Quality craftsmanship and personalization',
+        'market_positioning' => analyzeMarketPositioning($text, [], $category),
+        'trend_alignment_score' => 0.7,
+        'uniqueness_score' => 0.6,
+        'demand_score' => 0.7,
+        'market_saturation_level' => 'medium'
     ];
 }
 
-function analyzePricingStrategies($name, $description, $category, $costPrice, $productAnalysis, $pdo) {
-    // 1. Cost-Plus Pricing
-    $costPlusPrice = calculateCostPlusPrice($costPrice, $category, $productAnalysis);
+function analyzePricingStrategies($name, $description, $category, $costPrice, $itemAnalysis, $pdo) {
+    // Cost-plus pricing
+    $costPlusPrice = calculateCostPlusPrice($costPrice, $category, $itemAnalysis);
     
-    // 2. Market Research Pricing
-    $marketResearchPrice = calculateMarketResearchPrice($name, $description, $category, $productAnalysis);
+    // Market Research Pricing
+    $marketResearchPrice = calculateMarketResearchPrice($name, $description, $category, $itemAnalysis);
     
-    // 3. Competitive Pricing
-    $competitiveData = getEnhancedCompetitiveAnalysis($name, $category, $productAnalysis, $pdo);
+    // Competitive Pricing
+    $competitiveData = getEnhancedCompetitiveAnalysis($name, $category, $itemAnalysis, $pdo);
     $competitivePrice = $competitiveData['suggested_price'];
     
-    // 4. Value-Based Pricing
-    $valueBasedPrice = calculateValueBasedPrice($productAnalysis, $category);
+    // Value-Based Pricing
+    $valueBasedPrice = calculateValueBasedPrice($itemAnalysis, $category);
     
     // Confidence metrics
     $confidenceMetrics = calculatePricingConfidenceMetrics($costPrice, $marketResearchPrice, $competitivePrice, $valueBasedPrice);
@@ -1017,7 +1008,7 @@ function estimatePricingElasticity($category, $features, $marketPositioning) {
     return min(2.0, max(0.1, $elasticity));
 }
 
-function calculateCostPlusPrice($costPrice, $category, $productAnalysis) {
+function calculateCostPlusPrice($costPrice, $category, $itemAnalysis) {
     if ($costPrice <= 0) {
         // Estimate cost based on category
         $estimatedCosts = [
@@ -1032,13 +1023,14 @@ function calculateCostPlusPrice($costPrice, $category, $productAnalysis) {
     
     $markup = getCategoryMarkup($category);
     
-    // Adjust markup based on complexity
-    $markup *= (1 + ($productAnalysis['complexity_score'] - 0.5) * 0.5);
+    // Adjust markup based on complexity and features
+    $complexity = $itemAnalysis['complexity_score'] ?? 0.5;
+    $markup *= (1 + ($complexity - 0.5) * 0.5);
     
     return $costPrice * $markup;
 }
 
-function calculateMarketResearchPrice($name, $description, $category, $productAnalysis) {
+function calculateMarketResearchPrice($name, $description, $category, $itemAnalysis) {
     $basePrice = simulateMarketResearch($name, $description, $category);
     
     if (!$basePrice['found']) {
@@ -1048,18 +1040,18 @@ function calculateMarketResearchPrice($name, $description, $category, $productAn
     $price = $basePrice['price'];
     
     // Adjust based on product analysis
-    foreach ($productAnalysis['detected_materials'] as $material) {
+    foreach ($itemAnalysis['materials'] as $material) {
         $price *= $material['price_premium'];
     }
     
-    foreach ($productAnalysis['detected_features'] as $feature) {
+    foreach ($itemAnalysis['features'] as $feature) {
         $price *= $feature['price_impact'];
     }
     
     return $price;
 }
 
-function getEnhancedCompetitiveAnalysis($name, $category, $productAnalysis, $pdo) {
+function getEnhancedCompetitiveAnalysis($name, $category, $itemAnalysis, $pdo) {
     $basicAnalysis = getCompetitiveAnalysis($name, $category, $pdo);
     
     $analysis = [
@@ -1080,10 +1072,10 @@ function getEnhancedCompetitiveAnalysis($name, $category, $productAnalysis, $pdo
         // Determine positioning strategy
         $avgPrice = $basicAnalysis['average'];
         
-        if ($productAnalysis['market_positioning'] === 'premium') {
+        if ($itemAnalysis['market_positioning'] === 'premium') {
             $analysis['suggested_price'] = $avgPrice * 1.3; // Price above average
             $analysis['positioning_gap'] = 'premium_opportunity';
-        } elseif ($productAnalysis['market_positioning'] === 'budget') {
+        } elseif ($itemAnalysis['market_positioning'] === 'budget') {
             $analysis['suggested_price'] = $avgPrice * 0.8; // Price below average
             $analysis['positioning_gap'] = 'budget_opportunity';
         } else {
@@ -1098,7 +1090,7 @@ function getEnhancedCompetitiveAnalysis($name, $category, $productAnalysis, $pdo
     ];
 }
 
-function calculateValueBasedPrice($productAnalysis, $category) {
+function calculateValueBasedPrice($itemAnalysis, $category) {
     // Base value by category
     $categoryValues = [
         'T-Shirts' => 20.00,
@@ -1111,7 +1103,7 @@ function calculateValueBasedPrice($productAnalysis, $category) {
     $baseValue = $categoryValues[$category] ?? 25.00;
     
     // Adjust based on features
-    foreach ($productAnalysis['detected_features'] as $feature) {
+    foreach ($itemAnalysis['features'] as $feature) {
         if ($feature['market_demand'] === 'high') {
             $baseValue *= 1.3;
         } elseif ($feature['market_demand'] === 'premium') {
@@ -1120,7 +1112,7 @@ function calculateValueBasedPrice($productAnalysis, $category) {
     }
     
     // Adjust based on uniqueness
-    $uniquenessScore = $productAnalysis['demand_indicators']['uniqueness_score'];
+    $uniquenessScore = $itemAnalysis['demand_indicators']['uniqueness_score'];
     $baseValue *= (1 + $uniquenessScore);
     
     return $baseValue;

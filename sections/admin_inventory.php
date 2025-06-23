@@ -893,7 +893,7 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                     <div>
                         <label for="description" class="block text-gray-700">Description</label>
-                        <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="3" placeholder="Enter product description or click 'Marketing Manager' for AI-powered suggestions..."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
+                        <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="3" placeholder="Enter item description or click 'Marketing Manager' for AI-powered suggestions..."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                     </div>
                     <!-- Item Images Section - Now spans full width when needed -->
                     <div class="images-section-container" id="imagesSection">
@@ -3913,7 +3913,7 @@ function showMarketingIntelligenceModal(data) {
                         </h4>
                         <div class="p-3 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer" onclick="applyTitle('${data.title.replace(/'/g, "\\'")}')">
                             <div class="font-medium text-gray-800">${data.title}</div>
-                            <div class="text-xs text-blue-600 mt-1">Click to apply to product name</div>
+                            <div class="text-xs text-blue-600 mt-1">Click to apply to item name</div>
                         </div>
                     </div>
                     
@@ -3923,7 +3923,7 @@ function showMarketingIntelligenceModal(data) {
                         </h4>
                         <div class="p-3 bg-white border border-green-200 rounded-lg hover:bg-green-50 cursor-pointer" onclick="applyDescription('${data.description.replace(/'/g, "\\'")}')">
                             <div class="text-gray-800 text-sm">${data.description}</div>
-                            <div class="text-xs text-green-600 mt-1">Click to apply to product description</div>
+                            <div class="text-xs text-green-600 mt-1">Click to apply to item description</div>
                         </div>
                     </div>
                 </div>
@@ -5756,7 +5756,7 @@ function addMarketingChangeListeners() {
     });
 }
 
-// Check if title or description differ from current product data and show/hide save buttons
+    // Check if title or description differ from current item data and show/hide save buttons
 function checkForTitleDescriptionChanges(fieldId) {
     if (fieldId === 'marketingTitle') {
         const titleField = document.getElementById('marketingTitle');
@@ -5764,9 +5764,9 @@ function checkForTitleDescriptionChanges(fieldId) {
         
         if (titleField && saveButton && currentItemData) {
             const currentTitle = titleField.value.trim();
-            const productTitle = currentItemData.name || '';
-            
-            if (currentTitle && currentTitle !== productTitle) {
+                    const itemTitle = currentItemData.name || '';
+        
+        if (currentTitle && currentTitle !== itemTitle) {
                 saveButton.style.display = 'inline-block';
             } else {
                 saveButton.style.display = 'none';
@@ -5780,9 +5780,9 @@ function checkForTitleDescriptionChanges(fieldId) {
         
         if (descField && saveButton && currentItemData) {
             const currentDesc = descField.value.trim();
-            const productDesc = currentItemData.description || '';
-            
-            if (currentDesc && currentDesc !== productDesc) {
+                    const itemDesc = currentItemData.description || '';
+        
+        if (currentDesc && currentDesc !== itemDesc) {
                 saveButton.style.display = 'inline-block';
             } else {
                 saveButton.style.display = 'none';
@@ -5791,7 +5791,7 @@ function checkForTitleDescriptionChanges(fieldId) {
     }
 }
 
-// Apply and save marketing title to product
+// Apply and save marketing title to item
 function applyAndSaveMarketingTitle() {
     const titleField = document.getElementById('marketingTitle');
     if (!titleField || !currentItemSku) return;
@@ -5799,17 +5799,17 @@ function applyAndSaveMarketingTitle() {
     const newTitle = titleField.value.trim();
     if (!newTitle) return;
     
-    // Update the product name
-    updateInventoryField(currentItemSku, 'name', newTitle, 'Product title updated from Marketing Manager');
+    // Update the item name
+    updateInventoryField(currentItemSku, 'name', newTitle, 'Item title updated from Marketing Manager');
     
     // Hide the save button
     const saveButton = titleField.parentElement.querySelector('button[onclick="applyAndSaveMarketingTitle()"]');
     if (saveButton) saveButton.style.display = 'none';
     
-    showToast('success', '✅ Product title updated successfully');
+    showToast('success', '✅ Item title updated successfully');
 }
 
-// Apply and save marketing description to product
+// Apply and save marketing description to item
 function applyAndSaveMarketingDescription() {
     const descField = document.getElementById('marketingDescription');
     if (!descField || !currentItemSku) return;
@@ -5817,14 +5817,14 @@ function applyAndSaveMarketingDescription() {
     const newDesc = descField.value.trim();
     if (!newDesc) return;
     
-    // Update the product description
-    updateInventoryField(currentItemSku, 'description', newDesc, 'Product description updated from Marketing Manager');
+    // Update the item description
+    updateInventoryField(currentItemSku, 'description', newDesc, 'Item description updated from Marketing Manager');
     
     // Hide the save button
     const saveButton = descField.parentElement.querySelector('button[onclick="applyAndSaveMarketingDescription()"]');
     if (saveButton) saveButton.style.display = 'none';
     
-    showToast('success', '✅ Product description updated successfully');
+    showToast('success', '✅ Item description updated successfully');
 }
 
 // Reset change tracking after successful save
@@ -6012,7 +6012,7 @@ function loadContentTab(contentDiv) {
     contentDiv.innerHTML = '<div class="space-y-6">' +
         '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">' +
             '<div class="flex items-center gap-3">' +
-                '<div id="marketingProductImage" class="flex-shrink-0">' +
+                '<div id="marketingItemImage" class="flex-shrink-0">' +
                     '<!-- Primary image will be loaded here -->' +
                 '</div>' +
                 '<div class="flex-1">' +
@@ -6022,7 +6022,7 @@ function loadContentTab(contentDiv) {
                         '</svg>' +
                         '<span class="text-sm font-medium text-gray-800">Currently editing: <strong>' + (currentItemSku || 'No item selected') + '</strong></span>' +
                     '</div>' +
-                    '<p class="text-xs text-gray-600 mt-1">All content below is specific to this product only.</p>' +
+                    '<p class="text-xs text-gray-600 mt-1">All content below is specific to this item only.</p>' +
                 '</div>' +
             '</div>' +
         '</div>' +
@@ -6067,8 +6067,8 @@ function loadContentTab(contentDiv) {
         '</div>' +
         '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">' +
             '<div class="bg-blue-50 rounded-lg p-4">' +
-                '<label class="block text-sm font-medium text-gray-800 mb-2">📝 Product Title</label>' +
-                '<textarea id="marketingTitle" class="w-full p-3 border border-blue-300 rounded-lg text-sm resize-none" rows="2" placeholder="Enter enhanced product title..."></textarea>' +
+                '<label class="block text-sm font-medium text-gray-800 mb-2">📝 Item Title</label>' +
+                                  '<textarea id="marketingTitle" class="w-full p-3 border border-blue-300 rounded-lg text-sm resize-none" rows="2" placeholder="Enter enhanced item title..."></textarea>' +
                 '<div class="mt-2 flex justify-center">' +
                     '<button onclick="applyAndSaveMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-medium" style="display: none;">' +
                         '📝 Apply & Save' +
@@ -6076,8 +6076,8 @@ function loadContentTab(contentDiv) {
                 '</div>' +
             '</div>' +
             '<div class="bg-green-50 rounded-lg p-4">' +
-                '<label class="block text-sm font-medium text-gray-800 mb-2">📄 Product Description</label>' +
-                '<textarea id="marketingDescription" class="w-full p-3 border border-green-300 rounded-lg text-sm resize-none" rows="4" placeholder="Enter detailed product description..."></textarea>' +
+                '<label class="block text-sm font-medium text-gray-800 mb-2">📄 Item Description</label>' +
+                                  '<textarea id="marketingDescription" class="w-full p-3 border border-green-300 rounded-lg text-sm resize-none" rows="4" placeholder="Enter detailed item description..."></textarea>' +
                 '<div class="mt-2 flex justify-center">' +
                     '<button onclick="applyAndSaveMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-xs font-medium" style="display: none;">' +
                         '📝 Apply & Save' +
@@ -6102,7 +6102,7 @@ function loadAudienceTab(contentDiv) {
     contentDiv.innerHTML = '<div class="space-y-6">' +
         '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">' +
             '<div class="flex items-center gap-3">' +
-                '<div id="marketingProductImageAudience" class="flex-shrink-0">' +
+                '<div id="marketingItemImageAudience" class="flex-shrink-0">' +
                     '<!-- Primary image will be loaded here -->' +
                 '</div>' +
                 '<div class="flex-1">' +
@@ -6112,7 +6112,7 @@ function loadAudienceTab(contentDiv) {
                         '</svg>' +
                         '<span class="text-sm font-medium text-gray-800">Currently editing: <strong>' + (currentItemSku || 'No item selected') + '</strong></span>' +
                     '</div>' +
-                    '<p class="text-xs text-gray-600 mt-1">All audience data below is specific to this product only.</p>' +
+                    '<p class="text-xs text-gray-600 mt-1">All audience data below is specific to this item only.</p>' +
                 '</div>' +
             '</div>' +
                  '</div>' +
@@ -6295,14 +6295,14 @@ function loadExistingMarketingData() {
     console.log('Marketing Manager: Loading data for SKU:', currentItemSku);
     
     // Load primary image first
-    loadMarketingProductImage();
+    loadMarketingItemImage();
     
     return fetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}&_t=${Date.now()}`)
     .then(response => response.json())
     .then(data => {
         console.log('Marketing Manager: API response for SKU', currentItemSku, ':', data);
         if (data.success && data.data) {
-            console.log('Marketing Manager: Populating fields with product-specific data');
+            console.log('Marketing Manager: Populating fields with item-specific data');
             populateMarketingFields(data.data);
         } else {
             console.log('Marketing Manager: No existing data found for SKU', currentItemSku, '- fields will be empty');
@@ -6317,7 +6317,7 @@ function loadExistingMarketingData() {
     });
 }
 
-function loadMarketingProductImage() {
+function loadMarketingItemImage() {
     if (!currentItemSku) {
         console.log('Marketing Manager: No SKU available for image loading');
         return;
@@ -6329,8 +6329,8 @@ function loadMarketingProductImage() {
     .then(response => response.json())
     .then(data => {
         const imageContainers = [
-            document.getElementById('marketingProductImage'),
-            document.getElementById('marketingProductImageAudience')
+            document.getElementById('marketingItemImage'),
+            document.getElementById('marketingItemImageAudience')
         ];
         
         imageContainers.forEach(container => {
@@ -6361,8 +6361,8 @@ function loadMarketingProductImage() {
         console.error('Marketing Manager: Error loading primary image:', error);
         // Show error placeholder
         const imageContainers = [
-            document.getElementById('marketingProductImage'),
-            document.getElementById('marketingProductImageAudience')
+            document.getElementById('marketingItemImage'),
+            document.getElementById('marketingItemImageAudience')
         ];
         
         imageContainers.forEach(container => {
@@ -6710,7 +6710,7 @@ function applyMarketingTitle() {
         })
         .then(data => {
             if (data.success) {
-                showToast('success', 'Title applied and product saved automatically!');
+                showToast('success', 'Title applied and item saved automatically!');
             } else {
                 console.error('API error:', data);
                 showToast('error', 'Failed to save: ' + (data.error || 'Unknown error'));
@@ -6763,7 +6763,7 @@ function applyMarketingDescription() {
         })
         .then(data => {
             if (data.success) {
-                showToast('success', 'Description applied and product saved automatically!');
+                                        showToast('success', 'Description applied and item saved automatically!');
             } else {
                 console.error('API error:', data);
                 showToast('error', 'Failed to save: ' + (data.error || 'Unknown error'));
@@ -6840,7 +6840,7 @@ function applyAndSaveMarketingTitle() {
                 })
                 .then(data => {
                     if (data.success) {
-                        showToast('success', 'Title saved as draft and applied to product!');
+                        showToast('success', 'Title saved as draft and applied to item!');
                         // Reset only title changes, not all marketing changes
                         originalMarketingData['marketingTitle'] = newTitle;
                         hasTitleChanges = false;
@@ -6928,7 +6928,7 @@ function applyAndSaveMarketingDescription() {
                 })
                 .then(data => {
                     if (data.success) {
-                        showToast('success', 'Description saved as draft and applied to product!');
+                        showToast('success', 'Description saved as draft and applied to item!');
                         // Reset only description changes, not all marketing changes
                         originalMarketingData['marketingDescription'] = newDescription;
                         hasDescriptionChanges = false;
@@ -7515,7 +7515,7 @@ function showComparisonResults(data) {
     let html = '<div class="space-y-6">';
     html += '<div class="text-center mb-6">';
     html += '<h3 class="text-lg font-semibold text-gray-800">🎯 AI Content Comparison</h3>';
-    html += '<p class="text-sm text-gray-600">Review and select which AI-generated content to apply to your product</p>';
+            html += '<p class="text-sm text-gray-600">Review and select which AI-generated content to apply to your item</p>';
     html += '</div>';
     
     // Title comparison
@@ -7524,7 +7524,7 @@ function showComparisonResults(data) {
         const suggestedTitle = data.marketing_suggestions.suggested_title;
         
         if (currentTitle !== suggestedTitle) {
-            html += createComparisonCard('title', 'Product Title', currentTitle, suggestedTitle);
+            html += createComparisonCard('title', 'Item Title', currentTitle, suggestedTitle);
         }
     }
     
@@ -7534,7 +7534,7 @@ function showComparisonResults(data) {
         const suggestedDesc = data.marketing_suggestions.suggested_description;
         
         if (currentDesc !== suggestedDesc) {
-            html += createComparisonCard('description', 'Product Description', currentDesc, suggestedDesc);
+            html += createComparisonCard('description', 'Item Description', currentDesc, suggestedDesc);
         }
     }
     

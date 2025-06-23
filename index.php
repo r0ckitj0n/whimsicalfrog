@@ -187,7 +187,7 @@ $bodyClass = '';
 if ($page === 'landing') {
     $bodyClass = 'is-landing';
 } elseif (strpos($page, 'admin') === 0) {
-    $bodyClass = 'is-admin';
+    $bodyClass = 'is-admin admin-page';
 }
 
 // Determine if this is a fullscreen layout page
@@ -233,6 +233,9 @@ $seoData = generatePageSEO($page, $currentSku);
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
+    <?php if (strpos($page, 'admin') === 0): ?>
+    <link href="css/help-tooltips.css?v=<?php echo time(); ?>" rel="stylesheet">
+    <?php endif; ?>
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after {
@@ -647,10 +650,15 @@ $seoData = generatePageSEO($page, $currentSku);
 <?php endif; ?>
 
 <!-- Load global modal system -->
-<script src="js/global-modals.js?v=<?php echo time(); ?>"></script>
+    <script src="js/global-modals.js?v=<?php echo time(); ?>"></script>
 
-<!-- Load analytics tracking system -->
-<script src="js/analytics.js?v=<?php echo time(); ?>"></script>
+    <!-- Help Tooltips for Admin Pages -->
+    <?php if (strpos($page, 'admin') === 0): ?>
+    <script src="js/help-tooltips.js?v=<?php echo time(); ?>"></script>
+    <?php endif; ?>
+
+    <!-- Load analytics tracking system -->
+    <script src="js/analytics.js?v=<?php echo time(); ?>"></script>
 
 <!-- WebP Support Detection -->
 <script>

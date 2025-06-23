@@ -573,8 +573,23 @@ $seoData = generatePageSEO($page, $currentSku);
                 </div>
             </div>
             
-            <!-- Center Section: Empty space (welcome sign removed) -->
-            <div class="flex-grow"></div>
+            <!-- Center Section: Search Bar -->
+            <div class="flex-grow flex justify-center">
+                <div class="relative max-w-md w-full mx-4">
+                    <input 
+                        type="text" 
+                        id="headerSearchInput"
+                        placeholder="Search products..." 
+                        class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#87ac3a]/50 focus:border-[#87ac3a]/50 transition-all duration-200"
+                        style="backdrop-filter: blur(10px);"
+                    >
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
             
             <!-- Right Section: Navigation Links -->
             <div class="flex-none">
@@ -757,6 +772,27 @@ $seoData = generatePageSEO($page, $currentSku);
     
     // Load background when DOM is ready
     document.addEventListener('DOMContentLoaded', loadDynamicBackground);
+    
+    // Header search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('headerSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const searchTerm = this.value.trim();
+                    if (searchTerm) {
+                        // Redirect to shop page with search parameter
+                        window.location.href = `/?page=shop&search=${encodeURIComponent(searchTerm)}`;
+                    }
+                }
+            });
+            
+            // Optional: Add search icon click functionality
+            searchInput.addEventListener('input', function() {
+                // Could add live search suggestions here in the future
+            });
+        }
+    });
 </script>
 
 <!-- Then load other scripts -->

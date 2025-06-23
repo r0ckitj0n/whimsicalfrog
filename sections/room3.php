@@ -283,13 +283,14 @@ document.addEventListener('DOMContentLoaded', function() {
         border-radius: 20px;
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
         border: 3px solid #8B4513;
-        width: 400px;
+        min-width: 400px;
+        max-width: 600px;
+        width: auto;
         z-index: 200;
         opacity: 0;
         visibility: hidden;
         transition: all 0.3s ease;
         transform: translateY(10px);
-        overflow: hidden;
     }
     
     .product-popup-enhanced.show {
@@ -342,9 +343,8 @@ document.addEventListener('DOMContentLoaded', function() {
         line-height: 1.4;
         margin: 4px 0;
         flex-grow: 1;
-        max-height: 200px;
-        overflow-y: auto;
         word-wrap: break-word;
+        white-space: pre-wrap;
     }
     
     .popup-price-enhanced {
@@ -732,10 +732,23 @@ document.addEventListener('DOMContentLoaded', function() {
         let left = rect.left - containerRect.left + rect.width + 10;
         let top = rect.top - containerRect.top - 50;
         
-        // Adjust if popup would go off screen (400px width for enhanced popup)
-        if (left + 400 > containerRect.width) {
-            left = rect.left - containerRect.left - 410;
-        }
+            // Show popup temporarily to get actual dimensions
+    popup.style.visibility = 'hidden';
+    popup.style.opacity = '1';
+    popup.classList.add('show');
+    
+    const popupRect = popup.getBoundingClientRect();
+    const popupWidth = popupRect.width;
+    
+    // Hide popup again for smooth transition
+    popup.style.visibility = 'visible';
+    popup.style.opacity = '0';
+    popup.classList.remove('show');
+    
+    // Adjust if popup would go off screen (dynamic width)
+    if (left + popupWidth > containerRect.width) {
+        left = rect.left - containerRect.left - popupWidth - 10;
+    }
         if (top < 0) {
             top = rect.top - containerRect.top + rect.height + 10;
         }

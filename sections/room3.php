@@ -276,6 +276,129 @@ document.addEventListener('DOMContentLoaded', function() {
         transform: translateY(-1px) !important;
     }
     
+    /* Enhanced Popup Styles - Larger and More Detailed */
+    .product-popup-enhanced {
+        position: absolute;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        border: 3px solid #8B4513;
+        width: 400px;
+        z-index: 200;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        transform: translateY(10px);
+        overflow: hidden;
+    }
+    
+    .product-popup-enhanced.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    
+    .popup-content-enhanced {
+        display: flex;
+        gap: 16px;
+        padding: 20px;
+    }
+    
+    .popup-image-enhanced {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #f8f9fa;
+        flex-shrink: 0;
+    }
+    
+    .popup-details-enhanced {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .popup-title-enhanced {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2d3748;
+        line-height: 1.3;
+        margin: 0;
+    }
+    
+    .popup-category-enhanced {
+        color: #6B8E23;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .popup-description-enhanced {
+        color: #4a5568;
+        font-size: 14px;
+        line-height: 1.4;
+        margin: 4px 0;
+        flex-grow: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .popup-price-enhanced {
+        font-size: 20px;
+        font-weight: bold;
+        color: #87ac3a;
+        margin: 8px 0;
+    }
+    
+    .popup-actions-enhanced {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    
+    .popup-add-btn-enhanced {
+        background: #87ac3a;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex: 1;
+    }
+    
+    .popup-add-btn-enhanced:hover {
+        background: #a3cc4a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
+    }
+    
+    .popup-details-btn-enhanced {
+        background: #e2e8f0;
+        color: #4a5568;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex: 1;
+    }
+    
+    .popup-details-btn-enhanced:hover {
+        background: #cbd5e0;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
     .room-header {
         text-align: center;
         background: transparent;
@@ -356,14 +479,21 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Product popup template -->
-<div id="productPopup" class="product-popup">
-    <img id="popupImage" class="popup-image" src="" alt="">
-    <div id="popupCategory" class="popup-category"></div>
-    <div id="popupTitle" class="popup-title"></div>
-    <div id="popupDescription" class="popup-description"></div>
-    <div id="popupPrice" class="popup-price"></div>
-                    <button id="popupAddBtn" class="popup-add-btn"><?php echo htmlspecialchars(getRandomCartButtonText()); ?></button>
+<!-- Product popup template - Enhanced Size -->
+<div id="productPopup" class="product-popup-enhanced">
+    <div class="popup-content-enhanced">
+        <img id="popupImage" class="popup-image-enhanced" src="" alt="">
+        <div class="popup-details-enhanced">
+            <div id="popupTitle" class="popup-title-enhanced"></div>
+            <div id="popupCategory" class="popup-category-enhanced"></div>
+            <div id="popupDescription" class="popup-description-enhanced"></div>
+            <div id="popupPrice" class="popup-price-enhanced"></div>
+            <div class="popup-actions-enhanced">
+                <button id="popupAddBtn" class="popup-add-btn-enhanced"><?php echo htmlspecialchars(getRandomCartButtonText()); ?></button>
+                <button id="popupDetailsBtn" class="popup-details-btn-enhanced" onclick="showItemDetails()">View Details</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Quantity Selection Modal -->
@@ -603,9 +733,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let left = rect.left - containerRect.left + rect.width + 10;
         let top = rect.top - containerRect.top - 50;
         
-        // Adjust if popup would go off screen
-        if (left + 280 > containerRect.width) {
-            left = rect.left - containerRect.left - 290;
+        // Adjust if popup would go off screen (400px width for enhanced popup)
+        if (left + 400 > containerRect.width) {
+            left = rect.left - containerRect.left - 410;
         }
         if (top < 0) {
             top = rect.top - containerRect.top + rect.height + 10;
@@ -801,6 +931,318 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Show detailed item modal (same as room2)
+    window.showItemDetails = async function() {
+        if (!currentPopupItem) return;
+        
+        const sku = currentPopupItem.sku || currentPopupItem.id;
+        
+        try {
+            const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
+            const data = await response.json();
+            
+            if (data.success && data.item) {
+                // Hide the popup first
+                hidePopup();
+                
+                // Remove any existing detailed modal
+                const existingModal = document.getElementById('detailedProductModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // Create and append new detailed modal
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = await generateDetailedModal(data.item, data.images);
+                document.body.appendChild(modalContainer.firstElementChild);
+                
+                // Show the modal
+                showDetailedModal();
+            } else {
+                console.error('Failed to load product details:', data.message);
+                alert('Sorry, we could not load the product details. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error loading product details:', error);
+            alert('Sorry, there was an error loading the product details.');
+        }
+    };
+
+    // Generate detailed modal HTML (same as room2)
+    window.generateDetailedModal = async function(item, images) {
+        const primaryImage = images.length > 0 ? images[0] : null;
+        
+        // Helper function to check if field has data
+        function hasData(value) {
+            return value && value.trim() !== '';
+        }
+        
+        return `
+        <!-- Detailed Product Modal -->
+        <div id="detailedProductModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" style="display: none;">
+            <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+                <!-- Modal Header -->
+                <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
+                    <h2 class="text-2xl font-bold text-gray-800">${item.name}</h2>
+                    <button onclick="closeDetailedModal()" class="text-gray-500 hover:text-gray-700 text-3xl font-bold">
+                        &times;
+                    </button>
+                </div>
+                
+                <!-- Modal Content -->
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Left Column - Images -->
+                        <div class="space-y-4">
+                            <!-- Main Image -->
+                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                                ${primaryImage ? 
+                                    `<img id="detailedMainImage" 
+                                         src="${primaryImage.image_path}" 
+                                         alt="${item.name}"
+                                         class="w-full h-full object-cover">` :
+                                    `<div class="w-full h-full flex items-center justify-center text-gray-400">
+                                        <span>No image available</span>
+                                    </div>`
+                                }
+                            </div>
+                            
+                            <!-- Thumbnail Gallery -->
+                            ${images.length > 1 ? `
+                            <div class="grid grid-cols-4 gap-2">
+                                ${images.map((image, index) => `
+                                <div class="aspect-square bg-gray-100 rounded cursor-pointer overflow-hidden border-2 ${index === 0 ? 'border-green-500' : 'border-transparent hover:border-gray-300'}"
+                                     onclick="switchDetailedImage('${image.image_path}', this)">
+                                    <img src="${image.image_path}" 
+                                         alt="${item.name} - View ${index + 1}"
+                                         class="w-full h-full object-cover">
+                                </div>
+                                `).join('')}
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Right Column - Product Details -->
+                        <div class="space-y-6">
+                            <!-- Basic Info -->
+                            <div>
+                                <div class="text-3xl font-bold text-green-600 mb-2">
+                                    $${parseFloat(item.retailPrice).toFixed(2)}
+                                </div>
+                                ${hasData(item.description) ? `
+                                <p class="text-gray-700 text-lg leading-relaxed">
+                                    ${item.description.replace(/\n/g, '<br>')}
+                                </p>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- Stock Status -->
+                            <div class="flex items-center space-x-2">
+                                ${item.stockLevel > 0 ? 
+                                    `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                        ✓ In Stock (${item.stockLevel} available)
+                                    </span>` :
+                                    `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                        ✗ Out of Stock
+                                    </span>`
+                                }
+                            </div>
+                            
+                            <!-- Add to Cart Section -->
+                            <div class="border-t pt-4">
+                                <div class="flex items-center space-x-4 mb-4">
+                                    <label class="text-sm font-medium text-gray-700">Quantity:</label>
+                                    <div class="flex items-center border rounded-md">
+                                        <button onclick="adjustDetailedQuantity(-1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">-</button>
+                                        <input type="number" id="detailedQuantity" value="1" min="1" max="${item.stockLevel}" 
+                                               class="w-16 text-center border-0 focus:ring-0">
+                                        <button onclick="adjustDetailedQuantity(1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">+</button>
+                                    </div>
+                                </div>
+                                
+                                ${item.stockLevel > 0 ? `
+                                <button onclick="addDetailedToCart('${item.sku}')" 
+                                        class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium text-lg transition-colors">
+                                    Add to Cart
+                                </button>
+                                ` : `
+                                <button disabled class="w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
+                                    Out of Stock
+                                </button>
+                                `}
+                            </div>
+                            
+                            <!-- Detailed Information -->
+                            <div class="border-t pt-6">
+                                <div class="space-y-4">
+                                    ${hasData(item.materials) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Materials</h3>
+                                        <p class="text-gray-700">${item.materials.replace(/\n/g, '<br>')}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${(hasData(item.dimensions) || hasData(item.weight)) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Specifications</h3>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            ${hasData(item.dimensions) ? `
+                                            <div>
+                                                <span class="font-medium text-gray-600">Dimensions:</span>
+                                                <span class="text-gray-700">${item.dimensions}</span>
+                                            </div>
+                                            ` : ''}
+                                            ${hasData(item.weight) ? `
+                                            <div>
+                                                <span class="font-medium text-gray-600">Weight:</span>
+                                                <span class="text-gray-700">${item.weight}</span>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${hasData(item.features) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Features</h3>
+                                        <p class="text-gray-700">${item.features.replace(/\n/g, '<br>')}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${(hasData(item.color_options) || hasData(item.size_options)) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Available Options</h3>
+                                        <div class="space-y-2">
+                                            ${hasData(item.color_options) ? `
+                                            <div>
+                                                <span class="font-medium text-gray-600">Colors:</span>
+                                                <span class="text-gray-700">${item.color_options}</span>
+                                            </div>
+                                            ` : ''}
+                                            ${hasData(item.size_options) ? `
+                                            <div>
+                                                <span class="font-medium text-gray-600">Sizes:</span>
+                                                <span class="text-gray-700">${item.size_options}</span>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${hasData(item.technical_details) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Technical Details</h3>
+                                        <p class="text-gray-700">${item.technical_details.replace(/\n/g, '<br>')}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${hasData(item.care_instructions) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Care Instructions</h3>
+                                        <p class="text-gray-700">${item.care_instructions.replace(/\n/g, '<br>')}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${hasData(item.customization_options) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Customization</h3>
+                                        <p class="text-gray-700">${item.customization_options.replace(/\n/g, '<br>')}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${hasData(item.usage_tips) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Usage Tips</h3>
+                                        <p class="text-gray-700">${item.usage_tips.replace(/\n/g, '<br>')}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${hasData(item.production_time) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Production Time</h3>
+                                        <p class="text-gray-700">${item.production_time}</p>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${hasData(item.warranty_info) ? `
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Warranty</h3>
+                                        <p class="text-gray-700">${item.warranty_info}</p>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    };
+
+    // Detailed modal functions (same as room2)
+    window.switchDetailedImage = function(imagePath, thumbnail) {
+        document.getElementById('detailedMainImage').src = imagePath;
+        
+        // Update thumbnail borders
+        const thumbnails = thumbnail.parentElement.children;
+        for (let i = 0; i < thumbnails.length; i++) {
+            thumbnails[i].classList.remove('border-green-500');
+            thumbnails[i].classList.add('border-transparent');
+        }
+        thumbnail.classList.remove('border-transparent');
+        thumbnail.classList.add('border-green-500');
+    };
+
+    window.adjustDetailedQuantity = function(change) {
+        const input = document.getElementById('detailedQuantity');
+        const currentValue = parseInt(input.value);
+        const newValue = currentValue + change;
+        const max = parseInt(input.getAttribute('max'));
+        
+        if (newValue >= 1 && newValue <= max) {
+            input.value = newValue;
+        }
+    };
+
+    window.addDetailedToCart = function(sku) {
+        const quantity = parseInt(document.getElementById('detailedQuantity').value);
+        
+        // Use existing cart functionality
+        if (typeof addToCart === 'function') {
+            // Get product info from the detailed modal
+            const productName = document.querySelector('#detailedProductModal h2').textContent;
+            const priceText = document.querySelector('#detailedProductModal .text-3xl').textContent;
+            const price = parseFloat(priceText.replace('$', ''));
+            const image = document.getElementById('detailedMainImage').src;
+            
+            // Add multiple items to cart
+            for (let i = 0; i < quantity; i++) {
+                addToCart(sku, productName, price, image);
+            }
+            
+            closeDetailedModal();
+        } else {
+            alert('Added ' + quantity + ' item(s) to cart!');
+            closeDetailedModal();
+        }
+    };
+
+    window.closeDetailedModal = function() {
+        const modal = document.getElementById('detailedProductModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
+
+    window.showDetailedModal = function() {
+        const modal = document.getElementById('detailedProductModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    };
 });
 
 // Load room settings for dynamic title and description

@@ -185,7 +185,9 @@ document.addEventListener('DOMContentLoaded', function() {
         padding: 15px;
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         border: 3px solid #8B4513;
-        width: 280px;
+        min-width: 280px;
+        max-width: 450px;
+        width: auto;
         z-index: 200;
         opacity: 0;
         visibility: hidden;
@@ -221,6 +223,8 @@ document.addEventListener('DOMContentLoaded', function() {
         color: #666;
         margin-bottom: 10px;
         line-height: 1.4;
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
     
     .popup-price {
@@ -478,19 +482,36 @@ function showPopup(element, product) {
     document.getElementById('popupDescription').textContent = product['description'] || 'No description available';
     document.getElementById('popupPrice').textContent = '$' + parseFloat(product['basePrice'] || product['price'] || 0).toFixed(2);
     
-    // Position popup
+    // Position popup with dynamic sizing
     const roomContainer = element.closest('.room-container');
     const containerRect = roomContainer.getBoundingClientRect();
+    
+    // Show popup temporarily to measure dimensions
+    popup.style.visibility = 'hidden';
+    popup.style.opacity = '1';
+    popup.classList.add('show');
+    
+    const popupRect = popup.getBoundingClientRect();
+    const popupWidth = popupRect.width;
+    const popupHeight = popupRect.height;
+    
+    // Hide popup again
+    popup.classList.remove('show');
+    popup.style.visibility = 'visible';
+    popup.style.opacity = '0';
     
     let left = rect.left - containerRect.left + rect.width + 10;
     let top = rect.top - containerRect.top - 50;
     
     // Adjust if popup would go off screen
-    if (left + 280 > containerRect.width) {
-        left = rect.left - containerRect.left - 290;
+    if (left + popupWidth > containerRect.width) {
+        left = rect.left - containerRect.left - popupWidth - 10;
     }
     if (top < 0) {
         top = rect.top - containerRect.top + rect.height + 10;
+    }
+    if (top + popupHeight > containerRect.height) {
+        top = containerRect.height - popupHeight - 10;
     }
     
     popup.style.left = left + 'px';

@@ -98,6 +98,12 @@
                 </svg>
                 Analytics & Insights
             </button>
+            <button onclick="openCartButtonTextModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0L12 13m0 0l2.5 5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"></path>
+                </svg>
+                Cart Button Text
+            </button>
         </div>
     </div>
 
@@ -8637,6 +8643,220 @@ async function loadGeneralConfig() {
     `;
 }
 
+// Cart Button Text Management Functions
+function openCartButtonTextModal() {
+    document.getElementById('cartButtonTextModal').style.display = 'flex';
+    loadCartButtonTexts();
+}
+
+function closeCartButtonTextModal() {
+    document.getElementById('cartButtonTextModal').style.display = 'none';
+}
+
+async function loadCartButtonTexts() {
+    try {
+        const response = await fetch('/api/business_settings.php?action=get_setting&key=cart_button_texts');
+        const data = await response.json();
+        
+        if (data.success && data.setting) {
+            const texts = JSON.parse(data.setting.setting_value);
+            displayCartButtonTexts(texts);
+        } else {
+            // Load default texts if not found
+            const defaultTexts = [
+                'Add to Cart',
+                'Buy Now', 
+                'Get Yours Today',
+                'Shop Now',
+                'Order Now',
+                'Purchase',
+                'Take Home',
+                'Make It Mine',
+                'Grab One',
+                'Pick One Up',
+                'Add to Bag',
+                'Get One Now'
+            ];
+            displayCartButtonTexts(defaultTexts);
+        }
+    } catch (error) {
+        console.error('Error loading cart button texts:', error);
+        showToast('error', 'Failed to load cart button texts');
+    }
+}
+
+function displayCartButtonTexts(texts) {
+    const container = document.getElementById('cartButtonTextList');
+    
+    if (texts.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">No text variations added yet.</p>';
+        return;
+    }
+    
+    container.innerHTML = texts.map((text, index) => `
+        <div class="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-3">
+            <div class="flex items-center">
+                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-3">#${index + 1}</span>
+                <span class="font-medium text-gray-800">"${text}"</span>
+            </div>
+            <button onclick="removeCartButtonText(${index})" class="text-red-500 hover:text-red-700 p-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    `).join('');
+}
+
+async function addCartButtonText() {
+    const input = document.getElementById('newCartButtonText');
+    const newText = input.value.trim();
+    
+    if (!newText) {
+        showToast('error', 'Please enter some text');
+        return;
+    }
+    
+    if (newText.length > 50) {
+        showToast('error', 'Text must be 50 characters or less');
+        return;
+    }
+    
+    try {
+        // Get current texts
+        const response = await fetch('/api/business_settings.php?action=get_setting&key=cart_button_texts');
+        const data = await response.json();
+        
+        let texts = [];
+        if (data.success && data.setting) {
+            texts = JSON.parse(data.setting.setting_value);
+        }
+        
+        // Check if text already exists
+        if (texts.includes(newText)) {
+            showToast('error', 'This text variation already exists');
+            return;
+        }
+        
+        // Add new text
+        texts.push(newText);
+        
+        // Save updated texts
+        await saveCartButtonTexts(texts);
+        
+        // Clear input and refresh display
+        input.value = '';
+        displayCartButtonTexts(texts);
+        
+        showToast('success', `Added "${newText}" to cart button variations`);
+        
+    } catch (error) {
+        console.error('Error adding cart button text:', error);
+        showToast('error', 'Failed to add cart button text');
+    }
+}
+
+async function addQuickCartText(text) {
+    document.getElementById('newCartButtonText').value = text;
+    await addCartButtonText();
+}
+
+async function removeCartButtonText(index) {
+    try {
+        // Get current texts
+        const response = await fetch('/api/business_settings.php?action=get_setting&key=cart_button_texts');
+        const data = await response.json();
+        
+        if (!data.success || !data.setting) {
+            showToast('error', 'Failed to load current texts');
+            return;
+        }
+        
+        let texts = JSON.parse(data.setting.setting_value);
+        
+        if (index < 0 || index >= texts.length) {
+            showToast('error', 'Invalid text index');
+            return;
+        }
+        
+        const removedText = texts[index];
+        texts.splice(index, 1);
+        
+        // Ensure at least one text remains
+        if (texts.length === 0) {
+            texts.push('Add to Cart');
+        }
+        
+        // Save updated texts
+        await saveCartButtonTexts(texts);
+        
+        // Refresh display
+        displayCartButtonTexts(texts);
+        
+        showToast('success', `Removed "${removedText}" from cart button variations`);
+        
+    } catch (error) {
+        console.error('Error removing cart button text:', error);
+        showToast('error', 'Failed to remove cart button text');
+    }
+}
+
+async function resetToDefaults() {
+    if (!confirm('Are you sure you want to reset to default cart button texts? This will replace all your custom variations.')) {
+        return;
+    }
+    
+    const defaultTexts = [
+        'Add to Cart',
+        'Buy Now',
+        'Get Yours Today',
+        'Shop Now',
+        'Order Now',
+        'Purchase',
+        'Take Home',
+        'Make It Mine',
+        'Grab One',
+        'Pick One Up',
+        'Add to Bag',
+        'Get One Now'
+    ];
+    
+    try {
+        await saveCartButtonTexts(defaultTexts);
+        displayCartButtonTexts(defaultTexts);
+        showToast('success', 'Reset to default cart button texts');
+    } catch (error) {
+        console.error('Error resetting cart button texts:', error);
+        showToast('error', 'Failed to reset cart button texts');
+    }
+}
+
+async function saveCartButtonTexts(texts) {
+    const response = await fetch('/api/business_settings.php', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            setting_key: 'cart_button_texts',
+            setting_value: JSON.stringify(texts),
+            setting_type: 'json',
+            category: 'site',
+            display_name: 'Cart Button Text Variations',
+            description: 'List of different text variations for Add to Cart buttons. One will be randomly selected for each button.'
+        })
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+        throw new Error(data.error || 'Failed to save cart button texts');
+    }
+    
+    return data;
+}
+
 </script>
 
 <!-- Website Configuration Modal -->
@@ -8668,6 +8888,69 @@ async function loadGeneralConfig() {
         <!-- Footer -->
         <div class="bg-gray-50 px-6 py-4 border-t flex justify-end space-x-2 flex-shrink-0">
             <button onclick="closeWebsiteConfigModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Cart Button Text Modal -->
+<div id="cartButtonTextModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeCartButtonTextModal()">
+    <div class="bg-white shadow-xl rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-green-600 to-green-700">
+            <h2 class="text-xl font-bold text-white">🛒 Cart Button Text Variations</h2>
+            <button onclick="closeCartButtonTextModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+        
+        <div class="p-6">
+            <div class="mb-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-2">How It Works</h3>
+                    <p class="text-blue-700 text-sm">
+                        Add different variations of cart button text below. Each time a page loads, 
+                        a random text will be selected from your list, adding variety and personality to your shopping experience!
+                    </p>
+                </div>
+                
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">Current Text Variations:</h4>
+                    <div id="cartButtonTextList" class="space-y-2">
+                        <!-- Text variations will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t pt-6">
+                <h4 class="font-semibold text-gray-800 mb-3">Add New Text Variation:</h4>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="newCartButtonText" placeholder="Enter new cart button text..." 
+                           class="flex-1 p-3 border border-gray-300 rounded-lg text-sm" 
+                           maxlength="50" onkeypress="if(event.key==='Enter') addCartButtonText()">
+                    <button onclick="addCartButtonText()" class="px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium">
+                        Add Text
+                    </button>
+                </div>
+                <p class="text-gray-500 text-xs">Maximum 50 characters per text variation</p>
+            </div>
+            
+            <div class="border-t pt-6 mt-6">
+                <h4 class="font-semibold text-gray-800 mb-3">Quick Add Popular Options:</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <button onclick="addQuickCartText('Shop This Now')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Shop This Now</button>
+                    <button onclick="addQuickCartText('Take It Home')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Take It Home</button>
+                    <button onclick="addQuickCartText('Make It Mine')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Make It Mine</button>
+                    <button onclick="addQuickCartText('I Want This')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">I Want This</button>
+                    <button onclick="addQuickCartText('Grab It Now')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Grab It Now</button>
+                    <button onclick="addQuickCartText('Choose This One')" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Choose This One</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 px-6 py-4 border-t flex justify-between">
+            <button onclick="resetToDefaults()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded">
+                Reset to Defaults
+            </button>
+            <button onclick="closeCartButtonTextModal()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded">
+                Close
+            </button>
         </div>
     </div>
 </div>

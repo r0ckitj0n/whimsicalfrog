@@ -7,6 +7,7 @@ if (isset($categories['Artwork'])) {
 
 // Include image helpers for room pages
 require_once __DIR__ . '/../includes/item_image_helpers.php';
+require_once __DIR__ . '/../api/business_settings_helper.php';
 ?>
 
 <!-- Include room headers CSS -->
@@ -390,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div id="popupDescription" class="popup-description"></div>
         <div id="popupPrice" class="popup-price"></div>
         <button id="popupAddBtn" class="popup-add-btn" onclick="openQuantityModal()">
-            Add to Cart
+            <?php echo htmlspecialchars(getRandomCartButtonText()); ?>
         </button>
     </div>
 </section>
@@ -432,7 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         <div class="flex gap-3">
             <button id="cancelQuantityModal" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-md font-medium">Cancel</button>
-            <button id="confirmAddToCart" class="flex-1 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white py-2 px-4 rounded-md font-medium">Add to Cart</button>
+            <button id="confirmAddToCart" class="flex-1 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white py-2 px-4 rounded-md font-medium"><?php echo htmlspecialchars(getRandomCartButtonText()); ?></button>
         </div>
     </div>
 </div>

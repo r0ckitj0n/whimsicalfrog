@@ -8,6 +8,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 // Include the image carousel component and helpers
 require_once __DIR__ . '/../components/image_carousel.php';
 require_once __DIR__ . '/../includes/item_image_helpers.php';
+require_once __DIR__ . '/../api/business_settings_helper.php';
 
 // Categories are already loaded in index.php and available in $categories
 ?>
@@ -217,7 +218,12 @@ require_once __DIR__ . '/../includes/item_image_helpers.php';
                             if ($stock == 0) {
                                 echo 'Out of Stock';
                             } else {
-                                echo !empty($callToActions) ? htmlspecialchars($callToActions[0]) : 'Add to Cart';
+                                // Use random cart button text if no specific call to action is set
+                                if (!empty($callToActions)) {
+                                    echo htmlspecialchars($callToActions[0]);
+                                } else {
+                                    echo htmlspecialchars(getRandomCartButtonText());
+                                }
                             }
                             ?>
                         </button>

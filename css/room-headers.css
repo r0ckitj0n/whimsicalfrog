@@ -45,8 +45,6 @@
     font-weight: bold;
     margin: 0;
     text-shadow: var(--room-title-text-shadow);
-    -webkit-text-stroke: var(--room-title-text-stroke);
-    text-stroke: var(--room-title-text-stroke);
 }
 
 /* ==============================================
@@ -58,8 +56,6 @@
     font-size: var(--room-description-font-size);
     color: var(--room-description-color);
     text-shadow: var(--room-description-text-shadow);
-    -webkit-text-stroke: var(--room-description-text-stroke);
-    text-stroke: var(--room-description-text-stroke);
     margin: 0.5rem 0;
     line-height: 1.4;
 }

@@ -567,14 +567,19 @@ $seoData = generatePageSEO($page, $currentSku);
             margin-left: 0.5rem;
         }
         
-        .room-header h1, .room-header p {
-            color: var(--room-title-color, #87ac3a) !important;
+        .room-header h1, .room-header p,
+        .room-title-overlay .room-title,
+        .room-title-overlay .room-description {
+            color: #87ac3a !important;
             font-size: var(--room-title-font-size, 2rem) !important;
             font-weight: var(--room-title-font-weight, bold) !important;
-            -webkit-text-stroke: var(--room-title-text-stroke, 2px #556B2F);
-            text-stroke: var(--room-title-text-stroke, 2px #556B2F);
-            paint-order: stroke fill;
-            text-shadow: var(--room-title-text-shadow, 2px 2px 0px #556B2F, -2px -2px 0px #556B2F, 2px -2px 0px #556B2F, -2px 2px 0px #556B2F, 0px 2px 0px #556B2F, 2px 0px 0px #556B2F, 0px -2px 0px #556B2F, -2px 0px 0px #556B2F);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+        }
+        
+        .room-title-overlay .room-description {
+            color: #87ac3a !important;
+            font-size: var(--room-description-font-size, 1rem) !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
         }
     </style>
 </head>

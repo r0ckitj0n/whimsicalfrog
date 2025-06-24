@@ -605,16 +605,35 @@ function showPopup(element, product) {
 
     const popupRect = popup.getBoundingClientRect();
     const popupWidth = popupRect.width;
+    const popupHeight = popupRect.height;
 
     // Reset for measurement
     popup.style.display = '';
 
-    // Adjust if popup would go off screen
+    // Adjust if popup would go off screen horizontally
     if (left + popupWidth > containerRect.width) {
         left = rect.left - containerRect.left - popupWidth - 10;
     }
+    
+    // Adjust if popup would go off screen vertically (top)
     if (top < 0) {
         top = rect.top - containerRect.top + rect.height + 10;
+    }
+    
+    // Adjust if popup would go off screen vertically (bottom) - PREVENT DOUBLE SCROLLBAR
+    if (top + popupHeight > containerRect.height) {
+        // Try positioning above the element first
+        const topAbove = rect.top - containerRect.top - popupHeight - 10;
+        if (topAbove >= 0) {
+            top = topAbove;
+        } else {
+            // If still doesn't fit, position at bottom of container with padding
+            top = containerRect.height - popupHeight - 20;
+            // Ensure it doesn't go above the top
+            if (top < 0) {
+                top = 10;
+            }
+        }
     }
 
     popup.style.left = left + 'px';

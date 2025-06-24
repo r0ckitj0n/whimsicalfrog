@@ -384,24 +384,25 @@ document.addEventListener('DOMContentLoaded', function() {
         background: white;
         padding: 1rem 1.5rem;
         border-radius: 0.75rem;
-        border: 2px solid var(--primary-color, #87ac3a);
+        border: 2px solid var(--room-title-color, #87ac3a);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         max-width: 400px;
     }
 
     .room-title-overlay .room-title {
-        color: var(--primary-color, #87ac3a);
+        color: var(--room-title-color, #87ac3a);
         margin: 0 0 0.5rem 0;
-        font-size: 1.75rem;
+        font-size: var(--room-title-font-size, 1.75rem);
         font-weight: bold;
         text-shadow: none;
+        font-family: var(--room-title-font-family, 'Merienda', cursive);
     }
 
     .room-title-overlay .room-description {
-        color: var(--primary-color, #87ac3a);
+        color: var(--room-description-color, #87ac3a);
         opacity: 0.8;
         margin: 0;
-        font-size: 0.95rem;
+        font-size: var(--room-description-font-size, 0.95rem);
         line-height: 1.4;
         text-shadow: none;
     }

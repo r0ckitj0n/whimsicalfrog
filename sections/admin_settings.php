@@ -6914,6 +6914,12 @@ function renderGlobalCSSRules(groupedRules) {
             gradient: 'from-blue-50 to-indigo-50 border-blue-200',
             titleColor: 'text-blue-800'
         },
+        'room_headers': {
+            title: '🏠 Room Headers',
+            description: 'Room titles and descriptions styling',
+            gradient: 'from-amber-50 to-yellow-50 border-amber-200',
+            titleColor: 'text-amber-800'
+        },
         'buttons': {
             title: '🔘 Button Styles', 
             description: 'How all buttons look and feel',
@@ -7064,6 +7070,11 @@ function getFriendlyName(ruleName) {
         'primary_color_hover': 'Brand Color (Hover)',
         'secondary_color': 'Secondary Color',
         'accent_color': 'Accent Color',
+        'room_title_color': 'Room Title Color',
+        'room_description_color': 'Room Description Color',
+        'room_title_font_size': 'Room Title Size',
+        'room_description_font_size': 'Room Description Size',
+        'room_title_font_family': 'Room Title Font',
         'button_bg_primary': 'Button Background',
         'button_bg_primary_hover': 'Button Background (Hover)',
         'button_text_primary': 'Button Text Color',

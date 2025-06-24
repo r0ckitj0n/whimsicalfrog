@@ -1258,239 +1258,6 @@ button.hover\\:bg-indigo-700:hover,
     border-color: #047857;
 }
 
-/* Quantity Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.modal-overlay.hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    transform: scale(1);
-    transition: transform 0.3s ease;
-}
-
-.modal-overlay.hidden .modal-content {
-    transform: scale(0.95);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.modal-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #6b7280;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.modal-close:hover {
-    background-color: #f3f4f6;
-    color: #374151;
-}
-
-.modal-body {
-    margin-bottom: 24px;
-}
-
-.product-summary {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-    padding: 16px;
-    background-color: #f9fafb;
-    border-radius: 8px;
-}
-
-.modal-product-image {
-    width: 64px;
-    height: 64px;
-    object-fit: cover;
-    border-radius: 8px;
-    background-color: #e5e7eb;
-}
-
-.product-info {
-    flex: 1;
-}
-
-.product-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin: 0 0 4px 0;
-}
-
-.product-price {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #059669;
-    margin: 0;
-}
-
-.quantity-selector {
-    margin-bottom: 20px;
-}
-
-.quantity-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 8px;
-}
-
-.quantity-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.qty-btn {
-    background-color: #f3f4f6;
-    border: 1px solid #d1d5db;
-    color: #374151;
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    font-weight: 600;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.qty-btn:hover {
-    background-color: #e5e7eb;
-    border-color: #9ca3af;
-}
-
-.qty-input {
-    width: 80px;
-    height: 36px;
-    text-align: center;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.qty-input:focus {
-    outline: none;
-    border-color: #059669;
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
-}
-
-.order-summary {
-    background-color: #f9fafb;
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.summary-row:last-child {
-    margin-bottom: 0;
-    padding-top: 8px;
-    border-top: 1px solid #e5e7eb;
-    font-weight: 600;
-}
-
-.modal-footer {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-}
-
-.btn-secondary {
-    background-color: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.btn-secondary:hover {
-    background-color: #e5e7eb;
-    border-color: #9ca3af;
-}
-
-.btn-primary {
-    background-color: #059669;
-    color: white;
-    border: 1px solid #059669;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.btn-primary:hover {
-    background-color: #047857;
-    border-color: #047857;
-}
-
 /* ==============================================
    FOOTER SYSTEM CSS VARIABLES & UTILITY CLASSES
    ============================================== */
@@ -2087,89 +1854,91 @@ body, .body-text {
     margin: var(--section-margin-y) 0 !important;
 }
 
-.grid {
-    display: grid !important;
-    gap: var(--grid-gap) !important;
+/* Grid Layout Utilities - Exclude room elements */
+.grid:not(.room-overlay-wrapper):not(.room-container) {
+    display: grid;
+    gap: var(--grid-gap);
 }
 
-.grid-cols-1 { grid-template-columns: repeat(1, 1fr) !important; }
-.grid-cols-2 { grid-template-columns: repeat(2, 1fr) !important; }
-.grid-cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
-.grid-cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
+.grid-cols-1:not(.room-overlay-wrapper):not(.room-container) { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2:not(.room-overlay-wrapper):not(.room-container) { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3:not(.room-overlay-wrapper):not(.room-container) { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4:not(.room-overlay-wrapper):not(.room-container) { grid-template-columns: repeat(4, 1fr); }
 
-.flex {
-    display: flex !important;
+/* Flexbox Utilities - Exclude room elements */
+.flex:not(.room-overlay-wrapper):not(.room-container) {
+    display: flex;
 }
 
-.flex-col {
-    flex-direction: column !important;
+.flex-col:not(.room-overlay-wrapper):not(.room-container) {
+    flex-direction: column;
 }
 
-.items-center {
-    align-items: center !important;
+.items-center:not(.room-overlay-wrapper):not(.room-container) {
+    align-items: center;
 }
 
-.justify-center {
-    justify-content: center !important;
+.justify-center:not(.room-overlay-wrapper):not(.room-container) {
+    justify-content: center;
 }
 
-.justify-between {
-    justify-content: space-between !important;
+.justify-between:not(.room-overlay-wrapper):not(.room-container) {
+    justify-content: space-between;
 }
 
-/* Spacing Utilities */
-.m-xs { margin: var(--spacing-xs) !important; }
-.m-sm { margin: var(--spacing-sm) !important; }
-.m-md { margin: var(--spacing-md) !important; }
-.m-lg { margin: var(--spacing-lg) !important; }
-.m-xl { margin: var(--spacing-xl) !important; }
+/* Spacing Utilities - Exclude room elements */
+.m-xs:not(.room-overlay-wrapper):not(.room-container) { margin: var(--spacing-xs); }
+.m-sm:not(.room-overlay-wrapper):not(.room-container) { margin: var(--spacing-sm); }
+.m-md:not(.room-overlay-wrapper):not(.room-container) { margin: var(--spacing-md); }
+.m-lg:not(.room-overlay-wrapper):not(.room-container) { margin: var(--spacing-lg); }
+.m-xl:not(.room-overlay-wrapper):not(.room-container) { margin: var(--spacing-xl); }
 
-.p-xs { padding: var(--spacing-xs) !important; }
-.p-sm { padding: var(--spacing-sm) !important; }
-.p-md { padding: var(--spacing-md) !important; }
-.p-lg { padding: var(--spacing-lg) !important; }
-.p-xl { padding: var(--spacing-xl) !important; }
+.p-xs:not(.room-overlay-wrapper):not(.room-container) { padding: var(--spacing-xs); }
+.p-sm:not(.room-overlay-wrapper):not(.room-container) { padding: var(--spacing-sm); }
+.p-md:not(.room-overlay-wrapper):not(.room-container) { padding: var(--spacing-md); }
+.p-lg:not(.room-overlay-wrapper):not(.room-container) { padding: var(--spacing-lg); }
+.p-xl:not(.room-overlay-wrapper):not(.room-container) { padding: var(--spacing-xl); }
 
-.mb-xs { margin-bottom: var(--spacing-xs) !important; }
-.mb-sm { margin-bottom: var(--spacing-sm) !important; }
-.mb-md { margin-bottom: var(--spacing-md) !important; }
-.mb-lg { margin-bottom: var(--spacing-lg) !important; }
-.mb-xl { margin-bottom: var(--spacing-xl) !important; }
+.mb-xs:not(.room-overlay-wrapper):not(.room-container) { margin-bottom: var(--spacing-xs); }
+.mb-sm:not(.room-overlay-wrapper):not(.room-container) { margin-bottom: var(--spacing-sm); }
+.mb-md:not(.room-overlay-wrapper):not(.room-container) { margin-bottom: var(--spacing-md); }
+.mb-lg:not(.room-overlay-wrapper):not(.room-container) { margin-bottom: var(--spacing-lg); }
+.mb-xl:not(.room-overlay-wrapper):not(.room-container) { margin-bottom: var(--spacing-xl); }
 
-.mt-xs { margin-top: var(--spacing-xs) !important; }
-.mt-sm { margin-top: var(--spacing-sm) !important; }
-.mt-md { margin-top: var(--spacing-md) !important; }
-.mt-lg { margin-top: var(--spacing-lg) !important; }
-.mt-xl { margin-top: var(--spacing-xl) !important; }
+.mt-xs:not(.room-overlay-wrapper):not(.room-container) { margin-top: var(--spacing-xs); }
+.mt-sm:not(.room-overlay-wrapper):not(.room-container) { margin-top: var(--spacing-sm); }
+.mt-md:not(.room-overlay-wrapper):not(.room-container) { margin-top: var(--spacing-md); }
+.mt-lg:not(.room-overlay-wrapper):not(.room-container) { margin-top: var(--spacing-lg); }
+.mt-xl:not(.room-overlay-wrapper):not(.room-container) { margin-top: var(--spacing-xl); }
 
 /* Border Radius Utilities */
-.rounded-sm { border-radius: var(--border-radius-sm) !important; }
-.rounded-md { border-radius: var(--border-radius-md) !important; }
-.rounded-lg { border-radius: var(--border-radius-lg) !important; }
-.rounded-xl { border-radius: var(--border-radius-xl) !important; }
+.rounded-sm { border-radius: var(--border-radius-sm); }
+.rounded-md { border-radius: var(--border-radius-md); }
+.rounded-lg { border-radius: var(--border-radius-lg); }
+.rounded-xl { border-radius: var(--border-radius-xl); }
 
 /* Color Utilities */
-.text-primary { color: var(--color-primary) !important; }
-.text-secondary { color: var(--color-secondary) !important; }
-.text-success { color: var(--color-success) !important; }
-.text-warning { color: var(--color-warning) !important; }
-.text-error { color: var(--color-error) !important; }
-.text-info { color: var(--color-info) !important; }
+.text-primary { color: var(--color-primary); }
+.text-secondary { color: var(--color-secondary); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-error { color: var(--color-error); }
+.text-info { color: var(--color-info); }
 
-.bg-primary { background-color: var(--color-primary) !important; }
-.bg-secondary { background-color: var(--color-secondary) !important; }
-.bg-success { background-color: var(--color-success) !important; }
-.bg-warning { background-color: var(--color-warning) !important; }
-.bg-error { background-color: var(--color-error) !important; }
-.bg-info { background-color: var(--color-info) !important; }
+.bg-primary { background-color: var(--color-primary); }
+.bg-secondary { background-color: var(--color-secondary); }
+.bg-success { background-color: var(--color-success); }
+.bg-warning { background-color: var(--color-warning); }
+.bg-error { background-color: var(--color-error); }
+.bg-info { background-color: var(--color-info); }
 
 /* Animation Utilities */
-.transition-fast { transition: var(--transition-fast) !important; }
-.transition-normal { transition: var(--transition-normal) !important; }
-.transition-slow { transition: var(--transition-slow) !important; }
+.transition-fast { transition: var(--transition-fast); }
+.transition-normal { transition: var(--transition-normal); }
+.transition-slow { transition: var(--transition-slow); }
 
-.hover-scale:hover { transform: var(--hover-scale) !important; }
-.hover-lift:hover { transform: var(--hover-lift) !important; }
+.hover-scale:hover { transform: var(--hover-scale); }
+.hover-lift:hover { transform: var(--hover-lift); }
 
 /* Admin Interface System */
 .admin-container {
@@ -2271,4 +2040,99 @@ body, .body-text {
         box-shadow: none !important;
         border: 1px solid #ccc !important;
     }
+}
+
+/* ==============================================
+   ROOM LAYOUT PROTECTION
+   Ensures room pages maintain original size and aspect ratio
+   ============================================== */
+
+/* Room container must maintain its original sizing */
+.room-container {
+    position: relative !important;
+    width: 100% !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Room overlay wrapper must maintain aspect ratio */
+.room-overlay-wrapper {
+    width: 100% !important;
+    padding-top: 70% !important; /* 1280x896 aspect ratio (896/1280 * 100) */
+    position: relative !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    border-radius: 15px !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+}
+
+/* Room overlay content positioning */
+.room-overlay-content {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Shelf area positioning */
+.shelf-area {
+    position: absolute !important;
+    width: 100% !important;
+    height: 100% !important;
+    top: 0 !important;
+    left: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Modal-specific room styles protection */
+.room-container.modal-room {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    height: 100vh !important;
+}
+
+.room-container.modal-room .room-overlay-wrapper {
+    border-radius: 0 !important;
+    height: 100% !important;
+    padding-top: 0 !important;
+}
+
+.room-container.modal-room .room-overlay-content {
+    padding-top: 60px !important; /* Account for modal header */
+}
+
+/* Prevent utility classes from affecting room elements */
+.room-overlay-wrapper,
+.room-container,
+.room-overlay-content,
+.shelf-area {
+    /* Reset any utility class effects */
+    box-sizing: border-box !important;
+}
+
+/* Ensure room pages have full screen layout */
+body.room-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+
+body.room-page #mainContent {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100vh !important;
 }

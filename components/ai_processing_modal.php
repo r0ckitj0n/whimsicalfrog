@@ -8,123 +8,117 @@
 ?>
 
 <!-- AI Processing Modal -->
-<div id="aiProcessingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        🎨 AI Image Processing
-                    </h3>
-                    <button id="aiProcessingCloseBtn" class="text-gray-400 hover:text-gray-600 hidden">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
+<div id="aiProcessingModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header">
+            <h3 class="modal-title">
+                🎨 AI Image Processing
+            </h3>
+            <button id="aiProcessingCloseBtn" class="modal-close hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body">
+            <!-- Processing Status -->
+            <div id="aiProcessingStatus" class="mb-4">
+                <div class="text-sm text-gray-600 mb-2">Processing your image...</div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="aiProcessingProgressBar" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
             </div>
             
-            <!-- Modal Body -->
-            <div class="px-6 py-4">
-                <!-- Processing Status -->
-                <div id="aiProcessingStatus" class="mb-4">
-                    <div class="text-sm text-gray-600 mb-2">Processing your image...</div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div id="aiProcessingProgressBar" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            <!-- Processing Steps -->
+            <div id="aiProcessingSteps" class="space-y-3">
+                <!-- Step 1: AI Analysis -->
+                <div id="step1" class="flex items-center space-x-3">
+                    <div id="step1Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                        <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900">AI Edge Analysis</div>
+                        <div id="step1Status" class="text-sm text-gray-500">Analyzing image to detect object boundaries...</div>
                     </div>
                 </div>
                 
-                <!-- Processing Steps -->
-                <div id="aiProcessingSteps" class="space-y-3">
-                    <!-- Step 1: AI Analysis -->
-                    <div id="step1" class="flex items-center space-x-3">
-                        <div id="step1Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
-                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
-                        </div>
-                        <div>
-                            <div class="font-medium text-gray-900">AI Edge Analysis</div>
-                            <div id="step1Status" class="text-sm text-gray-500">Analyzing image to detect object boundaries...</div>
-                        </div>
+                <!-- Step 2: Smart Cropping -->
+                <div id="step2" class="flex items-center space-x-3">
+                    <div id="step2Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                        <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
                     </div>
-                    
-                    <!-- Step 2: Smart Cropping -->
-                    <div id="step2" class="flex items-center space-x-3">
-                        <div id="step2Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
-                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
-                        </div>
-                        <div>
-                            <div class="font-medium text-gray-900">Smart Cropping</div>
-                            <div id="step2Status" class="text-sm text-gray-500">Waiting for analysis...</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Step 3: WebP Conversion -->
-                    <div id="step3" class="flex items-center space-x-3">
-                        <div id="step3Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
-                            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
-                        </div>
-                        <div>
-                            <div class="font-medium text-gray-900">WebP Conversion</div>
-                            <div id="step3Status" class="text-sm text-gray-500">Waiting for cropping...</div>
-                        </div>
+                    <div>
+                        <div class="font-medium text-gray-900">Smart Cropping</div>
+                        <div id="step2Status" class="text-sm text-gray-500">Waiting for analysis...</div>
                     </div>
                 </div>
                 
-                <!-- Processing Results -->
-                <div id="aiProcessingResults" class="mt-4 hidden">
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-green-800">Processing Complete!</h3>
-                                <div id="aiProcessingResultText" class="mt-1 text-sm text-green-700"></div>
-                            </div>
-                        </div>
+                <!-- Step 3: WebP Conversion -->
+                <div id="step3" class="flex items-center space-x-3">
+                    <div id="step3Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                        <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
                     </div>
-                </div>
-                
-                <!-- Error Display -->
-                <div id="aiProcessingError" class="mt-4 hidden">
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-red-800">Processing Error</h3>
-                                <div id="aiProcessingErrorText" class="mt-1 text-sm text-red-700"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Processing Details -->
-                <div id="aiProcessingDetails" class="mt-4 hidden">
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <div class="text-sm font-medium text-blue-800 mb-2">Processing Details:</div>
-                        <div id="aiProcessingDetailsList" class="text-sm text-blue-700 space-y-1"></div>
+                    <div>
+                        <div class="font-medium text-gray-900">WebP Conversion</div>
+                        <div id="step3Status" class="text-sm text-gray-500">Waiting for cropping...</div>
                     </div>
                 </div>
             </div>
             
-            <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-gray-200">
-                <div class="flex justify-end space-x-3">
-                    <button id="aiProcessingCancelBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
-                        Cancel
-                    </button>
-                    <button id="aiProcessingDoneBtn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 hidden">
-                        Done
-                    </button>
+            <!-- Processing Results -->
+            <div id="aiProcessingResults" class="mt-4 hidden">
+                <div class="modal-success">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-green-800">Processing Complete!</h3>
+                            <div id="aiProcessingResultText" class="mt-1 text-sm text-green-700"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
+            <!-- Error Display -->
+            <div id="aiProcessingError" class="mt-4 hidden">
+                <div class="modal-error">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Processing Error</h3>
+                            <div id="aiProcessingErrorText" class="mt-1 text-sm text-red-700"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Processing Details -->
+            <div id="aiProcessingDetails" class="mt-4 hidden">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div class="text-sm font-medium text-blue-800 mb-2">Processing Details:</div>
+                    <div id="aiProcessingDetailsList" class="text-sm text-blue-700 space-y-1"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+            <button id="aiProcessingCancelBtn" class="modal-button btn-secondary">
+                Cancel
+            </button>
+            <button id="aiProcessingDoneBtn" class="modal-button btn-primary hidden">
+                Done
+            </button>
         </div>
     </div>
 </div>

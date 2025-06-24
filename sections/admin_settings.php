@@ -7278,7 +7278,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Global CSS Rules Modal -->
-<div id="globalCSSModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeGlobalCSSModal()">
+<div id="globalCSSModal" class="admin-modal-overlay hidden" onclick="closeGlobalCSSModal()">
     <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
         <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
             <!-- Header -->

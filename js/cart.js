@@ -13,18 +13,29 @@ class ShoppingCart {
 
     async refreshProductData() {
         console.log('Refreshing product data from database');
+        console.log('Current cart items before refresh:', this.items);
         try {
             // Get all SKUs in cart
             const itemSkus = this.items.map(item => item.sku);
-            if (itemSkus.length === 0) return;
+            console.log('Extracted SKUs from cart:', itemSkus);
+            
+            // Filter out undefined/null SKUs
+            const validSkus = itemSkus.filter(sku => sku && sku !== 'undefined');
+            console.log('Valid SKUs after filtering:', validSkus);
+            
+            if (validSkus.length === 0) {
+                console.warn('No valid SKUs found in cart');
+                return;
+            }
 
             // Fetch current item data from database
+            console.log('Sending API request with SKUs:', validSkus);
             const response = await fetch('api/get_items.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ item_ids: itemSkus })
+                body: JSON.stringify({ item_ids: validSkus })
             });
 
             if (!response.ok) {
@@ -38,6 +49,13 @@ class ShoppingCart {
             // Filter out items that no longer exist in the database
             const validItems = [];
             this.items.forEach(cartItem => {
+                // Handle items with undefined/null SKUs
+                if (!cartItem.sku || cartItem.sku === 'undefined') {
+                    console.warn(`Removing invalid item from cart: ${cartItem.sku} - invalid SKU`);
+                    this.showNotification(`Removed item with invalid SKU: ${cartItem.name || 'Unknown item'}`);
+                    return;
+                }
+                
                 const freshItem = items.find(p => p.sku === cartItem.sku);
                 if (freshItem) {
                     // Update image path and name with fresh data from database
@@ -58,10 +76,11 @@ class ShoppingCart {
 
             // Update cart with only valid items
             if (validItems.length !== this.items.length) {
+                const removedCount = this.items.length - validItems.length;
                 this.items = validItems;
                 this.saveCart();
                 this.updateCartCount();
-                console.log(`Cart cleaned: removed ${this.items.length - validItems.length} invalid items`);
+                console.log(`Cart cleaned: removed ${removedCount} invalid items`);
             }
 
         } catch (error) {

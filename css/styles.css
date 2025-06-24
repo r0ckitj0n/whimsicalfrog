@@ -2044,30 +2044,32 @@ body, .body-text {
 
 /* ==============================================
    ROOM LAYOUT PROTECTION
-   Ensures room pages maintain original size and aspect ratio
+   Ensures room pages maintain original large size and full viewport
    ============================================== */
 
-/* Room container must maintain its original sizing */
+/* Room container takes full viewport */
 .room-container {
     position: relative !important;
-    width: 100% !important;
+    width: 100vw !important;
     height: 100vh !important;
     overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
+    max-width: none !important;
 }
 
-/* Room overlay wrapper must maintain aspect ratio */
+/* Room overlay wrapper fills the entire viewport */
 .room-overlay-wrapper {
     width: 100% !important;
-    padding-top: 70% !important; /* 1280x896 aspect ratio (896/1280 * 100) */
+    height: 100vh !important; /* Full viewport height instead of aspect ratio */
     position: relative !important;
-    background-size: contain !important;
+    background-size: cover !important; /* Cover instead of contain for larger appearance */
     background-position: center !important;
     background-repeat: no-repeat !important;
-    border-radius: 15px !important;
+    border-radius: 0 !important; /* Remove border radius for full screen */
     overflow: hidden !important;
     margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* Room overlay content positioning */
@@ -2100,16 +2102,17 @@ body, .body-text {
     margin: 0 !important;
     border-radius: 0 !important;
     height: 100vh !important;
+    width: 100vw !important;
 }
 
 .room-container.modal-room .room-overlay-wrapper {
     border-radius: 0 !important;
-    height: 100% !important;
-    padding-top: 0 !important;
+    height: 100vh !important;
+    width: 100% !important;
 }
 
 .room-container.modal-room .room-overlay-content {
-    padding-top: 60px !important; /* Account for modal header */
+    padding-top: 0 !important; /* No padding for full screen */
 }
 
 /* Prevent utility classes from affecting room elements */
@@ -2126,13 +2129,21 @@ body.room-page {
     margin: 0 !important;
     padding: 0 !important;
     height: 100vh !important;
+    width: 100vw !important;
     overflow: hidden !important;
 }
 
 body.room-page #mainContent {
     padding: 0 !important;
     margin: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
+    max-width: none !important;
+    width: 100vw !important;
     height: 100vh !important;
+}
+
+/* Force full screen for room pages */
+.room-page .room-container,
+.room-page .room-overlay-wrapper {
+    min-height: 100vh !important;
+    min-width: 100vw !important;
 }

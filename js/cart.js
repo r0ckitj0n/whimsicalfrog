@@ -508,6 +508,43 @@ async function addToCart(sku, name, price, imageUrl = null) {
 // Make addToCart globally available
 window.addToCart = addToCart;
 
+// Cart cleanup utility function
+window.cleanupCart = function() {
+    if (window.cart) {
+        console.log('Cleaning up cart...');
+        const originalLength = window.cart.items.length;
+        
+        // Remove items with undefined/null/invalid SKUs
+        window.cart.items = window.cart.items.filter(item => {
+            const isValid = item.sku && item.sku !== 'undefined' && item.sku.trim() !== '';
+            if (!isValid) {
+                console.log('Removing invalid item:', item);
+            }
+            return isValid;
+        });
+        
+        const removedCount = originalLength - window.cart.items.length;
+        if (removedCount > 0) {
+            window.cart.saveCart();
+            window.cart.updateCartCount();
+            console.log(`Removed ${removedCount} invalid items from cart`);
+            window.cart.showNotification(`Cleaned up cart: removed ${removedCount} invalid items`);
+        } else {
+            console.log('No invalid items found in cart');
+            window.cart.showNotification('Cart is already clean - no invalid items found');
+        }
+    }
+};
+
+// Emergency cart clear function
+window.emergencyClearCart = function() {
+    if (window.cart) {
+        window.cart.clearCart();
+        window.cart.showNotification('Cart cleared successfully!');
+        console.log('Emergency cart clear completed');
+    }
+};
+
 function removeFromCart(sku) {
     if (window.cart) {
         window.cart.removeItem(sku);

@@ -90,7 +90,6 @@ class ShoppingCart {
         
         this.saveCart();
         this.updateCartCount();
-        this.showNotification(`${quantity > 1 ? quantity + ' items' : 'Item'} added to cart`);
         this.dispatchCartUpdate();
         
         // Track cart action for analytics
@@ -104,7 +103,6 @@ class ShoppingCart {
         this.items = this.items.filter(item => item.sku !== itemSku);
         this.saveCart();
         this.updateCartCount();
-        this.showNotification('Item removed from cart');
         this.dispatchCartUpdate();
         
         // Track cart action for analytics
@@ -487,6 +485,9 @@ async function addToCart(sku, name, price, imageUrl = null) {
         showNotification('Error adding item to cart', 'error');
     }
 }
+
+// Make addToCart globally available
+window.addToCart = addToCart;
 
 function removeFromCart(sku) {
     if (window.cart) {

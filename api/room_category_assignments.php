@@ -43,11 +43,43 @@ switch ($method) {
 }
 
 function handleGet($pdo) {
+    $action = $_GET['action'] ?? '';
     $roomNumber = $_GET['room_number'] ?? null;
+    $roomId = $_GET['room_id'] ?? null;
     $categoryId = $_GET['category_id'] ?? null;
     
     try {
-        if ($roomNumber !== null) {
+        if ($action === 'get_primary_category') {
+            // Get primary category for a specific room
+            $room = $roomNumber ?? $roomId;
+            if ($room === null) {
+                echo json_encode(['success' => false, 'message' => 'Room number or room_id is required']);
+                return;
+            }
+            
+            $stmt = $pdo->prepare("
+                SELECT rca.*, c.name, c.description, c.id as category_id
+                FROM room_category_assignments rca 
+                JOIN categories c ON rca.category_id = c.id 
+                WHERE rca.room_number = ? AND rca.is_primary = 1
+                LIMIT 1
+            ");
+            $stmt->execute([$room]);
+            $primaryCategory = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($primaryCategory) {
+                echo json_encode([
+                    'success' => true, 
+                    'category' => [
+                        'id' => $primaryCategory['category_id'],
+                        'name' => $primaryCategory['name'],
+                        'description' => $primaryCategory['description']
+                    ]
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No primary category found for this room']);
+            }
+        } elseif ($roomNumber !== null) {
             // Get categories for specific room
             $stmt = $pdo->prepare("
                 SELECT rca.*, c.name as category_name, c.description as category_description

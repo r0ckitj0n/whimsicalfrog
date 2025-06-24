@@ -213,7 +213,9 @@ $messageType = $_GET['type'] ?? '';
 <style>
     /* Force the customers title to be green with highest specificity */
     h1.customers-title.text-2xl.font-bold {
-        color: #87ac3a !important;
+        color: var(--admin-page-title-color, #87ac3a) !important;
+        font-size: var(--admin-page-title-font-size, 1.5rem) !important;
+        font-weight: var(--admin-page-title-font-weight, bold) !important;
     }
     
     /* Brand button styling */

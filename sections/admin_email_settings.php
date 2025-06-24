@@ -92,7 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <style>
     .email-title.text-2xl.font-bold {
-        color: #87ac3a !important;
+        color: var(--admin-page-title-color, #87ac3a) !important;
+        font-size: var(--admin-page-title-font-size, 1.5rem) !important;
+        font-weight: var(--admin-page-title-font-weight, bold) !important;
     }
     
     .brand-button {
@@ -188,6 +190,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         background-color: #fef3c7;
         border: 1px solid #f59e0b;
         color: #92400e;
+    }
+    
+    /* Force the email title to be green with highest specificity */
+    h1.email-title.text-2xl.font-bold {
+        color: var(--admin-page-title-color, #87ac3a) !important;
+        font-size: var(--admin-page-title-font-size, 1.5rem) !important;
+        font-weight: var(--admin-page-title-font-weight, bold) !important;
     }
 </style>
 

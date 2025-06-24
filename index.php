@@ -174,6 +174,42 @@ try {
     // Format items data to match the expected structure
     $inventory = $items;
 
+    // Function to check if search bar should be shown for current page
+    function shouldShowSearchBar($pdo, $currentPage) {
+        // Map page names to room numbers
+        $pageToRoomMap = [
+            'landing' => 0,
+            'main_room' => 1,
+            'room2' => 2,
+            'room3' => 3,
+            'room4' => 4,
+            'room5' => 5,
+            'room6' => 6
+        ];
+        
+        // Default to showing search bar for pages not in room settings (like shop, cart, etc.)
+        if (!isset($pageToRoomMap[$currentPage])) {
+            return true;
+        }
+        
+        $roomNumber = $pageToRoomMap[$currentPage];
+        
+        try {
+            $stmt = $pdo->prepare("SELECT show_search_bar FROM room_settings WHERE room_number = ? AND is_active = 1");
+            $stmt->execute([$roomNumber]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Default to true if no setting found
+            return $result ? (bool)$result['show_search_bar'] : true;
+        } catch (PDOException $e) {
+            // Default to showing search bar if there's an error
+            return true;
+        }
+    }
+    
+    // Check if search bar should be shown for current page
+    $showSearchBar = shouldShowSearchBar($pdo, $page);
+
 
 
 } catch (PDOException $e) {
@@ -233,9 +269,10 @@ $seoData = generatePageSEO($page, $currentSku);
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <?php if (strpos($page, 'admin') === 0): ?>
-    <link href="css/help-tooltips.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <?php endif; ?>
+    <link rel="stylesheet" href="css/search-modal.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/help-tooltips.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/room-popups.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/room-headers.css?v=<?php echo time(); ?>">
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after {
@@ -531,7 +568,9 @@ $seoData = generatePageSEO($page, $currentSku);
         }
         
         .room-header h1, .room-header p {
-            color: #87ac3a !important;
+            color: var(--page-title-color, #87ac3a) !important;
+            font-size: var(--page-title-font-size, 2rem) !important;
+            font-weight: var(--page-title-font-weight, bold) !important;
             -webkit-text-stroke: 2px #471907;
             paint-order: stroke fill;
             text-shadow: -1px -1px 0 #471907,
@@ -574,22 +613,26 @@ $seoData = generatePageSEO($page, $currentSku);
             </div>
             
             <!-- Center Section: Search Bar -->
+            <?php if ($showSearchBar): ?>
             <div class="flex-grow flex justify-center">
                 <div class="relative max-w-md w-full mx-4">
                     <input 
                         type="text" 
                         id="headerSearchInput"
                         placeholder="Search products..." 
-                        class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#87ac3a]/50 focus:border-[#87ac3a]/50 transition-all duration-200"
-                        style="backdrop-filter: blur(10px);"
+                        class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 border-white/60 rounded-full text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/80 transition-all duration-200"
                     >
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-4 w-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
                 </div>
             </div>
+            <?php else: ?>
+            <!-- Empty space when search bar is hidden -->
+            <div class="flex-grow"></div>
+            <?php endif; ?>
             
             <!-- Right Section: Navigation Links -->
             <div class="flex-none">
@@ -666,6 +709,9 @@ $seoData = generatePageSEO($page, $currentSku);
 
 <!-- Load global modal system -->
     <script src="js/global-modals.js?v=<?php echo time(); ?>"></script>
+    
+    <!-- Load search functionality -->
+    <script src="js/search.js?v=<?php echo time(); ?>"></script>
 
     <!-- Help Tooltips for Admin Pages -->
     <?php if (strpos($page, 'admin') === 0): ?>
@@ -773,26 +819,7 @@ $seoData = generatePageSEO($page, $currentSku);
     // Load background when DOM is ready
     document.addEventListener('DOMContentLoaded', loadDynamicBackground);
     
-    // Header search functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('headerSearchInput');
-        if (searchInput) {
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    const searchTerm = this.value.trim();
-                    if (searchTerm) {
-                        // Redirect to shop page with search parameter
-                        window.location.href = `/?page=shop&search=${encodeURIComponent(searchTerm)}`;
-                    }
-                }
-            });
-            
-            // Optional: Add search icon click functionality
-            searchInput.addEventListener('input', function() {
-                // Could add live search suggestions here in the future
-            });
-        }
-    });
+    // Search functionality is now handled by js/search.js
 </script>
 
 <!-- Then load other scripts -->

@@ -38,7 +38,9 @@ $messageType = $_GET['type'] ?? '';
 <style>
     /* Force the categories title to be green with highest specificity */
     h1.categories-title.text-2xl.font-bold {
-        color: #87ac3a !important;
+        color: var(--admin-page-title-color, #87ac3a) !important;
+        font-size: var(--admin-page-title-font-size, 1.5rem) !important;
+        font-weight: var(--admin-page-title-font-weight, bold) !important;
     }
     
     /* Brand button styling */
@@ -146,7 +148,7 @@ $messageType = $_GET['type'] ?? '';
 
 <div class="container mx-auto px-4 py-6">
     <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 class="categories-title text-2xl font-bold" style="color: #87ac3a !important;">Category Management</h1>
+        <h1 class="categories-title text-2xl font-bold">Category Management</h1>
         <a href="/?page=admin&section=settings" class="brand-button px-4 py-2 rounded text-sm">Back to Settings</a>
     </div>
     

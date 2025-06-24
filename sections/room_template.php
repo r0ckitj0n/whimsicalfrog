@@ -453,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                  data-stock="<?php echo $stockLevel; ?>"
                                  onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($item)); ?>)"
                                  onmouseleave="hidePopup()"
-                                 onclick="showProductDetails('<?php echo htmlspecialchars($item['sku']); ?>')"
+                                 onclick="openQuantityModal(<?php echo htmlspecialchars(json_encode($item)); ?>)"
                                  style="cursor: pointer;">
                                 <img src="<?php echo htmlspecialchars($primaryImageUrl); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>" 
@@ -483,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div id="popupPrice" class="popup-price"></div>
             <div class="popup-actions">
                 <button id="popupAddBtn" class="popup-add-btn">Add to Cart</button>
-                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
+                <button id="popupDetailsBtn" class="popup-details-btn" onclick="showItemDetails()">View Details</button>
             </div>
         </div>
     </div>
@@ -624,19 +624,8 @@ function showPopup(element, product) {
     popup.style.opacity = '';
     popup.classList.add('show');
 
-    // Make popup content clickable for product details
-    const popupContent = popup.querySelector('.popup-content');
-    popupContent.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent bubbling to background click handler
-        popup.classList.remove('show');
-        showProductDetails(product.sku);
-    };
-
     // Add to cart functionality
-    popupAddBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent triggering the popup content click and background
+    popupAddBtn.onclick = function() {
         popup.classList.remove('show');
         openQuantityModal(product);
     };
@@ -767,56 +756,30 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             
-            if (modalProduct) {
+            if (modalProduct && typeof window.cart !== 'undefined') {
                 const quantity = parseInt(quantityInput.value) || 1;
                 const sku = modalProduct.sku ?? modalProduct.id;
                 const name = modalProduct.name ?? modalProduct.productName ?? 'Item';
                 const price = parseFloat(modalProduct.retailPrice ?? modalProduct.price ?? 0);
                 const imageUrl = `images/items/${modalProduct.sku}A.png`;
                 
-                // Try different cart methods
-                let cartAdded = false;
+                // Add item to cart with quantity
+                window.cart.addItem({
+                    sku: sku,
+                    name: name,
+                    price: price,
+                    image: imageUrl,
+                    quantity: quantity
+                });
                 
-                // Try window.addToCart first
-                if (typeof window.addToCart === 'function') {
-                    for (let i = 0; i < quantity; i++) {
-                        window.addToCart(sku, name, price, imageUrl);
-                    }
-                    cartAdded = true;
-                }
-                // Try cart.addItem if window.cart exists
-                else if (window.cart && typeof window.cart.addItem === 'function') {
-                    window.cart.addItem(sku, name, price, imageUrl, quantity);
-                    cartAdded = true;
-                }
-                // Try global addToCart function
-                else if (typeof addToCart === 'function') {
-                    for (let i = 0; i < quantity; i++) {
-                        addToCart(sku, name, price, imageUrl);
-                    }
-                    cartAdded = true;
-                }
+                // Show notification
+                const quantityText = quantity > 1 ? ` (${quantity})` : '';
+                alert(`${name}${quantityText} added to your cart!`);
                 
-                if (cartAdded) {
-                    // Show notification
-                    if (typeof customAlertBox === 'function') {
-                        customAlertBox(`${name} (${quantity}) added to your cart!`);
-                    } else {
-                        alert(`${name} (${quantity}) added to your cart!`);
-                    }
-                    
-                    closeQuantityModal();
-                } else {
-                    console.error('No cart function found. Available functions:', {
-                        windowAddToCart: typeof window.addToCart,
-                        cartAddItem: window.cart ? typeof window.cart.addItem : 'cart object not found',
-                        globalAddToCart: typeof addToCart
-                    });
-                    alert('Unable to add item to cart. Please refresh the page and try again.');
-                }
+                closeQuantityModal();
             } else {
-                console.error('No product selected');
-                alert('No product selected. Please try again.');
+                console.error('Cart functionality not available or no product selected');
+                alert('Unable to add item to cart. Please refresh the page and try again.');
             }
         });
     }
@@ -824,33 +787,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to open quantity modal
 window.openQuantityModal = function(product) {
-    console.log('openQuantityModal called with product:', product);
-    
     // Hide any existing popup first
     hidePopupImmediate();
-    
-    // Get modal elements fresh each time to avoid stale references
-    const quantityModal = document.getElementById('quantityModal');
-    const modalProductImage = document.getElementById('modalProductImage');
-    const modalProductName = document.getElementById('modalProductName');
-    const modalProductPrice = document.getElementById('modalProductPrice');
-    const modalUnitPrice = document.getElementById('modalUnitPrice');
-    const quantityInput = document.getElementById('quantityInput');
-    
-    if (!quantityModal) {
-        console.error('Quantity modal not found!');
-        return;
-    }
-    
-    if (!modalProductName || !modalProductPrice || !modalUnitPrice || !quantityInput) {
-        console.error('Modal elements not found:', {
-            modalProductName: !!modalProductName,
-            modalProductPrice: !!modalProductPrice,
-            modalUnitPrice: !!modalUnitPrice,
-            quantityInput: !!quantityInput
-        });
-        return;
-    }
     
     modalProduct = product;
     
@@ -860,14 +798,12 @@ window.openQuantityModal = function(product) {
     modalUnitPrice.textContent = '$' + parseFloat(product.retailPrice ?? product.price ?? 0).toFixed(2);
     
     // Set product image
-    if (modalProductImage) {
-        const imageUrl = `images/items/${product.sku}A.png`;
-        modalProductImage.src = imageUrl;
-        modalProductImage.onerror = function() {
-            this.src = 'images/items/placeholder.png';
-            this.onerror = null;
-        };
-    }
+    const imageUrl = `images/items/${product.sku}A.png`;
+    modalProductImage.src = imageUrl;
+    modalProductImage.onerror = function() {
+        this.src = 'images/items/placeholder.png';
+        this.onerror = null;
+    };
     
     // Reset quantity
     quantityInput.value = 1;
@@ -875,33 +811,16 @@ window.openQuantityModal = function(product) {
     
     // Show modal
     quantityModal.classList.remove('hidden');
-    console.log('Quantity modal should now be visible');
 };
 
 // Function to update total calculation
 function updateTotal() {
-    // Get fresh references to avoid stale DOM elements
-    const quantityInput = document.getElementById('quantityInput');
-    const modalQuantity = document.getElementById('modalQuantity');
-    const modalTotal = document.getElementById('modalTotal');
-    
-    if (!quantityInput || !modalQuantity || !modalTotal) {
-        console.error('Total calculation elements not found:', {
-            quantityInput: !!quantityInput,
-            modalQuantity: !!modalQuantity,
-            modalTotal: !!modalTotal
-        });
-        return;
-    }
-    
     const quantity = parseInt(quantityInput.value) || 1;
     const unitPrice = modalProduct ? parseFloat(modalProduct.retailPrice ?? modalProduct.price ?? 0) : 0;
     const total = quantity * unitPrice;
     
     modalQuantity.textContent = quantity;
     modalTotal.textContent = '$' + total.toFixed(2);
-    
-    console.log('Total updated:', { quantity, unitPrice, total });
 }
 
 // Modal close functionality
@@ -914,6 +833,181 @@ function closeQuantityModal() {
     }
     modalProduct = null;
 }
+
+// Show detailed item modal
+window.showItemDetails = async function() {
+    if (!currentProduct) return;
+    
+    const sku = currentProduct.sku || currentProduct.id;
+    
+    try {
+        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
+        const data = await response.json();
+        
+        if (data.success && data.item) {
+            // Hide the popup first
+            hidePopup();
+            
+            // Remove any existing detailed modal
+            const existingModal = document.getElementById('detailedProductModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Create and append new detailed modal
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = await generateDetailedModal(data.item, data.images);
+            document.body.appendChild(modalContainer.firstElementChild);
+            
+            // Show the modal
+            const detailedModal = document.getElementById('detailedProductModal');
+            if (detailedModal) {
+                detailedModal.classList.remove('hidden');
+            }
+        } else {
+            console.error('Failed to load item details:', data.error);
+            alert('Unable to load item details. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error loading item details:', error);
+        alert('Unable to load item details. Please try again.');
+    }
+};
+
+// Click-outside room functionality
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up click-outside functionality');
+    
+    // Handle clicks on document body for background detection
+    document.body.addEventListener('click', function(e) {
+        console.log('Body clicked:', e.target);
+        
+        // Skip if click is on or inside room container or any UI elements
+        const roomContainer = document.querySelector('#universalRoomPage .room-container');
+        const backButton = document.querySelector('.back-button');
+        
+        // If back button was clicked, let it handle navigation
+        if (e.target === backButton || (backButton && backButton.contains(e.target))) {
+            console.log('Back button clicked, allowing default navigation');
+            return true; // Let the link handle navigation
+        }
+        
+        // If popup is open, don't handle background clicks
+        const popup = document.getElementById('productPopup');
+        if (popup && popup.classList.contains('show')) {
+            console.log('Popup is open, not handling background click');
+            return;
+        }
+        
+        // If click is not on room container or its children, navigate to main room
+        if (roomContainer && !roomContainer.contains(e.target)) {
+            console.log('Click outside room container, navigating to main room');
+            window.location.href = '/?page=main_room';
+        }
+    });
+    
+    // Ensure back button works
+    const backButton = document.querySelector('.back-button');
+    if (backButton) {
+        console.log('Back button found, ensuring it works');
+        
+        // Remove any existing click listeners that might interfere
+        const newBackButton = backButton.cloneNode(true);
+        backButton.parentNode.replaceChild(newBackButton, backButton);
+        
+        // Add a clean click listener
+        newBackButton.addEventListener('click', function(e) {
+            console.log('Back button clicked via event listener');
+            // Let the default link behavior happen
+        });
+    }
+});
+
+// Script to dynamically scale product icon areas
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    const roomOverlayWrapper = document.querySelector('#universalRoomPage .room-overlay-wrapper');
+
+    // Room coordinates loaded from database (database-only system)
+    let baseAreas = []; // Will be loaded from database
+
+    function updateAreaCoordinates() {
+        if (!roomOverlayWrapper) {
+            console.error('Room overlay wrapper not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomOverlayWrapper.offsetWidth;
+        const wrapperHeight = roomOverlayWrapper.offsetHeight;
+
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        baseAreas.forEach(areaData => {
+            const areaElement = roomOverlayWrapper.querySelector(areaData.selector);
+            if (areaElement) {
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            }
+        });
+    }
+
+    // Load coordinates from database first, then initialize
+    loadRoomCoordinatesFromDatabase();
+    
+    async function loadRoomCoordinatesFromDatabase() {
+        try {
+            const response = await fetch(`api/get_room_coordinates.php?room_type=${ROOM_TYPE}`);
+            
+            // Check if the response is ok (not 500 error)
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Database not available`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.coordinates && data.coordinates.length > 0) {
+                baseAreas = data.coordinates;
+                console.log(`Loaded ${ROOM_TYPE} coordinates from database:`, data.map_name);
+            } else {
+                console.error(`No active room map found in database for ${ROOM_TYPE}`);
+                return; // Don't initialize if no coordinates available
+            }
+        } catch (error) {
+            console.error(`Error loading ${ROOM_TYPE} coordinates from database:`, error);
+            return; // Don't initialize if database error
+        }
+        
+        // Initialize coordinates after loading
+        updateAreaCoordinates();
+    }
+
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
+    });
+});
 
 // Show product details in large modal (like shop page)
 async function showProductDetails(sku) {
@@ -1071,314 +1165,4 @@ async function generateDetailedModal(item, images) {
                                             <span class="font-medium text-gray-600">Dimensions:</span>
                                             <span class="text-gray-700">${item.dimensions}</span>
                                         </div>
-                                        ` : ''}
-                                        ${hasData(item.weight) ? `
-                                        <div>
-                                            <span class="font-medium text-gray-600">Weight:</span>
-                                            <span class="text-gray-700">${item.weight}</span>
-                                        </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                                ` : ''}
-                                
-                                ${hasData(item.features) ? `
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Features</h3>
-                                    <p class="text-gray-700">${item.features.replace(/\n/g, '<br>')}</p>
-                                </div>
-                                ` : ''}
-                                
-                                ${(hasData(item.color_options) || hasData(item.size_options)) ? `
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Available Options</h3>
-                                    <div class="space-y-2">
-                                        ${hasData(item.color_options) ? `
-                                        <div>
-                                            <span class="font-medium text-gray-600">Colors:</span>
-                                            <span class="text-gray-700">${item.color_options}</span>
-                                        </div>
-                                        ` : ''}
-                                        ${hasData(item.size_options) ? `
-                                        <div>
-                                            <span class="font-medium text-gray-600">Sizes:</span>
-                                            <span class="text-gray-700">${item.size_options}</span>
-                                        </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-}
-
-// Show detailed modal
-function showDetailedModal() {
-    const modal = document.getElementById('detailedProductModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-// Close detailed modal
-function closeDetailedModal() {
-    const modal = document.getElementById('detailedProductModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        modal.remove();
-    }
-}
-
-// Switch main image in detailed modal
-function switchDetailedImage(imagePath, thumbnailElement) {
-    const mainImage = document.getElementById('detailedMainImage');
-    if (mainImage) {
-        mainImage.src = imagePath;
-    }
-    
-    // Update thumbnail borders
-    const thumbnails = thumbnailElement.parentElement.querySelectorAll('div');
-    thumbnails.forEach(thumb => thumb.className = thumb.className.replace('border-green-500', 'border-transparent'));
-    thumbnailElement.className = thumbnailElement.className.replace('border-transparent', 'border-green-500');
-}
-
-// Adjust quantity in detailed modal
-function adjustDetailedQuantity(change) {
-    const input = document.getElementById('detailedQuantity');
-    if (input) {
-        const currentValue = parseInt(input.value) || 1;
-        const newValue = Math.max(1, Math.min(parseInt(input.max) || 999, currentValue + change));
-        input.value = newValue;
-    }
-}
-
-// Add to cart from detailed modal
-function addDetailedToCart(sku) {
-    const quantityInput = document.getElementById('detailedQuantity');
-    const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
-    
-    if (window.addToCart) {
-        // Get product info from the detailed modal
-        const productName = document.querySelector('#detailedProductModal h2').textContent;
-        const priceText = document.querySelector('#detailedProductModal .text-3xl').textContent;
-        const price = parseFloat(priceText.replace('$', ''));
-        const image = document.getElementById('detailedMainImage').src;
-        
-        // Add items to cart with proper parameters
-        for (let i = 0; i < quantity; i++) {
-            window.addToCart(sku, productName, price, image);
-        }
-        
-        // Show notification
-        if (window.cart && window.cart.showNotification) {
-            const quantityText = quantity > 1 ? ` (${quantity})` : '';
-            window.cart.showNotification(`${productName}${quantityText} added to your cart!`);
-        }
-        
-        closeDetailedModal();
-    } else {
-        console.error('Cart functionality not available');
-    }
-}
-
-// Click-outside room functionality
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, setting up click-outside functionality');
-    
-    // Handle clicks on document body for background detection
-    document.body.addEventListener('click', function(e) {
-        console.log('Body clicked:', e.target);
-        
-        // Skip if click is on or inside room container or any UI elements
-        const roomContainer = document.querySelector('#universalRoomPage .room-container');
-        const backButton = document.querySelector('.back-button');
-        const searchInput = document.getElementById('headerSearchInput');
-        const searchModal = document.getElementById('searchModal');
-        const navElement = document.querySelector('nav');
-        
-        // If back button was clicked, let it handle navigation
-        if (e.target === backButton || (backButton && backButton.contains(e.target))) {
-            console.log('Back button clicked, allowing default navigation');
-            return true; // Let the link handle navigation
-        }
-        
-        // If search input or search modal was clicked, don't redirect
-        if (e.target === searchInput || (searchInput && searchInput.contains(e.target)) ||
-            e.target === searchModal || (searchModal && searchModal.contains(e.target)) ||
-            e.target === navElement || (navElement && navElement.contains(e.target))) {
-            console.log('Search input, modal, or navigation clicked, not redirecting');
-            return;
-        }
-        
-        // If popup is open or click is on/inside popup, don't redirect
-        const popup = document.getElementById('productPopup');
-        const quantityModal = document.getElementById('quantityModal');
-        
-        // Check if popup is visible and click is on or inside popup
-        if (popup && popup.classList.contains('show')) {
-            if (e.target === popup || popup.contains(e.target)) {
-                console.log('Popup clicked, not redirecting');
-                return;
-            }
-        }
-        
-        // Check if quantity modal is visible and click is on or inside modal
-        if (quantityModal && !quantityModal.classList.contains('hidden')) {
-            if (e.target === quantityModal || quantityModal.contains(e.target)) {
-                console.log('Quantity modal clicked, not redirecting');
-                return;
-            }
-        }
-        
-        // If click is not on room container or its children, navigate to main room
-        if (roomContainer && !roomContainer.contains(e.target)) {
-            console.log('Click outside room container, navigating to main room');
-            window.location.href = '/?page=main_room';
-        }
-    });
-    
-    // Ensure back button works
-    const backButton = document.querySelector('.back-button');
-    if (backButton) {
-        console.log('Back button found, ensuring it works');
-        
-        // Remove any existing click listeners that might interfere
-        const newBackButton = backButton.cloneNode(true);
-        backButton.parentNode.replaceChild(newBackButton, backButton);
-        
-        // Add a clean click listener
-        newBackButton.addEventListener('click', function(e) {
-            console.log('Back button clicked via event listener');
-            // Let the default link behavior happen
-        });
-    }
-});
-
-// Script to dynamically scale product icon areas
-document.addEventListener('DOMContentLoaded', function() {
-    const originalImageWidth = 1280;
-    const originalImageHeight = 896;
-    const roomOverlayWrapper = document.querySelector('#universalRoomPage .room-overlay-wrapper');
-
-    // Room coordinates loaded from database (database-only system)
-    let baseAreas = []; // Will be loaded from database
-
-    function updateAreaCoordinates() {
-        if (!roomOverlayWrapper) {
-            console.error('Room overlay wrapper not found for scaling.');
-            return;
-        }
-
-        const wrapperWidth = roomOverlayWrapper.offsetWidth;
-        const wrapperHeight = roomOverlayWrapper.offsetHeight;
-
-        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
-        const imageAspectRatio = originalImageWidth / originalImageHeight;
-
-        let renderedImageWidth, renderedImageHeight;
-        let offsetX = 0;
-        let offsetY = 0;
-
-        if (wrapperAspectRatio > imageAspectRatio) {
-            renderedImageHeight = wrapperHeight;
-            renderedImageWidth = renderedImageHeight * imageAspectRatio;
-            offsetX = (wrapperWidth - renderedImageWidth) / 2;
-        } else {
-            renderedImageWidth = wrapperWidth;
-            renderedImageHeight = renderedImageWidth / imageAspectRatio;
-            offsetY = (wrapperHeight - renderedImageHeight) / 2;
-        }
-
-        const scaleX = renderedImageWidth / originalImageWidth;
-        const scaleY = renderedImageHeight / originalImageHeight;
-
-        baseAreas.forEach(areaData => {
-            const areaElement = roomOverlayWrapper.querySelector(areaData.selector);
-            if (areaElement) {
-                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
-                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
-                areaElement.style.width = (areaData.width * scaleX) + 'px';
-                areaElement.style.height = (areaData.height * scaleY) + 'px';
-            }
-        });
-    }
-
-    // Load coordinates from database first, then initialize
-    loadRoomCoordinatesFromDatabase();
-    
-    async function loadRoomCoordinatesFromDatabase() {
-        try {
-            const response = await fetch(`api/get_room_coordinates.php?room_type=${ROOM_TYPE}`);
-            
-            // Check if the response is ok (not 500 error)
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: Database not available`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.success && data.coordinates && data.coordinates.length > 0) {
-                baseAreas = data.coordinates;
-                console.log(`Loaded ${ROOM_TYPE} coordinates from database:`, data.map_name);
-            } else {
-                console.error(`No active room map found in database for ${ROOM_TYPE}`);
-                return; // Don't initialize if no coordinates available
-            }
-        } catch (error) {
-            console.error(`Error loading ${ROOM_TYPE} coordinates from database:`, error);
-            return; // Don't initialize if database error
-        }
-        
-        // Initialize coordinates after loading
-        updateAreaCoordinates();
-    }
-
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
-    });
-});
-</script>
-
-<!-- Load dynamic background script -->
-<script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>
-
-<!-- Load dynamic room settings -->
-<script>
-// Load room settings for dynamic title and description
-async function loadRoomSettings() {
-    try {
-        const response = await fetch(`/api/room_settings.php?action=get_room&room_number=${ROOM_NUMBER}`);
-        const data = await response.json();
-        
-        if (data.success && data.room) {
-            const room = data.room;
-            // Update both SEO header and visible overlay
-            document.getElementById('roomTitle').textContent = room.room_name;
-            document.getElementById('roomDescription').textContent = room.description;
-            document.getElementById('roomTitleOverlay').textContent = room.room_name;
-            document.getElementById('roomDescriptionOverlay').textContent = room.description;
-            console.log(`Loaded room settings for room ${ROOM_NUMBER}:`, room.room_name);
-        } else {
-            console.warn('Failed to load room settings, using defaults');
-        }
-    } catch (error) {
-        console.error('Error loading room settings:', error);
-    }
-}
-
-// Load room settings when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadRoomSettings();
-});
-</script>
-</rewritten_file> 
+                                        `

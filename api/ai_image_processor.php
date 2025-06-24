@@ -544,9 +544,9 @@ class AIImageProcessor {
             $cropWidth, $cropHeight, $cropWidth, $cropHeight
         );
         
-        // Generate output path
+        // Generate output path (overwrite original)
         $pathInfo = pathinfo($imagePath);
-        $outputPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '_cropped.' . $pathInfo['extension'];
+        $outputPath = $imagePath; // Use original path to overwrite
         
         // Save cropped image
         switch ($imageInfo[2]) {

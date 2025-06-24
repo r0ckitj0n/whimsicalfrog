@@ -184,7 +184,7 @@ function updateRoom($pdo, $input) {
     try {
         $stmt = $pdo->prepare("
             UPDATE room_settings 
-            SET room_name = ?, door_label = ?, description = ?, display_order = ?
+            SET room_name = ?, door_label = ?, description = ?, display_order = ?, show_search_bar = ?
             WHERE room_number = ?
         ");
         
@@ -193,6 +193,7 @@ function updateRoom($pdo, $input) {
             trim($input['door_label']),
             $input['description'] ?? '',
             $input['display_order'] ?? 0,
+            isset($input['show_search_bar']) ? (bool)$input['show_search_bar'] : true,
             $input['room_number']
         ]);
         

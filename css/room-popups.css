@@ -67,6 +67,18 @@
     transform: translateY(0);
 }
 
+/* Clickable popup content styling */
+.popup-content {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.popup-content:hover {
+    transform: scale(1.02);
+    background: rgba(135, 172, 58, 0.05);
+    border-radius: 10px;
+}
+
 /* Popup Image */
 .popup-image {
     width: 100%;

@@ -4825,6 +4825,15 @@ function editRoomSettings(room) {
                 <p class="text-xs text-gray-500 mt-1">Lower numbers appear first in navigation</p>
             </div>
             
+            <div>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="editShowSearchBar" ${room.show_search_bar ? 'checked' : ''} 
+                           class="rounded border-gray-300 text-cyan-600 focus:ring-cyan-500">
+                    <span class="text-sm font-medium text-gray-700">Show Search Bar</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">Controls whether the search bar appears at the top of this page</p>
+            </div>
+            
             <div class="flex gap-3 pt-4 border-t">
                 <button type="submit" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-lg font-medium flex items-center text-left">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4854,7 +4863,8 @@ async function saveRoomSettings(event) {
         room_name: document.getElementById('editRoomName').value.trim(),
         door_label: document.getElementById('editDoorLabel').value.trim(),
         description: document.getElementById('editRoomDescription').value.trim(),
-        display_order: parseInt(document.getElementById('editDisplayOrder').value) || 0
+        display_order: parseInt(document.getElementById('editDisplayOrder').value) || 0,
+        show_search_bar: document.getElementById('editShowSearchBar').checked
     };
     
     if (!formData.room_name || !formData.door_label) {

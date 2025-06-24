@@ -568,19 +568,13 @@ $seoData = generatePageSEO($page, $currentSku);
         }
         
         .room-header h1, .room-header p {
-            color: var(--page-title-color, #87ac3a) !important;
-            font-size: var(--page-title-font-size, 2rem) !important;
-            font-weight: var(--page-title-font-weight, bold) !important;
-            -webkit-text-stroke: 2px #471907;
+            color: var(--room-title-color, #87ac3a) !important;
+            font-size: var(--room-title-font-size, 2rem) !important;
+            font-weight: var(--room-title-font-weight, bold) !important;
+            -webkit-text-stroke: var(--room-title-text-stroke, 2px #556B2F);
+            text-stroke: var(--room-title-text-stroke, 2px #556B2F);
             paint-order: stroke fill;
-            text-shadow: -1px -1px 0 #471907,
-                         1px -1px 0 #471907,
-                        -1px  1px 0 #471907,
-                         1px  1px 0 #471907,
-                         0  -1px 0 #471907,
-                         0   1px 0 #471907,
-                        -1px  0   0 #471907,
-                         1px  0   0 #471907;
+            text-shadow: var(--room-title-text-shadow, 2px 2px 0px #556B2F, -2px -2px 0px #556B2F, 2px -2px 0px #556B2F, -2px 2px 0px #556B2F, 0px 2px 0px #556B2F, 2px 0px 0px #556B2F, 0px -2px 0px #556B2F, -2px 0px 0px #556B2F);
         }
     </style>
 </head>

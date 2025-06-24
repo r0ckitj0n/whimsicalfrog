@@ -79,13 +79,16 @@
     border-radius: 10px;
 }
 
-/* Popup Image */
+/* Popup Image - Dynamic Height */
 .popup-image {
     width: 100%;
-    height: 250px;
-    object-fit: cover;
+    max-width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
     border-radius: 10px;
     margin-bottom: 10px;
+    background: #f8f9fa;
 }
 
 /* Popup Text Elements */
@@ -172,9 +175,12 @@
     padding: var(--popup-enhanced-padding);
 }
 
+/* Enhanced Popup Image - Dynamic Height */
 .popup-image-enhanced {
     width: 200px;
-    height: 200px;
+    max-width: 200px;
+    height: auto;
+    max-height: 300px;
     object-fit: contain;
     border-radius: 12px;
     background: #f8f9fa;
@@ -341,11 +347,13 @@ div #confirmAddToCart:hover,
     
     .popup-image-enhanced {
         width: 100%;
-        height: 200px;
+        height: auto;
+        max-height: 250px;
     }
     
     .popup-image {
-        height: 180px;
+        height: auto;
+        max-height: 300px;
     }
 }
 

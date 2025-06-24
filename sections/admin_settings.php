@@ -175,7 +175,7 @@
 
 
 <!-- Room Mapper Modal -->
-<div id="roomMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeRoomMapperModal()">
+<div id="roomMapperModal" class="admin-modal-overlay" style="display: none;" onclick="closeRoomMapperModal()">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
@@ -394,7 +394,7 @@ async function loadSystemConfiguration() {
     } catch (error) {
         console.error('Error loading system configuration:', error);
         loadingDiv.innerHTML = `
-            <div class="text-center py-8">
+            <div class="modal-loading">
                 <div class="text-red-500 mb-3">⚠️</div>
                 <p class="text-red-600">Failed to load system configuration</p>
                 <p class="text-sm text-gray-500">${error.message}</p>
@@ -603,7 +603,7 @@ async function loadDatabaseInformation() {
     } catch (error) {
         console.error('Error loading database information:', error);
         loadingDiv.innerHTML = `
-            <div class="text-center py-8">
+            <div class="modal-loading">
                 <div class="text-red-500 mb-3">⚠️</div>
                 <p class="text-red-600">Failed to load database information</p>
                 <p class="text-sm text-gray-500">${error.message}</p>
@@ -2546,7 +2546,7 @@ async function removeAreaMapping(mappingId) {
 </script>
 
 <!-- Room-Category Manager Modal -->
-<div id="roomCategoryManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeRoomCategoryManagerModal()">
+<div id="roomCategoryManagerModal" class="admin-modal-overlay" style="display: none;" onclick="closeRoomCategoryManagerModal()">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠📦 Room-Category Assignments</h2>
@@ -2626,7 +2626,7 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- Background Manager Modal -->
-<div id="backgroundManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeBackgroundManagerModal()">
+<div id="backgroundManagerModal" class="admin-modal-overlay" style="display: none;" onclick="closeBackgroundManagerModal()">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🖼️ Background Manager</h2>
@@ -4633,7 +4633,7 @@ function escapeHtml(text) {
 </script>
 
 <!-- Room Settings Modal -->
-<div id="roomSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeRoomSettingsModal()">
+<div id="roomSettingsModal" class="admin-modal-overlay" style="display: none;" onclick="closeRoomSettingsModal()">
     <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠 Room Settings</h2>
@@ -4978,7 +4978,7 @@ function showRoomSettingsSuccess(message) {
 </script>
 
 <!-- Email History Modal -->
-<div id="emailHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeEmailHistoryModal()">
+<div id="emailHistoryModal" class="admin-modal-overlay" style="display: none;" onclick="closeEmailHistoryModal()">
     <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
@@ -5077,7 +5077,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Email Edit/Resend Modal -->
-<div id="emailEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeEmailEditModal()">
+<div id="emailEditModal" class="admin-modal-overlay" style="display: none;" onclick="closeEmailEditModal()">
     <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
@@ -5130,7 +5130,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Email Configuration Modal -->
-<div id="emailConfigModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeEmailConfigModal()">
+<div id="emailConfigModal" class="admin-modal-overlay" style="display: none;" onclick="closeEmailConfigModal()">
     <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
@@ -5253,7 +5253,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Room-Category Visual Mapper Modal -->
-<div id="roomCategoryMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeRoomCategoryMapperModal()">
+<div id="roomCategoryMapperModal" class="admin-modal-overlay" style="display: none;" onclick="closeRoomCategoryMapperModal()">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🗺️ Room-Category Visual Mapper</h2>
@@ -5285,7 +5285,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Area-Item Mapper Modal -->
-<div id="areaItemMapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeAreaItemMapperModal()">
+<div id="areaItemMapperModal" class="admin-modal-overlay" style="display: none;" onclick="closeAreaItemMapperModal()">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🎯 Area-Item Mapper</h2>
@@ -5374,7 +5374,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- System Configuration Modal -->
-<div id="systemConfigModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;" onclick="closeSystemConfigModal()">
+<div id="systemConfigModal" class="admin-modal-overlay" style="display: none;" onclick="closeSystemConfigModal()">
     <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
@@ -5390,7 +5390,7 @@ function showRoomSettingsSuccess(message) {
             <!-- Modal Content -->
             <div class="space-y-6" id="systemConfigContent">
                 <!-- Loading state -->
-                <div class="text-center py-8" id="systemConfigLoading">
+                <div class="modal-loading" id="systemConfigLoading">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-3"></div>
                     <p class="text-gray-600">Loading system configuration...</p>
                 </div>
@@ -5402,7 +5402,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Maintenance Modal -->
-<div id="databaseMaintenanceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;" onclick="closeDatabaseMaintenanceModal()">
+<div id="databaseMaintenanceModal" class="admin-modal-overlay" style="display: none;" onclick="closeDatabaseMaintenanceModal()">
     <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
@@ -5436,7 +5436,7 @@ function showRoomSettingsSuccess(message) {
             <!-- Modal Content -->
             <div class="space-y-6" id="databaseMaintenanceContent">
                 <!-- Loading state -->
-                <div class="text-center py-8" id="databaseMaintenanceLoading">
+                <div class="modal-loading" id="databaseMaintenanceLoading">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-3"></div>
                     <p class="text-gray-600">Loading database information...</p>
                 </div>
@@ -5448,7 +5448,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Table View Modal -->
-<div id="tableViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;" onclick="closeTableViewModal()">
+<div id="tableViewModal" class="admin-modal-overlay" style="display: none;" onclick="closeTableViewModal()">
     <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
@@ -5470,7 +5470,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- File Explorer Modal -->
-<div id="fileExplorerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;" onclick="closeFileExplorerModal()">
+<div id="fileExplorerModal" class="admin-modal-overlay" style="display: none;" onclick="closeFileExplorerModal()">
     <div class="relative top-5 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
@@ -5525,7 +5525,7 @@ function showRoomSettingsSuccess(message) {
                     </div>
                     <div id="fileList" class="p-3 max-h-96 overflow-y-auto">
                         <!-- File list will be loaded here -->
-                        <div class="text-center py-8" id="fileListLoading">
+                        <div class="modal-loading" id="fileListLoading">
                             <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500 mx-auto mb-2"></div>
                             <p class="text-gray-600 text-sm">Loading files...</p>
                         </div>
@@ -5582,28 +5582,25 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Backup Website Modal -->
-<div id="backupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeBackupModal()">
-    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white text-lg">💾</span>
-                        </div>
-                        <h3 class="text-lg font-semibold text-gray-900">Create Website Backup</h3>
-                    </div>
-                    <button onclick="closeBackupModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
+<div id="backupModal" class="modal-overlay hidden" onclick="closeBackupModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="modal-header">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white text-lg">💾</span>
                 </div>
+                <h3 class="modal-title">Create Website Backup</h3>
             </div>
+            <button onclick="closeBackupModal()" class="modal-close">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
             
             <!-- Body -->
-            <div class="px-6 py-4">
+            <div class="modal-body">
                 <div class="mb-4">
                     <p class="text-gray-600 text-sm mb-4">Create a complete backup of your website files and database. Choose your backup destination(s):</p>
                     
@@ -5646,7 +5643,7 @@ function showRoomSettingsSuccess(message) {
                     </div>
                     
                     <!-- Warning for no selection -->
-                    <div id="backupWarning" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 hidden">
+                    <div id="backupWarning" class="modal-error hidden">
                         <div class="flex items-start space-x-2">
                             <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
@@ -5661,7 +5658,7 @@ function showRoomSettingsSuccess(message) {
             </div>
             
             <!-- Footer -->
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+            <div class="modal-footer">
                 <div class="flex items-center justify-end space-x-3">
                     <button onclick="closeBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
                         Cancel
@@ -5679,16 +5676,16 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Backup Progress Modal -->
-<div id="backupProgressModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+<div id="backupProgressModal" class="modal-overlay hidden">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+        <div class="modal-content">
             <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200">
+            <div class="modal-header">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
                         <span class="text-white text-lg">⚡</span>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900">Backup in Progress</h3>
+                    <h3 class="modal-title">Backup in Progress</h3>
                 </div>
             </div>
             
@@ -5749,7 +5746,7 @@ function showRoomSettingsSuccess(message) {
             </div>
             
             <!-- Footer -->
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+            <div class="modal-footer">
                 <div class="flex items-center justify-end space-x-3">
                     <button id="backupProgressCloseBtn" onclick="closeBackupProgressModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors hidden">
                         Close
@@ -5761,19 +5758,19 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Backup Modal -->
-<div id="databaseBackupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeDatabaseBackupModal()">
+<div id="databaseBackupModal" class="modal-overlay hidden" onclick="closeDatabaseBackupModal()">
     <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content">
             <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200">
+            <div class="modal-header">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
                             <span class="text-white text-lg">🗄️</span>
                         </div>
-                        <h3 class="text-lg font-semibold text-gray-900">Backup Website Database</h3>
+                        <h3 class="modal-title">Backup Website Database</h3>
                     </div>
-                    <button onclick="closeDatabaseBackupModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <button onclick="closeDatabaseBackupModal()" class="modal-close">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -5782,7 +5779,7 @@ function showRoomSettingsSuccess(message) {
             </div>
             
             <!-- Body -->
-            <div class="px-6 py-4">
+            <div class="modal-body">
                 <div class="mb-4">
                     <p class="text-gray-600 text-sm mb-4">Create a backup of your website database including all tables and data. Choose your backup destination(s):</p>
                     
@@ -5825,7 +5822,7 @@ function showRoomSettingsSuccess(message) {
                     </div>
                     
                     <!-- Warning for no selection -->
-                    <div id="dbBackupWarning" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 hidden">
+                    <div id="dbBackupWarning" class="modal-error hidden">
                         <div class="flex items-start space-x-2">
                             <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
@@ -5840,7 +5837,7 @@ function showRoomSettingsSuccess(message) {
             </div>
             
             <!-- Footer -->
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+            <div class="modal-footer">
                 <div class="flex items-center justify-end space-x-3">
                     <button onclick="closeDatabaseBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
                         Cancel
@@ -6894,7 +6891,7 @@ async function loadGlobalCSSRules() {
     } catch (error) {
         console.error('Error loading CSS rules:', error);
         loadingDiv.innerHTML = `
-            <div class="text-center py-8">
+            <div class="modal-loading">
                 <div class="text-red-500 mb-3">⚠️</div>
                 <p class="text-red-600">Failed to load CSS rules</p>
                 <p class="text-sm text-gray-500">${error.message}</p>
@@ -7289,7 +7286,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="text-white text-lg">🎨</span>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-white">Website Style Settings</h3>
+                            <h3 class="modal-title">Website Style Settings</h3>
                             <p class="text-green-100 text-sm">Customize colors, fonts, and appearance across your entire website</p>
                         </div>
                     </div>
@@ -7309,7 +7306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 min-height: calc(90vh - 160px);
             " id="globalCSSScrollContainer">
                 <!-- Loading State -->
-                <div id="globalCSSLoading" class="text-center py-8">
+                <div id="globalCSSLoading" class="modal-loading">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-3"></div>
                     <p class="text-gray-600">Loading style settings...</p>
                 </div>
@@ -7327,11 +7324,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="flex space-x-3">
                     <button onclick="resetToDefaults()" 
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            class="modal-button btn-secondary">
                         Reset to Defaults
                     </button>
                     <button onclick="closeGlobalCSSModal()" 
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            class="modal-button btn-secondary">
                         Cancel
                     </button>
                     <button onclick="saveGlobalCSSRules()" 
@@ -7348,18 +7345,18 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Template Manager Modal -->
-<div id="templateManagerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeTemplateManagerModal()">
+<div id="templateManagerModal" class="modal-overlay hidden" onclick="closeTemplateManagerModal()">
     <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
-        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div class="admin-modal-content">
             <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600">
+            <div class="admin-modal-header" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
                             <span class="text-white text-lg">📋</span>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-white">Template Manager</h3>
+                            <h3 class="modal-title">Template Manager</h3>
                             <p class="text-purple-100 text-sm">Manage cost breakdown templates and pricing suggestions</p>
                         </div>
                     </div>
@@ -7372,17 +7369,17 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             
             <!-- Body -->
-            <div class="overflow-y-auto max-h-[calc(90vh-200px)]">
+            <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
                 <!-- Tab Navigation -->
-                <div class="border-b border-gray-200">
+                <div class="admin-tab-bar">
                     <nav class="flex space-x-8 px-6" aria-label="Tabs">
                         <button onclick="switchTemplateTab('cost-templates')" 
-                                class="template-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-purple-500 text-purple-600" 
+                                class="css-category-tab active" 
                                 data-tab="cost-templates">
                             🧮 Cost Breakdown Templates
                         </button>
                         <button onclick="switchTemplateTab('suggestion-history')" 
-                                class="template-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" 
+                                class="css-category-tab" 
                                 data-tab="suggestion-history">
                             📊 Suggestion History
                         </button>
@@ -7390,11 +7387,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <!-- Cost Breakdown Templates Tab -->
-                <div id="cost-templates-tab" class="template-tab-content p-6">
+                <div id="cost-templates-tab" class="css-category-content p-6">
                     <div class="mb-6">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="text-lg font-semibold text-gray-800">Cost Breakdown Templates</h4>
-                            <button onclick="createNewCostTemplate()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                            <button onclick="createNewCostTemplate()" class="modal-button btn-primary">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
@@ -7403,8 +7400,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         
                         <!-- Loading State -->
-                        <div id="costTemplatesLoading" class="text-center py-8">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-3"></div>
+                        <div id="costTemplatesLoading" class="modal-loading">
+                            <div class="modal-loading-spinner"></div>
                             <p class="text-gray-600">Loading templates...</p>
                         </div>
                         
@@ -7416,12 +7413,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <!-- Suggestion History Tab -->
-                <div id="suggestion-history-tab" class="template-tab-content p-6 hidden">
+                <div id="suggestion-history-tab" class="css-category-content p-6 hidden">
                     <div class="mb-6">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="text-lg font-semibold text-gray-800">Price & Cost Suggestion History</h4>
                             <div class="flex space-x-2">
-                                <select id="suggestionTypeFilter" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                <select id="suggestionTypeFilter" class="modal-select">
                                     <option value="all">All Suggestions</option>
                                     <option value="price">Price Suggestions</option>
                                     <option value="cost">Cost Suggestions</option>
@@ -7433,8 +7430,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         
                         <!-- Loading State -->
-                        <div id="suggestionHistoryLoading" class="text-center py-8">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-3"></div>
+                        <div id="suggestionHistoryLoading" class="modal-loading">
+                            <div class="modal-loading-spinner"></div>
                             <p class="text-gray-600">Loading suggestion history...</p>
                         </div>
                         
@@ -7453,7 +7450,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="flex space-x-3">
                     <button onclick="closeTemplateManagerModal()" 
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                            class="modal-button btn-secondary">
                         Close
                     </button>
                 </div>
@@ -7623,7 +7620,7 @@ function refreshSuggestionHistory() {
 </script>
 
 <!-- Analytics & Insights Modal -->
-<div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" onclick="closeAnalyticsModal()">
+<div id="analyticsModal" class="modal-overlay hidden" onclick="closeAnalyticsModal()">
     <div class="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-6 border-b border-gray-200">
             <div>
@@ -7794,7 +7791,7 @@ function refreshSuggestionHistory() {
             </div>
             <div class="flex space-x-3">
                 <button onclick="closeAnalyticsModal()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        class="modal-button btn-secondary">
                     Close
                 </button>
             </div>
@@ -7981,7 +7978,7 @@ function updateProductPerformance(productData) {
 
 async function generateOptimizationSuggestions() {
     const container = document.getElementById('optimizationSuggestions');
-    container.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div><p class="text-gray-600">Analyzing your website data and generating AI-powered suggestions...</p></div>';
+    container.innerHTML = '<div class="modal-loading"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div><p class="text-gray-600">Analyzing your website data and generating AI-powered suggestions...</p></div>';
     
     try {
         const response = await fetch('/api/analytics_tracker.php?action=get_optimization_suggestions', {
@@ -8080,7 +8077,7 @@ function closeCategoriesModal() {
 
 async function loadCategoriesData() {
     const contentDiv = document.getElementById('categoriesContent');
-    contentDiv.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div><p class="text-gray-600">Loading categories...</p></div>';
+    contentDiv.innerHTML = '<div class="modal-loading"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-3"></div><p class="text-gray-600">Loading categories...</p></div>';
     
     try {
         const response = await fetch('/api/get_categories.php');
@@ -8440,7 +8437,7 @@ function loadCSSVariablesTab(contentDiv) {
                 <p class="text-sm text-gray-600 mb-4">Customize the visual appearance of your website with CSS variables.</p>
                 
                 <div id="cssVariablesContent">
-                    <div class="text-center py-8">
+                    <div class="modal-loading">
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
                         <p class="mt-2 text-gray-600">Loading CSS variables...</p>
                     </div>
@@ -8461,7 +8458,7 @@ function loadUIComponentsTab(contentDiv) {
                 <p class="text-sm text-gray-600 mb-4">Configure the appearance and behavior of UI components.</p>
                 
                 <div id="uiComponentsContent">
-                    <div class="text-center py-8">
+                    <div class="modal-loading">
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                         <p class="mt-2 text-gray-600">Loading UI components...</p>
                     </div>
@@ -8482,7 +8479,7 @@ function loadGeneralConfigTab(contentDiv) {
                 <p class="text-sm text-gray-600 mb-4">Configure general website settings and business information to make this site completely customizable for any business.</p>
                 
                 <div id="generalConfigContent">
-                    <div class="text-center py-8">
+                    <div class="modal-loading">
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto"></div>
                         <p class="mt-2 text-gray-600">Loading configuration...</p>
                     </div>
@@ -9121,12 +9118,12 @@ async function saveCartButtonTexts(texts) {
 </script>
 
 <!-- Website Configuration Modal -->
-<div id="websiteConfigModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
+<div id="websiteConfigModal" class="admin-modal-overlay hidden">
+    <div class="admin-modal-content">
         <!-- Modal Header -->
         <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 flex justify-between items-center flex-shrink-0">
-            <h2 class="text-xl font-bold text-white">🌐 Website Configuration</h2>
-            <button onclick="closeWebsiteConfigModal()" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
+            <h2 class="modal-title">🌐 Website Configuration</h2>
+            <button onclick="closeWebsiteConfigModal()" class="modal-close">&times;</button>
         </div>
         
         <!-- Tab Navigation -->
@@ -9140,7 +9137,7 @@ async function saveCartButtonTexts(texts) {
         </div>
         
         <!-- Content Area -->
-        <div class="flex-1 overflow-y-auto p-6">
+        <div class="modal-body" style="flex: 1; overflow-y: auto;">
             <div id="websiteConfigContent">
                 <!-- Content will be loaded dynamically -->
             </div>
@@ -9154,10 +9151,10 @@ async function saveCartButtonTexts(texts) {
 </div>
 
 <!-- Cart Button Text Modal -->
-<div id="cartButtonTextModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeCartButtonTextModal()">
+<div id="cartButtonTextModal" class="admin-modal-overlay" style="display: none;" onclick="closeCartButtonTextModal()">
     <div class="bg-white shadow-xl rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-green-600 to-green-700">
-            <h2 class="text-xl font-bold text-white">🛒 Cart Button Text Variations</h2>
+            <h2 class="modal-title">🛒 Cart Button Text Variations</h2>
             <button onclick="closeCartButtonTextModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
         </div>
         
@@ -9217,7 +9214,7 @@ async function saveCartButtonTexts(texts) {
 </div>
 
 <!-- Categories Modal -->
-<div id="categoriesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" onclick="closeCategoriesModal()">
+<div id="categoriesModal" class="admin-modal-overlay" style="display: none;" onclick="closeCategoriesModal()">
     <div class="bg-white shadow-xl rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-6 border-b">
             <h2 class="text-xl font-bold text-gray-800">📂 Category Management</h2>

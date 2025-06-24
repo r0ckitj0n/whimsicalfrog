@@ -241,7 +241,7 @@ require_once __DIR__ . '/../api/business_settings_helper.php';
 </section>
 
 <!-- Quantity Selection Modal -->
-<div id="quantityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+<div id="quantityModal" class="modal-overlay hidden">
     <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold text-[#87ac3a]">Select Quantity</h3>
@@ -486,7 +486,7 @@ async function generateDetailedModal(item, images) {
     
     return `
     <!-- Detailed Product Modal -->
-    <div id="detailedProductModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" style="display: none;">
+    <div id="detailedProductModal" class="modal-overlay" style="display: none;">
         <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
             <!-- Modal Header -->
             <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">

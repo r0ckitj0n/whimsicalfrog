@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Quantity Selection Modal -->
-<div id="quantityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" style="z-index: 9999 !important;">
+<div id="quantityModal" class="modal-overlay hidden" style="z-index: 9999 !important;">
     <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md" style="z-index: 10000 !important;">
         <div class="modal-header">
             <h3 class="text-lg font-bold mb-4">Add to Cart</h3>
@@ -982,7 +982,7 @@ async function generateDetailedModal(item, images) {
     
     return `
     <!-- Detailed Product Modal -->
-    <div id="detailedProductModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" style="display: none;">
+    <div id="detailedProductModal" class="modal-overlay" style="display: none;">
         <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
             <!-- Modal Header -->
             <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">

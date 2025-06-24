@@ -1145,37 +1145,37 @@ $messageType = $_GET['type'] ?? '';
 <div id="deleteCostConfirmModal" class="cost-modal">
 
 <!-- Marketing Manager Modal -->
-<div id="marketingManagerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="z-index: 2147483647; display: none;">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
+<div id="marketingManagerModal" class="admin-modal-overlay" style="z-index: 2147483647; display: none;">
+    <div class="admin-modal-content">
         <!-- Modal Header -->
-        <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 flex justify-between items-center flex-shrink-0" style="background: linear-gradient(to right, #87ac3a, #6b8e23);">
+        <div class="admin-modal-header" style="background: linear-gradient(to right, #87ac3a, #6b8e23);">
             <div class="flex items-center">
                 <h2 class="text-xl font-bold text-white mr-3">🎯 Marketing Manager</h2>
                 <span class="text-green-100 text-sm font-medium px-2 py-1 bg-green-800 bg-opacity-30 rounded">Currently editing: <span id="currentEditingSku"></span></span>
             </div>
-            <button onclick="closeMarketingManager()" class="text-white hover:text-green-200 text-2xl font-bold transition-colors duration-200">&times;</button>
+            <button onclick="closeMarketingManager()" class="modal-close">&times;</button>
         </div>
         
         <!-- Tab Navigation -->
-        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-3 border-b border-gray-200 flex-shrink-0">
+        <div class="admin-tab-bar">
             <div class="flex space-x-4 overflow-x-auto">
-                <button id="contentTab" class="marketing-tab px-4 py-2 rounded-lg bg-white text-green-600 border-2 border-green-600 font-semibold whitespace-nowrap shadow-sm transition-all duration-200 hover:bg-green-50" onclick="showMarketingManagerTab('content')">📝 Content</button>
-                <button id="audienceTab" class="marketing-tab px-4 py-2 rounded-lg text-gray-600 border-2 border-gray-300 hover:text-green-600 hover:border-green-300 whitespace-nowrap transition-all duration-200 hover:bg-gray-50" onclick="showMarketingManagerTab('audience')">👥 Target Audience</button>
-                <button id="sellingTab" class="marketing-tab px-4 py-2 rounded-lg text-gray-600 border-2 border-gray-300 hover:text-green-600 hover:border-green-300 whitespace-nowrap transition-all duration-200 hover:bg-gray-50" onclick="showMarketingManagerTab('selling')">⭐ Selling Points</button>
-                <button id="seoTab" class="marketing-tab px-4 py-2 rounded-lg text-gray-600 border-2 border-gray-300 hover:text-green-600 hover:border-green-300 whitespace-nowrap transition-all duration-200 hover:bg-gray-50" onclick="showMarketingManagerTab('seo')">🔍 SEO & Keywords</button>
-                <button id="conversionTab" class="marketing-tab px-4 py-2 rounded-lg text-gray-600 border-2 border-gray-300 hover:text-green-600 hover:border-green-300 whitespace-nowrap transition-all duration-200 hover:bg-gray-50" onclick="showMarketingManagerTab('conversion')">💰 Conversion</button>
+                <button id="contentTab" class="css-category-tab active" onclick="showMarketingManagerTab('content')">📝 Content</button>
+                <button id="audienceTab" class="css-category-tab" onclick="showMarketingManagerTab('audience')">👥 Target Audience</button>
+                <button id="sellingTab" class="css-category-tab" onclick="showMarketingManagerTab('selling')">⭐ Selling Points</button>
+                <button id="seoTab" class="css-category-tab" onclick="showMarketingManagerTab('seo')">🔍 SEO & Keywords</button>
+                <button id="conversionTab" class="css-category-tab" onclick="showMarketingManagerTab('conversion')">💰 Conversion</button>
             </div>
         </div>
         
         <!-- Content Area -->
-        <div class="flex-1 overflow-y-auto p-6">
+        <div class="modal-body" style="flex: 1; overflow-y: auto;">
             <div id="marketingManagerContent">
                 <!-- Content will be loaded dynamically -->
             </div>
         </div>
         
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 flex justify-between items-center flex-shrink-0">
+        <div class="modal-footer">
             <div class="flex items-center text-sm text-gray-600">
                 <span class="mr-2">💡</span>
                 <span>Use AI to automatically generate marketing content for all tabs</span>
@@ -1192,12 +1192,12 @@ $messageType = $_GET['type'] ?? '';
 </div>
 
 <!-- AI Content Comparison Modal -->
-<div id="aiComparisonModal" class="fixed inset-0 bg-black bg-opacity-50 z-[70] hidden flex items-center justify-center p-2 sm:p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
+<div id="aiComparisonModal" class="admin-modal-overlay hidden">
+    <div class="admin-modal-content">
         <!-- Fixed Header -->
-        <div class="bg-gradient-to-r from-green-600 to-blue-600 px-4 sm:px-6 py-4 flex justify-between items-center flex-shrink-0">
-            <h2 class="text-lg sm:text-xl font-bold text-white">🤖 AI Content Comparison & Selection</h2>
-            <button onclick="closeAIComparisonModal()" class="text-white hover:text-gray-200 text-2xl font-bold">&times;</button>
+        <div class="admin-modal-header" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+            <h2 class="modal-title">🤖 AI Content Comparison & Selection</h2>
+            <button onclick="closeAIComparisonModal()" class="modal-close">&times;</button>
         </div>
         
         <!-- AI Analysis Progress Section (Collapsible) -->
@@ -1205,7 +1205,7 @@ $messageType = $_GET['type'] ?? '';
             <div class="px-4 sm:px-6 py-4">
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-2">
-                        <div id="aiProgressSpinner" class="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                        <div id="aiProgressSpinner" class="modal-loading-spinner"></div>
                         <span class="text-sm font-semibold text-gray-800">AI Analysis in Progress</span>
                     </div>
                     <span id="aiProgressText" class="text-xs text-gray-600">Initializing...</span>
@@ -1244,7 +1244,7 @@ $messageType = $_GET['type'] ?? '';
         </div>
         
         <!-- Fixed Footer -->
-        <div class="bg-gray-50 px-4 sm:px-6 py-4 border-t flex-shrink-0">
+        <div class="modal-footer">
             <div class="flex justify-between items-center">
                 <div class="text-sm text-gray-600">
                     <span id="statusText">Ready to generate AI content...</span>
@@ -1253,7 +1253,7 @@ $messageType = $_GET['type'] ?? '';
                     <button onclick="applySelectedChanges()" id="applyChangesBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium hidden">
                         Apply Selected Changes
                     </button>
-                    <button onclick="closeAIComparisonModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium">
+                    <button onclick="closeAIComparisonModal()" class="modal-button btn-secondary">
                         Close
                     </button>
                 </div>
@@ -1423,7 +1423,7 @@ function deleteItemImage(imageId, sku) {
 function showImageDeleteConfirmation(imageId, sku) {
     // Create modal overlay
     const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    overlay.className = 'modal-overlay';
     overlay.id = 'imageDeleteModal';
     
     // Create modal content
@@ -1847,7 +1847,7 @@ function showCostSuggestionChoiceDialog(suggestionData) {
     
     // Create the modal overlay
     const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+    modal.className = 'modal-overlay';
     modal.id = 'costSuggestionChoiceModal';
     
     modal.innerHTML = `
@@ -2486,7 +2486,7 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
     
     // Create the modal overlay
     const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+    modal.className = 'modal-overlay';
     modal.id = 'priceSuggestionChoiceModal';
     
     modal.innerHTML = `
@@ -3891,7 +3891,7 @@ function generateMarketingCopy() {
 function showMarketingIntelligenceModal(data) {
     // Create modal overlay
     const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    overlay.className = 'modal-overlay';
     overlay.id = 'marketingIntelligenceModal';
     
     // Create modal content with comprehensive marketing intelligence
@@ -6052,7 +6052,7 @@ function loadMarketingData() {
     console.log('Marketing Manager: Content div found:', !!contentDiv);
     
     if (contentDiv) {
-        contentDiv.innerHTML = '<div class="text-center py-8">' +
+        contentDiv.innerHTML = '<div class="modal-loading">' +
             '<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>' +
             '<p class="mt-4 text-gray-600">Loading marketing data...</p>' +
         '</div>';

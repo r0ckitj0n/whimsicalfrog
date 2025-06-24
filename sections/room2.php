@@ -582,8 +582,14 @@ function showPopup(element, product) {
     // Populate popup content
     popupImage.src = imageUrl;
     popupImage.onerror = function() {
-        this.src = 'images/items/placeholder.png';
-        this.onerror = null;
+        // Try WebP if PNG fails
+        const webpUrl = `images/items/${product.sku}A.webp`;
+        this.src = webpUrl;
+        this.onerror = function() {
+            // Final fallback to placeholder
+            this.src = 'images/items/placeholder.png';
+            this.onerror = null;
+        };
     };
     popupCategory.textContent = product.category ?? 'Category';
     popupTitle.textContent = product.name ?? product.productName ?? 'Item Name';
@@ -861,11 +867,18 @@ window.openQuantityModal = function(product) {
     
     // Set product image
     if (modalProductImage) {
+        // Try PNG first, then WebP, then fallback to placeholder
         const imageUrl = `images/items/${product.sku}A.png`;
         modalProductImage.src = imageUrl;
         modalProductImage.onerror = function() {
-            this.src = 'images/items/placeholder.png';
-            this.onerror = null;
+            // Try WebP if PNG fails
+            const webpUrl = `images/items/${product.sku}A.webp`;
+            this.src = webpUrl;
+            this.onerror = function() {
+                // Final fallback to placeholder
+                this.src = 'images/items/placeholder.png';
+                this.onerror = null;
+            };
         };
     }
     

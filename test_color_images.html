@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color-to-Image Mapping Test</title>
+    <link href="css/global-modals.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .test-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .test-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .cart-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .cart-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 10px;
+            border: 2px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎨 Color-to-Image Mapping Test</h1>
+        <p>Test the new color selection system with image switching and wider modal</p>
+        
+        <h2>Test Items</h2>
+        <div class="test-items">
+            <!-- Test Item with Colors -->
+            <div class="test-item" onclick="testAddToCart('WF-TS-002', 'Test T-Shirt with Colors', 25.99, 'images/items/WF-TS-002A.png')">
+                <img src="images/items/WF-TS-002A.png" alt="Test T-Shirt" onerror="this.src='images/items/placeholder.png'">
+                <h3>Test T-Shirt</h3>
+                <p>$25.99</p>
+                <p><small>Has color options</small></p>
+            </div>
+            
+            <!-- Test Item with Colors -->
+            <div class="test-item" onclick="testAddToCart('WF-TS-003', 'Test Hoodie with Colors', 45.99, 'images/items/WF-TS-003A.png')">
+                <img src="images/items/WF-TS-003A.png" alt="Test Hoodie" onerror="this.src='images/items/placeholder.png'">
+                <h3>Test Hoodie</h3>
+                <p>$45.99</p>
+                <p><small>Has color options</small></p>
+            </div>
+            
+            <!-- Test Item without Colors -->
+            <div class="test-item" onclick="testAddToCart('WF-TS-004', 'Test Item No Colors', 19.99, 'images/items/WF-TS-004A.png')">
+                <img src="images/items/WF-TS-004A.png" alt="Test Item" onerror="this.src='images/items/placeholder.png'">
+                <h3>Test Item No Colors</h3>
+                <p>$19.99</p>
+                <p><small>No color options</small></p>
+            </div>
+        </div>
+        
+        <h2>🛒 Current Cart</h2>
+        <div id="cartDisplay" class="cart-display">
+            <p>Cart is empty</p>
+        </div>
+        
+        <h2>📋 Test Instructions</h2>
+        <ol>
+            <li><strong>Modal Width:</strong> Click any item and verify the modal is wider with no scrollbars</li>
+            <li><strong>Color Selection:</strong> For items with colors, select different colors and watch the image change</li>
+            <li><strong>Image Switching:</strong> Verify that color selection updates the product image in real-time</li>
+            <li><strong>Cart Integration:</strong> Add items with different colors and verify they appear as separate cart entries</li>
+            <li><strong>Fallback Behavior:</strong> Test with colors that don't have specific images (should keep default)</li>
+        </ol>
+        
+        <h2>🔧 Admin Test</h2>
+        <p><a href="?page=admin&section=inventory&mode=edit&sku=WF-TS-002" target="_blank">Edit WF-TS-002 in Admin</a> to test color-to-image assignment</p>
+    </div>
+
+    <!-- Quantity Modal -->
+    <div id="quantityModal" class="modal-overlay hidden">
+        <div class="room-modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add to Cart</h3>
+                <button id="closeQuantityModal" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="product-summary">
+                    <img id="modalProductImage" class="modal-product-image" src="" alt="">
+                    <div class="product-info">
+                        <h4 id="modalProductName" class="product-name">Product Name</h4>
+                        <p id="modalProductPrice" class="product-price">$0.00</p>
+                    </div>
+                </div>
+                <div class="quantity-selector">
+                    <label for="quantityInput" class="quantity-label">Quantity:</label>
+                    <div class="quantity-controls">
+                        <input type="number" id="quantityInput" class="qty-input" value="1" min="1" max="999">
+                    </div>
+                </div>
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span>Unit Price:</span>
+                        <span id="modalUnitPrice">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Quantity:</span>
+                        <span id="modalQuantity">1</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span id="modalTotal">$0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelQuantityModal" class="btn-secondary">Cancel</button>
+                <button id="confirmAddToCart" class="btn-primary">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/cart.js"></script>
+    <script>
+        // Initialize cart system
+        window.cart = new ShoppingCart();
+        
+        // Test cart items storage
+        let testCartItems = [];
+        
+        // Test function to add to cart
+        function testAddToCart(sku, name, price, image) {
+            if (typeof window.showQuantityModal === 'function') {
+                window.showQuantityModal(sku, name, price, image);
+            } else {
+                alert('Cart system not loaded properly');
+            }
+        }
+        
+        // Override confirmAddToCart for testing
+        const originalConfirmAddToCart = window.confirmAddToCart;
+        window.confirmAddToCart = function() {
+            if (!window.currentModalProduct) return;
+            
+            const quantityInput = document.getElementById('quantityInput');
+            const quantity = parseInt(quantityInput.value) || 1;
+            
+            // Check if color selection is required but not selected
+            const colorSelect = document.getElementById('colorSelect');
+            if (colorSelect && window.currentModalProduct.availableColors && window.currentModalProduct.availableColors.length > 0) {
+                const selectedColor = colorSelect.value;
+                if (!selectedColor) {
+                    alert('Please select a color before adding to cart.');
+                    return;
+                }
+                window.currentModalProduct.selectedColor = selectedColor;
+            }
+            
+            // Add to test cart
+            const cartItem = {
+                sku: window.currentModalProduct.id,
+                name: window.currentModalProduct.name,
+                price: window.currentModalProduct.price,
+                image: window.currentModalProduct.image,
+                quantity: quantity,
+                color: window.currentModalProduct.selectedColor || null,
+                colorCode: null
+            };
+            
+            // Find color code for display
+            if (window.currentModalProduct.selectedColor) {
+                const selectedColorData = window.currentModalProduct.availableColors?.find(
+                    c => c.color_name === window.currentModalProduct.selectedColor
+                );
+                if (selectedColorData && selectedColorData.color_code) {
+                    cartItem.colorCode = selectedColorData.color_code;
+                }
+            }
+            
+            // Add to test cart
+            testCartItems.push(cartItem);
+            updateCartDisplay();
+            
+            // Show confirmation
+            const colorText = cartItem.color ? ` (${cartItem.color})` : '';
+            alert(`${cartItem.name}${colorText} x${quantity} added to test cart!`);
+            
+            // Close modal
+            window.closeCartModal();
+        };
+        
+        // Function to update cart display
+        function updateCartDisplay() {
+            const cartDisplay = document.getElementById('cartDisplay');
+            
+            if (testCartItems.length === 0) {
+                cartDisplay.innerHTML = '<p>Cart is empty</p>';
+                return;
+            }
+            
+            const cartHTML = testCartItems.map((item, index) => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}" onerror="this.src='images/items/placeholder.png'">
+                    <div style="flex: 1;">
+                        <strong>${item.name}</strong>
+                        ${item.color ? `<br><small>Color: ${item.color}</small>` : ''}
+                        <br><small>Quantity: ${item.quantity}</small>
+                        <br><small>Price: $${(item.price * item.quantity).toFixed(2)}</small>
+                    </div>
+                    ${item.colorCode ? `<div class="color-swatch" style="background-color: ${item.colorCode}"></div>` : ''}
+                    <button onclick="removeTestCartItem(${index})" style="margin-left: 10px; padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Remove</button>
+                </div>
+            `).join('');
+            
+            const total = testCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartDisplay.innerHTML = cartHTML + `<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd; font-weight: bold;">Total: $${total.toFixed(2)}</div>`;
+        }
+        
+        // Function to remove item from test cart
+        function removeTestCartItem(index) {
+            testCartItems.splice(index, 1);
+            updateCartDisplay();
+        }
+        
+        // Setup modal close handlers
+        document.getElementById('closeQuantityModal').onclick = window.closeCartModal;
+        document.getElementById('cancelQuantityModal').onclick = window.closeCartModal;
+        document.getElementById('confirmAddToCart').onclick = window.confirmAddToCart;
+        
+        // Close modal on overlay click
+        document.getElementById('quantityModal').onclick = function(e) {
+            if (e.target === this) {
+                window.closeCartModal();
+            }
+        };
+        
+        console.log('Color-to-Image Test Page Loaded');
+        console.log('Available functions:', {
+            showQuantityModal: typeof window.showQuantityModal,
+            setupColorDropdown: typeof window.setupColorDropdown,
+            updateSelectedColor: typeof window.updateSelectedColor,
+            updateProductImageForColor: typeof window.updateProductImageForColor
+        });
+    </script>
+</body>
+</html> 

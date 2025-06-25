@@ -283,11 +283,11 @@ document.addEventListener('DOMContentLoaded', function() {
         top: -5px;
         right: -5px;
         background: #dc2626;
-        color: white;
-        font-size: 10px;
+        color: black;
+        font-size: 12px;
         font-weight: bold;
-        padding: 2px 6px;
-        border-radius: 10px;
+        padding: 4px 8px;
+        border-radius: 12px;
         border: 2px solid white;
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         z-index: 10;
@@ -448,11 +448,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             // Get primary image using helper function
                             $primaryImageUrl = getImageWithFallback($item['sku']);
+                            
+                            // Add image information to item data for popup
+                            $itemWithImage = $item;
+                            $itemWithImage['primaryImageUrl'] = $primaryImageUrl;
                             ?>
                             <div class="product-icon <?php echo $area_class . $outOfStockClass; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($item['sku']); ?>"
                                  data-stock="<?php echo $stockLevel; ?>"
-                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($item)); ?>)"
+                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
                                  onmouseleave="hidePopup()"
                                  onclick="showProductDetails('<?php echo htmlspecialchars($item['sku']); ?>')"
                                  style="cursor: pointer;">
@@ -476,14 +480,14 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Product popup template -->
 <div id="productPopup" class="product-popup">
     <div class="popup-content">
-        <img id="popupImage" class="popup-image" src="" alt="">
+        <img class="popup-image" src="" alt="">
         <div class="popup-details">
-            <div id="popupTitle" class="popup-title"></div>
-            <div id="popupCategory" class="popup-category"></div>
-            <div id="popupDescription" class="popup-description"></div>
-            <div id="popupPrice" class="popup-price"></div>
+            <div class="popup-name"></div>
+            <div class="popup-category"></div>
+            <div class="popup-description"></div>
+            <div class="popup-price"></div>
             <div class="popup-actions">
-                <button id="popupAddBtn" class="popup-add-btn">Add to Cart</button>
+                <button class="popup-add-btn">Add to Cart</button>
                 <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
             </div>
         </div>
@@ -492,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Quantity Modal -->
 <div id="quantityModal" class="modal-overlay hidden">
-    <div class="modal-content">
+    <div class="room-modal-content">
         <div class="modal-header">
             <h3 class="modal-title">Add to Cart</h3>
             <button id="closeQuantityModal" class="modal-close">&times;</button>
@@ -508,9 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="quantity-selector">
                 <label for="quantityInput" class="quantity-label">Quantity:</label>
                 <div class="quantity-controls">
-                    <button id="decreaseQty" class="qty-btn">-</button>
                     <input type="number" id="quantityInput" class="qty-input" value="1" min="1" max="999">
-                    <button id="increaseQty" class="qty-btn">+</button>
                 </div>
             </div>
             <div class="order-summary">
@@ -547,163 +549,8 @@ let popupOpen = false;
 let isShowingPopup = false;
 let lastShowTime = 0;
 
-function showPopup(element, product) {
-    const now = Date.now();
-    
-    // Debounce rapid calls (prevent multiple calls within 100ms)
-    if (now - lastShowTime < 100) {
-        return;
-    }
-    lastShowTime = now;
-    
-    console.log('showPopup called with:', element, product);
-    
-    // Prevent rapid re-triggering of same popup (anti-flashing protection)
-    if (currentProduct && currentProduct.sku === product.sku && isShowingPopup) {
-        clearTimeout(popupTimeout);
-        return;
-    }
-    
-    clearTimeout(popupTimeout);
-    currentProduct = product;
-    isShowingPopup = true;
-    popupOpen = true;
-
-    const popup = document.getElementById('productPopup');
-    const popupImage = document.getElementById('popupImage');
-    const popupCategory = document.getElementById('popupCategory');
-    const popupTitle = document.getElementById('popupTitle');
-    const popupDescription = document.getElementById('popupDescription');
-    const popupPrice = document.getElementById('popupPrice');
-    const popupAddBtn = document.getElementById('popupAddBtn');
-
-    // Get the image URL - use SKU-based system
-    const imageUrl = `images/items/${product.sku}A.png`;
-
-    // Populate popup content
-    popupImage.src = imageUrl;
-    popupImage.onerror = function() {
-        // Try WebP if PNG fails
-        const webpUrl = `images/items/${product.sku}A.webp`;
-        this.src = webpUrl;
-        this.onerror = function() {
-            // Final fallback to placeholder
-            this.src = 'images/items/placeholder.png';
-            this.onerror = null;
-        };
-    };
-    popupCategory.textContent = product.category ?? 'Category';
-    popupTitle.textContent = product.name ?? product.productName ?? 'Item Name';
-    popupDescription.textContent = product.description ?? 'No description available';
-    popupPrice.textContent = '$' + (parseFloat(product.retailPrice ?? product.price ?? 0)).toFixed(2);
-
-    // Better positioning relative to the element
-    const rect = element.getBoundingClientRect();
-    const roomContainer = element.closest('.room-container');
-    const containerRect = roomContainer.getBoundingClientRect();
-
-    let left = rect.left - containerRect.left + rect.width + 10;
-    let top = rect.top - containerRect.top - 50;
-
-    // Show popup temporarily to get actual dimensions
-    popup.style.display = 'block';
-    popup.style.opacity = '';
-    popup.classList.add('show');
-
-    const popupRect = popup.getBoundingClientRect();
-    const popupWidth = popupRect.width;
-    const popupHeight = popupRect.height;
-
-    // Reset for measurement
-    popup.style.display = '';
-
-    // Adjust if popup would go off screen horizontally
-    if (left + popupWidth > containerRect.width) {
-        left = rect.left - containerRect.left - popupWidth - 10;
-    }
-    
-    // Adjust if popup would go off screen vertically (top)
-    if (top < 0) {
-        top = rect.top - containerRect.top + rect.height + 10;
-    }
-    
-    // Adjust if popup would go off screen vertically (bottom) - PREVENT DOUBLE SCROLLBAR
-    if (top + popupHeight > containerRect.height) {
-        // Try positioning above the element first
-        const topAbove = rect.top - containerRect.top - popupHeight - 10;
-        if (topAbove >= 0) {
-            top = topAbove;
-        } else {
-            // If still doesn't fit, position at bottom of container with padding
-            top = containerRect.height - popupHeight - 20;
-            // Ensure it doesn't go above the top
-            if (top < 0) {
-                top = 10;
-            }
-        }
-    }
-
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-
-    // Clear any inline styles that might interfere and show the popup
-    popup.style.opacity = '';
-    popup.classList.add('show');
-
-    // Make popup content clickable for product details
-    const popupContent = popup.querySelector('.popup-content');
-    popupContent.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent bubbling to background click handler
-        popup.classList.remove('show');
-        showProductDetails(product.sku);
-    };
-
-    // Add to cart functionality
-    popupAddBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent triggering the popup content click and background
-        popup.classList.remove('show');
-        openQuantityModal(product);
-    };
-}
-
-function hidePopup() {
-    // Clear any existing timeout
-    clearTimeout(popupTimeout);
-    
-    // Add a small delay before hiding to allow moving mouse to popup
-    popupTimeout = setTimeout(() => {
-        hidePopupImmediate();
-    }, 200); // Increased delay for stability
-}
-
-function hidePopupImmediate() {
-    const popup = document.getElementById('productPopup');
-    if (popup && popup.classList.contains('show')) {
-        popup.classList.remove('show');
-        currentProduct = null;
-        popupOpen = false;
-        isShowingPopup = false;
-    }
-}
-
-// Make functions globally available
-window.showPopup = showPopup;
-window.hidePopup = hidePopup;
-window.hidePopupImmediate = hidePopupImmediate;
-
-// Keep popup visible when hovering over it
-document.getElementById('productPopup').addEventListener('mouseenter', () => {
-    clearTimeout(popupTimeout);
-    // Ensure popup stays visible while hovering
-    isShowingPopup = true;
-    popupOpen = true;
-});
-
-document.getElementById('productPopup').addEventListener('mouseleave', () => {
-    hidePopup();
-});
+// Hover functions are now handled by js/sales-checker.js for consistency
+// This ensures all rooms use the same standard hover implementation
 
 // Simple document click listener for popup closing
 document.addEventListener('click', function(e) {
@@ -715,433 +562,174 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Quantity modal functionality
-let modalProduct = null;
-let quantityModal, modalProductImage, modalProductName, modalProductPrice;
-let modalUnitPrice, modalQuantity, modalTotal, quantityInput;
-let decreaseQtyBtn, increaseQtyBtn, closeModalBtn, cancelModalBtn, confirmAddBtn;
-
-// Initialize modal elements when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    quantityModal = document.getElementById('quantityModal');
-    modalProductImage = document.getElementById('modalProductImage');
-    modalProductName = document.getElementById('modalProductName');
-    modalProductPrice = document.getElementById('modalProductPrice');
-    modalUnitPrice = document.getElementById('modalUnitPrice');
-    modalQuantity = document.getElementById('modalQuantity');
-    modalTotal = document.getElementById('modalTotal');
-    quantityInput = document.getElementById('quantityInput');
-    decreaseQtyBtn = document.getElementById('decreaseQty');
-    increaseQtyBtn = document.getElementById('increaseQty');
-    closeModalBtn = document.getElementById('closeQuantityModal');
-    cancelModalBtn = document.getElementById('cancelQuantityModal');
-    confirmAddBtn = document.getElementById('confirmAddToCart');
-
-    // Set up event listeners
-    if (quantityInput) {
-        quantityInput.addEventListener('input', function() {
-            const value = Math.max(1, Math.min(999, parseInt(this.value) || 1));
-            this.value = value;
-            updateTotal();
-        });
-    }
-
-    if (decreaseQtyBtn) {
-        decreaseQtyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const current = parseInt(quantityInput.value) || 1;
-            if (current > 1) {
-                quantityInput.value = current - 1;
-                updateTotal();
-            }
-        });
-    }
-
-    if (increaseQtyBtn) {
-        increaseQtyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const current = parseInt(quantityInput.value) || 1;
-            if (current < 999) {
-                quantityInput.value = current + 1;
-                updateTotal();
-            }
-        });
-    }
-
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', closeQuantityModal);
-    }
+// Product details functionality
+function showProductDetails(sku) {
+    // Try to find the product in the room items
+    const product = <?php echo json_encode($roomItems); ?>.find(item => item.sku === sku);
     
-    if (cancelModalBtn) {
-        cancelModalBtn.addEventListener('click', closeQuantityModal);
-    }
-
-    // Close modal when clicking outside
-    if (quantityModal) {
-        quantityModal.addEventListener('click', function(e) {
-            if (e.target === quantityModal) {
-                closeQuantityModal();
-            }
-        });
-    }
-
-    // Confirm add to cart
-    if (confirmAddBtn) {
-        confirmAddBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (modalProduct) {
-                const quantity = parseInt(quantityInput.value) || 1;
-                const sku = modalProduct.sku ?? modalProduct.id;
-                const name = modalProduct.name ?? modalProduct.productName ?? 'Item';
-                const price = parseFloat(modalProduct.retailPrice ?? modalProduct.price ?? 0);
-                const imageUrl = `images/items/${modalProduct.sku}A.png`;
-                
-                // Try different cart methods
-                let cartAdded = false;
-                
-                // Try window.addToCart first
-                if (typeof window.addToCart === 'function') {
-                    for (let i = 0; i < quantity; i++) {
-                        window.addToCart(sku, name, price, imageUrl);
-                    }
-                    cartAdded = true;
-                }
-                // Try cart.addItem if window.cart exists
-                else if (window.cart && typeof window.cart.addItem === 'function') {
-                    window.cart.addItem(sku, name, price, imageUrl, quantity);
-                    cartAdded = true;
-                }
-                // Try global addToCart function
-                else if (typeof addToCart === 'function') {
-                    for (let i = 0; i < quantity; i++) {
-                        addToCart(sku, name, price, imageUrl);
-                    }
-                    cartAdded = true;
-                }
-                
-                if (cartAdded) {
-                    // Show notification
-                    if (typeof customAlertBox === 'function') {
-                        customAlertBox(`${name} (${quantity}) added to your cart!`);
-                    } else {
-                        alert(`${name} (${quantity}) added to your cart!`);
-                    }
-                    
-                    closeQuantityModal();
-                } else {
-                    console.error('No cart function found. Available functions:', {
-                        windowAddToCart: typeof window.addToCart,
-                        cartAddItem: window.cart ? typeof window.cart.addItem : 'cart object not found',
-                        globalAddToCart: typeof addToCart
-                    });
-                    alert('Unable to add item to cart. Please refresh the page and try again.');
-                }
-            } else {
-                console.error('No product selected');
-                alert('No product selected. Please try again.');
-            }
-        });
-    }
-});
-
-// Function to open quantity modal
-window.openQuantityModal = function(product) {
-    console.log('openQuantityModal called with product:', product);
-    
-    // Hide any existing popup first
-    hidePopupImmediate();
-    
-    // Get modal elements fresh each time to avoid stale references
-    const quantityModal = document.getElementById('quantityModal');
-    const modalProductImage = document.getElementById('modalProductImage');
-    const modalProductName = document.getElementById('modalProductName');
-    const modalProductPrice = document.getElementById('modalProductPrice');
-    const modalUnitPrice = document.getElementById('modalUnitPrice');
-    const quantityInput = document.getElementById('quantityInput');
-    
-    if (!quantityModal) {
-        console.error('Quantity modal not found!');
+    if (!product) {
+        console.error('Product not found:', sku);
         return;
     }
-    
-    if (!modalProductName || !modalProductPrice || !modalUnitPrice || !quantityInput) {
-        console.error('Modal elements not found:', {
-            modalProductName: !!modalProductName,
-            modalProductPrice: !!modalProductPrice,
-            modalUnitPrice: !!modalUnitPrice,
-            quantityInput: !!quantityInput
-        });
-        return;
-    }
-    
-    modalProduct = product;
-    
-    // Set product details
-    modalProductName.textContent = product.name || product.productName || 'Product';
-    modalProductPrice.textContent = '$' + parseFloat(product.retailPrice ?? product.price ?? 0).toFixed(2);
-    modalUnitPrice.textContent = '$' + parseFloat(product.retailPrice ?? product.price ?? 0).toFixed(2);
-    
-    // Set product image
-    if (modalProductImage) {
-        // Try PNG first, then WebP, then fallback to placeholder
-        const imageUrl = `images/items/${product.sku}A.png`;
-        modalProductImage.src = imageUrl;
-        modalProductImage.onerror = function() {
-            // Try WebP if PNG fails
-            const webpUrl = `images/items/${product.sku}A.webp`;
-            this.src = webpUrl;
-            this.onerror = function() {
-                // Final fallback to placeholder
-                this.src = 'images/items/placeholder.png';
-                this.onerror = null;
-            };
-        };
-    }
-    
-    // Reset quantity
-    quantityInput.value = 1;
-    updateTotal();
-    
-    // Show modal
-    quantityModal.classList.remove('hidden');
-    console.log('Quantity modal should now be visible');
-};
 
-// Function to update total calculation
-function updateTotal() {
-    // Get fresh references to avoid stale DOM elements
-    const quantityInput = document.getElementById('quantityInput');
-    const modalQuantity = document.getElementById('modalQuantity');
-    const modalTotal = document.getElementById('modalTotal');
+    // Use the detailed product modal component
+    const modalHTML = generateDetailedProductModal(product);
     
-    if (!quantityInput || !modalQuantity || !modalTotal) {
-        console.error('Total calculation elements not found:', {
-            quantityInput: !!quantityInput,
-            modalQuantity: !!modalQuantity,
-            modalTotal: !!modalTotal
-        });
-        return;
+    // Insert modal into page
+    const existingModal = document.getElementById('detailedProductModal');
+    if (existingModal) {
+        existingModal.remove();
     }
     
-    const quantity = parseInt(quantityInput.value) || 1;
-    const unitPrice = modalProduct ? parseFloat(modalProduct.retailPrice ?? modalProduct.price ?? 0) : 0;
-    const total = quantity * unitPrice;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    modalQuantity.textContent = quantity;
-    modalTotal.textContent = '$' + total.toFixed(2);
-    
-    console.log('Total updated:', { quantity, unitPrice, total });
+    // Show the modal
+    showDetailedModal();
 }
 
-// Modal close functionality
-function closeQuantityModal() {
-    if (quantityModal) {
-        quantityModal.classList.add('hidden');
-    }
-    if (quantityInput) {
-        quantityInput.value = 1;
-    }
-    modalProduct = null;
-}
-
-// Show product details in large modal (like shop page)
-async function showProductDetails(sku) {
-    try {
-        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
-        const data = await response.json();
-        
-        if (data.success && data.item) {
-            // Hide any existing popup first
-            hidePopupImmediate();
-            
-            // Remove any existing detailed modal
-            const existingModal = document.getElementById('detailedProductModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            // Create and append new detailed modal
-            const modalContainer = document.createElement('div');
-            modalContainer.innerHTML = await generateDetailedModal(data.item, data.images);
-            document.body.appendChild(modalContainer.firstElementChild);
-            
-            // Show the modal
-            showDetailedModal();
-        } else {
-            console.error('Failed to load product details:', data.message);
-            alert('Sorry, we could not load the product details. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error loading product details:', error);
-        alert('Sorry, there was an error loading the product details.');
-    }
-}
-
-// Generate detailed modal HTML
-async function generateDetailedModal(item, images) {
-    const primaryImage = images.length > 0 ? images[0] : null;
-    
-    // Helper function to check if field has data
+// Generate detailed product modal HTML
+function generateDetailedProductModal(item) {
     function hasData(value) {
-        return value && value.trim() !== '';
+        return value && value.trim() !== '' && value.toLowerCase() !== 'n/a' && value !== 'null';
     }
-    
+
     return `
-    <!-- Detailed Product Modal -->
-    <div id="detailedProductModal" class="modal-overlay" style="display: none;">
-        <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
-            <!-- Modal Header -->
-            <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
-                <h2 class="text-2xl font-bold text-gray-800">${item.name}</h2>
-                <button onclick="closeDetailedModal()" class="text-gray-500 hover:text-gray-700 text-3xl font-bold">
-                    &times;
-                </button>
-            </div>
-            
-            <!-- Modal Content -->
-            <div class="p-6">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Left Column - Images -->
-                    <div class="space-y-4">
-                        <!-- Main Image -->
-                        <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                            ${primaryImage ? 
-                                `<img id="detailedMainImage" 
-                                     src="${primaryImage.image_path}" 
-                                     alt="${item.name}"
-                                     class="w-full h-full object-cover">` :
-                                `<div class="w-full h-full flex items-center justify-center text-gray-400">
-                                    <span>No image available</span>
-                                </div>`
-                            }
-                        </div>
-                        
-                        <!-- Thumbnail Gallery -->
-                        ${images.length > 1 ? `
-                        <div class="grid grid-cols-4 gap-2">
-                            ${images.map((image, index) => `
-                            <div class="aspect-square bg-gray-100 rounded cursor-pointer overflow-hidden border-2 ${index === 0 ? 'border-green-500' : 'border-transparent hover:border-gray-300'}"
-                                 onclick="switchDetailedImage('${image.image_path}', this)">
-                                <img src="${image.image_path}" 
-                                     alt="${item.name} - View ${index + 1}"
-                                     class="w-full h-full object-cover">
-                            </div>
-                            `).join('')}
-                        </div>
-                        ` : ''}
+    <div id="detailedProductModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="flex flex-col md:flex-row h-full">
+                <!-- Image Section -->
+                <div class="md:w-1/2 p-6">
+                    <div class="relative">
+                        <img id="detailedMainImage" src="images/items/${item.sku}A.webp" alt="${item.name}" 
+                             class="w-full h-64 md:h-80 object-contain rounded-lg" 
+                             onerror="this.onerror=null; this.src='images/items/${item.sku}A.png'; this.onerror=function(){this.src='images/items/placeholder.webp'; this.onerror=function(){this.src='images/items/placeholder.png'; this.onerror=null;};}">
+                        <button onclick="closeDetailedModal()" 
+                                class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600">
+                            ×
+                        </button>
                     </div>
                     
-                    <!-- Right Column - Product Details -->
-                    <div class="space-y-6">
-                        <!-- Basic Info -->
+                    <!-- Thumbnail gallery would go here if multiple images exist -->
+                    <div class="flex mt-4 space-x-2">
+                        <div class="w-16 h-16 border-2 border-green-500 rounded cursor-pointer"
+                             onclick="switchDetailedImage('images/items/${item.sku}A.webp', this)">
+                            <img src="images/items/${item.sku}A.webp" alt="Thumbnail" class="w-full h-full object-contain rounded"
+                                 onerror="this.onerror=null; this.src='images/items/${item.sku}A.png'; this.onerror=function(){this.src='images/items/placeholder.webp'; this.onerror=function(){this.src='images/items/placeholder.png'; this.onerror=null;};}">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Details Section -->
+                <div class="md:w-1/2 p-6 overflow-y-auto">
+                    <div class="space-y-4">
                         <div>
-                            <div class="text-3xl font-bold text-green-600 mb-2">
-                                $${parseFloat(item.retailPrice).toFixed(2)}
+                            <h2 class="text-3xl font-bold text-gray-900">${item.name}</h2>
+                            <p class="text-xl text-gray-600">${item.category || 'Product'}</p>
+                        </div>
+                        
+                        <div>
+                            <span class="text-3xl font-bold text-green-600">$${parseFloat(item.retailPrice || item.price || 0).toFixed(2)}</span>
+                            ${item.stockLevel !== undefined ? `<p class="text-sm text-gray-500 mt-1">Stock: ${item.stockLevel} available</p>` : ''}
+                        </div>
+                        
+                        <!-- Quantity Selection -->
+                        <div class="flex items-center space-x-4">
+                            <label class="text-sm font-medium text-gray-700">Quantity:</label>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="adjustDetailedQuantity(-1)" 
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded">-</button>
+                                <input id="detailedQuantity" type="number" value="1" min="1" max="${item.stockLevel || 999}" 
+                                       class="w-16 text-center border border-gray-300 rounded px-2 py-1">
+                                <button onclick="adjustDetailedQuantity(1)" 
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded">+</button>
                             </div>
+                        </div>
+                        
+                        <!-- Add to Cart Button -->
+                        <button onclick="addDetailedToCart('${item.sku}')" 
+                                class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
+                            Add to Cart
+                        </button>
+                        
+                        <!-- Product Details -->
+                        <div class="space-y-4 border-t pt-4">
                             ${hasData(item.description) ? `
-                            <p class="text-gray-700 text-lg leading-relaxed">
-                                ${item.description.replace(/\n/g, '<br>')}
-                            </p>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Description</h3>
+                                <p class="text-gray-700">${item.description.replace(/\n/g, '<br>')}</p>
+                            </div>
                             ` : ''}
-                        </div>
-                        
-                        <!-- Stock Status -->
-                        <div class="flex items-center space-x-2">
-                            ${item.stockLevel > 0 ? 
-                                `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                    ✓ In Stock (${item.stockLevel} available)
-                                </span>` :
-                                `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                    ✗ Out of Stock
-                                </span>`
-                            }
-                        </div>
-                        
-                        <!-- Add to Cart Section -->
-                        <div class="border-t pt-4">
-                            <div class="flex items-center space-x-4 mb-4">
-                                <label class="text-sm font-medium text-gray-700">Quantity:</label>
-                                <div class="flex items-center border rounded-md">
-                                    <button onclick="adjustDetailedQuantity(-1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">-</button>
-                                    <input type="number" id="detailedQuantity" value="1" min="1" max="${item.stockLevel}" 
-                                           class="w-16 text-center border-0 focus:ring-0">
-                                    <button onclick="adjustDetailedQuantity(1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">+</button>
-                                </div>
-                            </div>
                             
-                            ${item.stockLevel > 0 ? `
-                            <button onclick="addDetailedToCart('${item.sku}')" 
-                                    class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium text-lg transition-colors">
-                                Add to Cart
-                            </button>
-                            ` : `
-                            <button disabled class="w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
-                                Out of Stock
-                            </button>
-                            `}
-                        </div>
-                        
-                        <!-- Detailed Information -->
-                        <div class="border-t pt-6">
-                            <div class="space-y-4">
-                                ${hasData(item.materials) ? `
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Materials</h3>
-                                    <p class="text-gray-700">${item.materials.replace(/\n/g, '<br>')}</p>
+                            ${hasData(item.specifications) ? `
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Specifications</h3>
+                                <div class="bg-gray-50 p-3 rounded">
+                                    <p class="text-gray-700">${item.specifications.replace(/\n/g, '<br>')}</p>
                                 </div>
-                                ` : ''}
-                                
-                                ${(hasData(item.dimensions) || hasData(item.weight)) ? `
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Specifications</h3>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        ${hasData(item.dimensions) ? `
-                                        <div>
-                                            <span class="font-medium text-gray-600">Dimensions:</span>
-                                            <span class="text-gray-700">${item.dimensions}</span>
-                                        </div>
-                                        ` : ''}
-                                        ${hasData(item.weight) ? `
-                                        <div>
-                                            <span class="font-medium text-gray-600">Weight:</span>
-                                            <span class="text-gray-700">${item.weight}</span>
-                                        </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                                ` : ''}
-                                
-                                ${hasData(item.features) ? `
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Features</h3>
-                                    <p class="text-gray-700">${item.features.replace(/\n/g, '<br>')}</p>
-                                </div>
-                                ` : ''}
-                                
-                                ${(hasData(item.color_options) || hasData(item.size_options)) ? `
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Available Options</h3>
-                                    <div class="space-y-2">
-                                        ${hasData(item.color_options) ? `
-                                        <div>
-                                            <span class="font-medium text-gray-600">Colors:</span>
-                                            <span class="text-gray-700">${item.color_options}</span>
-                                        </div>
-                                        ` : ''}
-                                        ${hasData(item.size_options) ? `
-                                        <div>
-                                            <span class="font-medium text-gray-600">Sizes:</span>
-                                            <span class="text-gray-700">${item.size_options}</span>
-                                        </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                                ` : ''}
                             </div>
+                            ` : ''}
+                            
+                            ${(hasData(item.material) || hasData(item.dimensions) || hasData(item.weight)) ? `
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Product Information</h3>
+                                <div class="grid grid-cols-1 gap-2">
+                                    ${hasData(item.material) ? `
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-gray-600">Material:</span>
+                                        <span class="text-gray-700">${item.material}</span>
+                                    </div>
+                                    ` : ''}
+                                    ${hasData(item.dimensions) ? `
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-gray-600">Dimensions:</span>
+                                        <span class="text-gray-700">${item.dimensions}</span>
+                                    </div>
+                                    ` : ''}
+                                    ${hasData(item.weight) ? `
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-gray-600">Weight:</span>
+                                        <span class="text-gray-700">${item.weight}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${hasData(item.care_instructions) ? `
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Care Instructions</h3>
+                                <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                                    <p class="text-gray-700">${item.care_instructions.replace(/\n/g, '<br>')}</p>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${hasData(item.features) ? `
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Features</h3>
+                                <p class="text-gray-700">${item.features.replace(/\n/g, '<br>')}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${(hasData(item.color_options) || hasData(item.size_options)) ? `
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Available Options</h3>
+                                <div class="space-y-2">
+                                    ${hasData(item.color_options) ? `
+                                    <div>
+                                        <span class="font-medium text-gray-600">Colors:</span>
+                                        <span class="text-gray-700">${item.color_options}</span>
+                                    </div>
+                                    ` : ''}
+                                    ${hasData(item.size_options) ? `
+                                    <div>
+                                        <span class="font-medium text-gray-600">Sizes:</span>
+                                        <span class="text-gray-700">${item.size_options}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>

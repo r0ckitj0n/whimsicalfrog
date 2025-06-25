@@ -89,19 +89,35 @@ try {
     }
     
     // Initialize pricing analysis using AI provider system
+    $pricingData = null;
     try {
         if (!empty($images) && $useImages) {
             // Use image-enhanced AI generation
             $aiProviders = new AIProviders();
             $pricingData = $aiProviders->generatePricingSuggestionWithImages($name, $description, $category, $costPrice, $images);
+            error_log("AI Provider (with images) returned: " . json_encode(['price' => $pricingData['price'] ?? 'null']));
         } else {
-            // Use standard text-only generation
-            $pricingData = analyzeItemForPricing($name, $description, $category);
+            // Use AI provider for text-only generation
+            $aiProviders = new AIProviders();
+            $pricingData = $aiProviders->generatePricingSuggestion($name, $description, $category, $costPrice);
+            error_log("AI Provider (text-only) returned: " . json_encode(['price' => $pricingData['price'] ?? 'null']));
         }
     } catch (Exception $e) {
-        // Fallback to local AI if external API fails
-        error_log("AI Provider failed for pricing, using local fallback: " . $e->getMessage());
-        $pricingData = analyzePricing($name, $description, $category, $costPrice, $pdo);
+        // Fallback to Jon's AI if external API fails
+        error_log("AI Provider failed for pricing, using Jon's AI fallback: " . $e->getMessage());
+        try {
+            $pricingData = analyzePricing($name, $description, $category, $costPrice, $pdo);
+            error_log("Local fallback returned: " . json_encode(['price' => $pricingData['price'] ?? 'null']));
+        } catch (Exception $e2) {
+            error_log("Jon's AI fallback also failed: " . $e2->getMessage());
+            throw new Exception("Both AI provider and Jon's AI fallback failed");
+        }
+    }
+    
+    // Validate that we have pricing data
+    if (!$pricingData || !isset($pricingData['price']) || $pricingData['price'] === null) {
+        error_log("No valid pricing data received. PricingData: " . json_encode($pricingData));
+        throw new Exception("Failed to generate price suggestion");
     }
     
     // Save enhanced price suggestion to database (create table if needed)

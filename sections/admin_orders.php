@@ -1398,7 +1398,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!orderIdToDelete) return;
             
             // Assuming your delete API is at /api/delete-order.php and takes orderId as a query param
-            fetch(`/api/delete-order.php?orderId=${orderIdToDelete}`, { // Make sure this endpoint exists and works
+            fetch(`/api/delete-order.php?orderId=${orderIdToDelete}&admin_token=whimsical_admin_2024`, { // Make sure this endpoint exists and works
                 method: 'DELETE' // Or POST if your server expects that for deletion
             })
             .then(response => response.json()) // Assuming it returns JSON

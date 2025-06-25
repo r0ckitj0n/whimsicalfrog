@@ -61,10 +61,13 @@ function renderDetailedProductModal($item, $images = []) {
                     
                     <!-- Right Column - Product Details -->
                     <div class="space-y-6">
-                        <!-- Basic Info -->
+                        <!-- Basic Info with Sale Price Support -->
                         <div>
-                            <div class="text-3xl font-bold text-green-600 mb-2">
-                                $<?php echo number_format($item['retailPrice'], 2); ?>
+                            <div id="detailedPriceSection" class="mb-2">
+                                <!-- Default price display, will be updated by JavaScript if sale is active -->
+                                <div class="text-3xl font-bold text-green-600">
+                                    $<?php echo number_format($item['retailPrice'], 2); ?>
+                                </div>
                             </div>
                             <?php if (hasData($item['description'])): ?>
                             <p class="text-gray-700 text-lg leading-relaxed">
@@ -276,6 +279,81 @@ function renderDetailedProductModal($item, $images = []) {
     function showDetailedModal() {
         document.getElementById('detailedProductModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        
+        // Check for active sales when modal opens
+        const modalTitle = document.querySelector('#detailedProductModal h2').textContent;
+        // Find the item data - this will be set by the calling function
+        if (window.currentDetailedProduct) {
+            checkAndDisplaySalePrice(window.currentDetailedProduct);
+        }
+    }
+    
+    // Function to check for active sale and update price display
+    async function checkAndDisplaySalePrice(product) {
+        try {
+            const response = await fetch(`/api/sales.php?action=get_active_sales&item_sku=${product.sku}`);
+            const data = await response.json();
+            
+            if (data.success && data.sale) {
+                const sale = data.sale;
+                const originalPrice = parseFloat(product.retailPrice || product.price || 0);
+                const discountPercentage = parseFloat(sale.discount_percentage);
+                const salePrice = originalPrice * (1 - discountPercentage / 100);
+                
+                // Update the price section to show both original and sale prices
+                const priceSection = document.getElementById('detailedPriceSection');
+                priceSection.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <div class="text-3xl font-bold text-red-600">
+                                $${salePrice.toFixed(2)}
+                            </div>
+                            <div class="bg-red-500 text-white px-2 py-1 rounded-md text-sm font-semibold">
+                                ${discountPercentage}% OFF
+                            </div>
+                        </div>
+                        <div class="text-lg text-gray-500 line-through">
+                            Originally $${originalPrice.toFixed(2)}
+                        </div>
+                        <div class="text-sm text-green-600 font-medium">
+                            You save $${(originalPrice - salePrice).toFixed(2)}!
+                        </div>
+                    </div>
+                `;
+                
+                // Store the sale price for cart functionality
+                window.currentDetailedProduct.salePrice = salePrice;
+                window.currentDetailedProduct.originalPrice = originalPrice;
+                window.currentDetailedProduct.onSale = true;
+                
+            } else {
+                // No active sale, show regular price
+                const originalPrice = parseFloat(product.retailPrice || product.price || 0);
+                const priceSection = document.getElementById('detailedPriceSection');
+                priceSection.innerHTML = `
+                    <div class="text-3xl font-bold text-green-600">
+                        $${originalPrice.toFixed(2)}
+                    </div>
+                `;
+                
+                // Clear sale data
+                if (window.currentDetailedProduct) {
+                    window.currentDetailedProduct.onSale = false;
+                    delete window.currentDetailedProduct.salePrice;
+                    delete window.currentDetailedProduct.originalPrice;
+                }
+            }
+        } catch (error) {
+            console.error('Error checking for sales:', error);
+            // Show regular price on error
+            const originalPrice = parseFloat(product.retailPrice || product.price || 0);
+            const priceSection = document.getElementById('detailedPriceSection');
+            priceSection.innerHTML = `
+                <div class="text-3xl font-bold text-green-600">
+                    $${originalPrice.toFixed(2)}
+                </div>
+            `;
+        }
     }
     </script>
     

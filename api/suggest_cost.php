@@ -70,8 +70,8 @@ try {
     try {
         $costData = generateAICostSuggestion($name, $description, $category);
     } catch (Exception $e) {
-        // Fallback to local algorithmic analysis if AI fails
-        error_log("AI Cost Provider failed, using local fallback: " . $e->getMessage());
+        // Fallback to Jon's AI algorithmic analysis if AI fails
+        error_log("AI Cost Provider failed, using Jon's AI fallback: " . $e->getMessage());
         $costData = analyzeCostStructure($name, $description, $category, $pdo);
     }
     

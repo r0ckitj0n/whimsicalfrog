@@ -58,7 +58,7 @@ try {
         ['meta', 'meta-llama/llama-3.2-90b-vision-instruct', 'Llama 3.2 90B Vision', true, true, 4000, 128000, 0.001200],
         
         // Local fallback
-        ['local', 'local-basic', 'Local Basic AI', false, true, 1000, 4000, 0.000000]
+        ['jons_ai', 'jons-ai-basic', "Jon's Basic AI", false, true, 1000, 4000, 0.000000]
     ];
     
     $stmt = $pdo->prepare("INSERT IGNORE INTO ai_models (provider, model_id, model_name, supports_images, supports_text, max_tokens, context_window, cost_per_1k_tokens) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");

@@ -283,11 +283,11 @@ document.addEventListener('DOMContentLoaded', function() {
         top: -5px;
         right: -5px;
         background: #dc2626;
-        color: white;
-        font-size: 10px;
+        color: black;
+        font-size: 12px;
         font-weight: bold;
-        padding: 2px 6px;
-        border-radius: 10px;
+        padding: 4px 8px;
+        border-radius: 12px;
         border: 2px solid white;
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         z-index: 10;
@@ -448,11 +448,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             // Get primary image using helper function
                             $primaryImageUrl = getImageWithFallback($item['sku']);
+                            
+                            // Add image information to item data for popup
+                            $itemWithImage = $item;
+                            $itemWithImage['primaryImageUrl'] = $primaryImageUrl;
                             ?>
                             <div class="product-icon <?php echo $area_class . $outOfStockClass; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($item['sku']); ?>"
                                  data-stock="<?php echo $stockLevel; ?>"
-                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($item)); ?>)"
+                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
                                  onmouseleave="hidePopup()"
                                  onclick="showProductDetails('<?php echo htmlspecialchars($item['sku']); ?>')"
                                  style="cursor: pointer;">
@@ -476,14 +480,14 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Product popup template -->
 <div id="productPopup" class="product-popup">
     <div class="popup-content">
-        <img id="popupImage" class="popup-image" src="" alt="">
+        <img class="popup-image" src="" alt="">
         <div class="popup-details">
-            <div id="popupTitle" class="popup-title"></div>
-            <div id="popupCategory" class="popup-category"></div>
-            <div id="popupDescription" class="popup-description"></div>
-            <div id="popupPrice" class="popup-price"></div>
+            <div class="popup-name"></div>
+            <div class="popup-category"></div>
+            <div class="popup-description"></div>
+            <div class="popup-price"></div>
             <div class="popup-actions">
-                <button id="popupAddBtn" class="popup-add-btn">Add to Cart</button>
+                <button class="popup-add-btn">Add to Cart</button>
                 <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
             </div>
         </div>
@@ -492,43 +496,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Quantity Selection Modal -->
 <div id="quantityModal" class="modal-overlay hidden" style="z-index: 9999 !important;">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md" style="z-index: 10000 !important;">
+    <div class="room-modal-content">
         <div class="modal-header">
-            <h3 class="text-lg font-bold mb-4">Add to Cart</h3>
-            <button id="closeQuantityModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
+            <h3 class="modal-title">Add to Cart</h3>
+            <button id="closeQuantityModal" class="modal-close">&times;</button>
         </div>
         <div class="modal-body">
-            <div class="product-info mb-4">
-                <img id="modalProductImage" class="w-16 h-16 object-cover rounded mb-2" src="" alt="Product Image">
-                <h4 id="modalProductName" class="font-semibold text-lg">Product Name</h4>
-                <p id="modalProductPrice" class="text-gray-600">$0.00</p>
-            </div>
-            <div class="quantity-controls mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity:</label>
-                <div class="flex items-center space-x-3">
-                    <button id="decreaseQty" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded">-</button>
-                    <input id="quantityInput" type="number" min="1" max="999" value="1" class="w-20 text-center border border-gray-300 rounded px-2 py-1">
-                    <button id="increaseQty" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded">+</button>
+            <div class="product-summary">
+                <img id="modalProductImage" class="modal-product-image" src="" alt="">
+                <div class="product-info">
+                    <h4 id="modalProductName" class="product-name">Product Name</h4>
+                    <p id="modalProductPrice" class="product-price">$0.00</p>
                 </div>
             </div>
-            <div class="order-summary bg-gray-50 p-4 rounded">
-                <div class="flex justify-between mb-2">
+            <div class="quantity-selector">
+                <label for="quantityInput" class="quantity-label">Quantity:</label>
+                <div class="quantity-controls">
+                    <input type="number" id="quantityInput" class="qty-input" value="1" min="1" max="999">
+                </div>
+            </div>
+            <div class="order-summary">
+                <div class="summary-row">
                     <span>Unit Price:</span>
                     <span id="modalUnitPrice">$0.00</span>
                 </div>
-                <div class="flex justify-between mb-2">
+                <div class="summary-row">
                     <span>Quantity:</span>
                     <span id="modalQuantity">1</span>
                 </div>
-                <div class="flex justify-between font-bold text-lg">
+                <div class="summary-row total">
                     <span>Total:</span>
                     <span id="modalTotal">$0.00</span>
                 </div>
             </div>
         </div>
-        <div class="modal-footer flex justify-end space-x-3 mt-6">
-            <button id="cancelQuantityModal" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded">Cancel</button>
-            <button id="confirmAddToCart" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded font-medium" onclick="console.log('Direct onclick triggered!');">Add to Cart</button>
+        <div class="modal-footer">
+            <button id="cancelQuantityModal" class="btn-secondary">Cancel</button>
+            <button id="confirmAddToCart" class="btn-primary">Add to Cart</button>
         </div>
     </div>
 </div>
@@ -548,8 +552,8 @@ let lastShowTime = 0;
 function showPopup(element, product) {
     const now = Date.now();
     
-    // Debounce rapid calls (prevent multiple calls within 100ms)
-    if (now - lastShowTime < 100) {
+    // Reduce debounce time for better responsiveness
+    if (now - lastShowTime < 50) {
         return;
     }
     lastShowTime = now;
@@ -587,7 +591,9 @@ function showPopup(element, product) {
     popupCategory.textContent = product.category ?? 'Category';
     popupTitle.textContent = product.name ?? product.productName ?? 'Item Name';
     popupDescription.textContent = product.description ?? 'No description available';
-    popupPrice.textContent = '$' + (parseFloat(product.retailPrice ?? product.price ?? 0)).toFixed(2);
+    
+    // Check for sales and update price display
+    checkAndDisplaySalePrice(product, popupPrice, null, 'popup');
 
     // Better positioning relative to the element
     const rect = element.getBoundingClientRect();
@@ -651,12 +657,22 @@ function showPopup(element, product) {
         showProductDetails(product.sku);
     };
 
-    // Add to cart functionality
+    // Add to cart functionality using global function
     popupAddBtn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation(); // Prevent triggering the popup content click and background
         popup.classList.remove('show');
-        openQuantityModal(product);
+        
+        const sku = product.sku;
+        const name = product.name;
+        const price = parseFloat(product.retailPrice);
+        const image = `images/items/${product.sku}A.png`;
+        
+        if (typeof window.addToCartWithModal === 'function') {
+            window.addToCartWithModal(sku, name, price, image);
+        } else {
+            console.error('Global addToCartWithModal function not available');
+        }
     };
 }
 
@@ -664,10 +680,10 @@ function hidePopup() {
     // Clear any existing timeout
     clearTimeout(popupTimeout);
     
-    // Add a small delay before hiding to allow moving mouse to popup
+    // Reduce delay for faster hiding when appropriate
     popupTimeout = setTimeout(() => {
         hidePopupImmediate();
-    }, 200); // Increased delay for stability
+    }, 150);
 }
 
 function hidePopupImmediate() {
@@ -707,159 +723,8 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Quantity modal functionality
-let modalProduct = null;
-let quantityModal, modalProductImage, modalProductName, modalProductPrice;
-let modalUnitPrice, modalQuantity, modalTotal, quantityInput;
-let decreaseQtyBtn, increaseQtyBtn, closeModalBtn, cancelModalBtn, confirmAddBtn;
-
-// Initialize modal elements when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    quantityModal = document.getElementById('quantityModal');
-    modalProductImage = document.getElementById('modalProductImage');
-    modalProductName = document.getElementById('modalProductName');
-    modalProductPrice = document.getElementById('modalProductPrice');
-    modalUnitPrice = document.getElementById('modalUnitPrice');
-    modalQuantity = document.getElementById('modalQuantity');
-    modalTotal = document.getElementById('modalTotal');
-    quantityInput = document.getElementById('quantityInput');
-    decreaseQtyBtn = document.getElementById('decreaseQty');
-    increaseQtyBtn = document.getElementById('increaseQty');
-    closeModalBtn = document.getElementById('closeQuantityModal');
-    cancelModalBtn = document.getElementById('cancelQuantityModal');
-    confirmAddBtn = document.getElementById('confirmAddToCart');
-
-    // Set up event listeners
-    if (quantityInput) {
-        quantityInput.addEventListener('input', function() {
-            const value = Math.max(1, Math.min(999, parseInt(this.value) || 1));
-            this.value = value;
-            updateTotal();
-        });
-    }
-
-    if (decreaseQtyBtn) {
-        decreaseQtyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const current = parseInt(quantityInput.value) || 1;
-            if (current > 1) {
-                quantityInput.value = current - 1;
-                updateTotal();
-            }
-        });
-    }
-
-    if (increaseQtyBtn) {
-        increaseQtyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const current = parseInt(quantityInput.value) || 1;
-            if (current < 999) {
-                quantityInput.value = current + 1;
-                updateTotal();
-            }
-        });
-    }
-
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', closeQuantityModal);
-    }
-    
-    if (cancelModalBtn) {
-        cancelModalBtn.addEventListener('click', closeQuantityModal);
-    }
-
-    // Close modal when clicking outside
-    if (quantityModal) {
-        quantityModal.addEventListener('click', function(e) {
-            if (e.target === quantityModal) {
-                closeQuantityModal();
-            }
-        });
-    }
-
-    // Confirm add to cart
-    if (confirmAddBtn) {
-        confirmAddBtn.addEventListener('click', function(e) {
-            console.log('Confirm Add to Cart button clicked!');
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (modalProduct) {
-                const quantity = parseInt(quantityInput.value) || 1;
-                const sku = modalProduct.sku ?? modalProduct.id;
-                const name = modalProduct.name ?? modalProduct.productName ?? 'Item';
-                const price = parseFloat(modalProduct.retailPrice ?? modalProduct.price ?? 0);
-                const imageUrl = `images/items/${modalProduct.sku}A.png`;
-                
-                console.log('Adding to cart:', { sku, name, price, quantity, imageUrl });
-                
-                // Try different cart methods
-                let cartAdded = false;
-                
-                // Try window.addToCart first
-                if (typeof window.addToCart === 'function') {
-                    console.log('Using window.addToCart method');
-                    for (let i = 0; i < quantity; i++) {
-                        window.addToCart(sku, name, price, imageUrl);
-                    }
-                    cartAdded = true;
-                    console.log('Added to cart using window.addToCart');
-                } 
-                // Try window.cart.addItem
-                else if (typeof window.cart !== 'undefined' && typeof window.cart.addItem === 'function') {
-                    console.log('Using window.cart.addItem method');
-                    window.cart.addItem({
-                        sku: sku,
-                        name: name,
-                        price: price,
-                        image: imageUrl,
-                        quantity: quantity
-                    });
-                    cartAdded = true;
-                    console.log('Added to cart using window.cart.addItem');
-                }
-                // Try global addToCart
-                else if (typeof addToCart === 'function') {
-                    console.log('Using global addToCart method');
-                    for (let i = 0; i < quantity; i++) {
-                        addToCart(sku, name, price, imageUrl);
-                    }
-                    cartAdded = true;
-                    console.log('Added to cart using addToCart');
-                }
-                
-                if (cartAdded) {
-                    console.log('Cart addition successful, showing notification');
-                    // Show notification
-                    if (window.cart && window.cart.showNotification) {
-                        window.cart.showNotification(`${name} (${quantity}) added to your cart!`);
-                    } else if (typeof customAlertBox === 'function') {
-                        customAlertBox(`${name} (${quantity}) added to your cart!`);
-                    } else {
-                        alert(`${name} (${quantity}) added to your cart!`);
-                    }
-                    closeQuantityModal();
-                } else {
-                    console.error('No cart function found');
-                    console.log('Available functions:', {
-                        'window.addToCart': typeof window.addToCart,
-                        'window.cart': typeof window.cart,
-                        'window.cart.addItem': window.cart ? typeof window.cart.addItem : 'undefined',
-                        'addToCart': typeof addToCart
-                    });
-                    alert('Unable to add item to cart. Please refresh the page and try again.');
-                }
-            } else {
-                console.error('No product selected');
-                alert('No product selected. Please try again.');
-            }
-        });
-    } else {
-        console.error('Confirm Add to Cart button not found!');
-    }
-});
+// Quantity modal functionality - now handled by global functions in cart.js
+// Local event listeners removed to prevent conflicts with global handlers
 
 // Function to open quantity modal
 window.openQuantityModal = function(product) {
@@ -868,7 +733,18 @@ window.openQuantityModal = function(product) {
     // Hide any existing popup first
     hidePopupImmediate();
     
-    // Get modal elements fresh each time to avoid stale references
+    // Use global modal function if available
+    if (typeof window.addToCartWithModal === 'function') {
+        const sku = product.sku;
+        const name = product.name || product.productName;
+        const price = parseFloat(product.retailPrice || product.price);
+        const image = `images/items/${product.sku}A.png`;
+        
+        window.addToCartWithModal(sku, name, price, image);
+        return;
+    }
+    
+    // Fallback to local modal if global not available
     const quantityModal = document.getElementById('quantityModal');
     const modalProductImage = document.getElementById('modalProductImage');
     const modalProductName = document.getElementById('modalProductName');
@@ -891,30 +767,31 @@ window.openQuantityModal = function(product) {
         return;
     }
     
-    modalProduct = product;
+    // Store product for later use
+    window.currentModalProduct = product;
     
-    // Set product details
+    // Update modal content
+    const imageUrl = `images/items/${product.sku}A.png`;
+    modalProductImage.src = imageUrl;
+    modalProductImage.onerror = function() {
+        this.src = 'images/items/placeholder.png';
+        this.onerror = null;
+    };
+    
     modalProductName.textContent = product.name || product.productName || 'Product';
-    modalProductPrice.textContent = '$' + parseFloat(product.retailPrice ?? product.price ?? 0).toFixed(2);
-    modalUnitPrice.textContent = '$' + parseFloat(product.retailPrice ?? product.price ?? 0).toFixed(2);
     
-    // Set product image
-    if (modalProductImage) {
-        const imageUrl = `images/items/${product.sku}A.png`;
-        modalProductImage.src = imageUrl;
-        modalProductImage.onerror = function() {
-            this.src = 'images/items/placeholder.png';
-            this.onerror = null;
-        };
-    }
+    // Check for sales and update pricing
+    checkAndDisplaySalePrice(product, modalProductPrice, modalUnitPrice, 'modal');
     
-    // Reset quantity
+    // Reset quantity to 1
     quantityInput.value = 1;
+    
+    // Update total
     updateTotal();
     
     // Show modal
     quantityModal.classList.remove('hidden');
-    console.log('Quantity modal should now be visible');
+    console.log('Modal should now be visible');
 };
 
 // Function to update total calculation
@@ -934,24 +811,23 @@ function updateTotal() {
     }
     
     const quantity = parseInt(quantityInput.value) || 1;
-    const unitPrice = modalProduct ? parseFloat(modalProduct.retailPrice ?? modalProduct.price ?? 0) : 0;
+    
+    // Get the current unit price from the modal (which may be on sale)
+    let unitPrice = 0;
+    const modalUnitPrice = document.getElementById('modalUnitPrice');
+    if (modalUnitPrice && modalUnitPrice.textContent) {
+        const priceText = modalUnitPrice.textContent.replace('$', '');
+        unitPrice = parseFloat(priceText) || 0;
+    } else if (window.currentModalProduct) {
+        unitPrice = parseFloat(window.currentModalProduct.retailPrice ?? window.currentModalProduct.price ?? 0);
+    }
+    
     const total = quantity * unitPrice;
     
     modalQuantity.textContent = quantity;
     modalTotal.textContent = '$' + total.toFixed(2);
     
     console.log('Total updated:', { quantity, unitPrice, total });
-}
-
-// Modal close functionality
-function closeQuantityModal() {
-    if (quantityModal) {
-        quantityModal.classList.add('hidden');
-    }
-    if (quantityInput) {
-        quantityInput.value = 1;
-    }
-    modalProduct = null;
 }
 
 // Show detailed item modal

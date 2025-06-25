@@ -166,10 +166,9 @@ async function loadGlobalCSS() {
                 document.head.appendChild(globalStyle);
             }
             globalStyle.textContent = data.css_content;
-            console.log('Global CSS variables loaded successfully');
         }
     } catch (error) {
-        console.warn('Failed to load global CSS variables:', error);
+        // Silently fail - CSS variables will use defaults
     }
 }
 
@@ -283,11 +282,11 @@ document.addEventListener('DOMContentLoaded', function() {
         top: -5px;
         right: -5px;
         background: #dc2626;
-        color: white;
-        font-size: 10px;
+        color: black;
+        font-size: 12px;
         font-weight: bold;
-        padding: 2px 6px;
-        border-radius: 10px;
+        padding: 4px 8px;
+        border-radius: 12px;
         border: 2px solid white;
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         z-index: 10;
@@ -448,11 +447,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             // Get primary image using helper function
                             $primaryImageUrl = getImageWithFallback($item['sku']);
+                            
+                            // Add image information to item data for popup
+                            $itemWithImage = $item;
+                            $itemWithImage['primaryImageUrl'] = $primaryImageUrl;
                             ?>
                             <div class="product-icon <?php echo $area_class . $outOfStockClass; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($item['sku']); ?>"
                                  data-stock="<?php echo $stockLevel; ?>"
-                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($item)); ?>)"
+                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
                                  onmouseleave="hidePopup()"
                                  onclick="openQuantityModal(<?php echo htmlspecialchars(json_encode($item)); ?>)"
                                  style="cursor: pointer;">
@@ -476,61 +479,62 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Product popup template -->
 <div id="productPopup" class="product-popup">
     <div class="popup-content">
-        <img id="popupImage" class="popup-image" src="" alt="">
+        <img class="popup-image" src="" alt="">
         <div class="popup-details">
-            <div id="popupTitle" class="popup-title"></div>
-            <div id="popupCategory" class="popup-category"></div>
-            <div id="popupDescription" class="popup-description"></div>
-            <div id="popupPrice" class="popup-price"></div>
+            <div class="popup-name"></div>
+            <div class="popup-category"></div>
+            <div class="popup-description"></div>
+            <div class="popup-price"></div>
             <div class="popup-actions">
-                <button id="popupAddBtn" class="popup-add-btn">Add to Cart</button>
-                <button id="popupDetailsBtn" class="popup-details-btn" onclick="showItemDetails()">View Details</button>
+                <button class="popup-add-btn">Add to Cart</button>
+                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Quantity Modal -->
+<!-- Quantity Modal - Compact with Large Image -->
 <div id="quantityModal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">Add to Cart</h3>
+    <div class="room-modal-content">
+        <div class="modal-header" style="margin-bottom: 15px;">
+            <h3 class="modal-title" style="font-size: 1.1rem;">Add to Cart</h3>
             <button id="closeQuantityModal" class="modal-close">&times;</button>
         </div>
         <div class="modal-body">
-            <div class="product-summary">
-                <img id="modalProductImage" class="modal-product-image" src="" alt="">
-                <div class="product-info">
-                    <h4 id="modalProductName" class="product-name">Product Name</h4>
-                    <p id="modalProductPrice" class="product-price">$0.00</p>
-                </div>
+            <!-- Large Product Image -->
+            <div style="text-align: center; margin-bottom: 15px;">
+                <img id="modalProductImage" class="modal-product-image" src="" alt="" 
+                     style="width: 120px; height: 120px; object-fit: contain; border-radius: 8px; background: #f8f9fa;">
             </div>
+            
+            <!-- Compact Product Info -->
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h4 id="modalProductName" class="product-name" style="font-size: 1rem; margin: 0 0 5px 0; color: #333;">Product Name</h4>
+                <p id="modalProductPrice" class="product-price" style="font-size: 1.1rem; font-weight: bold; margin: 0; color: #87ac3a;">$0.00</p>
+            </div>
+            
+            <!-- Compact Quantity Selector -->
             <div class="quantity-selector">
                 <label for="quantityInput" class="quantity-label">Quantity:</label>
                 <div class="quantity-controls">
-                    <button id="decreaseQty" class="qty-btn">-</button>
                     <input type="number" id="quantityInput" class="qty-input" value="1" min="1" max="999">
-                    <button id="increaseQty" class="qty-btn">+</button>
                 </div>
             </div>
-            <div class="order-summary">
-                <div class="summary-row">
-                    <span>Unit Price:</span>
-                    <span id="modalUnitPrice">$0.00</span>
-                </div>
-                <div class="summary-row">
-                    <span>Quantity:</span>
-                    <span id="modalQuantity">1</span>
-                </div>
-                <div class="summary-row total">
+            
+            <!-- Compact Order Summary -->
+            <div class="order-summary" style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                <div class="summary-row total" style="display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; font-weight: bold;">
                     <span>Total:</span>
-                    <span id="modalTotal">$0.00</span>
+                    <span id="modalTotal" style="color: #87ac3a;">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: center; margin-top: 5px; font-size: 0.85rem; color: #666;">
+                    <span id="modalUnitPrice">$0.00</span> × <span id="modalQuantity">1</span>
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button id="cancelQuantityModal" class="btn-secondary">Cancel</button>
-            <button id="confirmAddToCart" class="btn-primary">Add to Cart</button>
+        <div class="modal-footer" style="display: flex; gap: 10px;">
+            <button id="cancelQuantityModal" class="btn-secondary" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 6px; cursor: pointer;">Cancel</button>
+            <button id="confirmAddToCart" class="btn-primary" style="flex: 1; padding: 10px; background: #87ac3a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Add to Cart</button>
         </div>
     </div>
 </div>
@@ -556,7 +560,7 @@ function showPopup(element, product) {
     }
     lastShowTime = now;
     
-    console.log('showPopup called with:', element, product);
+
     
     // Prevent rapid re-triggering of same popup (anti-flashing protection)
     if (currentProduct && currentProduct.sku === product.sku && isShowingPopup) {
@@ -589,7 +593,9 @@ function showPopup(element, product) {
     popupCategory.textContent = product.category ?? 'Category';
     popupTitle.textContent = product.name ?? product.productName ?? 'Item Name';
     popupDescription.textContent = product.description ?? 'No description available';
-    popupPrice.textContent = '$' + (parseFloat(product.retailPrice ?? product.price ?? 0)).toFixed(2);
+    
+    // Check for sales and update price display
+    checkAndDisplaySalePrice(product, popupPrice, null, 'popup');
 
     // Better positioning relative to the element
     const rect = element.getBoundingClientRect();
@@ -644,10 +650,19 @@ function showPopup(element, product) {
     popup.style.opacity = '';
     popup.classList.add('show');
 
-    // Add to cart functionality
+    // Add to cart functionality using global function
     popupAddBtn.onclick = function() {
         popup.classList.remove('show');
-        openQuantityModal(product);
+        const sku = product.sku;
+        const name = product.name;
+        const price = parseFloat(product.retailPrice);
+        const image = `images/items/${product.sku}A.png`;
+        
+        if (typeof window.addToCartWithModal === 'function') {
+            window.addToCartWithModal(sku, name, price, image);
+        } else {
+            console.error('Global addToCartWithModal function not available');
+        }
     };
 }
 
@@ -698,124 +713,48 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Quantity modal functionality
-let modalProduct = null;
-let quantityModal, modalProductImage, modalProductName, modalProductPrice;
-let modalUnitPrice, modalQuantity, modalTotal, quantityInput;
-let decreaseQtyBtn, increaseQtyBtn, closeModalBtn, cancelModalBtn, confirmAddBtn;
-
-// Initialize modal elements when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    quantityModal = document.getElementById('quantityModal');
-    modalProductImage = document.getElementById('modalProductImage');
-    modalProductName = document.getElementById('modalProductName');
-    modalProductPrice = document.getElementById('modalProductPrice');
-    modalUnitPrice = document.getElementById('modalUnitPrice');
-    modalQuantity = document.getElementById('modalQuantity');
-    modalTotal = document.getElementById('modalTotal');
-    quantityInput = document.getElementById('quantityInput');
-    decreaseQtyBtn = document.getElementById('decreaseQty');
-    increaseQtyBtn = document.getElementById('increaseQty');
-    closeModalBtn = document.getElementById('closeQuantityModal');
-    cancelModalBtn = document.getElementById('cancelQuantityModal');
-    confirmAddBtn = document.getElementById('confirmAddToCart');
-
-    // Set up event listeners
-    if (quantityInput) {
-        quantityInput.addEventListener('input', function() {
-            const value = Math.max(1, Math.min(999, parseInt(this.value) || 1));
-            this.value = value;
-            updateTotal();
-        });
-    }
-
-    if (decreaseQtyBtn) {
-        decreaseQtyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const current = parseInt(quantityInput.value) || 1;
-            if (current > 1) {
-                quantityInput.value = current - 1;
-                updateTotal();
-            }
-        });
-    }
-
-    if (increaseQtyBtn) {
-        increaseQtyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const current = parseInt(quantityInput.value) || 1;
-            if (current < 999) {
-                quantityInput.value = current + 1;
-                updateTotal();
-            }
-        });
-    }
-
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', closeQuantityModal);
-    }
-    
-    if (cancelModalBtn) {
-        cancelModalBtn.addEventListener('click', closeQuantityModal);
-    }
-
-    // Close modal when clicking outside
-    if (quantityModal) {
-        quantityModal.addEventListener('click', function(e) {
-            if (e.target === quantityModal) {
-                closeQuantityModal();
-            }
-        });
-    }
-
-    // Confirm add to cart
-    if (confirmAddBtn) {
-        confirmAddBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (modalProduct && typeof window.cart !== 'undefined') {
-                const quantity = parseInt(quantityInput.value) || 1;
-                const sku = modalProduct.sku ?? modalProduct.id;
-                const name = modalProduct.name ?? modalProduct.productName ?? 'Item';
-                const price = parseFloat(modalProduct.retailPrice ?? modalProduct.price ?? 0);
-                const imageUrl = `images/items/${modalProduct.sku}A.png`;
-                
-                // Add item to cart with quantity
-                window.cart.addItem({
-                    sku: sku,
-                    name: name,
-                    price: price,
-                    image: imageUrl,
-                    quantity: quantity
-                });
-                
-                // Show notification
-                const quantityText = quantity > 1 ? ` (${quantity})` : '';
-                alert(`${name}${quantityText} added to your cart!`);
-                
-                closeQuantityModal();
-            } else {
-                console.error('Cart functionality not available or no product selected');
-                alert('Unable to add item to cart. Please refresh the page and try again.');
-            }
-        });
-    }
-});
+// Quantity modal functionality - now handled by global functions in cart.js
+// Local event listeners removed to prevent conflicts with global handlers
 
 // Function to open quantity modal
 window.openQuantityModal = function(product) {
     // Hide any existing popup first
     hidePopupImmediate();
     
-    modalProduct = product;
+    // Use global modal function if available
+    if (typeof window.addToCartWithModal === 'function') {
+        const sku = product.sku;
+        const name = product.name || product.productName;
+        const price = parseFloat(product.retailPrice || product.price);
+        const image = `images/items/${product.sku}A.png`;
+        
+        window.addToCartWithModal(sku, name, price, image);
+        return;
+    }
+    
+    // Fallback to local modal if global not available
+    const quantityModal = document.getElementById('quantityModal');
+    const modalProductImage = document.getElementById('modalProductImage');
+    const modalProductName = document.getElementById('modalProductName');
+    const modalProductPrice = document.getElementById('modalProductPrice');
+    const modalUnitPrice = document.getElementById('modalUnitPrice');
+    const modalQuantity = document.getElementById('modalQuantity');
+    const modalTotal = document.getElementById('modalTotal');
+    const quantityInput = document.getElementById('quantityInput');
+    
+    if (!quantityModal) {
+        console.error('Quantity modal not found!');
+        return;
+    }
+    
+    // Store product for later use
+    window.currentModalProduct = product;
     
     // Set product details
     modalProductName.textContent = product.name || product.productName || 'Product';
-    modalProductPrice.textContent = '$' + parseFloat(product.retailPrice ?? product.price ?? 0).toFixed(2);
-    modalUnitPrice.textContent = '$' + parseFloat(product.retailPrice ?? product.price ?? 0).toFixed(2);
+    
+    // Check for sales and update pricing in modal
+    checkAndDisplaySalePrice(product, modalProductPrice, modalUnitPrice, 'modal');
     
     // Set product image
     const imageUrl = `images/items/${product.sku}A.png`;
@@ -835,23 +774,26 @@ window.openQuantityModal = function(product) {
 
 // Function to update total calculation
 function updateTotal() {
+    const quantityInput = document.getElementById('quantityInput');
+    const modalUnitPrice = document.getElementById('modalUnitPrice');
+    const modalQuantity = document.getElementById('modalQuantity');
+    const modalTotal = document.getElementById('modalTotal');
+    
     const quantity = parseInt(quantityInput.value) || 1;
-    const unitPrice = modalProduct ? parseFloat(modalProduct.retailPrice ?? modalProduct.price ?? 0) : 0;
+    
+    // Get the current unit price from the modal (which may be on sale)
+    let unitPrice = 0;
+    if (modalUnitPrice && modalUnitPrice.textContent) {
+        const priceText = modalUnitPrice.textContent.replace('$', '');
+        unitPrice = parseFloat(priceText) || 0;
+    } else if (window.currentModalProduct) {
+        unitPrice = parseFloat(window.currentModalProduct.retailPrice ?? window.currentModalProduct.price ?? 0);
+    }
+    
     const total = quantity * unitPrice;
     
     modalQuantity.textContent = quantity;
     modalTotal.textContent = '$' + total.toFixed(2);
-}
-
-// Modal close functionality
-function closeQuantityModal() {
-    if (quantityModal) {
-        quantityModal.classList.add('hidden');
-    }
-    if (quantityInput) {
-        quantityInput.value = 1;
-    }
-    modalProduct = null;
 }
 
 // Show detailed item modal
@@ -896,11 +838,11 @@ window.showItemDetails = async function() {
 
 // Click-outside room functionality
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, setting up click-outside functionality');
+
     
     // Handle clicks on document body for background detection
     document.body.addEventListener('click', function(e) {
-        console.log('Body clicked:', e.target);
+
         
         // Skip if click is on or inside room container or any UI elements
         const roomContainer = document.querySelector('#universalRoomPage .room-container');
@@ -908,20 +850,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // If back button was clicked, let it handle navigation
         if (e.target === backButton || (backButton && backButton.contains(e.target))) {
-            console.log('Back button clicked, allowing default navigation');
+
             return true; // Let the link handle navigation
         }
         
         // If popup is open, don't handle background clicks
         const popup = document.getElementById('productPopup');
         if (popup && popup.classList.contains('show')) {
-            console.log('Popup is open, not handling background click');
+
             return;
         }
         
         // If click is not on room container or its children, navigate to main room
         if (roomContainer && !roomContainer.contains(e.target)) {
-            console.log('Click outside room container, navigating to main room');
+
             window.location.href = '/?page=main_room';
         }
     });
@@ -929,7 +871,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ensure back button works
     const backButton = document.querySelector('.back-button');
     if (backButton) {
-        console.log('Back button found, ensuring it works');
+
         
         // Remove any existing click listeners that might interfere
         const newBackButton = backButton.cloneNode(true);
@@ -937,7 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add a clean click listener
         newBackButton.addEventListener('click', function(e) {
-            console.log('Back button clicked via event listener');
+
             // Let the default link behavior happen
         });
     }
@@ -1008,7 +950,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success && data.coordinates && data.coordinates.length > 0) {
                 baseAreas = data.coordinates;
-                console.log(`Loaded ${ROOM_TYPE} coordinates from database:`, data.map_name);
+
             } else {
                 console.error(`No active room map found in database for ${ROOM_TYPE}`);
                 return; // Don't initialize if no coordinates available
@@ -1185,4 +1127,5 @@ async function generateDetailedModal(item, images) {
                                             <span class="font-medium text-gray-600">Dimensions:</span>
                                             <span class="text-gray-700">${item.dimensions}</span>
                                         </div>
+                                        `
                                         `

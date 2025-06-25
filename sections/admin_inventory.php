@@ -145,15 +145,85 @@ $messageType = $_GET['type'] ?? '';
     }
     
     .toast-notification {
-        position: fixed; top: 20px; right: 20px; padding: 12px 20px;
-        border-radius: 4px; color: white; font-weight: 500; z-index: 9999;
-        opacity: 0; transform: translateY(-20px); box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: opacity 0.3s, transform 0.3s;
+        position: fixed; 
+        top: 20px; 
+        right: 20px; 
+        padding: 16px 20px;
+        border-radius: 12px; 
+        color: white; 
+        font-weight: 500; 
+        z-index: 9999;
+        opacity: 0; 
+        transform: translateY(-20px) translateX(100px); 
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        max-width: 400px;
+        min-width: 300px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: system-ui, -apple-system, sans-serif;
     }
-    .toast-notification.show { opacity: 1; transform: translateY(0); }
-    .toast-notification.success { background-color: #48bb78; } /* Tailwind green-500 */
-    .toast-notification.error { background-color: #f56565; } /* Tailwind red-500 */
-    .toast-notification.info { background-color: #4299e1; } /* Tailwind blue-500 */
+    
+    .toast-notification.show { 
+        opacity: 1; 
+        transform: translateY(0) translateX(0); 
+    }
+    
+    .toast-notification.success { 
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    
+    .toast-notification.error { 
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .toast-notification.info { 
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .toast-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+    }
+    
+    .toast-content {
+        flex: 1;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    .toast-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.8);
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    
+    .toast-close:hover {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
 
     .inventory-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px; table-layout: fixed; }
     .inventory-table th { background-color: #87ac3a; color: white; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 0.8rem; position: sticky; top: 0; z-index: 10; }
@@ -164,23 +234,23 @@ $messageType = $_GET['type'] ?? '';
     
     /* Fixed column widths to prevent resizing during inline editing */
     .inventory-table th:nth-child(1), .inventory-table td:nth-child(1) { width: 60px; } /* Image */
-    .inventory-table th:nth-child(2), .inventory-table td:nth-child(2) { width: 180px; } /* Name */
-    .inventory-table th:nth-child(3), .inventory-table td:nth-child(3) { width: 120px; } /* Category */
-    .inventory-table th:nth-child(4), .inventory-table td:nth-child(4) { width: 100px; } /* SKU */
-    .inventory-table th:nth-child(5), .inventory-table td:nth-child(5) { width: 80px; } /* Stock */
-    .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { width: 90px; } /* Reorder Point */
-    .inventory-table th:nth-child(7), .inventory-table td:nth-child(7) { width: 90px; } /* Cost Price */
-    .inventory-table th:nth-child(8), .inventory-table td:nth-child(8) { width: 90px; } /* Retail Price */
-    .inventory-table th:nth-child(9), .inventory-table td:nth-child(9) { width: 70px; } /* Images */
+    .inventory-table th:nth-child(2), .inventory-table td:nth-child(2) { width: 70px; } /* Images */
+    .inventory-table th:nth-child(3), .inventory-table td:nth-child(3) { width: 180px; } /* Name */
+    .inventory-table th:nth-child(4), .inventory-table td:nth-child(4) { width: 120px; } /* Category */
+    .inventory-table th:nth-child(5), .inventory-table td:nth-child(5) { width: 100px; } /* SKU */
+    .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { width: 80px; } /* Stock */
+    .inventory-table th:nth-child(7), .inventory-table td:nth-child(7) { width: 90px; } /* Reorder Point */
+    .inventory-table th:nth-child(8), .inventory-table td:nth-child(8) { width: 90px; } /* Cost Price */
+    .inventory-table th:nth-child(9), .inventory-table td:nth-child(9) { width: 90px; } /* Retail Price */
     .inventory-table th:nth-child(10), .inventory-table td:nth-child(10) { width: 120px; } /* Actions */
     
     /* Responsive adjustments for smaller screens */
     @media (max-width: 1200px) {
         .inventory-table { table-layout: auto; }
         .inventory-table th, .inventory-table td { width: auto !important; min-width: 60px; }
-        .inventory-table th:nth-child(2), .inventory-table td:nth-child(2) { min-width: 120px; } /* Name */
-        .inventory-table th:nth-child(5), .inventory-table td:nth-child(5) { min-width: 60px; } /* Stock */
-        .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { min-width: 70px; } /* Reorder Point */
+        .inventory-table th:nth-child(3), .inventory-table td:nth-child(3) { min-width: 120px; } /* Name */
+        .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { min-width: 60px; } /* Stock */
+        .inventory-table th:nth-child(7), .inventory-table td:nth-child(7) { min-width: 70px; } /* Reorder Point */
     }
 
     .action-btn { padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; border: none; }
@@ -582,13 +652,13 @@ $messageType = $_GET['type'] ?? '';
         <table id="inventoryTable" class="inventory-table">
             <thead>
                 <tr>
-                    <th>Image</th><th>Name</th><th>Category</th><th>SKU</th><th>Stock</th>
-                    <th>Reorder Point</th><th>Cost Price</th><th>Retail Price</th><th>Images</th><th>Actions</th>
+                    <th>Image</th><th>Images</th><th>Name</th><th>Category</th><th>SKU</th><th>Stock</th>
+                    <th>Reorder Point</th><th>Cost Price</th><th>Retail Price</th><th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($items)): ?>
-                    <tr><td colspan="9" class="text-center py-4">No items found matching your criteria.</td></tr>
+                    <tr><td colspan="10" class="text-center py-4">No items found matching your criteria.</td></tr>
                 <?php else: ?>
                     <?php foreach ($items as $item): ?>
                     <tr data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['sku']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
@@ -597,6 +667,11 @@ $messageType = $_GET['type'] ?? '';
                                 <div class="thumbnail-loading" style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">...</div>
                             </div>
                         </td>
+                        <td class="text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= ($item['image_count'] > 0) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' ?>">
+                                <?= intval($item['image_count']) ?>
+                            </span>
+                        </td>
                                             <td class="editable" data-field="name"><?= htmlspecialchars($item['name'] ?? '') ?></td>
                     <td class="editable" data-field="category"><?= htmlspecialchars($item['category'] ?? '') ?></td>
                     <td><?= htmlspecialchars($item['sku'] ?? '') ?></td> <!-- SKU not typically inline editable -->
@@ -604,11 +679,6 @@ $messageType = $_GET['type'] ?? '';
                     <td class="editable" data-field="reorderPoint"><?= htmlspecialchars($item['reorderPoint'] ?? '0') ?></td>
                         <td class="editable" data-field="costPrice">$<?= number_format(floatval($item['costPrice'] ?? 0), 2) ?></td>
                         <td class="editable" data-field="retailPrice">$<?= number_format(floatval($item['retailPrice'] ?? 0), 2) ?></td>
-                        <td class="text-center">
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= ($item['image_count'] > 0) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' ?>">
-                                <?= intval($item['image_count']) ?>
-                            </span>
-                        </td>
                         <td>
                                                     <a href="?page=admin&section=inventory&view=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="action-btn view-btn" title="View Item">👁️</a>
                         <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="action-btn edit-btn" title="Edit Item">✏️</a>
@@ -942,6 +1012,28 @@ $messageType = $_GET['type'] ?? '';
                         </div>
                         
                         <!-- Note: Images now managed through item_images table and image carousel above -->
+                    </div>
+                    
+                    <!-- Color Management Section -->
+                    <div class="color-management-section mt-4" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <span class="mr-2">🎨</span> Color Options
+                            </h3>
+                            <div class="flex space-x-2">
+                                <button type="button" onclick="syncStockLevels()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" title="Sync total stock with color quantities">
+                                    🔄 Sync Stock
+                                </button>
+                                <button type="button" onclick="addNewColor()" class="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors">
+                                    + Add Color
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="colorsList" class="space-y-2">
+                            <!-- Colors will be loaded here -->
+                            <div class="text-center text-gray-500 text-sm" id="colorsLoading">Loading colors...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -1546,22 +1638,120 @@ document.addEventListener('click', function(e) {
 });
 
 function showToast(type, message) {
+    console.log('🔔 showToast called with:', { type, message });
+    
     const existingToast = document.getElementById('toast-notification');
     if (existingToast) {
+        console.log('🗑️ Removing existing toast');
         existingToast.remove();
     }
+    
+    // Create the toast container
     const toast = document.createElement('div');
     toast.id = 'toast-notification';
     toast.className = `toast-notification ${type}`;
-    toast.textContent = message;
+    
+    // Define icons for different types
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+    
+    // Create the toast structure
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || icons.info}</div>
+        <div class="toast-content">${message}</div>
+        <button class="toast-close" onclick="this.parentElement.remove()" title="Close">&times;</button>
+    `;
+    
+    console.log('📝 Toast element created:', toast);
+    
     document.body.appendChild(toast);
+    console.log('➕ Toast added to body');
+    
+    // Trigger the show animation
     setTimeout(() => {
         toast.classList.add('show');
+        console.log('✨ Show animation triggered');
     }, 10);
+    
+    // Auto-remove after 4 seconds (a bit longer for better UX)
     setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+        if (toast.parentElement) {
+            toast.classList.remove('show');
+            console.log('⏰ Auto-hiding toast after 4 seconds');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                    console.log('🗑️ Toast auto-removed');
+                }
+            }, 400); // Match the transition duration
+        }
+    }, 4000);
+}
+
+// Styled confirmation dialog
+function showStyledConfirm(title, message, confirmText = 'Confirm', cancelText = 'Cancel') {
+    return new Promise((resolve) => {
+        // Remove any existing confirmation modal
+        const existingModal = document.getElementById('styled-confirm-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Create the modal
+        const modal = document.createElement('div');
+        modal.id = 'styled-confirm-modal';
+        modal.className = 'modal-overlay';
+        modal.style.zIndex = '999999';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h3 style="margin: 0; color: #374151; font-size: 1.2rem;">${title}</h3>
+                </div>
+                <div class="modal-body">
+                    <p style="margin: 0 0 20px 0; color: #6b7280; line-height: 1.5;">${message}</p>
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button id="styled-confirm-cancel" class="btn-secondary" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #d1d5db; background: white; color: #374151; cursor: pointer;">
+                            ${cancelText}
+                        </button>
+                        <button id="styled-confirm-ok" class="btn-primary" style="padding: 8px 16px; border-radius: 6px; border: none; background: #ef4444; color: white; cursor: pointer;">
+                            ${confirmText}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add event listeners
+        document.getElementById('styled-confirm-cancel').addEventListener('click', () => {
+            modal.remove();
+            resolve(false);
+        });
+        
+        document.getElementById('styled-confirm-ok').addEventListener('click', () => {
+            modal.remove();
+            resolve(true);
+        });
+        
+        // Close on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                resolve(false);
+            }
+        });
+        
+        // Show the modal
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    });
 }
 
 function addCostItem(type) {
@@ -2024,23 +2214,33 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                 
                 <!-- Action Buttons -->
                 <div class="flex flex-col gap-3">
-                    <!-- Primary Action: Replace All -->
-                    <button onclick="replaceAllCostValues(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
-                            class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
-                        🔄 Replace Current Cost Values
+                    <!-- Primary Action: Apply Total to Cost Field -->
+                    <button onclick="applySuggestedCostToCostField(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                            class="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
+                        💰 Use Total Cost ($${parseFloat(suggestionData.suggestedCost).toFixed(2)}) in Cost Price Field
                     </button>
                     
-                    <!-- Secondary Actions -->
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <button onclick="applySelectedCostFields(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
-                                class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
-                            ➕ Add as Additional Costs
-                        </button>
-                        
-                        <button onclick="closeCostSuggestionChoiceDialog()" 
-                                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200">
-                            ❌ Cancel
-                        </button>
+                    <!-- Detailed Breakdown Actions -->
+                    <div class="border-t border-gray-200 pt-3">
+                        <p class="text-sm text-gray-600 mb-3 text-center">Or manage detailed cost breakdown:</p>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="replaceAllCostValues(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                                    class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-all duration-200 text-sm">
+                                🔄 Replace Current Cost Breakdown
+                            </button>
+                            
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <button onclick="applySelectedCostFields(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                                        class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-all duration-200 text-sm">
+                                    ➕ Add Selected to Breakdown
+                                </button>
+                                
+                                <button onclick="closeCostSuggestionChoiceDialog()" 
+                                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm">
+                                    ❌ Cancel
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -2799,6 +2999,7 @@ async function useSuggestedCost() {
 }
 
 async function useSuggestedPrice() {
+    console.log('🎯 useSuggestedPrice() called - generating NEW price suggestion');
     const nameField = document.getElementById('name');
     const descriptionField = document.getElementById('description');
     const categoryField = document.getElementById('categoryEdit');
@@ -2814,6 +3015,7 @@ async function useSuggestedPrice() {
     const originalText = button.innerHTML;
     button.innerHTML = '🔍 Analyzing...';
     button.disabled = true;
+    console.log('🔄 Button state changed to loading...');
     
     // Check if current AI model supports images
     const supportsImages = await checkAIImageSupport();
@@ -2830,21 +3032,27 @@ async function useSuggestedPrice() {
     
     try {
         // Call the price suggestion API
+        console.log('📡 Sending request to /api/suggest_price.php with data:', itemData);
         const response = await fetch('/api/suggest_price.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
+            credentials: 'same-origin', // Include session cookies
             body: JSON.stringify(itemData)
         });
         
+        console.log('📨 Response status:', response.status);
         const data = await response.json();
+        console.log('📋 Response data:', data);
         
         if (data.success) {
+            console.log('✅ Success! Showing price suggestion dialog');
             // Show choice dialog with the new figures
             showPriceSuggestionChoiceDialog(data);
         } else {
+            console.log('❌ API returned error:', data.error);
             showToast('error', data.error || 'Failed to get price suggestion');
         }
     } catch (error) {
@@ -3007,6 +3215,41 @@ function applyCostSuggestionToCost() {
         }
     } else {
         showToast('error', 'Cost suggestion elements not found. Please refresh the page.');
+    }
+}
+
+function applySuggestedCostToCostField(button) {
+    try {
+        // Parse the suggestion data from the button
+        const suggestionData = JSON.parse(button.getAttribute('data-suggestion').replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+        
+        // Get the cost price field
+        const costPriceField = document.getElementById('costPrice');
+        
+        if (costPriceField) {
+            // Apply the suggested cost to the cost price field
+            const suggestedCost = parseFloat(suggestionData.suggestedCost) || 0;
+            costPriceField.value = suggestedCost.toFixed(2);
+            
+            // Add visual feedback with green color for cost
+            costPriceField.style.backgroundColor = '#dcfce7';
+            costPriceField.style.borderColor = '#16a34a';
+            setTimeout(() => {
+                costPriceField.style.backgroundColor = '';
+                costPriceField.style.borderColor = '';
+            }, 3000);
+            
+            // Close the modal
+            closeCostSuggestionChoiceDialog();
+            
+            // Show success message
+            showToast('success', `AI suggested cost of $${suggestedCost.toFixed(2)} applied to Cost Price field!`);
+        } else {
+            showToast('error', 'Cost Price field not found. Please refresh the page.');
+        }
+    } catch (error) {
+        console.error('Error applying suggested cost to cost field:', error);
+        showToast('error', 'Error applying suggested cost. Please try again.');
     }
 }
 
@@ -3296,6 +3539,7 @@ function getViewModePriceSuggestion() {
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         },
+        credentials: 'same-origin', // Include session cookies
         body: JSON.stringify(itemData)
     })
     .then(response => response.json())
@@ -3487,10 +3731,12 @@ function loadExistingPriceSuggestion(sku) {
     fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`)
     .then(response => response.json())
     .then(data => {
-        console.log('Price suggestion API response:', data); // Debug log
+        console.log('📂 Loading existing price suggestion for SKU:', sku, 'Result:', data); // Debug log
         if (data.success && data.suggestedPrice) {
+            console.log('✅ Found existing price suggestion, displaying it');
             displayPriceSuggestion(data);
         } else {
+            console.log('ℹ️ No existing price suggestion found (this is normal) - showing placeholder');
             // Show placeholder if no existing suggestion
             const placeholder = document.getElementById('priceSuggestionPlaceholder');
             const display = document.getElementById('priceSuggestionDisplay');
@@ -7808,6 +8054,475 @@ document.addEventListener("click", function(event) {
             console.error("openMarketingManager function not found");
         }
         return false; // Prevent any other event handlers
+    }
+});
+
+// Color Management Functions
+
+// Load colors for the current item
+async function loadItemColors() {
+    console.log('loadItemColors called, currentItemSku:', currentItemSku);
+    
+    // Try to get SKU from multiple sources
+    if (!currentItemSku) {
+        const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
+        if (skuField && skuField.value) {
+            currentItemSku = skuField.value;
+            console.log('Found SKU from field:', currentItemSku);
+        }
+    }
+    
+    if (!currentItemSku) {
+        console.log('No SKU available for loading colors');
+        const colorsLoading = document.getElementById('colorsLoading');
+        if (colorsLoading) {
+            colorsLoading.textContent = 'No SKU available';
+        }
+        return;
+    }
+    
+    // Show loading state
+    const colorsLoading = document.getElementById('colorsLoading');
+    if (colorsLoading) {
+        colorsLoading.textContent = 'Loading colors...';
+        colorsLoading.style.display = 'block';
+    }
+    
+    try {
+        console.log('Fetching colors for SKU:', currentItemSku);
+        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        console.log('Colors API response:', data);
+        
+        if (data.success) {
+            renderColors(data.colors);
+        } else {
+            console.error('Error loading colors:', data.message);
+            renderColors([]);
+        }
+    } catch (error) {
+        console.error('Error fetching colors:', error);
+        renderColors([]);
+    }
+}
+
+// Render colors list
+function renderColors(colors) {
+    const colorsList = document.getElementById('colorsList');
+    const colorsLoading = document.getElementById('colorsLoading');
+    
+    if (colorsLoading) {
+        colorsLoading.style.display = 'none';
+    }
+    
+    if (!colorsList) return;
+    
+    if (colors.length === 0) {
+        colorsList.innerHTML = '<div class="text-center text-gray-500 text-sm">No colors defined. Click "Add Color" to get started.</div>';
+        return;
+    }
+    
+    // Calculate total stock from active colors
+    const activeColors = colors.filter(c => c.is_active == 1);
+    const totalColorStock = activeColors.reduce((sum, c) => sum + parseInt(c.stock_level || 0), 0);
+    
+    // Get current item stock level
+    const stockField = document.getElementById('stockLevel');
+    const currentItemStock = stockField ? parseInt(stockField.value || 0) : 0;
+    
+    // Check if stock is in sync
+    const isInSync = totalColorStock === currentItemStock;
+    
+    let html = '';
+    
+    // Add sync status indicator if there are active colors
+    if (activeColors.length > 0) {
+        const syncClass = isInSync ? 'bg-green-50 border-green-200 text-green-800' : 'bg-yellow-50 border-yellow-200 text-yellow-800';
+        const syncIcon = isInSync ? '✅' : '⚠️';
+        const syncMessage = isInSync ? 
+            `Stock synchronized (${totalColorStock} total)` : 
+            `Stock out of sync! Colors total: ${totalColorStock}, Item stock: ${currentItemStock}`;
+        
+        html += `
+            <div class="mb-3 p-2 border rounded-lg ${syncClass}">
+                <div class="text-sm font-medium">${syncIcon} ${syncMessage}</div>
+                ${!isInSync ? '<div class="text-xs mt-1">Click "Sync Stock" to fix this.</div>' : ''}
+            </div>
+        `;
+    }
+    
+    html += colors.map(color => {
+        const isActive = color.is_active == 1;
+        const activeClass = isActive ? 'bg-white' : 'bg-gray-100 opacity-75';
+        const activeText = isActive ? '' : ' (Inactive)';
+        
+        return `
+            <div class="color-item flex items-center justify-between p-3 border border-gray-200 rounded-lg ${activeClass}">
+                <div class="flex items-center space-x-3">
+                    <div class="color-swatch w-8 h-8 rounded-full border-2 border-gray-300" style="background-color: ${color.color_code || '#ccc'}"></div>
+                    <div>
+                        <div class="font-medium text-gray-800">${color.color_name}${activeText}</div>
+                        <div class="text-sm text-gray-500">${color.stock_level} in stock</div>
+                        ${color.image_path ? `<div class="text-xs text-blue-600">Image: ${color.image_path}</div>` : ''}
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="editColor(${color.id})" class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
+                        Edit
+                    </button>
+                    <button type="button" onclick="deleteColor(${color.id})" class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    colorsList.innerHTML = html;
+}
+
+// Add new color
+function addNewColor() {
+    showColorModal();
+}
+
+// Edit existing color
+async function editColor(colorId) {
+    try {
+        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const color = data.colors.find(c => c.id == colorId);
+            if (color) {
+                showColorModal(color);
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching color for edit:', error);
+    }
+}
+
+// Delete color
+async function deleteColor(colorId) {
+    console.log('🗑️ deleteColor called with colorId:', colorId);
+    
+    // Create a styled confirmation modal instead of browser confirm
+    const confirmResult = await showStyledConfirm(
+        'Delete Color',
+        'Are you sure you want to delete this color? This action cannot be undone.',
+        'Delete',
+        'Cancel'
+    );
+    
+    if (!confirmResult) {
+        console.log('❌ User cancelled color deletion');
+        return;
+    }
+    
+    console.log('✅ User confirmed color deletion, proceeding...');
+    
+    try {
+        const response = await fetch('/api/item_colors.php?action=delete_color', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ color_id: colorId })
+        });
+        
+        const data = await response.json();
+        console.log('📡 API response:', data);
+        
+        if (data.success) {
+            console.log('🎉 Color deleted successfully, calling showToast...');
+            showToast('success', 'Color deleted successfully');
+            loadItemColors(); // Reload colors
+        } else {
+            console.log('❌ API error:', data.message);
+            showToast('error', 'Error deleting color: ' + data.message);
+        }
+    } catch (error) {
+        console.error('💥 Error deleting color:', error);
+        showToast('error', 'Error deleting color');
+    }
+}
+
+// Show color modal
+function showColorModal(color = null) {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('colorModal')) {
+        createColorModal();
+    }
+    
+    const modal = document.getElementById('colorModal');
+    const form = document.getElementById('colorForm');
+    const modalTitle = document.getElementById('colorModalTitle');
+    
+    // Reset form
+    form.reset();
+    
+    if (color) {
+        // Edit mode
+        modalTitle.textContent = 'Edit Color';
+        document.getElementById('colorId').value = color.id;
+        document.getElementById('colorName').value = color.color_name;
+        document.getElementById('colorCode').value = color.color_code || '#000000';
+        document.getElementById('colorStockLevel').value = color.stock_level;
+        document.getElementById('displayOrder').value = color.display_order;
+        document.getElementById('isActive').checked = color.is_active == 1;
+        // Set image path if available
+        setTimeout(() => {
+            const imageSelect = document.getElementById('colorImagePath');
+            if (imageSelect && color.image_path) {
+                imageSelect.value = color.image_path;
+            }
+        }, 100); // Small delay to ensure options are loaded
+    } else {
+        // Add mode
+        modalTitle.textContent = 'Add New Color';
+        document.getElementById('colorId').value = '';
+        document.getElementById('colorCode').value = '#000000';
+        document.getElementById('colorStockLevel').value = '0';
+        document.getElementById('displayOrder').value = '0';
+        document.getElementById('isActive').checked = true;
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Create color modal
+function createColorModal() {
+    const modalHTML = `
+        <div id="colorModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2 id="colorModalTitle">Add New Color</h2>
+                    <button type="button" class="modal-close" onclick="closeColorModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="colorForm" onsubmit="saveColor(event)">
+                        <input type="hidden" id="colorId" name="colorId">
+                        
+                        <div class="mb-4">
+                            <label for="colorName" class="block text-sm font-medium text-gray-700 mb-2">Color Name *</label>
+                            <input type="text" id="colorName" name="colorName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="colorCode" class="block text-sm font-medium text-gray-700 mb-2">Color Code</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="color" id="colorCode" name="colorCode" class="w-16 h-10 border border-gray-300 rounded cursor-pointer">
+                                <input type="text" id="colorCodeText" name="colorCodeText" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="#000000">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="colorImagePath" class="block text-sm font-medium text-gray-700 mb-2">Associated Image</label>
+                            <select id="colorImagePath" name="colorImagePath" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">No specific image (use default)</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Choose which item image to show when this color is selected</p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="colorStockLevel" class="block text-sm font-medium text-gray-700 mb-2">Stock Level</label>
+                            <input type="number" id="colorStockLevel" name="stockLevel" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="displayOrder" class="block text-sm font-medium text-gray-700 mb-2">Display Order</label>
+                            <input type="number" id="displayOrder" name="displayOrder" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="isActive" name="isActive" class="mr-2">
+                                <span class="text-sm font-medium text-gray-700">Active (visible to customers)</span>
+                            </label>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeColorModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                Save Color
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Sync color picker with text input
+    const colorCode = document.getElementById('colorCode');
+    const colorCodeText = document.getElementById('colorCodeText');
+    
+    colorCode.addEventListener('change', function() {
+        colorCodeText.value = this.value;
+    });
+    
+    colorCodeText.addEventListener('input', function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+            colorCode.value = this.value;
+        }
+    });
+    
+    // Load available images for the dropdown
+    loadAvailableImages();
+}
+
+// Load available images for color assignment
+async function loadAvailableImages() {
+    if (!currentItemSku) return;
+    
+    try {
+        const response = await fetch(`/api/get_item_images.php?sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        const imageSelect = document.getElementById('colorImagePath');
+        if (!imageSelect) return;
+        
+        // Clear existing options except the first one
+        imageSelect.innerHTML = '<option value="">No specific image (use default)</option>';
+        
+        if (data.success && data.images && data.images.length > 0) {
+            data.images.forEach(image => {
+                const option = document.createElement('option');
+                option.value = image.image_path;
+                option.textContent = `${image.image_path}${image.is_primary ? ' (Primary)' : ''}`;
+                imageSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading available images:', error);
+    }
+}
+
+// Close color modal
+function closeColorModal() {
+    const modal = document.getElementById('colorModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Save color
+async function saveColor(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const colorData = {
+        item_sku: currentItemSku,
+        color_name: formData.get('colorName'),
+        color_code: formData.get('colorCode'),
+        image_path: formData.get('colorImagePath') || '',
+        stock_level: parseInt(formData.get('stockLevel')) || 0,
+        display_order: parseInt(formData.get('displayOrder')) || 0,
+        is_active: formData.get('isActive') ? 1 : 0
+    };
+    
+    const colorId = formData.get('colorId');
+    const isEdit = colorId && colorId !== '';
+    
+    if (isEdit) {
+        colorData.color_id = parseInt(colorId);
+    }
+    
+    try {
+        const response = await fetch(`/api/item_colors.php?action=${isEdit ? 'update_color' : 'add_color'}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(colorData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', `Color ${isEdit ? 'updated' : 'added'} successfully${data.new_total_stock ? ` - Total stock: ${data.new_total_stock}` : ''}`);
+            closeColorModal();
+            loadItemColors(); // Reload colors
+            
+            // Update the stock level field if it exists
+            const stockField = document.getElementById('stockLevel');
+            if (stockField && data.new_total_stock !== undefined) {
+                stockField.value = data.new_total_stock;
+            }
+        } else {
+            showToast('error', `Error ${isEdit ? 'updating' : 'adding'} color: ` + data.message);
+        }
+    } catch (error) {
+        console.error('Error saving color:', error);
+        showToast('error', `Error ${isEdit ? 'updating' : 'adding'} color`);
+    }
+}
+
+// Sync stock levels manually
+async function syncStockLevels() {
+    if (!currentItemSku) {
+        showToast('error', 'No item selected');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/item_colors.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'sync_stock',
+                item_sku: currentItemSku
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', `Stock synchronized - Total: ${data.new_total_stock}`);
+            
+            // Update the stock level field if it exists
+            const stockField = document.getElementById('stockLevel');
+            if (stockField && data.new_total_stock !== undefined) {
+                stockField.value = data.new_total_stock;
+            }
+            
+            // Reload colors to show updated information
+            loadItemColors();
+        } else {
+            showToast('error', `Error syncing stock: ${data.message}`);
+        }
+    } catch (error) {
+        console.error('Error syncing stock:', error);
+        showToast('error', 'Error syncing stock levels');
+    }
+}
+
+// Load colors when modal opens
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemSku:', currentItemSku);
+    
+    // Load colors when in edit mode and we have a valid SKU
+    if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {
+        console.log('Loading colors for SKU:', currentItemSku);
+        setTimeout(loadItemColors, 500); // Small delay to ensure elements are ready
+    } else if (document.getElementById('sku') || document.getElementById('skuDisplay')) {
+        // Fallback: try to get SKU from form fields
+        const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
+        if (skuField && skuField.value) {
+            currentItemSku = skuField.value;
+            console.log('Found SKU from field:', currentItemSku);
+            setTimeout(loadItemColors, 500);
+        }
     }
 });
 

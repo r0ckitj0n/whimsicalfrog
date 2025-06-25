@@ -314,10 +314,10 @@ div #confirmAddToCart:hover,
     top: 5px;
     right: 5px;
     background-color: #dc2626;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
+    color: black;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
     font-weight: bold;
     z-index: 10;
     border: 1px solid rgba(255, 255, 255, 0.3);

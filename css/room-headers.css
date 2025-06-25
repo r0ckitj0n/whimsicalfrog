@@ -8,11 +8,11 @@
     --room-title-font-size: 2.5rem;
     --room-title-color: #87ac3a;
     --room-title-text-stroke: 2px #556B2F;
-    --room-title-text-shadow: 2px 2px 0px #556B2F, -2px -2px 0px #556B2F, 2px -2px 0px #556B2F, -2px 2px 0px #556B2F, 0px 2px 0px #556B2F, 2px 0px 0px #556B2F, 0px -2px 0px #556B2F, -2px 0px 0px #556B2F;
+    --room-title-text-shadow: none;
     --room-description-font-size: 1rem;
     --room-description-color: #87ac3a;
     --room-description-text-stroke: 2px #556B2F;
-    --room-description-text-shadow: 2px 2px 0px #556B2F, -2px -2px 0px #556B2F, 2px -2px 0px #556B2F, -2px 2px 0px #556B2F, 0px 2px 0px #556B2F, 2px 0px 0px #556B2F, 0px -2px 0px #556B2F, -2px 0px 0px #556B2F;
+    --room-description-text-shadow: none;
     
     /* Back Button Variables - Fallback values, will be overridden by Global CSS Rules */
     --back-button-text-color: #ffffff;

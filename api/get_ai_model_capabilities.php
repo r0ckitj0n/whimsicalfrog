@@ -19,11 +19,11 @@ try {
             $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE setting_key = ? AND category = 'ai'");
             
             $stmt->execute(['ai_provider']);
-            $provider = $stmt->fetchColumn() ?: 'local';
+            $provider = $stmt->fetchColumn() ?: 'jons_ai';
             
             $modelKey = $provider . '_model';
             $stmt->execute([$modelKey]);
-            $modelId = $stmt->fetchColumn() ?: 'local-basic';
+            $modelId = $stmt->fetchColumn() ?: 'jons-ai-basic';
             
             // Get model capabilities
             $stmt = $pdo->prepare("SELECT * FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1");
@@ -31,8 +31,8 @@ try {
             $model = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$model) {
-                // Fallback to local if model not found
-                $stmt->execute(['local', 'local-basic']);
+                // Fallback to Jon's AI if model not found
+                $stmt->execute(['jons_ai', 'jons-ai-basic']);
                 $model = $stmt->fetch(PDO::FETCH_ASSOC);
             }
             
@@ -70,11 +70,11 @@ try {
                 $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE setting_key = ? AND category = 'ai'");
                 
                 $stmt->execute(['ai_provider']);
-                $provider = $stmt->fetchColumn() ?: 'local';
+                $provider = $stmt->fetchColumn() ?: 'jons_ai';
                 
                 $modelKey = $provider . '_model';
                 $stmt->execute([$modelKey]);
-                $modelId = $stmt->fetchColumn() ?: 'local-basic';
+                $modelId = $stmt->fetchColumn() ?: 'jons-ai-basic';
             }
             
             $stmt = $pdo->prepare("SELECT supports_images FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1");

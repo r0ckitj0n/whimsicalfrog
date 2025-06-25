@@ -9,13 +9,23 @@
     color: #c00 !important;
     font-weight: bold;
   }
+  
+  /* Left-align all admin settings buttons */
+  .admin-settings-container button {
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+  
+  .admin-settings-container button svg {
+    flex-shrink: 0;
+  }
 
 </style>
 
 
 
 <!-- Admin Settings Grid Layout -->
-<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+<div class="admin-settings-container grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
     
     <!-- Content Management -->
     <div class="bg-white shadow rounded-lg p-4">
@@ -98,6 +108,12 @@
                 </svg>
                 Analytics & Insights
             </button>
+            <button onclick="openSalesAdminModal()" class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
+                </svg>
+                Sales Admin
+            </button>
             <button onclick="openCartButtonTextModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0L12 13m0 0l2.5 5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"></path>
@@ -145,6 +161,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
                 </svg>
                 File Explorer
+            </button>
+            <button onclick="openDatabaseTablesModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Database Tables
             </button>
             <button onclick="openDatabaseMaintenanceModal()" class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2770,6 +2792,8 @@ function openAISettingsModal() {
     document.getElementById('aiSettingsModal').style.display = 'flex';
     loadAISettings();
     loadAIProviders();
+    loadContentToneOptions();
+    loadBrandVoiceOptions();
 }
 
 function closeAISettingsModal() {
@@ -2827,9 +2851,9 @@ function displayAISettings(settings) {
                 <div id="ai-provider-selection-content" class="hidden px-4 pb-4">
                 <div class="space-y-2">
                     <label class="flex items-center space-x-3">
-                        <input type="radio" name="ai_provider" value="local" ${settings.ai_provider === 'local' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <input type="radio" name="ai_provider" value="jons_ai" ${settings.ai_provider === 'jons_ai' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
                         <div>
-                            <span class="font-medium">Local AI (Algorithm-based)</span>
+                            <span class="font-medium">Jon's AI (Algorithm-based)</span>
                             <p class="text-sm text-gray-600">Fast, reliable, cost-free algorithm-based AI</p>
                         </div>
                     </label>
@@ -2983,9 +3007,9 @@ function displayAISettings(settings) {
                     <div>
                         <label class="flex items-center space-x-2">
                             <input type="checkbox" id="fallback_to_local" ${settings.fallback_to_local ? 'checked' : ''} class="text-purple-600">
-                            <span class="text-sm font-medium text-gray-700">Fallback to Local AI</span>
+                            <span class="text-sm font-medium text-gray-700">Fallback to Jon's AI</span>
                         </label>
-                        <p class="text-xs text-gray-500 mt-1">Use local AI if external API fails</p>
+                        <p class="text-xs text-gray-500 mt-1">Use Jon's AI if external API fails</p>
                     </div>
                 </div>
                 </div>
@@ -3111,21 +3135,23 @@ function displayAISettings(settings) {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Brand Voice</label>
-                        <input type="text" id="ai_brand_voice" value="${settings.ai_brand_voice || ''}" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                               placeholder="e.g., Friendly, Professional, Casual">
+                        <select id="ai_brand_voice" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">Select brand voice...</option>
+                        </select>
                         <p class="text-xs text-gray-500 mt-1">Default brand voice for content generation</p>
+                        <button type="button" onclick="manageBrandVoiceOptions()" class="mt-1 text-xs text-blue-600 hover:text-blue-800">
+                            Manage Options
+                        </button>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Content Tone</label>
                         <select id="ai_content_tone" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                            <option value="professional" ${settings.ai_content_tone === 'professional' ? 'selected' : ''}>Professional</option>
-                            <option value="friendly" ${settings.ai_content_tone === 'friendly' ? 'selected' : ''}>Friendly</option>
-                            <option value="casual" ${settings.ai_content_tone === 'casual' ? 'selected' : ''}>Casual</option>
-                            <option value="energetic" ${settings.ai_content_tone === 'energetic' ? 'selected' : ''}>Energetic</option>
-                            <option value="sophisticated" ${settings.ai_content_tone === 'sophisticated' ? 'selected' : ''}>Sophisticated</option>
+                            <option value="">Select content tone...</option>
                         </select>
                         <p class="text-xs text-gray-500 mt-1">Default tone for generated content</p>
+                        <button type="button" onclick="manageContentToneOptions()" class="mt-1 text-xs text-blue-600 hover:text-blue-800">
+                            Manage Options
+                        </button>
                     </div>
                 </div>
                 </div>
@@ -3143,6 +3169,21 @@ function displayAISettings(settings) {
     
     // Load models for the currently selected provider only
     loadModelsForCurrentProvider(settings);
+    
+    // Populate content tone and brand voice dropdowns with current selections
+    setTimeout(() => {
+        populateContentToneDropdown();
+        const contentToneDropdown = document.getElementById('ai_content_tone');
+        if (contentToneDropdown && settings.ai_content_tone) {
+            contentToneDropdown.value = settings.ai_content_tone;
+        }
+        
+        populateBrandVoiceDropdown();
+        const brandVoiceDropdown = document.getElementById('ai_brand_voice');
+        if (brandVoiceDropdown && settings.ai_brand_voice) {
+            brandVoiceDropdown.value = settings.ai_brand_voice;
+        }
+    }, 100);
 }
 
 function toggleSection(sectionId) {
@@ -3230,7 +3271,7 @@ function createAISettingField(setting) {
 
 async function saveAISettings() {
     const settings = {
-        ai_provider: document.querySelector('input[name="ai_provider"]:checked')?.value || 'local',
+                    ai_provider: document.querySelector('input[name="ai_provider"]:checked')?.value || 'jons_ai',
         openai_api_key: document.getElementById('openai_api_key')?.value || '',
         openai_model: document.getElementById('openai_model')?.value || 'gpt-3.5-turbo',
         anthropic_api_key: document.getElementById('anthropic_api_key')?.value || '',
@@ -3294,7 +3335,7 @@ function displayAIProviders(providers) {
 }
 
 async function testAIProvider() {
-    const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'local';
+    const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'jons_ai';
     
     try {
         showNotification('Testing AI Provider', `Testing ${selectedProvider} provider...`, 'info');
@@ -3373,10 +3414,10 @@ async function loadAllModelsWithSelection(settings) {
 }
 
 async function loadModelsForCurrentProvider(settings) {
-    const selectedProvider = settings.ai_provider || 'local';
+    const selectedProvider = settings.ai_provider || 'jons_ai';
     
-    // Local AI doesn't need model loading
-    if (selectedProvider === 'local') {
+    // Jon's AI doesn't need model loading
+    if (selectedProvider === 'jons_ai') {
         return;
     }
     
@@ -3645,7 +3686,7 @@ function loadFallbackModelsForProviderWithSelection(provider, settings) {
 
 // Toggle provider sections based on selection
 function toggleProviderSections() {
-    const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'local';
+    const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || 'jons_ai';
     
     // Hide all provider sections
     const sections = ['openai_section', 'anthropic_section', 'google_section', 'meta_section'];
@@ -3656,8 +3697,8 @@ function toggleProviderSections() {
         }
     });
     
-    // Show the selected provider section (if not local)
-    if (selectedProvider !== 'local') {
+    // Show the selected provider section (if not Jon's AI)
+    if (selectedProvider !== 'jons_ai') {
         const activeSection = document.getElementById(`${selectedProvider}_section`);
         if (activeSection) {
             activeSection.style.display = 'block';
@@ -3667,6 +3708,526 @@ function toggleProviderSections() {
                 refreshModels(selectedProvider);
             }
         }
+    }
+}
+
+// Content Tone Options Management
+let contentToneOptions = [];
+
+async function loadContentToneOptions() {
+    try {
+        // First try to get active options
+        const response = await fetch('/api/content_tone_options.php?action=get_active');
+        const result = await response.json();
+        
+        if (result.success && result.options.length > 0) {
+            contentToneOptions = result.options.map(option => ({
+                id: option.value,
+                name: option.label,
+                description: option.description
+            }));
+            populateContentToneDropdown();
+        } else {
+            // Initialize defaults if no options exist
+            await initializeDefaultContentToneOptions();
+        }
+    } catch (error) {
+        console.error('Error loading content tone options:', error.message);
+        loadDefaultContentToneOptions();
+    }
+}
+
+async function initializeDefaultContentToneOptions() {
+    try {
+        const response = await fetch('/api/content_tone_options.php?action=initialize_defaults', {
+            method: 'POST'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            // Reload options after initialization
+            await loadContentToneOptions();
+        } else {
+            loadDefaultContentToneOptions();
+        }
+    } catch (error) {
+        console.error('Error initializing default content tone options:', error.message);
+        loadDefaultContentToneOptions();
+    }
+}
+
+function loadDefaultContentToneOptions() {
+    contentToneOptions = [
+        { id: 'professional', name: 'Professional', description: 'Formal, business-focused tone' },
+        { id: 'friendly', name: 'Friendly', description: 'Warm and approachable' },
+        { id: 'casual', name: 'Casual', description: 'Relaxed and informal' },
+        { id: 'energetic', name: 'Energetic', description: 'Enthusiastic and dynamic' },
+        { id: 'sophisticated', name: 'Sophisticated', description: 'Elegant and refined' },
+        { id: 'playful', name: 'Playful', description: 'Fun and lighthearted' },
+        { id: 'authoritative', name: 'Authoritative', description: 'Expert and confident' },
+        { id: 'conversational', name: 'Conversational', description: 'Natural and engaging' },
+        { id: 'inspiring', name: 'Inspiring', description: 'Motivational and uplifting' },
+        { id: 'trustworthy', name: 'Trustworthy', description: 'Reliable and credible' },
+        { id: 'innovative', name: 'Innovative', description: 'Forward-thinking and creative' },
+        { id: 'luxurious', name: 'Luxurious', description: 'Premium and exclusive' }
+    ];
+    populateContentToneDropdown();
+}
+
+function populateContentToneDropdown() {
+    const dropdown = document.getElementById('ai_content_tone');
+    if (!dropdown) return;
+    
+    // Get current selection
+    const currentValue = dropdown.value;
+    
+    // Clear existing options except the first one
+    dropdown.innerHTML = '<option value="">Select content tone...</option>';
+    
+    // Add options from database
+    contentToneOptions.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.id;
+        optionElement.textContent = option.name;
+        if (option.description) {
+            optionElement.title = option.description;
+        }
+        dropdown.appendChild(optionElement);
+    });
+    
+    // Restore selection
+    if (currentValue) {
+        dropdown.value = currentValue;
+    }
+}
+
+function manageContentToneOptions() {
+    // Open content tone management modal
+    showContentToneModal();
+}
+
+function showContentToneModal() {
+    const modalHtml = `
+        <div id="contentToneModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="closeContentToneModal()">
+            <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-lg font-semibold text-gray-800">Manage Content Tone Options</h3>
+                    <button onclick="closeContentToneModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-4">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-600">Manage the content tone options available for AI content generation.</p>
+                            <button onclick="addContentToneOption()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                Add Option
+                            </button>
+                        </div>
+                        
+                        <div id="contentToneList" class="space-y-2">
+                            <!-- Options will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t p-4 flex justify-end space-x-2">
+                    <button onclick="closeContentToneModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button onclick="saveContentToneOptions()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('contentToneModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Load current options
+    displayContentToneOptions();
+}
+
+function closeContentToneModal() {
+    const modal = document.getElementById('contentToneModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function displayContentToneOptions() {
+    const container = document.getElementById('contentToneList');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    contentToneOptions.forEach((option, index) => {
+        const optionHtml = `
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <input type="text" value="${option.name}" 
+                       onchange="updateContentToneOption(${index}, 'name', this.value)"
+                       class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm">
+                <input type="text" value="${option.description || ''}" 
+                       onchange="updateContentToneOption(${index}, 'description', this.value)"
+                       placeholder="Description (optional)"
+                       class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm">
+                <button onclick="removeContentToneOption(${index})" 
+                        class="text-red-500 hover:text-red-700 p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', optionHtml);
+    });
+}
+
+function addContentToneOption() {
+    const newOption = {
+        id: 'custom_' + Date.now(),
+        name: 'New Tone',
+        description: 'Custom content tone'
+    };
+    contentToneOptions.push(newOption);
+    displayContentToneOptions();
+}
+
+function updateContentToneOption(index, field, value) {
+    if (contentToneOptions[index]) {
+        contentToneOptions[index][field] = value;
+        // Update ID based on name for consistency
+        if (field === 'name') {
+            contentToneOptions[index].id = value.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        }
+    }
+}
+
+function removeContentToneOption(index) {
+    if (confirm('Are you sure you want to remove this content tone option?')) {
+        contentToneOptions.splice(index, 1);
+        displayContentToneOptions();
+    }
+}
+
+async function saveContentToneOptions() {
+    try {
+        // For now, just reload the options since individual saves happen on change
+        await loadContentToneOptions();
+        showNotification('Content Tone Options', 'Options refreshed successfully!', 'success');
+        populateContentToneDropdown();
+        closeContentToneModal();
+    } catch (error) {
+        showNotification('Content Tone Options', 'Error refreshing options: ' + error.message, 'error');
+    }
+}
+
+async function saveContentToneOption(option, isNew = false) {
+    try {
+        const action = isNew ? 'add' : 'update';
+        const response = await fetch(`/api/content_tone_options.php?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: option.id,
+                value: option.value || option.id,
+                label: option.name,
+                description: option.description
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            showNotification('Content Tone Options', 'Failed to save option: ' + result.error, 'error');
+        }
+        
+        return result.success;
+    } catch (error) {
+        showNotification('Content Tone Options', 'Error saving option: ' + error.message, 'error');
+        return false;
+    }
+}
+
+async function deleteContentToneOptionFromDB(optionId) {
+    try {
+        const response = await fetch(`/api/content_tone_options.php?action=delete&id=${optionId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            showNotification('Content Tone Options', 'Failed to delete option: ' + result.error, 'error');
+        }
+        
+        return result.success;
+    } catch (error) {
+        showNotification('Content Tone Options', 'Error deleting option: ' + error.message, 'error');
+        return false;
+    }
+}
+
+// Brand Voice Options Management
+let brandVoiceOptions = [];
+
+async function loadBrandVoiceOptions() {
+    try {
+        // First try to get active options
+        const response = await fetch('/api/brand_voice_options.php?action=get_active');
+        const result = await response.json();
+        
+        if (result.success && result.options.length > 0) {
+            brandVoiceOptions = result.options.map(option => ({
+                id: option.value,
+                name: option.label,
+                description: option.description
+            }));
+            populateBrandVoiceDropdown();
+        } else {
+            // Initialize defaults if no options exist
+            await initializeDefaultBrandVoiceOptions();
+        }
+    } catch (error) {
+        console.error('Error loading brand voice options:', error.message);
+        loadDefaultBrandVoiceOptions();
+    }
+}
+
+async function initializeDefaultBrandVoiceOptions() {
+    try {
+        const response = await fetch('/api/brand_voice_options.php?action=initialize_defaults', {
+            method: 'POST'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            // Reload options after initialization
+            await loadBrandVoiceOptions();
+        } else {
+            loadDefaultBrandVoiceOptions();
+        }
+    } catch (error) {
+        console.error('Error initializing default brand voice options:', error.message);
+        loadDefaultBrandVoiceOptions();
+    }
+}
+
+function loadDefaultBrandVoiceOptions() {
+    brandVoiceOptions = [
+        { id: 'friendly_approachable', name: 'Friendly & Approachable', description: 'Warm, welcoming, and easy to connect with' },
+        { id: 'professional_trustworthy', name: 'Professional & Trustworthy', description: 'Business-focused, reliable, and credible' },
+        { id: 'playful_fun', name: 'Playful & Fun', description: 'Lighthearted, entertaining, and engaging' },
+        { id: 'luxurious_premium', name: 'Luxurious & Premium', description: 'High-end, sophisticated, and exclusive' },
+        { id: 'casual_relaxed', name: 'Casual & Relaxed', description: 'Laid-back, informal, and comfortable' },
+        { id: 'authoritative_expert', name: 'Authoritative & Expert', description: 'Knowledgeable, confident, and commanding' },
+        { id: 'warm_personal', name: 'Warm & Personal', description: 'Intimate, caring, and heartfelt' },
+        { id: 'innovative_forward_thinking', name: 'Innovative & Forward-Thinking', description: 'Creative, cutting-edge, and progressive' },
+        { id: 'energetic_dynamic', name: 'Energetic & Dynamic', description: 'Enthusiastic, vibrant, and exciting' },
+        { id: 'sophisticated_elegant', name: 'Sophisticated & Elegant', description: 'Refined, polished, and tasteful' },
+        { id: 'conversational_natural', name: 'Conversational & Natural', description: 'Dialogue-like, personal, and engaging' },
+        { id: 'inspiring_motivational', name: 'Inspiring & Motivational', description: 'Uplifting, encouraging, and empowering' }
+    ];
+    populateBrandVoiceDropdown();
+}
+
+function populateBrandVoiceDropdown() {
+    const dropdown = document.getElementById('ai_brand_voice');
+    if (!dropdown) return;
+    
+    // Get current selection
+    const currentValue = dropdown.value;
+    
+    // Clear existing options except the first one
+    dropdown.innerHTML = '<option value="">Select brand voice...</option>';
+    
+    // Add options from database
+    brandVoiceOptions.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.id;
+        optionElement.textContent = option.name;
+        if (option.description) {
+            optionElement.title = option.description;
+        }
+        dropdown.appendChild(optionElement);
+    });
+    
+    // Restore selection
+    if (currentValue) {
+        dropdown.value = currentValue;
+    }
+}
+
+function manageBrandVoiceOptions() {
+    // Open brand voice management modal
+    showBrandVoiceModal();
+}
+
+function showBrandVoiceModal() {
+    const modalHtml = `
+        <div id="brandVoiceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onclick="closeBrandVoiceModal()">
+            <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-lg font-semibold text-gray-800">Manage Brand Voice Options</h3>
+                    <button onclick="closeBrandVoiceModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-4">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-600">Manage the brand voice options available for AI content generation.</p>
+                            <button onclick="addBrandVoiceOption()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                Add Option
+                            </button>
+                        </div>
+                        
+                        <div id="brandVoiceList" class="space-y-2">
+                            <!-- Options will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t p-4 flex justify-end space-x-2">
+                    <button onclick="closeBrandVoiceModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button onclick="saveBrandVoiceOptions()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('brandVoiceModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Load current options
+    displayBrandVoiceOptions();
+}
+
+function closeBrandVoiceModal() {
+    const modal = document.getElementById('brandVoiceModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function displayBrandVoiceOptions() {
+    const container = document.getElementById('brandVoiceList');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    brandVoiceOptions.forEach((option, index) => {
+        const optionHtml = `
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <input type="text" value="${option.name}" 
+                       onchange="updateBrandVoiceOption(${index}, 'name', this.value)"
+                       class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm">
+                <input type="text" value="${option.description || ''}" 
+                       onchange="updateBrandVoiceOption(${index}, 'description', this.value)"
+                       placeholder="Description (optional)"
+                       class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm">
+                <button onclick="removeBrandVoiceOption(${index})" 
+                        class="text-red-500 hover:text-red-700 p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', optionHtml);
+    });
+}
+
+function addBrandVoiceOption() {
+    const newOption = {
+        id: 'custom_' + Date.now(),
+        name: 'New Voice',
+        description: 'Custom brand voice'
+    };
+    brandVoiceOptions.push(newOption);
+    displayBrandVoiceOptions();
+}
+
+function updateBrandVoiceOption(index, field, value) {
+    if (brandVoiceOptions[index]) {
+        brandVoiceOptions[index][field] = value;
+        // Update ID based on name for consistency
+        if (field === 'name') {
+            brandVoiceOptions[index].id = value.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        }
+    }
+}
+
+function removeBrandVoiceOption(index) {
+    if (confirm('Are you sure you want to remove this brand voice option?')) {
+        brandVoiceOptions.splice(index, 1);
+        displayBrandVoiceOptions();
+    }
+}
+
+async function saveBrandVoiceOptions() {
+    try {
+        // For now, just reload the options since individual saves happen on change
+        await loadBrandVoiceOptions();
+        showNotification('Brand Voice Options', 'Options refreshed successfully!', 'success');
+        populateBrandVoiceDropdown();
+        closeBrandVoiceModal();
+    } catch (error) {
+        showNotification('Brand Voice Options', 'Error refreshing options: ' + error.message, 'error');
+    }
+}
+
+async function saveBrandVoiceOption(option, isNew = false) {
+    try {
+        const action = isNew ? 'add' : 'update';
+        const response = await fetch(`/api/brand_voice_options.php?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: option.id,
+                value: option.value || option.id,
+                label: option.name,
+                description: option.description
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            showNotification('Brand Voice Options', 'Failed to save option: ' + result.error, 'error');
+        }
+        
+        return result.success;
+    } catch (error) {
+        showNotification('Brand Voice Options', 'Error saving option: ' + error.message, 'error');
+        return false;
+    }
+}
+
+async function deleteBrandVoiceOptionFromDB(optionId) {
+    try {
+        const response = await fetch(`/api/brand_voice_options.php?action=delete&id=${optionId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            showNotification('Brand Voice Options', 'Failed to delete option: ' + result.error, 'error');
+        }
+        
+        return result.success;
+    } catch (error) {
+        showNotification('Brand Voice Options', 'Error deleting option: ' + error.message, 'error');
+        return false;
     }
 }
 
@@ -5371,6 +5932,11 @@ function showRoomSettingsSuccess(message) {
             </div>
         </div>
     </div>
+    
+    <!-- Edit Mode Indicator -->
+    <div id="editModeIndicator" class="edit-mode-indicator">
+        ✏️ Editing Mode Active - Click cells to edit
+    </div>
 </div>
 
 <!-- System Configuration Modal -->
@@ -5582,21 +6148,12 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Backup Website Modal -->
-<div id="backupModal" class="modal-overlay hidden" onclick="closeBackupModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
+<div id="backupModal" class="admin-modal-overlay hidden" onclick="closeBackupModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
         <!-- Header -->
-        <div class="modal-header">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
-                    <span class="text-white text-lg">💾</span>
-                </div>
-                <h3 class="modal-title">Create Website Backup</h3>
-            </div>
-            <button onclick="closeBackupModal()" class="modal-close">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+        <div class="admin-modal-header">
+            <h2 class="modal-title">💾 Create Website Backup</h2>
+            <button onclick="closeBackupModal()" class="modal-close">&times;</button>
         </div>
             
             <!-- Body -->
@@ -5659,35 +6216,22 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Footer -->
             <div class="modal-footer">
-                <div class="flex items-center justify-end space-x-3">
-                    <button onclick="closeBackupModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
-                        Cancel
-                    </button>
-                    <button id="createBackupButton" onclick="executeBackup()" class="px-4 py-2 text-sm font-medium text-white bg-green-500 hover:bg-green-600 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="flex items-center space-x-2">
-                            <span>💾</span>
-                            <span>Create Backup</span>
-                        </span>
-                    </button>
-                </div>
+                <button onclick="closeBackupModal()" class="modal-button btn-secondary">Cancel</button>
+                <button id="createBackupButton" onclick="executeBackup()" class="modal-button btn-primary">
+                    💾 Create Backup
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Backup Progress Modal -->
-<div id="backupProgressModal" class="modal-overlay hidden">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="modal-content">
-            <!-- Header -->
-            <div class="modal-header">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
-                        <span class="text-white text-lg">⚡</span>
-                    </div>
-                    <h3 class="modal-title">Backup in Progress</h3>
-                </div>
-            </div>
+<div id="backupProgressModal" class="admin-modal-overlay hidden">
+    <div class="admin-modal-content">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">⚡ Backup in Progress</h2>
+        </div>
             
             <!-- Progress Content -->
             <div id="backupProgressContent" class="px-6 py-6">
@@ -5747,36 +6291,22 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Footer -->
             <div class="modal-footer">
-                <div class="flex items-center justify-end space-x-3">
-                    <button id="backupProgressCloseBtn" onclick="closeBackupProgressModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors hidden">
-                        Close
-                    </button>
-                </div>
+                <button id="backupProgressCloseBtn" onclick="closeBackupProgressModal()" class="modal-button btn-secondary hidden">
+                    Close
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Database Backup Modal -->
-<div id="databaseBackupModal" class="modal-overlay hidden" onclick="closeDatabaseBackupModal()">
-    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
-        <div class="modal-content">
-            <!-- Header -->
-            <div class="modal-header">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
-                            <span class="text-white text-lg">🗄️</span>
-                        </div>
-                        <h3 class="modal-title">Backup Website Database</h3>
-                    </div>
-                    <button onclick="closeDatabaseBackupModal()" class="modal-close">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+<div id="databaseBackupModal" class="admin-modal-overlay hidden" onclick="closeDatabaseBackupModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">🗄️ Backup Website Database</h2>
+            <button onclick="closeDatabaseBackupModal()" class="modal-close">&times;</button>
+        </div>
             
             <!-- Body -->
             <div class="modal-body">
@@ -6855,6 +7385,45 @@ function resetSettingsChangeTracking() {
     storeOriginalSettingsData();
 }
 
+// Load and inject CSS variables into the page
+async function loadAndInjectGlobalCSS() {
+    try {
+        const response = await fetch('/api/global_css_rules.php?action=list');
+        const result = await response.json();
+        
+        if (result.success) {
+            // Create CSS variables string
+            let cssVariables = ':root {\n';
+            
+            // Flatten the grouped rules
+            Object.values(result.grouped).forEach(group => {
+                group.forEach(rule => {
+                    const cssVarName = '--' + rule.rule_name.replace(/_/g, '-');
+                    cssVariables += `    ${cssVarName}: ${rule.css_value};\n`;
+                });
+            });
+            
+            cssVariables += '}';
+            
+            // Remove existing global CSS injection
+            const existingStyle = document.getElementById('globalCSSInjection');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+            
+            // Inject the CSS variables
+            const style = document.createElement('style');
+            style.id = 'globalCSSInjection';
+            style.textContent = cssVariables;
+            document.head.appendChild(style);
+            
+            console.log('Global CSS variables loaded and injected');
+        }
+    } catch (error) {
+        console.error('Error loading global CSS variables:', error);
+    }
+}
+
 // Global CSS Rules Management
 function openGlobalCSSModal() {
     const modal = document.getElementById('globalCSSModal');
@@ -6961,6 +7530,12 @@ function renderGlobalCSSRules(groupedRules) {
             description: 'Admin panel and backend styling',
             gradient: 'from-violet-50 to-purple-50 border-violet-200',
             titleColor: 'text-violet-800'
+        },
+        'admin_modals': {
+            title: '🪟 Admin Modals',
+            description: 'Admin modal headers and popup styling',
+            gradient: 'from-emerald-50 to-green-50 border-emerald-200',
+            titleColor: 'text-emerald-800'
         }
     };
 
@@ -7096,6 +7671,8 @@ function getFriendlyName(ruleName) {
         'modal_shadow': 'Modal Shadow',
         'admin_bg_color': 'Admin Background',
         'admin_text_color': 'Admin Text Color',
+        'brand_bg_text_color': 'Text Color on Brand Backgrounds',
+        'admin_modal_sales_header_bg': 'Sales Modal Header Background',
         'spacing_small': 'Small Spacing',
         'spacing_medium': 'Medium Spacing', 
         'spacing_large': 'Large Spacing',
@@ -7191,6 +7768,9 @@ async function saveGlobalCSSRules() {
             // Generate and apply CSS
             await generateAndApplyCSS();
             
+            // Reload CSS variables for all elements
+            await loadAndInjectGlobalCSS();
+            
             // Show success message
             showAlert('CSS rules updated successfully!', 'success');
             
@@ -7282,102 +7862,53 @@ async function resetToDefaults() {
 // Load and apply CSS on page load
 document.addEventListener('DOMContentLoaded', function() {
     generateAndApplyCSS();
+    loadAndInjectGlobalCSS();
 });
 </script>
 
 <!-- Global CSS Rules Modal -->
 <div id="globalCSSModal" class="admin-modal-overlay hidden" onclick="closeGlobalCSSModal()">
-    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
-        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <span class="text-white text-lg">🎨</span>
-                        </div>
-                        <div>
-                            <h3 class="modal-title">Website Style Settings</h3>
-                            <p class="text-green-100 text-sm">Customize colors, fonts, and appearance across your entire website</p>
-                        </div>
-                    </div>
-                    <button onclick="closeGlobalCSSModal()" class="text-white hover:text-green-200 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">🎨 Website Style Settings</h2>
+            <button onclick="closeGlobalCSSModal()" class="modal-close">&times;</button>
+        </div>
             
             <!-- Body -->
-            <div class="overflow-y-scroll max-h-[calc(90vh-160px)]" style="
-                scrollbar-width: thin; 
-                scrollbar-color: #9ca3af #f3f4f6;
-                -webkit-overflow-scrolling: touch;
-                min-height: calc(90vh - 160px);
-            " id="globalCSSScrollContainer">
+            <div class="modal-body" id="globalCSSScrollContainer">
                 <!-- Loading State -->
                 <div id="globalCSSLoading" class="modal-loading">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-3"></div>
+                    <div class="modal-loading-spinner"></div>
                     <p class="text-gray-600">Loading style settings...</p>
                 </div>
                 
                 <!-- Content -->
-                <div id="globalCSSContent" class="p-6" style="display: none;">
+                <div id="globalCSSContent" style="display: none;">
                     <!-- User-friendly sections will be loaded here -->
                 </div>
             </div>
             
             <!-- Footer -->
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
-                <div class="text-sm text-gray-600">
-                    💡 Changes apply to your entire website instantly
-                </div>
-                <div class="flex space-x-3">
-                    <button onclick="resetToDefaults()" 
-                            class="modal-button btn-secondary">
-                        Reset to Defaults
-                    </button>
-                    <button onclick="closeGlobalCSSModal()" 
-                            class="modal-button btn-secondary">
-                        Cancel
-                    </button>
-                    <button onclick="saveGlobalCSSRules()" 
-                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium flex items-center text-left" style="display: none;">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                        </svg>
-                        Save Changes
-                    </button>
-                </div>
+            <div class="modal-footer">
+                <button onclick="resetToDefaults()" class="modal-button btn-secondary">Reset to Defaults</button>
+                <button onclick="closeGlobalCSSModal()" class="modal-button btn-secondary">Cancel</button>
+                <button onclick="saveGlobalCSSRules()" class="modal-button btn-primary" style="display: none;">
+                    💾 Save Changes
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Template Manager Modal -->
-<div id="templateManagerModal" class="modal-overlay hidden" onclick="closeTemplateManagerModal()">
-    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
-        <div class="admin-modal-content">
-            <!-- Header -->
-            <div class="admin-modal-header" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <span class="text-white text-lg">📋</span>
-                        </div>
-                        <div>
-                            <h3 class="modal-title">Template Manager</h3>
-                            <p class="text-purple-100 text-sm">Manage cost breakdown templates and pricing suggestions</p>
-                        </div>
-                    </div>
-                    <button onclick="closeTemplateManagerModal()" class="text-white hover:text-purple-200 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+<div id="templateManagerModal" class="admin-modal-overlay hidden" onclick="closeTemplateManagerModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📋 Template Manager</h2>
+            <button onclick="closeTemplateManagerModal()" class="modal-close">&times;</button>
+        </div>
             
             <!-- Body -->
             <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
@@ -7455,16 +7986,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             
             <!-- Footer -->
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
-                <div class="text-sm text-gray-600">
-                    💡 Templates help speed up cost calculations and maintain consistency
-                </div>
-                <div class="flex space-x-3">
-                    <button onclick="closeTemplateManagerModal()" 
-                            class="modal-button btn-secondary">
-                        Close
-                    </button>
-                </div>
+            <div class="modal-footer">
+                <button onclick="closeTemplateManagerModal()" class="modal-button btn-secondary">Close</button>
             </div>
         </div>
     </div>
@@ -9132,7 +9655,7 @@ async function saveCartButtonTexts(texts) {
 <div id="websiteConfigModal" class="admin-modal-overlay hidden">
     <div class="admin-modal-content">
         <!-- Modal Header -->
-        <div class="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 flex justify-between items-center flex-shrink-0">
+        <div class="admin-modal-header">
             <h2 class="modal-title">🌐 Website Configuration</h2>
             <button onclick="closeWebsiteConfigModal()" class="modal-close">&times;</button>
         </div>
@@ -9163,13 +9686,13 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Cart Button Text Modal -->
 <div id="cartButtonTextModal" class="admin-modal-overlay" style="display: none;" onclick="closeCartButtonTextModal()">
-    <div class="bg-white shadow-xl rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
-        <div class="flex justify-between items-center p-6 border-b bg-gradient-to-r from-green-600 to-green-700">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
             <h2 class="modal-title">🛒 Cart Button Text Variations</h2>
-            <button onclick="closeCartButtonTextModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+            <button onclick="closeCartButtonTextModal()" class="modal-close">&times;</button>
         </div>
         
-        <div class="p-6">
+        <div class="modal-body">
             <div class="mb-6">
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <h3 class="text-lg font-semibold text-blue-800 mb-2">How It Works</h3>
@@ -9213,29 +9736,1514 @@ async function saveCartButtonTexts(texts) {
             </div>
         </div>
         
-        <div class="bg-gray-50 px-6 py-4 border-t flex justify-between">
-            <button onclick="resetToDefaults()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded">
-                Reset to Defaults
-            </button>
-            <button onclick="closeCartButtonTextModal()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded">
-                Close
-            </button>
+        <div class="modal-footer">
+            <button onclick="resetToDefaults()" class="modal-button btn-secondary">Reset to Defaults</button>
+            <button onclick="closeCartButtonTextModal()" class="modal-button btn-primary">Close</button>
         </div>
+    </div>
+</div>
+
+<!-- Sales Admin Modal -->
+<div id="salesAdminModal" class="admin-modal-overlay" style="display: none;" onclick="closeSalesAdminModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <div class="admin-modal-header" style="background: var(--admin-modal-sales-header-bg, linear-gradient(to right, #87ac3a, #a3cc4a));">
+            <h2 class="modal-title">💰 Sales Administration</h2>
+            <button onclick="closeSalesAdminModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- Sales List Header -->
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-800">Manage Sales & Promotions</h3>
+                <button onclick="openCreateSaleModal()" class="modal-button btn-primary">
+                    ➕ Create New Sale
+                </button>
+            </div>
+            
+            <!-- Sales List -->
+            <div id="salesList" class="space-y-4">
+                <!-- Sales will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Sale Modal -->
+<div id="createSaleModal" class="admin-modal-overlay" style="display: none;" onclick="closeCreateSaleModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <div class="admin-modal-header" style="background: var(--admin-modal-sales-header-bg, linear-gradient(to right, #87ac3a, #a3cc4a));">
+            <h2 id="createSaleModalTitle" class="modal-title">🎯 Create New Sale</h2>
+            <button onclick="closeCreateSaleModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <form id="saleForm" class="modal-body space-y-6">
+            <input type="hidden" id="saleId" value="">
+            
+            <!-- Sale Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="saleName" class="block text-sm font-medium text-gray-700 mb-2">Sale Name *</label>
+                    <input type="text" id="saleName" required class="w-full p-3 border border-gray-300 rounded-lg text-sm" placeholder="e.g., Summer Sale 2024">
+                </div>
+                
+                <div>
+                    <label for="discountPercentage" class="block text-sm font-medium text-gray-700 mb-2">Discount Percentage *</label>
+                    <div class="relative">
+                        <input type="number" id="discountPercentage" required min="1" max="99" step="0.01" class="w-full p-3 border border-gray-300 rounded-lg text-sm pr-8" placeholder="20">
+                        <span class="absolute right-3 top-3 text-gray-500">%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <label for="saleDescription" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea id="saleDescription" rows="3" class="w-full p-3 border border-gray-300 rounded-lg text-sm" placeholder="Optional description of the sale"></textarea>
+            </div>
+            
+            <!-- Date Range -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700 mb-2">Start Date & Time *</label>
+                    <input type="datetime-local" id="startDate" required class="w-full p-3 border border-gray-300 rounded-lg text-sm">
+                </div>
+                
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700 mb-2">End Date & Time *</label>
+                    <input type="datetime-local" id="endDate" required class="w-full p-3 border border-gray-300 rounded-lg text-sm">
+                </div>
+            </div>
+            
+            <!-- Sale Status -->
+            <div class="flex items-center">
+                <input type="checkbox" id="isActive" checked class="mr-2 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                <label for="isActive" class="text-sm font-medium text-gray-700">Sale is Active</label>
+                <span class="ml-2 text-xs text-gray-500">(can be toggled later)</span>
+            </div>
+            
+            <!-- Item Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Items for Sale</label>
+                <div class="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
+                    <div class="flex items-center mb-3">
+                        <input type="checkbox" id="selectAllItems" class="mr-2 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                        <label for="selectAllItems" class="text-sm font-medium text-gray-700">Select All Items</label>
+                    </div>
+                    <div id="itemsList" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <!-- Items will be loaded here -->
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Select which items will be included in this sale. Only selected items will show the discounted price.</p>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="modal-footer">
+                <button type="button" onclick="closeCreateSaleModal()" class="modal-button btn-secondary">Cancel</button>
+                <button type="submit" class="modal-button btn-primary">
+                    <span id="submitButtonText">Create Sale</span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 <!-- Categories Modal -->
 <div id="categoriesModal" class="admin-modal-overlay" style="display: none;" onclick="closeCategoriesModal()">
-    <div class="bg-white shadow-xl rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
-        <div class="flex justify-between items-center p-6 border-b">
-            <h2 class="text-xl font-bold text-gray-800">📂 Category Management</h2>
-            <button onclick="closeCategoriesModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📂 Category Management</h2>
+            <button onclick="closeCategoriesModal()" class="modal-close">&times;</button>
         </div>
         
-        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div class="modal-body">
             <div id="categoriesContent">
                 <!-- Categories content will be loaded here -->
             </div>
         </div>
     </div>
 </div>
+
+<!-- Database Tables Modal -->
+<style>
+/* Force scrollbars to be visible in database tables modal */
+#databaseTablesModal .db-scrollable {
+    overflow: auto !important;
+    scrollbar-width: thin;
+    scrollbar-color: #9ca3af #f3f4f6;
+    /* Force scrollbars to always be visible */
+    overflow-x: auto !important;
+    overflow-y: scroll !important;
+}
+
+#databaseTablesModal .db-scrollable::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+#databaseTablesModal .db-scrollable::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 6px;
+}
+
+#databaseTablesModal .db-scrollable::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 6px;
+    border: 2px solid #f3f4f6;
+}
+
+#databaseTablesModal .db-scrollable::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+#databaseTablesModal .db-scrollable::-webkit-scrollbar-corner {
+    background: #f3f4f6;
+}
+
+/* Ensure tables have proper styling */
+#databaseTablesModal table {
+    border-collapse: collapse;
+}
+
+#databaseTablesModal table th,
+#databaseTablesModal table td {
+    border: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+#databaseTablesModal table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Improve table item selection visual feedback */
+#databaseTablesModal .table-item {
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+#databaseTablesModal .table-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#databaseTablesModal .table-item.selected {
+    border-color: #3b82f6 !important;
+    background-color: #eff6ff !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Specific styling for table data container to ensure scrollbars */
+#databaseTablesModal #tableData {
+    display: block;
+    min-height: 300px;
+}
+
+#databaseTablesModal #tableData thead,
+#databaseTablesModal #tableData tbody {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* Ensure the table data container always shows scrollbars when content overflows */
+#databaseTablesModal .db-scrollable:has(#tableData) {
+    overflow-y: scroll !important;
+    overflow-x: auto !important;
+}
+
+/* Inline editing styles */
+#databaseTablesModal .editable-cell {
+    cursor: pointer;
+    position: relative;
+    padding: 8px 12px;
+    transition: background-color 0.2s ease;
+}
+
+#databaseTablesModal .editable-cell:hover {
+    background-color: #f0f9ff !important;
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+#databaseTablesModal .editable-cell.editing {
+    background-color: #ffffff !important;
+    outline: 2px solid #10b981;
+    outline-offset: -2px;
+}
+
+#databaseTablesModal .cell-input {
+    width: 100%;
+    min-width: 80px;
+    border: none;
+    background: transparent;
+    padding: 4px 8px;
+    font-size: inherit;
+    font-family: inherit;
+    outline: none;
+    resize: none;
+}
+
+#databaseTablesModal .cell-actions {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    display: none;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+}
+
+#databaseTablesModal .editable-cell.editing .cell-actions {
+    display: flex;
+}
+
+#databaseTablesModal .cell-actions button {
+    padding: 4px 8px;
+    font-size: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#databaseTablesModal .cell-actions .save-btn {
+    color: #10b981;
+}
+
+#databaseTablesModal .cell-actions .save-btn:hover {
+    background-color: #f0fdf4;
+}
+
+#databaseTablesModal .cell-actions .cancel-btn {
+    color: #ef4444;
+}
+
+#databaseTablesModal .cell-actions .cancel-btn:hover {
+    background-color: #fef2f2;
+}
+
+/* Edit mode indicator */
+#databaseTablesModal .edit-mode-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: none;
+}
+
+#databaseTablesModal .edit-mode-indicator.show {
+    display: block;
+}
+</style>
+
+<div id="databaseTablesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white shadow-xl w-full h-full overflow-hidden">
+        <div class="flex justify-between items-center p-4 border-b bg-gray-100">
+            <h2 class="text-xl font-semibold text-gray-800">🗄️ Database Tables Management - Full Screen</h2>
+            <button onclick="closeDatabaseTablesModal()" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="flex h-[calc(100vh-80px)]">
+            <!-- Tables Sidebar - Fixed width to prevent collapse -->
+            <div class="w-80 min-w-80 max-w-80 border-r bg-gray-50 p-4 db-scrollable flex-shrink-0" style="overflow-y: auto; height: calc(100vh - 80px);">
+                <h3 class="font-semibold text-gray-700 mb-3 sticky top-0 bg-gray-50 py-2">Database Tables</h3>
+                <div id="tablesList" class="space-y-2">
+                    <!-- Tables will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col min-w-0">
+                <!-- Tab Navigation -->
+                <div class="border-b bg-white">
+                    <nav class="flex space-x-8 px-6">
+                        <button onclick="switchDatabaseTab('data')" class="db-tab py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+                            Table Data
+                        </button>
+                        <button onclick="switchDatabaseTab('query')" class="db-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            Query Tool
+                        </button>
+                        <button onclick="switchDatabaseTab('docs')" class="db-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            Documentation
+                        </button>
+                    </nav>
+                </div>
+                
+                <!-- Tab Content -->
+                <div class="flex-1 overflow-hidden">
+                    <!-- Table Data Tab -->
+                    <div id="db-data-tab" class="db-tab-content h-full flex flex-col p-4">
+                        <div class="mb-4 flex-shrink-0">
+                            <h3 class="text-lg font-semibold text-gray-800">
+                                Table: <span id="currentTableName" class="text-blue-600">Select a table</span>
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                Rows: <span id="tableRowCount" class="font-medium">-</span>
+                            </p>
+                        </div>
+                        
+                        <!-- Table Structure -->
+                        <div class="mb-4 flex-shrink-0">
+                            <h4 class="font-medium text-gray-700 mb-2">Table Structure</h4>
+                            <div class="border border-gray-200 rounded db-scrollable" style="overflow: auto; max-height: 180px;">
+                                <table id="tableStructure" class="min-w-full text-sm">
+                                    <!-- Structure will be loaded here -->
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Table Data -->
+                        <div class="flex-1 min-h-0 flex flex-col">
+                            <div class="flex justify-between items-center mb-2 flex-shrink-0">
+                                <h4 class="font-medium text-gray-700">Table Data</h4>
+                                <div class="flex items-center space-x-2 text-sm">
+                                    <span class="text-gray-600">Rows per page:</span>
+                                    <select id="rowsPerPage" onchange="changeRowsPerPage()" class="border border-gray-300 rounded px-2 py-1">
+                                        <option value="25">25</option>
+                                        <option value="50" selected>50</option>
+                                        <option value="100">100</option>
+                                        <option value="200">200</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded db-scrollable flex-1" style="overflow: auto; min-height: 400px; max-height: calc(100vh - 400px);">
+                                <table id="tableData" class="min-w-full text-sm">
+                                    <!-- Data will be loaded here -->
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination Controls -->
+                            <div id="paginationControls" class="flex justify-between items-center mt-3 p-2 bg-gray-50 rounded border flex-shrink-0" style="display: none;">
+                                <div class="text-sm text-gray-600">
+                                    Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRows">0</span> rows
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button id="prevPage" onclick="previousPage()" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Previous
+                                    </button>
+                                    <span id="pageInfo" class="text-sm text-gray-600">Page 1 of 1</span>
+                                    <button id="nextPage" onclick="nextPage()" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Query Tool Tab -->
+                    <div id="db-query-tab" class="db-tab-content h-full flex flex-col p-4" style="display: none;">
+                        <div class="mb-4 flex-shrink-0">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">SQL Query Tool</h3>
+                            <p class="text-sm text-gray-600 mb-4">Execute SELECT queries to explore your data. Only SELECT statements are allowed for security.</p>
+                            
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">SQL Query</label>
+                                <textarea id="sqlQuery" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2 font-mono text-sm" 
+                                    placeholder="SELECT * FROM items WHERE category = 'T-Shirts' LIMIT 10;"></textarea>
+                            </div>
+                            
+                            <button onclick="executeQuery()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                                Execute Query
+                            </button>
+                        </div>
+                        
+                        <!-- Query Results -->
+                        <div class="flex-1 min-h-0">
+                            <h4 class="font-medium text-gray-700 mb-2">Query Results</h4>
+                            <div id="queryResults" class="border border-gray-200 rounded p-4 bg-gray-50 db-scrollable h-full" style="overflow: auto;">
+                                <p class="text-gray-500">Execute a query to see results here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Documentation Tab -->
+                    <div id="db-docs-tab" class="db-tab-content h-full p-4 db-scrollable" style="display: none; overflow-y: auto;">
+                        <div class="mb-4 flex-shrink-0">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Database Documentation</h3>
+                            <p class="text-sm text-gray-600">Documentation for all database tables and their fields.</p>
+                        </div>
+                        
+                        <div id="tableDocumentation" class="flex-1">
+                            <!-- Documentation will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== SALES ADMIN FUNCTIONALITY =====
+
+let currentEditingSaleId = null;
+let allAvailableItems = [];
+
+// Open Sales Admin Modal
+function openSalesAdminModal() {
+    document.getElementById('salesAdminModal').style.display = 'flex';
+    loadSalesList();
+}
+
+// Close Sales Admin Modal
+function closeSalesAdminModal() {
+    document.getElementById('salesAdminModal').style.display = 'none';
+}
+
+// Open Create Sale Modal
+async function openCreateSaleModal(saleId = null) {
+    currentEditingSaleId = saleId;
+    document.getElementById('createSaleModal').style.display = 'flex';
+    
+    // Load available items
+    await loadAvailableItems();
+    
+    if (saleId) {
+        // Edit mode
+        document.getElementById('createSaleModalTitle').textContent = '✏️ Edit Sale';
+        document.getElementById('submitButtonText').textContent = 'Update Sale';
+        await loadSaleForEdit(saleId);
+    } else {
+        // Create mode
+        document.getElementById('createSaleModalTitle').textContent = '🎯 Create New Sale';
+        document.getElementById('submitButtonText').textContent = 'Create Sale';
+        resetSaleForm();
+    }
+}
+
+// Close Create Sale Modal
+function closeCreateSaleModal() {
+    document.getElementById('createSaleModal').style.display = 'none';
+    currentEditingSaleId = null;
+}
+
+// Load sales list
+async function loadSalesList() {
+    try {
+        const response = await fetch('/api/sales.php?action=list');
+        const data = await response.json();
+        
+        if (data.success) {
+            displaySalesList(data.sales);
+        } else {
+            showToast('error', 'Failed to load sales: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error loading sales:', error);
+        showToast('error', 'Failed to load sales');
+    }
+}
+
+// Display sales list
+function displaySalesList(sales) {
+    const salesList = document.getElementById('salesList');
+    
+    if (sales.length === 0) {
+        salesList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
+                </svg>
+                <p class="text-lg font-medium">No sales created yet</p>
+                <p class="text-sm">Create your first sale to start offering discounts to customers!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    salesList.innerHTML = sales.map(sale => {
+        const statusColors = {
+            'active': 'bg-green-100 text-green-800',
+            'scheduled': 'bg-blue-100 text-blue-800',
+            'expired': 'bg-red-100 text-red-800',
+            'inactive': 'bg-gray-100 text-gray-800'
+        };
+        
+        const statusColor = statusColors[sale.status] || 'bg-gray-100 text-gray-800';
+        
+        return `
+            <div class="border border-gray-200 rounded-lg p-4 bg-white">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1">
+                        <h4 class="text-lg font-semibold text-gray-800">${sale.name}</h4>
+                        <p class="text-sm text-gray-600">${sale.description || 'No description'}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${statusColor}">
+                            ${sale.status.toUpperCase()}
+                        </span>
+                        <div class="flex space-x-1">
+                            <button onclick="openCreateSaleModal(${sale.id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded" title="Edit Sale">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button onclick="toggleSaleActive(${sale.id})" class="p-2 text-yellow-600 hover:bg-yellow-50 rounded" title="Toggle Active">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"></path>
+                                </svg>
+                            </button>
+                            <button onclick="deleteSale(${sale.id})" class="p-2 text-red-600 hover:bg-red-50 rounded" title="Delete Sale">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">Discount:</span>
+                        <span class="font-semibold text-red-600">${sale.discount_percentage}% OFF</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Items:</span>
+                        <span class="font-medium">${sale.item_count} selected</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Start:</span>
+                        <span class="font-medium">${new Date(sale.start_date).toLocaleDateString()}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">End:</span>
+                        <span class="font-medium">${new Date(sale.end_date).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Load available items for sale selection
+async function loadAvailableItems() {
+    try {
+        const response = await fetch('/api/sales.php?action=get_all_items');
+        const data = await response.json();
+        
+        if (data.success) {
+            allAvailableItems = data.items;
+            displayItemsList(data.items);
+        } else {
+            showToast('error', 'Failed to load items: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error loading items:', error);
+        showToast('error', 'Failed to load items');
+    }
+}
+
+// Display items list for selection
+function displayItemsList(items, selectedItems = []) {
+    const itemsList = document.getElementById('itemsList');
+    
+    itemsList.innerHTML = items.map(item => {
+        const isSelected = selectedItems.includes(item.sku);
+        return `
+            <div class="flex items-center">
+                <input type="checkbox" id="item_${item.sku}" value="${item.sku}" 
+                       ${isSelected ? 'checked' : ''} 
+                       class="sale-item-checkbox mr-2 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                <label for="item_${item.sku}" class="text-sm text-gray-700 cursor-pointer flex-1">
+                    <span class="font-medium">${item.name}</span>
+                    <span class="text-gray-500 ml-2">($${parseFloat(item.retailPrice).toFixed(2)})</span>
+                </label>
+            </div>
+        `;
+    }).join('');
+    
+    // Add select all functionality
+    const selectAllCheckbox = document.getElementById('selectAllItems');
+    selectAllCheckbox.onchange = function() {
+        const checkboxes = document.querySelectorAll('.sale-item-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    };
+}
+
+// Load sale data for editing
+async function loadSaleForEdit(saleId) {
+    try {
+        const response = await fetch(`/api/sales.php?action=get&id=${saleId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const sale = data.sale;
+            
+            // Populate form fields
+            document.getElementById('saleId').value = sale.id;
+            document.getElementById('saleName').value = sale.name;
+            document.getElementById('saleDescription').value = sale.description || '';
+            document.getElementById('discountPercentage').value = sale.discount_percentage;
+            document.getElementById('isActive').checked = !!sale.is_active;
+            
+            // Format dates for datetime-local input
+            document.getElementById('startDate').value = formatDateForInput(sale.start_date);
+            document.getElementById('endDate').value = formatDateForInput(sale.end_date);
+            
+            // Select items
+            const selectedItems = sale.items.map(item => item.item_sku);
+            displayItemsList(allAvailableItems, selectedItems);
+            
+        } else {
+            showToast('error', 'Failed to load sale: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error loading sale:', error);
+        showToast('error', 'Failed to load sale data');
+    }
+}
+
+// Reset sale form
+function resetSaleForm() {
+    document.getElementById('saleForm').reset();
+    document.getElementById('saleId').value = '';
+    displayItemsList(allAvailableItems);
+}
+
+// Format date for datetime-local input
+function formatDateForInput(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// Handle sale form submission
+document.getElementById('saleForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const selectedItems = Array.from(document.querySelectorAll('.sale-item-checkbox:checked')).map(cb => cb.value);
+    
+    const saleData = {
+        name: formData.get('saleName') || document.getElementById('saleName').value,
+        description: document.getElementById('saleDescription').value,
+        discount_percentage: parseFloat(document.getElementById('discountPercentage').value),
+        start_date: document.getElementById('startDate').value,
+        end_date: document.getElementById('endDate').value,
+        is_active: document.getElementById('isActive').checked,
+        items: selectedItems
+    };
+    
+    if (currentEditingSaleId) {
+        saleData.id = currentEditingSaleId;
+    }
+    
+    try {
+        const action = currentEditingSaleId ? 'update' : 'create';
+        const response = await fetch('/api/sales.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: action,
+                ...saleData
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', data.message || (currentEditingSaleId ? 'Sale updated successfully' : 'Sale created successfully'));
+            closeCreateSaleModal();
+            loadSalesList();
+        } else {
+            showToast('error', data.error || 'Failed to save sale');
+        }
+    } catch (error) {
+        console.error('Error saving sale:', error);
+        showToast('error', 'Failed to save sale');
+    }
+});
+
+// Toggle sale active status
+async function toggleSaleActive(saleId) {
+    try {
+        const response = await fetch('/api/sales.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=toggle_active&id=${saleId}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', data.message);
+            loadSalesList();
+        } else {
+            showToast('error', data.error || 'Failed to update sale status');
+        }
+    } catch (error) {
+        console.error('Error toggling sale status:', error);
+        showToast('error', 'Failed to update sale status');
+    }
+}
+
+// Delete sale
+async function deleteSale(saleId) {
+    if (!confirm('Are you sure you want to delete this sale? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/sales.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=delete&id=${saleId}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', data.message);
+            loadSalesList();
+        } else {
+            showToast('error', data.error || 'Failed to delete sale');
+        }
+    } catch (error) {
+        console.error('Error deleting sale:', error);
+        showToast('error', 'Failed to delete sale');
+    }
+}
+
+// Toast notification function for sales admin
+function showToast(type, message) {
+    const existingToast = document.getElementById('toast-notification');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    const toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.className = `toast-notification ${type}`;
+    toast.textContent = message;
+    
+    // Add CSS styling for the toast
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 99999;
+        padding: 12px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+    
+    // Set background color based on type
+    if (type === 'success') {
+        toast.style.backgroundColor = '#10b981';
+    } else if (type === 'error') {
+        toast.style.backgroundColor = '#ef4444';
+    } else if (type === 'warning') {
+        toast.style.backgroundColor = '#f59e0b';
+    } else {
+        toast.style.backgroundColor = '#3b82f6';
+    }
+    
+    document.body.appendChild(toast);
+    
+    // Show the toast
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Hide the toast after 3 seconds
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
+// ===== END SALES ADMIN FUNCTIONALITY =====
+
+// ===== DATABASE TABLES FUNCTIONALITY =====
+
+// Open Database Tables Modal
+function openDatabaseTablesModal() {
+    console.log('🗄️ Opening Database Tables modal...');
+    
+    // Check authentication status
+    console.log('🔐 Checking authentication...');
+    console.log('Current URL:', window.location.href);
+    console.log('Session storage user:', sessionStorage.getItem('user'));
+    
+    document.getElementById('databaseTablesModal').style.display = 'flex';
+    loadTablesList();
+    loadDocumentation();
+}
+
+// Close Database Tables Modal
+function closeDatabaseTablesModal() {
+    document.getElementById('databaseTablesModal').style.display = 'none';
+}
+
+// Load list of database tables
+async function loadTablesList() {
+    try {
+        console.log('📋 Loading database tables list...');
+        const response = await fetch('/api/database_tables.php?action=list_tables');
+        
+        // Check response status
+        if (!response.ok) {
+            console.error('❌ HTTP Error:', response.status, response.statusText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        console.log('📋 Tables API Response:', data);
+        
+        if (data.success) {
+            const tablesList = document.getElementById('tablesList');
+            tablesList.innerHTML = '';
+            
+            if (data.tables && data.tables.length > 0) {
+                data.tables.forEach(table => {
+                    const tableItem = document.createElement('div');
+                    tableItem.className = 'table-item p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50';
+                    tableItem.innerHTML = `
+                        <div class="font-medium text-gray-800">${table}</div>
+                        <div class="text-sm text-gray-500 mt-1">Click to view table data</div>
+                    `;
+                    tableItem.onclick = () => selectTable(table);
+                    tablesList.appendChild(tableItem);
+                });
+                console.log('✅ Loaded', data.tables.length, 'tables');
+            } else {
+                tablesList.innerHTML = '<div class="text-center py-8 text-gray-500">No tables found</div>';
+                console.log('ℹ️ No tables found');
+            }
+        } else {
+            const tablesList = document.getElementById('tablesList');
+            tablesList.innerHTML = `<div class="text-center py-8 text-red-500">Error: ${data.error}</div>`;
+            console.error('❌ Tables API Error:', data.error);
+            showToast('error', 'Failed to load tables: ' + data.error);
+        }
+    } catch (error) {
+        console.error('💥 JavaScript Error loading tables:', error);
+        const tablesList = document.getElementById('tablesList');
+        tablesList.innerHTML = `<div class="text-center py-8 text-red-500">Network error: ${error.message}</div>`;
+        showToast('error', 'Failed to load tables: ' + error.message);
+    }
+}
+
+// Select and view table
+async function selectTable(tableName) {
+    console.log('🎯 Selecting table:', tableName);
+    
+    // Update active state for all table items
+    document.querySelectorAll('.table-item').forEach(item => {
+        item.classList.remove('bg-blue-50', 'border-blue-300', 'ring-2', 'ring-blue-500');
+        item.classList.add('hover:bg-gray-50');
+    });
+    
+    // Find and highlight the selected table item
+    const tableItems = document.querySelectorAll('.table-item');
+    tableItems.forEach(item => {
+        const tableNameElement = item.querySelector('.font-medium');
+        if (tableNameElement && tableNameElement.textContent === tableName) {
+            item.classList.remove('hover:bg-gray-50');
+            item.classList.add('bg-blue-50', 'border-blue-300', 'ring-2', 'ring-blue-500');
+        }
+    });
+    
+    // Show loading state
+    document.getElementById('currentTableName').textContent = `Loading ${tableName}...`;
+    document.getElementById('tableRowCount').textContent = '-';
+    
+    try {
+        // Load table info and data in parallel
+        await Promise.all([
+            loadTableInfo(tableName),
+            loadTableData(tableName)
+        ]);
+        
+        console.log('✅ Successfully loaded table:', tableName);
+        
+        // Switch to data tab to show the results
+        switchDatabaseTab('data');
+        
+    } catch (error) {
+        console.error('❌ Error loading table:', error);
+        document.getElementById('currentTableName').textContent = `Error loading ${tableName}`;
+        showToast('error', `Failed to load table ${tableName}: ${error.message}`);
+    }
+}
+
+// Load table structure and info
+async function loadTableInfo(tableName) {
+    try {
+        const response = await fetch(`/api/database_tables.php?action=table_info&table=${tableName}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update table info
+            document.getElementById('currentTableName').textContent = tableName;
+            document.getElementById('tableRowCount').textContent = data.rowCount;
+            
+            // Build structure table
+            const structureTable = document.getElementById('tableStructure');
+            structureTable.innerHTML = `
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-2 text-left">Field</th>
+                        <th class="px-4 py-2 text-left">Type</th>
+                        <th class="px-4 py-2 text-left">Null</th>
+                        <th class="px-4 py-2 text-left">Key</th>
+                        <th class="px-4 py-2 text-left">Default</th>
+                        <th class="px-4 py-2 text-left">Extra</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.structure.map(field => `
+                        <tr class="border-t">
+                            <td class="px-4 py-2 font-medium">${field.Field}</td>
+                            <td class="px-4 py-2">${field.Type}</td>
+                            <td class="px-4 py-2">${field.Null}</td>
+                            <td class="px-4 py-2">${field.Key}</td>
+                            <td class="px-4 py-2">${field.Default || ''}</td>
+                            <td class="px-4 py-2">${field.Extra || ''}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading table info:', error);
+        showToast('error', 'Failed to load table information');
+    }
+}
+
+// Global pagination state
+let currentTableName = '';
+let currentPage = 1;
+let currentRowsPerPage = 50;
+let currentOrderBy = '';
+let currentOrderDir = 'ASC';
+let totalRows = 0;
+
+// Load table data with pagination
+async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', orderDir = 'ASC') {
+    try {
+        // Update global state
+        currentTableName = tableName;
+        currentRowsPerPage = limit;
+        currentPage = Math.floor(offset / limit) + 1;
+        currentOrderBy = orderBy;
+        currentOrderDir = orderDir;
+        
+        const params = new URLSearchParams({
+            action: 'table_data',
+            table: tableName,
+            limit: limit,
+            offset: offset,
+            count_total: 'true'  // Request total count for pagination
+        });
+        
+        if (orderBy) {
+            params.append('order_by', orderBy);
+            params.append('order_dir', orderDir);
+        }
+        
+        console.log('🔍 Loading table data for:', tableName, 'Page:', currentPage);
+        const response = await fetch(`/api/database_tables.php?${params}`);
+        
+        // Check response status
+        if (!response.ok) {
+            console.error('❌ HTTP Error:', response.status, response.statusText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        console.log('📊 API Response:', data);
+        
+        if (data.success) {
+            const dataTable = document.getElementById('tableData');
+            totalRows = data.total_count || 0;
+            
+            if (data.data && data.data.length > 0) {
+                const columns = Object.keys(data.data[0]);
+                
+                dataTable.innerHTML = `
+                    <thead class="sticky top-0 bg-gray-50 z-10">
+                        <tr>
+                            ${columns.map(col => `
+                                <th class="px-4 py-3 text-left cursor-pointer hover:bg-gray-100 border-b border-gray-200" 
+                                    onclick="sortTableData('${tableName}', '${col}', '${orderDir === 'ASC' ? 'DESC' : 'ASC'}')">
+                                    <div class="flex items-center space-x-1">
+                                        <span class="font-medium text-gray-900">${col}</span>
+                                        <span class="text-gray-400">
+                                            ${orderBy === col ? (orderDir === 'ASC' ? '↑' : '↓') : '↕'}
+                                        </span>
+                                    </div>
+                                </th>
+                            `).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.data.map((row, rowIndex) => `
+                            <tr class="border-t hover:bg-gray-50 ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-25'}" data-row-index="${rowIndex}">
+                                ${columns.map(col => {
+                                    const value = row[col];
+                                    const displayValue = value === null ? '<span class="text-gray-400 italic">NULL</span>' : 
+                                                       value === '' ? '<span class="text-gray-400 italic">Empty</span>' : 
+                                                       String(value);
+                                    return `<td class="editable-cell px-4 py-2 max-w-xs" 
+                                               title="${value || ''}" 
+                                               data-column="${col}" 
+                                               data-row-index="${rowIndex}" 
+                                               data-original-value="${value || ''}"
+                                               onclick="startCellEdit(this, '${tableName}')">
+                                        <div class="truncate">${displayValue}</div>
+                                        <div class="cell-actions">
+                                            <button class="save-btn" onclick="saveCellEdit(this, event)" title="Save">✓</button>
+                                            <button class="cancel-btn" onclick="cancelCellEdit(this, event)" title="Cancel">✕</button>
+                                        </div>
+                                    </td>`;
+                                }).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                
+                // Update pagination controls
+                updatePaginationControls();
+                
+                console.log('✅ Successfully loaded', data.data.length, 'rows of', totalRows, 'total');
+            } else {
+                dataTable.innerHTML = '<tbody><tr><td colspan="100%" class="text-center py-8 text-gray-500">No data found in this table</td></tr></tbody>';
+                document.getElementById('paginationControls').style.display = 'none';
+                console.log('ℹ️ Table is empty');
+            }
+        } else {
+            const dataTable = document.getElementById('tableData');
+            dataTable.innerHTML = `<tbody><tr><td colspan="100%" class="text-center py-8 text-red-500">Error: ${data.error || 'Unknown error'}</td></tr></tbody>`;
+            console.error('❌ API Error:', data.error);
+            showToast('error', 'Failed to load table data: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('💥 JavaScript Error loading table data:', error);
+        const dataTable = document.getElementById('tableData');
+        dataTable.innerHTML = `<tbody><tr><td colspan="100%" class="text-center py-8 text-red-500">Network error: ${error.message}</td></tr></tbody>`;
+        showToast('error', 'Failed to load table data: ' + error.message);
+    }
+}
+
+// Update pagination controls
+function updatePaginationControls() {
+    const paginationDiv = document.getElementById('paginationControls');
+    const totalPages = Math.ceil(totalRows / currentRowsPerPage);
+    
+    if (totalRows > currentRowsPerPage) {
+        paginationDiv.style.display = 'flex';
+        
+        // Update showing info
+        const startRow = (currentPage - 1) * currentRowsPerPage + 1;
+        const endRow = Math.min(currentPage * currentRowsPerPage, totalRows);
+        
+        document.getElementById('showingStart').textContent = startRow;
+        document.getElementById('showingEnd').textContent = endRow;
+        document.getElementById('totalRows').textContent = totalRows;
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+        
+        // Update button states
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+        
+        prevBtn.disabled = currentPage <= 1;
+        nextBtn.disabled = currentPage >= totalPages;
+        
+        if (prevBtn.disabled) {
+            prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        
+        if (nextBtn.disabled) {
+            nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    } else {
+        paginationDiv.style.display = 'none';
+    }
+}
+
+// Pagination functions
+function previousPage() {
+    if (currentPage > 1) {
+        const offset = (currentPage - 2) * currentRowsPerPage;
+        loadTableData(currentTableName, currentRowsPerPage, offset, currentOrderBy, currentOrderDir);
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(totalRows / currentRowsPerPage);
+    if (currentPage < totalPages) {
+        const offset = currentPage * currentRowsPerPage;
+        loadTableData(currentTableName, currentRowsPerPage, offset, currentOrderBy, currentOrderDir);
+    }
+}
+
+function changeRowsPerPage() {
+    const newLimit = parseInt(document.getElementById('rowsPerPage').value);
+    currentPage = 1; // Reset to first page
+    loadTableData(currentTableName, newLimit, 0, currentOrderBy, currentOrderDir);
+}
+
+// Sort table data
+function sortTableData(tableName, column, direction) {
+    // Reset to first page when sorting
+    currentPage = 1;
+    loadTableData(tableName, currentRowsPerPage, 0, column, direction);
+}
+
+// Inline editing functions
+let currentEditingCell = null;
+
+// Start editing a cell
+function startCellEdit(cell, tableName) {
+    console.log('🖱️ Starting cell edit:', cell.dataset.column, cell.dataset.rowIndex);
+    
+    // If another cell is being edited, cancel it first
+    if (currentEditingCell && currentEditingCell !== cell) {
+        cancelCellEdit(currentEditingCell.querySelector('.cancel-btn'), new Event('click'));
+    }
+    
+    // Don't start editing if already editing this cell
+    if (cell.classList.contains('editing')) {
+        return;
+    }
+    
+    currentEditingCell = cell;
+    cell.classList.add('editing');
+    
+    // Show edit mode indicator
+    const indicator = document.getElementById('editModeIndicator');
+    indicator.classList.add('show');
+    
+    // Get current value
+    const originalValue = cell.dataset.originalValue;
+    const displayDiv = cell.querySelector('.truncate');
+    
+    // Create input based on content
+    let input;
+    if (originalValue && originalValue.length > 100) {
+        input = document.createElement('textarea');
+        input.rows = 3;
+    } else {
+        input = document.createElement('input');
+        input.type = 'text';
+    }
+    
+    input.className = 'cell-input';
+    input.value = originalValue || '';
+    
+    // Replace content with input
+    displayDiv.style.display = 'none';
+    cell.insertBefore(input, cell.querySelector('.cell-actions'));
+    
+    // Focus and select all text
+    input.focus();
+    input.select();
+    
+    // Handle Enter key to save, Escape to cancel
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            saveCellEdit(cell.querySelector('.save-btn'), e);
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            cancelCellEdit(cell.querySelector('.cancel-btn'), e);
+        }
+    });
+    
+    // Handle click outside to save
+    input.addEventListener('blur', function(e) {
+        // Small delay to allow button clicks to register
+        setTimeout(() => {
+            if (cell.classList.contains('editing')) {
+                saveCellEdit(cell.querySelector('.save-btn'), e);
+            }
+        }, 100);
+    });
+}
+
+// Save cell edit
+async function saveCellEdit(saveBtn, event) {
+    event.stopPropagation();
+    
+    const cell = saveBtn.closest('.editable-cell');
+    const input = cell.querySelector('.cell-input');
+    const newValue = input.value;
+    const originalValue = cell.dataset.originalValue;
+    
+    console.log('💾 Saving cell edit:', {
+        table: currentTableName,
+        column: cell.dataset.column,
+        row: cell.dataset.rowIndex,
+        oldValue: originalValue,
+        newValue: newValue
+    });
+    
+    // If value hasn't changed, just cancel
+    if (newValue === originalValue) {
+        cancelCellEdit(cell.querySelector('.cancel-btn'), event);
+        return;
+    }
+    
+    try {
+        // Show saving state
+        saveBtn.textContent = '⏳';
+        saveBtn.disabled = true;
+        
+        // Make API call to update the database
+        const response = await fetch('/api/database_tables.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'update_cell',
+                table: currentTableName,
+                column: cell.dataset.column,
+                row_index: parseInt(cell.dataset.rowIndex),
+                new_value: newValue,
+                // Include row data for WHERE clause
+                row_data: getCurrentRowData(cell)
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update the cell display
+            const displayDiv = cell.querySelector('.truncate');
+            const displayValue = newValue === null ? '<span class="text-gray-400 italic">NULL</span>' : 
+                               newValue === '' ? '<span class="text-gray-400 italic">Empty</span>' : 
+                               String(newValue);
+            displayDiv.innerHTML = displayValue;
+            cell.dataset.originalValue = newValue;
+            cell.title = newValue || '';
+            
+            // Clean up editing state
+            finishCellEdit(cell);
+            
+            console.log('✅ Cell updated successfully');
+            showToast('success', 'Cell updated successfully');
+            
+        } else {
+            console.error('❌ Failed to update cell:', result.error);
+            showToast('error', 'Failed to update: ' + result.error);
+            
+            // Reset save button
+            saveBtn.textContent = '✓';
+            saveBtn.disabled = false;
+        }
+        
+    } catch (error) {
+        console.error('💥 Error updating cell:', error);
+        showToast('error', 'Error updating cell: ' + error.message);
+        
+        // Reset save button
+        saveBtn.textContent = '✓';
+        saveBtn.disabled = false;
+    }
+}
+
+// Cancel cell edit
+function cancelCellEdit(cancelBtn, event) {
+    event.stopPropagation();
+    
+    const cell = cancelBtn.closest('.editable-cell');
+    console.log('❌ Canceling cell edit');
+    
+    finishCellEdit(cell);
+}
+
+// Finish cell editing (common cleanup)
+function finishCellEdit(cell) {
+    // Remove input
+    const input = cell.querySelector('.cell-input');
+    if (input) {
+        input.remove();
+    }
+    
+    // Show display div again
+    const displayDiv = cell.querySelector('.truncate');
+    displayDiv.style.display = '';
+    
+    // Remove editing state
+    cell.classList.remove('editing');
+    currentEditingCell = null;
+    
+    // Hide edit mode indicator if no cells are being edited
+    const editingCells = document.querySelectorAll('.editable-cell.editing');
+    if (editingCells.length === 0) {
+        const indicator = document.getElementById('editModeIndicator');
+        indicator.classList.remove('show');
+    }
+}
+
+// Get current row data for WHERE clause
+function getCurrentRowData(cell) {
+    const row = cell.closest('tr');
+    const cells = row.querySelectorAll('.editable-cell');
+    const rowData = {};
+    
+    cells.forEach(c => {
+        rowData[c.dataset.column] = c.dataset.originalValue;
+    });
+    
+    return rowData;
+}
+
+// Execute custom query
+async function executeQuery() {
+    const query = document.getElementById('sqlQuery').value.trim();
+    if (!query) {
+        showToast('error', 'Please enter a query');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/database_tables.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=execute_query&query=${encodeURIComponent(query)}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.data) {
+                // Display results
+                const resultsDiv = document.getElementById('queryResults');
+                if (data.data.length > 0) {
+                    const columns = Object.keys(data.data[0]);
+                    resultsDiv.innerHTML = `
+                        <div class="mb-2 text-sm text-gray-600">${data.data.length} rows returned</div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full border border-gray-200">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        ${columns.map(col => `<th class="px-4 py-2 text-left border-b">${col}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.data.map(row => `
+                                        <tr class="border-b hover:bg-gray-50">
+                                            ${columns.map(col => `<td class="px-4 py-2">${row[col] || ''}</td>`).join('')}
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="text-gray-500">Query executed successfully - no results returned</div>';
+                }
+            } else {
+                document.getElementById('queryResults').innerHTML = `<div class="text-green-600">${data.message}</div>`;
+            }
+        } else {
+            document.getElementById('queryResults').innerHTML = `<div class="text-red-600">Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        console.error('Error executing query:', error);
+        document.getElementById('queryResults').innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
+    }
+}
+
+// Load documentation
+async function loadDocumentation() {
+    try {
+        const response = await fetch('/api/database_tables.php?action=get_documentation');
+        const data = await response.json();
+        
+        if (data.success) {
+            const docsDiv = document.getElementById('tableDocumentation');
+            docsDiv.innerHTML = '';
+            
+            Object.entries(data.documentation).forEach(([tableName, tableInfo]) => {
+                const tableDoc = document.createElement('div');
+                tableDoc.className = 'mb-6 p-4 border border-gray-200 rounded-lg';
+                tableDoc.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">${tableName}</h3>
+                    <p class="text-gray-600 mb-3">${tableInfo.description}</p>
+                    <div class="space-y-2">
+                        ${Object.entries(tableInfo.fields).map(([fieldName, fieldDesc]) => `
+                            <div class="flex">
+                                <span class="font-medium text-blue-600 w-32 flex-shrink-0">${fieldName}:</span>
+                                <span class="text-gray-700">${fieldDesc}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                docsDiv.appendChild(tableDoc);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading documentation:', error);
+        showToast('error', 'Failed to load documentation');
+    }
+}
+
+// Switch database tabs
+function switchDatabaseTab(tab) {
+    // Update tab buttons
+    document.querySelectorAll('.db-tab').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'text-blue-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    document.querySelector(`[onclick="switchDatabaseTab('${tab}')"]`).classList.remove('border-transparent', 'text-gray-500');
+    document.querySelector(`[onclick="switchDatabaseTab('${tab}')"]`).classList.add('border-blue-500', 'text-blue-600');
+    
+    // Show/hide content
+    document.querySelectorAll('.db-tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    document.getElementById(`db-${tab}-tab`).style.display = 'block';
+}
+
+// ===== END DATABASE TABLES FUNCTIONALITY =====
+
+</script>

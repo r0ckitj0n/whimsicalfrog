@@ -268,6 +268,7 @@ $seoData = generatePageSEO($page, $currentSku);
     <meta name="twitter:description" content="<?= htmlspecialchars($seoData['description']) ?>">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
+    <link href="css/header-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link rel="stylesheet" href="css/search-modal.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="css/help-tooltips.css?v=<?php echo time(); ?>">
@@ -573,13 +574,13 @@ $seoData = generatePageSEO($page, $currentSku);
             color: #87ac3a !important;
             font-size: var(--room-title-font-size, 2rem) !important;
             font-weight: var(--room-title-font-weight, bold) !important;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+            text-shadow: var(--room-title-text-shadow, none) !important;
         }
         
         .room-title-overlay .room-description {
             color: #87ac3a !important;
             font-size: var(--room-description-font-size, 1rem) !important;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+            text-shadow: var(--room-description-text-shadow, none) !important;
         }
     </style>
 </head>
@@ -619,7 +620,7 @@ $seoData = generatePageSEO($page, $currentSku);
                         type="text" 
                         id="headerSearchInput"
                         placeholder="Search products..." 
-                        class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 border-white/60 rounded-full text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/80 transition-all duration-200"
+                        class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 rounded-full focus:outline-none focus:ring-2 transition-all duration-200"
                     >
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-4 w-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -708,6 +709,9 @@ $seoData = generatePageSEO($page, $currentSku);
 
 <!-- Load global modal system -->
     <script src="js/global-modals.js?v=<?php echo time(); ?>"></script>
+    
+    <!-- Load sales checker functionality -->
+    <script src="js/sales-checker.js?v=<?php echo time(); ?>"></script>
     
     <!-- Load search functionality -->
     <script src="js/search.js?v=<?php echo time(); ?>"></script>

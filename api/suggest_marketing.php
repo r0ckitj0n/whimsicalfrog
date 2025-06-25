@@ -187,8 +187,8 @@ try {
         error_log("AI Response received for Request ID: $requestId - Title: '" . substr($marketingData['title'], 0, 50) . "...'");
         
     } catch (Exception $e) {
-        // Fallback to local AI if external API fails
-        error_log("External AI Provider failed, using local fallback: " . $e->getMessage());
+        // Fallback to Jon's AI if external API fails
+        error_log("External AI Provider failed, using Jon's AI fallback: " . $e->getMessage());
         
         // Restore execution time for local processing
         set_time_limit(60);
@@ -342,8 +342,8 @@ try {
 }
 
 function generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice = '', $preferredContentTone = '') {
-    // Debug: Log the voice and tone values in local AI
-    error_log("Local AI - Preferred Brand Voice: '$preferredBrandVoice', Preferred Content Tone: '$preferredContentTone'");
+            // Debug: Log the voice and tone values in Jon's AI
+        error_log("Jon's AI - Preferred Brand Voice: '$preferredBrandVoice', Preferred Content Tone: '$preferredContentTone'");
     
     // Comprehensive item analysis
     $analysis = analyzeItemForMarketing($name, $description, $category);
@@ -353,7 +353,7 @@ function generateMarketingIntelligence($name, $description, $category, $pdo, $pr
     $contentTone = !empty($preferredContentTone) ? $preferredContentTone : determineContentTone($category, $analysis);
     
     // Debug: Log the final voice and tone values
-    error_log("Local AI - Final Brand Voice: '$brandVoice', Final Content Tone: '$contentTone'");
+            error_log("Jon's AI - Final Brand Voice: '$brandVoice', Final Content Tone: '$contentTone'");
     
     // Generate enhanced title with brand voice influence
     $title = generateEnhancedTitle($name, $category, $analysis, $brandVoice);

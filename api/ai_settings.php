@@ -23,7 +23,7 @@ if ($isLoggedIn) {
         $userData = json_decode($userData, true);
     }
     if (is_array($userData)) {
-        $isAdmin = isset($userData['role']) && $userData['role'] === 'Admin';
+        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
     }
 }
 
@@ -91,7 +91,7 @@ function getAISettings() {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
     $defaults = [
-        'ai_provider' => 'local',
+        'ai_provider' => 'jons_ai',
         'openai_api_key' => '',
         'openai_model' => 'gpt-3.5-turbo',
         'anthropic_api_key' => '',
@@ -182,7 +182,7 @@ function updateAISettings($settings, $pdo) {
         
         // Set descriptions and display names
         $descriptions = [
-            'ai_provider' => 'Selected AI provider (local, openai, anthropic, google)',
+            'ai_provider' => 'Selected AI provider (jons_ai, openai, anthropic, google)',
             'openai_api_key' => 'OpenAI API key for ChatGPT access',
             'openai_model' => 'OpenAI model to use (gpt-3.5-turbo, gpt-4, etc.)',
             'anthropic_api_key' => 'Anthropic API key for Claude access',
@@ -192,7 +192,7 @@ function updateAISettings($settings, $pdo) {
             'ai_temperature' => 'AI creativity level (0.0-1.0, higher = more creative)',
             'ai_max_tokens' => 'Maximum tokens per AI response',
             'ai_timeout' => 'API timeout in seconds',
-            'fallback_to_local' => 'Fallback to local AI if external API fails',
+            'fallback_to_local' => "Fallback to Jon's AI if external API fails",
             'ai_brand_voice' => 'Default brand voice for AI content generation',
             'ai_content_tone' => 'Default content tone (professional, casual, friendly, etc.)',
             // Advanced AI Temperature & Configuration Settings
@@ -245,7 +245,7 @@ function updateAISettings($settings, $pdo) {
  */
 function initializeAISettings($pdo) {
     $defaultSettings = [
-        'ai_provider' => ['local', 'Selected AI provider (local, openai, anthropic, google)', 'text', 'AI Provider'],
+        'ai_provider' => ['jons_ai', 'Selected AI provider (jons_ai, openai, anthropic, google)', 'text', 'AI Provider'],
         'openai_api_key' => ['', 'OpenAI API key for ChatGPT access', 'text', 'OpenAI API Key'],
         'openai_model' => ['gpt-3.5-turbo', 'OpenAI model to use', 'text', 'OpenAI Model'],
         'anthropic_api_key' => ['', 'Anthropic API key for Claude access', 'text', 'Anthropic API Key'],
@@ -255,7 +255,7 @@ function initializeAISettings($pdo) {
         'ai_temperature' => ['0.7', 'AI creativity level (0.0-1.0)', 'number', 'AI Temperature'],
         'ai_max_tokens' => ['1000', 'Maximum tokens per AI response', 'number', 'Max Tokens'],
         'ai_timeout' => ['30', 'API timeout in seconds', 'number', 'API Timeout'],
-        'fallback_to_local' => ['1', 'Fallback to local AI if external API fails', 'boolean', 'Fallback to Local'],
+        'fallback_to_local' => ['1', "Fallback to Jon's AI if external API fails", 'boolean', "Fallback to Jon's AI"],
         'ai_brand_voice' => ['', 'Default brand voice for AI content generation', 'text', 'Brand Voice'],
         'ai_content_tone' => ['professional', 'Default content tone', 'text', 'Content Tone'],
         // Advanced AI Temperature & Configuration Settings

@@ -33,15 +33,23 @@ foreach ($required as $field) {
 }
     $itemIds = $input['itemIds'];  // These are actually SKUs now
     $quantities = $input['quantities'];
+    $colors = $input['colors'] ?? []; // Color information for each item
     
     // Debug the itemIds array
     error_log("add-order.php: itemIds array: " . print_r($itemIds, true));
     error_log("add-order.php: quantities array: " . print_r($quantities, true));
+    error_log("add-order.php: colors array: " . print_r($colors, true));
     
     if (!is_array($itemIds) || !is_array($quantities) || count($itemIds)!==count($quantities)) {
     echo json_encode(['success'=>false,'error'=>'Invalid items array']);
     exit;
 }
+
+// Ensure colors array has same length as items (fill with nulls if needed)
+if (count($colors) < count($itemIds)) {
+    $colors = array_pad($colors, count($itemIds), null);
+}
+
 $paymentMethod = $input['paymentMethod'];
 $shippingMethod = $input['shippingMethod'] ?? 'Customer Pickup'; // Default to Customer Pickup if not provided
 $paymentStatus = in_array($paymentMethod, ['Cash','Check']) ? 'Pending' : 'Received';
@@ -96,16 +104,16 @@ try {
     
     // Prepare statements for order items and stock updates
     $priceStmt = $pdo->prepare("SELECT retailPrice FROM items WHERE sku = ?");
-    $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price) VALUES (?, ?, ?, ?, ?)");
-    $updateStockStmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");
+    $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price, color) VALUES (?, ?, ?, ?, ?, ?)");
     
     // Process each item (SKU)
     for ($i = 0; $i < count($itemIds); $i++) {
         $sku = $itemIds[$i];
         $quantity = (int)$quantities[$i];
+        $color = !empty($colors[$i]) ? $colors[$i] : null;
         
         // Debug each SKU being processed
-        error_log("add-order.php: Processing item $i: SKU='$sku', Quantity=$quantity");
+        error_log("add-order.php: Processing item $i: SKU='$sku', Quantity=$quantity, Color='$color'");
         
         // Check if SKU is null or empty
         if (empty($sku)) {
@@ -125,12 +133,38 @@ try {
         // Generate order item ID
         $orderItemId = 'OI' . str_pad($itemCount + $i + 1, 10, '0', STR_PAD_LEFT);
         
-        // Insert order item
-        error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$sku, Qty=$quantity, Price=$price");
-        $orderItemStmt->execute([$orderItemId, $orderId, $sku, $quantity, $price]);
+        // Insert order item with color information
+        error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$sku, Qty=$quantity, Price=$price, Color=$color");
+        $orderItemStmt->execute([$orderItemId, $orderId, $sku, $quantity, $price, $color]);
         
-        // Update stock levels
-        $updateStockStmt->execute([$quantity, $sku]);
+        // Handle stock reduction based on whether item has colors
+        if (!empty($color)) {
+            // Use color-specific stock reduction
+            $colorStockResponse = file_get_contents('http://localhost:8000/api/item_colors.php', false, stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => 'Content-Type: application/json',
+                    'content' => json_encode([
+                        'action' => 'reduce_stock_for_sale',
+                        'item_sku' => $sku,
+                        'color_name' => $color,
+                        'quantity' => $quantity
+                    ])
+                ]
+            ]));
+            
+            $colorStockResult = json_decode($colorStockResponse, true);
+            if (!$colorStockResult || !$colorStockResult['success']) {
+                error_log("add-order.php: WARNING - Failed to reduce color stock for SKU '$sku', Color '$color'");
+                // Fall back to regular stock reduction
+                $updateStockStmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");
+                $updateStockStmt->execute([$quantity, $sku]);
+            }
+        } else {
+            // Regular stock reduction for items without colors
+            $updateStockStmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");
+            $updateStockStmt->execute([$quantity, $sku]);
+        }
     }
     
     $pdo->commit();

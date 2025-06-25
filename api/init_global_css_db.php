@@ -107,17 +107,24 @@ try {
         ['room_title_font_size', 'font-size', '2.5rem', 'room_headers', 'Room title font size'],
         ['room_title_color', 'color', '#ffffff', 'room_headers', 'Room title color'],
         ['room_title_text_stroke', 'text-stroke', '2px #556B2F', 'room_headers', 'Room title text stroke'],
-        ['room_title_text_shadow', 'text-shadow', '2px 2px 0px #556B2F, -2px -2px 0px #556B2F, 2px -2px 0px #556B2F, -2px 2px 0px #556B2F, 0px 2px 0px #556B2F, 2px 0px 0px #556B2F, 0px -2px 0px #556B2F, -2px 0px 0px #556B2F', 'room_headers', 'Room title text shadow'],
+        ['room_title_text_shadow', 'text-shadow', 'none', 'room_headers', 'Room title text shadow'],
         ['room_description_font_size', 'font-size', '1rem', 'room_headers', 'Room description font size'],
         ['room_description_color', 'color', '#ffffff', 'room_headers', 'Room description color'],
         ['room_description_text_stroke', 'text-stroke', '2px #556B2F', 'room_headers', 'Room description text stroke'],
-        ['room_description_text_shadow', 'text-shadow', '2px 2px 0px #556B2F, -2px -2px 0px #556B2F, 2px -2px 0px #556B2F, -2px 2px 0px #556B2F, 0px 2px 0px #556B2F, 2px 0px 0px #556B2F, 0px -2px 0px #556B2F, -2px 0px 0px #556B2F', 'room_headers', 'Room description text shadow'],
+        ['room_description_text_shadow', 'text-shadow', 'none', 'room_headers', 'Room description text shadow'],
         
         // Admin Interface
         ['admin_bg_color', 'background-color', '#f9fafb', 'admin', 'Admin interface background'],
         ['admin_sidebar_bg', 'background-color', '#ffffff', 'admin', 'Admin sidebar background'],
         ['admin_text_color', 'color', '#374151', 'admin', 'Admin text color'],
-        ['admin_border_color', 'border-color', '#e5e7eb', 'admin', 'Admin border color']
+        ['admin_border_color', 'border-color', '#e5e7eb', 'admin', 'Admin border color'],
+        
+        // Admin Modal Headers
+        ['admin_modal_header_bg', 'background-color', '#87ac3a', 'admin_modals', 'Admin modal header background'],
+        ['admin_modal_header_bg_gradient', 'background', 'linear-gradient(to right, #87ac3a, #a3cc4a)', 'admin_modals', 'Admin modal header gradient'],
+        ['admin_modal_header_text', 'color', '#ffffff', 'admin_modals', 'Admin modal header text color'],
+        ['admin_modal_sales_header_bg', 'background', 'linear-gradient(to right, #87ac3a, #a3cc4a)', 'admin_modals', 'Sales admin modal header gradient'],
+        ['brand_bg_text_color', 'color', '#ffffff', 'brand', 'Text color when background uses brand colors']
     ];
 
     $stmt = $pdo->prepare("

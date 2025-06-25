@@ -651,6 +651,74 @@ button.hover\\:bg-indigo-700:hover,
 }
 
 /* ==============================================
+   BRAND COLOR CONTRAST RULES
+   ============================================== */
+
+/* Automatic white text when background uses brand colors */
+.brand-bg,
+button[style*="background-color: var(--button-bg-primary"],
+button[style*="background-color: var(--primary-color"],
+button[style*="background-color: #87ac3a"],
+button.bg-green-500,
+button.btn-primary,
+.btn-primary,
+[style*="background-color: var(--button-bg-primary"],
+[style*="background-color: var(--primary-color"],
+[style*="background-color: var(--admin-modal-sales-header-bg"],
+[style*="background: var(--admin-modal-sales-header-bg"],
+[style*="background-color: #87ac3a"],
+[style*="background: linear-gradient"][style*="#87ac3a"] {
+    color: var(--brand-bg-text-color, white) !important;
+}
+
+/* Ensure child elements also get white text */
+.brand-bg *,
+button[style*="background-color: var(--button-bg-primary"] *,
+button[style*="background-color: var(--primary-color"] *,
+button[style*="background-color: #87ac3a"] *,
+button.bg-green-500 *,
+button.btn-primary *,
+.btn-primary *,
+[style*="background-color: var(--button-bg-primary"] *,
+[style*="background-color: var(--primary-color"] *,
+[style*="background-color: var(--admin-modal-sales-header-bg"] *,
+[style*="background: var(--admin-modal-sales-header-bg"] *,
+[style*="background-color: #87ac3a"] *,
+[style*="background: linear-gradient"][style*="#87ac3a"] * {
+    color: var(--brand-bg-text-color, white) !important;
+}
+
+/* Specific class for brand background elements */
+.brand-bg-auto-white {
+    background-color: var(--primary-color, #87ac3a) !important;
+    color: var(--brand-bg-text-color, white) !important;
+}
+
+.brand-bg-auto-white * {
+    color: var(--brand-bg-text-color, white) !important;
+}
+
+/* Specific button classes for brand colors */
+.brand-button,
+button.brand-button {
+    background-color: var(--button-bg-primary, #87ac3a) !important;
+    color: var(--brand-bg-text-color, white) !important;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.brand-button:hover,
+button.brand-button:hover {
+    background-color: var(--button-bg-primary-hover, #a3cc4a) !important;
+    color: var(--brand-bg-text-color, white) !important;
+}
+
+.brand-button *,
+button.brand-button * {
+    color: var(--brand-bg-text-color, white) !important;
+}
+
+/* ==============================================
    LEGACY CLASSES - BEING PHASED OUT
    ============================================== */
 

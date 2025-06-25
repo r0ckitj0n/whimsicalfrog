@@ -31,7 +31,7 @@ class AIProviders {
      */
     private function loadAISettings() {
         $defaults = [
-            'ai_provider' => 'local',
+            'ai_provider' => 'jons_ai',
             'openai_api_key' => '',
             'openai_model' => 'gpt-3.5-turbo',
             'anthropic_api_key' => '',
@@ -131,7 +131,7 @@ class AIProviders {
                     return $this->generateEnhancedWithGoogle($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
                 case 'meta':
                     return $this->generateEnhancedWithMeta($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
-                case 'local':
+                case 'jons_ai':
                 default:
                     return $this->generateEnhancedWithLocal($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
             }
@@ -139,8 +139,8 @@ class AIProviders {
             error_log("Enhanced AI Provider Error ($provider): " . $e->getMessage());
             
             // Fallback to local if enabled
-            if ($this->settings['fallback_to_local'] && $provider !== 'local') {
-                error_log("Falling back to local AI for enhanced content");
+            if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
+                error_log("Falling back to Jon's AI for enhanced content");
                 return $this->generateEnhancedWithLocal($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
             }
             
@@ -164,7 +164,7 @@ class AIProviders {
                     return $this->generateWithGoogle($name, $description, $category, $brandVoice, $contentTone);
                 case 'meta':
                     return $this->generateWithMeta($name, $description, $category, $brandVoice, $contentTone);
-                case 'local':
+                case 'jons_ai':
                 default:
                     return $this->generateWithLocal($name, $description, $category, $brandVoice, $contentTone);
             }
@@ -172,8 +172,8 @@ class AIProviders {
             error_log("AI Provider Error ($provider): " . $e->getMessage());
             
             // Fallback to local if enabled
-            if ($this->settings['fallback_to_local'] && $provider !== 'local') {
-                error_log("Falling back to local AI");
+            if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
+                error_log("Falling back to Jon's AI");
                 return $this->generateWithLocal($name, $description, $category, $brandVoice, $contentTone);
             }
             
@@ -197,7 +197,7 @@ class AIProviders {
                     return $this->generateCostWithGoogle($name, $description, $category);
                 case 'meta':
                     return $this->generateCostWithMeta($name, $description, $category);
-                case 'local':
+                case 'jons_ai':
                 default:
                     return $this->generateCostWithLocal($name, $description, $category);
             }
@@ -205,8 +205,8 @@ class AIProviders {
             error_log("AI Cost Provider Error ($provider): " . $e->getMessage());
             
             // Fallback to local if enabled
-            if ($this->settings['fallback_to_local'] && $provider !== 'local') {
-                error_log("Falling back to local cost AI");
+            if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
+                error_log("Falling back to Jon's AI cost analysis");
                 return $this->generateCostWithLocal($name, $description, $category);
             }
             
@@ -230,7 +230,7 @@ class AIProviders {
                     return $this->generatePricingWithGoogle($name, $description, $category, $costPrice);
                 case 'meta':
                     return $this->generatePricingWithMeta($name, $description, $category, $costPrice);
-                case 'local':
+                case 'jons_ai':
                 default:
                     return $this->generatePricingWithLocal($name, $description, $category, $costPrice);
             }
@@ -238,8 +238,8 @@ class AIProviders {
             error_log("AI Pricing Provider Error ($provider): " . $e->getMessage());
             
             // Fallback to local if enabled
-            if ($this->settings['fallback_to_local'] && $provider !== 'local') {
-                error_log("Falling back to local pricing AI");
+            if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
+                error_log("Falling back to Jon's AI pricing analysis");
                 return $this->generatePricingWithLocal($name, $description, $category, $costPrice);
             }
             
@@ -269,7 +269,7 @@ class AIProviders {
                     return $this->generateWithGoogleImages($name, $description, $category, $images, $brandVoice, $contentTone);
                 case 'meta':
                     return $this->generateWithMetaImages($name, $description, $category, $images, $brandVoice, $contentTone);
-                case 'local':
+                case 'jons_ai':
                 default:
                     return $this->generateWithLocal($name, $description, $category, $brandVoice, $contentTone);
             }
@@ -303,7 +303,7 @@ class AIProviders {
                     return $this->generatePricingWithGoogleImages($name, $description, $category, $costPrice, $images);
                 case 'meta':
                     return $this->generatePricingWithMetaImages($name, $description, $category, $costPrice, $images);
-                case 'local':
+                case 'jons_ai':
                 default:
                     return $this->generatePricingWithLocal($name, $description, $category, $costPrice);
             }
@@ -737,8 +737,69 @@ class AIProviders {
      * Local pricing with existing system
      */
     private function generatePricingWithLocal($name, $description, $category, $costPrice) {
-        require_once 'suggest_price.php';
-        return analyzePricing($name, $description, $category, $costPrice, $this->pdo);
+        // Simple local pricing algorithm to avoid circular dependency
+        $basePrice = $this->calculateBasePrice($name, $description, $category, $costPrice);
+        
+        return [
+            'price' => $basePrice,
+            'reasoning' => "Local pricing algorithm based on category markup and item analysis",
+            'confidence' => 'medium',
+            'factors' => [
+                'base_price' => $basePrice,
+                'category' => $category,
+                'cost_plus' => $costPrice > 0 ? $costPrice * 2.5 : $basePrice
+            ],
+            'analysis' => [
+                'pricing_strategy' => 'cost_plus',
+                'detected_materials' => [],
+                'detected_features' => [],
+                'market_positioning' => 'standard',
+                'brand_premium' => 1.0,
+                'recommended_pricing_tier' => 'standard'
+            ],
+            'components' => [
+                [
+                    'type' => 'base_pricing',
+                    'label' => 'Base category pricing',
+                    'amount' => $basePrice,
+                    'explanation' => 'Standard pricing for ' . $category . ' category'
+                ]
+            ]
+        ];
+    }
+    
+    /**
+     * Calculate base price using simple algorithm
+     */
+    private function calculateBasePrice($name, $description, $category, $costPrice) {
+        // Category base prices
+        $basePrices = [
+            'T-Shirts' => 19.99,
+            'Tumblers' => 16.99,
+            'Artwork' => 29.99,
+            'Sublimation' => 24.99,
+            'Window Wraps' => 39.99,
+            'default' => 19.99
+        ];
+        
+        $basePrice = $basePrices[$category] ?? $basePrices['default'];
+        
+        // If we have a cost price, use cost-plus pricing
+        if ($costPrice > 0) {
+            $markup = 2.5; // 150% markup
+            $calculatedPrice = $costPrice * $markup;
+            // Use the higher of base price or calculated price
+            $basePrice = max($basePrice, $calculatedPrice);
+        }
+        
+        // Adjust for premium keywords
+        $text = strtolower($name . ' ' . $description);
+        if (strpos($text, 'premium') !== false || strpos($text, 'deluxe') !== false || strpos($text, 'custom') !== false) {
+            $basePrice *= 1.3;
+        }
+        
+        // Round to .99 pricing
+        return floor($basePrice) + 0.99;
     }
     
     /**
@@ -2055,9 +2116,9 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                     return $this->getGoogleModels();
                 case 'meta':
                     return $this->getMetaModels();
-                case 'local':
+                case 'jons_ai':
                     return [
-                        ['id' => 'local-ai', 'name' => 'Local AI Algorithm', 'description' => 'Built-in AI system']
+                        ['id' => 'jons-ai', 'name' => "Jon's AI Algorithm", 'description' => "Jon's built-in AI system"]
                     ];
                 default:
                     return [];
@@ -2371,9 +2432,9 @@ Provide detailed, specific cost breakdown based on the actual product details pr
      */
     public function getAvailableProviders() {
         return [
-            'local' => [
-                'name' => 'Local AI (Algorithm-based)',
-                'description' => 'Fast, reliable, cost-free algorithm-based AI',
+            'jons_ai' => [
+                'name' => "Jon's AI (Algorithm-based)",
+                'description' => "Fast, reliable, cost-free algorithm-based AI by Jon",
                 'cost' => 'Free',
                 'speed' => 'Very Fast',
                 'requires_api_key' => false

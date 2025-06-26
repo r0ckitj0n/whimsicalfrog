@@ -172,13 +172,100 @@ $pending = ($order['paymentStatus'] === 'Pending');
 ?>
 <style>
 @media print {
-  #printBtn { display:none; }
-  .no-print { display:none; }
+  /* Hide the entire navigation structure */
+  nav,
+  header,
+  .site-header,
+  .header-container,
+  .header-content,
+  .header-left,
+  .header-center,
+  .header-right,
+  .nav-links,
+  .mobile-menu,
+  .search-container,
+  .cart-link,
+  .user-menu,
+  .auth-links,
+  .mobile-menu-toggle,
+  .logo-link,
+  .search-bar,
+  #printBtn,
+  .no-print { 
+    display: none !important; 
+  }
+  
+  /* Use visibility approach to hide everything except receipt */
+  body {
+    visibility: hidden !important;
+    background: white !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* Show only the receipt container and its contents */
+  .receipt-container,
+  .receipt-container * {
+    visibility: visible !important;
+  }
+  
+  /* Position the receipt container for print */
+  .receipt-container {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    background: white !important;
+  }
+  
+  /* Reset page margins for print */
+  @page {
+    margin: 0.5in;
+  }
+  
+  /* Make sure tables print nicely */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  
+  th, td {
+    border: 1px solid #333 !important;
+    padding: 8px !important;
+  }
+  
+  thead tr {
+    background: #f0f0f0 !important;
+  }
+  
+  /* Ensure colors are print-friendly */
+  h1, h2, h3 {
+    color: #000 !important;
+  }
+  
+  /* Make sure the company header prints nicely */
+  .receipt-container h1 {
+    color: #000 !important;
+    font-size: 24pt !important;
+  }
+  
+  /* Ensure alert boxes are visible in print */
+  .bg-yellow-100,
+  .bg-green-100 {
+    background: #f9f9f9 !important;
+    border: 1px solid #ccc !important;
+    color: #000 !important;
+  }
 }
 </style>
 
 <!-- Simple Receipt Header with Company Info -->
-<div class="max-w-2xl mx-auto bg-white shadow-md rounded p-6 mt-6">
+<div class="receipt-container max-w-2xl mx-auto bg-white shadow-md rounded p-6 mt-6">
     <!-- Company Header -->
     <div class="text-center mb-8 border-b pb-6">
         <div class="flex justify-center items-center mb-4">

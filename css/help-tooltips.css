@@ -255,7 +255,7 @@ span.help-tooltip.show,
     border-radius: 50%;
     font-size: 12px;
     font-weight: bold;
-    cursor: help;
+    cursor: pointer;
     transition: all 0.2s ease;
 }
 

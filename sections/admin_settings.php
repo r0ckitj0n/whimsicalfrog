@@ -7703,6 +7703,8 @@ function closeGlobalCSSModal() {
     const modal = document.getElementById('globalCSSModal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    // Clear search when closing modal
+    clearCSSSearch();
 }
 
 async function loadGlobalCSSRules() {
@@ -8171,6 +8173,118 @@ async function resetToDefaults() {
     }
 }
 
+// Search functionality for CSS rules
+function filterCSSRules(searchTerm) {
+    const searchInput = document.getElementById('cssSearchInput');
+    const resultsCount = document.getElementById('searchResultsCount');
+    const sections = document.querySelectorAll('#globalCSSContent > div > div');
+    
+    if (!searchTerm || searchTerm.trim() === '') {
+        // Show all sections and rules
+        sections.forEach(section => {
+            section.style.display = 'block';
+            const rules = section.querySelectorAll('.bg-white.rounded-lg');
+            rules.forEach(rule => rule.style.display = 'block');
+        });
+        resultsCount.style.display = 'none';
+        return;
+    }
+    
+    searchTerm = searchTerm.toLowerCase().trim();
+    let visibleRulesCount = 0;
+    let visibleSectionsCount = 0;
+    
+    sections.forEach(section => {
+        const sectionTitle = section.querySelector('h4').textContent.toLowerCase();
+        const sectionDescription = section.querySelector('p').textContent.toLowerCase();
+        const rules = section.querySelectorAll('.bg-white.rounded-lg');
+        let sectionHasVisibleRules = false;
+        
+        rules.forEach(rule => {
+            const label = rule.querySelector('label').textContent.toLowerCase();
+            const helpText = rule.querySelector('.text-xs.text-gray-500').textContent.toLowerCase();
+            const input = rule.querySelector('input, select');
+            const currentValue = input ? input.value.toLowerCase() : '';
+            
+            // Check if search term matches any of these fields
+            const matches = 
+                label.includes(searchTerm) ||
+                helpText.includes(searchTerm) ||
+                sectionTitle.includes(searchTerm) ||
+                sectionDescription.includes(searchTerm) ||
+                currentValue.includes(searchTerm);
+            
+            if (matches) {
+                rule.style.display = 'block';
+                sectionHasVisibleRules = true;
+                visibleRulesCount++;
+                
+                // Highlight matching text in label
+                highlightMatchingText(rule.querySelector('label'), searchTerm);
+                highlightMatchingText(rule.querySelector('.text-xs.text-gray-500'), searchTerm);
+            } else {
+                rule.style.display = 'none';
+                // Remove any existing highlights
+                removeHighlights(rule.querySelector('label'));
+                removeHighlights(rule.querySelector('.text-xs.text-gray-500'));
+            }
+        });
+        
+        if (sectionHasVisibleRules) {
+            section.style.display = 'block';
+            visibleSectionsCount++;
+            // Highlight section title if it matches
+            highlightMatchingText(section.querySelector('h4'), searchTerm);
+        } else {
+            section.style.display = 'none';
+            removeHighlights(section.querySelector('h4'));
+        }
+    });
+    
+    // Show results count
+    if (visibleRulesCount > 0) {
+        resultsCount.innerHTML = `Found ${visibleRulesCount} setting${visibleRulesCount !== 1 ? 's' : ''} in ${visibleSectionsCount} section${visibleSectionsCount !== 1 ? 's' : ''}`;
+        resultsCount.style.display = 'block';
+    } else {
+        resultsCount.innerHTML = 'No settings found matching your search';
+        resultsCount.style.display = 'block';
+    }
+}
+
+function highlightMatchingText(element, searchTerm) {
+    if (!element || !searchTerm) return;
+    
+    // Remove existing highlights first
+    removeHighlights(element);
+    
+    const originalText = element.textContent;
+    const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
+    const highlightedHTML = originalText.replace(regex, '<mark style="background-color: #fef08a; padding: 1px 2px; border-radius: 2px;">$1</mark>');
+    
+    if (highlightedHTML !== originalText) {
+        element.innerHTML = highlightedHTML;
+    }
+}
+
+function removeHighlights(element) {
+    if (!element) return;
+    
+    // If element contains highlighted text, replace with plain text
+    if (element.querySelector('mark')) {
+        element.textContent = element.textContent;
+    }
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function clearCSSSearch() {
+    const searchInput = document.getElementById('cssSearchInput');
+    searchInput.value = '';
+    filterCSSRules('');
+}
+
 // Load and apply CSS on page load
 document.addEventListener('DOMContentLoaded', function() {
     generateAndApplyCSS();
@@ -8185,6 +8299,25 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="admin-modal-header">
             <h2 class="modal-title">🎨 Website Style Settings</h2>
             <button onclick="closeGlobalCSSModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="px-6 py-4 bg-white border-b border-gray-200">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <input type="text" 
+                       id="cssSearchInput"
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm"
+                       placeholder="Search CSS settings... (e.g., 'button color', 'font size', 'modal')"
+                       onkeyup="filterCSSRules(this.value)">
+            </div>
+            <div id="searchResultsCount" class="text-xs text-gray-500 mt-1" style="display: none;">
+                <!-- Search results count will appear here -->
+            </div>
         </div>
             
             <!-- Body -->

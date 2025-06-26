@@ -195,12 +195,16 @@ $pending = ($order['paymentStatus'] === 'Pending');
     display: none !important; 
   }
   
-  /* Use visibility approach to hide everything except receipt */
+  /* Use visibility approach to hide everything except receipt - ONLY when printing */
   body {
-    visibility: hidden !important;
     background: white !important;
     font-size: 12pt !important;
     line-height: 1.4 !important;
+  }
+  
+  /* Hide everything during print, then show only receipt */
+  body > *:not(.receipt-container) {
+    visibility: hidden !important;
   }
   
   /* Show only the receipt container and its contents */

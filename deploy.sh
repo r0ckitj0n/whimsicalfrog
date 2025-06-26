@@ -53,6 +53,8 @@ mirror --reverse --delete --verbose \
   --exclude-glob SERVER_MANAGEMENT.md \
   --exclude-glob factory-tutorial/ \
   --exclude-glob backup.sql \
+  --exclude-glob backup_*.tar.gz \
+  --exclude-glob *_backup_*.tar.gz \
   --exclude-glob deploy_commands.txt \
   --exclude-glob fix_clown_frog_image.sql \
   --exclude-glob images/.htaccess \

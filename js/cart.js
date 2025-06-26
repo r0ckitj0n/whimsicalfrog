@@ -1,7 +1,34 @@
 class ShoppingCart {
     constructor() {
         this.items = JSON.parse(localStorage.getItem('cart') || '[]');
+        this.cleanupInvalidItems();
         this.updateCartCount();
+    }
+
+    cleanupInvalidItems() {
+        // Remove items with invalid prices or quantities
+        const originalLength = this.items.length;
+        this.items = this.items.filter(item => {
+            const hasValidPrice = !isNaN(parseFloat(item.price)) && parseFloat(item.price) >= 0;
+            const hasValidQuantity = !isNaN(parseInt(item.quantity)) && parseInt(item.quantity) > 0;
+            const hasValidSku = item.sku && item.sku !== 'undefined' && item.sku !== 'null';
+            
+            if (!hasValidPrice || !hasValidQuantity || !hasValidSku) {
+                console.warn(`Removing invalid cart item:`, item);
+                return false;
+            }
+            
+            // Fix price to ensure it's a number
+            item.price = parseFloat(item.price) || 0;
+            item.quantity = parseInt(item.quantity) || 1;
+            
+            return true;
+        });
+        
+        // Save if we removed any items
+        if (this.items.length !== originalLength) {
+            this.saveCart();
+        }
     }
 
     dispatchCartUpdate() {
@@ -92,7 +119,7 @@ class ShoppingCart {
             const cartItem = {
                 sku: item.sku,
                 name: item.name,
-                price: item.price,
+                price: parseFloat(item.price) || 0,
                 image: item.image,
                 quantity: quantity
             };
@@ -157,7 +184,11 @@ class ShoppingCart {
     }
 
     getTotal() {
-        return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+        return this.items.reduce((total, item) => {
+            const price = parseFloat(item.price) || 0;
+            const quantity = parseInt(item.quantity) || 0;
+            return total + (price * quantity);
+        }, 0);
     }
 
     getItemCount() {
@@ -516,10 +547,15 @@ async function addToCart(sku, name, price, imageUrl = null) {
     }
     
     try {
+        const validPrice = parseFloat(price) || 0;
+        if (validPrice <= 0) {
+            console.warn(`Invalid price for item ${sku}: ${price}`);
+        }
+        
         cart.addItem({
             sku: sku,
             name: name,
-            price: parseFloat(price),
+            price: validPrice,
             image: imageUrl,
             quantity: 1
         });

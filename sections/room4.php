@@ -838,11 +838,11 @@ window.showItemDetails = async function() {
             }
         } else {
             console.error('Failed to load item details:', data.error);
-            alert('Unable to load item details. Please try again.');
+            showError('Unable to load item details. Please try again.');
         }
     } catch (error) {
         console.error('Error loading item details:', error);
-        alert('Unable to load item details. Please try again.');
+                    showError('Unable to load item details. Please try again.');
     }
 };
 

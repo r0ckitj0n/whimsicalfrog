@@ -1352,7 +1352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const sel=document.getElementById('addProductSelect');
             const qtyInput=document.getElementById('addQty');
             const sku=sel.value; const qty=parseInt(qtyInput.value||'0',10);
-            if(!sku||qty<=0){ alert('Select item and qty'); return; }
+            if(!sku||qty<=0){ showValidation('Select item and qty'); return; }
             
             const selectedOption = sel.options[sel.selectedIndex];
             const price = parseFloat(selectedOption.dataset.price || 0);
@@ -1512,7 +1512,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const payText = fd.get('paynote').trim();
             
             if (!noteText && !payText) {
-                alert('Please enter a fulfillment note or payment note before saving.');
+                showValidation('Please enter a fulfillment note or payment note before saving.');
                 return;
             }
             

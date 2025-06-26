@@ -6313,7 +6313,7 @@ function openMarketingManager() {
     console.log('Marketing Manager: Opening modal for SKU:', currentItemSku);
     
     if (!currentItemSku) {
-        alert('No item selected. Please select an item first.');
+        showValidation('No item selected. Please select an item first.');
         return;
     }
     

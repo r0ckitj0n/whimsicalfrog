@@ -828,11 +828,11 @@ window.showItemDetails = async function() {
             }
         } else {
             console.error('Failed to load item details:', data.error);
-            alert('Unable to load item details. Please try again.');
+            showError('Unable to load item details. Please try again.');
         }
     } catch (error) {
         console.error('Error loading item details:', error);
-        alert('Unable to load item details. Please try again.');
+                    showError('Unable to load item details. Please try again.');
     }
 };
 
@@ -996,11 +996,11 @@ async function showProductDetails(sku) {
             showDetailedModal();
         } else {
             console.error('Failed to load product details:', data.message);
-            alert('Sorry, we could not load the product details. Please try again.');
+            showError('Sorry, we could not load the product details. Please try again.');
         }
     } catch (error) {
         console.error('Error loading product details:', error);
-        alert('Sorry, there was an error loading the product details.');
+                    showError('Sorry, there was an error loading the product details.');
     }
 }
 

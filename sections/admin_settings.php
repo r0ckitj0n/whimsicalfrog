@@ -5411,7 +5411,7 @@ function viewEmailDetails(emailId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Email Details:\n\n' + 
+                showInfo('Email Details:\n\n' + 
                       'To: ' + data.email.to_email + '\n' +
                       'Subject: ' + data.email.subject + '\n' +
                       'Sent: ' + new Date(data.email.sent_at).toLocaleString() + '\n' +
@@ -8086,7 +8086,7 @@ async function saveGlobalCSSRules() {
             }
             
             // Show success message
-            showAlert('CSS rules updated successfully!', 'success');
+                            showSuccess('CSS rules updated successfully!');
             
             // Reset change tracking
             resetSettingsChangeTracking();
@@ -8098,7 +8098,7 @@ async function saveGlobalCSSRules() {
         }
     } catch (error) {
         console.error('Error saving CSS rules:', error);
-        showAlert('Failed to save CSS rules: ' + error.message, 'error');
+                        showError('Failed to save CSS rules: ' + error.message);
     }
 }
 
@@ -8125,21 +8125,7 @@ async function generateAndApplyCSS() {
     }
 }
 
-function showAlert(message, type = 'info') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `fixed top-4 right-4 z-[9999] px-4 py-3 rounded-lg shadow-lg ${
-        type === 'success' ? 'bg-green-500 text-white' : 
-        type === 'error' ? 'bg-red-500 text-white' : 
-        'bg-blue-500 text-white'
-    }`;
-    alertDiv.textContent = message;
-    
-    document.body.appendChild(alertDiv);
-    
-    setTimeout(() => {
-        alertDiv.remove();
-    }, 3000);
-}
+// showAlert function removed - now using global notification system
 
 async function resetToDefaults() {
     if (!confirm('Are you sure you want to reset all styles to their default values? This cannot be undone.')) {
@@ -8161,7 +8147,7 @@ async function resetToDefaults() {
         const result = await response.json();
         
         if (result.success) {
-            showAlert('Styles reset to defaults successfully!', 'success');
+                            showSuccess('Styles reset to defaults successfully!');
             loadGlobalCSSRules(); // Reload the interface
             await generateAndApplyCSS(); // Apply the reset styles
         } else {
@@ -8169,7 +8155,7 @@ async function resetToDefaults() {
         }
     } catch (error) {
         console.error('Error resetting styles:', error);
-        showAlert('Failed to reset styles: ' + error.message, 'error');
+                        showError('Failed to reset styles: ' + error.message);
     }
 }
 

@@ -266,7 +266,7 @@ function renderDetailedProductModal($item, $images = []) {
             closeDetailedModal();
         } else {
             // Fallback if addToCart function not available
-            alert('Added ' + quantity + ' item(s) to cart!');
+                            showSuccess('Added ' + quantity + ' item(s) to cart!');
             closeDetailedModal();
         }
     }

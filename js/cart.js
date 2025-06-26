@@ -224,118 +224,15 @@ class ShoppingCart {
     }
 
     showNotification(message) {
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg z-50 font-medium';
-        notification.style.backgroundColor = '#87ac3a'; // Your brand green color
-        notification.style.border = '2px solid #6b8e23'; // Slightly darker green border
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        // Add a subtle fade-in animation
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(-10px)';
-        notification.style.transition = 'all 0.3s ease';
-        
-        // Trigger the animation
-        setTimeout(() => {
-            notification.style.opacity = '1';
-            notification.style.transform = 'translateY(0)';
-        }, 10);
-        
-        // Remove after 3 seconds
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
-        }, 3000);
+        return window.showSuccess(message);
     }
 
     showErrorNotification(message) {
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg z-50 font-medium';
-        notification.style.backgroundColor = '#dc2626'; // Red background for errors
-        notification.style.border = '2px solid #b91c1c'; // Darker red border
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        // Add a subtle fade-in animation
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(-10px)';
-        notification.style.transition = 'all 0.3s ease';
-        
-        // Trigger the animation
-        setTimeout(() => {
-            notification.style.opacity = '1';
-            notification.style.transform = 'translateY(0)';
-        }, 10);
-        
-        // Remove after 4 seconds (slightly longer for errors)
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
-        }, 4000);
+        return window.showError(message);
     }
 
     showValidationError(message) {
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 font-medium';
-        notification.style.cssText = `
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border: 2px solid #f59e0b;
-            color: #92400e;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            max-width: 380px;
-            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-        `;
-        
-        notification.innerHTML = `
-            <div class="flex items-center">
-                <span class="text-xl mr-3">⚠️</span>
-                <span class="flex-1">${message}</span>
-                <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-amber-600 hover:text-amber-800 font-bold text-lg leading-none">&times;</button>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Add smooth fade-in animation
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%) scale(0.9)';
-        notification.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-        
-        // Trigger the animation
-        setTimeout(() => {
-            notification.style.opacity = '1';
-            notification.style.transform = 'translateX(0) scale(1)';
-        }, 10);
-        
-        // Add a subtle pulse effect for emphasis
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0) scale(1.02)';
-            setTimeout(() => {
-                notification.style.transform = 'translateX(0) scale(1)';
-            }, 150);
-        }, 200);
-        
-        // Auto-remove after 6 seconds (longer for validation messages)
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(100%) scale(0.9)';
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 400);
-        }, 6000);
+        return window.showValidation(message);
     }
 
     async renderCart() {

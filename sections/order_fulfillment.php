@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     // Error state
                     this.style.backgroundColor = '#fecaca'; // red error color
-                    alert('Error updating field: ' + (result.error || 'Unknown error'));
+                    showError('Error updating field: ' + (result.error || 'Unknown error'));
                     setTimeout(() => {
                         this.style.backgroundColor = originalStyle;
                     }, 2000);
@@ -459,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Network error
                 this.style.backgroundColor = '#fecaca'; // red error color
                 console.error('Error updating field:', error);
-                alert('Network error updating field');
+                showError('Network error updating field');
                 setTimeout(() => {
                     this.style.backgroundColor = originalStyle;
                 }, 2000);

@@ -281,6 +281,63 @@ class ShoppingCart {
         }, 4000);
     }
 
+    showValidationError(message) {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 font-medium';
+        notification.style.cssText = `
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            color: #92400e;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            max-width: 380px;
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+        `;
+        
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <span class="text-xl mr-3">⚠️</span>
+                <span class="flex-1">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-amber-600 hover:text-amber-800 font-bold text-lg leading-none">&times;</button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Add smooth fade-in animation
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%) scale(0.9)';
+        notification.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        
+        // Trigger the animation
+        setTimeout(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(0) scale(1)';
+        }, 10);
+        
+        // Add a subtle pulse effect for emphasis
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0) scale(1.02)';
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0) scale(1)';
+            }, 150);
+        }, 200);
+        
+        // Auto-remove after 6 seconds (longer for validation messages)
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%) scale(0.9)';
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 400);
+        }, 6000);
+    }
+
     async renderCart() {
         let cartContainer = document.getElementById('cartContainer');
         if (!cartContainer) {
@@ -446,7 +503,7 @@ class ShoppingCart {
         const shippingMethod = document.querySelector('input[name="shippingMethod"]:checked')?.value;
 
         if (!paymentMethod || !shippingMethod) {
-            alert('Please select both payment and shipping methods.');
+            this.showValidationError('Please select both payment and shipping methods.');
             return;
         }
 
@@ -458,8 +515,10 @@ class ShoppingCart {
         }
 
         if (!user) {
-            alert('Please log in to complete your order.');
-            window.location.href = '/?page=login';
+            this.showValidationError('Please log in to complete your order.');
+            setTimeout(() => {
+                window.location.href = '/?page=login';
+            }, 1500);
             return;
         }
 
@@ -471,7 +530,7 @@ class ShoppingCart {
             const customerId = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')).userId : null;
             
             if (!customerId) {
-                alert('Please log in to complete your order.');
+                this.showValidationError('Please log in to complete your order.');
                 return;
             }
 
@@ -479,7 +538,7 @@ class ShoppingCart {
             const invalidItems = this.items.filter(item => !item.sku || item.sku === 'undefined');
             if (invalidItems.length > 0) {
                 console.error('Invalid SKUs found in cart:', this.items);
-                alert('Some items in your cart are invalid. Please refresh the page and try again.');
+                this.showErrorNotification('Some items in your cart are invalid. Please refresh the page and try again.');
                 return;
             }
 
@@ -515,11 +574,11 @@ class ShoppingCart {
                 // Redirect to receipt page
                 window.location.href = `/?page=receipt&orderId=${result.orderId}`;
             } else {
-                alert('Order failed: ' + result.error);
+                this.showErrorNotification('Order failed: ' + result.error);
             }
         } catch (error) {
             console.error('Checkout error:', error);
-            alert('An error occurred during checkout. Please try again.');
+            this.showErrorNotification('An error occurred during checkout. Please try again.');
         }
     }
 }

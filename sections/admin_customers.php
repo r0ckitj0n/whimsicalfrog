@@ -794,25 +794,6 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-function showToast(type, message) {
-    const existingToast = document.getElementById('toast-notification');
-    if (existingToast) {
-        existingToast.remove();
-    }
-    const toast = document.createElement('div');
-    toast.id = 'toast-notification';
-    toast.className = `toast-notification ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
 function confirmDelete(customerId, customerName) {
     document.getElementById('delete_customer_id').value = customerId;
     document.getElementById('modal-message').innerText = `Are you sure you want to delete ${customerName}? This action cannot be undone.`;
@@ -867,7 +848,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If there are validation errors, show them and stop
             if (validationErrors.length > 0) {
-                showToast('error', validationErrors.join('. '));
+                showError(validationErrors.join('. '));
                 return;
             }
             
@@ -897,7 +878,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => { // This block executes if response.json() was successful
                 if (data.success) {
-                    showToast('success', data.message);
+                    showSuccess(data.message);
                     
                     // Redirect to the customers page, optionally highlighting the customer
                     let redirectUrl = '?page=admin&section=customers';
@@ -911,7 +892,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return; 
 
                 } else { // data.success is false
-                    showToast('error', data.error || 'Failed to save customer. Please check inputs.');
+                    showError(data.error || 'Failed to save customer. Please check inputs.');
                     if(saveBtn && btnText && spinner) {
                         btnText.classList.remove('hidden');
                         spinner.classList.add('hidden');
@@ -928,7 +909,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => { // Catches network errors or the error thrown from non-JSON response
                 console.error('Error saving customer:', error);
-                showToast('error', 'An unexpected error occurred: ' + error.message);
+                showError('An unexpected error occurred: ' + error.message);
                  if(saveBtn && btnText && spinner) {
                     btnText.classList.remove('hidden');
                     spinner.classList.add('hidden');

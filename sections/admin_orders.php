@@ -1183,25 +1183,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // Show toast notification
-    function showToast(type, message) {
-        const existingToast = document.getElementById('toast-notification');
-        if (existingToast) {
-            existingToast.remove();
-        }
-        const toast = document.createElement('div');
-        toast.id = 'toast-notification';
-        toast.className = `toast-notification ${type}`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 10);
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
+    // Using global notification system - no custom showToast needed
     
     // Handle order form submission
     const orderForm = document.getElementById('orderForm');
@@ -1284,12 +1266,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast('success', data.message || 'Order updated successfully.');
+                    showSuccess(data.message || 'Order updated successfully.');
                     setTimeout(() => {
                         window.location.href = '?page=admin&section=orders&highlight=' + payload.orderId;
                     }, 1000);
                 } else {
-                    showToast('error', data.error || 'Failed to update order.');
+                    showError(data.error || 'Failed to update order.');
                     btnText.classList.remove('hidden');
                     spinner.classList.add('hidden');
                     saveBtn.disabled = false;
@@ -1297,7 +1279,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('error', 'An error occurred while updating the order.');
+                showError('An error occurred while updating the order.');
                 btnText.classList.remove('hidden');
                 spinner.classList.add('hidden');
                 saveBtn.disabled = false;
@@ -1404,17 +1386,17 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json()) // Assuming it returns JSON
             .then(data => {
                 if (data.success) {
-                    showToast('success', data.message || 'Order deleted successfully');
+                    showSuccess(data.message || 'Order deleted successfully');
                     setTimeout(() => {
                         window.location.reload(); // Reload to reflect changes
                     }, 1000);
                 } else {
-                    showToast('error', data.error || 'Failed to delete order');
+                    showError(data.error || 'Failed to delete order');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('error', 'An error occurred while deleting the order');
+                showError('An error occurred while deleting the order');
             });
             
             if(deleteConfirmModal) deleteConfirmModal.classList.remove('show');
@@ -1526,7 +1508,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const res = await fetch('api/fulfill_order.php', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
-                    showToast('success', 'Notes saved successfully!');
+                    showSuccess('Notes saved successfully!');
                     // Clear the form
                     form.querySelector('textarea[name="note"]').value = '';
                     form.querySelector('textarea[name="paynote"]').value = '';
@@ -1541,10 +1523,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.href = url.toString();
                     }, 1000);
                 } else {
-                    showToast('error', data.error || 'Error saving note');
+                    showError(data.error || 'Error saving note');
                 }
             } catch (err) {
-                showToast('error', 'Network error while saving note');
+                showError('Network error while saving note');
                 console.error('Note save error:', err);
             } finally {
                 // Reset button state
@@ -1651,14 +1633,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 this.textContent = newValue;
                             }
                             
-                            showToast('success', data.message);
+                            showSuccess(data.message);
                         } else {
-                            showToast('error', data.error || 'Update failed');
+                            showError(data.error || 'Update failed');
                             this.classList.remove('editing');
                             this.innerHTML = originalHTML;
                         }
                     } catch (error) {
-                        showToast('error', 'Network error occurred');
+                        showError('Network error occurred');
                         this.classList.remove('editing');
                         this.innerHTML = originalHTML;
                     }
@@ -1705,14 +1687,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.success) {
                             this.classList.remove('editing');
                             this.textContent = newValue || '';
-                            showToast('success', data.message);
+                            showSuccess(data.message);
                         } else {
-                            showToast('error', data.error || 'Update failed');
+                            showError(data.error || 'Update failed');
                             this.classList.remove('editing');
                             this.innerHTML = originalHTML;
                         }
                     } catch (error) {
-                        showToast('error', 'Network error occurred');
+                        showError('Network error occurred');
                         this.classList.remove('editing');
                         this.innerHTML = originalHTML;
                     }

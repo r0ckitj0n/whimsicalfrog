@@ -904,9 +904,9 @@ window.confirmAddToCart = function() {
             } else if (window.cart && window.cart.showNotification) {
                 window.cart.showNotification('Please select a color before adding to cart.');
             } else {
-                alert('Please select a color before adding to cart.');
+                showValidation('Please select a color before adding to cart.');
+                return;
             }
-            return;
         }
         // Update the selected color from dropdown
         window.currentModalProduct.selectedColor = selectedColor;
@@ -956,7 +956,7 @@ window.confirmAddToCart = function() {
         }
     } else {
         const colorText = window.currentModalProduct.selectedColor ? ` (${window.currentModalProduct.selectedColor})` : '';
-        alert(`Added ${quantity} ${window.currentModalProduct.name}${colorText} to cart!`);
+        showSuccess(`Added ${quantity} ${window.currentModalProduct.name}${colorText} to cart!`);
     }
     
     // Close modal

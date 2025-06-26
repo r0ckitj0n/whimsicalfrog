@@ -113,15 +113,15 @@ function saveCostItem() {
     .then(result => {
         if (result.success) {
             closeCostModal();
-            showToast(result.message || capitalizeFirstLetter(type) + ' cost saved successfully.', 'success');
+            showSuccess(result.message || capitalizeFirstLetter(type) + ' cost saved successfully.');
             refreshCostBreakdown(); // Refresh the entire cost breakdown section
         } else {
-            showToast('Error: ' + (result.error || 'Failed to save cost item.'), 'error');
+            showError('Error: ' + (result.error || 'Failed to save cost item.'));
         }
     })
     .catch(error => {
         console.error('Error saving cost item:', error);
-        showToast('Failed to save cost item. ' + (error.error || error.message || 'Please try again.'), 'error');
+        showError('Failed to save cost item. ' + (error.error || error.message || 'Please try again.'));
     })
     .finally(() => {
         costSubmitText.classList.remove('hidden');
@@ -171,15 +171,15 @@ function confirmDeleteCostItem() {
     .then(result => {
         if (result.success) {
             closeDeleteCostModal();
-            showToast(result.message || capitalizeFirstLetter(type) + ' cost deleted successfully.', 'success');
+            showSuccess(result.message || capitalizeFirstLetter(type) + ' cost deleted successfully.');
             refreshCostBreakdown(); // Refresh the entire cost breakdown section
         } else {
-            showToast('Error: ' + (result.error || 'Failed to delete cost item.'), 'error');
+            showError('Error: ' + (result.error || 'Failed to delete cost item.'));
         }
     })
     .catch(error => {
         console.error('Error deleting cost item:', error);
-        showToast('Failed to delete cost item. ' + (error.error || error.message || 'Please try again.'), 'error');
+        showError('Failed to delete cost item. ' + (error.error || error.message || 'Please try again.'));
     })
     .finally(() => {
         if (deleteButtonTextSpan) deleteButtonTextSpan.classList.remove('hidden');
@@ -210,12 +210,12 @@ function refreshCostBreakdown() {
             renderCostList('equipment', costBreakdown.equipment);
             updateTotalsDisplay();
         } else {
-            showToast('Error refreshing cost breakdown: ' + (data.error || 'Unknown error'), 'error');
+            showError('Error refreshing cost breakdown: ' + (data.error || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error refreshing cost breakdown:', error);
-        showToast('Failed to refresh cost breakdown. ' + (error.error || error.message || ''), 'error');
+        showError('Failed to refresh cost breakdown. ' + (error.error || error.message || ''));
     });
 }
 

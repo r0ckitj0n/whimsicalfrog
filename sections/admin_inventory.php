@@ -637,7 +637,7 @@ $messageType = $_GET['type'] ?? '';
                 <option value="in" <?= ($stockFilter === 'in') ? 'selected' : ''; ?>>In Stock</option>
             </select>
             <button type="submit" class="brand-button p-2 rounded text-sm">Filter</button>
-            <button type="button" onclick="refreshCategoryDropdown().then(() => showToast('success', 'Categories refreshed!'))" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded text-sm" title="Refresh Categories">🔄</button>
+            <button type="button" onclick="refreshCategoryDropdown().then(() => showSuccess( 'Categories refreshed!'))" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded text-sm" title="Refresh Categories">🔄</button>
             <a href="?page=admin&section=inventory&add=1" class="brand-button p-2 rounded text-sm text-center">Add New Item</a>
         </form>
     </div>
@@ -1466,7 +1466,7 @@ var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $
                 }
                 
                 // Show edit item modal with pre-filled data
-                showToast('success', 'AI analysis complete! Review and edit the generated details.');
+                showSuccess( 'AI analysis complete! Review and edit the generated details.');
                 
             } else {
                 throw new Error(result.error || 'AI analysis failed');
@@ -1478,7 +1478,7 @@ var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $
                 aiMessage.innerHTML = `❌ AI analysis failed: ${error.message}. Please fill in the details manually.`;
                 aiMessage.className = 'mt-1 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800';
             }
-            showToast('error', 'AI analysis failed: ' + error.message);
+            showError( 'AI analysis failed: ' + error.message);
         }
     }
 
@@ -1592,19 +1592,19 @@ function setPrimaryImage(sku, imageId) {
         try {
             const data = JSON.parse(text);
             if (data.success) {
-                showToast('success', 'Primary image updated');
+                showSuccess( 'Primary image updated');
                 loadCurrentImages(sku);
             } else {
-                showToast('error', data.error || 'Failed to set primary image');
+                showError( data.error || 'Failed to set primary image');
             }
         } catch (e) {
             console.error('Failed to parse JSON:', e);
-            showToast('error', 'Server returned invalid response: ' + text.substring(0, 100));
+            showError( 'Server returned invalid response: ' + text.substring(0, 100));
         }
     })
     .catch(error => {
         console.error('Error setting primary image:', error);
-        showToast('error', 'Failed to set primary image');
+        showError( 'Failed to set primary image');
     });
 }
 
@@ -1697,19 +1697,19 @@ function confirmImageDelete(imageId, sku) {
         try {
             const data = JSON.parse(text);
             if (data.success) {
-                showToast('success', 'Image deleted');
+                showSuccess( 'Image deleted');
                 loadCurrentImages(sku);
             } else {
-                showToast('error', data.error || 'Failed to delete image');
+                showError( data.error || 'Failed to delete image');
             }
         } catch (e) {
             console.error('Failed to parse JSON:', e);
-            showToast('error', 'Server returned invalid response: ' + text.substring(0, 100));
+            showError( 'Server returned invalid response: ' + text.substring(0, 100));
         }
     })
     .catch(error => {
         console.error('Error deleting image:', error);
-        showToast('error', 'Failed to delete image');
+        showError( 'Failed to delete image');
     });
 }
 
@@ -1740,60 +1740,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-function showToast(type, message) {
-    console.log('🔔 showToast called with:', { type, message });
-    
-    const existingToast = document.getElementById('toast-notification');
-    if (existingToast) {
-        console.log('🗑️ Removing existing toast');
-        existingToast.remove();
-    }
-    
-    // Create the toast container
-    const toast = document.createElement('div');
-    toast.id = 'toast-notification';
-    toast.className = `toast-notification ${type}`;
-    
-    // Define icons for different types
-    const icons = {
-        success: '✅',
-        error: '❌',
-        info: 'ℹ️',
-        warning: '⚠️'
-    };
-    
-    // Create the toast structure
-    toast.innerHTML = `
-        <div class="toast-icon">${icons[type] || icons.info}</div>
-        <div class="toast-content">${message}</div>
-        <button class="toast-close" onclick="this.parentElement.remove()" title="Close">&times;</button>
-    `;
-    
-    console.log('📝 Toast element created:', toast);
-    
-    document.body.appendChild(toast);
-    console.log('➕ Toast added to body');
-    
-    // Trigger the show animation
-    setTimeout(() => {
-        toast.classList.add('show');
-        console.log('✨ Show animation triggered');
-    }, 10);
-    
-    // Auto-remove after 4 seconds (a bit longer for better UX)
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.classList.remove('show');
-            console.log('⏰ Auto-hiding toast after 4 seconds');
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.remove();
-                    console.log('🗑️ Toast auto-removed');
-                }
-            }, 400); // Match the transition duration
-        }
-    }, 4000);
-}
+// Using global notification system - no custom showToast needed
 
 // Styled confirmation dialog
 function showStyledConfirm(title, message, confirmText = 'Confirm', cancelText = 'Cancel') {
@@ -1879,12 +1826,12 @@ function addCostItem(type) {
 
 function editCostItem(type, id) {
     if (!costBreakdown || !costBreakdown[type]) {
-        showToast('error', 'Cost breakdown data not available.');
+        showError( 'Cost breakdown data not available.');
         return;
     }
     const item_cost = costBreakdown[type].find(i => String(i.id) === String(id));
     if (!item_cost) {
-        showToast('error', 'Cost item not found.');
+        showError( 'Cost item not found.');
         return;
     }
     document.getElementById('costForm').reset();
@@ -1931,16 +1878,16 @@ function saveCostItem() { // Called by costForm submit
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast('success', data.message);
+            showSuccess( data.message);
             closeCostModal();
             refreshCostBreakdown();
         } else {
-            showToast('error', data.error || `Failed to save ${type} cost`);
+            showError( data.error || `Failed to save ${type} cost`);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showToast('error', `Failed to save ${type} cost`);
+        showError( `Failed to save ${type} cost`);
     });
 }
 
@@ -1948,7 +1895,7 @@ function deleteCurrentCostItem() { // Called by delete button in costFormModal
     const id = document.getElementById('costItemId').value;
     const type = document.getElementById('costItemType').value;
     if (!id || !type) {
-        showToast('error', 'No item selected for deletion.');
+        showError( 'No item selected for deletion.');
         return;
     }
     
@@ -1990,17 +1937,17 @@ function confirmCostDeletion() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast('success', data.message);
+            showSuccess( data.message);
             closeCostDeleteModal();
             closeCostModal();
             refreshCostBreakdown();
         } else {
-            showToast('error', data.error || `Failed to delete ${type} cost`);
+            showError( data.error || `Failed to delete ${type} cost`);
         }
     })
     .catch(error => {
         console.error('Error deleting cost item:', error);
-        showToast('error', `Failed to delete ${type} cost. Check console for details.`);
+        showError( `Failed to delete ${type} cost. Check console for details.`);
     })
     .finally(() => {
         // Reset button state
@@ -2035,12 +1982,12 @@ function refreshCostBreakdown(useExistingData = false) {
             costBreakdown = data.data; 
             renderCostBreakdown(costBreakdown);
         } else {
-            showToast('error', data.error || 'Failed to load cost breakdown');
+            showError( data.error || 'Failed to load cost breakdown');
         }
     })
     .catch(error => { 
         console.error('Error:', error); 
-        showToast('error', 'Failed to load cost breakdown'); 
+        showError( 'Failed to load cost breakdown'); 
     })
     .finally(() => {
         isRefreshingCostBreakdown = false;
@@ -2501,7 +2448,7 @@ async function replaceAllCostValues(button) {
         closeCostSuggestionChoiceDialog();
         
         // Show loading state
-        showToast('Replacing all cost values with AI suggestions...', 'info');
+        showInfo('Replacing all cost values with AI suggestions...');
         
         // Clear ALL existing cost items first
         const allCategories = ['materials', 'labor', 'energy', 'equipment'];
@@ -2529,15 +2476,15 @@ async function replaceAllCostValues(button) {
             // Refresh the cost breakdown display
             setTimeout(() => {
                 refreshCostBreakdown();
-                showToast('✅ All cost values replaced with AI suggestions!', 'success');
+                showSuccess('✅ All cost values replaced with AI suggestions!');
             }, 1000);
         } else {
-            showToast('No valid AI cost values to apply.', 'warning');
+            showWarning('No valid AI cost values to apply.');
         }
         
     } catch (error) {
         console.error('Error replacing all cost values:', error);
-        showToast('Error replacing cost values. Please check the console for details.', 'error');
+        showError('Error replacing cost values. Please check the console for details.');
     }
 }
 
@@ -2577,7 +2524,7 @@ async function applySelectedCostFields(button) {
         
     } catch (e) {
         console.error('Error applying selected cost fields:', e);
-        showToast('Error applying selected cost fields. Please try again.', 'error');
+        showError('Error applying selected cost fields. Please try again.');
     }
 }
 
@@ -2586,7 +2533,7 @@ async function applySelectedCostBreakdown(selectedData) {
     console.log('Applying selected cost breakdown:', selectedData);
     
     // Show loading state
-    showToast('Applying selected cost changes...', 'info');
+    showInfo('Applying selected cost changes...');
     
     // Clear existing cost breakdown if any fields are selected
     const hasSelections = selectedData.selectedFields.materials || 
@@ -2633,18 +2580,18 @@ async function applySelectedCostBreakdown(selectedData) {
                     // Refresh the cost breakdown display
                     setTimeout(() => {
                         refreshCostBreakdown();
-                        showToast('Selected cost fields applied successfully!', 'success');
+                        showSuccess('Selected cost fields applied successfully!');
                     }, 1000);
                 } else {
-                    showToast('No valid cost values to apply.', 'warning');
+                    showWarning('No valid cost values to apply.');
                 }
             }
         } catch (error) {
             console.error('Error applying cost breakdown:', error);
-            showToast('Error applying cost fields. Please check the console for details.', 'error');
+            showError('Error applying cost fields. Please check the console for details.');
         }
     } else {
-        showToast('No fields were selected to apply.', 'warning');
+        showWarning('No fields were selected to apply.');
     }
 }
 
@@ -3005,9 +2952,9 @@ function applySelectedPriceChoice(buttonElement) {
             retailPriceField.dispatchEvent(new Event('change', { bubbles: true }));
         }
         
-        showToast('success', `✅ AI suggested price applied! New price: $${suggestionData.suggestedPrice} (${suggestionData.confidence || 'medium'} confidence)`);
+        showSuccess( `✅ AI suggested price applied! New price: $${suggestionData.suggestedPrice} (${suggestionData.confidence || 'medium'} confidence)`);
     } else {
-        showToast('info', '📋 Current price kept. AI analysis saved for reference.');
+        showInfo( '📋 Current price kept. AI analysis saved for reference.');
     }
     
     // Always display the price suggestion inline for reference
@@ -3035,16 +2982,16 @@ async function applySuggestedCostBreakdown(buttonElement) {
     closeCostSuggestionChoiceDialog();
     
     // Show loading state
-    showToast('info', 'Applying AI cost breakdown...');
+    showInfo( 'Applying AI cost breakdown...');
     
     try {
         // Populate the cost breakdown with the suggestion and save to database
         await populateCostBreakdownFromSuggestion(suggestionData);
         
-        showToast('success', `✅ AI cost breakdown applied and saved! Total: $${suggestionData.suggestedCost} (${suggestionData.confidence} confidence)`);
+        showSuccess( `✅ AI cost breakdown applied and saved! Total: $${suggestionData.suggestedCost} (${suggestionData.confidence} confidence)`);
     } catch (error) {
         console.error('Error applying cost breakdown:', error);
-        showToast('error', 'Failed to apply cost breakdown');
+        showError( 'Failed to apply cost breakdown');
     }
 }
 
@@ -3054,7 +3001,7 @@ async function useSuggestedCost() {
     const categoryField = document.getElementById('categoryEdit');
     
     if (!nameField || !nameField.value.trim()) {
-        showToast('error', 'Item name is required for cost suggestion');
+        showError( 'Item name is required for cost suggestion');
         return;
     }
     
@@ -3089,11 +3036,11 @@ async function useSuggestedCost() {
             // Show choice dialog with the new figures
             showCostSuggestionChoiceDialog(data);
         } else {
-            showToast('error', data.error || 'Failed to get cost suggestion');
+            showError( data.error || 'Failed to get cost suggestion');
         }
     } catch (error) {
         console.error('Error getting cost suggestion:', error);
-        showToast('error', 'Failed to connect to cost suggestion service');
+        showError( 'Failed to connect to cost suggestion service');
     } finally {
         // Restore button state
         button.innerHTML = originalText;
@@ -3109,7 +3056,7 @@ async function useSuggestedPrice() {
     const costPriceField = document.getElementById('costPrice');
     
     if (!nameField || !nameField.value.trim()) {
-        showToast('error', 'Item name is required for price suggestion');
+        showError( 'Item name is required for price suggestion');
         return;
     }
     
@@ -3156,11 +3103,11 @@ async function useSuggestedPrice() {
             showPriceSuggestionChoiceDialog(data);
         } else {
             console.log('❌ API returned error:', data.error);
-            showToast('error', data.error || 'Failed to get price suggestion');
+            showError( data.error || 'Failed to get price suggestion');
         }
     } catch (error) {
         console.error('Error getting price suggestion:', error);
-        showToast('error', 'Failed to connect to pricing service');
+        showError( 'Failed to connect to pricing service');
     } finally {
         // Restore button state
         button.innerHTML = originalText;
@@ -3290,7 +3237,7 @@ function applyPriceSuggestion() {
             retailPriceField.style.backgroundColor = '';
         }, 2000);
         
-        showToast('success', 'Suggested price applied to Retail Price field!');
+        showSuccess( 'Suggested price applied to Retail Price field!');
     }
 }
 
@@ -3312,12 +3259,12 @@ function applyCostSuggestionToCost() {
                 costPriceField.style.backgroundColor = '';
             }, 2000);
             
-            showToast('success', 'Suggested cost applied to Cost Price field!');
+            showSuccess( 'Suggested cost applied to Cost Price field!');
         } else {
-            showToast('error', 'No suggested cost available. Please generate a cost suggestion first using "🧮 Get Suggested Cost".');
+            showError( 'No suggested cost available. Please generate a cost suggestion first using "🧮 Get Suggested Cost".');
         }
     } else {
-        showToast('error', 'Cost suggestion elements not found. Please refresh the page.');
+        showError( 'Cost suggestion elements not found. Please refresh the page.');
     }
 }
 
@@ -3346,13 +3293,13 @@ function applySuggestedCostToCostField(button) {
             closeCostSuggestionChoiceDialog();
             
             // Show success message
-            showToast('success', `AI suggested cost of $${suggestedCost.toFixed(2)} applied to Cost Price field!`);
+            showSuccess( `AI suggested cost of $${suggestedCost.toFixed(2)} applied to Cost Price field!`);
         } else {
-            showToast('error', 'Cost Price field not found. Please refresh the page.');
+            showError( 'Cost Price field not found. Please refresh the page.');
         }
     } catch (error) {
         console.error('Error applying suggested cost to cost field:', error);
-        showToast('error', 'Error applying suggested cost. Please try again.');
+        showError( 'Error applying suggested cost. Please try again.');
     }
 }
 
@@ -3607,7 +3554,7 @@ function clearPriceSuggestion() {
 // View Modal Price Suggestion Functions
 function getViewModePriceSuggestion() {
     if (!currentItemSku) {
-        showToast('error', 'No item SKU available');
+        showError( 'No item SKU available');
         return;
     }
     
@@ -3657,14 +3604,14 @@ function getViewModePriceSuggestion() {
                 createdAt: new Date().toISOString()
             });
             
-            showToast('success', 'Price suggestion generated and saved!');
+            showSuccess( 'Price suggestion generated and saved!');
         } else {
-            showToast('error', data.error || 'Failed to get price suggestion');
+            showError( data.error || 'Failed to get price suggestion');
         }
     })
     .catch(error => {
         console.error('Error getting price suggestion:', error);
-        showToast('error', 'Failed to connect to pricing service');
+        showError( 'Failed to connect to pricing service');
     })
     .finally(() => {
         // Restore button state
@@ -4084,14 +4031,14 @@ async function clearCostBreakdownCompletely() {
             
             if (!result.success) {
                 console.error('Failed to clear cost breakdown from database:', result.error);
-                showToast('warning', 'UI cleared but database may still contain old cost data');
+                showWarning( 'UI cleared but database may still contain old cost data');
                 return false;
             }
             
             return true;
         } catch (error) {
             console.error('Error clearing cost breakdown from database:', error);
-            showToast('warning', 'UI cleared but database may still contain old cost data');
+            showWarning( 'UI cleared but database may still contain old cost data');
             return false;
         }
     }
@@ -4170,14 +4117,14 @@ async function saveCostItemToDatabase(costType, data) {
         
         if (!result.success) {
             console.error('Failed to save cost item:', result.error);
-            showToast('error', 'Failed to save cost item: ' + result.error);
+            showError( 'Failed to save cost item: ' + result.error);
             return false;
         }
         
         return true;
     } catch (error) {
         console.error('Error saving cost item:', error);
-        showToast('error', 'Error saving cost item: ' + error.message);
+        showError( 'Error saving cost item: ' + error.message);
         return false;
     }
 }
@@ -4188,7 +4135,7 @@ function generateMarketingCopy() {
     const descriptionField = document.getElementById('description');
     
     if (!nameField || !nameField.value.trim()) {
-        showToast('error', 'Item name is required for marketing copy generation');
+        showError( 'Item name is required for marketing copy generation');
         return;
     }
     
@@ -4223,12 +4170,12 @@ function generateMarketingCopy() {
             // Show comprehensive marketing intelligence modal
             showMarketingIntelligenceModal(data);
         } else {
-            showToast('error', data.error || 'Failed to generate marketing suggestions');
+            showError( data.error || 'Failed to generate marketing suggestions');
         }
     })
     .catch(error => {
         console.error('Error generating marketing suggestions:', error);
-        showToast('error', 'Failed to connect to AI marketing service');
+        showError( 'Failed to connect to AI marketing service');
     })
     .finally(() => {
         // Restore button state
@@ -4488,7 +4435,7 @@ function applyTitle(title) {
         setTimeout(() => {
             nameField.style.backgroundColor = '';
         }, 2000);
-        showToast('success', 'Title applied! Remember to save your changes.');
+        showSuccess( 'Title applied! Remember to save your changes.');
     }
 }
 
@@ -4500,7 +4447,7 @@ function applyDescription(description) {
         setTimeout(() => {
             descriptionField.style.backgroundColor = '';
         }, 2000);
-        showToast('success', 'Description applied! Remember to save your changes.');
+        showSuccess( 'Description applied! Remember to save your changes.');
     }
 }
 
@@ -4571,16 +4518,16 @@ function performCostItemDeletion(id, type) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast('success', data.message || 'Cost item deleted successfully');
+            showSuccess( data.message || 'Cost item deleted successfully');
             // Refresh the cost breakdown to update the display
             refreshCostBreakdown(false);
         } else {
-            showToast('error', data.error || 'Failed to delete cost item');
+            showError( data.error || 'Failed to delete cost item');
         }
     })
     .catch(error => {
         console.error('Error deleting cost item:', error);
-        showToast('error', 'Failed to delete cost item');
+        showError( 'Failed to delete cost item');
     });
 }
 
@@ -4745,7 +4692,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => { // This block executes if response.json() was successful
                 if (data.success) {
-                    showToast('success', data.message);
+                    showSuccess( data.message);
                     
                     // Check if this is an add operation (modal mode is 'add')
                     const isAddOperation = window.location.search.includes('add=1');
@@ -4812,7 +4759,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } 
 
                 } else { // data.success is false
-                    showToast('error', data.error || 'Failed to save item. Please check inputs.');
+                    showError( data.error || 'Failed to save item. Please check inputs.');
                     if(saveBtn && btnText && spinner) {
                         btnText.classList.remove('hidden');
                         spinner.classList.add('hidden');
@@ -4829,7 +4776,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => { // Catches network errors or the error thrown from non-JSON response
                 console.error('Error saving item:', error);
-                showToast('error', 'An unexpected error occurred: ' + error.message);
+                showError( 'An unexpected error occurred: ' + error.message);
                  if(saveBtn && btnText && spinner) {
                     btnText.classList.remove('hidden');
                     spinner.classList.add('hidden');
@@ -4863,12 +4810,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (currentSku) {
                             loadCurrentImages(currentSku, modalMode === 'edit');
                         }
-                        showToast('success', 'Image uploaded successfully.');
+                        showSuccess( 'Image uploaded successfully.');
                     } else {
-                        showToast('error', data.error || 'Failed to upload image.');
+                        showError( data.error || 'Failed to upload image.');
                     }
                 })
-                .catch(error => { console.error('Error:', error); showToast('error', 'Failed to upload image.'); });
+                .catch(error => { console.error('Error:', error); showError( 'Failed to upload image.'); });
             }
         });
     }
@@ -4912,14 +4859,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast('success', data.message);
+                    showSuccess( data.message);
                     // Redirect to refresh the list after successful deletion
                     setTimeout(() => { window.location.href = '?page=admin&section=inventory'; }, 1000);
                 } else {
-                    showToast('error', data.error || 'Failed to delete item.');
+                    showError( data.error || 'Failed to delete item.');
                 }
             })
-            .catch(error => { console.error('Error:', error); showToast('error', 'Failed to delete item.'); });
+            .catch(error => { console.error('Error:', error); showError( 'Failed to delete item.'); });
             deleteConfirmModalElement.classList.remove('show');
         });
     }
@@ -4985,7 +4932,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     if (result.success) {
                         skuField.value = result.sku;
-                        showToast('info', `SKU updated to ${result.sku} for category ${newCategory}`);
+                        showInfo( `SKU updated to ${result.sku} for category ${newCategory}`);
                     }
                 } catch (error) {
                     console.error('Error generating new SKU:', error);
@@ -5053,7 +5000,7 @@ window.addEventListener('storage', function(e) {
     if (e.key === 'categoriesUpdated') {
         // Categories were updated in another tab, refresh our dropdown
         refreshCategoryDropdown().then(() => {
-            showToast('info', 'Categories updated! Dropdown refreshed.');
+            showInfo( 'Categories updated! Dropdown refreshed.');
         });
     }
 });
@@ -5072,7 +5019,7 @@ document.getElementById('multiImageUpload')?.addEventListener('change', function
     
     if (oversizedFiles.length > 0) {
         const fileNames = oversizedFiles.map(file => `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`).join(', ');
-        showToast('error', `The following files are too large (max 10MB allowed): ${fileNames}`);
+        showError( `The following files are too large (max 10MB allowed): ${fileNames}`);
         // Clear the file input
         this.value = '';
         return;
@@ -5096,7 +5043,7 @@ function autoUploadImages(files) {
     
     if (!sku) {
         console.error('No SKU found');
-        showToast('error', 'SKU is required');
+        showError( 'SKU is required');
         hideUploadProgress();
         return;
     }
@@ -5137,7 +5084,7 @@ function autoUploadImages(files) {
             console.log('Parsed upload response:', data);
             
             if (data.success) {
-                showToast('success', data.message || `Successfully uploaded ${files.length} image(s)`);
+                showSuccess( data.message || `Successfully uploaded ${files.length} image(s)`);
                 
                 // Clear the file input
                 document.getElementById('multiImageUpload').value = '';
@@ -5147,24 +5094,24 @@ function autoUploadImages(files) {
                 
             } else {
                 console.error('Upload failed:', data.error);
-                showToast('error', data.error || 'Upload failed');
+                showError( data.error || 'Upload failed');
             }
             
             if (data.warnings && data.warnings.length > 0) {
                 data.warnings.forEach(warning => {
                     console.warn('Upload warning:', warning);
-                    showToast('warning', warning);
+                    showWarning( warning);
                 });
             }
         } catch (e) {
             console.error('Failed to parse JSON response:', e);
             console.error('Raw response:', text.substring(0, 500));
-            showToast('error', 'Server returned invalid response: ' + text.substring(0, 100));
+            showError( 'Server returned invalid response: ' + text.substring(0, 100));
         }
     })
     .catch(error => {
         console.error('Upload fetch error:', error);
-        showToast('error', 'Upload failed: ' + error.message);
+        showError( 'Upload failed: ' + error.message);
     })
     .finally(() => {
         // Hide progress after a short delay
@@ -5186,7 +5133,7 @@ async function processExistingImagesWithAI() {
     const sku = (document.getElementById('skuEdit') || document.getElementById('skuDisplay'))?.value;
     
     if (!sku) {
-        showToast('error', 'SKU is required');
+        showError( 'SKU is required');
         return;
     }
     
@@ -5195,12 +5142,12 @@ async function processExistingImagesWithAI() {
         window.aiProcessingModal.onComplete = function() {
             // Refresh current images display
             loadCurrentImages(sku);
-            showToast('success', 'AI processing completed! Images have been updated.');
+            showSuccess( 'AI processing completed! Images have been updated.');
         };
         
         // Set up cancel callback
         window.aiProcessingModal.onCancel = function() {
-            showToast('info', 'AI processing was cancelled.');
+            showInfo( 'AI processing was cancelled.');
         };
         
         // Start processing
@@ -5242,7 +5189,7 @@ async function processExistingImagesWithAI() {
         
     } catch (error) {
         console.error('AI processing error:', error);
-        showToast('error', 'AI processing failed: ' + error.message);
+        showError( 'AI processing failed: ' + error.message);
     }
 }
 
@@ -5563,7 +5510,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 if (!newValue) {
-                    showToast('error', 'Value cannot be empty');
+                    showError( 'Value cannot be empty');
                     return;
                 }
                 
@@ -5586,7 +5533,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     if (result.success) {
-                        showToast('success', result.message || 'Updated successfully');
+                        showSuccess( result.message || 'Updated successfully');
                         
                         // Update display with proper formatting
                         if (field === 'costPrice' || field === 'retailPrice') {
@@ -5595,12 +5542,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             this.textContent = newValue;
                         }
                     } else {
-                        showToast('error', result.error || 'Update failed');
+                        showError( result.error || 'Update failed');
                         this.textContent = currentText; // Restore original
                     }
                 } catch (error) {
                     console.error('Update error:', error);
-                    showToast('error', 'Failed to update: ' + error.message);
+                    showError( 'Failed to update: ' + error.message);
                     this.textContent = currentText; // Restore original
                 }
             };
@@ -5724,16 +5671,16 @@ function saveInlineEdit(itemSku, field, newValue, cell, originalValue) {
             } else {
                 cell.innerHTML = newValue;
             }
-            showToast('success', data.message);
+            showSuccess( data.message);
         } else {
             cell.innerHTML = originalValue; // Restore original value
-            showToast('error', data.error || 'Failed to update field');
+            showError( data.error || 'Failed to update field');
         }
     })
     .catch(error => {
         console.error('Error updating field:', error);
         cell.innerHTML = originalValue; // Restore original value
-        showToast('error', 'Failed to update field: ' + error.message);
+        showError( 'Failed to update field: ' + error.message);
     });
 }
 
@@ -5857,7 +5804,7 @@ function loadTemplateList() {
     })
     .catch(error => {
         console.error('Error loading templates:', error);
-        showToast('error', 'Failed to load templates');
+        showError( 'Failed to load templates');
     });
 }
 
@@ -5866,7 +5813,7 @@ function loadTemplate() {
     const templateId = select.value;
     
     if (!templateId) {
-        showToast('error', 'Please select a template to load');
+        showError( 'Please select a template to load');
         return;
     }
     
@@ -5875,14 +5822,14 @@ function loadTemplate() {
     .then(data => {
         if (data.success && data.template) {
             applyTemplateToBreakdown(data.template);
-            showToast('success', `Template "${data.template.template_name}" loaded successfully!`);
+            showSuccess( `Template "${data.template.template_name}" loaded successfully!`);
         } else {
-            showToast('error', data.error || 'Failed to load template');
+            showError( data.error || 'Failed to load template');
         }
     })
     .catch(error => {
         console.error('Error loading template:', error);
-        showToast('error', 'Failed to load template');
+        showError( 'Failed to load template');
     });
 }
 
@@ -5961,7 +5908,7 @@ function saveAsTemplate() {
     
     const templateName = templateNameField.value.trim();
     if (!templateName) {
-        showToast('error', 'Please enter a template name');
+        showError( 'Please enter a template name');
         return;
     }
     
@@ -6004,16 +5951,16 @@ function saveAsTemplate() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast('success', `Template "${templateName}" saved successfully!`);
+            showSuccess( `Template "${templateName}" saved successfully!`);
             templateNameField.value = '';
             loadTemplateList(); // Refresh the template list
         } else {
-            showToast('error', data.error || 'Failed to save template');
+            showError( data.error || 'Failed to save template');
         }
     })
     .catch(error => {
         console.error('Error saving template:', error);
-        showToast('error', 'Failed to save template');
+        showError( 'Failed to save template');
     });
 }
 
@@ -6260,7 +6207,7 @@ function applyAndSaveMarketingTitle() {
     const saveButton = titleField.parentElement.querySelector('button[onclick="applyAndSaveMarketingTitle()"]');
     if (saveButton) saveButton.style.display = 'none';
     
-    showToast('success', '✅ Item title updated successfully');
+    showSuccess( '✅ Item title updated successfully');
 }
 
 // Apply and save marketing description to item
@@ -6278,7 +6225,7 @@ function applyAndSaveMarketingDescription() {
     const saveButton = descField.parentElement.querySelector('button[onclick="applyAndSaveMarketingDescription()"]');
     if (saveButton) saveButton.style.display = 'none';
     
-    showToast('success', '✅ Item description updated successfully');
+    showSuccess( '✅ Item description updated successfully');
 }
 
 // Reset change tracking after successful save
@@ -6912,7 +6859,7 @@ function addListItem(fieldName) {
     const input = document.getElementById(inputId);
     
     if (!input || !input.value.trim()) {
-        showToast('error', 'Please enter a value');
+        showError( 'Please enter a value');
         return;
     }
     
@@ -6936,14 +6883,14 @@ function addListItem(fieldName) {
             input.value = '';
             const listId = fieldName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('') + 'List';
             addListItemToUI(listId, value, fieldName);
-            showToast('success', 'Item added successfully');
+            showSuccess( 'Item added successfully');
         } else {
-            showToast('error', data.error || 'Failed to add item');
+            showError( data.error || 'Failed to add item');
         }
     })
     .catch(error => {
         console.error('Error adding list item:', error);
-        showToast('error', 'Failed to add item');
+        showError( 'Failed to add item');
     });
 }
 
@@ -6964,14 +6911,14 @@ function removeListItem(fieldName, item) {
     .then(data => {
         if (data.success) {
             loadExistingMarketingData(); // Refresh the display
-            showToast('success', 'Item removed successfully');
+            showSuccess( 'Item removed successfully');
         } else {
-            showToast('error', data.error || 'Failed to remove item');
+            showError( data.error || 'Failed to remove item');
         }
     })
     .catch(error => {
         console.error('Error removing list item:', error);
-        showToast('error', 'Failed to remove item');
+        showError( 'Failed to remove item');
     });
 }
 
@@ -6988,13 +6935,13 @@ function saveMarketingField(fieldName) {
     
     const field = document.getElementById(fieldId);
     if (!field) {
-        showToast('error', 'Field not found');
+        showError( 'Field not found');
         return;
     }
     
     const value = field.value.trim();
     if (!value) {
-        showToast('error', 'Please enter a value');
+        showError( 'Please enter a value');
         return;
     }
     
@@ -7013,21 +6960,21 @@ function saveMarketingField(fieldName) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast('success', 'Field saved successfully');
+            showSuccess( 'Field saved successfully');
             resetMarketingChangeTracking();
         } else {
-            showToast('error', data.error || 'Failed to save field');
+            showError( data.error || 'Failed to save field');
         }
     })
     .catch(error => {
         console.error('Error saving field:', error);
-        showToast('error', 'Failed to save field');
+        showError( 'Failed to save field');
     });
 }
 
 function saveMarketingFields(fieldNames) {
     if (!Array.isArray(fieldNames) || fieldNames.length === 0) {
-        showToast('error', 'No fields specified');
+        showError( 'No fields specified');
         return;
     }
     
@@ -7054,7 +7001,7 @@ function saveMarketingFields(fieldNames) {
     }
     
     if (!hasValues) {
-        showToast('error', 'Please enter values for the fields');
+        showError( 'Please enter values for the fields');
         return;
     }
     
@@ -7078,16 +7025,16 @@ function saveMarketingFields(fieldNames) {
     .then(results => {
         const allSuccessful = results.every(result => result.success);
         if (allSuccessful) {
-            showToast('success', `All ${fieldNames.length} fields saved successfully`);
+            showSuccess( `All ${fieldNames.length} fields saved successfully`);
             resetMarketingChangeTracking();
         } else {
             const failedCount = results.filter(result => !result.success).length;
-            showToast('warning', `${fieldNames.length - failedCount} fields saved, ${failedCount} failed`);
+            showWarning( `${fieldNames.length - failedCount} fields saved, ${failedCount} failed`);
         }
     })
     .catch(error => {
         console.error('Error saving fields:', error);
-        showToast('error', 'Failed to save fields');
+        showError( 'Failed to save fields');
     });
 }
 
@@ -7127,15 +7074,15 @@ function applyMarketingTitle() {
         })
         .then(data => {
             if (data.success) {
-                showToast('success', 'Title applied and item saved automatically!');
+                showSuccess( 'Title applied and item saved automatically!');
             } else {
                 console.error('API error:', data);
-                showToast('error', 'Failed to save: ' + (data.error || 'Unknown error'));
+                showError( 'Failed to save: ' + (data.error || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error auto-saving product:', error);
-            showToast('error', 'Network error: ' + error.message);
+            showError( 'Network error: ' + error.message);
         });
         
         setTimeout(() => {
@@ -7180,15 +7127,15 @@ function applyMarketingDescription() {
         })
         .then(data => {
             if (data.success) {
-                                        showToast('success', 'Description applied and item saved automatically!');
+                                        showSuccess( 'Description applied and item saved automatically!');
             } else {
                 console.error('API error:', data);
-                showToast('error', 'Failed to save: ' + (data.error || 'Unknown error'));
+                showError( 'Failed to save: ' + (data.error || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error auto-saving product:', error);
-            showToast('error', 'Network error: ' + error.message);
+            showError( 'Network error: ' + error.message);
         });
         
         setTimeout(() => {
@@ -7203,7 +7150,7 @@ function applyAndSaveMarketingTitle() {
     const nameField = document.getElementById('name');
     
     if (!titleField || !titleField.value.trim()) {
-        showToast('error', 'Please enter a title');
+        showError( 'Please enter a title');
         return;
     }
     
@@ -7257,19 +7204,19 @@ function applyAndSaveMarketingTitle() {
                 })
                 .then(data => {
                     if (data.success) {
-                        showToast('success', 'Title saved as draft and applied to item!');
+                        showSuccess( 'Title saved as draft and applied to item!');
                         // Reset only title changes, not all marketing changes
                         originalMarketingData['marketingTitle'] = newTitle;
                         hasTitleChanges = false;
                         updateMarketingSaveButtonVisibility();
                     } else {
                         console.error('API error:', data);
-                        showToast('error', 'Failed to save product: ' + (data.error || 'Unknown error'));
+                        showError( 'Failed to save product: ' + (data.error || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Error auto-saving product:', error);
-                    showToast('error', 'Failed to save product: ' + error.message);
+                    showError( 'Failed to save product: ' + error.message);
                 });
                 
                 setTimeout(() => {
@@ -7277,12 +7224,12 @@ function applyAndSaveMarketingTitle() {
                 }, 2000);
             }
         } else {
-            showToast('error', 'Failed to save draft: ' + (draftData.error || 'Unknown error'));
+            showError( 'Failed to save draft: ' + (draftData.error || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error saving draft:', error);
-        showToast('error', 'Failed to save draft: ' + error.message);
+        showError( 'Failed to save draft: ' + error.message);
     });
 }
 
@@ -7291,7 +7238,7 @@ function applyAndSaveMarketingDescription() {
     const productDescField = document.getElementById('description');
     
     if (!descField || !descField.value.trim()) {
-        showToast('error', 'Please enter a description');
+        showError( 'Please enter a description');
         return;
     }
     
@@ -7345,19 +7292,19 @@ function applyAndSaveMarketingDescription() {
                 })
                 .then(data => {
                     if (data.success) {
-                        showToast('success', 'Description saved as draft and applied to item!');
+                        showSuccess( 'Description saved as draft and applied to item!');
                         // Reset only description changes, not all marketing changes
                         originalMarketingData['marketingDescription'] = newDescription;
                         hasDescriptionChanges = false;
                         updateMarketingSaveButtonVisibility();
                     } else {
                         console.error('API error:', data);
-                        showToast('error', 'Failed to save product: ' + (data.error || 'Unknown error'));
+                        showError( 'Failed to save product: ' + (data.error || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Error auto-saving product:', error);
-                    showToast('error', 'Failed to save product: ' + error.message);
+                    showError( 'Failed to save product: ' + error.message);
                 });
                 
                 setTimeout(() => {
@@ -7365,12 +7312,12 @@ function applyAndSaveMarketingDescription() {
                 }, 2000);
             }
         } else {
-            showToast('error', 'Failed to save draft: ' + (draftData.error || 'Unknown error'));
+            showError( 'Failed to save draft: ' + (draftData.error || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error saving draft:', error);
-        showToast('error', 'Failed to save draft: ' + error.message);
+        showError( 'Failed to save draft: ' + error.message);
     });
 }
 
@@ -7487,7 +7434,7 @@ function generateNewMarketingContent() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast('success', '🎯 AI content generated for: Target Audience, Selling Points, SEO & Keywords, and Conversion tabs!');
+            showSuccess( '🎯 AI content generated for: Target Audience, Selling Points, SEO & Keywords, and Conversion tabs!');
             
             // Populate all tabs with AI-generated data
             populateAllMarketingTabs(data);
@@ -7520,12 +7467,12 @@ function generateNewMarketingContent() {
                 updateMarketingSaveButtonVisibility();
             });
         } else {
-            showToast('error', data.error || 'Failed to generate marketing content');
+            showError( data.error || 'Failed to generate marketing content');
         }
     })
     .catch(error => {
         console.error('Error generating marketing content:', error);
-        showToast('error', 'Failed to generate marketing content');
+        showError( 'Failed to generate marketing content');
     })
     .finally(() => {
         button.innerHTML = originalText;
@@ -7537,7 +7484,7 @@ function generateNewMarketingContent() {
 // Generate fresh marketing comparison (ignores existing data)
 function generateFreshMarketingComparison() {
     if (!currentItemSku) {
-        showToast('error', 'No item selected for marketing generation');
+        showError( 'No item selected for marketing generation');
         return;
     }
 
@@ -7552,7 +7499,7 @@ function generateFreshMarketingComparison() {
     const descriptionField = document.getElementById('description');
 
     if (!nameField || !nameField.value.trim()) {
-        showToast('error', 'Item name is required for marketing generation');
+        showError( 'Item name is required for marketing generation');
         button.innerHTML = originalText;
         button.disabled = false;
         return;
@@ -7586,7 +7533,7 @@ function generateFreshMarketingComparison() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast('success', '🔥 Fresh marketing content generated! All fields updated with brand new AI suggestions.');
+            showSuccess( '🔥 Fresh marketing content generated! All fields updated with brand new AI suggestions.');
             
             // Populate all tabs with fresh AI-generated data
             populateAllMarketingTabs(data);
@@ -7612,12 +7559,12 @@ function generateFreshMarketingComparison() {
             }, 500);
             
         } else {
-            showToast('error', data.error || 'Failed to generate fresh marketing content');
+            showError( data.error || 'Failed to generate fresh marketing content');
         }
     })
     .catch(error => {
         console.error('Error generating fresh marketing content:', error);
-        showToast('error', 'Failed to generate fresh marketing content');
+        showError( 'Failed to generate fresh marketing content');
     })
     .finally(() => {
         button.innerHTML = originalText;
@@ -7682,13 +7629,13 @@ async function updateGlobalMarketingDefault(settingType, value) {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', `Global ${settingType.replace('_', ' ')} updated successfully!`);
+            showSuccess( `Global ${settingType.replace('_', ' ')} updated successfully!`);
         } else {
-            showToast('error', data.error || 'Failed to update global setting');
+            showError( data.error || 'Failed to update global setting');
         }
     } catch (error) {
         console.error('Error updating global marketing default:', error);
-        showToast('error', 'Failed to update global setting');
+        showError( 'Failed to update global setting');
     }
 }
 
@@ -7697,7 +7644,7 @@ function generateAllMarketingContent() {
     console.log('generateAllMarketingContent called');
     
     if (!currentItemSku) {
-        showToast('error', 'No item selected for marketing content generation');
+        showError( 'No item selected for marketing content generation');
         return;
     }
     
@@ -7836,7 +7783,7 @@ function startAIAnalysisProcess() {
                             showComparisonResults(data);
                         }, 1500);
                     } else {
-                        showToast('error', data.error || 'Failed to generate marketing content');
+                        showError( data.error || 'Failed to generate marketing content');
                         closeAIComparisonModal();
                     }
                 })
@@ -7844,7 +7791,7 @@ function startAIAnalysisProcess() {
                     console.error('Error generating marketing content:', error);
                     setStepStatus('step3-generate-content', 'error');
                     updateAIAnalysisProgress('error', '❌ Error generating content');
-                    showToast('error', 'Failed to generate marketing content');
+                    showError( 'Failed to generate marketing content');
                 });
             }, 1000);
         }, 1000);
@@ -8126,7 +8073,7 @@ function updateSelectAllState() {
 
 function applySelectedChanges() {
     if (Object.keys(selectedChanges).length === 0) {
-        showToast('warning', 'Please select at least one change to apply');
+        showWarning( 'Please select at least one change to apply');
         return;
     }
     
@@ -8160,7 +8107,7 @@ function applySelectedChanges() {
     
     // Auto-save the changes
     const selectedCount = Object.keys(selectedChanges).length;
-    showToast('success', `${selectedCount} changes applied successfully!`);
+    showSuccess( `${selectedCount} changes applied successfully!`);
     
     // Close the modal
     closeAIComparisonModal();
@@ -8432,15 +8379,15 @@ async function deleteColor(colorId) {
         
         if (data.success) {
             console.log('🎉 Color deleted successfully, calling showToast...');
-            showToast('success', 'Color deleted successfully');
+            showSuccess( 'Color deleted successfully');
             loadItemColors(); // Reload colors
         } else {
             console.log('❌ API error:', data.message);
-            showToast('error', 'Error deleting color: ' + data.message);
+            showError( 'Error deleting color: ' + data.message);
         }
     } catch (error) {
         console.error('💥 Error deleting color:', error);
-        showToast('error', 'Error deleting color');
+        showError( 'Error deleting color');
     }
 }
 
@@ -8643,7 +8590,7 @@ async function saveColor(event) {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', `Color ${isEdit ? 'updated' : 'added'} successfully${data.new_total_stock ? ` - Total stock: ${data.new_total_stock}` : ''}`);
+            showSuccess( `Color ${isEdit ? 'updated' : 'added'} successfully${data.new_total_stock ? ` - Total stock: ${data.new_total_stock}` : ''}`);
             closeColorModal();
             loadItemColors(); // Reload colors
             
@@ -8653,18 +8600,18 @@ async function saveColor(event) {
                 stockField.value = data.new_total_stock;
             }
         } else {
-            showToast('error', `Error ${isEdit ? 'updating' : 'adding'} color: ` + data.message);
+            showError( `Error ${isEdit ? 'updating' : 'adding'} color: ` + data.message);
         }
     } catch (error) {
         console.error('Error saving color:', error);
-        showToast('error', `Error ${isEdit ? 'updating' : 'adding'} color`);
+        showError( `Error ${isEdit ? 'updating' : 'adding'} color`);
     }
 }
 
 // Sync stock levels manually
 async function syncStockLevels() {
     if (!currentItemSku) {
-        showToast('error', 'No item selected');
+        showError( 'No item selected');
         return;
     }
     
@@ -8683,7 +8630,7 @@ async function syncStockLevels() {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', `Stock synchronized - Total: ${data.new_total_stock}`);
+            showSuccess( `Stock synchronized - Total: ${data.new_total_stock}`);
             
             // Update the stock level field if it exists
             const stockField = document.getElementById('stockLevel');
@@ -8694,11 +8641,11 @@ async function syncStockLevels() {
             // Reload colors to show updated information
             loadItemColors();
         } else {
-            showToast('error', `Error syncing stock: ${data.message}`);
+            showError( `Error syncing stock: ${data.message}`);
         }
     } catch (error) {
         console.error('Error syncing stock:', error);
-        showToast('error', 'Error syncing stock levels');
+        showError( 'Error syncing stock levels');
     }
 }
 

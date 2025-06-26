@@ -9493,7 +9493,7 @@ async function saveMarketingDefaults() {
         const autoApply = document.getElementById('autoApplyDefaults').checked;
         
         if (!brandVoice || !contentTone) {
-            showToast('error', 'Please select both brand voice and content tone');
+            showError( 'Please select both brand voice and content tone');
             return;
         }
         
@@ -9513,13 +9513,13 @@ async function saveMarketingDefaults() {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', 'Marketing defaults saved successfully!');
+            showSuccess( 'Marketing defaults saved successfully!');
         } else {
-            showToast('error', data.error || 'Failed to save marketing defaults');
+            showError( data.error || 'Failed to save marketing defaults');
         }
     } catch (error) {
         console.error('Error saving marketing defaults:', error);
-        showToast('error', 'Failed to save marketing defaults');
+        showError( 'Failed to save marketing defaults');
     }
 }
 
@@ -9587,13 +9587,13 @@ async function updateCSSVariable(variableName, value, category) {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', `Updated ${variableName}`);
+            showSuccess( `Updated ${variableName}`);
         } else {
-            showToast('error', data.error || 'Failed to update CSS variable');
+            showError( data.error || 'Failed to update CSS variable');
         }
     } catch (error) {
         console.error('Error updating CSS variable:', error);
-        showToast('error', 'Failed to update CSS variable');
+        showError( 'Failed to update CSS variable');
     }
 }
 
@@ -9825,14 +9825,14 @@ async function saveAllBusinessSettings() {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', `Updated ${Object.keys(settings).length} business settings successfully!`);
+            showSuccess( `Updated ${Object.keys(settings).length} business settings successfully!`);
         } else {
             throw new Error(data.message || 'Failed to save settings');
         }
         
     } catch (error) {
         console.error('Error saving business settings:', error);
-        showToast('error', 'Failed to save business settings: ' + error.message);
+        showError( 'Failed to save business settings: ' + error.message);
     }
 }
 
@@ -9853,7 +9853,7 @@ async function resetAllSettingsToDefaults() {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', 'All business settings reset to defaults!');
+            showSuccess( 'All business settings reset to defaults!');
             // Reload the configuration
             loadGeneralConfig();
         } else {
@@ -9862,7 +9862,7 @@ async function resetAllSettingsToDefaults() {
         
     } catch (error) {
         console.error('Error resetting settings:', error);
-        showToast('error', 'Failed to reset settings: ' + error.message);
+        showError( 'Failed to reset settings: ' + error.message);
     }
 }
 
@@ -9904,7 +9904,7 @@ async function loadCartButtonTexts() {
         }
     } catch (error) {
         console.error('Error loading cart button texts:', error);
-        showToast('error', 'Failed to load cart button texts');
+        showError( 'Failed to load cart button texts');
     }
 }
 
@@ -9936,12 +9936,12 @@ async function addCartButtonText() {
     const newText = input.value.trim();
     
     if (!newText) {
-        showToast('error', 'Please enter some text');
+        showError( 'Please enter some text');
         return;
     }
     
     if (newText.length > 50) {
-        showToast('error', 'Text must be 50 characters or less');
+        showError( 'Text must be 50 characters or less');
         return;
     }
     
@@ -9957,7 +9957,7 @@ async function addCartButtonText() {
         
         // Check if text already exists
         if (texts.includes(newText)) {
-            showToast('error', 'This text variation already exists');
+            showError( 'This text variation already exists');
             return;
         }
         
@@ -9971,11 +9971,11 @@ async function addCartButtonText() {
         input.value = '';
         displayCartButtonTexts(texts);
         
-        showToast('success', `Added "${newText}" to cart button variations`);
+        showSuccess( `Added "${newText}" to cart button variations`);
         
     } catch (error) {
         console.error('Error adding cart button text:', error);
-        showToast('error', 'Failed to add cart button text');
+        showError( 'Failed to add cart button text');
     }
 }
 
@@ -9991,14 +9991,14 @@ async function removeCartButtonText(index) {
         const data = await response.json();
         
         if (!data.success || !data.setting) {
-            showToast('error', 'Failed to load current texts');
+            showError( 'Failed to load current texts');
             return;
         }
         
         let texts = JSON.parse(data.setting.setting_value);
         
         if (index < 0 || index >= texts.length) {
-            showToast('error', 'Invalid text index');
+            showError( 'Invalid text index');
             return;
         }
         
@@ -10016,11 +10016,11 @@ async function removeCartButtonText(index) {
         // Refresh display
         displayCartButtonTexts(texts);
         
-        showToast('success', `Removed "${removedText}" from cart button variations`);
+        showSuccess( `Removed "${removedText}" from cart button variations`);
         
     } catch (error) {
         console.error('Error removing cart button text:', error);
-        showToast('error', 'Failed to remove cart button text');
+        showError( 'Failed to remove cart button text');
     }
 }
 
@@ -10047,10 +10047,10 @@ async function resetToDefaults() {
     try {
         await saveCartButtonTexts(defaultTexts);
         displayCartButtonTexts(defaultTexts);
-        showToast('success', 'Reset to default cart button texts');
+        showSuccess( 'Reset to default cart button texts');
     } catch (error) {
         console.error('Error resetting cart button texts:', error);
-        showToast('error', 'Failed to reset cart button texts');
+        showError( 'Failed to reset cart button texts');
     }
 }
 
@@ -10673,11 +10673,11 @@ async function loadSalesList() {
         if (data.success) {
             displaySalesList(data.sales);
         } else {
-            showToast('error', 'Failed to load sales: ' + (data.error || 'Unknown error'));
+            showError( 'Failed to load sales: ' + (data.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error loading sales:', error);
-        showToast('error', 'Failed to load sales');
+        showError( 'Failed to load sales');
     }
 }
 
@@ -10772,11 +10772,11 @@ async function loadAvailableItems() {
             allAvailableItems = data.items;
             displayItemsList(data.items);
         } else {
-            showToast('error', 'Failed to load items: ' + (data.error || 'Unknown error'));
+            showError( 'Failed to load items: ' + (data.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error loading items:', error);
-        showToast('error', 'Failed to load items');
+        showError( 'Failed to load items');
     }
 }
 
@@ -10832,11 +10832,11 @@ async function loadSaleForEdit(saleId) {
             displayItemsList(allAvailableItems, selectedItems);
             
         } else {
-            showToast('error', 'Failed to load sale: ' + (data.error || 'Unknown error'));
+            showError( 'Failed to load sale: ' + (data.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error loading sale:', error);
-        showToast('error', 'Failed to load sale data');
+        showError( 'Failed to load sale data');
     }
 }
 
@@ -10895,15 +10895,15 @@ document.getElementById('saleForm').addEventListener('submit', async function(e)
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', data.message || (currentEditingSaleId ? 'Sale updated successfully' : 'Sale created successfully'));
+            showSuccess( data.message || (currentEditingSaleId ? 'Sale updated successfully' : 'Sale created successfully'));
             closeCreateSaleModal();
             loadSalesList();
         } else {
-            showToast('error', data.error || 'Failed to save sale');
+            showError( data.error || 'Failed to save sale');
         }
     } catch (error) {
         console.error('Error saving sale:', error);
-        showToast('error', 'Failed to save sale');
+        showError( 'Failed to save sale');
     }
 });
 
@@ -10921,14 +10921,14 @@ async function toggleSaleActive(saleId) {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', data.message);
+            showSuccess( data.message);
             loadSalesList();
         } else {
-            showToast('error', data.error || 'Failed to update sale status');
+            showError( data.error || 'Failed to update sale status');
         }
     } catch (error) {
         console.error('Error toggling sale status:', error);
-        showToast('error', 'Failed to update sale status');
+        showError( 'Failed to update sale status');
     }
 }
 
@@ -10950,75 +10950,18 @@ async function deleteSale(saleId) {
         const data = await response.json();
         
         if (data.success) {
-            showToast('success', data.message);
+            showSuccess( data.message);
             loadSalesList();
         } else {
-            showToast('error', data.error || 'Failed to delete sale');
+            showError( data.error || 'Failed to delete sale');
         }
     } catch (error) {
         console.error('Error deleting sale:', error);
-        showToast('error', 'Failed to delete sale');
+        showError( 'Failed to delete sale');
     }
 }
 
-// Toast notification function for sales admin
-function showToast(type, message) {
-    const existingToast = document.getElementById('toast-notification');
-    if (existingToast) {
-        existingToast.remove();
-    }
-    const toast = document.createElement('div');
-    toast.id = 'toast-notification';
-    toast.className = `toast-notification ${type}`;
-    toast.textContent = message;
-    
-    // Add CSS styling for the toast
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 99999;
-        padding: 12px 20px;
-        border-radius: 6px;
-        color: white;
-        font-weight: 500;
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 0.3s ease;
-        max-width: 300px;
-        word-wrap: break-word;
-    `;
-    
-    // Set background color based on type
-    if (type === 'success') {
-        toast.style.backgroundColor = '#10b981';
-    } else if (type === 'error') {
-        toast.style.backgroundColor = '#ef4444';
-    } else if (type === 'warning') {
-        toast.style.backgroundColor = '#f59e0b';
-    } else {
-        toast.style.backgroundColor = '#3b82f6';
-    }
-    
-    document.body.appendChild(toast);
-    
-    // Show the toast
-    setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateX(0)';
-    }, 10);
-    
-    // Hide the toast after 3 seconds
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (toast.parentElement) {
-                toast.remove();
-            }
-        }, 300);
-    }, 3000);
-}
+// Using global notification system - no custom showToast needed
 
 // ===== END SALES ADMIN FUNCTIONALITY =====
 
@@ -11083,13 +11026,13 @@ async function loadTablesList() {
             const tablesList = document.getElementById('tablesList');
             tablesList.innerHTML = `<div class="text-center py-8 text-red-500">Error: ${data.error}</div>`;
             console.error('❌ Tables API Error:', data.error);
-            showToast('error', 'Failed to load tables: ' + data.error);
+            showError( 'Failed to load tables: ' + data.error);
         }
     } catch (error) {
         console.error('💥 JavaScript Error loading tables:', error);
         const tablesList = document.getElementById('tablesList');
         tablesList.innerHTML = `<div class="text-center py-8 text-red-500">Network error: ${error.message}</div>`;
-        showToast('error', 'Failed to load tables: ' + error.message);
+        showError( 'Failed to load tables: ' + error.message);
     }
 }
 
@@ -11132,7 +11075,7 @@ async function selectTable(tableName) {
     } catch (error) {
         console.error('❌ Error loading table:', error);
         document.getElementById('currentTableName').textContent = `Error loading ${tableName}`;
-        showToast('error', `Failed to load table ${tableName}: ${error.message}`);
+        showError( `Failed to load table ${tableName}: ${error.message}`);
     }
 }
 
@@ -11176,7 +11119,7 @@ async function loadTableInfo(tableName) {
         }
     } catch (error) {
         console.error('Error loading table info:', error);
-        showToast('error', 'Failed to load table information');
+        showError( 'Failed to load table information');
     }
 }
 
@@ -11286,13 +11229,13 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
             const dataTable = document.getElementById('tableData');
             dataTable.innerHTML = `<tbody><tr><td colspan="100%" class="text-center py-8 text-red-500">Error: ${data.error || 'Unknown error'}</td></tr></tbody>`;
             console.error('❌ API Error:', data.error);
-            showToast('error', 'Failed to load table data: ' + (data.error || 'Unknown error'));
+            showError( 'Failed to load table data: ' + (data.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('💥 JavaScript Error loading table data:', error);
         const dataTable = document.getElementById('tableData');
         dataTable.innerHTML = `<tbody><tr><td colspan="100%" class="text-center py-8 text-red-500">Network error: ${error.message}</td></tr></tbody>`;
-        showToast('error', 'Failed to load table data: ' + error.message);
+        showError( 'Failed to load table data: ' + error.message);
     }
 }
 
@@ -11497,11 +11440,11 @@ async function saveCellEdit(saveBtn, event) {
             finishCellEdit(cell);
             
             console.log('✅ Cell updated successfully');
-            showToast('success', 'Cell updated successfully');
+            showSuccess( 'Cell updated successfully');
             
         } else {
             console.error('❌ Failed to update cell:', result.error);
-            showToast('error', 'Failed to update: ' + result.error);
+            showError( 'Failed to update: ' + result.error);
             
             // Reset save button
             saveBtn.textContent = '✓';
@@ -11510,7 +11453,7 @@ async function saveCellEdit(saveBtn, event) {
         
     } catch (error) {
         console.error('💥 Error updating cell:', error);
-        showToast('error', 'Error updating cell: ' + error.message);
+        showError( 'Error updating cell: ' + error.message);
         
         // Reset save button
         saveBtn.textContent = '✓';
@@ -11569,7 +11512,7 @@ function getCurrentRowData(cell) {
 async function executeQuery() {
     const query = document.getElementById('sqlQuery').value.trim();
     if (!query) {
-        showToast('error', 'Please enter a query');
+        showError( 'Please enter a query');
         return;
     }
     
@@ -11654,7 +11597,7 @@ async function loadDocumentation() {
         }
     } catch (error) {
         console.error('Error loading documentation:', error);
-        showToast('error', 'Failed to load documentation');
+        showError( 'Failed to load documentation');
     }
 }
 
@@ -11722,11 +11665,11 @@ async function initializeHelpHintsDB() {
             await loadHelpHintsStats();
         } else {
             console.error('Failed to initialize help hints database:', initData.message);
-            showToast('error', 'Failed to initialize help hints database');
+            showError( 'Failed to initialize help hints database');
         }
     } catch (error) {
         console.error('Error initializing help hints database:', error);
-        showToast('error', 'Error initializing help hints database');
+        showError( 'Error initializing help hints database');
     }
 }
 
@@ -11742,11 +11685,11 @@ async function loadHelpHintsData() {
             populatePageFilter();
         } else {
             console.error('Failed to load help hints:', data.message);
-            showToast('error', 'Failed to load help hints');
+            showError( 'Failed to load help hints');
         }
     } catch (error) {
         console.error('Error loading help hints:', error);
-        showToast('error', 'Error loading help hints');
+        showError( 'Error loading help hints');
     }
 }
 
@@ -11893,7 +11836,7 @@ async function saveHelpHint() {
     const isActive = document.getElementById('hintIsActive').checked;
     
     if (!elementId || !pageContext || !title || !content) {
-        showToast('error', 'Please fill in all required fields');
+        showError( 'Please fill in all required fields');
         return;
     }
     
@@ -11926,16 +11869,16 @@ async function saveHelpHint() {
         const result = await response.json();
         
         if (result.success) {
-            showToast('success', result.message);
+            showSuccess( result.message);
             hideHelpHintForm();
             await loadHelpHintsData();
             await loadHelpHintsStats();
         } else {
-            showToast('error', result.message);
+            showError( result.message);
         }
     } catch (error) {
         console.error('Error saving help hint:', error);
-        showToast('error', 'Error saving help hint');
+        showError( 'Error saving help hint');
     }
 }
 
@@ -11953,15 +11896,15 @@ async function toggleHelpHint(hintId) {
         const result = await response.json();
         
         if (result.success) {
-            showToast('success', result.message);
+            showSuccess( result.message);
             await loadHelpHintsData();
             await loadHelpHintsStats();
         } else {
-            showToast('error', result.message);
+            showError( result.message);
         }
     } catch (error) {
         console.error('Error toggling help hint:', error);
-        showToast('error', 'Error toggling help hint');
+        showError( 'Error toggling help hint');
     }
 }
 
@@ -11983,15 +11926,15 @@ async function deleteHelpHint(hintId) {
         const result = await response.json();
         
         if (result.success) {
-            showToast('success', result.message);
+            showSuccess( result.message);
             await loadHelpHintsData();
             await loadHelpHintsStats();
         } else {
-            showToast('error', result.message);
+            showError( result.message);
         }
     } catch (error) {
         console.error('Error deleting help hint:', error);
-        showToast('error', 'Error deleting help hint');
+        showError( 'Error deleting help hint');
     }
 }
 
@@ -12001,12 +11944,12 @@ async function bulkToggleHints() {
     const action = document.getElementById('bulkAction').value;
     
     if (!pageContext) {
-        showToast('error', 'Please select a page to perform bulk actions');
+        showError( 'Please select a page to perform bulk actions');
         return;
     }
     
     if (!action) {
-        showToast('error', 'Please select a bulk action');
+        showError( 'Please select a bulk action');
         return;
     }
     
@@ -12025,15 +11968,15 @@ async function bulkToggleHints() {
         const result = await response.json();
         
         if (result.success) {
-            showToast('success', result.message);
+            showSuccess( result.message);
             await loadHelpHintsData();
             await loadHelpHintsStats();
         } else {
-            showToast('error', result.message);
+            showError( result.message);
         }
     } catch (error) {
         console.error('Error performing bulk action:', error);
-        showToast('error', 'Error performing bulk action');
+        showError( 'Error performing bulk action');
     }
 }
 
@@ -12052,10 +11995,10 @@ async function exportHelpHints() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         
-        showToast('success', 'Help hints exported successfully');
+        showSuccess( 'Help hints exported successfully');
     } catch (error) {
         console.error('Error exporting help hints:', error);
-        showToast('error', 'Error exporting help hints');
+        showError( 'Error exporting help hints');
     }
 }
 
@@ -12065,7 +12008,7 @@ async function importHelpHints() {
     const file = fileInput.files[0];
     
     if (!file) {
-        showToast('error', 'Please select a file to import');
+        showError( 'Please select a file to import');
         return;
     }
     
@@ -12084,16 +12027,16 @@ async function importHelpHints() {
         const result = await response.json();
         
         if (result.success) {
-            showToast('success', result.message);
+            showSuccess( result.message);
             await loadHelpHintsData();
             await loadHelpHintsStats();
             fileInput.value = '';
         } else {
-            showToast('error', result.message);
+            showError( result.message);
         }
     } catch (error) {
         console.error('Error importing help hints:', error);
-        showToast('error', 'Error importing help hints: Invalid file format');
+        showError( 'Error importing help hints: Invalid file format');
     }
 }
 
@@ -12113,7 +12056,7 @@ async function toggleGlobalTooltips() {
         const result = await response.json();
         
         if (result.success) {
-            showToast('success', result.message);
+            showSuccess( result.message);
             
             // Update status display
             document.getElementById('globalTooltipsStatus').textContent = enabled ? 'Enabled' : 'Disabled';
@@ -12122,16 +12065,16 @@ async function toggleGlobalTooltips() {
             
             // If tooltips were disabled, inform user about page refresh
             if (!enabled) {
-                showToast('info', 'Tooltips disabled globally. Refresh the page to see changes.');
+                showInfo( 'Tooltips disabled globally. Refresh the page to see changes.');
             }
         } else {
-            showToast('error', result.message);
+            showError( result.message);
             // Revert the checkbox state
             document.getElementById('globalTooltipsEnabled').checked = !enabled;
         }
     } catch (error) {
         console.error('Error toggling global tooltips:', error);
-        showToast('error', 'Error updating global tooltip setting');
+        showError( 'Error updating global tooltip setting');
         // Revert the checkbox state
         document.getElementById('globalTooltipsEnabled').checked = !enabled;
     }
@@ -12517,7 +12460,7 @@ async function loadSquareSettings() {
         }
     } catch (error) {
         console.error("Error loading Square settings:", error);
-        showToast("Error loading Square settings", "error");
+        showError("Error loading Square settings");
     }
 }
 
@@ -12539,14 +12482,14 @@ async function saveSquareSettings() {
         const data = await response.json();
         
         if (data.success) {
-            showToast("Square settings saved successfully!", "success");
+            showSuccess("Square settings saved successfully!");
             updateConnectionStatus(data.is_connected, data.last_sync);
         } else {
-            showToast(data.message || "Error saving settings", "error");
+            showError(data.message || "Error saving settings");
         }
     } catch (error) {
         console.error("Error saving Square settings:", error);
-        showToast("Error saving Square settings", "error");
+        showError("Error saving Square settings");
     }
 }
 
@@ -12594,14 +12537,14 @@ async function syncItemsToSquare() {
         const data = await response.json();
         
         if (data.success) {
-            showToast(`Successfully synced ${data.synced_count} items to Square!`, "success");
+            showSuccess(`Successfully synced ${data.synced_count} items to Square!`);
             updateConnectionStatus(true, new Date().toISOString());
         } else {
-            showToast(data.message || "Error syncing items", "error");
+            showError(data.message || "Error syncing items");
         }
     } catch (error) {
         console.error("Error syncing items:", error);
-        showToast("Error syncing items to Square", "error");
+        showError("Error syncing items to Square");
     }
 }
 
@@ -12826,11 +12769,11 @@ async function loadReceiptSettings() {
             receiptSettingsData = data.settings;
             renderReceiptSettings();
         } else {
-            showToast('Error loading receipt settings: ' + data.error, 'error');
+            showError('Error loading receipt settings: ' + data.error);
         }
     } catch (error) {
         console.error('Error loading receipt settings:', error);
-        showToast('Error loading receipt settings', 'error');
+        showError('Error loading receipt settings');
     }
 }
 
@@ -12951,13 +12894,13 @@ async function generateAIMessage(id, type) {
             message.ai_generated = data.ai_generated;
             
             renderReceiptSettings();
-            showToast('AI message generated successfully!', 'success');
+            showSuccess('AI message generated successfully!');
         } else {
-            showToast('Error generating AI message: ' + data.error, 'error');
+            showError('Error generating AI message: ' + data.error);
         }
     } catch (error) {
         console.error('Error generating AI message:', error);
-        showToast('Error generating AI message', 'error');
+        showError('Error generating AI message');
     }
 }
 
@@ -12979,13 +12922,13 @@ async function saveReceiptSettings() {
         const data = await response.json();
         
         if (data.success) {
-            showToast('Receipt settings saved successfully!', 'success');
+            showSuccess('Receipt settings saved successfully!');
         } else {
-            showToast('Error saving settings: ' + data.error, 'error');
+            showError('Error saving settings: ' + data.error);
         }
     } catch (error) {
         console.error('Error saving receipt settings:', error);
-        showToast('Error saving receipt settings', 'error');
+        showError('Error saving receipt settings');
     }
 }
 
@@ -13000,14 +12943,14 @@ async function initializeReceiptDefaults() {
         const data = await response.json();
         
         if (data.success) {
-            showToast('Default settings initialized!', 'success');
+            showSuccess('Default settings initialized!');
             loadReceiptSettings();
         } else {
-            showToast('Error initializing defaults: ' + data.error, 'error');
+            showError('Error initializing defaults: ' + data.error);
         }
     } catch (error) {
         console.error('Error initializing defaults:', error);
-        showToast('Error initializing defaults', 'error');
+        showError('Error initializing defaults');
     }
 }
 

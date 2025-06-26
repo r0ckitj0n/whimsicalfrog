@@ -215,25 +215,6 @@ $messageType = $_GET['type'] ?? '';
 </div>
 
 <script>
-function showToast(type, message) {
-    const existingToast = document.getElementById('toast-notification');
-    if (existingToast) {
-        existingToast.remove();
-    }
-    const toast = document.createElement('div');
-    toast.id = 'toast-notification';
-    toast.className = `toast-notification ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
-}
-
 // Function to generate category code (same logic as backend)
 function generateCategoryCode(category) {
     const map = {
@@ -293,7 +274,7 @@ document.getElementById('addCategoryForm').addEventListener('submit', async (e) 
             document.getElementById('newCategory').value = '';
             
             // Show success message
-            showToast('success', `Category "${category}" added successfully! SKU code: ${code}`);
+            showSuccess(`Category "${category}" added successfully! SKU code: ${code}`);
             
             // Show naming scheme update info
             if (data.namingSchemeUpdated) {
@@ -308,11 +289,11 @@ document.getElementById('addCategoryForm').addEventListener('submit', async (e) 
                 window.opener.refreshCategoryDropdown();
             }
         } else {
-            showToast('error', data.error || 'Failed to add category');
+            showError(data.error || 'Failed to add category');
         }
     } catch(err) {
         console.error(err);
-        showToast('error', 'Server error occurred');
+        showError('Server error occurred');
     } finally {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
@@ -343,7 +324,7 @@ document.getElementById('categoryTableBody').addEventListener('click', async (e)
                 e.target.closest('tr').remove();
                 
                 // Show success message
-                showToast('success', `Category "${category}" deleted successfully! Naming scheme updated.`);
+                showSuccess(`Category "${category}" deleted successfully! Naming scheme updated.`);
                 
                 // Show naming scheme update info
                 if (data.namingSchemeUpdated) {
@@ -358,13 +339,13 @@ document.getElementById('categoryTableBody').addEventListener('click', async (e)
                     window.opener.refreshCategoryDropdown();
                 }
             } else {
-                showToast('error', data.error || 'Failed to delete category');
+                showError(data.error || 'Failed to delete category');
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
         } catch(err) {
             console.error(err);
-            showToast('error', 'Server error occurred');
+            showError('Server error occurred');
             btn.textContent = originalText;
             btn.disabled = false;
         }
@@ -407,7 +388,7 @@ function startInlineEdit(categoryDiv) {
         const newName = input.value.trim();
         
         if (!newName) {
-            showToast('error', 'Category name cannot be empty');
+            showError('Category name cannot be empty');
             cancelEdit();
             return;
         }
@@ -456,7 +437,7 @@ function startInlineEdit(categoryDiv) {
                 exampleSpan.textContent = `WF-${newCode}-001`;
                 
                 // Show success message
-                showToast('success', `Category renamed to "${newName}" successfully! ${data.affectedProducts} products updated.`);
+                showSuccess(`Category renamed to "${newName}" successfully! ${data.affectedProducts} products updated.`);
                 
                 // Notify other pages that categories have been updated
                 localStorage.setItem('categoriesUpdated', Date.now().toString());
@@ -466,12 +447,12 @@ function startInlineEdit(categoryDiv) {
                     window.opener.refreshCategoryDropdown();
                 }
             } else {
-                showToast('error', data.error || 'Failed to rename category');
+                showError(data.error || 'Failed to rename category');
                 cancelEdit();
             }
         } catch(err) {
             console.error(err);
-            showToast('error', 'Server error occurred');
+            showError('Server error occurred');
             cancelEdit();
         }
     };

@@ -651,13 +651,13 @@ if (!empty($selectedItemId)) {
                         displayCostBreakdown();
                         hideLoading();
                     } else {
-                        showToast('Error: ' + data.error, 'error');
+                        showError('Failed to load cost breakdown. Please try again.');
                         hideLoading();
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching cost breakdown:', error);
-                    showToast('Failed to load cost breakdown. Please try again.', 'error');
+                    showError('Failed to load cost breakdown. Please try again.');
                     hideLoading();
                 });
         }
@@ -867,16 +867,16 @@ if (!empty($selectedItemId)) {
             .then(result => {
                 if (result.success) {
                     closeModal('materialModal');
-                    showToast(result.message, 'success');
+                    showSuccess(result.message);
                     loadCostBreakdown(inventoryId);
                 } else {
-                    showToast('Error: ' + result.error, 'error');
+                    showError('Error: ' + result.error);
                 }
                 hideFormLoading('material');
             })
             .catch(error => {
                 console.error('Error saving material:', error);
-                showToast('Failed to save material. Please try again.', 'error');
+                showError('Failed to save material. Please try again.');
                 hideFormLoading('material');
             });
         }
@@ -918,16 +918,16 @@ if (!empty($selectedItemId)) {
             .then(result => {
                 if (result.success) {
                     closeModal('laborModal');
-                    showToast(result.message, 'success');
+                    showSuccess(result.message);
                     loadCostBreakdown(inventoryId);
                 } else {
-                    showToast('Error: ' + result.error, 'error');
+                    showError('Error: ' + result.error);
                 }
                 hideFormLoading('labor');
             })
             .catch(error => {
                 console.error('Error saving labor:', error);
-                showToast('Failed to save labor. Please try again.', 'error');
+                showError('Failed to save labor. Please try again.');
                 hideFormLoading('labor');
             });
         }
@@ -969,16 +969,16 @@ if (!empty($selectedItemId)) {
             .then(result => {
                 if (result.success) {
                     closeModal('energyModal');
-                    showToast(result.message, 'success');
+                    showSuccess(result.message);
                     loadCostBreakdown(inventoryId);
                 } else {
-                    showToast('Error: ' + result.error, 'error');
+                    showError('Error: ' + result.error);
                 }
                 hideFormLoading('energy');
             })
             .catch(error => {
                 console.error('Error saving energy:', error);
-                showToast('Failed to save energy. Please try again.', 'error');
+                showError('Failed to save energy. Please try again.');
                 hideFormLoading('energy');
             });
         }
@@ -1001,16 +1001,16 @@ if (!empty($selectedItemId)) {
             .then(result => {
                 if (result.success) {
                     closeModal('deleteModal');
-                    showToast(result.message, 'success');
+                    showSuccess(result.message);
                     loadCostBreakdown(currentItemId);
                 } else {
-                    showToast('Error: ' + result.error, 'error');
+                    showError('Error: ' + result.error);
                 }
                 hideFormLoading('delete');
             })
             .catch(error => {
                 console.error('Error deleting item:', error);
-                showToast('Failed to delete item. Please try again.', 'error');
+                showError('Failed to delete item. Please try again.');
                 hideFormLoading('delete');
             });
         }
@@ -1041,7 +1041,7 @@ if (!empty($selectedItemId)) {
             .then(result => {
                 if (result.success) {
                     closeModal('updateCostModal');
-                    showToast('Cost price updated successfully', 'success');
+                    showSuccess('Cost price updated successfully');
                     
                     // Update displayed cost price
                     document.getElementById('itemCostDisplay').textContent = '$' + suggestedCost.toFixed(2);
@@ -1051,13 +1051,13 @@ if (!empty($selectedItemId)) {
                     animateElement('itemCostDisplay');
                     animateElement('currentCostDisplay');
                 } else {
-                    showToast('Error: ' + (result.error || 'Failed to update cost price'), 'error');
+                    showError('Error: ' + (result.error || 'Failed to update cost price'));
                 }
                 hideFormLoading('updateCost');
             })
             .catch(error => {
                 console.error('Error updating cost price:', error);
-                showToast('Failed to update cost price. Please try again.', 'error');
+                showError('Failed to update cost price. Please try again.');
                 hideFormLoading('updateCost');
             });
         }
@@ -1088,23 +1088,6 @@ if (!empty($selectedItemId)) {
                 document.getElementById('energyDescription').value = '';
                 document.getElementById('energyCost').value = '';
             }
-        }
-        
-        // Show toast notification
-        function showToast(message, type) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = 'toast-notification ' + type;
-            
-            // Add show class to trigger animation
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 10);
-            
-            // Hide after 3 seconds
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
         }
         
         // Show loading state

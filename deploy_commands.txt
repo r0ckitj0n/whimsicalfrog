@@ -1,0 +1,6 @@
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
+mirror --reverse --delete --verbose   --exclude-glob .git/   --exclude-glob node_modules/   --exclude-glob vendor/   --exclude-glob .vscode/   --exclude-glob *.log   --exclude-glob *.sh   --exclude-glob *.plist   --exclude-glob temp_cron.txt   --exclude-glob SERVER_MANAGEMENT.md   --exclude-glob factory-tutorial/   --exclude-glob backup.sql   --exclude-glob backup_*.tar.gz   --exclude-glob *_backup_*.tar.gz   --exclude-glob deploy_commands.txt   --exclude-glob fix_clown_frog_image.sql   --exclude-glob images/.htaccess   --exclude-glob images/items/.htaccess   --include-glob credentials.json   . /
+bye

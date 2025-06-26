@@ -144,7 +144,7 @@ class TooltipSystem {
         element.addEventListener('blur', (e) => this.handleMouseLeave(e));
         
         // Add visual indicator
-        element.style.cursor = 'help';
+        element.style.cursor = 'pointer';
         element.setAttribute('data-has-tooltip', 'true');
     }
     

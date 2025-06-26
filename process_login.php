@@ -59,8 +59,8 @@ try {
             'username' => $user['username'],
             'email' => $user['email'],
             'role' => $user['role'],
-            'firstName' => $user['first_name'] ?? null,
-            'lastName' => $user['last_name'] ?? null
+            'firstName' => $user['firstName'] ?? null,
+            'lastName' => $user['lastName'] ?? null
         ];
         
         // User authenticated successfully
@@ -70,8 +70,8 @@ try {
             'email' => $user['email'],
             'role' => $user['role'],
             'roleType' => $user['role'], // For backward compatibility
-            'firstName' => $user['first_name'] ?? null,
-            'lastName' => $user['last_name'] ?? null,
+            'firstName' => $user['firstName'] ?? null,
+            'lastName' => $user['lastName'] ?? null,
             'redirectUrl' => $redirectUrl // Include redirect URL in response
         ]);
     } else {

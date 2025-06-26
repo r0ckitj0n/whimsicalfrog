@@ -354,11 +354,11 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
         <form action="" method="GET" class="flex items-center gap-2">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="orders">
-            <label for="start_date" class="text-sm font-medium" style="color:#87ac3a !important;">From:</label>
+            <label for="start_date" class="filter-label">From:</label>
             <input type="date" name="start_date" id="start_date" value="<?= htmlspecialchars($startDate); ?>" class="border rounded px-2 py-1 text-sm">
-            <label for="end_date" class="text-sm font-medium" style="color:#87ac3a !important;">To:</label>
+            <label for="end_date" class="filter-label">To:</label>
             <input type="date" name="end_date" id="end_date" value="<?= htmlspecialchars($endDate); ?>" class="border rounded px-2 py-1 text-sm">
-            <a href="?page=admin&section=orders" class="text-sm text-gray-600 underline">Clear</a>
+                            <a href="?page=admin&section=orders" class="filter-label underline">Clear</a>
             <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">Apply</button>
         </form>
     </div>
@@ -375,7 +375,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                     <th>Order ID</th>
                     <th>Customer</th>
-                    <th>Date</th>
+                    <th>Date & Time</th>
                     <th>Items</th>
                     <th>Total</th>
                     <th>Status</th>
@@ -391,30 +391,24 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                     <tr><td colspan="11" class="text-center py-4">No orders found.</td></tr>
                 <?php else: ?>
                     <?php foreach ($orders as $order): 
-                        // Get order items for this order
-                        $itemStmt = $pdo->prepare("SELECT oi.*, i.name FROM order_items oi JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ? LIMIT 3");
-                        $itemStmt->execute([$order['id']]);
-                        $orderItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
-                        
-                        // Count total items
-                        $totalItemsStmt = $pdo->prepare("SELECT COUNT(*) as total FROM order_items WHERE orderId = ?");
+                        // Count total items and total quantity for this order
+                        $totalItemsStmt = $pdo->prepare("SELECT COUNT(*) as item_count, SUM(quantity) as total_quantity FROM order_items WHERE orderId = ?");
                         $totalItemsStmt->execute([$order['id']]);
-                        $totalItemsCount = $totalItemsStmt->fetchColumn();
+                        $itemStats = $totalItemsStmt->fetch(PDO::FETCH_ASSOC);
+                        $itemCount = $itemStats['item_count'] ?? 0;
+                        $totalQuantity = $itemStats['total_quantity'] ?? 0;
                     ?>
                     <tr>
                         <td style="font-family: monospace; font-size: 0.85rem;"><?= htmlspecialchars($order['id'] ?? '') ?></td>
                         <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
-                        <td><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
-                        <td style="font-size: 0.8rem; max-width: 200px;">
-                            <?php if (empty($orderItems)): ?>
-                                <span class="text-gray-500 italic">No items</span>
+                        <td>
+                            <?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?> <?= htmlspecialchars(date('g:i A', strtotime($order['date'] ?? 'now'))) ?>
+                        </td>
+                        <td style="text-align: center;">
+                            <?php if ($itemCount == 0): ?>
+                                <span class="text-gray-500 italic">0</span>
                             <?php else: ?>
-                                <?php foreach ($orderItems as $index => $item): ?>
-                                    <div class="truncate"><?= htmlspecialchars($item['name'] ?? 'Unknown') ?> (<?= $item['quantity'] ?? 0 ?>)</div>
-                                <?php endforeach; ?>
-                                <?php if ($totalItemsCount > 3): ?>
-                                    <div class="text-gray-500 text-xs">+<?= $totalItemsCount - 3 ?> more...</div>
-                                <?php endif; ?>
+                                <span class="font-semibold"><?= $totalQuantity ?></span>
                             <?php endif; ?>
                         </td>
                         <td>$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
@@ -1141,6 +1135,65 @@ document.addEventListener('DOMContentLoaded', function() {
         updateOrderNavigationButtons();
     }
     
+    // Ensure action buttons work properly - comprehensive fix
+    function attachOrderActionListeners() {
+        console.log('Attaching order action listeners...');
+        document.querySelectorAll('.action-btn.edit-btn, .action-btn.view-btn').forEach((link, index) => {
+            console.log(`Processing action button ${index}:`, link.href);
+            
+            // Remove any existing listeners to avoid duplicates
+            const newLink = link.cloneNode(true);
+            link.parentNode.replaceChild(newLink, link);
+            
+            // Add fresh click handler
+            newLink.addEventListener('click', function(e) {
+                console.log('Action button clicked:', this.href);
+                console.log('Current modal mode:', modalMode);
+                console.log('Event target:', e.target);
+                
+                // Get the href
+                const href = this.getAttribute('href');
+                if (href) {
+                    console.log('Navigating to:', href);
+                    
+                    // Prevent any interference
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    // Force navigation immediately
+                    window.location.href = href;
+                }
+            });
+        });
+    }
+    
+    // Attach listeners initially
+    attachOrderActionListeners();
+    
+    // Ensure page state is clean when not in modal mode
+    if (!modalMode || modalMode === '') {
+        console.log('Page loaded in list mode - ensuring clean state');
+        // Remove any lingering modal classes or states
+        document.body.classList.remove('modal-open');
+        
+        // Re-attach action listeners after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            console.log('Re-attaching action listeners after modal close...');
+            attachOrderActionListeners();
+        }, 100);
+    }
+    
+    // Also reattach listeners when page becomes visible (handles back button scenarios)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && (!modalMode || modalMode === '')) {
+            console.log('Page became visible - re-attaching action listeners...');
+            setTimeout(() => {
+                attachOrderActionListeners();
+            }, 100);
+        }
+    });
+    
     // Toggle check number field based on payment method
     window.toggleCheckNumberField = function() {
         const paymentMethodEl = document.getElementById('paymentMethod');
@@ -1532,6 +1585,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Reset button state
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
+            }
+        });
+        
+        // Add Enter key submission for note textareas
+        const noteTextarea = form.querySelector('textarea[name="note"]');
+        const paynoteTextarea = form.querySelector('textarea[name="paynote"]');
+        
+        [noteTextarea, paynoteTextarea].forEach(textarea => {
+            if (textarea) {
+                textarea.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        form.dispatchEvent(new Event('submit'));
+                    }
+                });
             }
         });
     });

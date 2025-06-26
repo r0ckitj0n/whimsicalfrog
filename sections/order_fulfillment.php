@@ -48,7 +48,7 @@ if (!empty($filterItems)) {
 
 $whereClause = implode(' AND ', $whereConditions);
 
-$stmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id WHERE {$whereClause} ORDER BY o.date ASC");
+$stmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id WHERE {$whereClause} ORDER BY o.date DESC");
 $stmt->execute($params);
 $unfulfilled = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -172,9 +172,9 @@ $messageType = $_GET['type'] ?? '';
     }
 
     .filter-form label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #87ac3a !important;
+        color: var(--filter-label-color, #87ac3a) !important;
+        font-weight: var(--filter-label-font-weight, 500) !important;
+        font-size: var(--filter-label-font-size, 0.875rem) !important;
     }
 
     .filter-form input,
@@ -201,7 +201,8 @@ $messageType = $_GET['type'] ?? '';
 
     .filter-clear-link {
         font-size: 0.875rem;
-        color: #6b7280;
+        color: var(--filter_label_color, #87ac3a);
+        font-weight: var(--filter_label_font_weight, 500);
         text-decoration: underline;
     }
 
@@ -319,19 +320,12 @@ $messageType = $_GET['type'] ?? '';
                         <td class="font-medium text-gray-900">#<?= htmlspecialchars($order['id'] ?? '') ?></td>
                         <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
                         <td class="text-sm text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
-                        <td class="order-items-cell" title="<?php
-                            $items = $pdo->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) AS name FROM order_items oi LEFT JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ?");
-                            $items->execute([$order['id']]);
-                            $itemList = $items->fetchAll(PDO::FETCH_ASSOC);
-                            $names = array_map(function($it){ return $it['name'] . ' x' . $it['quantity']; }, $itemList);
-                            echo htmlspecialchars(implode(', ', $names));
-                        ?>">
+                        <td class="text-center">
                             <?php
-                            $items = $pdo->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) AS name FROM order_items oi LEFT JOIN items i ON oi.sku = i.sku WHERE oi.orderId = ?");
+                            $items = $pdo->prepare("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?");
                             $items->execute([$order['id']]);
-                            $itemList = $items->fetchAll(PDO::FETCH_ASSOC);
-                            $names = array_map(function($it){ return $it['name'] . ' x' . $it['quantity']; }, $itemList);
-                            echo htmlspecialchars(implode(', ', $names));
+                            $totalItems = $items->fetchColumn();
+                            echo $totalItems ?: '0';
                             ?>
                         </td>
                         <td>

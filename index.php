@@ -275,6 +275,32 @@ $seoData = generatePageSEO($page, $currentSku);
     <link rel="stylesheet" href="css/room-popups.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="css/room-headers.css?v=<?php echo time(); ?>">
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Global CSS Variables from Database -->
+    <style id="global-css-variables">
+        /* Global CSS variables will be loaded here */
+    </style>
+    <script>
+        // Load global CSS variables from database
+        async function loadGlobalCSS() {
+            try {
+                const response = await fetch('/api/global_css_rules.php?action=generate_css');
+                const data = await response.json();
+                if (data.success && data.css_content) {
+                    const styleElement = document.getElementById('global-css-variables');
+                    if (styleElement) {
+                        styleElement.textContent = data.css_content;
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to load global CSS:', error);
+            }
+        }
+        
+        // Load CSS immediately
+        loadGlobalCSS();
+    </script>
+    
     <style>
         *, *::before, *::after {
             box-sizing: border-box; /* Apply border-box to all elements */

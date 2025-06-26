@@ -264,17 +264,17 @@ $lowStockProducts = array_filter($inventoryData, function($product) {
         <input type="hidden" name="page" value="admin">
         <input type="hidden" name="section" value="reports">
         <div class="flex items-center">
-            <label for="start_date" class="block text-sm font-medium mr-2" style="color:#87ac3a !important;">From:</label>
+            <label for="start_date" class="filter-label block mr-2">From:</label>
             <input type="date" name="start_date" id="start_date" value="<?php echo htmlspecialchars($startDate); ?>" class="block px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
         </div>
         <div class="flex items-center">
-            <label for="end_date" class="block text-sm font-medium mr-2" style="color:#87ac3a !important;">To:</label>
+            <label for="end_date" class="filter-label block mr-2">To:</label>
             <input type="date" name="end_date" id="end_date" value="<?php echo htmlspecialchars($endDate); ?>" class="block px-2 py-1 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
         </div>
         <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">
             Apply
         </button>
-        <a href="?page=admin&section=reports" class="text-sm text-gray-600 underline ml-2">Clear</a>
+                        <a href="?page=admin&section=reports" class="filter-label underline ml-2">Clear</a>
     </form>
 </div>
 

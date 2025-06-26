@@ -476,17 +476,20 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </main>
 
-<!-- Product popup template -->
-<div id="productPopup" class="product-popup">
-    <div class="popup-content">
-        <img class="popup-image" src="" alt="">
-        <div class="popup-details">
-            <div class="popup-name"></div>
-            <div class="popup-category"></div>
-            <div class="popup-description"></div>
-            <div class="popup-price"></div>
-            <div class="popup-actions">
-                <button class="popup-add-btn">Add to Cart</button>
+<!-- Enhanced Product Popup -->
+<div id="productPopup" class="product-popup-enhanced">
+    <div class="popup-content-enhanced">
+        <img class="popup-image-enhanced" src="" alt="">
+        <div class="popup-details-enhanced">
+            <div class="popup-title-enhanced"></div>
+            <div class="popup-category-enhanced"></div>
+            <div class="popup-sku" style="font-size: 12px; color: #888; margin-bottom: 4px; font-family: monospace;"></div>
+            <div class="popup-stock" style="font-size: 12px; margin-bottom: 8px;"></div>
+            <div class="popup-description-enhanced"></div>
+            <div class="popup-price-enhanced"></div>
+            <div class="popup-actions-enhanced">
+                <button class="popup-add-btn-enhanced">Add to Cart</button>
+                <button class="popup-details-btn-enhanced">View Details</button>
                 <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
             </div>
         </div>
@@ -560,8 +563,6 @@ function showPopup(element, product) {
     }
     lastShowTime = now;
     
-
-    
     // Prevent rapid re-triggering of same popup (anti-flashing protection)
     if (currentProduct && currentProduct.sku === product.sku && isShowingPopup) {
         clearTimeout(popupTimeout);
@@ -574,12 +575,15 @@ function showPopup(element, product) {
     popupOpen = true;
 
     const popup = document.getElementById('productPopup');
-    const popupImage = document.getElementById('popupImage');
-    const popupCategory = document.getElementById('popupCategory');
-    const popupTitle = document.getElementById('popupTitle');
-    const popupDescription = document.getElementById('popupDescription');
-    const popupPrice = document.getElementById('popupPrice');
-    const popupAddBtn = document.getElementById('popupAddBtn');
+    const popupImage = popup.querySelector('.popup-image-enhanced');
+    const popupCategory = popup.querySelector('.popup-category-enhanced');
+    const popupTitle = popup.querySelector('.popup-title-enhanced');
+    const popupSku = popup.querySelector('.popup-sku');
+    const popupStock = popup.querySelector('.popup-stock');
+    const popupDescription = popup.querySelector('.popup-description-enhanced');
+    const popupPrice = popup.querySelector('.popup-price-enhanced');
+    const popupAddBtn = popup.querySelector('.popup-add-btn-enhanced');
+    const popupDetailsBtn = popup.querySelector('.popup-details-btn-enhanced');
 
     // Get the image URL - use SKU-based system
     const imageUrl = `images/items/${product.sku}A.png`;
@@ -590,8 +594,19 @@ function showPopup(element, product) {
         this.src = 'images/items/placeholder.png';
         this.onerror = null;
     };
+    
     popupCategory.textContent = product.category ?? 'Category';
     popupTitle.textContent = product.name ?? product.productName ?? 'Item Name';
+    popupSku.textContent = `SKU: ${product.sku}`;
+    
+    // Display stock information with color coding
+    const stockLevel = product.stockLevel || product.stock || 0;
+    const stockText = stockLevel > 0 ? `${stockLevel} in stock` : 'Out of stock';
+    const stockColor = stockLevel > 10 ? '#22c55e' : stockLevel > 0 ? '#f59e0b' : '#ef4444';
+    popupStock.textContent = stockText;
+    popupStock.style.color = stockColor;
+    popupStock.style.fontWeight = '600';
+    
     popupDescription.textContent = product.description ?? 'No description available';
     
     // Check for sales and update price display
@@ -651,7 +666,9 @@ function showPopup(element, product) {
     popup.classList.add('show');
 
     // Add to cart functionality using global function
-    popupAddBtn.onclick = function() {
+    popupAddBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         popup.classList.remove('show');
         const sku = product.sku;
         const name = product.name;
@@ -662,6 +679,18 @@ function showPopup(element, product) {
             window.addToCartWithModal(sku, name, price, image);
         } else {
             console.error('Global addToCartWithModal function not available');
+        }
+    };
+    
+    // View details functionality
+    popupDetailsBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        popup.classList.remove('show');
+        if (typeof showProductDetails === 'function') {
+            showProductDetails(product.sku);
+        } else {
+            console.log('Product details for:', product.sku);
         }
     };
 }

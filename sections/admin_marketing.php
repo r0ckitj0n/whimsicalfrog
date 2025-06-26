@@ -186,9 +186,9 @@ function generateId($prefix, $length = 3) {
     <form class="flex items-center gap-2" method="get" action="">
         <input type="hidden" name="page" value="admin">
         <input type="hidden" name="section" value="marketing">
-        <label class="text-sm font-medium" style="color:#87ac3a !important;" for="mFrom">From:</label>
+        <label class="filter-label" for="mFrom">From:</label>
         <input type="date" id="mFrom" name="start_date" value="<?php echo htmlspecialchars($marketingStartInput); ?>" class="border rounded p-1">
-        <label class="text-sm font-medium" style="color:#87ac3a !important;" for="mTo">To:</label>
+        <label class="filter-label" for="mTo">To:</label>
         <input type="date" id="mTo" name="end_date" value="<?php echo htmlspecialchars($marketingEndInput); ?>" class="border rounded p-1">
         <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">Apply</button>
     </form>

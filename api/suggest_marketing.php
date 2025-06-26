@@ -129,6 +129,21 @@ try {
     
     $pdo->exec($createTableSql);
     
+    // Get existing marketing data to incorporate into new generation
+    $existingMarketingData = null;
+    if (!empty($sku)) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM marketing_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1");
+            $stmt->execute([$sku]);
+            $existingMarketingData = $stmt->fetch();
+            if ($existingMarketingData) {
+                error_log("Found existing marketing data for SKU: $sku - incorporating into AI generation");
+            }
+        } catch (Exception $e) {
+            error_log("Failed to load existing marketing data: " . $e->getMessage());
+        }
+    }
+    
     // Get item images if using image support
     $images = [];
     if ($useImages && !empty($sku)) {
@@ -181,7 +196,8 @@ try {
             $category, 
             $imageInsights, 
             $preferredBrandVoice, 
-            $preferredContentTone
+            $preferredContentTone,
+            $existingMarketingData
         );
         
         error_log("AI Response received for Request ID: $requestId - Title: '" . substr($marketingData['title'], 0, 50) . "...'");
@@ -193,7 +209,7 @@ try {
         // Restore execution time for local processing
         set_time_limit(60);
         
-        $marketingData = generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice, $preferredContentTone);
+        $marketingData = generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice, $preferredContentTone, $existingMarketingData);
         
         // Generate basic image analysis for fallback
         if (!empty($images) && $useImages) {
@@ -341,9 +357,14 @@ try {
     echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
 }
 
-function generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice = '', $preferredContentTone = '') {
+function generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice = '', $preferredContentTone = '', $existingMarketingData = null) {
             // Debug: Log the voice and tone values in Jon's AI
         error_log("Jon's AI - Preferred Brand Voice: '$preferredBrandVoice', Preferred Content Tone: '$preferredContentTone'");
+        
+        // Log existing data incorporation
+        if ($existingMarketingData) {
+            error_log("Jon's AI - Incorporating existing marketing data into generation");
+        }
     
     // Comprehensive item analysis
     $analysis = analyzeItemForMarketing($name, $description, $category);
@@ -355,11 +376,13 @@ function generateMarketingIntelligence($name, $description, $category, $pdo, $pr
     // Debug: Log the final voice and tone values
             error_log("Jon's AI - Final Brand Voice: '$brandVoice', Final Content Tone: '$contentTone'");
     
-    // Generate enhanced title with brand voice influence
-    $title = generateEnhancedTitle($name, $category, $analysis, $brandVoice);
+    // Generate enhanced title with brand voice influence - incorporate existing data if admin has provided content
+    $currentTitle = !empty($name) ? $name : ($existingMarketingData['suggested_title'] ?? '');
+    $title = generateEnhancedTitle($currentTitle, $category, $analysis, $brandVoice, $existingMarketingData);
     
-    // Generate compelling description with brand voice and tone influence
-    $enhancedDescription = generateCompellingDescription($name, $description, $category, $analysis, $brandVoice, $contentTone);
+    // Generate compelling description with brand voice and tone influence - incorporate existing data if admin has provided content  
+    $currentDescription = !empty($description) ? $description : ($existingMarketingData['suggested_description'] ?? '');
+    $enhancedDescription = generateCompellingDescription($currentTitle, $currentDescription, $category, $analysis, $brandVoice, $contentTone, $existingMarketingData);
     
     // Generate comprehensive marketing data
     return [
@@ -418,7 +441,7 @@ function analyzeItemForMarketing($name, $description, $category) {
     ];
 }
 
-function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '') {
+function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '', $existingMarketingData = null) {
     $enhancers = [];
     
     // Brand voice influences title style
@@ -475,6 +498,26 @@ function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '') {
     $enhancers = array_unique($enhancers);
     $enhancers = array_slice($enhancers, 0, 3);
     
+    // If admin has provided a title, enhance it rather than replace it
+    if (!empty($name) && $existingMarketingData && !empty($existingMarketingData['suggested_title'])) {
+        // Admin has content - enhance existing title while preserving admin intent
+        $baseName = $name;
+        if (!empty($enhancers)) {
+            // Only add enhancers that aren't already in the admin's title
+            $filteredEnhancers = [];
+            foreach ($enhancers as $enhancer) {
+                if (stripos($baseName, $enhancer) === false) {
+                    $filteredEnhancers[] = $enhancer;
+                }
+            }
+            if (!empty($filteredEnhancers)) {
+                return implode(' ', array_slice($filteredEnhancers, 0, 2)) . ' ' . $baseName;
+            }
+        }
+        return $baseName;
+    }
+    
+    // Standard enhancement for new content
     if (!empty($enhancers)) {
         return implode(' ', $enhancers) . ' ' . $name;
     }
@@ -482,7 +525,7 @@ function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '') {
     return $name;
 }
 
-function generateCompellingDescription($name, $currentDescription, $category, $analysis, $brandVoice = '', $contentTone = '') {
+function generateCompellingDescription($name, $currentDescription, $category, $analysis, $brandVoice = '', $contentTone = '', $existingMarketingData = null) {
     $hooks = generateDescriptionHooks($category, $analysis, $brandVoice);
     $benefits = generateBenefitStatements($category, $analysis, $contentTone);
     $features = generateFeatureHighlights($analysis);
@@ -516,6 +559,24 @@ function generateCompellingDescription($name, $currentDescription, $category, $a
     }
     
     $description .= $closing;
+    
+    // If admin has provided description content, incorporate it intelligently
+    if (!empty($currentDescription) && $existingMarketingData && !empty($existingMarketingData['suggested_description'])) {
+        // Admin has content - enhance rather than replace
+        $adminDescription = $currentDescription;
+        
+        // If admin description is very short, expand it with AI enhancements
+        if (strlen($adminDescription) < 100) {
+            return $adminDescription . ' ' . $description;
+        }
+        
+        // If admin description is substantial, use it as the base and add key benefits
+        if (!empty($benefits)) {
+            return $adminDescription . ' ' . $benefits[0];
+        }
+        
+        return $adminDescription;
+    }
     
     return $description;
 }

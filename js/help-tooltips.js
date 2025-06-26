@@ -114,6 +114,7 @@ class TooltipSystem {
         
         let attachedCount = 0;
         
+        // Attach database tooltips
         this.tooltips.forEach((tooltipData, elementId) => {
             const element = document.getElementById(elementId);
             if (element) {
@@ -126,6 +127,26 @@ class TooltipSystem {
                 // Only log missing elements in debug mode to reduce console noise
                 if (window.debugTooltips) {
                     console.warn(`⚠️ TooltipSystem: Element not found: ${elementId}`);
+                }
+            }
+        });
+        
+        // Attach data-tooltip attributes
+        const dataTooltipElements = document.querySelectorAll('[data-tooltip]');
+        dataTooltipElements.forEach(element => {
+            if (!element._tooltipData) { // Don't override database tooltips
+                const tooltipText = element.getAttribute('data-tooltip');
+                if (tooltipText) {
+                    const tooltipData = {
+                        title: 'Help',
+                        content: tooltipText,
+                        position: element.getAttribute('data-tooltip-position') || 'top'
+                    };
+                    this.attachTooltipToElement(element, tooltipData);
+                    attachedCount++;
+                    if (window.debugTooltips) {
+                        console.log(`✅ TooltipSystem: Attached data-tooltip to element: "${tooltipText.substring(0, 50)}..."`);
+                    }
                 }
             }
         });

@@ -37,14 +37,14 @@ try {
             'email' => $user['email'],
             'role' => $user['role'],
             'roleType' => $user['role'], // For backward compatibility
-            'first_name' => $user['first_name'] ?? '',
-            'last_name' => $user['last_name'] ?? '',
-            'phone_number' => $user['phone_number'] ?? '',
-            'address_line1' => $user['address_line1'] ?? '',
-            'address_line2' => $user['address_line2'] ?? '',
+            'firstName' => $user['firstName'] ?? '',
+            'lastName' => $user['lastName'] ?? '',
+            'phoneNumber' => $user['phoneNumber'] ?? '',
+            'addressLine1' => $user['addressLine1'] ?? '',
+            'addressLine2' => $user['addressLine2'] ?? '',
             'city' => $user['city'] ?? '',
             'state' => $user['state'] ?? '',
-            'zip_code' => $user['zip_code'] ?? ''
+            'zipCode' => $user['zipCode'] ?? ''
         ];
     }, $users);
     

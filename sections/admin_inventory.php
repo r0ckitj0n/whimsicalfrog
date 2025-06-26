@@ -916,14 +916,16 @@ $messageType = $_GET['type'] ?? '';
                         <div>
                             <label for="name" class="block text-gray-700">Name *</label>
                             <input type="text" id="name" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('name', $field_errors) ? 'field-error-highlight' : '' ?>" required 
-                                   value="<?= htmlspecialchars($editItem['name'] ?? ''); ?>">
+                                   value="<?= htmlspecialchars($editItem['name'] ?? ''); ?>"
+                                   data-tooltip="The name of your item. Try to be more creative than 'Thing' or 'Stuff'. Your customers deserve better than that.">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label for="categoryEdit" class="block text-gray-700">Category *</label>
-                            <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'style="display:none;"' : '' ?>>
+                            <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'style="display:none;"' : '' ?>
+                                    data-tooltip="Which category does this belong to? If you can't figure this out, maybe running a business isn't for you.">
                                 <option value="">Select Category</option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?= htmlspecialchars($cat); ?>" <?= (isset($editItem['category']) && $editItem['category'] === $cat) ? 'selected' : ''; ?>><?= htmlspecialchars($cat); ?></option>
@@ -936,7 +938,8 @@ $messageType = $_GET['type'] ?? '';
                             <?php endif; ?>
                         </div>
                             <div class="flex items-end">
-                                <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm">
+                                <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm"
+                                        data-tooltip="Let AI write your marketing copy because apparently describing your own products is too hard. Don't worry, the robots are better at it anyway.">
                                      🎯 Marketing Manager
                                 </button>
                         </div>
@@ -946,29 +949,34 @@ $messageType = $_GET['type'] ?? '';
                         <div>
                             <label for="stockLevel" class="block text-gray-700">Stock Level *</label>
                             <input type="number" id="stockLevel" name="stockLevel" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('stockLevel', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
-                                   value="<?= htmlspecialchars($editItem['stockLevel'] ?? '0'); ?>">
+                                   value="<?= htmlspecialchars($editItem['stockLevel'] ?? '0'); ?>"
+                                   data-tooltip="How many of these do you actually have? Don't lie - we're not your accountant, but your customers will be mad if you oversell.">
                         </div>
                         <div>
                             <label for="reorderPoint" class="block text-gray-700">Reorder Point *</label>
                             <input type="number" id="reorderPoint" name="reorderPoint" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('reorderPoint', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
-                                   value="<?= htmlspecialchars($editItem['reorderPoint'] ?? '5'); ?>">
+                                   value="<?= htmlspecialchars($editItem['reorderPoint'] ?? '5'); ?>"
+                                   data-tooltip="When to panic and order more. Set this too low and you'll run out. Set it too high and you'll have a warehouse full of stuff nobody wants.">
                         </div>
                     </div>
                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label for="costPrice" class="block text-gray-700">Cost Price ($) *</label>
                             <input type="number" id="costPrice" name="costPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('costPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
-                                   value="<?= htmlspecialchars($editItem['costPrice'] ?? '0.00'); ?>">
+                                   value="<?= htmlspecialchars($editItem['costPrice'] ?? '0.00'); ?>"
+                                   data-tooltip="How much you paid for this. Don't include your tears and frustration - those are free. This is just the cold, hard cash you spent.">
                         </div>
                         <div>
                             <label for="retailPrice" class="block text-gray-700">Retail Price ($) *</label>
                             <input type="number" id="retailPrice" name="retailPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('retailPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
-                                   value="<?= htmlspecialchars($editItem['retailPrice'] ?? '0.00'); ?>">
+                                   value="<?= htmlspecialchars($editItem['retailPrice'] ?? '0.00'); ?>"
+                                   data-tooltip="What you're charging customers. Try to make it higher than your cost price - that's how profit works. Revolutionary concept, I know.">
                         </div>
                     </div>
                     <div>
                         <label for="description" class="block text-gray-700">Description</label>
-                        <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="3" placeholder="Enter item description or click 'Marketing Manager' for AI-powered suggestions..."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
+                        <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="3" placeholder="Enter item description or click 'Marketing Manager' for AI-powered suggestions..."
+                                  data-tooltip="Describe your item. Be more creative than 'It's good' or 'People like it'. Your customers have questions, and this is where you answer them."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                     </div>
                     <!-- Item Images Section - Now spans full width when needed -->
                     <div class="images-section-container" id="imagesSection">
@@ -977,7 +985,7 @@ $messageType = $_GET['type'] ?? '';
                         <div id="currentImagesContainer" class="current-images-section">
                             <div class="flex justify-between items-center mb-2">
                                 <div class="text-sm text-gray-600">Current Images:</div>
-                                <button type="button" id="processExistingImagesBtn" onclick="processExistingImagesWithAI()" class="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
+                                <button type="button" id="processExistingImagesBtn" onclick="processExistingImagesWithAI()" class="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>" data-tooltip="Let AI automatically crop all existing images to their edges and convert them to WebP format. Because apparently manually cropping photos is too much work for you.">
                                     🎨 AI Process All
                                 </button>
                             </div>
@@ -1059,7 +1067,8 @@ $messageType = $_GET['type'] ?? '';
                                     <span class="mr-2">💰</span> Cost Breakdown
                                 </h3>
                                 
-                                <button type="button" onclick="useSuggestedCost()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors mb-4">
+                                <button type="button" onclick="useSuggestedCost()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors mb-4" 
+                                        id="get-suggested-cost-btn" data-tooltip="Let AI analyze your item and suggest cost breakdown including materials, labor, energy, and equipment. Because apparently calculating costs is rocket science now.">
                                     🧮 Get Suggested Cost
                                 </button>
                                 
@@ -1072,7 +1081,8 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <button type="button" onclick="applyCostSuggestionToCost()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors">
+                                    <button type="button" onclick="applyCostSuggestionToCost()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                                            id="apply-suggested-cost-btn" data-tooltip="Take the AI-suggested cost and put it in your cost field. For when you trust robots more than your own business judgment.">
                                         💰 Apply to Cost Field
                                     </button>
                                 </div>
@@ -1117,7 +1127,16 @@ $messageType = $_GET['type'] ?? '';
                                     <div class="mb-2" id="<?= $costType; ?>List" style="max-height: 100px; overflow-y: auto;">
                                         <!-- Cost items will be rendered here by JavaScript -->
                                     </div>
-                                    <button type="button" class="add-cost-btn" onclick="addCostItem('<?= $costType; ?>')">
+                                    <button type="button" class="add-cost-btn" onclick="addCostItem('<?= $costType; ?>')" 
+                                            id="add-<?= $costType; ?>-btn" data-tooltip="<?php 
+                                                $tooltips = [
+                                                    'materials' => 'Add raw materials and supplies to your cost breakdown. Wood, fabric, glue, tears of frustration - whatever goes into making your product.',
+                                                    'labor' => 'Add time and effort costs. Your hours, assistant wages, the cost of your sanity - everything that involves human effort to create this masterpiece.',
+                                                    'energy' => 'Add electricity, gas, and other utilities used in production. Because apparently even the power company wants a cut of your profits.',
+                                                    'equipment' => 'Add tool depreciation, equipment rental, and machinery costs. That expensive printer, cutting machine, or whatever gadget you convinced yourself was \"essential\" for the business.'
+                                                ];
+                                                echo $tooltips[$costType] ?? 'Add cost items for this category.';
+                                            ?>">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 mr-1"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                                         Add <?php 
                                             $labels = ['materials' => 'Material', 'labor' => 'Labor', 'energy' => 'Energy', 'equipment' => 'Equipment'];
@@ -1142,7 +1161,8 @@ $messageType = $_GET['type'] ?? '';
                                     <span class="mr-2">🎯</span> Price Suggestion
                                 </h3>
                                 
-                                <button type="button" onclick="useSuggestedPrice()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4">
+                                <button type="button" onclick="useSuggestedPrice()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4"
+                                        id="get-suggested-price-btn" data-tooltip="Let AI analyze your item and suggest optimal pricing based on cost analysis, market research, and competitive analysis. Because apparently setting prices is too complicated for humans now.">
                                     🎯 Get Suggested Price
                                 </button>
                                 
@@ -1157,7 +1177,8 @@ $messageType = $_GET['type'] ?? '';
                                         </div>
                                     </div>
                                     
-                                    <button type="button" onclick="applyPriceSuggestion()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors mb-3">
+                                    <button type="button" onclick="applyPriceSuggestion()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors mb-3"
+                                            id="apply-suggested-price-btn" data-tooltip="Take the AI-suggested price and put it in your price field. Let the robots do your pricing - what could go wrong?">
                                         Apply to Retail Price
                                     </button>
                                     
@@ -1277,6 +1298,14 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
         
+        <!-- AI Help Text - Below Tab Buttons -->
+        <div class="px-6 py-3 bg-blue-50 border-b border-blue-200">
+            <div class="flex items-center text-sm text-blue-700">
+                <span class="mr-2">💡</span>
+                <span>Use AI to automatically generate marketing content for all tabs</span>
+            </div>
+        </div>
+        
         <!-- Content Area -->
         <div class="modal-body" style="flex: 1; overflow-y: auto;">
             <div id="marketingManagerContent">
@@ -1286,11 +1315,12 @@ $messageType = $_GET['type'] ?? '';
         
         <!-- Footer -->
         <div class="modal-footer">
-            <div class="flex items-center text-sm text-gray-600">
-                <span class="mr-2">💡</span>
-                <span>Use AI to automatically generate marketing content for all tabs</span>
-            </div>
             <div class="flex space-x-3">
+                <button onclick="applyMarketingToItem()" 
+                        class="px-6 py-2 text-sm font-medium text-white rounded-md transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                        style="background: linear-gradient(to right, #3b82f6, #1d4ed8); border: none;">
+                    📝 Apply to Item
+                </button>
                 <button onclick="closeMarketingManager()" 
                         class="px-6 py-2 text-sm font-medium text-white rounded-md transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                         style="background: linear-gradient(to right, #87ac3a, #6b8e23); border: none;">
@@ -5344,7 +5374,7 @@ function displayCurrentImages(images, isViewModal = false) {
             console.log(`- First slide width: ${slides[0].offsetWidth}px`);
             console.log(`- First slide computed width: ${getComputedStyle(slides[0]).width}`);
         }
-    }, 100);
+    }, 200);
     
     // Update carousel navigation visibility
     updateCarouselNavigation(carouselType, images.length);
@@ -5397,7 +5427,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 console.log('No SKU found for loading images');
             }
-        }, 100);
+        }, 200);
     } else if (modalMode === 'view' && viewId) {
         // Load images for view modal
         setTimeout(() => {
@@ -5413,7 +5443,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (loadingDiv) loadingDiv.remove();
                 if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">No SKU available</div>';
             }
-        }, 100);
+        }, 200);
     }
     
     // ===== IMAGE SYSTEM ARCHITECTURE =====
@@ -6348,6 +6378,67 @@ function closeMarketingManager() {
     }
 }
 
+function applyMarketingToItem() {
+    console.log('Marketing Manager: Applying marketing content to item fields');
+    
+    // Get the marketing title and description fields
+    const marketingTitle = document.getElementById('marketingTitle');
+    const marketingDescription = document.getElementById('marketingDescription');
+    
+    // Get the main item title and description fields
+    const itemNameField = document.getElementById('name');
+    const itemDescriptionField = document.getElementById('description');
+    
+    let appliedChanges = 0;
+    
+    // Apply marketing title to item name if both exist and have content
+    if (marketingTitle && marketingTitle.value.trim() && itemNameField) {
+        const newTitle = marketingTitle.value.trim();
+        itemNameField.value = newTitle;
+        
+        // Add temporary highlight to show the change
+        itemNameField.style.backgroundColor = '#dcfce7';
+        itemNameField.style.border = '2px solid #22c55e';
+        
+        appliedChanges++;
+        console.log('Marketing Manager: Applied title:', newTitle);
+    }
+    
+    // Apply marketing description to item description if both exist and have content
+    if (marketingDescription && marketingDescription.value.trim() && itemDescriptionField) {
+        const newDescription = marketingDescription.value.trim();
+        itemDescriptionField.value = newDescription;
+        
+        // Add temporary highlight to show the change
+        itemDescriptionField.style.backgroundColor = '#dcfce7';
+        itemDescriptionField.style.border = '2px solid #22c55e';
+        
+        appliedChanges++;
+        console.log('Marketing Manager: Applied description:', newDescription);
+    }
+    
+    if (appliedChanges > 0) {
+        showSuccess(`✅ Applied ${appliedChanges} marketing ${appliedChanges === 1 ? 'field' : 'fields'} to item successfully!`);
+        
+        // Remove highlights after 3 seconds
+        setTimeout(() => {
+            if (itemNameField) {
+                itemNameField.style.backgroundColor = '';
+                itemNameField.style.border = '';
+            }
+            if (itemDescriptionField) {
+                itemDescriptionField.style.backgroundColor = '';
+                itemDescriptionField.style.border = '';
+            }
+        }, 3000);
+        
+        // Close the Marketing Manager modal
+        closeMarketingManager();
+    } else {
+        showWarning('⚠️ No marketing content found to apply. Please enter a title or description first.');
+    }
+}
+
 
 
 
@@ -6482,7 +6573,7 @@ function loadContentTab(contentDiv) {
             loadGlobalMarketingDefaults();
             // Load primary image after tab content is rendered
             loadMarketingItemImage();
-        }, 100);
+        }, 200);
     });
 }
 
@@ -6514,7 +6605,7 @@ function loadAudienceTab(contentDiv) {
             addMarketingChangeListeners();
             // Load primary image after tab content is rendered
             loadMarketingItemImage();
-        }, 100);
+        }, 200);
     });
 }
 
@@ -6609,7 +6700,7 @@ function loadSEOTab(contentDiv) {
         setTimeout(() => {
             storeOriginalMarketingData();
             addMarketingChangeListeners();
-        }, 100);
+        }, 200);
     });
 }
 
@@ -6757,6 +6848,26 @@ function clearMarketingFields() {
         }
     });
     
+    // Auto-populate title and description with current item data when no marketing data exists
+    const nameField = document.getElementById('name');
+    const descriptionField = document.getElementById('description');
+    
+    if (nameField && nameField.value.trim()) {
+        const titleField = document.getElementById('marketingTitle');
+        if (titleField) {
+            titleField.value = nameField.value.trim();
+            console.log('Marketing Manager: Auto-populated title with current item name:', nameField.value.trim());
+        }
+    }
+    
+    if (descriptionField && descriptionField.value.trim()) {
+        const marketingDescField = document.getElementById('marketingDescription');
+        if (marketingDescField) {
+            marketingDescField.value = descriptionField.value.trim();
+            console.log('Marketing Manager: Auto-populated description with current item description:', descriptionField.value.trim());
+        }
+    }
+    
     // Clear list fields
     const listFields = [
         'sellingPointsList', 'competitiveAdvantagesList', 'customerBenefitsList', 
@@ -6809,6 +6920,26 @@ function populateMarketingFields(data) {
             }
         }
     });
+    
+    // Auto-populate title and description with current item data if not in marketing data
+    const nameField = document.getElementById('name');
+    const descriptionField = document.getElementById('description');
+    
+    // Auto-populate title if no marketing title exists but item name does
+    const titleField = document.getElementById('marketingTitle');
+    if (titleField && !data.suggested_title && nameField && nameField.value.trim()) {
+        titleField.value = nameField.value.trim();
+        console.log('Marketing Manager: Auto-populated title with current item name:', nameField.value.trim());
+        fieldsPopulated = true;
+    }
+    
+    // Auto-populate description if no marketing description exists but item description does
+    const marketingDescField = document.getElementById('marketingDescription');
+    if (marketingDescField && !data.suggested_description && descriptionField && descriptionField.value.trim()) {
+        marketingDescField.value = descriptionField.value.trim();
+        console.log('Marketing Manager: Auto-populated description with current item description:', descriptionField.value.trim());
+        fieldsPopulated = true;
+    }
     
     // If any fields were populated, trigger change tracking to show save buttons
     if (fieldsPopulated) {
@@ -7711,9 +7842,25 @@ function showAIComparisonModal() {
 }
 
 function closeAIComparisonModal() {
+    console.log('closeAIComparisonModal function called');
     const modal = document.getElementById('aiComparisonModal');
     if (modal) {
+        console.log('AI Comparison Modal found, hiding modal');
+        
+        // Reset all inline styles that were set by showAIComparisonModal
+        modal.style.cssText = '';
+        
+        // Add the hidden class
         modal.classList.add('hidden');
+        
+        // Force hide with inline styles to override any remaining CSS
+        modal.style.display = 'none !important';
+        modal.style.visibility = 'hidden !important';
+        modal.style.opacity = '0 !important';
+        
+        console.log('AI Comparison Modal closed successfully');
+    } else {
+        console.error('AI Comparison Modal not found!');
     }
 }
 
@@ -7875,6 +8022,26 @@ function showComparisonResults(data) {
     aiComparisonData = data;
     selectedChanges = {};
     
+    // First, get current marketing data from database to compare against
+    console.log('Loading current marketing data from database for comparison...');
+    
+    fetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}&_t=${Date.now()}`)
+        .then(response => response.json())
+        .then(currentData => {
+            console.log('Current marketing data loaded:', currentData);
+            buildComparisonInterface(data, currentData.data);
+        })
+        .catch(error => {
+            console.error('Error loading current marketing data:', error);
+            // Fallback to building interface without current data
+            buildComparisonInterface(data, null);
+        });
+}
+
+function buildComparisonInterface(aiData, currentMarketingData) {
+    const contentDiv = document.getElementById('aiComparisonContent');
+    const applyBtn = document.getElementById('applyChangesBtn');
+    
     // Build comparison interface
     let html = '<div class="space-y-6">';
     html += '<div class="text-center mb-6">';
@@ -7886,9 +8053,9 @@ function showComparisonResults(data) {
     let availableFields = [];
     
     // Title comparison
-    if (data.title) {
+    if (aiData.title) {
         const currentTitle = document.getElementById('name')?.value || '';
-        const suggestedTitle = data.title;
+        const suggestedTitle = aiData.title;
         
         if (currentTitle !== suggestedTitle) {
             availableFields.push('title');
@@ -7897,9 +8064,9 @@ function showComparisonResults(data) {
     }
     
     // Description comparison
-    if (data.description) {
+    if (aiData.description) {
         const currentDesc = document.getElementById('description')?.value || '';
-        const suggestedDesc = data.description;
+        const suggestedDesc = aiData.description;
         
         if (currentDesc !== suggestedDesc) {
             availableFields.push('description');
@@ -7907,25 +8074,32 @@ function showComparisonResults(data) {
         }
     }
     
-    // Marketing fields comparison
+    // Marketing fields comparison - use database values as current
     const marketingFields = [
-        { key: 'target_audience', label: 'Target Audience', current: document.getElementById('targetAudience')?.value || '', source: 'targetAudience' },
-        { key: 'demographic_targeting', label: 'Demographics', current: document.getElementById('demographics')?.value || '', source: 'marketingIntelligence' },
-        { key: 'psychographic_profile', label: 'Psychographics', current: document.getElementById('psychographics')?.value || '', source: 'marketingIntelligence' }
+        { 
+            key: 'target_audience', 
+            label: 'Target Audience', 
+            current: currentMarketingData?.target_audience || '', 
+            suggested: aiData.targetAudience 
+        },
+        { 
+            key: 'demographic_targeting', 
+            label: 'Demographics', 
+            current: currentMarketingData?.demographic_targeting || '', 
+            suggested: aiData.marketingIntelligence?.demographic_targeting 
+        },
+        { 
+            key: 'psychographic_profile', 
+            label: 'Psychographics', 
+            current: currentMarketingData?.psychographic_profile || '', 
+            suggested: aiData.marketingIntelligence?.psychographic_profile 
+        }
     ];
     
     marketingFields.forEach(field => {
-        let suggestedValue = null;
-        
-        if (field.source === 'targetAudience') {
-            suggestedValue = data.targetAudience;
-        } else if (field.source === 'marketingIntelligence') {
-            suggestedValue = data.marketingIntelligence?.[field.key];
-        }
-        
-        if (suggestedValue && field.current !== suggestedValue) {
+        if (field.suggested && field.current !== field.suggested) {
             availableFields.push(field.key);
-            html += createComparisonCard(field.key, field.label, field.current, suggestedValue);
+            html += createComparisonCard(field.key, field.label, field.current, field.suggested);
         }
     });
     
@@ -7953,9 +8127,9 @@ function showComparisonResults(data) {
         html += '<div class="mt-4 text-xs bg-gray-100 p-4 rounded">';
         html += '<strong>Debug Info:</strong><br>';
         html += `Current Title: "${document.getElementById('name')?.value || 'N/A'}"<br>`;
-        html += `AI Title: "${data.title || 'N/A'}"<br>`;
+        html += `AI Title: "${aiData.title || 'N/A'}"<br>`;
         html += `Current Desc: "${(document.getElementById('description')?.value || 'N/A').substring(0, 50)}..."<br>`;
-        html += `AI Desc: "${(data.description || 'N/A').substring(0, 50)}..."`;
+        html += `AI Desc: "${(aiData.description || 'N/A').substring(0, 50)}..."`;
         html += '</div>';
         html += '</div>';
     }
@@ -8020,7 +8194,9 @@ function toggleSelectAll() {
 }
 
 function toggleComparison(fieldKey) {
+    console.log('toggleComparison called for field:', fieldKey);
     const checkbox = document.getElementById(`comparison-${fieldKey}-checkbox`);
+    console.log('Checkbox found:', checkbox, 'checked:', checkbox?.checked);
     if (checkbox.checked) {
         // Get the value from the correct location in the AI data
         let value = null;
@@ -8036,10 +8212,14 @@ function toggleComparison(fieldKey) {
         
         if (value) {
             selectedChanges[fieldKey] = value;
+            console.log('Added to selectedChanges:', fieldKey, '=', value);
         }
     } else {
         delete selectedChanges[fieldKey];
+        console.log('Removed from selectedChanges:', fieldKey);
     }
+    
+    console.log('Current selectedChanges after toggle:', selectedChanges);
     
     // Update select all checkbox state based on individual selections
     updateSelectAllState();
@@ -8072,50 +8252,95 @@ function updateSelectAllState() {
 }
 
 function applySelectedChanges() {
+    console.log('applySelectedChanges called');
+    console.log('selectedChanges object:', selectedChanges);
+    console.log('selectedChanges keys length:', Object.keys(selectedChanges).length);
+    
     if (Object.keys(selectedChanges).length === 0) {
-        showWarning( 'Please select at least one change to apply');
+        console.log('No changes selected, showing warning');
+        showWarning('Please select at least one change to apply');
         return;
     }
     
-    // Apply changes to form fields
-    Object.entries(selectedChanges).forEach(([fieldKey, value]) => {
-        let targetField = null;
+    if (!currentItemSku) {
+        console.error('No SKU available for saving changes');
+        showError('Unable to save changes - no item SKU available');
+        return;
+    }
+    
+    console.log('Saving selected changes to database for SKU:', currentItemSku);
+    
+    // Save all selected changes to the database
+    const savePromises = Object.entries(selectedChanges).map(([fieldKey, value]) => {
+        console.log(`Saving field ${fieldKey} to database:`, value);
         
-        switch (fieldKey) {
-            case 'title':
-                targetField = document.getElementById('name');
-                break;
-            case 'description':
-                targetField = document.getElementById('description');
-                break;
-            case 'target_audience':
-                targetField = document.getElementById('targetAudience');
-                break;
-            case 'demographic_targeting':
-                targetField = document.getElementById('demographics');
-                break;
-            case 'psychographic_profile':
-                targetField = document.getElementById('psychographics');
-                break;
-        }
-        
-        if (targetField) {
-            targetField.value = value;
-            targetField.style.backgroundColor = '#f0fdf4'; // Light green highlight
-        }
+        return fetch('/api/marketing_manager.php?action=update_field', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                sku: currentItemSku,
+                field: fieldKey === 'title' ? 'suggested_title' : 
+                       fieldKey === 'description' ? 'suggested_description' : fieldKey,
+                value: value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log(`✅ Successfully saved ${fieldKey} to database`);
+            } else {
+                console.error(`❌ Failed to save ${fieldKey}:`, data.error);
+                throw new Error(`Failed to save ${fieldKey}: ${data.error}`);
+            }
+            return { fieldKey, success: true };
+        })
+        .catch(error => {
+            console.error(`❌ Error saving ${fieldKey}:`, error);
+            return { fieldKey, success: false, error };
+        });
     });
     
-    // Auto-save the changes
-    const selectedCount = Object.keys(selectedChanges).length;
-    showSuccess( `${selectedCount} changes applied successfully!`);
+    // Wait for all database saves to complete
+    Promise.all(savePromises)
+        .then(results => {
+            const successCount = results.filter(r => r.success).length;
+            const failCount = results.length - successCount;
+            
+            console.log(`Database save results: ${successCount} success, ${failCount} failed`);
+            
+            if (successCount > 0) {
+                // Update main form fields for title and description only
+                // (Marketing Manager will load from database when opened)
+                updateMainFormFields();
+                
+                // Show success message
+                showSuccess(`${successCount} changes saved to database successfully!`);
+                
+                // If Marketing Manager modal is open, refresh its content from database
+                refreshMarketingManagerContent();
+                
+            } else {
+                showError('Failed to save changes to database');
+            }
+            
+            // Close AI comparison modal immediately
+            console.log('Closing AI Comparison Modal...');
+            closeAIComparisonModal();
+        })
+        .catch(error => {
+            console.error('Error in batch save operation:', error);
+            showError('Failed to save changes to database');
+        });
     
-    // Close the modal
-    closeAIComparisonModal();
-    
-    // Remove highlights after a delay
-    setTimeout(() => {
-        Object.keys(selectedChanges).forEach(fieldKey => {
+    function updateMainFormFields() {
+        // Only update title and description in main form
+        // Other fields exist only in Marketing Manager modal
+        Object.entries(selectedChanges).forEach(([fieldKey, value]) => {
             let targetField = null;
+            
             switch (fieldKey) {
                 case 'title':
                     targetField = document.getElementById('name');
@@ -8123,21 +8348,43 @@ function applySelectedChanges() {
                 case 'description':
                     targetField = document.getElementById('description');
                     break;
-                case 'target_audience':
-                    targetField = document.getElementById('targetAudience');
-                    break;
-                case 'demographic_targeting':
-                    targetField = document.getElementById('demographics');
-                    break;
-                case 'psychographic_profile':
-                    targetField = document.getElementById('psychographics');
-                    break;
+                // Don't update marketing-specific fields in main form
+                // They will be loaded from database when Marketing Manager opens
             }
+            
             if (targetField) {
-                targetField.style.backgroundColor = '';
+                console.log(`Updating main form field ${fieldKey}`);
+                targetField.value = value;
+                targetField.style.backgroundColor = '#f0fdf4'; // Light green highlight
+                
+                // Remove highlight after delay
+                setTimeout(() => {
+                    targetField.style.backgroundColor = '';
+                }, 3000);
             }
         });
-    }, 3000);
+    }
+    
+    function refreshMarketingManagerContent() {
+        // Check if Marketing Manager modal is open
+        const marketingModal = document.getElementById('marketingManagerModal');
+        if (marketingModal && !marketingModal.classList.contains('hidden')) {
+            console.log('Marketing Manager is open - refreshing content from database');
+            
+            // Reload the current tab content to reflect database changes
+            const activeTab = document.querySelector('.admin-tab-button.active');
+            if (activeTab) {
+                const tabName = activeTab.textContent.includes('📝') ? 'content' :
+                              activeTab.textContent.includes('👥') ? 'audience' :
+                              activeTab.textContent.includes('⭐') ? 'selling' :
+                              activeTab.textContent.includes('🔍') ? 'seo' :
+                              activeTab.textContent.includes('💰') ? 'conversion' : 'content';
+                
+                console.log('Refreshing active tab:', tabName);
+                loadMarketingTabContent(tabName);
+            }
+        }
+    }
 }
 </script>
 <script>
@@ -8420,7 +8667,7 @@ function showColorModal(color = null) {
             if (imageSelect && color.image_path) {
                 imageSelect.value = color.image_path;
             }
-        }, 100); // Small delay to ensure options are loaded
+        }, 200); // Small delay to ensure options are loaded
     } else {
         // Add mode
         modalTitle.textContent = 'Add New Color';

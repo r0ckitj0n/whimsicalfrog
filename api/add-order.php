@@ -117,7 +117,8 @@ if (count($colors) < count($itemIds)) {
 
 $paymentMethod = $input['paymentMethod'];
 $shippingMethod = $input['shippingMethod'] ?? 'Customer Pickup'; // Default to Customer Pickup if not provided
-$paymentStatus = in_array($paymentMethod, ['Cash','Check']) ? 'Pending' : 'Received';
+// Payment status defaults to Pending unless it's a verified credit card payment
+$paymentStatus = 'Pending'; // All payments start as Pending until manually verified
 $orderStatus   = in_array($paymentMethod, ['Cash','Check']) ? 'Pending' : 'Processing';
 
 // Generate compact order ID format: [CustomerNum][MonthDay][ShippingCode][RandomNum]

@@ -51,8 +51,8 @@ try {
             'email' => $user['email'],
             'role' => $user['role'],
             'roleType' => $user['role'], // For backward compatibility
-            'firstName' => $user['first_name'] ?? null,
-            'lastName' => $user['last_name'] ?? null
+            'firstName' => $user['firstName'] ?? null,
+            'lastName' => $user['lastName'] ?? null
         ]);
     } else {
         http_response_code(401);

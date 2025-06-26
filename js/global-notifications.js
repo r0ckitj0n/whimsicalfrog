@@ -20,7 +20,7 @@ class WhimsicalFrogNotifications {
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                z-index: 999999;
+                z-index: 2147483648;
                 pointer-events: none;
                 max-width: 420px;
                 width: 100%;

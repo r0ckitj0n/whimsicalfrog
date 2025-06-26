@@ -468,6 +468,9 @@ button.hover\\:bg-indigo-700:hover,
     --input-focus-color: #87ac3a;
     --input-padding: 8px 12px;
     --input-border-radius: 6px;
+    --filter-label-color: #87ac3a;
+    --filter-label-font-weight: 500;
+    --filter-label-font-size: 0.875rem;
     --border-radius-default: 8px;
     --spacing-small: 8px;
     --spacing-medium: 16px;
@@ -571,6 +574,13 @@ button.hover\\:bg-indigo-700:hover,
     outline: none !important;
     border-color: var(--input-focus-color) !important;
     box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.1) !important;
+}
+
+/* Filter Label Class - Global styling for filter labels */
+.filter-label {
+    color: var(--filter_label_color, #87ac3a) !important;
+    font-weight: var(--filter_label_font_weight, 500) !important;
+    font-size: var(--filter_label_font_size, 0.875rem) !important;
 }
 
 /* Text Classes */

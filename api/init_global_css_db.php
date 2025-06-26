@@ -95,6 +95,9 @@ try {
         ['input_border_radius', 'border-radius', '6px', 'forms', 'Input border radius'],
         ['input_padding', 'padding', '8px 12px', 'forms', 'Input padding'],
         ['input_focus_color', 'border-color', '#87ac3a', 'forms', 'Input focus border color'],
+        ['filter_label_color', 'color', '#87ac3a', 'forms', 'Filter label color (From:, To:, Clear)'],
+        ['filter_label_font_weight', 'font-weight', '500', 'forms', 'Filter label font weight'],
+        ['filter_label_font_size', 'font-size', '0.875rem', 'forms', 'Filter label font size'],
         
         // Modals
         ['modal_bg_color', 'background-color', '#ffffff', 'modals', 'Modal background color'],

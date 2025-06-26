@@ -63,8 +63,12 @@ foreach ($ordersData as $order) {
 $formattedRevenue = '$' . number_format($totalRevenue, 2);
 
 // Get current admin user info
-$adminName = ($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '');
-$adminRole = $userData['roleType'] ?? 'Administrator';
+$adminName = trim(($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? ''));
+// If no first/last name, fall back to username
+if (empty($adminName)) {
+    $adminName = $userData['username'] ?? 'Admin';
+}
+$adminRole = $userData['role'] ?? 'Administrator';
 ?>
 
 <div class="admin-dashboard">

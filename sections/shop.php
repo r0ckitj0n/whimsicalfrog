@@ -123,6 +123,46 @@ if (!isset($GLOBALS['marketingHelper'])) {
         opacity: 0.9;
         filter: grayscale(10%);
     }
+
+    /* Modal Scrollbar Styling */
+    .modal-with-scrollbar {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-content-scrollable {
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex: 1;
+        max-height: calc(90vh - 80px); /* Account for header height */
+    }
+
+    /* Custom Scrollbar for Modal */
+    .modal-content-scrollable::-webkit-scrollbar {
+        width: 12px;
+    }
+
+    .modal-content-scrollable::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 6px;
+    }
+
+    .modal-content-scrollable::-webkit-scrollbar-thumb {
+        background: var(--wf-green);
+        border-radius: 6px;
+        border: 2px solid #f1f1f1;
+    }
+
+    .modal-content-scrollable::-webkit-scrollbar-thumb:hover {
+        background: var(--wf-green-light);
+    }
+
+    /* Firefox scrollbar styling */
+    .modal-content-scrollable {
+        scrollbar-width: thin;
+        scrollbar-color: var(--wf-green) #f1f1f1;
+    }
 </style>
 
 <section id="shopPage" class="py-6">
@@ -180,7 +220,17 @@ if (!isset($GLOBALS['marketingHelper'])) {
                 <div class="out-of-stock-badge">Out of Stock</div>
             <?php endif; ?>
             <!-- Sale badge will be added dynamically by JavaScript -->
-            <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full cursor-pointer" onclick="showProductDetails('<?php echo $sku; ?>')">
+                                <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full cursor-pointer product-card" 
+                         onclick="showProductDetails('<?php echo $sku; ?>')"
+                         onmouseenter="showShopPopup(this, {
+                             sku: '<?php echo $sku; ?>',
+                             name: '<?php echo htmlspecialchars($product['name']); ?>',
+                             description: '<?php echo htmlspecialchars($product['description'] ?? ''); ?>',
+                             category: '<?php echo htmlspecialchars($product['category'] ?? ''); ?>',
+                             retailPrice: '<?php echo $product['retailPrice']; ?>',
+                             stockLevel: <?php echo $product['stockLevel'] ?? 0; ?>
+                         })"
+                         onmouseleave="hideShopPopup()">
                 <?php 
                 // Display product images using database-driven system
                 if ($primaryImageData && !empty($primaryImageData['image_path'])) {
@@ -500,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return `
         <!-- Detailed Product Modal -->
         <div id="detailedProductModal" class="modal-overlay" style="display: none;">
-            <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div class="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] shadow-2xl modal-with-scrollbar">
                 <!-- Modal Header -->
                 <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
                     <h2 class="text-2xl font-bold text-gray-800">${item.name}</h2>
@@ -509,187 +559,189 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                 </div>
                 
-                <!-- Modal Content -->
-                <div class="p-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <!-- Left Column - Images -->
-                        <div class="space-y-4">
-                            <!-- Main Image -->
-                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                                ${primaryImage ? 
-                                    `<img id="detailedMainImage" 
-                                         src="${primaryImage.image_path}" 
-                                         alt="${item.name}"
-                                         class="w-full h-full object-cover">` :
-                                    `<div class="w-full h-full flex items-center justify-center text-gray-400">
-                                        <span>No image available</span>
-                                    </div>`
-                                }
-                            </div>
-                            
-                            <!-- Thumbnail Gallery -->
-                            ${images.length > 1 ? `
-                            <div class="grid grid-cols-4 gap-2">
-                                ${images.map((image, index) => `
-                                <div class="aspect-square bg-gray-100 rounded cursor-pointer overflow-hidden border-2 ${index === 0 ? 'border-green-500' : 'border-transparent hover:border-gray-300'}"
-                                     onclick="switchDetailedImage('${image.image_path}', this)">
-                                    <img src="${image.image_path}" 
-                                         alt="${item.name} - View ${index + 1}"
-                                         class="w-full h-full object-cover">
+                <!-- Modal Content with Scrollable Area -->
+                <div class="modal-content-scrollable">
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Left Column - Images -->
+                            <div class="space-y-4">
+                                <!-- Main Image -->
+                                <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                                    ${primaryImage ? 
+                                        `<img id="detailedMainImage" 
+                                             src="${primaryImage.image_path}" 
+                                             alt="${item.name}"
+                                             class="w-full h-full object-cover">` :
+                                        `<div class="w-full h-full flex items-center justify-center text-gray-400">
+                                            <span>No image available</span>
+                                        </div>`
+                                    }
                                 </div>
-                                `).join('')}
-                            </div>
-                            ` : ''}
-                        </div>
-                        
-                        <!-- Right Column - Product Details -->
-                        <div class="space-y-6">
-                            <!-- Basic Info -->
-                            <div>
-                                <div class="text-3xl font-bold text-green-600 mb-2">
-                                    $${parseFloat(item.retailPrice).toFixed(2)}
+                                
+                                <!-- Thumbnail Gallery -->
+                                ${images.length > 1 ? `
+                                <div class="grid grid-cols-4 gap-2">
+                                    ${images.map((image, index) => `
+                                    <div class="aspect-square bg-gray-100 rounded cursor-pointer overflow-hidden border-2 ${index === 0 ? 'border-green-500' : 'border-transparent hover:border-gray-300'}"
+                                         onclick="switchDetailedImage('${image.image_path}', this)">
+                                        <img src="${image.image_path}" 
+                                             alt="${item.name} - View ${index + 1}"
+                                             class="w-full h-full object-cover">
+                                    </div>
+                                    `).join('')}
                                 </div>
-                                ${hasData(item.description) ? `
-                                <p class="text-gray-700 text-lg leading-relaxed">
-                                    ${item.description.replace(/\n/g, '<br>')}
-                                </p>
                                 ` : ''}
                             </div>
                             
-                            <!-- Stock Status -->
-                            <div class="flex items-center space-x-2">
-                                ${item.stockLevel > 0 ? 
-                                    `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                        ✓ In Stock (${item.stockLevel} available)
-                                    </span>` :
-                                    `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                        ✗ Out of Stock
-                                    </span>`
-                                }
-                            </div>
-                            
-                            <!-- Add to Cart Section -->
-                            <div class="border-t pt-4">
-                                <div class="flex items-center space-x-4 mb-4">
-                                    <label class="text-sm font-medium text-gray-700">Quantity:</label>
-                                    <div class="flex items-center border rounded-md">
-                                        <button onclick="adjustDetailedQuantity(-1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">-</button>
-                                        <input type="number" id="detailedQuantity" value="1" min="1" max="${item.stockLevel}" 
-                                               class="w-16 text-center border-0 focus:ring-0">
-                                        <button onclick="adjustDetailedQuantity(1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">+</button>
+                            <!-- Right Column - Product Details -->
+                            <div class="space-y-6">
+                                <!-- Basic Info -->
+                                <div>
+                                    <div class="text-3xl font-bold text-green-600 mb-2">
+                                        $${parseFloat(item.retailPrice).toFixed(2)}
                                     </div>
+                                    ${hasData(item.description) ? `
+                                    <p class="text-gray-700 text-lg leading-relaxed">
+                                        ${item.description.replace(/\n/g, '<br>')}
+                                    </p>
+                                    ` : ''}
                                 </div>
                                 
-                                ${item.stockLevel > 0 ? `
-                                <button onclick="addDetailedToCart('${item.sku}')" 
-                                        class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium text-lg transition-colors">
-                                    Add to Cart
-                                </button>
-                                ` : `
-                                <button disabled class="w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
-                                    Out of Stock
-                                </button>
-                                `}
-                            </div>
-                            
-                            <!-- Detailed Information -->
-                            <div class="border-t pt-6">
-                                <div class="space-y-4">
-                                    ${hasData(item.materials) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Materials</h3>
-                                        <p class="text-gray-700">${item.materials.replace(/\n/g, '<br>')}</p>
-                                    </div>
-                                    ` : ''}
-                                    
-                                    ${(hasData(item.dimensions) || hasData(item.weight)) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Specifications</h3>
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            ${hasData(item.dimensions) ? `
-                                            <div>
-                                                <span class="font-medium text-gray-600">Dimensions:</span>
-                                                <span class="text-gray-700">${item.dimensions}</span>
-                                            </div>
-                                            ` : ''}
-                                            ${hasData(item.weight) ? `
-                                            <div>
-                                                <span class="font-medium text-gray-600">Weight:</span>
-                                                <span class="text-gray-700">${item.weight}</span>
-                                            </div>
-                                            ` : ''}
+                                <!-- Stock Status -->
+                                <div class="flex items-center space-x-2">
+                                    ${item.stockLevel > 0 ? 
+                                        `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                            ✓ In Stock (${item.stockLevel} available)
+                                        </span>` :
+                                        `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                            ✗ Out of Stock
+                                        </span>`
+                                    }
+                                </div>
+                                
+                                <!-- Add to Cart Section -->
+                                <div class="border-t pt-4">
+                                    <div class="flex items-center space-x-4 mb-4">
+                                        <label class="text-sm font-medium text-gray-700">Quantity:</label>
+                                        <div class="flex items-center border rounded-md">
+                                            <button onclick="adjustDetailedQuantity(-1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">-</button>
+                                            <input type="number" id="detailedQuantity" value="1" min="1" max="${item.stockLevel}" 
+                                                   class="w-16 text-center border-0 focus:ring-0">
+                                            <button onclick="adjustDetailedQuantity(1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">+</button>
                                         </div>
                                     </div>
-                                    ` : ''}
                                     
-                                    ${hasData(item.features) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Features</h3>
-                                        <p class="text-gray-700">${item.features.replace(/\n/g, '<br>')}</p>
-                                    </div>
-                                    ` : ''}
-                                    
-                                    ${(hasData(item.color_options) || hasData(item.size_options)) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Available Options</h3>
-                                        <div class="space-y-2">
-                                            ${hasData(item.color_options) ? `
-                                            <div>
-                                                <span class="font-medium text-gray-600">Colors:</span>
-                                                <span class="text-gray-700">${item.color_options}</span>
-                                            </div>
-                                            ` : ''}
-                                            ${hasData(item.size_options) ? `
-                                            <div>
-                                                <span class="font-medium text-gray-600">Sizes:</span>
-                                                <span class="text-gray-700">${item.size_options}</span>
-                                            </div>
-                                            ` : ''}
+                                    ${item.stockLevel > 0 ? `
+                                    <button onclick="addDetailedToCart('${item.sku}')" 
+                                            class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium text-lg transition-colors">
+                                        Add to Cart
+                                    </button>
+                                    ` : `
+                                    <button disabled class="w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
+                                        Out of Stock
+                                    </button>
+                                    `}
+                                </div>
+                                
+                                <!-- Detailed Information -->
+                                <div class="border-t pt-6">
+                                    <div class="space-y-4">
+                                        ${hasData(item.materials) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Materials</h3>
+                                            <p class="text-gray-700">${item.materials.replace(/\n/g, '<br>')}</p>
                                         </div>
+                                        ` : ''}
+                                        
+                                        ${(hasData(item.dimensions) || hasData(item.weight)) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Specifications</h3>
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                ${hasData(item.dimensions) ? `
+                                                <div>
+                                                    <span class="font-medium text-gray-600">Dimensions:</span>
+                                                    <span class="text-gray-700">${item.dimensions}</span>
+                                                </div>
+                                                ` : ''}
+                                                ${hasData(item.weight) ? `
+                                                <div>
+                                                    <span class="font-medium text-gray-600">Weight:</span>
+                                                    <span class="text-gray-700">${item.weight}</span>
+                                                </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${hasData(item.features) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Features</h3>
+                                            <p class="text-gray-700">${item.features.replace(/\n/g, '<br>')}</p>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${(hasData(item.color_options) || hasData(item.size_options)) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Available Options</h3>
+                                            <div class="space-y-2">
+                                                ${hasData(item.color_options) ? `
+                                                <div>
+                                                    <span class="font-medium text-gray-600">Colors:</span>
+                                                    <span class="text-gray-700">${item.color_options}</span>
+                                                </div>
+                                                ` : ''}
+                                                ${hasData(item.size_options) ? `
+                                                <div>
+                                                    <span class="font-medium text-gray-600">Sizes:</span>
+                                                    <span class="text-gray-700">${item.size_options}</span>
+                                                </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${hasData(item.technical_details) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Technical Details</h3>
+                                            <p class="text-gray-700">${item.technical_details.replace(/\n/g, '<br>')}</p>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${hasData(item.care_instructions) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Care Instructions</h3>
+                                            <p class="text-gray-700">${item.care_instructions.replace(/\n/g, '<br>')}</p>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${hasData(item.customization_options) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Customization</h3>
+                                            <p class="text-gray-700">${item.customization_options.replace(/\n/g, '<br>')}</p>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${hasData(item.usage_tips) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Usage Tips</h3>
+                                            <p class="text-gray-700">${item.usage_tips.replace(/\n/g, '<br>')}</p>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${hasData(item.production_time) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Production Time</h3>
+                                            <p class="text-gray-700">${item.production_time}</p>
+                                        </div>
+                                        ` : ''}
+                                        
+                                        ${hasData(item.warranty_info) ? `
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Warranty</h3>
+                                            <p class="text-gray-700">${item.warranty_info}</p>
+                                        </div>
+                                        ` : ''}
                                     </div>
-                                    ` : ''}
-                                    
-                                    ${hasData(item.technical_details) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Technical Details</h3>
-                                        <p class="text-gray-700">${item.technical_details.replace(/\n/g, '<br>')}</p>
-                                    </div>
-                                    ` : ''}
-                                    
-                                    ${hasData(item.care_instructions) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Care Instructions</h3>
-                                        <p class="text-gray-700">${item.care_instructions.replace(/\n/g, '<br>')}</p>
-                                    </div>
-                                    ` : ''}
-                                    
-                                    ${hasData(item.customization_options) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Customization</h3>
-                                        <p class="text-gray-700">${item.customization_options.replace(/\n/g, '<br>')}</p>
-                                    </div>
-                                    ` : ''}
-                                    
-                                    ${hasData(item.usage_tips) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Usage Tips</h3>
-                                        <p class="text-gray-700">${item.usage_tips.replace(/\n/g, '<br>')}</p>
-                                    </div>
-                                    ` : ''}
-                                    
-                                    ${hasData(item.production_time) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Production Time</h3>
-                                        <p class="text-gray-700">${item.production_time}</p>
-                                    </div>
-                                    ` : ''}
-                                    
-                                    ${hasData(item.warranty_info) ? `
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Warranty</h3>
-                                        <p class="text-gray-700">${item.warranty_info}</p>
-                                    </div>
-                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -787,6 +839,183 @@ document.addEventListener('DOMContentLoaded', function() {
     window.closeDetailedModal = closeDetailedModal;
     window.showDetailedModal = showDetailedModal;
     
+    // Shop popup system variables
+    let shopCurrentProduct = null;
+    let shopPopupTimeout = null;
+    let shopPopupOpen = false;
+    let shopIsShowingPopup = false;
+    let shopLastShowTime = 0;
+
+    function showShopPopup(element, product) {
+        const now = Date.now();
+        
+        // Debounce rapid calls (prevent multiple calls within 100ms)
+        if (now - shopLastShowTime < 100) {
+            return;
+        }
+        shopLastShowTime = now;
+        
+        // Prevent rapid re-triggering of same popup (anti-flashing protection)
+        if (shopCurrentProduct && shopCurrentProduct.sku === product.sku && shopIsShowingPopup) {
+            clearTimeout(shopPopupTimeout);
+            return;
+        }
+        
+        clearTimeout(shopPopupTimeout);
+        shopCurrentProduct = product;
+        shopIsShowingPopup = true;
+        shopPopupOpen = true;
+
+        const popup = document.getElementById('shopProductPopup');
+        const popupImage = popup.querySelector('.popup-image-enhanced');
+        const popupCategory = popup.querySelector('.popup-category-enhanced');
+        const popupTitle = popup.querySelector('.popup-title-enhanced');
+        const popupSku = popup.querySelector('.popup-sku');
+        const popupStock = popup.querySelector('.popup-stock');
+        const popupDescription = popup.querySelector('.popup-description-enhanced');
+        const popupPrice = popup.querySelector('.popup-price-enhanced');
+        const popupAddBtn = popup.querySelector('.popup-add-btn-enhanced');
+        const popupDetailsBtn = popup.querySelector('.popup-details-btn-enhanced');
+
+        // Get the image URL - use SKU-based system
+        const imageUrl = `images/items/${product.sku}A.png`;
+
+        // Populate popup content
+        popupImage.src = imageUrl;
+        popupImage.onerror = function() {
+            this.src = 'images/items/placeholder.png';
+            this.onerror = null;
+        };
+        
+        popupCategory.textContent = product.category ?? 'Category';
+        popupTitle.textContent = product.name ?? 'Item Name';
+        popupSku.textContent = `SKU: ${product.sku}`;
+        
+        // Display stock information with color coding
+        const stockLevel = product.stockLevel || 0;
+        const stockText = stockLevel > 0 ? `${stockLevel} in stock` : 'Out of stock';
+        const stockColor = stockLevel > 10 ? '#22c55e' : stockLevel > 0 ? '#f59e0b' : '#ef4444';
+        popupStock.textContent = stockText;
+        popupStock.style.color = stockColor;
+        popupStock.style.fontWeight = '600';
+        
+        popupDescription.textContent = product.description ?? 'No description available';
+        
+        // Set price
+        popupPrice.textContent = `$${parseFloat(product.retailPrice).toFixed(2)}`;
+
+        // Better positioning relative to the element
+        const rect = element.getBoundingClientRect();
+        const shopContainer = document.querySelector('.shop-container') || document.body;
+        const containerRect = shopContainer.getBoundingClientRect();
+
+        let left = rect.left - containerRect.left + rect.width + 10;
+        let top = rect.top - containerRect.top - 50;
+
+        // Show popup temporarily to get actual dimensions
+        popup.style.display = 'block';
+        popup.style.opacity = '';
+        popup.classList.add('show');
+
+        const popupRect = popup.getBoundingClientRect();
+        const popupWidth = popupRect.width;
+        const popupHeight = popupRect.height;
+
+        // Reset for measurement
+        popup.style.display = '';
+
+        // Adjust if popup would go off screen horizontally
+        if (left + popupWidth > window.innerWidth) {
+            left = rect.left - containerRect.left - popupWidth - 10;
+        }
+        
+        // Adjust if popup would go off screen vertically (top)
+        if (top < 0) {
+            top = rect.top - containerRect.top + rect.height + 10;
+        }
+        
+        // Adjust if popup would go off screen vertically (bottom)
+        if (top + popupHeight > window.innerHeight) {
+            const topAbove = rect.top - containerRect.top - popupHeight - 10;
+            if (topAbove >= 0) {
+                top = topAbove;
+            } else {
+                top = window.innerHeight - popupHeight - 20;
+                if (top < 0) {
+                    top = 10;
+                }
+            }
+        }
+
+        popup.style.left = left + 'px';
+        popup.style.top = top + 'px';
+
+        // Clear any inline styles that might interfere and show the popup
+        popup.style.opacity = '';
+        popup.classList.add('show');
+
+        // Add to cart functionality
+        popupAddBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            popup.classList.remove('show');
+            
+            if (typeof window.cart !== 'undefined') {
+                window.cart.addItem({
+                    id: product.sku,
+                    name: product.name,
+                    price: parseFloat(product.retailPrice),
+                    image: imageUrl,
+                    quantity: 1
+                });
+                
+                // Show confirmation
+                const customAlert = document.getElementById('customAlertBox');
+                const customAlertMessage = document.getElementById('customAlertMessage');
+                customAlertMessage.textContent = `${product.name} added to your cart!`;
+                customAlert.style.display = 'block';
+                
+                setTimeout(() => {
+                    customAlert.style.display = 'none';
+                }, 5000);
+            } else {
+                console.error('Cart functionality not available');
+            }
+        };
+        
+        // View details functionality
+        popupDetailsBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            popup.classList.remove('show');
+            showProductDetails(product.sku);
+        };
+    }
+
+    function hideShopPopup() {
+        // Clear any existing timeout
+        clearTimeout(shopPopupTimeout);
+        
+        // Add a small delay before hiding to allow moving mouse to popup
+        shopPopupTimeout = setTimeout(() => {
+            hideShopPopupImmediate();
+        }, 200);
+    }
+
+    function hideShopPopupImmediate() {
+        const popup = document.getElementById('shopProductPopup');
+        if (popup) {
+            popup.classList.remove('show');
+            shopPopupOpen = false;
+            shopIsShowingPopup = false;
+            shopCurrentProduct = null;
+        }
+    }
+
+    // Make shop popup functions globally available
+    window.showShopPopup = showShopPopup;
+    window.hideShopPopup = hideShopPopup;
+
     // Check for sales and display sale prices on page load
     setTimeout(() => {
         // Check for sales on all product prices
@@ -797,6 +1026,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100);
 });
 </script>
+
+<!-- Enhanced Product Popup for Shop -->
+<div id="shopProductPopup" class="product-popup-enhanced">
+    <div class="popup-content-enhanced">
+        <img class="popup-image-enhanced" src="" alt="">
+        <div class="popup-details-enhanced">
+            <div class="popup-title-enhanced"></div>
+            <div class="popup-category-enhanced"></div>
+            <div class="popup-sku" style="font-size: 12px; color: #888; margin-bottom: 4px; font-family: monospace;"></div>
+            <div class="popup-stock" style="font-size: 12px; margin-bottom: 8px;"></div>
+            <div class="popup-description-enhanced"></div>
+            <div class="popup-price-enhanced"></div>
+            <div class="popup-actions-enhanced">
+                <button class="popup-add-btn-enhanced">Add to Cart</button>
+                <button class="popup-details-btn-enhanced">View Details</button>
+                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Placeholder for detailed modal (will be dynamically created) -->
 <div id="detailedModalContainer"></div>

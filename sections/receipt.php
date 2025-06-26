@@ -258,6 +258,26 @@ $pending = ($order['paymentStatus'] === 'Pending');
     font-size: 24pt !important;
   }
   
+  /* Logo styling for print */
+  .receipt-container img {
+    max-height: 80px !important;
+    width: auto !important;
+    display: block !important;
+  }
+  
+  /* Company header layout for print */
+  .receipt-container .flex {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Website URL styling for print */
+  .receipt-container .text-\[#87ac3a\] {
+    color: #87ac3a !important;
+    font-weight: 600 !important;
+  }
+  
   /* Ensure alert boxes are visible in print */
   .bg-yellow-100,
   .bg-green-100 {
@@ -273,16 +293,18 @@ $pending = ($order['paymentStatus'] === 'Pending');
     <!-- Company Header -->
     <div class="text-center mb-8 border-b pb-6">
         <div class="flex justify-center items-center mb-4">
-            <img src="images/logo.png" alt="Whimsical Frog Crafts Logo" class="h-16 w-auto mr-4" onerror="this.style.display='none'">
+            <img src="images/WhimsicalFrog_Logo.webp" alt="Whimsical Frog Crafts Logo" class="h-20 w-auto mr-4" 
+                 onerror="this.src='images/WhimsicalFrog_Logo.png'">
             <div>
                 <h1 class="text-3xl font-bold text-[#87ac3a]">Whimsical Frog Crafts</h1>
-                <p class="text-lg text-gray-600 italic">Enchanted Treasures</p>
+                <p class="text-lg text-gray-600 italic">Custom Crafts & Personalized Gifts</p>
             </div>
         </div>
         <div class="text-sm text-gray-600">
             <p><strong>Lisa Lemley</strong></p>
             <p>1524 Red Oak Flats Rd</p>
             <p>Dahlonega, GA 30533</p>
+            <p class="mt-1 text-[#87ac3a] font-medium">whimsicalfrog.us</p>
         </div>
     </div>
 

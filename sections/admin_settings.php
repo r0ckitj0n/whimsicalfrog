@@ -1,6 +1,7 @@
 <?php
 // Admin settings page - Authentication is now handled by index.php
 ?>
+
 <style>
   .admin-data-label {
     color: #222 !important;
@@ -10,188 +11,447 @@
     font-weight: bold;
   }
   
-  /* Left-align all admin settings buttons */
-  .admin-settings-container button {
-    text-align: left !important;
-    justify-content: flex-start !important;
+  /* Modern Settings Page Styling */
+  .settings-page {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    min-height: 100vh;
+    padding: 2rem 1rem;
   }
   
-  .admin-settings-container button svg {
-    flex-shrink: 0;
+  .settings-header {
+    text-align: center;
+    margin-bottom: 3rem;
   }
-
+  
+  .settings-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1e293b, #475569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+  
+  .settings-subtitle {
+    color: #64748b;
+    font-size: 1.1rem;
+    font-weight: 400;
+  }
+  
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .settings-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .settings-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .section-header {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: white;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .section-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+  }
+  
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .section-description {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .section-content {
+    padding: 1.5rem;
+  }
+  
+  .settings-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: white;
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  
+  .settings-button:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateX(4px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .settings-button:last-child {
+    margin-bottom: 0;
+  }
+  
+  .button-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+    color: #6366f1;
+  }
+  
+  .button-text {
+    flex: 1;
+    text-align: left;
+  }
+  
+  .button-badge {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  /* Section-specific color themes */
+  .content-section .section-header {
+    background: linear-gradient(135deg, #059669, #10b981);
+  }
+  
+  .content-section .button-icon {
+    color: #059669;
+  }
+  
+  .visual-section .section-header {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  }
+  
+  .visual-section .button-icon {
+    color: #7c3aed;
+  }
+  
+  .business-section .section-header {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+  }
+  
+  .business-section .button-icon {
+    color: #dc2626;
+  }
+  
+  .communication-section .section-header {
+    background: linear-gradient(135deg, #ea580c, #f97316);
+  }
+  
+  .communication-section .button-icon {
+    color: #ea580c;
+  }
+  
+  .technical-section .section-header {
+    background: linear-gradient(135deg, #0369a1, #0284c7);
+  }
+  
+  .technical-section .button-icon {
+    color: #0369a1;
+  }
+  
+  .integration-section .section-header {
+    background: linear-gradient(135deg, #7c2d12, #9a3412);
+  }
+  
+  .integration-section .button-icon {
+    color: #7c2d12;
+  }
+  
+  /* Special styling for disabled/coming soon items */
+  .settings-button:disabled,
+  .settings-button.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f9fafb;
+  }
+  
+  .settings-button:disabled:hover,
+  .settings-button.disabled:hover {
+    transform: none;
+    background: #f9fafb;
+    box-shadow: none;
+  }
+  
+  .coming-soon-notice {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    color: #92400e;
+    font-size: 0.875rem;
+  }
+  
+  .coming-soon-notice strong {
+    color: #78350f;
+  }
 </style>
 
+<div class="settings-page">
 
-
-<!-- Admin Settings Grid Layout -->
-<div class="admin-settings-container grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+  <div class="settings-grid">
     
-    <!-- Content Management -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <div class="space-y-2">
-            <button id="categoriesBtn" onclick="openCategoriesModal()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                </svg>
-                Categories
-            </button>
-            <button id="roomsBtn" onclick="openRoomSettingsModal()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
-                </svg>
-                Room Settings
-            </button>
-            <button id="roomCategoryBtn" onclick="openRoomCategoryManagerModal()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-                Room-Category Links
-            </button>
-        </div>
+    <!-- Content Management Section -->
+    <div class="settings-section content-section">
+      <div class="section-header">
+        <h2 class="section-title">Content Management</h2>
+        <p class="section-description">Organize products, categories, and room content</p>
+      </div>
+      <div class="section-content">
+        <button id="categoriesBtn" onclick="openCategoriesModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+          </svg>
+          <span class="button-text">Categories</span>
+        </button>
+        
+        <button id="roomsBtn" onclick="openRoomSettingsModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+          </svg>
+          <span class="button-text">Room Settings</span>
+        </button>
+        
+        <button id="roomCategoryBtn" onclick="openRoomCategoryManagerModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <span class="button-text">Room-Category Links</span>
+        </button>
+        
+        <button id="templateManagerBtn" onclick="openTemplateManagerModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span class="button-text">Template Manager</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Room & Visual Tools -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <div class="space-y-2">
-            <button onclick="openRoomMapperModal()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                </svg>
-                Room Mapper
-            </button>
-            <button onclick="openBackgroundManagerModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Background Manager
-            </button>
-            <button onclick="openAreaItemMapperModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                </svg>
-                Area-Item Mapper
-            </button>
-        </div>
+    <!-- Visual & Design Section -->
+    <div class="settings-section visual-section">
+      <div class="section-header">
+        <h2 class="section-title">Visual & Design</h2>
+        <p class="section-description">Customize appearance and interactive elements</p>
+      </div>
+      <div class="section-content">
+        <button id="globalCSSBtn" onclick="openGlobalCSSModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
+          </svg>
+          <span class="button-text">Global CSS Rules</span>
+        </button>
+        
+        <button id="backgroundManagerBtn" onclick="openBackgroundManagerModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span class="button-text">Background Manager</span>
+        </button>
+        
+        <button id="roomMapperBtn" onclick="openRoomMapperModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+          </svg>
+          <span class="button-text">Room Mapper</span>
+        </button>
+        
+        <button id="areaItemMapperBtn" onclick="openAreaItemMapperModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+          </svg>
+          <span class="button-text">Area-Item Mapper</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Business & Design -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <div class="space-y-2">
-            <button id="aiSettingsBtn" onclick="openAISettingsModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-                AI Settings
-            </button>
-            <button id="globalCSSBtn" onclick="openGlobalCSSModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
-                </svg>
-                Global CSS Rules
-            </button>
-            <button onclick="openTemplateManagerModal()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Template Manager
-            </button>
-            <button onclick="openWebsiteConfigModal()" class="w-full bg-teal-500 hover:bg-teal-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                </svg>
-                Website Configuration
-            </button>
-            <button onclick="openAnalyticsModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                Analytics & Insights
-            </button>
-            <button onclick="openSalesAdminModal()" class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
-                </svg>
-                Sales Admin
-            </button>
-            <button onclick="openCartButtonTextModal()" class="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0L12 13m0 0l2.5 5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"></path>
-                </svg>
-                Cart Button Text
-            </button>
-        </div>
+    <!-- Business & Analytics Section -->
+    <div class="settings-section business-section">
+      <div class="section-header">
+        <h2 class="section-title">Business & Analytics</h2>
+        <p class="section-description">Manage sales, promotions, and business insights</p>
+      </div>
+      <div class="section-content">
+        <button id="websiteConfigBtn" onclick="openWebsiteConfigModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          </svg>
+          <span class="button-text">Website Configuration</span>
+        </button>
+        
+        <button id="analyticsBtn" onclick="openAnalyticsModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          <span class="button-text">Analytics & Insights</span>
+        </button>
+        
+        <button id="salesAdminBtn" onclick="openSalesAdminModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
+          </svg>
+          <span class="button-text">Sales Administration</span>
+        </button>
+        
+        <button id="cartButtonTextBtn" onclick="openCartButtonTextModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0L12 13m0 0l2.5 5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"></path>
+          </svg>
+          <span class="button-text">Cart Button Text</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Email & Communications -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <div class="space-y-2">
-            <button onclick="openEmailConfigModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                </svg>
-                Email Configuration
-            </button>
-            <button onclick="openEmailHistoryModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Email History
-            </button>
-            <button onclick="fixSampleEmail()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium" id="fixSampleEmailBtn">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                </svg>
-                Fix Sample Email
-            </button>
-        </div>
+    <!-- Communication Section -->
+    <div class="settings-section communication-section">
+      <div class="section-header">
+        <h2 class="section-title">Communication</h2>
+        <p class="section-description">Email configuration and customer messaging</p>
+      </div>
+      <div class="section-content">
+        <button id="emailConfigBtn" onclick="openEmailConfigModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+          <span class="button-text">Email Configuration</span>
+        </button>
+        
+        <button id="emailHistoryBtn" onclick="openEmailHistoryModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="button-text">Email History</span>
+        </button>
+        
+        <button onclick="fixSampleEmail()" class="settings-button" id="fixSampleEmailBtn">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          </svg>
+          <span class="button-text">Fix Sample Email</span>
+        </button>
+      </div>
     </div>
 
-    <!-- System & Technical -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <div class="space-y-2">
-            <button onclick="openSystemConfigModal()" class="w-full btn-primary px-3 py-2 rounded text-sm font-medium">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                </svg>
-                System Reference
-            </button>
-            <button onclick="openFileExplorerModal()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
-                </svg>
-                File Explorer
-            </button>
-            <button onclick="openDatabaseTablesModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-                Database Tables
-            </button>
-            <button onclick="openDatabaseMaintenanceModal()" class="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                </svg>
-                Database Maintenance
-            </button>
-        </div>
+    <!-- Technical & System Section -->
+    <div class="settings-section technical-section">
+      <div class="section-header">
+        <h2 class="section-title">Technical & System</h2>
+        <p class="section-description">System management and technical configuration</p>
+      </div>
+      <div class="section-content">
+        <button id="systemConfigBtn" onclick="openSystemConfigModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+          </svg>
+          <span class="button-text">System Reference</span>
+        </button>
+        
+        <button id="databaseTablesBtn" onclick="openDatabaseTablesModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <span class="button-text">Database Tables</span>
+        </button>
+        
+        <button id="fileExplorerBtn" onclick="openFileExplorerModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+          </svg>
+          <span class="button-text">File Explorer</span>
+        </button>
+        
+        <button onclick="openHelpHintsModal()" id="help-hints-btn" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="button-text">Help Hints Management</span>
+        </button>
+        
+        <button id="databaseMaintenanceBtn" onclick="openDatabaseMaintenanceModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+          </svg>
+          <span class="button-text">Database Maintenance</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Payment Integration -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <div class="space-y-2">
-            <div class="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded text-sm">
-                <strong>Coming Soon:</strong> Square payment integration for online credit card processing.
-            </div>
-            <button type="button" class="w-full bg-gray-400 text-white px-3 py-2 rounded text-sm font-medium cursor-not-allowed flex items-center text-left" disabled>
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                Configure Square (Coming Soon)
-            </button>
+    <!-- AI & Automation Section -->
+    <div class="settings-section integration-section">
+      <div class="section-header">
+        <h2 class="section-title">AI & Automation</h2>
+        <p class="section-description">Artificial intelligence and automated features</p>
+      </div>
+      <div class="section-content">
+        <button id="aiSettingsBtn" onclick="openAISettingsModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+          <span class="button-text">AI Settings</span>
+        </button>
+        
+        <div class="coming-soon-notice">
+          <strong>Square Integration:</strong> Synchronize your store items with Square for seamless payment processing and inventory management.
         </div>
+        
+        <button id="squareSettingsBtn" onclick="openSquareSettingsModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+          <span class="button-text">Configure Square</span>
+        </button>
+        
+        <button id="receiptSettingsBtn" onclick="openReceiptSettingsModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span class="button-text">Receipt Messages</span>
+        </button>
+      </div>
     </div>
 
+  </div>
 </div>
 
 
@@ -648,28 +908,34 @@ function generateDatabaseMaintenanceHTML(data) {
                 Database Tables & Structure (${data.total_active} Active + ${data.total_backup} Backup)
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                ${Object.entries(data.organized).map(([category, tables]) => {
+                ${Object.entries(data.organized || {}).map(([category, tables]) => {
                     const categoryLabels = {
-                        'core_tables': '🏗️ Core Tables',
+                        'core_ecommerce': '🛒 Core E-commerce',
                         'user_management': '👥 User Management', 
-                        'inventory_cost': '💰 Inventory Cost',
+                        'inventory_cost': '💰 Inventory & Cost',
                         'product_categories': '🏷️ Product Categories',
                         'room_management': '🏠 Room Management',
                         'email_system': '📧 Email System',
                         'business_config': '⚙️ Business Config',
-                        'social_media': '📱 Social Media'
+                        'marketing_social': '📱 Marketing & Social',
+                        'help_system': '❓ Help System',
+                        'integrations': '🔌 Integrations',
+                        'analytics_receipts': '📊 Analytics & Receipts',
+                        'styling_theme': '🎨 Styling & Theme',
+                        'content_data': '📄 Content & Data',
+                        'other': '📁 Other'
                     };
                     
                     return `
                         <div class="bg-transparent rounded p-3 border border-purple-200">
                             <h5 class="font-semibold text-purple-700 mb-2 text-xs">${categoryLabels[category] || category}</h5>
                             <ul class="space-y-1">
-                                ${Object.entries(tables).map(([table, exists]) => 
+                                ${Object.entries(tables).map(([table, info]) => 
                                     `<li>
                                         <button onclick="viewTable('${table}')" 
                                                 class="text-left w-full hover:bg-purple-100 rounded px-1 py-0.5 transition-colors">
                                             <code class="bg-transparent border border-purple-200 px-1 py-0.5 rounded text-xs">${table}</code> 
-                                            ${exists ? '✅' : '❌'}
+                                            <span class="text-xs text-gray-500">(${info.row_count} rows, ${info.field_count} fields)</span>
                                         </button>
                                     </li>`
                                 ).join('')}
@@ -7562,33 +7828,54 @@ function renderGlobalCSSRules(groupedRules) {
         rules.forEach(rule => {
             const friendlyName = getFriendlyName(rule.rule_name);
             const isColor = rule.css_property.includes('color');
+            const isModalPosition = rule.rule_name === 'modal_close_position';
+            
+            let inputHTML = '';
+            if (isModalPosition) {
+                inputHTML = `
+                    <select class="css-rule-input w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                            data-rule-id="${rule.id}"
+                            data-property="${rule.css_property}">
+                        <option value="top-right" ${rule.css_value === 'top-right' ? 'selected' : ''}>Top Right (Default)</option>
+                        <option value="top-left" ${rule.css_value === 'top-left' ? 'selected' : ''}>Top Left</option>
+                        <option value="top-center" ${rule.css_value === 'top-center' ? 'selected' : ''}>Top Center</option>
+                        <option value="bottom-right" ${rule.css_value === 'bottom-right' ? 'selected' : ''}>Bottom Right</option>
+                        <option value="bottom-left" ${rule.css_value === 'bottom-left' ? 'selected' : ''}>Bottom Left</option>
+                    </select>
+                `;
+            } else if (isColor) {
+                inputHTML = `
+                    <div class="flex items-center space-x-3">
+                        <input type="color" 
+                               class="w-12 h-8 border border-gray-300 rounded cursor-pointer" 
+                               value="${rule.css_value.startsWith('#') ? rule.css_value : '#87ac3a'}"
+                               onchange="updateColorValue(this, ${rule.id})">
+                        <input type="text" 
+                               class="css-rule-input flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                               data-rule-id="${rule.id}"
+                               data-property="${rule.css_property}"
+                               value="${rule.css_value}"
+                               placeholder="#87ac3a">
+                        <div class="w-8 h-8 rounded border border-gray-300" style="background-color: ${rule.css_value}"></div>
+                    </div>
+                `;
+            } else {
+                inputHTML = `
+                    <input type="text" 
+                           class="css-rule-input w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                           data-rule-id="${rule.id}"
+                           data-property="${rule.css_property}"
+                           value="${rule.css_value}"
+                           placeholder="${getPlaceholder(rule.css_property)}">
+                `;
+            }
             
             html += `
                 <div class="bg-white rounded-lg p-3 border border-white/50">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         ${friendlyName}
                     </label>
-                    ${isColor ? 
-                        `<div class="flex items-center space-x-3">
-                            <input type="color" 
-                                   class="w-12 h-8 border border-gray-300 rounded cursor-pointer" 
-                                   value="${rule.css_value.startsWith('#') ? rule.css_value : '#87ac3a'}"
-                                   onchange="updateColorValue(this, ${rule.id})">
-                            <input type="text" 
-                                   class="css-rule-input flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
-                                   data-rule-id="${rule.id}"
-                                   data-property="${rule.css_property}"
-                                   value="${rule.css_value}"
-                                   placeholder="#87ac3a">
-                            <div class="w-8 h-8 rounded border border-gray-300" style="background-color: ${rule.css_value}"></div>
-                        </div>` :
-                        `<input type="text" 
-                               class="css-rule-input w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                               data-rule-id="${rule.id}"
-                               data-property="${rule.css_property}"
-                               value="${rule.css_value}"
-                               placeholder="${getPlaceholder(rule.css_property)}">`
-                    }
+                    ${inputHTML}
                     <div class="text-xs text-gray-500 mt-1">${getHelpText(rule.rule_name)}</div>
                 </div>
             `;
@@ -7677,7 +7964,17 @@ function getFriendlyName(ruleName) {
         'spacing_medium': 'Medium Spacing', 
         'spacing_large': 'Large Spacing',
         'border_radius_default': 'Default Roundness',
-        'shadow_default': 'Default Shadow'
+        'shadow_default': 'Default Shadow',
+        // Modal Close Button Settings
+        'modal_close_position': 'Close Button Position',
+        'modal_close_top': 'Distance from Top',
+        'modal_close_right': 'Distance from Right',
+        'modal_close_left': 'Distance from Left',
+        'modal_close_size': 'Button Size',
+        'modal_close_font_size': 'X Symbol Size',
+        'modal_close_color': 'Button Color',
+        'modal_close_hover_color': 'Hover Color',
+        'modal_close_bg_hover': 'Hover Background'
     };
     
     return friendlyNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -7709,7 +8006,17 @@ function getHelpText(ruleName) {
         'input_border_color': 'Border color for form inputs',
         'nav_bg_color': 'Background color of navigation menu',
         'modal_bg_color': 'Background color of popup windows',
-        'spacing_medium': 'Standard spacing between elements'
+        'spacing_medium': 'Standard spacing between elements',
+        // Modal Close Button Help
+        'modal_close_position': 'Choose where the X close button appears in modals',
+        'modal_close_top': 'How far from the top edge (e.g., 10px)',
+        'modal_close_right': 'How far from the right edge (e.g., 15px)',
+        'modal_close_left': 'How far from the left edge (e.g., 15px)',
+        'modal_close_size': 'Size of the clickable close button (e.g., 30px)',
+        'modal_close_font_size': 'Size of the X symbol (e.g., 24px)',
+        'modal_close_color': 'Color of the X close button',
+        'modal_close_hover_color': 'Color when hovering over the X',
+        'modal_close_bg_hover': 'Background color when hovering'
     };
     
     return helpTexts[ruleName] || 'Customize this style property';
@@ -7770,6 +8077,11 @@ async function saveGlobalCSSRules() {
             
             // Reload CSS variables for all elements
             await loadAndInjectGlobalCSS();
+            
+            // Update modal close button positioning if the function exists
+            if (typeof updateModalClosePositioning === 'function') {
+                updateModalClosePositioning();
+            }
             
             // Show success message
             showAlert('CSS rules updated successfully!', 'success');
@@ -10050,7 +10362,7 @@ async function saveCartButtonTexts(texts) {
 <div id="databaseTablesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
     <div class="bg-white shadow-xl w-full h-full overflow-hidden">
         <div class="flex justify-between items-center p-4 border-b bg-gray-100">
-            <h2 class="text-xl font-semibold text-gray-800">🗄️ Database Tables Management - Full Screen</h2>
+            <h2 class="text-xl font-semibold text-gray-800">🗄️ Database Tables Management</h2>
             <button onclick="closeDatabaseTablesModal()" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -10070,15 +10382,15 @@ async function saveCartButtonTexts(texts) {
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0">
                 <!-- Tab Navigation -->
-                <div class="border-b bg-white">
-                    <nav class="flex space-x-8 px-6">
-                        <button onclick="switchDatabaseTab('data')" class="db-tab py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+                <div class="border-b bg-gray-100">
+                    <nav class="flex space-x-1 px-6 pt-2">
+                        <button onclick="switchDatabaseTab('data')" class="db-tab px-6 py-3 font-medium text-sm rounded-t-lg bg-white border-t border-l border-r border-gray-300 text-blue-600 shadow-sm">
                             Table Data
                         </button>
-                        <button onclick="switchDatabaseTab('query')" class="db-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <button onclick="switchDatabaseTab('query')" class="db-tab px-6 py-3 font-medium text-sm rounded-t-lg bg-gray-50 border-t border-l border-r border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800">
                             Query Tool
                         </button>
-                        <button onclick="switchDatabaseTab('docs')" class="db-tab py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <button onclick="switchDatabaseTab('docs')" class="db-tab px-6 py-3 font-medium text-sm rounded-t-lg bg-gray-50 border-t border-l border-r border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800">
                             Documentation
                         </button>
                     </nav>
@@ -10173,13 +10485,13 @@ async function saveCartButtonTexts(texts) {
                     </div>
                     
                     <!-- Documentation Tab -->
-                    <div id="db-docs-tab" class="db-tab-content h-full p-4 db-scrollable" style="display: none; overflow-y: auto;">
-                        <div class="mb-4 flex-shrink-0">
+                    <div id="db-docs-tab" class="db-tab-content h-full flex flex-col" style="display: none;">
+                        <div class="mb-4 flex-shrink-0 p-4 border-b bg-gray-50">
                             <h3 class="text-lg font-semibold text-gray-800 mb-2">Database Documentation</h3>
                             <p class="text-sm text-gray-600">Documentation for all database tables and their fields.</p>
                         </div>
                         
-                        <div id="tableDocumentation" class="flex-1">
+                        <div id="tableDocumentation" class="flex-1 p-4 overflow-y-auto" style="max-height: calc(100vh - 200px);">
                             <!-- Documentation will be loaded here -->
                         </div>
                     </div>
@@ -11229,21 +11541,1423 @@ async function loadDocumentation() {
 
 // Switch database tabs
 function switchDatabaseTab(tab) {
-    // Update tab buttons
+    // Update tab buttons - remove active styling from all tabs
     document.querySelectorAll('.db-tab').forEach(btn => {
-        btn.classList.remove('border-blue-500', 'text-blue-600');
-        btn.classList.add('border-transparent', 'text-gray-500');
+        btn.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+        btn.classList.add('bg-gray-50', 'text-gray-600');
     });
-    document.querySelector(`[onclick="switchDatabaseTab('${tab}')"]`).classList.remove('border-transparent', 'text-gray-500');
-    document.querySelector(`[onclick="switchDatabaseTab('${tab}')"]`).classList.add('border-blue-500', 'text-blue-600');
+    
+    // Add active styling to selected tab
+    const activeTab = document.querySelector(`[onclick="switchDatabaseTab('${tab}')"]`);
+    activeTab.classList.remove('bg-gray-50', 'text-gray-600');
+    activeTab.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
     
     // Show/hide content
     document.querySelectorAll('.db-tab-content').forEach(content => {
         content.style.display = 'none';
     });
-    document.getElementById(`db-${tab}-tab`).style.display = 'block';
+    
+    const targetContent = document.getElementById(`db-${tab}-tab`);
+    if (tab === 'docs') {
+        targetContent.style.display = 'flex'; // Use flex for documentation tab
+    } else {
+        targetContent.style.display = 'block';
+    }
+    
+    // Load documentation if switching to docs tab
+    if (tab === 'docs') {
+        loadDocumentation();
+    }
 }
 
 // ===== END DATABASE TABLES FUNCTIONALITY =====
 
+// ===== HELP HINTS MANAGEMENT FUNCTIONALITY =====
+
+// Global variables for help hints
+let helpHintsData = [];
+let currentEditingHint = null;
+
+// Open Help Hints Management Modal
+function openHelpHintsModal() {
+    document.getElementById('helpHintsModal').style.display = 'flex';
+    initializeHelpHintsDB();
+}
+
+// Close Help Hints Management Modal
+function closeHelpHintsModal() {
+    document.getElementById('helpHintsModal').style.display = 'none';
+    currentEditingHint = null;
+}
+
+// Initialize help hints database and load data
+async function initializeHelpHintsDB() {
+    try {
+        // Initialize the database table
+        const initResponse = await fetch('/api/init_help_tooltips_db.php');
+        const initData = await initResponse.json();
+        
+        if (initData.success) {
+            console.log('Help hints database initialized:', initData.message);
+            await loadHelpHintsData();
+            await loadHelpHintsStats();
+        } else {
+            console.error('Failed to initialize help hints database:', initData.message);
+            showToast('error', 'Failed to initialize help hints database');
+        }
+    } catch (error) {
+        console.error('Error initializing help hints database:', error);
+        showToast('error', 'Error initializing help hints database');
+    }
+}
+
+// Load help hints data
+async function loadHelpHintsData() {
+    try {
+        const response = await fetch('/api/help_tooltips.php?action=list_all');
+        const data = await response.json();
+        
+        if (data.success) {
+            helpHintsData = data.tooltips;
+            renderHelpHintsTable();
+            populatePageFilter();
+        } else {
+            console.error('Failed to load help hints:', data.message);
+            showToast('error', 'Failed to load help hints');
+        }
+    } catch (error) {
+        console.error('Error loading help hints:', error);
+        showToast('error', 'Error loading help hints');
+    }
+}
+
+// Load help hints statistics
+async function loadHelpHintsStats() {
+    try {
+        const response = await fetch('/api/help_tooltips.php?action=get_stats');
+        const data = await response.json();
+        
+        if (data.success) {
+            const stats = data.stats;
+            document.getElementById('totalHintsCount').textContent = stats.total_tooltips;
+            document.getElementById('activeHintsCount').textContent = stats.active_tooltips;
+            document.getElementById('inactiveHintsCount').textContent = stats.inactive_tooltips;
+            document.getElementById('uniquePagesCount').textContent = stats.unique_pages;
+            
+            // Update global enabled status
+            const globalEnabled = data.global_enabled !== undefined ? data.global_enabled : true;
+            document.getElementById('globalTooltipsEnabled').checked = globalEnabled;
+            document.getElementById('globalTooltipsStatus').textContent = globalEnabled ? 'Enabled' : 'Disabled';
+            document.getElementById('globalTooltipsStatus').className = globalEnabled ? 
+                'text-sm font-medium text-green-700' : 'text-sm font-medium text-red-700';
+        }
+    } catch (error) {
+        console.error('Error loading help hints stats:', error);
+    }
+}
+
+// Render help hints table
+function renderHelpHintsTable() {
+    const tbody = document.getElementById('helpHintsTableBody');
+    const filter = document.getElementById('pageContextFilter').value;
+    
+    let filteredData = helpHintsData;
+    if (filter) {
+        filteredData = helpHintsData.filter(hint => hint.page_context === filter);
+    }
+    
+    tbody.innerHTML = '';
+    
+    filteredData.forEach(hint => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        
+        const statusBadge = hint.is_active ? 
+            '<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Active</span>' :
+            '<span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Inactive</span>';
+        
+        row.innerHTML = `
+            <td class="px-4 py-2 text-sm">${hint.element_id}</td>
+            <td class="px-4 py-2 text-sm">${hint.page_context}</td>
+            <td class="px-4 py-2 text-sm font-medium">${hint.title}</td>
+            <td class="px-4 py-2 text-sm text-gray-600 max-w-xs truncate">${hint.content}</td>
+            <td class="px-4 py-2 text-sm">
+                <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">${hint.position}</span>
+            </td>
+            <td class="px-4 py-2 text-sm">${statusBadge}</td>
+            <td class="px-4 py-2 text-sm text-gray-500">${new Date(hint.updated_at).toLocaleDateString()}</td>
+            <td class="px-4 py-2 text-sm">
+                <div class="flex space-x-1">
+                    <button onclick="editHelpHint(${hint.id})" class="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
+                    <button onclick="toggleHelpHint(${hint.id})" class="text-${hint.is_active ? 'orange' : 'green'}-600 hover:text-${hint.is_active ? 'orange' : 'green'}-800 text-xs">
+                        ${hint.is_active ? 'Disable' : 'Enable'}
+                    </button>
+                    <button onclick="deleteHelpHint(${hint.id})" class="text-red-600 hover:text-red-800 text-xs">Delete</button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+// Populate page filter dropdown
+function populatePageFilter() {
+    const select = document.getElementById('pageContextFilter');
+    const pages = [...new Set(helpHintsData.map(hint => hint.page_context))].sort();
+    
+    select.innerHTML = '<option value="">All Pages</option>';
+    pages.forEach(page => {
+        const option = document.createElement('option');
+        option.value = page;
+        option.textContent = page;
+        select.appendChild(option);
+    });
+}
+
+// Filter help hints by page
+function filterHelpHints() {
+    renderHelpHintsTable();
+}
+
+// Show create/edit form
+function showHelpHintForm(hintId = null) {
+    const form = document.getElementById('helpHintForm');
+    const title = document.getElementById('formTitle');
+    
+    if (hintId) {
+        // Edit mode
+        const hint = helpHintsData.find(h => h.id === hintId);
+        if (hint) {
+            title.textContent = 'Edit Help Hint';
+            document.getElementById('hintElementId').value = hint.element_id;
+            document.getElementById('hintPageContext').value = hint.page_context;
+            document.getElementById('hintTitle').value = hint.title;
+            document.getElementById('hintContent').value = hint.content;
+            document.getElementById('hintPosition').value = hint.position;
+            document.getElementById('hintIsActive').checked = hint.is_active;
+            currentEditingHint = hintId;
+        }
+    } else {
+        // Create mode
+        title.textContent = 'Create New Help Hint';
+        document.getElementById('hintElementId').value = '';
+        document.getElementById('hintPageContext').value = '';
+        document.getElementById('hintTitle').value = '';
+        document.getElementById('hintContent').value = '';
+        document.getElementById('hintPosition').value = 'top';
+        document.getElementById('hintIsActive').checked = true;
+        currentEditingHint = null;
+    }
+    
+    form.style.display = 'block';
+}
+
+// Hide create/edit form
+function hideHelpHintForm() {
+    document.getElementById('helpHintForm').style.display = 'none';
+    currentEditingHint = null;
+}
+
+// Edit help hint
+function editHelpHint(hintId) {
+    showHelpHintForm(hintId);
+}
+
+// Save help hint (create or update)
+async function saveHelpHint() {
+    const elementId = document.getElementById('hintElementId').value.trim();
+    const pageContext = document.getElementById('hintPageContext').value.trim();
+    const title = document.getElementById('hintTitle').value.trim();
+    const content = document.getElementById('hintContent').value.trim();
+    const position = document.getElementById('hintPosition').value;
+    const isActive = document.getElementById('hintIsActive').checked;
+    
+    if (!elementId || !pageContext || !title || !content) {
+        showToast('error', 'Please fill in all required fields');
+        return;
+    }
+    
+    const data = {
+        element_id: elementId,
+        page_context: pageContext,
+        title: title,
+        content: content,
+        position: position,
+        is_active: isActive
+    };
+    
+    try {
+        let url = '/api/help_tooltips.php';
+        let action = 'create';
+        
+        if (currentEditingHint) {
+            action = 'update';
+            data.id = currentEditingHint;
+        }
+        
+        const response = await fetch(`${url}?action=${action}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', result.message);
+            hideHelpHintForm();
+            await loadHelpHintsData();
+            await loadHelpHintsStats();
+        } else {
+            showToast('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error saving help hint:', error);
+        showToast('error', 'Error saving help hint');
+    }
+}
+
+// Toggle help hint active status
+async function toggleHelpHint(hintId) {
+    try {
+        const response = await fetch('/api/help_tooltips.php?action=toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: hintId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', result.message);
+            await loadHelpHintsData();
+            await loadHelpHintsStats();
+        } else {
+            showToast('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error toggling help hint:', error);
+        showToast('error', 'Error toggling help hint');
+    }
+}
+
+// Delete help hint
+async function deleteHelpHint(hintId) {
+    if (!confirm('Are you sure you want to delete this help hint?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/help_tooltips.php?action=delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: hintId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', result.message);
+            await loadHelpHintsData();
+            await loadHelpHintsStats();
+        } else {
+            showToast('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error deleting help hint:', error);
+        showToast('error', 'Error deleting help hint');
+    }
+}
+
+// Bulk toggle hints for a page
+async function bulkToggleHints() {
+    const pageContext = document.getElementById('pageContextFilter').value;
+    const action = document.getElementById('bulkAction').value;
+    
+    if (!pageContext) {
+        showToast('error', 'Please select a page to perform bulk actions');
+        return;
+    }
+    
+    if (!action) {
+        showToast('error', 'Please select a bulk action');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/help_tooltips.php?action=bulk_toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                page_context: pageContext,
+                active: action === 'activate'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', result.message);
+            await loadHelpHintsData();
+            await loadHelpHintsStats();
+        } else {
+            showToast('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error performing bulk action:', error);
+        showToast('error', 'Error performing bulk action');
+    }
+}
+
+// Export help hints
+async function exportHelpHints() {
+    try {
+        const response = await fetch('/api/help_tooltips.php?action=export');
+        const blob = await response.blob();
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'help_tooltips_export.json';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showToast('success', 'Help hints exported successfully');
+    } catch (error) {
+        console.error('Error exporting help hints:', error);
+        showToast('error', 'Error exporting help hints');
+    }
+}
+
+// Import help hints
+async function importHelpHints() {
+    const fileInput = document.getElementById('importFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showToast('error', 'Please select a file to import');
+        return;
+    }
+    
+    try {
+        const text = await file.text();
+        const tooltips = JSON.parse(text);
+        
+        const response = await fetch('/api/help_tooltips.php?action=import', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tooltips: tooltips })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', result.message);
+            await loadHelpHintsData();
+            await loadHelpHintsStats();
+            fileInput.value = '';
+        } else {
+            showToast('error', result.message);
+        }
+    } catch (error) {
+        console.error('Error importing help hints:', error);
+        showToast('error', 'Error importing help hints: Invalid file format');
+    }
+}
+
+// Toggle global tooltips enabled/disabled
+async function toggleGlobalTooltips() {
+    const enabled = document.getElementById('globalTooltipsEnabled').checked;
+    
+    try {
+        const response = await fetch('/api/help_tooltips.php?action=set_global_enabled', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ enabled: enabled })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', result.message);
+            
+            // Update status display
+            document.getElementById('globalTooltipsStatus').textContent = enabled ? 'Enabled' : 'Disabled';
+            document.getElementById('globalTooltipsStatus').className = enabled ? 
+                'text-sm font-medium text-green-700' : 'text-sm font-medium text-red-700';
+            
+            // If tooltips were disabled, inform user about page refresh
+            if (!enabled) {
+                showToast('info', 'Tooltips disabled globally. Refresh the page to see changes.');
+            }
+        } else {
+            showToast('error', result.message);
+            // Revert the checkbox state
+            document.getElementById('globalTooltipsEnabled').checked = !enabled;
+        }
+    } catch (error) {
+        console.error('Error toggling global tooltips:', error);
+        showToast('error', 'Error updating global tooltip setting');
+        // Revert the checkbox state
+        document.getElementById('globalTooltipsEnabled').checked = !enabled;
+    }
+}
+
+// ===== END HELP HINTS MANAGEMENT FUNCTIONALITY =====
+
+</script>
+
+<!-- Help Hints Management Modal -->
+<div id="helpHintsModal" class="admin-modal-overlay" style="display: none;" onclick="closeHelpHintsModal()">
+    <div class="bg-white shadow-xl w-full h-full flex flex-col" onclick="event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <div>
+                <h2 class="text-2xl font-bold">💡 Help Hints Management</h2>
+                <p class="text-purple-100 text-sm mt-1">Manage hover tooltips for admin interface elements</p>
+            </div>
+            <button onclick="closeHelpHintsModal()" class="text-white hover:text-purple-200 text-3xl font-bold">&times;</button>
+        </div>
+
+        <!-- Global Settings -->
+        <div class="p-6 bg-yellow-50 border-b border-yellow-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">🌐 Global Tooltip Settings</h3>
+                    <p class="text-sm text-gray-600">Control tooltip system globally across the entire admin interface</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm font-medium text-gray-700">Tooltips Globally:</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="globalTooltipsEnabled" class="sr-only peer" onchange="toggleGlobalTooltips()">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                    <span id="globalTooltipsStatus" class="text-sm font-medium text-gray-700">Enabled</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Dashboard -->
+        <div class="p-6 bg-gray-50 border-b">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <div class="text-2xl font-bold text-blue-600" id="totalHintsCount">0</div>
+                    <div class="text-sm text-gray-600">Total Hints</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <div class="text-2xl font-bold text-green-600" id="activeHintsCount">0</div>
+                    <div class="text-sm text-gray-600">Active Hints</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <div class="text-2xl font-bold text-red-600" id="inactiveHintsCount">0</div>
+                    <div class="text-sm text-gray-600">Inactive Hints</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <div class="text-2xl font-bold text-purple-600" id="uniquePagesCount">0</div>
+                    <div class="text-sm text-gray-600">Unique Pages</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="p-6 bg-white border-b">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Page Filter -->
+                <div class="flex items-center space-x-2">
+                    <label for="pageContextFilter" class="text-sm font-medium text-gray-700">Filter by Page:</label>
+                    <select id="pageContextFilter" onchange="filterHelpHints()" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <option value="">All Pages</option>
+                    </select>
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="flex items-center space-x-2">
+                    <select id="bulkAction" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <option value="">Bulk Actions</option>
+                        <option value="activate">Activate All</option>
+                        <option value="deactivate">Deactivate All</option>
+                    </select>
+                    <button onclick="bulkToggleHints()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm">
+                        Apply
+                    </button>
+                </div>
+
+                <!-- Create New -->
+                <button onclick="showHelpHintForm()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Create New Hint
+                </button>
+
+                <!-- Import/Export -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="exportHelpHints()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
+                        Export
+                    </button>
+                    <div class="relative">
+                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importHelpHints()">
+                        <button onclick="document.getElementById('importFile').click()" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md text-sm">
+                            Import
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Help Hints Table -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-6">
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Element ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Page</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="helpHintsTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create/Edit Form -->
+            <div id="helpHintForm" class="w-96 bg-gray-50 border-l border-gray-200 overflow-y-auto" style="display: none;">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 id="formTitle" class="text-lg font-semibold text-gray-800">Create New Help Hint</h3>
+                        <button onclick="hideHelpHintForm()" class="text-gray-500 hover:text-gray-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); saveHelpHint();" class="space-y-4">
+                        <!-- Element ID -->
+                        <div>
+                            <label for="hintElementId" class="block text-sm font-medium text-gray-700 mb-1">
+                                Element ID <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="hintElementId" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="e.g., save-btn, categories-btn">
+                            <p class="text-xs text-gray-500 mt-1">The HTML element ID to attach the tooltip to</p>
+                        </div>
+
+                        <!-- Page Context -->
+                        <div>
+                            <label for="hintPageContext" class="block text-sm font-medium text-gray-700 mb-1">
+                                Page Context <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="hintPageContext" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="e.g., settings, inventory, orders">
+                            <p class="text-xs text-gray-500 mt-1">Page or section where this hint appears (use 'common' for all pages)</p>
+                        </div>
+
+                        <!-- Title -->
+                        <div>
+                            <label for="hintTitle" class="block text-sm font-medium text-gray-700 mb-1">
+                                Title <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="hintTitle" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                   placeholder="Brief title for the tooltip">
+                        </div>
+
+                        <!-- Content -->
+                        <div>
+                            <label for="hintContent" class="block text-sm font-medium text-gray-700 mb-1">
+                                Content <span class="text-red-500">*</span>
+                            </label>
+                            <textarea id="hintContent" required rows="4"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                      placeholder="Detailed explanation of what this element does..."></textarea>
+                        </div>
+
+                        <!-- Position -->
+                        <div>
+                            <label for="hintPosition" class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                            <select id="hintPosition" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="top">Top</option>
+                                <option value="bottom">Bottom</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="flex items-center">
+                            <input type="checkbox" id="hintIsActive" checked class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <label for="hintIsActive" class="ml-2 block text-sm text-gray-700">Active</label>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="flex space-x-3 pt-4">
+                            <button type="submit" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium">
+                                Save Hint
+                            </button>
+                            <button type="button" onclick="hideHelpHintForm()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Help Section -->
+                    <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-2">💡 Tips for Creating Help Hints</h4>
+                        <ul class="text-xs text-blue-700 space-y-1">
+                            <li>• Use descriptive Element IDs that match your HTML</li>
+                            <li>• Keep titles short and descriptive</li>
+                            <li>• Write clear, helpful content explaining the element's purpose</li>
+                            <li>• Use 'common' as page context for hints that appear on all pages</li>
+                            <li>• Test different positions to find the best placement</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Square Settings Modal -->
+<div id="squareSettingsModal" class="modal-overlay" style="display: none;">
+    <div class="admin-modal-content" style="max-width: 800px;">
+        <div class="admin-modal-header">
+            <h2>Square Integration Settings</h2>
+            <button onclick="closeSquareSettingsModal()" class="close-button">×</button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- Connection Status -->
+            <div class="mb-6 p-4 rounded-lg" id="squareConnectionStatus">
+                <div class="flex items-center">
+                    <div id="connectionIndicator" class="w-3 h-3 rounded-full bg-red-500 mr-3"></div>
+                    <span id="connectionText" class="font-medium">Not Connected</span>
+                </div>
+            </div>
+
+            <!-- Configuration Form -->
+            <form id="squareConfigForm" class="space-y-6">
+                <!-- Environment Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Environment</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="environment" value="sandbox" checked class="mr-2">
+                            <span>Sandbox (Testing)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="environment" value="production" class="mr-2">
+                            <span>Production (Live)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Application ID -->
+                <div>
+                    <label for="squareAppId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Application ID <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="squareAppId" name="app_id" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                           placeholder="Enter your Square Application ID">
+                    <p class="text-xs text-gray-500 mt-1">Found in your Square Developer Dashboard</p>
+                </div>
+
+                <!-- Access Token -->
+                <div>
+                    <label for="squareAccessToken" class="block text-sm font-medium text-gray-700 mb-2">
+                        Access Token <span class="text-red-500">*</span>
+                    </label>
+                    <input type="password" id="squareAccessToken" name="access_token" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                           placeholder="Enter your Square Access Token">
+                    <p class="text-xs text-gray-500 mt-1">Keep this secure - it provides access to your Square account</p>
+                </div>
+
+                <!-- Location ID -->
+                <div>
+                    <label for="squareLocationId" class="block text-sm font-medium text-gray-700 mb-2">
+                        Location ID
+                    </label>
+                    <input type="text" id="squareLocationId" name="location_id"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                           placeholder="Will be auto-detected after connection">
+                    <p class="text-xs text-gray-500 mt-1">Leave blank to use your default location</p>
+                </div>
+
+                <!-- Sync Options -->
+                <div class="border-t pt-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Synchronization Options</h3>
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="syncPrices" name="sync_prices" checked class="mr-2">
+                            <span>Sync item prices to Square</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" id="syncInventory" name="sync_inventory" checked class="mr-2">
+                            <span>Sync inventory levels to Square</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" id="syncDescriptions" name="sync_descriptions" class="mr-2">
+                            <span>Sync item descriptions to Square</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" id="autoSync" name="auto_sync" class="mr-2">
+                            <span>Enable automatic synchronization (every hour)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Test Connection Button -->
+                <div class="border-t pt-6">
+                    <button type="button" onclick="testSquareConnection()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md mr-3">
+                        Test Connection
+                    </button>
+                    <span id="connectionResult" class="text-sm"></span>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button onclick="saveSquareSettings()" class="btn-primary">Save Settings</button>
+            <button onclick="syncItemsToSquare()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md mr-3">
+                Sync Items Now
+            </button>
+            <button onclick="closeSquareSettingsModal()" class="btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Square Settings Modal Functions
+function openSquareSettingsModal() {
+    document.getElementById("squareSettingsModal").style.display = "flex";
+    loadSquareSettings();
+}
+
+function closeSquareSettingsModal() {
+    document.getElementById("squareSettingsModal").style.display = "none";
+}
+
+async function loadSquareSettings() {
+    try {
+        const response = await fetch("/api/square_settings.php?action=get_settings");
+        const data = await response.json();
+        
+        if (data.success) {
+            const settings = data.settings;
+            
+            // Populate form fields
+            document.querySelector(`input[name="environment"][value="${settings.environment || "sandbox"}"]`).checked = true;
+            document.getElementById("squareAppId").value = settings.app_id || "";
+            document.getElementById("squareAccessToken").value = settings.access_token || "";
+            document.getElementById("squareLocationId").value = settings.location_id || "";
+            
+            // Sync options
+            document.getElementById("syncPrices").checked = settings.sync_prices !== false;
+            document.getElementById("syncInventory").checked = settings.sync_inventory !== false;
+            document.getElementById("syncDescriptions").checked = settings.sync_descriptions === true;
+            document.getElementById("autoSync").checked = settings.auto_sync === true;
+            
+            // Update connection status
+            updateConnectionStatus(settings.is_connected, settings.last_sync);
+        }
+    } catch (error) {
+        console.error("Error loading Square settings:", error);
+        showToast("Error loading Square settings", "error");
+    }
+}
+
+async function saveSquareSettings() {
+    const formData = new FormData(document.getElementById("squareConfigForm"));
+    
+    // Add checkbox values
+    formData.append("sync_prices", document.getElementById("syncPrices").checked);
+    formData.append("sync_inventory", document.getElementById("syncInventory").checked);
+    formData.append("sync_descriptions", document.getElementById("syncDescriptions").checked);
+    formData.append("auto_sync", document.getElementById("autoSync").checked);
+    
+    try {
+        const response = await fetch("/api/square_settings.php?action=save_settings", {
+            method: "POST",
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast("Square settings saved successfully!", "success");
+            updateConnectionStatus(data.is_connected, data.last_sync);
+        } else {
+            showToast(data.message || "Error saving settings", "error");
+        }
+    } catch (error) {
+        console.error("Error saving Square settings:", error);
+        showToast("Error saving Square settings", "error");
+    }
+}
+
+async function testSquareConnection() {
+    const resultElement = document.getElementById("connectionResult");
+    resultElement.textContent = "Testing connection...";
+    resultElement.className = "text-sm text-blue-600";
+    
+    try {
+        const response = await fetch("/api/square_settings.php?action=test_connection", {
+            method: "POST"
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultElement.textContent = `✓ Connected successfully! Location: ${data.location_name}`;
+            resultElement.className = "text-sm text-green-600";
+            
+            // Auto-fill location ID if not set
+            if (data.location_id && !document.getElementById("squareLocationId").value) {
+                document.getElementById("squareLocationId").value = data.location_id;
+            }
+        } else {
+            resultElement.textContent = `✗ Connection failed: ${data.message}`;
+            resultElement.className = "text-sm text-red-600";
+        }
+    } catch (error) {
+        console.error("Error testing connection:", error);
+        resultElement.textContent = "✗ Connection test failed";
+        resultElement.className = "text-sm text-red-600";
+    }
+}
+
+async function syncItemsToSquare() {
+    if (!confirm("This will sync all your store items to Square. Continue?")) {
+        return;
+    }
+    
+    try {
+        const response = await fetch("/api/square_settings.php?action=sync_items", {
+            method: "POST"
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(`Successfully synced ${data.synced_count} items to Square!`, "success");
+            updateConnectionStatus(true, new Date().toISOString());
+        } else {
+            showToast(data.message || "Error syncing items", "error");
+        }
+    } catch (error) {
+        console.error("Error syncing items:", error);
+        showToast("Error syncing items to Square", "error");
+    }
+}
+
+function updateConnectionStatus(isConnected, lastSync) {
+    const indicator = document.getElementById("connectionIndicator");
+    const text = document.getElementById("connectionText");
+    const status = document.getElementById("squareConnectionStatus");
+    
+    if (isConnected) {
+        indicator.className = "w-3 h-3 rounded-full bg-green-500 mr-3";
+        text.textContent = "Connected to Square";
+        status.className = "mb-6 p-4 rounded-lg bg-green-50 border border-green-200";
+        
+        if (lastSync) {
+            const syncDate = new Date(lastSync).toLocaleString();
+            text.textContent += ` (Last sync: ${syncDate})`;
+        }
+    } else {
+        indicator.className = "w-3 h-3 rounded-full bg-red-500 mr-3";
+        text.textContent = "Not Connected";
+        status.className = "mb-6 p-4 rounded-lg bg-red-50 border border-red-200";
+    }
+}
+</script>
+
+<!-- Receipt Settings Modal -->
+<div id="receiptSettingsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Receipt Message Settings</h2>
+            <button onclick="closeReceiptSettingsModal()" class="close-button">×</button>
+        </div>
+        
+        <div class="modal-body">
+            <p class="text-gray-600 mb-6">Customize receipt messages based on shipping method, item count, and categories. Messages will use your selected AI style and tone.</p>
+            
+            <!-- Settings Tabs -->
+            <div class="receipt-settings-tabs mb-6">
+                <button class="receipt-tab active" data-tab="shipping">Shipping Methods</button>
+                <button class="receipt-tab" data-tab="items">Item Count</button>
+                <button class="receipt-tab" data-tab="categories">Categories</button>
+                <button class="receipt-tab" data-tab="default">Default</button>
+            </div>
+            
+            <!-- Shipping Method Settings -->
+            <div id="shippingTab" class="receipt-tab-content active">
+                <h3 class="text-lg font-semibold mb-4">Shipping Method Messages</h3>
+                <div id="shippingMessages" class="space-y-4">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+                <button onclick="addShippingMessage()" class="btn-secondary mt-4">Add Shipping Method</button>
+            </div>
+            
+            <!-- Item Count Settings -->
+            <div id="itemsTab" class="receipt-tab-content">
+                <h3 class="text-lg font-semibold mb-4">Item Count Messages</h3>
+                <div id="itemCountMessages" class="space-y-4">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+                <button onclick="addItemCountMessage()" class="btn-secondary mt-4">Add Item Count Rule</button>
+            </div>
+            
+            <!-- Category Settings -->
+            <div id="categoriesTab" class="receipt-tab-content">
+                <h3 class="text-lg font-semibold mb-4">Category-Specific Messages</h3>
+                <div id="categoryMessages" class="space-y-4">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+                <button onclick="addCategoryMessage()" class="btn-secondary mt-4">Add Category Message</button>
+            </div>
+            
+            <!-- Default Settings -->
+            <div id="defaultTab" class="receipt-tab-content">
+                <h3 class="text-lg font-semibold mb-4">Default Message</h3>
+                <div id="defaultMessages" class="space-y-4">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="saveReceiptSettings()" class="btn-primary">Save Settings</button>
+            <button onclick="initializeReceiptDefaults()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md mr-3">Initialize Defaults</button>
+            <button onclick="closeReceiptSettingsModal()" class="btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.receipt-settings-tabs {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.receipt-tab {
+    padding: 12px 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: #6b7280;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.receipt-tab.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+
+.receipt-tab:hover {
+    color: #3b82f6;
+    background-color: #f9fafb;
+}
+
+.receipt-tab-content {
+    display: none;
+    padding: 20px 0;
+}
+
+.receipt-tab-content.active {
+    display: block;
+}
+
+.receipt-message-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    background: #f9fafb;
+}
+
+.receipt-message-item.ai-generated {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.receipt-message-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.receipt-message-controls button {
+    padding: 6px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.receipt-message-controls button:hover {
+    background: #f3f4f6;
+}
+
+.receipt-message-controls .btn-ai {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.receipt-message-controls .btn-ai:hover {
+    background: #2563eb;
+}
+
+.receipt-message-controls .btn-delete {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+.receipt-message-controls .btn-delete:hover {
+    background: #dc2626;
+}
+</style>
+
+<script>
+// Receipt Settings Modal Functions
+let receiptSettingsData = {};
+
+function openReceiptSettingsModal() {
+    document.getElementById('receiptSettingsModal').style.display = 'flex';
+    loadReceiptSettings();
+}
+
+function closeReceiptSettingsModal() {
+    document.getElementById('receiptSettingsModal').style.display = 'none';
+}
+
+// Tab switching
+document.addEventListener('DOMContentLoaded', function() {
+    const receiptTabs = document.querySelectorAll('.receipt-tab');
+    receiptTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            switchReceiptTab(tabName);
+        });
+    });
+});
+
+function switchReceiptTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.receipt-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.receipt-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tabName}Tab`).classList.add('active');
+}
+
+async function loadReceiptSettings() {
+    try {
+        const response = await fetch('/api/receipt_settings.php?action=get_settings');
+        const data = await response.json();
+        
+        if (data.success) {
+            receiptSettingsData = data.settings;
+            renderReceiptSettings();
+        } else {
+            showToast('Error loading receipt settings: ' + data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error loading receipt settings:', error);
+        showToast('Error loading receipt settings', 'error');
+    }
+}
+
+function renderReceiptSettings() {
+    renderShippingMessages();
+    renderItemCountMessages();
+    renderCategoryMessages();
+    renderDefaultMessages();
+}
+
+function renderShippingMessages() {
+    const container = document.getElementById('shippingMessages');
+    const messages = receiptSettingsData.shipping_method || [];
+    
+    container.innerHTML = messages.map(msg => createMessageHTML(msg, 'shipping_method')).join('');
+}
+
+function renderItemCountMessages() {
+    const container = document.getElementById('itemCountMessages');
+    const messages = receiptSettingsData.item_count || [];
+    
+    container.innerHTML = messages.map(msg => createMessageHTML(msg, 'item_count')).join('');
+}
+
+function renderCategoryMessages() {
+    const container = document.getElementById('categoryMessages');
+    const messages = receiptSettingsData.item_category || [];
+    
+    container.innerHTML = messages.map(msg => createMessageHTML(msg, 'item_category')).join('');
+}
+
+function renderDefaultMessages() {
+    const container = document.getElementById('defaultMessages');
+    const messages = receiptSettingsData.default || [];
+    
+    container.innerHTML = messages.map(msg => createMessageHTML(msg, 'default')).join('');
+}
+
+function createMessageHTML(message, type) {
+    const aiClass = message.ai_generated ? 'ai-generated' : '';
+    const aiLabel = message.ai_generated ? '<span class="text-xs text-blue-600 font-medium">🤖 AI Generated</span>' : '';
+    
+    return `
+        <div class="receipt-message-item ${aiClass}" data-id="${message.id}">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <strong>${message.condition_value}</strong>
+                    ${aiLabel}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Title:</label>
+                <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md" 
+                       value="${message.message_title}" 
+                       onchange="updateMessageField(${message.id}, 'message_title', this.value)">
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Message:</label>
+                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="3"
+                          onchange="updateMessageField(${message.id}, 'message_content', this.value)">${message.message_content}</textarea>
+            </div>
+            
+            <div class="receipt-message-controls">
+                <button onclick="generateAIMessage(${message.id}, '${type}')" class="btn-ai">
+                    🤖 Generate with AI
+                </button>
+                <button onclick="deleteReceiptMessage(${message.id})" class="btn-delete">
+                    Delete
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function updateMessageField(id, field, value) {
+    // Find and update the message in our data
+    for (let type in receiptSettingsData) {
+        const messages = receiptSettingsData[type];
+        const message = messages.find(m => m.id === id);
+        if (message) {
+            message[field] = value;
+            break;
+        }
+    }
+}
+
+async function generateAIMessage(id, type) {
+    // Find the message
+    let message = null;
+    for (let settingType in receiptSettingsData) {
+        const messages = receiptSettingsData[settingType];
+        message = messages.find(m => m.id === id);
+        if (message) break;
+    }
+    
+    if (!message) return;
+    
+    const context = {
+        setting_type: type,
+        condition_key: message.condition_key,
+        condition_value: message.condition_value
+    };
+    
+    try {
+        const response = await fetch('/api/receipt_settings.php?action=generate_ai_message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ context })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            message.message_title = data.message.title;
+            message.message_content = data.message.content;
+            message.ai_generated = data.ai_generated;
+            
+            renderReceiptSettings();
+            showToast('AI message generated successfully!', 'success');
+        } else {
+            showToast('Error generating AI message: ' + data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error generating AI message:', error);
+        showToast('Error generating AI message', 'error');
+    }
+}
+
+async function saveReceiptSettings() {
+    const settingsToSave = [];
+    
+    // Collect all settings
+    for (let type in receiptSettingsData) {
+        settingsToSave.push(...receiptSettingsData[type]);
+    }
+    
+    try {
+        const response = await fetch('/api/receipt_settings.php?action=update_settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings: settingsToSave })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Receipt settings saved successfully!', 'success');
+        } else {
+            showToast('Error saving settings: ' + data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving receipt settings:', error);
+        showToast('Error saving receipt settings', 'error');
+    }
+}
+
+async function initializeReceiptDefaults() {
+    if (!confirm('This will initialize default receipt messages. Continue?')) return;
+    
+    try {
+        const response = await fetch('/api/receipt_settings.php?action=init_defaults', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Default settings initialized!', 'success');
+            loadReceiptSettings();
+        } else {
+            showToast('Error initializing defaults: ' + data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error initializing defaults:', error);
+        showToast('Error initializing defaults', 'error');
+    }
+}
+
+// Add new message functions
+function addShippingMessage() {
+    const method = prompt('Enter shipping method name:');
+    if (!method) return;
+    
+    const newMessage = {
+        id: Date.now(),
+        setting_type: 'shipping_method',
+        condition_key: 'method',
+        condition_value: method,
+        message_title: 'New Shipping Message',
+        message_content: 'Your order will be processed according to the selected shipping method.',
+        ai_generated: false
+    };
+    
+    receiptSettingsData.shipping_method = receiptSettingsData.shipping_method || [];
+    receiptSettingsData.shipping_method.push(newMessage);
+    renderShippingMessages();
+}
+
+function addItemCountMessage() {
+    const count = prompt('Enter item count (e.g., "1" for single item, "multiple" for multiple items):');
+    if (!count) return;
+    
+    const newMessage = {
+        id: Date.now(),
+        setting_type: 'item_count',
+        condition_key: 'count',
+        condition_value: count,
+        message_title: 'New Item Count Message',
+        message_content: 'Your order is being processed.',
+        ai_generated: false
+    };
+    
+    receiptSettingsData.item_count = receiptSettingsData.item_count || [];
+    receiptSettingsData.item_count.push(newMessage);
+    renderItemCountMessages();
+}
+
+function addCategoryMessage() {
+    const category = prompt('Enter category name:');
+    if (!category) return;
+    
+    const newMessage = {
+        id: Date.now(),
+        setting_type: 'item_category',
+        condition_key: 'category',
+        condition_value: category,
+        message_title: 'New Category Message',
+        message_content: 'Your custom items are being prepared.',
+        ai_generated: false
+    };
+    
+    receiptSettingsData.item_category = receiptSettingsData.item_category || [];
+    receiptSettingsData.item_category.push(newMessage);
+    renderCategoryMessages();
+}
+
+function deleteReceiptMessage(id) {
+    if (!confirm('Delete this message?')) return;
+    
+    // Remove from data
+    for (let type in receiptSettingsData) {
+        receiptSettingsData[type] = receiptSettingsData[type].filter(m => m.id !== id);
+    }
+    
+    renderReceiptSettings();
+}
 </script>

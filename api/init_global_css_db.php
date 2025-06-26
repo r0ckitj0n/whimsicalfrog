@@ -124,7 +124,18 @@ try {
         ['admin_modal_header_bg_gradient', 'background', 'linear-gradient(to right, #87ac3a, #a3cc4a)', 'admin_modals', 'Admin modal header gradient'],
         ['admin_modal_header_text', 'color', '#ffffff', 'admin_modals', 'Admin modal header text color'],
         ['admin_modal_sales_header_bg', 'background', 'linear-gradient(to right, #87ac3a, #a3cc4a)', 'admin_modals', 'Sales admin modal header gradient'],
-        ['brand_bg_text_color', 'color', '#ffffff', 'brand', 'Text color when background uses brand colors']
+        ['brand_bg_text_color', 'color', '#ffffff', 'brand', 'Text color when background uses brand colors'],
+        
+        // Modal Close Button System
+        ['modal_close_position', '--modal-close-position', 'top-right', 'modal_close', 'Position of the X close button in modals'],
+        ['modal_close_top', '--modal-close-top', '10px', 'modal_close', 'Distance from top edge of modal'],
+        ['modal_close_right', '--modal-close-right', '15px', 'modal_close', 'Distance from right edge of modal'],
+        ['modal_close_left', '--modal-close-left', '15px', 'modal_close', 'Distance from left edge of modal'],
+        ['modal_close_size', '--modal-close-size', '30px', 'modal_close', 'Size of the close button'],
+        ['modal_close_font_size', '--modal-close-font-size', '24px', 'modal_close', 'Font size of the X symbol'],
+        ['modal_close_color', '--modal-close-color', '#6b7280', 'modal_close', 'Color of the close button'],
+        ['modal_close_hover_color', '--modal-close-hover-color', '#374151', 'modal_close', 'Color when hovering over close button'],
+        ['modal_close_bg_hover', '--modal-close-bg-hover', '#f3f4f6', 'modal_close', 'Background color when hovering']
     ];
 
     $stmt = $pdo->prepare("

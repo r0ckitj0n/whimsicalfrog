@@ -79,6 +79,12 @@ try {
 // Include image helpers for room pages
 require_once __DIR__ . '/../includes/item_image_helpers.php';
 require_once __DIR__ . '/../api/business_settings_helper.php';
+require_once __DIR__ . '/../api/marketing_helper.php';
+
+// Initialize marketing helper
+if (!isset($GLOBALS['marketingHelper'])) {
+    $GLOBALS['marketingHelper'] = new MarketingHelper();
+}
 
 // Generate structured data for SEO
 function generateStructuredData($seoData) {

@@ -634,6 +634,31 @@ $messageType = $_GET['type'] ?? '';
                         <?php endif; ?>
                     </div>
                 </div>
+
+                <?php if ($modalMode === 'edit'): ?>
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <h5 class="text-sm font-medium text-gray-700 mb-3">Password Management</h5>
+                    <p class="text-xs text-gray-500 mb-3">Leave password fields blank to keep the current password unchanged.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label for="newPassword" class="block text-gray-700">New Password</label>
+                            <input type="password" id="newPassword" name="newPassword" 
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   placeholder="Enter new password (min 6 characters)"
+                                   minlength="6">
+                            <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-gray-700">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" 
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded" 
+                                   placeholder="Confirm new password">
+                            <p class="text-xs text-gray-500 mt-1">Must match new password</p>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
             
             <div class="modal-form-side-column">
@@ -813,6 +838,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
         customerForm.addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent default form submission
+            
+            // Clear any previous field error highlights
+            document.querySelectorAll('.field-error-highlight').forEach(el => el.classList.remove('field-error-highlight'));
+            
+            // Validate password fields if provided
+            const newPassword = document.getElementById('newPassword');
+            const confirmPassword = document.getElementById('confirmPassword');
+            let validationErrors = [];
+            
+            if (newPassword && confirmPassword) {
+                const newPwd = newPassword.value.trim();
+                const confirmPwd = confirmPassword.value.trim();
+                
+                // If either password field has content, validate both
+                if (newPwd || confirmPwd) {
+                    if (newPwd.length < 6) {
+                        validationErrors.push('Password must be at least 6 characters long');
+                        newPassword.classList.add('field-error-highlight');
+                    }
+                    
+                    if (newPwd !== confirmPwd) {
+                        validationErrors.push('Password confirmation does not match');
+                        confirmPassword.classList.add('field-error-highlight');
+                    }
+                }
+            }
+            
+            // If there are validation errors, show them and stop
+            if (validationErrors.length > 0) {
+                showToast('error', validationErrors.join('. '));
+                return;
+            }
             
             if(saveBtn && btnText && spinner) {
                 btnText.classList.add('hidden');

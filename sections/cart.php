@@ -1,5 +1,13 @@
 <?php
-// Cart page content
+// Cart page content - Check authentication first
+if (!$isLoggedIn) {
+    // Store the cart redirect intent
+    $_SESSION['redirect_after_login'] = '/?page=cart';
+    
+    // Redirect to login page
+    header('Location: /?page=login');
+    exit;
+}
 ?>
 <section id="cartPage" class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">

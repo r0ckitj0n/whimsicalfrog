@@ -432,6 +432,11 @@
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
 }
 
+.field-error-highlight {
+    border-color: var(--form-error-color) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
 /* Feedback Messages */
 .form-feedback {
     display: block !important;

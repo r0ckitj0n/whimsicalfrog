@@ -8,6 +8,71 @@ error_log("add-order.php: Received request");
 error_log("add-order.php: Request method: " . $_SERVER['REQUEST_METHOD']);
 error_log("add-order.php: Raw input: " . file_get_contents('php://input'));
 
+// Function to sync total stock with color quantities
+function syncTotalStockWithColors($pdo, $itemSku) {
+    try {
+        // Calculate total stock from all active colors
+        $stmt = $pdo->prepare("
+            SELECT COALESCE(SUM(stock_level), 0) as total_color_stock
+            FROM item_colors 
+            WHERE item_sku = ? AND is_active = 1
+        ");
+        $stmt->execute([$itemSku]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $totalColorStock = $result['total_color_stock'];
+        
+        // Update the main item's stock level
+        $updateStmt = $pdo->prepare("UPDATE items SET stockLevel = ? WHERE sku = ?");
+        $updateStmt->execute([$totalColorStock, $itemSku]);
+        
+        return $totalColorStock;
+    } catch (Exception $e) {
+        error_log("Error syncing stock for $itemSku: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Function to reduce stock for a sale (both color and total stock)
+function reduceStockForSale($pdo, $itemSku, $colorName, $quantity, $useTransaction = true) {
+    try {
+        if ($useTransaction) {
+            $pdo->beginTransaction();
+        }
+        
+        if (!empty($colorName)) {
+            // Reduce color-specific stock
+            $stmt = $pdo->prepare("
+                UPDATE item_colors 
+                SET stock_level = GREATEST(stock_level - ?, 0) 
+                WHERE item_sku = ? AND color_name = ? AND is_active = 1
+            ");
+            $stmt->execute([$quantity, $itemSku, $colorName]);
+            
+            // Sync total stock with color quantities
+            syncTotalStockWithColors($pdo, $itemSku);
+        } else {
+            // No color specified, reduce total stock only
+            $stmt = $pdo->prepare("
+                UPDATE items 
+                SET stockLevel = GREATEST(stockLevel - ?, 0) 
+                WHERE sku = ?
+            ");
+            $stmt->execute([$quantity, $itemSku]);
+        }
+        
+        if ($useTransaction) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Exception $e) {
+        if ($useTransaction) {
+            $pdo->rollBack();
+        }
+        error_log("Error reducing stock for $itemSku: " . $e->getMessage());
+        return false;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success'=>false,'error'=>'Method not allowed']);
@@ -137,24 +202,11 @@ try {
         error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$sku, Qty=$quantity, Price=$price, Color=$color");
         $orderItemStmt->execute([$orderItemId, $orderId, $sku, $quantity, $price, $color]);
         
-        // Handle stock reduction based on whether item has colors
+        // Handle stock reduction using direct function call instead of HTTP request
         if (!empty($color)) {
-            // Use color-specific stock reduction
-            $colorStockResponse = file_get_contents('http://localhost:8000/api/item_colors.php', false, stream_context_create([
-                'http' => [
-                    'method' => 'POST',
-                    'header' => 'Content-Type: application/json',
-                    'content' => json_encode([
-                        'action' => 'reduce_stock_for_sale',
-                        'item_sku' => $sku,
-                        'color_name' => $color,
-                        'quantity' => $quantity
-                    ])
-                ]
-            ]));
-            
-            $colorStockResult = json_decode($colorStockResponse, true);
-            if (!$colorStockResult || !$colorStockResult['success']) {
+            // Use color-specific stock reduction with direct function call (no nested transaction)
+            $stockReduced = reduceStockForSale($pdo, $sku, $color, $quantity, false);
+            if (!$stockReduced) {
                 error_log("add-order.php: WARNING - Failed to reduce color stock for SKU '$sku', Color '$color'");
                 // Fall back to regular stock reduction
                 $updateStockStmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");

@@ -190,22 +190,58 @@
 .modal-close {
     background: none;
     border: none;
-    font-size: 24px;
-    color: #6b7280;
+    font-size: var(--modal-close-font-size, 24px);
+    color: var(--modal-close-color, #6b7280);
     cursor: pointer;
     padding: 0;
-    width: 30px;
-    height: 30px;
+    width: var(--modal-close-size, 30px);
+    height: var(--modal-close-size, 30px);
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 6px;
     transition: background-color 0.2s ease, color 0.2s ease;
+    position: absolute;
+    z-index: 10;
+}
+
+/* Position variants based on CSS variable */
+.modal-close {
+    /* Default to top-right */
+    top: var(--modal-close-top, 10px);
+    right: var(--modal-close-right, 15px);
+}
+
+/* Position-specific classes that can be applied based on --modal-close-position */
+.modal-close.position-top-left {
+    top: var(--modal-close-top, 10px);
+    left: var(--modal-close-left, 15px);
+    right: auto;
+}
+
+.modal-close.position-top-center {
+    top: var(--modal-close-top, 10px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+}
+
+.modal-close.position-bottom-right {
+    top: auto;
+    bottom: var(--modal-close-top, 10px);
+    right: var(--modal-close-right, 15px);
+}
+
+.modal-close.position-bottom-left {
+    top: auto;
+    bottom: var(--modal-close-top, 10px);
+    left: var(--modal-close-left, 15px);
+    right: auto;
 }
 
 .modal-close:hover {
-    background-color: #f3f4f6;
-    color: #374151;
+    background-color: var(--modal-close-bg-hover, #f3f4f6);
+    color: var(--modal-close-hover-color, #374151);
 }
 
 /* Admin Modal Header (with gradient backgrounds) */
@@ -216,6 +252,7 @@
     color: white;
     border-radius: 0.5rem 0.5rem 0 0;
     margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    position: relative;
 }
 
 .admin-modal-header .modal-title {

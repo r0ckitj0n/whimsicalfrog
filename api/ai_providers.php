@@ -553,6 +553,253 @@ class AIProviders {
     }
 
     /**
+     * Generate receipt message using selected AI provider
+     */
+    public function generateReceiptMessage($prompt, $aiSettings = null) {
+        $provider = $this->settings['ai_provider'];
+        
+        try {
+            switch ($provider) {
+                case 'openai':
+                    return $this->generateReceiptWithOpenAI($prompt);
+                case 'anthropic':
+                    return $this->generateReceiptWithAnthropic($prompt);
+                case 'google':
+                    return $this->generateReceiptWithGoogle($prompt);
+                case 'meta':
+                    return $this->generateReceiptWithMeta($prompt);
+                case 'jons_ai':
+                default:
+                    return $this->generateReceiptWithLocal($prompt, $aiSettings);
+            }
+        } catch (Exception $e) {
+            error_log("Receipt AI Provider Error ($provider): " . $e->getMessage());
+            
+            // Fallback to local if enabled
+            if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
+                error_log("Falling back to Jon's AI for receipt message");
+                return $this->generateReceiptWithLocal($prompt, $aiSettings);
+            }
+            
+            throw $e;
+        }
+    }
+
+    private function generateReceiptWithOpenAI($prompt) {
+        $apiKey = $this->settings['openai_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("OpenAI API key not configured");
+        }
+        
+        $data = [
+            'model' => $this->settings['openai_model'],
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'You are a helpful assistant that creates personalized receipt messages for a custom craft business. Always respond with valid JSON containing "title" and "content" fields.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ],
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'max_tokens' => 200
+        ];
+        
+        $response = $this->makeAPICall(
+            'https://api.openai.com/v1/chat/completions',
+            $data,
+            [
+                'Authorization: Bearer ' . $apiKey,
+                'Content-Type: application/json'
+            ]
+        );
+        
+        if (!$response || !isset($response['choices'][0]['message']['content'])) {
+            throw new Exception("Invalid OpenAI response");
+        }
+        
+        return $this->parseReceiptResponse($response['choices'][0]['message']['content']);
+    }
+
+    private function generateReceiptWithAnthropic($prompt) {
+        $apiKey = $this->settings['anthropic_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Anthropic API key not configured");
+        }
+        
+        $data = [
+            'model' => $this->settings['anthropic_model'],
+            'max_tokens' => 200,
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ]
+        ];
+        
+        $response = $this->makeAPICall(
+            'https://api.anthropic.com/v1/messages',
+            $data,
+            [
+                'x-api-key: ' . $apiKey,
+                'Content-Type: application/json',
+                'anthropic-version: 2023-06-01'
+            ]
+        );
+        
+        if (!$response || !isset($response['content'][0]['text'])) {
+            throw new Exception("Invalid Anthropic response");
+        }
+        
+        return $this->parseReceiptResponse($response['content'][0]['text']);
+    }
+
+    private function generateReceiptWithGoogle($prompt) {
+        $apiKey = $this->settings['google_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Google API key not configured");
+        }
+        
+        $data = [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt]
+                    ]
+                ]
+            ],
+            'generationConfig' => [
+                'temperature' => (float)$this->settings['ai_temperature'],
+                'maxOutputTokens' => 200
+            ]
+        ];
+        
+        $model = $this->settings['google_model'];
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+        
+        $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
+        
+        if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
+            throw new Exception("Invalid Google AI response");
+        }
+        
+        return $this->parseReceiptResponse($response['candidates'][0]['content']['parts'][0]['text']);
+    }
+
+    private function generateReceiptWithMeta($prompt) {
+        $apiKey = $this->settings['meta_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Meta API key not configured");
+        }
+        
+        $data = [
+            'model' => $this->settings['meta_model'],
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'You are a helpful assistant that creates personalized receipt messages for a custom craft business. Always respond with valid JSON containing "title" and "content" fields.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ],
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'max_tokens' => 200
+        ];
+        
+        $response = $this->makeAPICall(
+            'https://openrouter.ai/api/v1/chat/completions',
+            $data,
+            [
+                'Authorization: Bearer ' . $apiKey,
+                'Content-Type: application/json',
+                'HTTP-Referer: https://whimsicalfrog.us',
+                'X-Title: WhimsicalFrog AI Assistant'
+            ]
+        );
+        
+        if (!$response || !isset($response['choices'][0]['message']['content'])) {
+            throw new Exception("Invalid Meta response");
+        }
+        
+        return $this->parseReceiptResponse($response['choices'][0]['message']['content']);
+    }
+
+    private function generateReceiptWithLocal($prompt, $aiSettings) {
+        // Parse the prompt to extract context
+        $brandVoice = $aiSettings['ai_brand_voice'] ?? 'friendly';
+        $contentTone = $aiSettings['ai_content_tone'] ?? 'professional';
+        
+        // Simple local generation based on tone
+        $toneModifiers = [
+            'professional' => ['formal', 'business-focused', 'courteous'],
+            'friendly' => ['warm', 'personal', 'welcoming'],
+            'casual' => ['relaxed', 'informal', 'easygoing'],
+            'energetic' => ['enthusiastic', 'exciting', 'dynamic'],
+            'playful' => ['fun', 'lighthearted', 'cheerful']
+        ];
+        
+        $modifiers = $toneModifiers[$contentTone] ?? $toneModifiers['professional'];
+        
+        // Generate based on context in prompt
+        if (strpos($prompt, 'Customer Pickup') !== false) {
+            return [
+                'title' => 'Ready for Pickup Soon!',
+                'content' => "Your custom items are being prepared with care and attention to detail. We'll send you a notification as soon as they're ready for pickup at our location."
+            ];
+        } elseif (strpos($prompt, 'Local Delivery') !== false) {
+            return [
+                'title' => 'We\'ll Deliver to You!',
+                'content' => "Your personalized order is being crafted with precision. We'll coordinate delivery to your location once everything meets our quality standards."
+            ];
+        } elseif (strpos($prompt, 'USPS') !== false || strpos($prompt, 'FedEx') !== false || strpos($prompt, 'UPS') !== false) {
+            return [
+                'title' => 'Shipping Confirmed',
+                'content' => "Your custom items are being prepared for shipment. You'll receive tracking information once your package is on its way to you."
+            ];
+        }
+        
+        // Default message
+        return [
+            'title' => 'Order Confirmed',
+            'content' => "Your order is being processed with care. You'll receive updates as your custom items are prepared and ready."
+        ];
+    }
+
+    private function parseReceiptResponse($content) {
+        // Try to parse JSON
+        $decoded = json_decode($content, true);
+        
+        if ($decoded && isset($decoded['title']) && isset($decoded['content'])) {
+            return $decoded;
+        }
+        
+        // Fallback parsing if not proper JSON
+        $title = 'Order Confirmed';
+        $contentText = $content;
+        
+        // Look for title patterns
+        if (preg_match('/title["\']?\s*:\s*["\']([^"\']+)["\']?/i', $content, $matches)) {
+            $title = $matches[1];
+        }
+        
+        // Look for content patterns
+        if (preg_match('/content["\']?\s*:\s*["\']([^"\']+)["\']?/i', $content, $matches)) {
+            $contentText = $matches[1];
+        }
+        
+        return [
+            'title' => $title,
+            'content' => $contentText
+        ];
+    }
+
+    /**
      * Enhanced Generation Methods (with image insights)
      */
     private function generateEnhancedWithOpenAI($name, $description, $category, $imageInsights, $brandVoice, $contentTone) {
@@ -2694,6 +2941,140 @@ Respond with JSON in this format:
             'alt_text' => "Custom {$category} - {$name}" . ($index > 0 ? " (View " . ($index + 1) . ")" : ""),
             'description' => "High-quality {$category} featuring {$name}. Professional product photography showcasing the design and craftsmanship."
         ];
+    }
+
+    /**
+     * Analyze an uploaded item image and generate category, title, and description
+     */
+    public function analyzeItemImage($imagePath, $existingCategories = []) {
+        if (!file_exists($imagePath)) {
+            throw new Exception("Image file not found: $imagePath");
+        }
+        
+        $provider = $this->settings['default_provider'] ?? 'openai';
+        
+        switch ($provider) {
+            case 'openai':
+                return $this->analyzeItemImageWithOpenAI($imagePath, $existingCategories);
+            case 'anthropic':
+                return $this->analyzeItemImageWithAnthropic($imagePath, $existingCategories);
+            case 'google':
+                return $this->analyzeItemImageWithGoogle($imagePath, $existingCategories);
+            default:
+                throw new Exception("Unsupported AI provider for image analysis: $provider");
+        }
+    }
+    
+    private function analyzeItemImageWithOpenAI($imagePath, $existingCategories) {
+        $apiKey = $this->settings['openai_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("OpenAI API key not configured");
+        }
+        
+        // Encode image to base64
+        $imageData = file_get_contents($imagePath);
+        $imageBase64 = base64_encode($imageData);
+        $imageExtension = pathinfo($imagePath, PATHINFO_EXTENSION);
+        $mimeType = "image/" . ($imageExtension === 'jpg' ? 'jpeg' : $imageExtension);
+        
+        $categoriesText = empty($existingCategories) ? "any appropriate category" : implode(", ", $existingCategories);
+        
+        $prompt = "Analyze this product image and provide item details for an e-commerce inventory system.
+
+Existing categories: {$categoriesText}
+
+Please respond with JSON in this exact format:
+{
+  \"category\": \"Best fitting category from existing ones, or suggest a new one if none fit well\",
+  \"title\": \"Descriptive product name (2-8 words)\",
+  \"description\": \"Detailed product description (1-3 sentences)\",
+  \"confidence\": \"high|medium|low\",
+  \"reasoning\": \"Brief explanation of your analysis\"
+}
+
+Focus on:
+- Choose existing category if it fits, otherwise suggest a logical new category
+- Create an appealing, descriptive title
+- Write a compelling description highlighting key features
+- Consider the target audience for handmade/craft items";
+
+        $data = [
+            'model' => $this->settings['openai_model'] ?? 'gpt-4o',
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => $prompt
+                        ],
+                        [
+                            'type' => 'image_url',
+                            'image_url' => [
+                                'url' => "data:{$mimeType};base64,{$imageBase64}"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            'max_tokens' => 500,
+            'temperature' => 0.7
+        ];
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => 'https://api.openai.com/v1/chat/completions',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey
+            ],
+            CURLOPT_TIMEOUT => 30
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            throw new Exception("OpenAI API request failed with status $httpCode: $response");
+        }
+
+        $result = json_decode($response, true);
+        if (!$result || !isset($result['choices'][0]['message']['content'])) {
+            throw new Exception("Invalid response from OpenAI API");
+        }
+
+        $content = $result['choices'][0]['message']['content'];
+        
+        // Extract JSON from response
+        if (preg_match('/\{.*\}/s', $content, $matches)) {
+            $jsonData = json_decode($matches[0], true);
+            if ($jsonData) {
+                return $jsonData;
+            }
+        }
+        
+        // Fallback parsing if JSON extraction fails
+        return [
+            'category' => 'General',
+            'title' => 'New Item',
+            'description' => 'AI-analyzed product',
+            'confidence' => 'low',
+            'reasoning' => 'JSON parsing failed: ' . $content
+        ];
+    }
+    
+    private function analyzeItemImageWithAnthropic($imagePath, $existingCategories) {
+        // Similar implementation for Anthropic Claude
+        throw new Exception("Anthropic image analysis not yet implemented");
+    }
+    
+    private function analyzeItemImageWithGoogle($imagePath, $existingCategories) {
+        // Similar implementation for Google Gemini
+        throw new Exception("Google image analysis not yet implemented");
     }
 }
 

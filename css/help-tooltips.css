@@ -1,4 +1,212 @@
-/* Help Tooltips CSS */
+/* Help Tooltips CSS - Complete Rewrite for Reliable Display */
+
+/* Base tooltip styling - FORCE EVERYTHING */
+.help-tooltip {
+    position: fixed !important;
+    background: #333333 !important;
+    color: #ffffff !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    line-height: 1.4 !important;
+    max-width: 320px !important;
+    word-wrap: break-word !important;
+    white-space: normal !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid #555555 !important;
+    z-index: 99999 !important;
+    
+    /* CRITICAL: Default hidden state */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    display: block !important;
+    
+    /* Smooth transitions */
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out !important;
+    
+    /* Prevent any layout issues */
+    pointer-events: none !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    font-weight: normal !important;
+    text-decoration: none !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+/* VISIBLE STATE - This is the key fix */
+.help-tooltip.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* Tooltip content structure */
+.tooltip-title {
+    font-weight: 600 !important;
+    margin-bottom: 6px !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+}
+
+.tooltip-content {
+    color: #e5e5e5 !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+/* Arrow positioning for different directions */
+.help-tooltip::before {
+    content: '' !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    border: 6px solid transparent !important;
+}
+
+/* Top arrow (tooltip below element) */
+.tooltip-top::before {
+    bottom: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    border-bottom-color: #333333 !important;
+    border-top: none !important;
+}
+
+/* Bottom arrow (tooltip above element) */
+.tooltip-bottom::before {
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    border-top-color: #333333 !important;
+    border-bottom: none !important;
+}
+
+/* Left arrow (tooltip to the right) */
+.tooltip-left::before {
+    right: 100% !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    border-right-color: #333333 !important;
+    border-left: none !important;
+}
+
+/* Right arrow (tooltip to the left) */
+.tooltip-right::before {
+    left: 100% !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    border-left-color: #333333 !important;
+    border-right: none !important;
+}
+
+/* Hover states for better UX */
+.help-tooltip:hover {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Admin-specific styling */
+.admin-tooltip {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+}
+
+.admin-tooltip .tooltip-title {
+    color: #f3f4f6 !important;
+}
+
+.admin-tooltip .tooltip-content {
+    color: #d1d5db !important;
+}
+
+/* Success/Info variants */
+.tooltip-success {
+    background: #065f46 !important;
+    border-color: #059669 !important;
+}
+
+.tooltip-info {
+    background: #1e40af !important;
+    border-color: #3b82f6 !important;
+}
+
+.tooltip-warning {
+    background: #92400e !important;
+    border-color: #f59e0b !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .help-tooltip {
+        max-width: 280px !important;
+        font-size: 13px !important;
+        padding: 10px 14px !important;
+    }
+    
+    .tooltip-title {
+        font-size: 14px !important;
+    }
+    
+    .tooltip-content {
+        font-size: 12px !important;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .help-tooltip {
+        transition: none !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .help-tooltip {
+        background: #000000 !important;
+        color: #ffffff !important;
+        border: 2px solid #ffffff !important;
+    }
+}
+
+/* Focus states for accessibility */
+.help-tooltip:focus-within {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+}
+
+/* Ensure tooltips don't interfere with page layout */
+.help-tooltip-container {
+    position: relative !important;
+}
+
+/* Debug styles - remove these in production */
+.tooltip-debug {
+    background: #dc2626 !important;
+    border: 2px solid #fbbf24 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+}
+
+/* Force override any conflicting styles */
+div.help-tooltip,
+span.help-tooltip,
+.help-tooltip[class*="tooltip"] {
+    position: fixed !important;
+    display: block !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+div.help-tooltip.show,
+span.help-tooltip.show,
+.help-tooltip.show[class*="tooltip"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
 
 /* Tooltip container */
 .help-tooltip-container {
@@ -6,185 +214,9 @@
     display: inline-block;
 }
 
-/* Tooltip trigger icon */
+/* Tooltip trigger - hidden since we hover on elements directly */
 .help-tooltip-trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    margin-left: 6px;
-    background-color: #6b7280;
-    color: white;
-    border-radius: 50%;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: help;
-    transition: all 0.2s ease;
-    vertical-align: middle;
-}
-
-.help-tooltip-trigger:hover {
-    background-color: #4f46e5;
-    transform: scale(1.1);
-}
-
-.help-tooltip-trigger::before {
-    content: "?";
-}
-
-/* Tooltip content */
-.help-tooltip {
-    position: absolute;
-    z-index: 9999;
-    padding: 12px 16px;
-    background-color: #1f2937;
-    color: white;
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.4;
-    max-width: 300px;
-    min-width: 200px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(5px);
-    transition: all 0.3s ease;
-    pointer-events: none;
-    word-wrap: break-word;
-}
-
-/* Tooltip title */
-.help-tooltip-title {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 6px;
-    color: #fbbf24;
-    border-bottom: 1px solid #374151;
-    padding-bottom: 4px;
-}
-
-/* Tooltip content text */
-.help-tooltip-content {
-    color: #e5e7eb;
-}
-
-/* Show tooltip on hover */
-.help-tooltip-container:hover .help-tooltip {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-/* Tooltip arrow */
-.help-tooltip::before {
-    content: "";
-    position: absolute;
-    width: 0;
-    height: 0;
-    border-style: solid;
-}
-
-/* Tooltip positions */
-
-/* Top position (default) */
-.help-tooltip.tooltip-top {
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%) translateY(5px);
-    margin-bottom: 8px;
-}
-
-.help-tooltip.tooltip-top::before {
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 6px 6px 0 6px;
-    border-color: #1f2937 transparent transparent transparent;
-}
-
-.help-tooltip-container:hover .help-tooltip.tooltip-top {
-    transform: translateX(-50%) translateY(0);
-}
-
-/* Bottom position */
-.help-tooltip.tooltip-bottom {
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-5px);
-    margin-top: 8px;
-}
-
-.help-tooltip.tooltip-bottom::before {
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 0 6px 6px 6px;
-    border-color: transparent transparent #1f2937 transparent;
-}
-
-.help-tooltip-container:hover .help-tooltip.tooltip-bottom {
-    transform: translateX(-50%) translateY(0);
-}
-
-/* Left position */
-.help-tooltip.tooltip-left {
-    right: 100%;
-    top: 50%;
-    transform: translateY(-50%) translateX(5px);
-    margin-right: 8px;
-}
-
-.help-tooltip.tooltip-left::before {
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border-width: 6px 0 6px 6px;
-    border-color: transparent transparent transparent #1f2937;
-}
-
-.help-tooltip-container:hover .help-tooltip.tooltip-left {
-    transform: translateY(-50%) translateX(0);
-}
-
-/* Right position */
-.help-tooltip.tooltip-right {
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%) translateX(-5px);
-    margin-left: 8px;
-}
-
-.help-tooltip.tooltip-right::before {
-    right: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border-width: 6px 6px 6px 0;
-    border-color: transparent #1f2937 transparent transparent;
-}
-
-.help-tooltip-container:hover .help-tooltip.tooltip-right {
-    transform: translateY(-50%) translateX(0);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .help-tooltip {
-        max-width: 250px;
-        min-width: 180px;
-        font-size: 12px;
-        padding: 10px 12px;
-    }
-    
-    .help-tooltip-title {
-        font-size: 13px;
-    }
-    
-    .help-tooltip-trigger {
-        width: 14px;
-        height: 14px;
-        font-size: 10px;
-    }
+    display: none;
 }
 
 /* Special styling for form labels with help */
@@ -202,68 +234,37 @@
 .button-with-help {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
-/* Settings section help */
+/* Settings section help styling */
 .settings-section-help {
-    margin-bottom: 20px;
-    padding: 12px 16px;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    color: #64748b;
-    font-size: 14px;
+    position: relative;
+    display: inline-block;
+    margin-left: 8px;
 }
 
 .settings-section-help .help-icon {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 18px;
     height: 18px;
-    margin-right: 8px;
-    background-color: #3b82f6;
-    color: white;
+    background-color: #e5e7eb;
+    color: #6b7280;
     border-radius: 50%;
-    text-align: center;
-    line-height: 18px;
     font-size: 12px;
     font-weight: bold;
-    vertical-align: middle;
+    cursor: help;
+    transition: all 0.2s ease;
 }
 
-/* Admin help toggle */
-.admin-help-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10000;
+.settings-section-help .help-icon:hover {
     background-color: #4f46e5;
     color: white;
-    border: none;
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    font-size: 18px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-    transition: all 0.3s ease;
 }
 
-.admin-help-toggle:hover {
-    background-color: #3730a3;
-    transform: scale(1.05);
-}
-
-.admin-help-toggle.active {
-    background-color: #059669;
-}
-
-/* Hide all tooltips when help is disabled */
-.help-disabled .help-tooltip-trigger {
-    display: none;
-}
-
-/* Tooltip fade in/out animations */
+/* Animation keyframes */
 @keyframes tooltipFadeIn {
     from {
         opacity: 0;
@@ -294,38 +295,10 @@
     animation: tooltipFadeOut 0.3s ease forwards;
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .help-tooltip {
-        background-color: #000000;
-        border: 2px solid #ffffff;
-    }
-    
-    .help-tooltip-trigger {
-        background-color: #000000;
-        border: 1px solid #ffffff;
-    }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-    .help-tooltip-trigger,
-    .help-tooltip,
-    .admin-help-toggle {
-        transition: none;
-    }
-    
-    .help-tooltip.fade-in,
-    .help-tooltip.fade-out {
-        animation: none;
-    }
-}
-
-/* Print styles - hide tooltips when printing */
+/* Print styles */
 @media print {
     .help-tooltip-trigger,
-    .help-tooltip,
-    .admin-help-toggle {
+    .help-tooltip {
         display: none !important;
     }
 } 

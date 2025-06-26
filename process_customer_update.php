@@ -30,6 +30,10 @@ try {
     $state = trim($_POST['state'] ?? '');
     $zipCode = trim($_POST['zipCode'] ?? '');
     
+    // Get password data (optional)
+    $newPassword = trim($_POST['newPassword'] ?? '');
+    $confirmPassword = trim($_POST['confirmPassword'] ?? '');
+    
     // Validate required fields
     $fieldErrors = [];
     if (empty($customerId)) {
@@ -49,6 +53,16 @@ try {
     }
     if (empty($role)) {
         $fieldErrors[] = 'role';
+    }
+    
+    // Validate password fields if provided
+    if (!empty($newPassword)) {
+        if (strlen($newPassword) < 6) {
+            $fieldErrors[] = 'newPassword';
+        }
+        if ($newPassword !== $confirmPassword) {
+            $fieldErrors[] = 'confirmPassword';
+        }
     }
     
     if (!empty($fieldErrors)) {
@@ -76,7 +90,7 @@ try {
     }
     
     // Check if username or email already exists for different customer
-    $stmt = $pdo->prepare('SELECT id FROM users WHERE (username = ? OR email = ?) AND id != ?');
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)) AND id != ?');
     $stmt->execute([$username, $email, $customerId]);
     $duplicate = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -89,41 +103,79 @@ try {
         exit;
     }
     
-    // Update customer
-    $updateSql = "UPDATE users SET 
-                    firstName = ?, 
-                    lastName = ?, 
-                    username = ?, 
-                    email = ?, 
-                    role = ?, 
-                    phoneNumber = ?, 
-                    addressLine1 = ?, 
-                    addressLine2 = ?, 
-                    city = ?, 
-                    state = ?, 
-                    zipCode = ?
-                  WHERE id = ?";
-    
-    $stmt = $pdo->prepare($updateSql);
-    $result = $stmt->execute([
-        $firstName,
-        $lastName, 
-        $username,
-        $email,
-        $role,
-        $phoneNumber,
-        $addressLine1,
-        $addressLine2,
-        $city,
-        $state,
-        $zipCode,
-        $customerId
-    ]);
+    // Prepare update query based on whether password is being changed
+    if (!empty($newPassword)) {
+        $updateSql = "UPDATE users SET 
+                        firstName = ?, 
+                        lastName = ?, 
+                        username = ?, 
+                        email = ?, 
+                        role = ?, 
+                        phoneNumber = ?, 
+                        addressLine1 = ?, 
+                        addressLine2 = ?, 
+                        city = ?, 
+                        state = ?, 
+                        zipCode = ?,
+                        password = ?
+                      WHERE id = ?";
+        
+        $stmt = $pdo->prepare($updateSql);
+        $result = $stmt->execute([
+            $firstName,
+            $lastName, 
+            $username,
+            $email,
+            $role,
+            $phoneNumber,
+            $addressLine1,
+            $addressLine2,
+            $city,
+            $state,
+            $zipCode,
+            $newPassword,
+            $customerId
+        ]);
+        
+        $successMessage = 'Customer updated successfully (password changed)';
+    } else {
+        $updateSql = "UPDATE users SET 
+                        firstName = ?, 
+                        lastName = ?, 
+                        username = ?, 
+                        email = ?, 
+                        role = ?, 
+                        phoneNumber = ?, 
+                        addressLine1 = ?, 
+                        addressLine2 = ?, 
+                        city = ?, 
+                        state = ?, 
+                        zipCode = ?
+                      WHERE id = ?";
+        
+        $stmt = $pdo->prepare($updateSql);
+        $result = $stmt->execute([
+            $firstName,
+            $lastName, 
+            $username,
+            $email,
+            $role,
+            $phoneNumber,
+            $addressLine1,
+            $addressLine2,
+            $city,
+            $state,
+            $zipCode,
+            $customerId
+        ]);
+        
+        $successMessage = 'Customer updated successfully';
+    }
     
     if ($result) {
         echo json_encode([
             'success' => true,
-            'message' => 'Customer updated successfully',
+            'message' => $successMessage,
             'customerId' => $customerId
         ]);
     } else {

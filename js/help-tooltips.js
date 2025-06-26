@@ -1,384 +1,379 @@
 /**
- * Help Tooltips System
- * Provides contextual help for admin settings pages
+ * Help Tooltips System - Complete Rewrite for Reliable Operation
+ * This system provides hover tooltips for admin interface elements
  */
 
-class HelpTooltipSystem {
+class TooltipSystem {
     constructor() {
         this.tooltips = new Map();
-        this.isEnabled = localStorage.getItem('help-tooltips-enabled') !== 'false';
-        this.currentPageContext = this.detectPageContext();
+        this.activeTooltip = null;
+        this.showDelay = 500; // ms delay before showing
+        this.hideDelay = 100; // ms delay before hiding
+        this.showTimeout = null;
+        this.hideTimeout = null;
+        this.isInitialized = false;
+        
+        if (window.debugTooltips) {
+            console.log('🚀 TooltipSystem: Constructor called');
+        }
         this.init();
     }
-
-    /**
-     * Initialize the tooltip system
-     */
+    
     async init() {
         try {
-            await this.loadTooltips();
-            this.createToggleButton();
-            this.attachTooltips();
-            this.setupEventListeners();
-            this.updateHelpState();
-        } catch (error) {
-            console.warn('Failed to initialize help tooltip system:', error);
-        }
-    }
-
-    /**
-     * Detect the current page context for tooltips
-     */
-    detectPageContext() {
-        const url = window.location.href;
-        const params = new URLSearchParams(window.location.search);
-        
-        // Check for admin sections
-        if (url.includes('admin')) {
-            const section = params.get('section');
-            if (section) {
-                return section;
+            if (window.debugTooltips) {
+                console.log('🔄 TooltipSystem: Starting initialization');
             }
-            return 'admin';
+            
+            // Load tooltip data
+            await this.loadTooltips();
+            
+            // Wait for DOM if needed
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.attachTooltips());
+            } else {
+                this.attachTooltips();
+            }
+            
+            this.isInitialized = true;
+            console.log('✅ TooltipSystem: Fully initialized');
+            
+        } catch (error) {
+            console.error('❌ TooltipSystem: Initialization failed:', error);
         }
-        
-        // Check for specific pages
-        if (url.includes('inventory')) return 'inventory';
-        if (url.includes('orders')) return 'orders';
-        if (url.includes('users')) return 'users';
-        if (url.includes('analytics')) return 'analytics';
-        if (url.includes('rooms')) return 'rooms';
-        if (url.includes('shipping')) return 'shipping';
-        if (url.includes('email')) return 'email';
-        if (url.includes('payment')) return 'payment';
-        if (url.includes('seo')) return 'seo';
-        if (url.includes('security')) return 'security';
-        if (url.includes('backup')) return 'backup';
-        
-        return 'admin';
     }
-
-    /**
-     * Load tooltips from the API
-     */
+    
     async loadTooltips() {
         try {
-            const response = await fetch(`/api/help_tooltips.php?action=get&page_context=${this.currentPageContext}`);
-            const data = await response.json();
+            const pageContext = this.getPageContext();
+            if (window.debugTooltips) {
+                console.log(`📄 TooltipSystem: Loading tooltips for page context: ${pageContext}`);
+            }
             
-            if (data.success) {
-                data.tooltips.forEach(tooltip => {
-                    this.tooltips.set(tooltip.element_id, tooltip);
+            // Load page-specific tooltips
+            const pageResponse = await fetch(`/api/help_tooltips.php?action=get_tooltips&page=${pageContext}`);
+            const pageData = await pageResponse.json();
+            
+            if (pageData.success && pageData.tooltips) {
+                pageData.tooltips.forEach(tooltip => {
+                    this.tooltips.set(tooltip.element_id, {
+                        title: tooltip.title,
+                        content: tooltip.content,
+                        position: tooltip.position || 'top'
+                    });
                 });
-                console.log(`Loaded ${data.tooltips.length} help tooltips for context: ${this.currentPageContext}`);
-            }
-        } catch (error) {
-            console.warn('Failed to load tooltips:', error);
-        }
-    }
-
-    /**
-     * Create the help toggle button
-     */
-    createToggleButton() {
-        const toggleButton = document.createElement('button');
-        toggleButton.className = 'admin-help-toggle';
-        toggleButton.title = 'Toggle Help Tooltips';
-        toggleButton.innerHTML = '?';
-        toggleButton.addEventListener('click', () => this.toggleHelp());
-        
-        if (this.isEnabled) {
-            toggleButton.classList.add('active');
-        }
-        
-        document.body.appendChild(toggleButton);
-    }
-
-    /**
-     * Attach tooltips to elements
-     */
-    attachTooltips() {
-        this.tooltips.forEach((tooltip, elementId) => {
-            const element = document.getElementById(elementId);
-            if (element) {
-                this.attachTooltipToElement(element, tooltip);
-            }
-        });
-    }
-
-    /**
-     * Attach a tooltip to a specific element
-     */
-    attachTooltipToElement(element, tooltip) {
-        // Check if element already has a tooltip container
-        if (element.closest('.help-tooltip-container')) {
-            return;
-        }
-
-        // Create tooltip container
-        const container = document.createElement('div');
-        container.className = 'help-tooltip-container';
-
-        // Wrap the element
-        element.parentNode.insertBefore(container, element);
-        container.appendChild(element);
-
-        // Create tooltip trigger
-        const trigger = document.createElement('span');
-        trigger.className = 'help-tooltip-trigger';
-        trigger.setAttribute('data-element-id', tooltip.element_id);
-
-        // Create tooltip content
-        const tooltipDiv = document.createElement('div');
-        tooltipDiv.className = `help-tooltip tooltip-${tooltip.position}`;
-        
-        const title = document.createElement('div');
-        title.className = 'help-tooltip-title';
-        title.textContent = tooltip.title;
-        
-        const content = document.createElement('div');
-        content.className = 'help-tooltip-content';
-        content.textContent = tooltip.content;
-        
-        tooltipDiv.appendChild(title);
-        tooltipDiv.appendChild(content);
-
-        // Add trigger and tooltip to container
-        container.appendChild(trigger);
-        container.appendChild(tooltipDiv);
-
-        // Special handling for different element types
-        this.handleSpecialElements(element, container);
-    }
-
-    /**
-     * Handle special element types (labels, buttons, etc.)
-     */
-    handleSpecialElements(element, container) {
-        if (element.tagName === 'LABEL') {
-            container.classList.add('form-label-with-help');
-        } else if (element.tagName === 'BUTTON') {
-            container.classList.add('button-with-help');
-        }
-
-        // For input elements, attach to their label if it exists
-        if (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA') {
-            const label = document.querySelector(`label[for="${element.id}"]`);
-            if (label && !label.closest('.help-tooltip-container')) {
-                // Move the tooltip to the label instead
-                const labelContainer = document.createElement('div');
-                labelContainer.className = 'help-tooltip-container form-label-with-help';
-                
-                label.parentNode.insertBefore(labelContainer, label);
-                labelContainer.appendChild(label);
-                
-                const trigger = container.querySelector('.help-tooltip-trigger');
-                const tooltip = container.querySelector('.help-tooltip');
-                
-                labelContainer.appendChild(trigger);
-                labelContainer.appendChild(tooltip);
-                
-                // Remove the original container
-                container.parentNode.insertBefore(element, container);
-                container.remove();
-            }
-        }
-    }
-
-    /**
-     * Setup event listeners
-     */
-    setupEventListeners() {
-        // Handle dynamic content
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        this.attachTooltipsToNewElements(node);
-                    }
-                });
-            });
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
-        // Handle keyboard accessibility
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.hideAllTooltips();
-            }
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            this.repositionTooltips();
-        });
-    }
-
-    /**
-     * Attach tooltips to newly added elements
-     */
-    attachTooltipsToNewElements(container) {
-        this.tooltips.forEach((tooltip, elementId) => {
-            const element = container.querySelector ? container.querySelector(`#${elementId}`) : null;
-            if (element && !element.closest('.help-tooltip-container')) {
-                this.attachTooltipToElement(element, tooltip);
-            }
-        });
-    }
-
-    /**
-     * Toggle help system on/off
-     */
-    toggleHelp() {
-        this.isEnabled = !this.isEnabled;
-        localStorage.setItem('help-tooltips-enabled', this.isEnabled.toString());
-        this.updateHelpState();
-    }
-
-    /**
-     * Update the help system state
-     */
-    updateHelpState() {
-        const toggleButton = document.querySelector('.admin-help-toggle');
-        
-        if (this.isEnabled) {
-            document.body.classList.remove('help-disabled');
-            if (toggleButton) {
-                toggleButton.classList.add('active');
-                toggleButton.title = 'Disable Help Tooltips';
-            }
-        } else {
-            document.body.classList.add('help-disabled');
-            if (toggleButton) {
-                toggleButton.classList.remove('active');
-                toggleButton.title = 'Enable Help Tooltips';
-            }
-        }
-    }
-
-    /**
-     * Hide all visible tooltips
-     */
-    hideAllTooltips() {
-        document.querySelectorAll('.help-tooltip').forEach(tooltip => {
-            tooltip.style.opacity = '0';
-            tooltip.style.visibility = 'hidden';
-        });
-    }
-
-    /**
-     * Reposition tooltips on window resize
-     */
-    repositionTooltips() {
-        // Force recalculation of tooltip positions
-        document.querySelectorAll('.help-tooltip').forEach(tooltip => {
-            const container = tooltip.closest('.help-tooltip-container');
-            if (container) {
-                // Temporarily hide and show to trigger position recalculation
-                const originalDisplay = tooltip.style.display;
-                tooltip.style.display = 'none';
-                setTimeout(() => {
-                    tooltip.style.display = originalDisplay;
-                }, 10);
-            }
-        });
-    }
-
-    /**
-     * Add a new tooltip programmatically
-     */
-    addTooltip(elementId, title, content, position = 'top') {
-        const element = document.getElementById(elementId);
-        if (!element) {
-            console.warn(`Element with ID ${elementId} not found`);
-            return;
-        }
-
-        const tooltip = {
-            element_id: elementId,
-            title: title,
-            content: content,
-            position: position
-        };
-
-        this.tooltips.set(elementId, tooltip);
-        this.attachTooltipToElement(element, tooltip);
-    }
-
-    /**
-     * Remove a tooltip
-     */
-    removeTooltip(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            const container = element.closest('.help-tooltip-container');
-            if (container) {
-                const parent = container.parentNode;
-                parent.insertBefore(element, container);
-                container.remove();
-            }
-        }
-        this.tooltips.delete(elementId);
-    }
-
-    /**
-     * Update tooltip content
-     */
-    updateTooltip(elementId, title, content, position) {
-        const tooltip = this.tooltips.get(elementId);
-        if (tooltip) {
-            tooltip.title = title || tooltip.title;
-            tooltip.content = content || tooltip.content;
-            tooltip.position = position || tooltip.position;
-
-            // Update the DOM
-            const element = document.getElementById(elementId);
-            if (element) {
-                const container = element.closest('.help-tooltip-container');
-                if (container) {
-                    const tooltipDiv = container.querySelector('.help-tooltip');
-                    const titleDiv = tooltipDiv.querySelector('.help-tooltip-title');
-                    const contentDiv = tooltipDiv.querySelector('.help-tooltip-content');
-                    
-                    if (titleDiv) titleDiv.textContent = tooltip.title;
-                    if (contentDiv) contentDiv.textContent = tooltip.content;
-                    
-                    // Update position class
-                    tooltipDiv.className = `help-tooltip tooltip-${tooltip.position}`;
+                if (window.debugTooltips) {
+                    console.log(`📋 TooltipSystem: Loaded ${pageData.tooltips.length} page tooltips`);
                 }
             }
+            
+            // Load common tooltips
+            const commonResponse = await fetch('/api/help_tooltips.php?action=get_tooltips&page=common');
+            const commonData = await commonResponse.json();
+            
+            if (commonData.success && commonData.tooltips) {
+                commonData.tooltips.forEach(tooltip => {
+                    this.tooltips.set(tooltip.element_id, {
+                        title: tooltip.title,
+                        content: tooltip.content,
+                        position: tooltip.position || 'top'
+                    });
+                });
+                if (window.debugTooltips) {
+                    console.log(`📋 TooltipSystem: Loaded ${commonData.tooltips.length} common tooltips`);
+                }
+            }
+            
+            if (window.debugTooltips) {
+                console.log(`📊 TooltipSystem: Total tooltips loaded: ${this.tooltips.size}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ TooltipSystem: Failed to load tooltips:', error);
         }
     }
-
-    /**
-     * Get tooltip data
-     */
-    getTooltip(elementId) {
-        return this.tooltips.get(elementId);
+    
+    getPageContext() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page');
+        const section = urlParams.get('section');
+        
+        if (page === 'admin' && section) {
+            return section;
+        } else if (page) {
+            return page;
+        } else {
+            return 'main';
+        }
     }
-
-    /**
-     * Get all tooltips
-     */
-    getAllTooltips() {
-        return Array.from(this.tooltips.values());
+    
+    attachTooltips() {
+        if (window.debugTooltips) {
+            console.log('🔗 TooltipSystem: Attaching tooltips to elements');
+        }
+        
+        let attachedCount = 0;
+        
+        this.tooltips.forEach((tooltipData, elementId) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                this.attachTooltipToElement(element, tooltipData);
+                attachedCount++;
+                if (window.debugTooltips) {
+                    console.log(`✅ TooltipSystem: Attached tooltip to ${elementId}: "${tooltipData.title}"`);
+                }
+            } else {
+                // Only log missing elements in debug mode to reduce console noise
+                if (window.debugTooltips) {
+                    console.warn(`⚠️ TooltipSystem: Element not found: ${elementId}`);
+                }
+            }
+        });
+        
+        console.log(`📎 TooltipSystem: Attached ${attachedCount} tooltips`);
+    }
+    
+    attachTooltipToElement(element, tooltipData) {
+        // Store tooltip data on element
+        element._tooltipData = tooltipData;
+        
+        // Add event listeners
+        element.addEventListener('mouseenter', (e) => this.handleMouseEnter(e));
+        element.addEventListener('mouseleave', (e) => this.handleMouseLeave(e));
+        element.addEventListener('focus', (e) => this.handleMouseEnter(e));
+        element.addEventListener('blur', (e) => this.handleMouseLeave(e));
+        
+        // Add visual indicator
+        element.style.cursor = 'help';
+        element.setAttribute('data-has-tooltip', 'true');
+    }
+    
+    handleMouseEnter(event) {
+        const element = event.target;
+        const tooltipData = element._tooltipData;
+        
+        if (!tooltipData) return;
+        
+        // Clear any existing timeouts
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+            this.hideTimeout = null;
+        }
+        
+        // Hide any existing tooltip
+        this.hideTooltip();
+        
+        // Show new tooltip with delay
+        this.showTimeout = setTimeout(() => {
+            this.showTooltip(element, tooltipData);
+        }, this.showDelay);
+    }
+    
+    handleMouseLeave(event) {
+        // Clear show timeout
+        if (this.showTimeout) {
+            clearTimeout(this.showTimeout);
+            this.showTimeout = null;
+        }
+        
+        // Hide tooltip with delay
+        this.hideTimeout = setTimeout(() => {
+            this.hideTooltip();
+        }, this.hideDelay);
+    }
+    
+    showTooltip(element, tooltipData) {
+        try {
+            // Create tooltip element
+            const tooltip = this.createTooltipElement(tooltipData);
+            
+            // Add to DOM
+            document.body.appendChild(tooltip);
+            
+            // Position tooltip
+            this.positionTooltip(tooltip, element, tooltipData.position);
+            
+            // Show tooltip
+            requestAnimationFrame(() => {
+                tooltip.classList.add('show');
+            });
+            
+            // Store reference
+            this.activeTooltip = tooltip;
+            
+            if (window.debugTooltips) {
+                console.log(`👁️ TooltipSystem: Showing tooltip "${tooltipData.title}" at position ${tooltipData.position}`);
+            }
+            
+        } catch (error) {
+            console.error('❌ TooltipSystem: Failed to show tooltip:', error);
+        }
+    }
+    
+    createTooltipElement(tooltipData) {
+        const tooltip = document.createElement('div');
+        tooltip.className = `help-tooltip tooltip-${tooltipData.position}`;
+        
+        // Create title element
+        const title = document.createElement('div');
+        title.className = 'tooltip-title';
+        title.textContent = tooltipData.title;
+        
+        // Create content element
+        const content = document.createElement('div');
+        content.className = 'tooltip-content';
+        content.textContent = tooltipData.content;
+        
+        // Assemble tooltip
+        tooltip.appendChild(title);
+        tooltip.appendChild(content);
+        
+        return tooltip;
+    }
+    
+    positionTooltip(tooltip, element, position = 'top') {
+        const elementRect = element.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewport = {
+            width: window.innerWidth,
+            height: window.innerHeight
+        };
+        
+        let left, top;
+        
+        switch (position) {
+            case 'top':
+                left = elementRect.left + (elementRect.width / 2) - (tooltipRect.width / 2);
+                top = elementRect.top - tooltipRect.height - 10;
+                break;
+                
+            case 'bottom':
+                left = elementRect.left + (elementRect.width / 2) - (tooltipRect.width / 2);
+                top = elementRect.bottom + 10;
+                break;
+                
+            case 'left':
+                left = elementRect.left - tooltipRect.width - 10;
+                top = elementRect.top + (elementRect.height / 2) - (tooltipRect.height / 2);
+                break;
+                
+            case 'right':
+                left = elementRect.right + 10;
+                top = elementRect.top + (elementRect.height / 2) - (tooltipRect.height / 2);
+                break;
+                
+            default:
+                left = elementRect.left + (elementRect.width / 2) - (tooltipRect.width / 2);
+                top = elementRect.top - tooltipRect.height - 10;
+        }
+        
+        // Ensure tooltip stays within viewport
+        left = Math.max(10, Math.min(left, viewport.width - tooltipRect.width - 10));
+        top = Math.max(10, Math.min(top, viewport.height - tooltipRect.height - 10));
+        
+        // Apply position
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+        
+        if (window.debugTooltips) {
+            console.log(`📍 TooltipSystem: Positioned tooltip at (${left}, ${top})`);
+        }
+    }
+    
+    hideTooltip() {
+        if (this.activeTooltip) {
+            const tooltip = this.activeTooltip;
+            
+            // Hide with animation
+            tooltip.classList.remove('show');
+            
+            // Remove from DOM after animation
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            }, 200);
+            
+            this.activeTooltip = null;
+            if (window.debugTooltips) {
+                console.log('👋 TooltipSystem: Tooltip hidden');
+            }
+        }
+    }
+    
+    // Public API methods
+    addTooltip(elementId, title, content, position = 'top') {
+        this.tooltips.set(elementId, { title, content, position });
+        
+        const element = document.getElementById(elementId);
+        if (element) {
+            this.attachTooltipToElement(element, { title, content, position });
+        }
+    }
+    
+    removeTooltip(elementId) {
+        this.tooltips.delete(elementId);
+        
+        const element = document.getElementById(elementId);
+        if (element) {
+            element._tooltipData = null;
+            element.removeAttribute('data-has-tooltip');
+            element.style.cursor = '';
+        }
+    }
+    
+    destroy() {
+        // Clear timeouts
+        if (this.showTimeout) clearTimeout(this.showTimeout);
+        if (this.hideTimeout) clearTimeout(this.hideTimeout);
+        
+        // Hide active tooltip
+        this.hideTooltip();
+        
+        // Clear data
+        this.tooltips.clear();
+        this.isInitialized = false;
+        
+        console.log('🗑️ TooltipSystem: Destroyed');
     }
 }
 
-// Initialize the help tooltip system when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Only initialize on admin pages
-    if (window.location.href.includes('admin') || 
-        document.body.classList.contains('admin-page')) {
-        window.helpTooltipSystem = new HelpTooltipSystem();
-    }
-});
+// Initialize global tooltip system
+let globalTooltipSystem = null;
 
-// Export for use in other scripts
+// Initialize when DOM is ready
+function initializeTooltipSystem() {
+    if (!globalTooltipSystem) {
+        globalTooltipSystem = new TooltipSystem();
+        
+        // Expose to global scope for debugging
+        window.tooltipSystem = globalTooltipSystem;
+    }
+}
+
+// Auto-initialize
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTooltipSystem);
+} else {
+    initializeTooltipSystem();
+}
+
+// Legacy compatibility functions
+function loadTooltips() {
+    console.log('📞 Legacy function called: loadTooltips()');
+    if (globalTooltipSystem) {
+        return globalTooltipSystem.loadTooltips();
+    }
+}
+
+function attachTooltips() {
+    console.log('📞 Legacy function called: attachTooltips()');
+    if (globalTooltipSystem) {
+        globalTooltipSystem.attachTooltips();
+    }
+}
+
+// Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = HelpTooltipSystem;
+    module.exports = { TooltipSystem, initializeTooltipSystem };
 } 

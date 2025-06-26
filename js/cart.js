@@ -353,7 +353,8 @@ class ShoppingCart {
             { value: 'ups', label: 'UPS', icon: '🚛' }
         ];
 
-        const toggleShippingInfo = () => {
+        // Make toggleShippingInfo globally available
+        window.toggleShippingInfo = () => {
             const shippingMethod = document.querySelector('input[name="shippingMethod"]:checked')?.value;
             const shippingInfo = document.getElementById('shippingInfo');
             if (shippingMethod && shippingMethod !== 'pickup') {
@@ -405,7 +406,7 @@ class ShoppingCart {
 
         // Add event listener for shipping method changes
         modal.querySelectorAll('input[name="shippingMethod"]').forEach(input => {
-            input.addEventListener('change', toggleShippingInfo);
+            input.addEventListener('change', window.toggleShippingInfo);
         });
     }
 

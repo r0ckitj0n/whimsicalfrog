@@ -49,6 +49,10 @@ try {
             session_start();
         }
         
+        // Check for redirect after login
+        $redirectUrl = $_SESSION['redirect_after_login'] ?? null;
+        unset($_SESSION['redirect_after_login']); // Clear it
+        
         // Store user data in session
         $_SESSION['user'] = [
             'userId' => $user['id'],
@@ -67,7 +71,8 @@ try {
             'role' => $user['role'],
             'roleType' => $user['role'], // For backward compatibility
             'firstName' => $user['first_name'] ?? null,
-            'lastName' => $user['last_name'] ?? null
+            'lastName' => $user['last_name'] ?? null,
+            'redirectUrl' => $redirectUrl // Include redirect URL in response
         ]);
     } else {
         http_response_code(401);

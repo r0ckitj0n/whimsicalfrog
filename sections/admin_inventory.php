@@ -923,12 +923,17 @@ $messageType = $_GET['type'] ?? '';
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                             <label for="categoryEdit" class="block text-gray-700">Category *</label>
-                            <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required>
+                            <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'style="display:none;"' : '' ?>>
                                 <option value="">Select Category</option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?= htmlspecialchars($cat); ?>" <?= (isset($editItem['category']) && $editItem['category'] === $cat) ? 'selected' : ''; ?>><?= htmlspecialchars($cat); ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <?php if ($modalMode === 'add'): ?>
+                            <div id="aiCategoryMessage" class="mt-1 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                                🤖 AI will automatically select the best category after you upload a photo and we analyze your item!
+                            </div>
+                            <?php endif; ?>
                         </div>
                             <div class="flex items-end">
                                 <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm">
@@ -984,8 +989,16 @@ $messageType = $_GET['type'] ?? '';
                         <!-- Multi-Image Upload Section - Only show in edit/add mode -->
                         <div class="multi-image-upload-section mt-3" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
                             <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden">
+                            <?php if ($modalMode === 'add'): ?>
+                            <input type="file" id="aiAnalysisUpload" accept="image/*" class="hidden">
+                            <?php endif; ?>
                             <div class="upload-controls mb-3">
                                 <div class="flex gap-2 flex-wrap">
+                                    <?php if ($modalMode === 'add'): ?>
+                                    <button type="button" onclick="document.getElementById('aiAnalysisUpload').click()" class="px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm">
+                                        🤖 Upload Photo for AI Analysis
+                                    </button>
+                                    <?php endif; ?>
                                     <button type="button" onclick="document.getElementById('multiImageUpload').click()" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                                         📁 Upload Images
                                     </button>
@@ -1240,7 +1253,7 @@ $messageType = $_GET['type'] ?? '';
 <div id="marketingManagerModal" class="admin-modal-overlay" style="z-index: 2147483647; display: none;">
     <div class="admin-modal-content">
         <!-- Modal Header -->
-        <div class="admin-modal-header" style="background: linear-gradient(to right, #87ac3a, #6b8e23);">
+        <div class="admin-modal-header" style="background: linear-gradient(to right, #87ac3a, #6b8e23); position: relative;">
             <div class="flex items-center">
                 <h2 class="text-xl font-bold text-white mr-3">🎯 Marketing Manager</h2>
                 <span class="text-green-100 text-sm font-medium px-2 py-1 bg-green-800 bg-opacity-30 rounded">Currently editing: <span id="currentEditingSku"></span></span>
@@ -1250,12 +1263,17 @@ $messageType = $_GET['type'] ?? '';
         
         <!-- Tab Navigation -->
         <div class="admin-tab-bar">
-            <div class="flex space-x-4 overflow-x-auto">
-                <button id="contentTab" class="css-category-tab active" onclick="showMarketingManagerTab('content')">📝 Content</button>
-                <button id="audienceTab" class="css-category-tab" onclick="showMarketingManagerTab('audience')">👥 Target Audience</button>
-                <button id="sellingTab" class="css-category-tab" onclick="showMarketingManagerTab('selling')">⭐ Selling Points</button>
-                <button id="seoTab" class="css-category-tab" onclick="showMarketingManagerTab('seo')">🔍 SEO & Keywords</button>
-                <button id="conversionTab" class="css-category-tab" onclick="showMarketingManagerTab('conversion')">💰 Conversion</button>
+            <div class="flex items-center">
+                <div id="marketingItemImageHeader" class="flex-shrink-0 mr-4">
+                    <!-- Primary image will be loaded here -->
+                </div>
+                <div class="flex space-x-4 overflow-x-auto">
+                    <button id="contentTab" class="css-category-tab active" onclick="showMarketingManagerTab('content')">📝 Content</button>
+                    <button id="audienceTab" class="css-category-tab" onclick="showMarketingManagerTab('audience')">👥 Target Audience</button>
+                    <button id="sellingTab" class="css-category-tab" onclick="showMarketingManagerTab('selling')">⭐ Selling Points</button>
+                    <button id="seoTab" class="css-category-tab" onclick="showMarketingManagerTab('seo')">🔍 SEO & Keywords</button>
+                    <button id="conversionTab" class="css-category-tab" onclick="showMarketingManagerTab('conversion')">💰 Conversion</button>
+                </div>
             </div>
         </div>
         
@@ -1339,7 +1357,7 @@ $messageType = $_GET['type'] ?? '';
         <div class="modal-footer">
             <div class="flex justify-between items-center">
                 <div class="text-sm text-gray-600">
-                    <span id="statusText">Ready to generate AI content...</span>
+                    <span id="statusText"></span>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="applySelectedChanges()" id="applyChangesBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium hidden">
@@ -1376,8 +1394,93 @@ var modalMode = <?= json_encode($modalMode ?? '') ?>;
         var currentItemSku = <?= json_encode(isset($editItem['sku']) ? $editItem['sku'] : '') ?>;
 var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $editCostBreakdown) ? json_encode($editCostBreakdown) : 'null' ?>;
 
-// Initialize global categories array
-window.inventoryCategories = <?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> || [];
+    // Initialize global categories array
+    window.inventoryCategories = <?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> || [];
+    
+    // AI Analysis functionality for new items
+    document.addEventListener('DOMContentLoaded', function() {
+        const aiUpload = document.getElementById('aiAnalysisUpload');
+        if (aiUpload) {
+            aiUpload.addEventListener('change', handleAIAnalysisUpload);
+        }
+    });
+    
+    async function handleAIAnalysisUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Show loading state
+        const aiMessage = document.getElementById('aiCategoryMessage');
+        if (aiMessage) {
+            aiMessage.innerHTML = '🔄 Analyzing image with AI... This may take a moment.';
+            aiMessage.className = 'mt-1 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800';
+        }
+        
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const response = await fetch('/api/ai_item_analysis.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success && result.analysis) {
+                // Populate form fields with AI analysis
+                const analysis = result.analysis;
+                
+                // Set SKU
+                const skuField = document.getElementById('skuEdit');
+                if (skuField) skuField.value = analysis.suggested_sku || '';
+                
+                // Set title/name
+                const nameField = document.getElementById('name');
+                if (nameField) nameField.value = analysis.title || '';
+                
+                // Set description
+                const descField = document.getElementById('description');
+                if (descField) descField.value = analysis.description || '';
+                
+                // Set category and show the dropdown
+                const categoryField = document.getElementById('categoryEdit');
+                if (categoryField) {
+                    // Add new category option if it doesn't exist
+                    const categoryExists = Array.from(categoryField.options).some(option => option.value === analysis.category);
+                    if (!categoryExists && analysis.category) {
+                        const newOption = document.createElement('option');
+                        newOption.value = analysis.category;
+                        newOption.textContent = analysis.category;
+                        categoryField.appendChild(newOption);
+                    }
+                    
+                    categoryField.value = analysis.category || '';
+                    categoryField.style.display = 'block';
+                }
+                
+                // Update AI message with success
+                if (aiMessage) {
+                    aiMessage.innerHTML = `✅ AI Analysis Complete! Category: <strong>${analysis.category}</strong>, Confidence: ${analysis.confidence}. You can now edit any details before saving.`;
+                    aiMessage.className = 'mt-1 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-800';
+                }
+                
+                // Show edit item modal with pre-filled data
+                showToast('success', 'AI analysis complete! Review and edit the generated details.');
+                
+            } else {
+                throw new Error(result.error || 'AI analysis failed');
+            }
+            
+        } catch (error) {
+            console.error('AI analysis error:', error);
+            if (aiMessage) {
+                aiMessage.innerHTML = `❌ AI analysis failed: ${error.message}. Please fill in the details manually.`;
+                aiMessage.className = 'mt-1 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800';
+            }
+            showToast('error', 'AI analysis failed: ' + error.message);
+        }
+    }
 
 // Initialize items list for navigation
 var allItems = <?= json_encode(array_values($items)) ?>;
@@ -4868,6 +4971,28 @@ document.addEventListener('DOMContentLoaded', function() {
               .then(r=>r.json()).then(d=>{ if(d.success){ skuInput.value=d.sku; } });
         });
     }
+    
+    // Handle SKU regeneration when category changes manually
+    async function handleCategoryChange() {
+        const categoryField = document.getElementById('categoryEdit');
+        const skuField = document.getElementById('skuEdit');
+        
+        if (categoryField && skuField) {
+            const newCategory = categoryField.value;
+            if (newCategory) {
+                try {
+                    const response = await fetch(`/api/next_sku.php?cat=${encodeURIComponent(newCategory)}`);
+                    const result = await response.json();
+                    if (result.success) {
+                        skuField.value = result.sku;
+                        showToast('info', `SKU updated to ${result.sku} for category ${newCategory}`);
+                    }
+                } catch (error) {
+                    console.error('Error generating new SKU:', error);
+                }
+            }
+        }
+    }
 
 });
 
@@ -6088,12 +6213,13 @@ function checkForTitleDescriptionChanges(fieldId) {
     if (fieldId === 'marketingTitle') {
         const titleField = document.getElementById('marketingTitle');
         const saveButton = titleField?.parentElement?.querySelector('button[onclick="applyAndSaveMarketingTitle()"]');
+        const nameField = document.getElementById('name');
         
-        if (titleField && saveButton && currentItemData) {
+        if (titleField && saveButton && nameField) {
             const currentTitle = titleField.value.trim();
-                    const itemTitle = currentItemData.name || '';
+            const itemTitle = nameField.value || '';
         
-        if (currentTitle && currentTitle !== itemTitle) {
+            if (currentTitle && currentTitle !== itemTitle) {
                 saveButton.style.display = 'inline-block';
             } else {
                 saveButton.style.display = 'none';
@@ -6104,12 +6230,13 @@ function checkForTitleDescriptionChanges(fieldId) {
     if (fieldId === 'marketingDescription') {
         const descField = document.getElementById('marketingDescription');
         const saveButton = descField?.parentElement?.querySelector('button[onclick="applyAndSaveMarketingDescription()"]');
+        const itemDescField = document.getElementById('description');
         
-        if (descField && saveButton && currentItemData) {
+        if (descField && saveButton && itemDescField) {
             const currentDesc = descField.value.trim();
-                    const itemDesc = currentItemData.description || '';
+            const itemDesc = itemDescField.value || '';
         
-        if (currentDesc && currentDesc !== itemDesc) {
+            if (currentDesc && currentDesc !== itemDesc) {
                 saveButton.style.display = 'inline-block';
             } else {
                 saveButton.style.display = 'none';
@@ -6253,6 +6380,9 @@ function openMarketingManager() {
     
     console.log('Marketing Manager: Modal opened with professional styling');
     
+    // Load the item image in the header
+    loadMarketingItemImage();
+    
     // Load marketing data and show content tab
     loadMarketingData();
     showMarketingManagerTab('content');
@@ -6275,17 +6405,15 @@ function closeMarketingManager() {
 
 
 function showMarketingManagerTab(tabName) {
-    // Update tab buttons - remove active styles from all tabs
-    document.querySelectorAll('.marketing-tab').forEach(tab => {
-        tab.classList.remove('bg-white', 'text-green-600', 'border-2', 'border-green-600', 'font-semibold', 'shadow-sm');
-        tab.classList.add('text-gray-600', 'border-2', 'border-gray-300', 'hover:text-green-600', 'hover:border-green-300');
+    // Update tab buttons - remove active class from all tabs
+    document.querySelectorAll('.css-category-tab').forEach(tab => {
+        tab.classList.remove('active');
     });
     
-    // Apply active styles to selected tab
+    // Apply active class to selected tab
     const activeTab = document.getElementById(tabName + 'Tab');
     if (activeTab) {
-        activeTab.classList.remove('text-gray-600', 'border-gray-300', 'hover:text-green-600', 'hover:border-green-300');
-        activeTab.classList.add('bg-white', 'text-green-600', 'border-2', 'border-green-600', 'font-semibold', 'shadow-sm');
+        activeTab.classList.add('active');
     }
     
     // Load tab content
@@ -6337,26 +6465,10 @@ function loadMarketingTabContent(tabName) {
 
 function loadContentTab(contentDiv) {
     contentDiv.innerHTML = '<div class="space-y-6">' +
-        '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">' +
-            '<div class="flex items-center gap-3">' +
-                '<div id="marketingItemImage" class="flex-shrink-0">' +
-                    '<!-- Primary image will be loaded here -->' +
-                '</div>' +
-                '<div class="flex-1">' +
-                    '<div class="flex items-center gap-2">' +
-                        '<svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>' +
-                        '</svg>' +
-                        '<span class="text-sm font-medium text-gray-800">Currently editing: <strong>' + (currentItemSku || 'No item selected') + '</strong></span>' +
-                    '</div>' +
-                    '<p class="text-xs text-gray-600 mt-1">All content below is specific to this item only.</p>' +
-                '</div>' +
-            '</div>' +
-        '</div>' +
-        '<div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-3 mb-4">' +
+        '<div class="bg-purple-200 rounded-lg p-3 mb-4">' +
             '<div class="grid grid-cols-1 lg:grid-cols-4 gap-3 items-end">' +
                 '<div>' +
-                    '<label class="block text-xs text-gray-600 mb-1">Brand Voice</label>' +
+                    '<label class="block text-xs text-white mb-1">Brand Voice</label>' +
                     '<select id="brandVoice" class="w-full p-2 border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'brand_voice\', this.value)">' +
                         '<option value="">Select voice...</option>' +
                         '<option value="friendly">Friendly</option>' +
@@ -6367,7 +6479,7 @@ function loadContentTab(contentDiv) {
                     '</select>' +
                 '</div>' +
                 '<div>' +
-                    '<label class="block text-xs text-gray-600 mb-1">Content Tone</label>' +
+                    '<label class="block text-xs text-white mb-1">Content Tone</label>' +
                     '<select id="contentTone" class="w-full p-2 border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'content_tone\', this.value)">' +
                         '<option value="">Select tone...</option>' +
                         '<option value="informative">Informative</option>' +
@@ -6389,7 +6501,7 @@ function loadContentTab(contentDiv) {
                 '</div>' +
             '</div>' +
             '<div class="mt-2 text-center">' +
-                '<p class="text-xs text-gray-500">💡 Global settings • AI generates content for all tabs based on voice & tone</p>' +
+                '<p class="text-xs text-white">💡 Global settings • AI generates content for all tabs based on voice & tone</p>' +
             '</div>' +
         '</div>' +
         '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">' +
@@ -6421,28 +6533,14 @@ function loadContentTab(contentDiv) {
             addMarketingChangeListeners();
             // Load global marketing defaults
             loadGlobalMarketingDefaults();
+            // Load primary image after tab content is rendered
+            loadMarketingItemImage();
         }, 100);
     });
 }
 
 function loadAudienceTab(contentDiv) {
     contentDiv.innerHTML = '<div class="space-y-6">' +
-        '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">' +
-            '<div class="flex items-center gap-3">' +
-                '<div id="marketingItemImageAudience" class="flex-shrink-0">' +
-                    '<!-- Primary image will be loaded here -->' +
-                '</div>' +
-                '<div class="flex-1">' +
-                    '<div class="flex items-center gap-2">' +
-                        '<svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>' +
-                        '</svg>' +
-                        '<span class="text-sm font-medium text-gray-800">Currently editing: <strong>' + (currentItemSku || 'No item selected') + '</strong></span>' +
-                    '</div>' +
-                    '<p class="text-xs text-gray-600 mt-1">All audience data below is specific to this item only.</p>' +
-                '</div>' +
-            '</div>' +
-                 '</div>' +
         '<h3 class="text-lg font-semibold text-gray-800">Target Audience Management</h3>' +
         '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">' +
             '<div class="bg-orange-50 rounded-lg p-4">' +
@@ -6467,6 +6565,8 @@ function loadAudienceTab(contentDiv) {
         setTimeout(() => {
             storeOriginalMarketingData();
             addMarketingChangeListeners();
+            // Load primary image after tab content is rendered
+            loadMarketingItemImage();
         }, 100);
     });
 }
@@ -6621,9 +6721,6 @@ function loadExistingMarketingData() {
     
     console.log('Marketing Manager: Loading data for SKU:', currentItemSku);
     
-    // Load primary image first
-    loadMarketingItemImage();
-    
     return fetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}&_t=${Date.now()}`)
     .then(response => response.json())
     .then(data => {
@@ -6655,52 +6752,45 @@ function loadMarketingItemImage() {
     fetch(`/api/get_item_images.php?sku=${encodeURIComponent(currentItemSku)}`)
     .then(response => response.json())
     .then(data => {
-        const imageContainers = [
-            document.getElementById('marketingItemImage'),
-            document.getElementById('marketingItemImageAudience')
-        ];
+        const headerContainer = document.getElementById('marketingItemImageHeader');
         
-        imageContainers.forEach(container => {
-            if (!container) return;
+        if (!headerContainer) {
+            console.log('Marketing Manager: Header image container not found');
+            return;
+        }
+        
+        if (data.success && data.primaryImage && data.primaryImage.file_exists) {
+            const primaryImage = data.primaryImage;
+            console.log('Marketing Manager: Loading primary image:', primaryImage.image_path);
             
-            if (data.success && data.primaryImage && data.primaryImage.file_exists) {
-                const primaryImage = data.primaryImage;
-                console.log('Marketing Manager: Loading primary image:', primaryImage.image_path);
-                
-                container.innerHTML = '<div class="w-12 h-12 rounded-lg border-2 border-gray-200 overflow-hidden bg-white shadow-sm">' +
-                    '<img src="' + primaryImage.image_path + '" ' +
-                         'alt="' + currentItemSku + '" ' +
-                         'class="w-full h-full object-cover" ' +
-                         'onerror="this.parentElement.innerHTML=\'<div class=\\\'w-full h-full bg-gray-100 flex items-center justify-center\\\'>📷</div>\'">' +
-                '</div>';
-            } else {
-                console.log('Marketing Manager: No primary image found for SKU:', currentItemSku);
-                // Show placeholder
-                container.innerHTML = '<div class="w-12 h-12 rounded-lg border-2 border-gray-200 bg-gray-100 flex items-center justify-center shadow-sm">' +
-                    '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>' +
-                    '</svg>' +
-                '</div>';
-            }
-        });
+            headerContainer.innerHTML = '<div class="w-40 h-40 rounded-lg border-2 border-gray-200 overflow-hidden bg-white shadow-lg">' +
+                '<img src="' + primaryImage.image_path + '" ' +
+                     'alt="' + currentItemSku + '" ' +
+                     'class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" ' +
+                     'onerror="this.parentElement.innerHTML=\'<div class=\\\'w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs\\\'>📷</div>\'">' +
+            '</div>';
+        } else {
+            console.log('Marketing Manager: No primary image found for SKU:', currentItemSku);
+            // Show placeholder
+            headerContainer.innerHTML = '<div class="w-40 h-40 rounded-lg border-2 border-gray-200 bg-gray-100 flex flex-col items-center justify-center shadow-lg">' +
+                '<svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>' +
+                '</svg>' +
+            '</div>';
+        }
     })
     .catch(error => {
         console.error('Marketing Manager: Error loading primary image:', error);
         // Show error placeholder
-        const imageContainers = [
-            document.getElementById('marketingItemImage'),
-            document.getElementById('marketingItemImageAudience')
-        ];
+        const headerContainer = document.getElementById('marketingItemImageHeader');
         
-        imageContainers.forEach(container => {
-            if (container) {
-                container.innerHTML = '<div class="w-12 h-12 rounded-lg border-2 border-red-200 bg-red-50 flex items-center justify-center shadow-sm">' +
-                    '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
-                    '</svg>' +
-                '</div>';
-            }
-        });
+        if (headerContainer) {
+            headerContainer.innerHTML = '<div class="w-40 h-40 rounded-lg border-2 border-red-200 bg-red-50 flex flex-col items-center justify-center shadow-lg">' +
+                '<svg class="w-16 h-16 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>' +
+                '</svg>' +
+            '</div>';
+        }
     });
 }
 
@@ -7842,49 +7932,101 @@ function showComparisonResults(data) {
     let html = '<div class="space-y-6">';
     html += '<div class="text-center mb-6">';
     html += '<h3 class="text-lg font-semibold text-gray-800">🎯 AI Content Comparison</h3>';
-            html += '<p class="text-sm text-gray-600">Review and select which AI-generated content to apply to your item</p>';
+    html += '<p class="text-sm text-gray-600">Review and select which AI-generated content to apply to your item</p>';
     html += '</div>';
     
+    // Store available fields for select all functionality
+    let availableFields = [];
+    
     // Title comparison
-    if (data.marketing_suggestions?.suggested_title) {
+    if (data.title) {
         const currentTitle = document.getElementById('name')?.value || '';
-        const suggestedTitle = data.marketing_suggestions.suggested_title;
+        const suggestedTitle = data.title;
         
         if (currentTitle !== suggestedTitle) {
+            availableFields.push('title');
             html += createComparisonCard('title', 'Item Title', currentTitle, suggestedTitle);
         }
     }
     
     // Description comparison
-    if (data.marketing_suggestions?.suggested_description) {
+    if (data.description) {
         const currentDesc = document.getElementById('description')?.value || '';
-        const suggestedDesc = data.marketing_suggestions.suggested_description;
+        const suggestedDesc = data.description;
         
         if (currentDesc !== suggestedDesc) {
+            availableFields.push('description');
             html += createComparisonCard('description', 'Item Description', currentDesc, suggestedDesc);
         }
     }
     
     // Marketing fields comparison
     const marketingFields = [
-        { key: 'target_audience', label: 'Target Audience', current: document.getElementById('targetAudience')?.value || '' },
-        { key: 'demographic_targeting', label: 'Demographics', current: document.getElementById('demographics')?.value || '' },
-        { key: 'psychographic_profile', label: 'Psychographics', current: document.getElementById('psychographics')?.value || '' }
+        { key: 'target_audience', label: 'Target Audience', current: document.getElementById('targetAudience')?.value || '', source: 'targetAudience' },
+        { key: 'demographic_targeting', label: 'Demographics', current: document.getElementById('demographics')?.value || '', source: 'marketingIntelligence' },
+        { key: 'psychographic_profile', label: 'Psychographics', current: document.getElementById('psychographics')?.value || '', source: 'marketingIntelligence' }
     ];
     
     marketingFields.forEach(field => {
-        if (data.marketing_suggestions?.[field.key] && field.current !== data.marketing_suggestions[field.key]) {
-            html += createComparisonCard(field.key, field.label, field.current, data.marketing_suggestions[field.key]);
+        let suggestedValue = null;
+        
+        if (field.source === 'targetAudience') {
+            suggestedValue = data.targetAudience;
+        } else if (field.source === 'marketingIntelligence') {
+            suggestedValue = data.marketingIntelligence?.[field.key];
+        }
+        
+        if (suggestedValue && field.current !== suggestedValue) {
+            availableFields.push(field.key);
+            html += createComparisonCard(field.key, field.label, field.current, suggestedValue);
         }
     });
+    
+    // Add select all control if there are available fields
+    if (availableFields.length > 0) {
+        html = html.replace('<div class="space-y-6">', `
+            <div class="space-y-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="selectAllComparison" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded" onchange="toggleSelectAll()">
+                        <label for="selectAllComparison" class="font-medium text-blue-800">Select All AI Suggestions</label>
+                    </div>
+                    <span class="text-sm text-blue-600">${availableFields.length} suggestions available</span>
+                </div>
+                <p class="text-sm text-blue-600 mt-2">Apply all AI-generated content to your item at once</p>
+            </div>
+        `);
+    }
+    
+    // Only show "no changes" message if there are truly no available fields
+    if (availableFields.length === 0) {
+        html += '<div class="text-center py-8 text-gray-500">';
+        html += '<p>No changes detected. All AI suggestions match your current content.</p>';
+        html += '<div class="mt-4 text-xs bg-gray-100 p-4 rounded">';
+        html += '<strong>Debug Info:</strong><br>';
+        html += `Current Title: "${document.getElementById('name')?.value || 'N/A'}"<br>`;
+        html += `AI Title: "${data.title || 'N/A'}"<br>`;
+        html += `Current Desc: "${(document.getElementById('description')?.value || 'N/A').substring(0, 50)}..."<br>`;
+        html += `AI Desc: "${(data.description || 'N/A').substring(0, 50)}..."`;
+        html += '</div>';
+        html += '</div>';
+    }
     
     html += '</div>';
     
     contentDiv.innerHTML = html;
     
-    // Show apply button
+    // Store available fields globally for select all functionality
+    window.availableComparisonFields = availableFields;
+    
+    // Show apply button only if there are changes
     if (applyBtn) {
-        applyBtn.classList.remove('hidden');
+        if (availableFields.length > 0) {
+            applyBtn.classList.remove('hidden');
+        } else {
+            applyBtn.classList.add('hidden');
+        }
     }
 }
 
@@ -7913,19 +8055,72 @@ function createComparisonCard(fieldKey, fieldLabel, currentValue, suggestedValue
     `;
 }
 
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllComparison');
+    const isChecked = selectAllCheckbox.checked;
+    
+    // Get all available fields and toggle their checkboxes
+    if (window.availableComparisonFields) {
+        window.availableComparisonFields.forEach(fieldKey => {
+            const fieldCheckbox = document.getElementById(`comparison-${fieldKey}-checkbox`);
+            if (fieldCheckbox) {
+                fieldCheckbox.checked = isChecked;
+                // Trigger the individual toggle to update selectedChanges
+                toggleComparison(fieldKey);
+            }
+        });
+    }
+}
+
 function toggleComparison(fieldKey) {
     const checkbox = document.getElementById(`comparison-${fieldKey}-checkbox`);
     if (checkbox.checked) {
-        selectedChanges[fieldKey] = aiComparisonData.marketing_suggestions[fieldKey];
+        // Get the value from the correct location in the AI data
+        let value = null;
+        if (fieldKey === 'title') {
+            value = aiComparisonData.title;
+        } else if (fieldKey === 'description') {
+            value = aiComparisonData.description;
+        } else if (fieldKey === 'target_audience') {
+            value = aiComparisonData.targetAudience;
+        } else if (fieldKey === 'demographic_targeting' || fieldKey === 'psychographic_profile') {
+            value = aiComparisonData.marketingIntelligence?.[fieldKey];
+        }
+        
+        if (value) {
+            selectedChanges[fieldKey] = value;
+        }
     } else {
         delete selectedChanges[fieldKey];
     }
+    
+    // Update select all checkbox state based on individual selections
+    updateSelectAllState();
     
     // Update apply button text
     const applyBtn = document.getElementById('applyChangesBtn');
     const selectedCount = Object.keys(selectedChanges).length;
     if (applyBtn) {
         applyBtn.textContent = selectedCount > 0 ? `Apply ${selectedCount} Selected Changes` : 'Apply Selected Changes';
+    }
+}
+
+function updateSelectAllState() {
+    const selectAllCheckbox = document.getElementById('selectAllComparison');
+    if (!selectAllCheckbox || !window.availableComparisonFields) return;
+    
+    const totalFields = window.availableComparisonFields.length;
+    const selectedCount = Object.keys(selectedChanges).length;
+    
+    if (selectedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (selectedCount === totalFields) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
     }
 }
 
@@ -8527,6 +8722,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+
+<script src="js/modal-close-positioning.js?v=<?= $cache_buster ?>"></script>
 
 <?php
 $output = ob_get_clean();

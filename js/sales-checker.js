@@ -349,7 +349,40 @@ function positionPopupSimple(element, popup) {
 }
 
 // Function to add sale badges to product cards (for shop page)
-function addSaleBadgeToCard(productCard, discountPercentage) {
+function addSaleBadgeToCard(skuOrCard, discountPercentageOrCard) {
+    let productCard, discountPercentage;
+    
+    // Handle different parameter patterns
+    if (typeof skuOrCard === 'string') {
+        // Called with (sku, productCard) pattern
+        const sku = skuOrCard;
+        productCard = discountPercentageOrCard;
+        
+        // We need to get the discount percentage by checking the sale
+        checkItemSale(sku).then(saleData => {
+            if (saleData.isOnSale) {
+                addSaleBadgeToCardWithDiscount(productCard, saleData.discountPercentage);
+            }
+        }).catch(error => {
+            console.log('Error checking sale for badge:', error);
+        });
+        return;
+    } else {
+        // Called with (productCard, discountPercentage) pattern
+        productCard = skuOrCard;
+        discountPercentage = discountPercentageOrCard;
+    }
+    
+    addSaleBadgeToCardWithDiscount(productCard, discountPercentage);
+}
+
+// Helper function to actually add the badge with discount percentage
+function addSaleBadgeToCardWithDiscount(productCard, discountPercentage) {
+    if (!productCard || !productCard.querySelector) {
+        console.error('Invalid product card element provided to addSaleBadgeToCard');
+        return;
+    }
+    
     // Remove existing sale badge if any
     const existingBadge = productCard.querySelector('.sale-badge');
     if (existingBadge) {

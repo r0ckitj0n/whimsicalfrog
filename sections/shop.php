@@ -10,6 +10,12 @@ require_once __DIR__ . '/../components/image_carousel.php';
 require_once __DIR__ . '/../components/detailed_product_modal.php';
 require_once __DIR__ . '/../includes/item_image_helpers.php';
 require_once __DIR__ . '/../api/business_settings_helper.php';
+require_once __DIR__ . '/../api/marketing_helper.php';
+
+// Initialize marketing helper
+if (!isset($GLOBALS['marketingHelper'])) {
+    $GLOBALS['marketingHelper'] = new MarketingHelper();
+}
 
 // Categories are already loaded in index.php and available in $categories
 ?>
@@ -212,7 +218,7 @@ require_once __DIR__ . '/../api/business_settings_helper.php';
                         <span class="product-price font-bold text-[#87ac3a]" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
                         <button class="add-to-cart-btn <?php echo $stock>0 ? 'bg-[#87ac3a] hover:bg-[#a3cc4a]' : 'bg-gray-400 cursor-not-allowed'; ?> text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg"
                                 <?php if($stock==0) echo 'disabled'; ?>
-                                onclick="event.stopPropagation(); openQuickAddModal('<?php echo $sku; ?>', '<?php echo addslashes($productName); ?>', <?php echo $price; ?>, '<?php echo $imageUrl; ?>')"
+                                onclick="event.stopPropagation(); openQuickAddModal('<?php echo $sku; ?>', '<?php echo str_replace(["'", '"'], ["\'", '\"'], $productName); ?>', <?php echo $price; ?>, '<?php echo $imageUrl; ?>')"
                                 data-product-id="<?php echo $productId; ?>"
                                 data-product-name="<?php echo $productName; ?>"
                                 data-product-price="<?php echo $price; ?>"
@@ -318,6 +324,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Global addToCartWithModal function not available');
         }
     }
+    
+    // Make functions globally available
+    window.openQuickAddModal = openQuickAddModal;
     
     // Quantity modal functionality - initialize elements when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -475,6 +484,9 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Sorry, there was an error loading the product details.');
         }
     }
+    
+    // Make functions globally available
+    window.showProductDetails = showProductDetails;
 
     // Generate detailed modal HTML
     async function generateDetailedModal(item, images) {
@@ -767,6 +779,13 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.overflow = 'hidden';
         }
     }
+    
+    // Make modal functions globally available
+    window.switchDetailedImage = switchDetailedImage;
+    window.adjustDetailedQuantity = adjustDetailedQuantity;
+    window.addDetailedToCart = addDetailedToCart;
+    window.closeDetailedModal = closeDetailedModal;
+    window.showDetailedModal = showDetailedModal;
     
     // Check for sales and display sale prices on page load
     setTimeout(() => {

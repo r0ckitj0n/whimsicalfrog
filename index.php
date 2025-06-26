@@ -901,6 +901,12 @@ $seoData = generatePageSEO($page, $currentSku);
                 const userObj = data.user ? data.user : data; // support both formats
                 sessionStorage.setItem('user', JSON.stringify(userObj));
                 
+                // Check if server provided a redirect URL (for cart redirect)
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                    return;
+                }
+                
                 // Check if user was trying to checkout before login
                 const pendingCheckout = localStorage.getItem('pendingCheckout');
                 if (pendingCheckout === 'true') {

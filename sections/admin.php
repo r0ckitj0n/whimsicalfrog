@@ -85,20 +85,21 @@ $adminRole = $userData['roleType'] ?? 'Administrator';
     <?php
     $section = isset($_GET['section']) ? $_GET['section'] : '';
     $tabs = [
-        '' => ['Dashboard', 'bg-gray-200', 'text-gray-800'],
-        'customers' => ['Customers', 'bg-purple-100', 'text-purple-800'],
-        'inventory' => ['Inventory', 'bg-green-100', 'text-green-800'],
-        'orders' => ['Orders', 'bg-blue-100', 'text-blue-800'],
-        'reports' => ['Reports', 'bg-indigo-100', 'text-indigo-800'],
-        'marketing' => ['Marketing', 'bg-red-100', 'text-red-800'],
-        'settings' => ['Settings', 'bg-gray-100', 'text-gray-800'],
+        '' => ['Dashboard', 'bg-gray-200', 'text-gray-800', 'adminDashboardTab'],
+        'customers' => ['Customers', 'bg-purple-100', 'text-purple-800', 'adminCustomersTab'],
+        'inventory' => ['Inventory', 'bg-green-100', 'text-green-800', 'adminInventoryTab'],
+        'orders' => ['Orders', 'bg-blue-100', 'text-blue-800', 'adminOrdersTab'],
+        'reports' => ['Reports', 'bg-indigo-100', 'text-indigo-800', 'adminReportsTab'],
+        'marketing' => ['Marketing', 'bg-red-100', 'text-red-800', 'adminMarketingTab'],
+        'settings' => ['Settings', 'bg-gray-100', 'text-gray-800', 'adminSettingsTab'],
     ];
     ?>
     <div class="flex justify-between items-center mb-1 admin-tab-bar p-2 rounded-lg">
         <!-- Left side: Navigation tabs -->
         <div class="flex flex-wrap gap-2">
-            <?php foreach ($tabs as $key => [$label, $bg, $text]): ?>
+            <?php foreach ($tabs as $key => [$label, $bg, $text, $id]): ?>
                 <a href="/?page=admin<?php echo $key ? '&section=' . $key : ''; ?>"
+                   id="<?php echo $id; ?>"
                    class="px-3 py-1 rounded text-xs font-semibold <?php echo $bg . ' ' . $text; ?> <?php echo ($section === $key || ($key === '' && !$section)) ? 'ring-2 ring-green-400' : 'hover:bg-green-200'; ?>">
                     <?php echo $label; ?>
                 </a>

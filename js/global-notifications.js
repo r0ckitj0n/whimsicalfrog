@@ -49,9 +49,14 @@ class WhimsicalFrogNotifications {
             notification.style.transform = 'translateX(0) scale(1)';
         });
 
+        // Debug logging
+        console.log(`Notification ${id}: duration=${duration}, persistent=${persistent}, type=${type}`);
+
         // Auto-remove if not persistent
         if (!persistent && duration > 0) {
+            console.log(`Setting timeout for notification ${id} with duration ${duration}ms`);
             setTimeout(() => {
+                console.log(`Auto-removing notification ${id} after ${duration}ms`);
                 this.remove(id);
             }, duration);
         }
@@ -110,8 +115,25 @@ class WhimsicalFrogNotifications {
         }
 
         // Add click-to-dismiss functionality
-        notification.addEventListener('click', () => {
+        notification.addEventListener('click', (event) => {
+            console.log(`Notification ${id} clicked - removing`);
+            event.preventDefault();
+            event.stopPropagation();
             this.remove(id);
+        });
+
+        // Also add click-to-dismiss to the notification content area
+        notification.addEventListener('mousedown', (event) => {
+            event.stopPropagation();
+        });
+
+        // Add hover effect to indicate clickability
+        notification.addEventListener('mouseenter', () => {
+            notification.style.transform = 'translateX(0) scale(1.02)';
+        });
+
+        notification.addEventListener('mouseleave', () => {
+            notification.style.transform = 'translateX(0) scale(1)';
         });
 
         // Create HTML content without inline color styles for success notifications
@@ -257,17 +279,23 @@ class WhimsicalFrogNotifications {
     }
 
     remove(id) {
+        console.log(`Attempting to remove notification ${id}`);
         const notification = this.notifications.get(id);
         if (notification && notification.parentElement) {
+            console.log(`Removing notification ${id} from DOM`);
             notification.style.opacity = '0';
             notification.style.transform = 'translateX(100%) scale(0.9)';
             
             setTimeout(() => {
                 if (notification.parentElement) {
                     notification.remove();
+                    console.log(`Notification ${id} removed from DOM`);
                 }
                 this.notifications.delete(id);
+                console.log(`Notification ${id} deleted from memory`);
             }, 400);
+        } else {
+            console.log(`Notification ${id} not found or already removed`);
         }
     }
 

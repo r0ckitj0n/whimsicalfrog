@@ -590,7 +590,7 @@ async function generateDetailedModal(item, images) {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Product Images -->
                     <div class="space-y-4">
-                        <div class="aspect-square bg-gray-50 rounded-lg overflow-hidden" style="max-width: 50%; margin: 0 auto;">
+                        <div class="aspect-square bg-gray-50 rounded-lg overflow-hidden">
                             <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain">
                         </div>
                         

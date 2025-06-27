@@ -983,6 +983,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="js/sales.js?v=<?php echo time(); ?>"></script>
 <script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>
 
+<!-- Container for global item modal -->
+<div id="globalModalContainer"></div>
+
 <!-- Include centralized quantity modal -->
 <?php include 'components/quantity_modal.php'; ?>
 

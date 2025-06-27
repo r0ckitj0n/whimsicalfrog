@@ -542,8 +542,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Container for detailed product modal -->
-<div id="detailedModalContainer"></div>
+<!-- Container for global item modal -->
+<div id="globalModalContainer"></div>
 
 <script>
 // Universal room functionality

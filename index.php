@@ -699,6 +699,9 @@ $seoData = generatePageSEO($page, $currentSku);
 <script src="js/cart.js?v=<?php echo time(); ?>"></script>
 <?php endif; ?>
 
+<!-- Load global item modal system (unified modal for shop and rooms) -->
+<script src="js/global-item-modal.js?v=<?php echo time(); ?>"></script>
+
 <!-- Load global modal system -->
     <script src="js/global-modals.js?v=<?php echo time(); ?>"></script>
     

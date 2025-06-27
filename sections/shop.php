@@ -257,113 +257,21 @@ if (!isset($GLOBALS['marketingHelper'])) {
 </style>
 
 <script>
+// Shop page now uses the global item modal system
+// All modal functionality is handled by js/global-item-modal.js
 
-
-
-
-// Show product details in large modal
-async function showProductDetails(sku) {
-    try {
-        // Call the showDetailedModal function with the SKU
-        await showDetailedModal(sku);
-    } catch (error) {
-        console.error('Error loading product details:', error);
-        alert('Error: ' + error.message);
+// Show product details using global modal system
+function showProductDetails(sku) {
+    if (typeof window.showGlobalItemModal === 'function') {
+        window.showGlobalItemModal(sku);
+    } else {
+        console.error('Global item modal system not loaded');
+        alert('Unable to load item details. Please refresh the page.');
     }
 }
 
-// Show detailed modal for an item - moved before showProductDetails
-async function showDetailedModal(sku) {
-    try {
-        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to load item details');
-        }
-        
-        const item = data.item;
-        const images = data.images || [];
-        
-        // Render the modal using the API
-        const modalResponse = await fetch('/api/render_detailed_modal.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                item: item,
-                images: images
-            })
-        });
-        
-        const modalHtml = await modalResponse.text();
-        
-        // Insert the modal HTML
-        const modalContainer = document.getElementById('detailedModalContainer');
-        modalContainer.innerHTML = modalHtml;
-        
-        // Execute any script tags in the loaded HTML
-        const scripts = modalContainer.querySelectorAll('script');
-        scripts.forEach(script => {
-            const newScript = document.createElement('script');
-            newScript.textContent = script.textContent;
-            document.head.appendChild(newScript);
-            document.head.removeChild(newScript);
-        });
-        
-        // Wait a moment for scripts to execute, then call the modal's function
-        setTimeout(() => {
-            if (typeof window.showDetailedModalComponent !== 'undefined') {
-                window.showDetailedModalComponent(sku, item);
-            } else {
-                // Fallback - show modal manually
-                const modal = document.getElementById('detailedProductModal');
-                if (modal) {
-                    modal.style.display = 'flex';
-                    modal.classList.remove('hidden');
-                    document.body.classList.add('modal-open');
-                    document.documentElement.classList.add('modal-open');
-                }
-            }
-        }, 50);
-        
-    } catch (error) {
-        console.error('Error showing detailed modal:', error);
-        alert('Error: ' + error.message);
-    }
-}
-
-function closeDetailedModal() {
-    const modal = document.getElementById('detailedProductModal');
-    if (modal) {
-        modal.style.display = 'none';
-        // Remove modal-open class and reset styles
-        document.body.classList.remove('modal-open');
-        document.documentElement.classList.remove('modal-open');
-        
-        // Reset body styles completely
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
-        document.body.style.height = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        
-        // Reset html styles completely
-        document.documentElement.style.overflow = '';
-        document.documentElement.style.position = '';
-        document.documentElement.style.width = '';
-        document.documentElement.style.height = '';
-    }
-}
-
-// Image viewer functionality is now handled by global js/image-viewer.js
-
-// Make all functions globally available
+// Make function globally available
 window.showProductDetails = showProductDetails;
-window.closeDetailedModal = closeDetailedModal;
-window.showDetailedModal = showDetailedModal;
 </script>
 
 <section id="shopPage" class="py-6">
@@ -527,8 +435,8 @@ require_once __DIR__ . '/../components/quantity_modal.php';
 
 
 
-<!-- Placeholder for detailed modal (will be dynamically created) -->
-<div id="detailedModalContainer"></div>
+<!-- Container for global item modal -->
+<div id="globalModalContainer"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -215,6 +215,10 @@ class ShoppingCart {
         this.items = [];
         this.saveCart();
         this.updateCartCount();
+        this.dispatchCartUpdate();
+        
+        // Re-render the cart view to show empty state
+        this.renderCart();
     }
 
     saveCart() {
@@ -306,9 +310,9 @@ class ShoppingCart {
             <div class="p-4 border-t border-gray-200 bg-gray-50">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-lg font-semibold">Total: $${this.getTotal().toFixed(2)}</span>
-                    <button onclick="cart.clearCart()" class="px-4 py-2 rounded" style="background-color: #6b7280; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
+                    <button onclick="cart.clearCart()" class="px-4 py-2 rounded text-white" style="background-color: #6b7280; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
                 </div>
-                <button onclick="cart.checkout()" class="w-full py-3 px-6 rounded-lg font-semibold" style="background-color: #87ac3a; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">Proceed to Checkout</button>
+                <button onclick="cart.checkout()" class="brand-button w-full py-3 px-6 rounded-lg font-semibold">Proceed to Checkout</button>
             </div>
         `;
     }
@@ -401,8 +405,8 @@ class ShoppingCart {
                 </div>
 
                 <div class="flex space-x-2">
-                    <button onclick="document.getElementById('paymentMethodModal').remove()" class="flex-1 py-2 px-4 rounded" style="background-color: #6b7280; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Cancel</button>
-                    <button onclick="cart.proceedToCheckout()" class="flex-1 text-white py-2 px-4 rounded" style="background-color: #87ac3a; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">Place Order</button>
+                    <button onclick="document.getElementById('paymentMethodModal').remove()" class="flex-1 py-2 px-4 rounded text-white" style="background-color: #6b7280; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Cancel</button>
+                    <button onclick="cart.proceedToCheckout()" class="brand-button flex-1 py-2 px-4 rounded">Place Order</button>
                 </div>
             </div>
         `;
@@ -850,8 +854,6 @@ window.updateColorSwatch = function() {
         }
     }
 };
-
-
 
 // Function to update product image when color is selected
 window.updateProductImageForColor = async function() {

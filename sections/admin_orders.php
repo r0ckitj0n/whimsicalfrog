@@ -21,7 +21,15 @@ if ($startDate === '' && $endDate === '') {
             o.shippingMethod,
             o.date,
             o.paymentDate,
-            u.username
+            o.fulfillmentNotes,
+            o.paymentNotes,
+            o.shippingAddress,
+            u.username,
+            u.addressLine1,
+            u.addressLine2,
+            u.city,
+            u.state,
+            u.zipCode
         FROM orders o
         LEFT JOIN users u ON o.userId = u.id
         ORDER BY o.date DESC
@@ -41,7 +49,15 @@ if ($startDate === '' && $endDate === '') {
             o.shippingMethod,
             o.date,
             o.paymentDate,
-            u.username
+            o.fulfillmentNotes,
+            o.paymentNotes,
+            o.shippingAddress,
+            u.username,
+            u.addressLine1,
+            u.addressLine2,
+            u.city,
+            u.state,
+            u.zipCode
         FROM orders o
         LEFT JOIN users u ON o.userId = u.id
         WHERE DATE(o.date) <= :end
@@ -62,7 +78,15 @@ if ($startDate === '' && $endDate === '') {
             o.shippingMethod,
             o.date,
             o.paymentDate,
-            u.username
+            o.fulfillmentNotes,
+            o.paymentNotes,
+            o.shippingAddress,
+            u.username,
+            u.addressLine1,
+            u.addressLine2,
+            u.city,
+            u.state,
+            u.zipCode
         FROM orders o
         LEFT JOIN users u ON o.userId = u.id
         WHERE DATE(o.date) >= :start
@@ -83,7 +107,15 @@ if ($startDate === '' && $endDate === '') {
             o.shippingMethod,
             o.date,
             o.paymentDate,
-            u.username
+            o.fulfillmentNotes,
+            o.paymentNotes,
+            o.shippingAddress,
+            u.username,
+            u.addressLine1,
+            u.addressLine2,
+            u.city,
+            u.state,
+            u.zipCode
         FROM orders o
         LEFT JOIN users u ON o.userId = u.id
         WHERE DATE(o.date) BETWEEN :start AND :end
@@ -188,6 +220,24 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
     .orders-table tr:hover { background-color: #f7fafc; }
     .orders-table th:first-child { border-top-left-radius: 6px; }
     .orders-table th:last-child { border-top-right-radius: 6px; }
+
+    .address-cell {
+        max-width: 150px;
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
+    .notes-cell {
+        max-width: 120px;
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+    
+    .address-cell:hover,
+    .notes-cell:hover {
+        white-space: normal;
+        overflow: visible;
+    }
 
     /* Action buttons */
     .action-btn { padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; border: none; }
@@ -383,12 +433,14 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Shipping Method</th>
                     <th>Payment Status</th>
                     <th>Payment Date</th>
+                    <th>Shipping Address</th>
+                    <th>Notes</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($orders)): ?>
-                    <tr><td colspan="11" class="text-center py-4">No orders found.</td></tr>
+                    <tr><td colspan="13" class="text-center py-4">No orders found.</td></tr>
                 <?php else: ?>
                     <?php foreach ($orders as $order): 
                         // Count total items and total quantity for this order
@@ -425,6 +477,35 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                             </span>
                         </td>
                         <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentDate" data-type="date"><?= !empty($order['paymentDate']) ? htmlspecialchars(date('Y-m-d', strtotime($order['paymentDate']))) : '' ?></td>
+                        <td class="address-cell" style="max-width: 150px; font-size: 0.75rem; line-height: 1.2;">
+                            <?php
+                            $customShip = trim($order['shippingAddress'] ?? '');
+                            if ($customShip !== '') {
+                                echo nl2br(htmlspecialchars($customShip));
+                            } else {
+                                $addrParts = array_filter([
+                                    $order['addressLine1'] ?? '',
+                                    $order['addressLine2'] ?? '',
+                                    ($order['city'] ?? '') . (isset($order['state']) ? ', ' . $order['state'] : ''),
+                                    $order['zipCode'] ?? ''
+                                ]);
+                                $fullAddress = !empty($addrParts) ? implode('<br>', array_map('htmlspecialchars', $addrParts)) : 'N/A';
+                                echo $fullAddress;
+                            }
+                            ?>
+                        </td>
+                        <td class="notes-cell" style="max-width: 120px; font-size: 0.75rem; line-height: 1.2;">
+                            <?php
+                            $notesBlock = [];
+                            if (!empty($order['fulfillmentNotes'])) {
+                                $notesBlock[] = '<span class="font-semibold">Fulfillment:</span> ' . htmlspecialchars($order['fulfillmentNotes'] ?? '');
+                            }
+                            if (!empty($order['paymentNotes'])) {
+                                $notesBlock[] = '<span class="font-semibold">Payment:</span> ' . htmlspecialchars($order['paymentNotes'] ?? '');
+                            }
+                            echo !empty($notesBlock) ? implode('<br>', $notesBlock) : '-';
+                            ?>
+                        </td>
                         <td>
                             <a href="?page=admin&section=orders&view=<?= htmlspecialchars($order['id'] ?? '') ?>" class="action-btn view-btn" title="View Order">👁️</a>
                             <a href="?page=admin&section=orders&edit=<?= htmlspecialchars($order['id'] ?? '') ?>" class="action-btn edit-btn" title="Edit Order">✏️</a>

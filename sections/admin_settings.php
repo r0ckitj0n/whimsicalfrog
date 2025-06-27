@@ -229,7 +229,8 @@
         <p class="section-description">Customize appearance and interactive elements</p>
       </div>
       <div class="section-content">
-        <button id="cssRulesBtn" onclick="openCSSRulesModal()" class="btn-primary btn-full-width admin-settings-button">
+        <button id="cssRulesBtn" onclick="openCSSRulesModal()" class="btn-primary btn-full-width admin-settings-button" 
+                title="Change colors, fonts, and buttons because apparently 'make it look good' isn't specific enough instruction for you. Don't worry, we'll hold your hand through picking colors that don't make your customers' eyes bleed.">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
           </svg>
@@ -8587,15 +8588,7 @@ function filterCSSRules(searchTerm) {
     }
 }
 
-function clearCSSSearch() {
-    const searchInput = document.getElementById('cssSearchInput');
-    const searchResults = document.getElementById('searchResultsCount');
-    if (searchInput) searchInput.value = '';
-    if (searchResults) searchResults.style.display = 'none';
-    };
-    
-    return helpTexts[ruleName] || 'Customize this style property';
-}
+// clearCSSSearch function moved to avoid duplicate definition
 
 function showCSSCategory(category) {
     // Update tab styles

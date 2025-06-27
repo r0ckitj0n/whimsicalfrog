@@ -311,7 +311,7 @@ $messageType = $_GET['type'] ?? '';
             <table class="fulfillment-table">
                 <thead>
                     <tr>
-                        <th>Order ID</th><th>Customer</th><th>Date</th><th>Items</th><th>Status</th><th>Payment Method</th><th>Shipping Method</th><th>Payment Status</th><th>Shipping Address</th><th>Notes</th><th>Actions</th>
+                        <th>Order ID</th><th>Customer</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th>Payment Method</th><th>Shipping Method</th><th>Payment Status</th><th>Payment Date</th><th>Shipping Address</th><th>Notes</th><th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -328,6 +328,7 @@ $messageType = $_GET['type'] ?? '';
                             echo $totalItems ?: '0';
                             ?>
                         </td>
+                        <td class="font-semibold">$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
                         <td>
                             <select class="order-field-select order-field-update" data-field="status" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
                                 <option value="Pending" <?= ($order['status'] ?? 'Pending') === 'Pending' ? 'selected' : '' ?>>Pending</option>
@@ -363,6 +364,9 @@ $messageType = $_GET['type'] ?? '';
                                 <option value="Refunded" <?= ($order['paymentStatus'] ?? '') === 'Refunded' ? 'selected' : '' ?>>Refunded</option>
                                 <option value="Failed" <?= ($order['paymentStatus'] ?? '') === 'Failed' ? 'selected' : '' ?>>Failed</option>
                             </select>
+                        </td>
+                        <td class="text-sm text-gray-600">
+                            <?= !empty($order['paymentDate']) ? htmlspecialchars(date('M j, Y', strtotime($order['paymentDate']))) : '-' ?>
                         </td>
                         <td class="address-cell">
                             <?php

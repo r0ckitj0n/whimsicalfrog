@@ -1,0 +1,87 @@
+/* WhimsicalFrog Notification Style Overrides */
+/* This file contains CSS rules that override the default notification styles */
+
+/* Success Notification Brand Colors */
+.wf-notification[data-type="success"],
+.wf-notification:has(.wf-notification-icon:contains("✅")) {
+    background: #87ac3a !important;
+    border-color: #6b8e23 !important;
+    color: white !important;
+}
+
+.wf-notification[data-type="success"] .wf-notification-title,
+.wf-notification[data-type="success"] .wf-notification-message,
+.wf-notification[data-type="success"] .wf-notification-close {
+    color: white !important;
+}
+
+/* Alternative selector for notifications created by the global notification system */
+.wf-notification:has([style*="✅"]) {
+    background: #87ac3a !important;
+    border-color: #6b8e23 !important;
+    color: white !important;
+}
+
+.wf-notification:has([style*="✅"]) .wf-notification-title,
+.wf-notification:has([style*="✅"]) .wf-notification-message,
+.wf-notification:has([style*="✅"]) .wf-notification-close {
+    color: white !important;
+}
+
+/* More specific selector targeting the notification content structure */
+div[class*="wf-notification"]:has(div:contains("✅")) {
+    background: #87ac3a !important;
+    border-color: #6b8e23 !important;
+    color: white !important;
+}
+
+/* Target notifications containing cart-related text */
+.wf-notification:has(.wf-notification-message:contains("added to cart")),
+.wf-notification:has(.wf-notification-message:contains("Added")),
+.wf-notification:has(.wf-notification-message:contains("cart")) {
+    background: #87ac3a !important;
+    border-color: #6b8e23 !important;
+    color: white !important;
+}
+
+.wf-notification:has(.wf-notification-message:contains("added to cart")) *,
+.wf-notification:has(.wf-notification-message:contains("Added")) *,
+.wf-notification:has(.wf-notification-message:contains("cart")) * {
+    color: white !important;
+}
+
+/* Fallback: Target all notifications with checkmark icon */
+[class*="wf-notification"]:has([style*="font-size: 20px"]:contains("✅")) {
+    background: #87ac3a !important;
+    border-color: #6b8e23 !important;
+    color: white !important;
+}
+
+[class*="wf-notification"]:has([style*="font-size: 20px"]:contains("✅")) * {
+    color: white !important;
+}
+
+/* Most specific override - target the notification container directly */
+#wf-notification-container .wf-notification {
+    /* This will be applied via JavaScript for success notifications */
+}
+
+/* Brand color CSS variables for consistency */
+:root {
+    --wf-brand-green: #87ac3a;
+    --wf-brand-green-dark: #6b8e23;
+    --wf-notification-success-bg: var(--wf-brand-green);
+    --wf-notification-success-border: var(--wf-brand-green-dark);
+    --wf-notification-success-text: white;
+}
+
+/* Success notification styling using CSS variables */
+.wf-success-notification {
+    background: var(--wf-notification-success-bg) !important;
+    border-color: var(--wf-notification-success-border) !important;
+    color: var(--wf-notification-success-text) !important;
+}
+
+.wf-success-notification * {
+    color: var(--wf-notification-success-text) !important;
+} 

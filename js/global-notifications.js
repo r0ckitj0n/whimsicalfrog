@@ -61,8 +61,9 @@ class WhimsicalFrogNotifications {
 
     createNotification(id, message, type, title, persistent, actions) {
         const notification = document.createElement('div');
-        notification.className = 'wf-notification';
+        notification.className = `wf-notification wf-${type}-notification`;
         notification.dataset.id = id;
+        notification.dataset.type = type;
         
         const config = this.getTypeConfig(type);
         

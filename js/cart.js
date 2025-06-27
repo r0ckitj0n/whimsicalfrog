@@ -458,6 +458,20 @@ class ShoppingCart {
         }
 
         if (!user) {
+            // Set flag for pending checkout
+            localStorage.setItem('pendingCheckout', 'true');
+            
+            // Store cart redirect intent in PHP session via AJAX
+            try {
+                await fetch('/api/set_redirect.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ redirectUrl: '/?page=cart' })
+                });
+            } catch (e) {
+                console.warn('Could not set server-side redirect');
+            }
+            
             // Redirect to login page
             window.location.href = '/?page=login';
             return;

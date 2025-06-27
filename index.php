@@ -911,10 +911,10 @@ $seoData = generatePageSEO($page, $currentSku);
                 }
                 
                 // Redirect based on role
-                if (data.user && data.user.role === 'Admin') {
+                if (data.role === 'Admin') {
                     window.location.href = '/?page=admin';
                 } else {
-                    window.location.href = '/?page=shop';
+                    window.location.href = '/?page=main_room';
                 }
             } catch (error) {
                 errorMessage.textContent = error.message;

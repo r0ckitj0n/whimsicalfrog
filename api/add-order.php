@@ -14,6 +14,7 @@ register_shutdown_function(function() {
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/email_config.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 // Ensure no HTML errors are displayed for this API endpoint
 ini_set('display_errors', 0);
@@ -32,76 +33,18 @@ $rawInput = file_get_contents('php://input');
 error_log("add-order.php: Raw input: " . $rawInput);
 error_log("add-order.php: Raw input length: " . strlen($rawInput));
 
-// Function to sync total stock with color quantities
-function syncTotalStockWithColors($pdo, $itemSku) {
-    try {
-        // Calculate total stock from all active colors
-        $stmt = $pdo->prepare("
-            SELECT COALESCE(SUM(stock_level), 0) as total_color_stock
-            FROM item_colors 
-            WHERE item_sku = ? AND is_active = 1
-        ");
-        $stmt->execute([$itemSku]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $totalColorStock = $result['total_color_stock'];
-        
-        // Update the main item's stock level
-        $updateStmt = $pdo->prepare("UPDATE items SET stockLevel = ? WHERE sku = ?");
-        $updateStmt->execute([$totalColorStock, $itemSku]);
-        
-        return $totalColorStock;
-    } catch (Exception $e) {
-        error_log("Error syncing stock for $itemSku: " . $e->getMessage());
-        return false;
-    }
-}
-
-// Function to reduce stock for a sale (both color and total stock)
-function reduceStockForSale($pdo, $itemSku, $colorName, $quantity, $useTransaction = true) {
-    try {
-        if ($useTransaction) {
-            $pdo->beginTransaction();
-        }
-        
-        if (!empty($colorName)) {
-            // Reduce color-specific stock
-            $stmt = $pdo->prepare("
-                UPDATE item_colors 
-                SET stock_level = GREATEST(stock_level - ?, 0) 
-                WHERE item_sku = ? AND color_name = ? AND is_active = 1
-            ");
-            $stmt->execute([$quantity, $itemSku, $colorName]);
-            
-            // Sync total stock with color quantities
-            syncTotalStockWithColors($pdo, $itemSku);
-        } else {
-            // No color specified, reduce total stock only
-            $stmt = $pdo->prepare("
-                UPDATE items 
-                SET stockLevel = GREATEST(stockLevel - ?, 0) 
-                WHERE sku = ?
-            ");
-            $stmt->execute([$quantity, $itemSku]);
-        }
-        
-        if ($useTransaction) {
-            $pdo->commit();
-        }
-        return true;
-    } catch (Exception $e) {
-        if ($useTransaction) {
-            $pdo->rollBack();
-        }
-        error_log("Error reducing stock for $itemSku: " . $e->getMessage());
-        return false;
-    }
-}
+// Stock management functions are now available from includes/functions.php
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success'=>false,'error'=>'Method not allowed']);
     exit;
 }
+
+// Read raw input
+$rawInput = file_get_contents('php://input');
+error_log("add-order.php: Raw input received: " . $rawInput);
+
 $input = json_decode($rawInput, true);
 if (!$input) {
     $jsonError = json_last_error_msg();
@@ -268,8 +211,7 @@ try {
                 $colorId = $colorResult ? $colorResult['id'] : null;
             }
             
-            // Use size-specific stock reduction function from item_sizes.php
-            include_once __DIR__ . '/item_sizes.php';
+            // Use size-specific stock reduction function
             
             // Manually reduce size-specific stock
             try {
@@ -321,9 +263,14 @@ try {
             }
         }
         
+        if (!$stockReduced && !empty($color) && !empty($size)) {
+            // Use size + color specific stock reduction (most specific)
+            $stockReduced = reduceStockForSale($pdo, $sku, $quantity, $color, $size, false);
+        }
+        
         if (!$stockReduced && !empty($color)) {
-            // Use color-specific stock reduction with direct function call (no nested transaction)
-            $stockReduced = reduceStockForSale($pdo, $sku, $color, $quantity, false);
+            // Use color-specific stock reduction
+            $stockReduced = reduceStockForSale($pdo, $sku, $quantity, $color, null, false);
             if ($stockReduced) {
                 error_log("add-order.php: Color-specific stock reduced for SKU '$sku', Color '$color'");
             } else {
@@ -342,7 +289,12 @@ try {
     $pdo->commit();
     
     // Send order confirmation emails
-    $emailResults = sendOrderConfirmationEmails($orderId, $pdo);
+    $emailResults = null;
+    if (function_exists('sendOrderConfirmationEmails')) {
+        $emailResults = sendOrderConfirmationEmails($orderId, $pdo);
+    } else {
+        error_log("Order $orderId: sendOrderConfirmationEmails function not available");
+    }
     
     // Log email results but don't fail the order if emails fail
     if ($emailResults) {

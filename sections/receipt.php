@@ -198,8 +198,8 @@ $pending = ($order['paymentStatus'] === 'Pending');
   /* Use visibility approach to hide everything except receipt - ONLY when printing */
   body {
     background: white !important;
-    font-size: 12pt !important;
-    line-height: 1.4 !important;
+    font-size: 10pt !important;
+    line-height: 1.2 !important;
   }
   
   /* Hide everything during print, then show only receipt */
@@ -220,16 +220,19 @@ $pending = ($order['paymentStatus'] === 'Pending');
     left: 0 !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 20px !important;
+    padding: 10px !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     max-width: none !important;
     background: white !important;
+    transform: scale(0.9) !important;
+    transform-origin: top left !important;
   }
   
   /* Reset page margins for print */
   @page {
-    margin: 0.5in;
+    margin: 0.3in;
+    size: letter;
   }
   
   /* Make sure tables print nicely */
@@ -240,7 +243,8 @@ $pending = ($order['paymentStatus'] === 'Pending');
   
   th, td {
     border: 1px solid #333 !important;
-    padding: 8px !important;
+    padding: 4px !important;
+    font-size: 9pt !important;
   }
   
   thead tr {
@@ -255,12 +259,13 @@ $pending = ($order['paymentStatus'] === 'Pending');
   /* Make sure the company header prints nicely */
   .receipt-container h1 {
     color: #000 !important;
-    font-size: 24pt !important;
+    font-size: 18pt !important;
+    margin-bottom: 8px !important;
   }
   
   /* Logo styling for print */
   .receipt-container img {
-    max-height: 80px !important;
+    max-height: 50px !important;
     width: auto !important;
     display: block !important;
   }
@@ -284,6 +289,10 @@ $pending = ($order['paymentStatus'] === 'Pending');
     background: #f9f9f9 !important;
     border: 1px solid #ccc !important;
     color: #000 !important;
+    padding: 8px !important;
+    margin: 4px 0 !important;
+    font-size: 9pt !important;
+    line-height: 1.2 !important;
   }
 }
 </style>
@@ -291,13 +300,13 @@ $pending = ($order['paymentStatus'] === 'Pending');
 <!-- Simple Receipt Header with Company Info -->
 <div class="receipt-container max-w-2xl mx-auto bg-white shadow-md rounded p-6 mt-6">
     <!-- Company Header -->
-    <div class="text-center mb-8 border-b pb-6">
+    <div class="text-center mb-4 border-b pb-3">
         <div class="flex justify-center items-center mb-4">
-            <img src="images/WhimsicalFrog_Logo.webp" alt="Whimsical Frog Crafts Logo" class="h-20 w-auto mr-4" 
+            <img src="images/WhimsicalFrog_Logo.webp" alt="Whimsical Frog Crafts Logo" class="h-16 w-auto mr-3" 
                  onerror="this.src='images/WhimsicalFrog_Logo.png'">
             <div>
-                <h1 class="text-3xl font-bold text-[#87ac3a]">Whimsical Frog Crafts</h1>
-                <p class="text-lg text-gray-600 italic">Custom Crafts & Personalized Gifts</p>
+                <h1 class="text-2xl font-bold text-[#87ac3a]">Whimsical Frog Crafts</h1>
+                <p class="text-base text-gray-600 italic">Custom Crafts & Personalized Gifts</p>
             </div>
         </div>
         <div class="text-sm text-gray-600">
@@ -309,14 +318,14 @@ $pending = ($order['paymentStatus'] === 'Pending');
     </div>
 
     <!-- Order Information -->
-    <div class="text-center mb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-2">Order Receipt</h2>
+    <div class="text-center mb-3">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Order Receipt</h2>
         <p class="text-sm text-gray-600">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong></p>
         <p class="text-sm text-gray-600">Date: <?= date('M d, Y', strtotime($order['date'] ?? 'now')) ?></p>
     </div>
 
     <!-- Order Items Table -->
-    <table class="w-full mb-6 text-sm">
+    <table class="w-full mb-3 text-sm">
         <thead>
             <tr class="bg-gray-100">
                 <th class="text-left p-2">Item ID</th>
@@ -337,19 +346,19 @@ $pending = ($order['paymentStatus'] === 'Pending');
         </tbody>
     </table>
     
-    <div class="flex justify-end mb-6 text-lg font-semibold">
+    <div class="flex justify-end mb-3 text-base font-semibold">
         <span>Total:&nbsp;$<?= $total ?></span>
     </div>
 
     <?php if ($pending): ?>
-        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-3 text-sm" role="alert">
             <p class="font-bold">Thank you for choosing Whimsical&nbsp;Frog&nbsp;Crafts!</p>
             <p>Your order is reserved and will be shipped as soon as we receive your payment&nbsp;🙂</p>
             <p class="mt-2">Remit payment to:<br><strong>Lisa&nbsp;Lemley</strong><br>1524&nbsp;Red&nbsp;Oak&nbsp;Flats&nbsp;Rd<br>Dahlonega,&nbsp;GA&nbsp;30533</p>
             <p class="mt-2">Please include your order&nbsp;ID on the memo line. As soon as we record your payment we'll send a confirmation e-mail and get your items on their way.</p>
         </div>
     <?php else: ?>
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-3 text-sm" role="alert">
             <p class="font-bold"><?= htmlspecialchars($receiptMessage['title']) ?></p>
             <p><?= htmlspecialchars($receiptMessage['content']) ?></p>
         </div>

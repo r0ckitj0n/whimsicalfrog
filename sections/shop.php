@@ -158,6 +158,10 @@ if (!isset($GLOBALS['marketingHelper'])) {
         left: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         overflow: hidden !important;
         z-index: 9999;
     }
@@ -198,34 +202,6 @@ if (!isset($GLOBALS['marketingHelper'])) {
         background: #a0aec0;
     }
     
-    /* Detailed product modal specific fixes */
-    #detailedProductModal {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: rgba(0, 0, 0, 0.5) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        z-index: 9999 !important;
-        overflow: hidden !important;
-    }
-    
-    #detailedProductModal .bg-white {
-        max-height: 90vh !important;
-        overflow: hidden !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-    
-    #detailedProductModal .p-6 {
-        flex: 1 !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-    }
-
     /* Popup Options Styling */
     .popup-options-container {
         margin: 12px 0;
@@ -636,11 +612,11 @@ async function generateDetailedModal(item, images) {
     return `
     <!-- Detailed Product Modal -->
     <div id="detailedProductModal" class="modal-overlay" style="display: none;">
-        <div class="modal-container">
+        <div class="modal-content" style="max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto;">
             <!-- Modal Header -->
             <div class="modal-header">
-                <h2 class="text-2xl font-bold text-gray-900">${item.productName}</h2>
-                <button onclick="closeDetailedModal()" class="modal-close-btn">&times;</button>
+                <h2 class="modal-title">${item.productName}</h2>
+                <button onclick="closeDetailedModal()" class="modal-close">&times;</button>
             </div>
             
             <!-- Modal Body -->
@@ -650,6 +626,9 @@ async function generateDetailedModal(item, images) {
                     <div class="space-y-4">
                         <div class="bg-gray-50 rounded-lg overflow-hidden cursor-pointer relative group" style="height: 400px; position: relative;" onclick="openImageViewer('${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}', '${item.productName.replace(/'/g, "\\'")}', ${JSON.stringify(images)})">
                             <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain transition-transform group-hover:scale-105">
+                            <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                🔍 Click to enlarge
+                            </div>
                         </div>
                         
                         ${images.length > 1 ? `
@@ -730,12 +709,12 @@ async function generateDetailedModal(item, images) {
                             
                             ${item.stockLevel > 0 ? `
                             <button onclick="addDetailedToCart('${item.sku}')" 
-                                    class="w-full py-3 px-6 rounded-lg font-medium text-lg transition-colors shadow-lg hover:shadow-xl" style="background-color: #87ac3a; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                    class="modal-button btn-primary w-full py-3 px-6 rounded-lg font-medium text-lg">
                                 🛒 Add to Cart
                             </button>
                             <p class="text-center text-sm text-gray-600 mt-2">Choose colors & sizes in the next step</p>
                             ` : `
-                            <button disabled class="w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
+                            <button disabled class="modal-button w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
                                 Out of Stock
                             </button>
                             `}

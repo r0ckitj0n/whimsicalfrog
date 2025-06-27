@@ -580,17 +580,17 @@ async function generateDetailedModal(item, images) {
     return `
     <!-- Detailed Product Modal -->
     <div id="detailedProductModal" class="modal-overlay" style="display: none;">
-        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] shadow-2xl modal-with-scrollbar">
+        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[85vh] shadow-2xl overflow-hidden">
             <div class="flex justify-between items-center p-6 border-b border-gray-200">
                 <h2 class="text-2xl font-bold text-gray-900">${item.productName}</h2>
                 <button onclick="closeDetailedModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
             </div>
             
-            <div class="modal-content-scrollable p-6">
+            <div class="p-6 overflow-y-auto" style="max-height: calc(85vh - 120px);">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Product Images -->
                     <div class="space-y-4">
-                        <div class="aspect-square bg-gray-50 rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 rounded-lg overflow-hidden" style="height: 400px; max-height: 50vh;">
                             <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain">
                         </div>
                         

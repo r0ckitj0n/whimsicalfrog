@@ -10,7 +10,12 @@ function renderDetailedProductModal($item, $images = []) {
     
     // Helper function to check if data exists and is not empty
     function hasData($value) {
-        return !empty($value) && $value !== 'N/A' && $value !== null;
+        return isset($value) && !empty($value) && $value !== 'N/A' && $value !== null;
+    }
+    
+    // Helper function to safely check if array key exists and has data
+    function hasItemData($item, $key) {
+        return isset($item[$key]) && hasData($item[$key]);
     }
     
     // Get selling points for this item
@@ -142,7 +147,7 @@ function renderDetailedProductModal($item, $images = []) {
                                 <?php endif; ?>
                                 
                                 <!-- Description -->
-                                <?php if (hasData($item['description'])): ?>
+                                <?php if (hasItemData($item, 'description')): ?>
                                 <div>
                                     <h3 class="text-sm font-semibold text-gray-800 mb-1">Description</h3>
                                     <p class="text-xs text-gray-700 leading-relaxed"><?php echo nl2br(htmlspecialchars($item['description'])); ?></p>
@@ -202,7 +207,7 @@ function renderDetailedProductModal($item, $images = []) {
                                     
                                     <div id="detailedInfoContent" class="hidden mt-2 space-y-2 text-xs text-gray-600">
                                         <!-- Material -->
-                                        <?php if (hasData($item['material'])): ?>
+                                        <?php if (hasItemData($item, 'material')): ?>
                                         <div class="flex">
                                             <span class="font-medium text-gray-700 w-20">Material:</span>
                                             <span class="text-gray-600"><?php echo htmlspecialchars($item['material']); ?></span>
@@ -210,7 +215,7 @@ function renderDetailedProductModal($item, $images = []) {
                                         <?php endif; ?>
                                         
                                         <!-- Dimensions -->
-                                        <?php if (hasData($item['dimensions'])): ?>
+                                        <?php if (hasItemData($item, 'dimensions')): ?>
                                         <div class="flex">
                                             <span class="font-medium text-gray-700 w-20">Size:</span>
                                             <span class="text-gray-600"><?php echo htmlspecialchars($item['dimensions']); ?></span>
@@ -218,7 +223,7 @@ function renderDetailedProductModal($item, $images = []) {
                                         <?php endif; ?>
                                         
                                         <!-- Weight -->
-                                        <?php if (hasData($item['weight'])): ?>
+                                        <?php if (hasItemData($item, 'weight')): ?>
                                         <div class="flex">
                                             <span class="font-medium text-gray-700 w-20">Weight:</span>
                                             <span class="text-gray-600"><?php echo htmlspecialchars($item['weight']); ?></span>
@@ -226,7 +231,7 @@ function renderDetailedProductModal($item, $images = []) {
                                         <?php endif; ?>
                                         
                                         <!-- Features -->
-                                        <?php if (hasData($item['features'])): ?>
+                                        <?php if (hasItemData($item, 'features')): ?>
                                         <div class="flex">
                                             <span class="font-medium text-gray-700 w-20">Features:</span>
                                             <span class="text-gray-600"><?php echo htmlspecialchars($item['features']); ?></span>
@@ -234,7 +239,7 @@ function renderDetailedProductModal($item, $images = []) {
                                         <?php endif; ?>
                                         
                                         <!-- Care Instructions -->
-                                        <?php if (hasData($item['care_instructions'])): ?>
+                                        <?php if (hasItemData($item, 'care_instructions')): ?>
                                         <div class="flex">
                                             <span class="font-medium text-gray-700 w-20">Care:</span>
                                             <span class="text-gray-600"><?php echo htmlspecialchars($item['care_instructions']); ?></span>

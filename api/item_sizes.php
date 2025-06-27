@@ -124,16 +124,16 @@ try {
                 throw new Exception('Item SKU is required');
             }
             
-            $whereClause = "item_sku = ? AND is_active = 1";
+            $whereClause = "s.item_sku = ? AND s.is_active = 1";
             $params = [$itemSku];
             
             if ($colorId !== null) {
                 if ($colorId === '0' || $colorId === 'null') {
                     // Get general sizes (no color association)
-                    $whereClause .= " AND color_id IS NULL";
+                    $whereClause .= " AND s.color_id IS NULL";
                 } else {
                     // Get sizes for specific color
-                    $whereClause .= " AND color_id = ?";
+                    $whereClause .= " AND s.color_id = ?";
                     $params[] = (int)$colorId;
                 }
             }

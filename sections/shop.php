@@ -124,25 +124,62 @@ if (!isset($GLOBALS['marketingHelper'])) {
         filter: grayscale(10%);
     }
 
-    /* Simplified modal styling - no custom scrollbars to avoid conflicts */
+    /* Complete scrollbar fix for shop page and modals */
+    
+    /* Prevent horizontal scrolling on shop page */
+    #shopPage {
+        overflow-x: hidden !important;
+        max-width: 100vw;
+    }
+    
+    /* Ensure product grid doesn't cause horizontal overflow */
+    #productsGrid {
+        overflow-x: hidden !important;
+        max-width: 100%;
+    }
+    
+    /* Fix body scrolling when modals are open - highest priority */
+    body.modal-open {
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+    
+    /* Ensure html doesn't scroll when modal is open */
+    html.modal-open {
+        overflow: hidden !important;
+    }
+    
+    /* Modal overlay - prevent any scrolling */
+    .modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+        z-index: 9999;
+    }
+    
+    /* Modal content with proper scrolling */
     .modal-with-scrollbar {
-        overflow: hidden;
         display: flex;
         flex-direction: column;
         max-height: 90vh;
+        overflow: hidden;
     }
 
     .modal-content-scrollable {
         flex: 1;
-        max-height: calc(90vh - 80px); /* Account for header height */
+        max-height: calc(90vh - 80px);
         overflow-y: auto;
         overflow-x: hidden;
-        /* Ensure smooth scrolling without double scrollbars */
         scrollbar-width: thin;
         scrollbar-color: #cbd5e0 #f7fafc;
     }
     
-    /* Webkit scrollbar styling for modal content only */
+    /* Custom scrollbar for modal content only */
     .modal-content-scrollable::-webkit-scrollbar {
         width: 8px;
     }
@@ -161,30 +198,32 @@ if (!isset($GLOBALS['marketingHelper'])) {
         background: #a0aec0;
     }
     
-    /* Prevent double scrollbars by ensuring body doesn't scroll when modal is open */
-    body.modal-open {
+    /* Detailed product modal specific fixes */
+    #detailedProductModal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 9999 !important;
         overflow: hidden !important;
-        padding-right: 0px; /* Prevent layout shift */
     }
     
-    /* Ensure modal overlay handles overflow properly */
-    .modal-overlay {
+    #detailedProductModal .bg-white {
+        max-height: 90vh !important;
         overflow: hidden !important;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        display: flex !important;
+        flex-direction: column !important;
     }
     
-    /* Fix for shop page double scrollbar issue */
-    #shopPage {
-        overflow-x: hidden;
-    }
-    
-    /* Ensure product grid doesn't cause horizontal overflow */
-    #productsGrid {
-        overflow-x: hidden;
+    #detailedProductModal .p-6 {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
     }
 
     /* Popup Options Styling */
@@ -791,10 +830,15 @@ function closeDetailedModal() {
     const modal = document.getElementById('detailedProductModal');
     if (modal) {
         modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
+        // Remove modal-open class from both body and html
         document.body.classList.remove('modal-open');
-        // Restore document scroll
-        document.documentElement.style.overflow = 'auto';
+        document.documentElement.classList.remove('modal-open');
+        // Reset overflow styles
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflow = '';
     }
 }
 
@@ -802,10 +846,9 @@ function showDetailedModal() {
     const modal = document.getElementById('detailedProductModal');
     if (modal) {
         modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        // Add modal-open class to both body and html
         document.body.classList.add('modal-open');
-        // Ensure proper scroll handling
-        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.classList.add('modal-open');
     }
 }
 

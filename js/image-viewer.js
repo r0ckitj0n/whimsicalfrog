@@ -106,8 +106,8 @@ function openImageViewer(imagePath, productName, allImages = null) {
     
     // Show the viewer
     viewerModal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
     
     // Add keyboard support
     document.addEventListener('keydown', handleImageViewerKeyboard);
@@ -123,7 +123,12 @@ function closeImageViewer() {
     }
     
     // Restore scrolling
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
     document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
     document.documentElement.style.overflow = '';
     
     // Remove keyboard support

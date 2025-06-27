@@ -596,9 +596,8 @@ async function showProductDetails(sku) {
             }
             
             // Create and append new detailed modal
-            const modalContainer = document.createElement('div');
+            const modalContainer = document.getElementById('detailedModalContainer');
             modalContainer.innerHTML = await generateDetailedModal(data.item, data.images);
-            document.body.appendChild(modalContainer.firstElementChild);
             
             // Show the modal
             showDetailedModal();

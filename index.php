@@ -690,6 +690,9 @@ $seoData = generatePageSEO($page, $currentSku);
 <!-- Load global notification system first -->
 <script src="js/global-notifications.js?v=<?php echo time(); ?>"></script>
 
+<!-- Load global image viewer system -->
+<script src="js/image-viewer.js?v=<?php echo time(); ?>"></script>
+
 <!-- Load cart script first (only on non-admin pages) -->
 <?php if ($page !== 'admin'): ?>
 <script src="js/cart.js?v=<?php echo time(); ?>"></script>

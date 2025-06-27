@@ -107,26 +107,50 @@ class WhimsicalFrogNotifications {
             `;
         }
 
-        notification.innerHTML = `
-            <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
-                <div class="wf-notification-icon" style="font-size: 20px; flex-shrink: 0; margin-top: 1px;">
-                    ${config.icon}
-                </div>
-                <div class="wf-notification-body" style="flex: 1; min-width: 0;">
-                    ${title ? `<div class="wf-notification-title" style="font-weight: 600; margin-bottom: 4px; color: ${config.titleColor};">${title}</div>` : ''}
-                    <div class="wf-notification-message" style="line-height: 1.4; word-wrap: break-word;">
-                        ${message}
+        // Create HTML content without inline color styles for success notifications
+        if (type === 'success') {
+            notification.innerHTML = `
+                <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
+                    <div class="wf-notification-icon" style="font-size: 20px; flex-shrink: 0; margin-top: 1px;">
+                        ${config.icon}
                     </div>
-                    ${actions ? this.createActions(actions) : ''}
+                    <div class="wf-notification-body" style="flex: 1; min-width: 0;">
+                        ${title ? `<div class="wf-notification-title" style="font-weight: 600; margin-bottom: 4px;">${title}</div>` : ''}
+                        <div class="wf-notification-message" style="line-height: 1.4; word-wrap: break-word;">
+                            ${message}
+                        </div>
+                        ${actions ? this.createActions(actions) : ''}
+                    </div>
+                    ${!persistent ? `
+                        <button class="wf-notification-close" onclick="window.wfNotifications.remove(${id})" 
+                                style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0;"
+                                onmouseover="this.style.backgroundColor='rgba(255,255,255,0.2)'"
+                                onmouseout="this.style.backgroundColor='transparent'">&times;</button>
+                    ` : ''}
                 </div>
-                ${!persistent ? `
-                    <button class="wf-notification-close" onclick="window.wfNotifications.remove(${id})" 
-                            style="background: none; border: none; color: ${config.closeColor}; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0;"
-                            onmouseover="this.style.backgroundColor='rgba(0,0,0,0.1)'"
-                            onmouseout="this.style.backgroundColor='transparent'">&times;</button>
-                ` : ''}
-            </div>
-        `;
+            `;
+        } else {
+            notification.innerHTML = `
+                <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
+                    <div class="wf-notification-icon" style="font-size: 20px; flex-shrink: 0; margin-top: 1px;">
+                        ${config.icon}
+                    </div>
+                    <div class="wf-notification-body" style="flex: 1; min-width: 0;">
+                        ${title ? `<div class="wf-notification-title" style="font-weight: 600; margin-bottom: 4px; color: ${config.titleColor};">${title}</div>` : ''}
+                        <div class="wf-notification-message" style="line-height: 1.4; word-wrap: break-word;">
+                            ${message}
+                        </div>
+                        ${actions ? this.createActions(actions) : ''}
+                    </div>
+                    ${!persistent ? `
+                        <button class="wf-notification-close" onclick="window.wfNotifications.remove(${id})" 
+                                style="background: none; border: none; color: ${config.closeColor}; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0;"
+                                onmouseover="this.style.backgroundColor='rgba(0,0,0,0.1)'"
+                                onmouseout="this.style.backgroundColor='transparent'">&times;</button>
+                    ` : ''}
+                </div>
+            `;
+        }
 
         // Add pulse effect for emphasis on certain types
         if (type === 'warning' || type === 'error') {

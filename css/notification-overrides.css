@@ -1,120 +1,143 @@
 /* WhimsicalFrog Notification Style Overrides */
-/* This file contains CSS rules that override the default notification styles */
+/* AGGRESSIVE OVERRIDES FOR SUCCESS NOTIFICATIONS */
 
-/* Success Notification Brand Colors */
-.wf-notification[data-type="success"],
-.wf-notification:has(.wf-notification-icon:contains("✅")) {
-    background: #87ac3a !important;
-    border-color: #6b8e23 !important;
-    color: white !important;
-}
-
-.wf-notification[data-type="success"] .wf-notification-title,
-.wf-notification[data-type="success"] .wf-notification-message,
-.wf-notification[data-type="success"] .wf-notification-close {
-    color: white !important;
-}
-
-/* Alternative selector for notifications created by the global notification system */
-.wf-notification:has([style*="✅"]) {
-    background: #87ac3a !important;
-    border-color: #6b8e23 !important;
-    color: white !important;
-}
-
-.wf-notification:has([style*="✅"]) .wf-notification-title,
-.wf-notification:has([style*="✅"]) .wf-notification-message,
-.wf-notification:has([style*="✅"]) .wf-notification-close {
-    color: white !important;
-}
-
-/* More specific selector targeting the notification content structure */
-div[class*="wf-notification"]:has(div:contains("✅")) {
-    background: #87ac3a !important;
-    border-color: #6b8e23 !important;
-    color: white !important;
-}
-
-/* Target notifications containing cart-related text */
-.wf-notification:has(.wf-notification-message:contains("added to cart")),
-.wf-notification:has(.wf-notification-message:contains("Added")),
-.wf-notification:has(.wf-notification-message:contains("cart")) {
-    background: #87ac3a !important;
-    border-color: #6b8e23 !important;
-    color: white !important;
-}
-
-.wf-notification:has(.wf-notification-message:contains("added to cart")) *,
-.wf-notification:has(.wf-notification-message:contains("Added")) *,
-.wf-notification:has(.wf-notification-message:contains("cart")) * {
-    color: white !important;
-}
-
-/* Fallback: Target all notifications with checkmark icon */
-[class*="wf-notification"]:has([style*="font-size: 20px"]:contains("✅")) {
-    background: #87ac3a !important;
-    border-color: #6b8e23 !important;
-    color: white !important;
-}
-
-[class*="wf-notification"]:has([style*="font-size: 20px"]:contains("✅")) * {
-    color: white !important;
-}
-
-/* Most specific override - target the notification container directly */
-#wf-notification-container .wf-notification {
-    /* This will be applied via JavaScript for success notifications */
-}
-
-/* Brand color CSS variables for consistency */
+/* Brand color CSS variables */
 :root {
     --wf-brand-green: #87ac3a;
     --wf-brand-green-dark: #6b8e23;
-    --wf-notification-success-bg: var(--wf-brand-green);
-    --wf-notification-success-border: var(--wf-brand-green-dark);
-    --wf-notification-success-text: white;
+    --wf-brand-green-darker: #556B2F;
 }
 
-/* Success notification styling using CSS variables */
-.wf-success-notification {
-    background: var(--wf-notification-success-bg) !important;
-    border: 2px solid var(--wf-notification-success-border) !important;
-    color: var(--wf-notification-success-text) !important;
+/* NUCLEAR OPTION: Override ALL notification styling with maximum specificity */
+div.wf-notification[data-type="success"],
+div.wf-notification.wf-success-notification,
+.wf-notification[data-type="success"],
+.wf-success-notification,
+.wf-notification:has(.wf-notification-icon:contains("✅")),
+.wf-notification:has([style*="✅"]),
+.wf-notification:has(.wf-notification-message:contains("added to cart")),
+.wf-notification:has(.wf-notification-message:contains("Added")),
+.wf-notification:has(.wf-notification-message:contains("cart")),
+[class*="wf-notification"][style*="background"],
+[class*="wf-notification"][style*="color"],
+div[style*="background"][style*="linear-gradient"][class*="notification"],
+div[style*="background-color"][class*="notification"],
+.wf-notification.wf-success-notification[style] {
+    background: var(--wf-brand-green) !important;
+    background-color: var(--wf-brand-green) !important;
+    background-image: none !important;
+    border: 2px solid var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-dark) !important;
+    color: white !important;
+    box-shadow: 0 10px 25px rgba(135, 172, 58, 0.3) !important;
 }
 
-.wf-success-notification * {
-    color: var(--wf-notification-success-text) !important;
+/* Force ALL child elements to have white text */
+div.wf-notification[data-type="success"] *,
+div.wf-notification.wf-success-notification *,
+.wf-notification[data-type="success"] *,
+.wf-success-notification *,
+.wf-notification:has(.wf-notification-icon:contains("✅")) *,
+.wf-notification:has([style*="✅"]) *,
+.wf-notification:has(.wf-notification-message:contains("added to cart")) *,
+.wf-notification:has(.wf-notification-message:contains("Added")) *,
+.wf-notification:has(.wf-notification-message:contains("cart")) *,
+[class*="wf-notification"][style*="background"] *,
+[class*="wf-notification"][style*="color"] *,
+div[style*="background"][style*="linear-gradient"][class*="notification"] *,
+div[style*="background-color"][class*="notification"] * {
+    color: white !important;
 }
 
-.wf-success-notification .wf-notification-title {
-    color: var(--wf-notification-success-text) !important;
+/* Specific targeting of notification elements */
+.wf-notification-title,
+.wf-notification-message,
+.wf-notification-close,
+.wf-notification-icon {
+    color: white !important;
 }
 
-.wf-success-notification .wf-notification-message {
-    color: var(--wf-notification-success-text) !important;
+/* Override any possible inline style attribute */
+.wf-notification[style] {
+    background: var(--wf-brand-green) !important;
+    background-color: var(--wf-brand-green) !important;
+    background-image: none !important;
+    border-color: var(--wf-brand-green-dark) !important;
+    color: white !important;
 }
 
-.wf-success-notification .wf-notification-close {
-    color: var(--wf-notification-success-text) !important;
+.wf-notification[style] * {
+    color: white !important;
 }
 
-/* Add to Cart Button Styling in Item Details Modal */
+/* Target notification container */
+#wf-notification-container .wf-notification[data-type="success"],
+#wf-notification-container .wf-success-notification {
+    background: var(--wf-brand-green) !important;
+    background-color: var(--wf-brand-green) !important;
+    background-image: none !important;
+    border: 2px solid var(--wf-brand-green-dark) !important;
+    color: white !important;
+}
+
+#wf-notification-container .wf-notification[data-type="success"] *,
+#wf-notification-container .wf-success-notification * {
+    color: white !important;
+}
+
+/* ITEM DETAILS MODAL "ADD TO CART" BUTTON STYLING */
+/* Target all possible Add to Cart button selectors */
 .detailed-product-modal .add-to-cart-btn,
 .modal-content .add-to-cart-btn,
+.modal .add-to-cart-btn,
 [class*="modal"] .add-to-cart-btn,
-button[onclick*="addDetailedToCart"] {
+button[onclick*="addDetailedToCart"],
+button:contains("Add to Cart"),
+.detailed-modal button[onclick*="addDetailedToCart"],
+#detailed-modal button[onclick*="addDetailedToCart"],
+.modal button[class*="add-to-cart"],
+.modal button[class*="btn-primary"] {
     background: var(--wf-brand-green) !important;
+    background-color: var(--wf-brand-green) !important;
+    border: 2px solid var(--wf-brand-green-dark) !important;
     border-color: var(--wf-brand-green-dark) !important;
     color: white !important;
+    text-shadow: none !important;
+    font-weight: 500 !important;
 }
 
+/* Hover states for Add to Cart buttons */
 .detailed-product-modal .add-to-cart-btn:hover,
 .modal-content .add-to-cart-btn:hover,
+.modal .add-to-cart-btn:hover,
 [class*="modal"] .add-to-cart-btn:hover,
-button[onclick*="addDetailedToCart"]:hover {
+button[onclick*="addDetailedToCart"]:hover,
+button:contains("Add to Cart"):hover,
+.detailed-modal button[onclick*="addDetailedToCart"]:hover,
+#detailed-modal button[onclick*="addDetailedToCart"]:hover,
+.modal button[class*="add-to-cart"]:hover,
+.modal button[class*="btn-primary"]:hover {
     background: var(--wf-brand-green-dark) !important;
-    border-color: var(--wf-brand-green-dark) !important;
+    background-color: var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-darker) !important;
     color: white !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(135, 172, 58, 0.3);
+    text-shadow: none !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(135, 172, 58, 0.3) !important;
+}
+
+/* Active/focus states */
+.detailed-product-modal .add-to-cart-btn:active,
+.detailed-product-modal .add-to-cart-btn:focus,
+.modal-content .add-to-cart-btn:active,
+.modal-content .add-to-cart-btn:focus,
+button[onclick*="addDetailedToCart"]:active,
+button[onclick*="addDetailedToCart"]:focus {
+    background: var(--wf-brand-green-dark) !important;
+    background-color: var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-darker) !important;
+    color: white !important;
+    text-shadow: none !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.3) !important;
 } 

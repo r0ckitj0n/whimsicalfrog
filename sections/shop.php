@@ -303,30 +303,21 @@ async function showDetailedModal(sku) {
         const modalContainer = document.getElementById('detailedModalContainer');
         modalContainer.innerHTML = modalHtml;
         
-        // Show the modal
-        const modal = document.getElementById('detailedProductModal');
-        if (modal) {
-            modal.style.display = 'flex';
-            document.body.classList.add('modal-open');
-            document.documentElement.classList.add('modal-open');
-            
-            // Add click-outside-to-close functionality
-            modal.addEventListener('click', function(e) {
-                // Check if the click was on the modal overlay (not the modal content)
-                if (e.target === modal) {
-                    closeDetailedModal();
-                }
-            });
-            
-            // Load product options (colors, sizes) after modal is shown
-            if (typeof loadDetailedProductOptions === 'function') {
-                await loadDetailedProductOptions(sku);
-            }
-            
-            // Check for sales and update price display
-            if (typeof checkAndDisplaySalePrice === 'function') {
-                const priceElement = modal.querySelector('#detailedPriceSection .text-2xl');
-                await checkAndDisplaySalePrice(item, priceElement, null, 'modal');
+        // The modal component now handles its own showing via the showDetailedModalComponent function it defines
+        // Call the modal's own showDetailedModalComponent function
+        if (typeof window.showDetailedModalComponent !== 'undefined') {
+            // Wait a moment for the DOM to update, then call the modal's function
+            setTimeout(() => {
+                window.showDetailedModalComponent(sku, item);
+            }, 100);
+        } else {
+            // Fallback - show modal manually
+            const modal = document.getElementById('detailedProductModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.classList.remove('hidden');
+                document.body.classList.add('modal-open');
+                document.documentElement.classList.add('modal-open');
             }
         }
         

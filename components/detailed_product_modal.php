@@ -2,199 +2,275 @@
 // Detailed Product Modal Component
 // This component displays comprehensive product information in a compact modal
 
+// Include marketing helper for selling points
+require_once __DIR__ . '/../api/marketing_helper.php';
+
 function renderDetailedProductModal($item, $images = []) {
-    $primaryImage = !empty($images) ? $images[0] : null;
-    $additionalImages = array_slice($images, 1);
+    ob_start();
     
-    // Helper function to check if field has data
+    // Helper function to check if data exists and is not empty
     function hasData($value) {
-        return !empty($value) && trim($value) !== '';
+        return !empty($value) && $value !== 'N/A' && $value !== null;
     }
     
-    ob_start();
-    ?>
+    // Get selling points for this item
+    $sellingPoints = getSellingPoints($item['sku']);
     
-    <!-- Detailed Product Modal - Compact Layout -->
-    <div id="detailedProductModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" style="display: none;">
-        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <!-- Modal Header -->
-            <div class="sticky top-0 bg-white border-b px-6 py-3 flex justify-between items-center z-10">
-                <h2 class="text-xl font-bold text-gray-800"><?php echo htmlspecialchars($item['name']); ?></h2>
-                <button onclick="closeDetailedModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
-                    &times;
+    ?>
+    <div id="detailedProductModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeDetailedModalOnOverlay(event)">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                <!-- Close Button -->
+                <button onclick="closeDetailedModal()" class="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-shadow">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
                 </button>
-            </div>
-            
-            <!-- Modal Content - Compact Layout -->
-            <div class="p-6">
-                <div class="flex gap-6">
-                    <!-- Left Column - Image (Larger than popup but compact) -->
-                    <div class="flex-shrink-0" style="width: 280px;">
-                        <!-- Main Image -->
-                        <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
-                            <?php if ($primaryImage): ?>
-                                <img id="detailedMainImage" 
-                                     src="<?php echo htmlspecialchars($primaryImage['image_path']); ?>" 
-                                     alt="<?php echo htmlspecialchars($item['name']); ?>"
-                                     class="w-full h-full object-contain">
-                            <?php else: ?>
-                                <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                    <span>No image available</span>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <!-- Thumbnail Gallery (if multiple images) -->
-                        <?php if (count($images) > 1): ?>
-                        <div class="grid grid-cols-4 gap-1">
-                            <?php foreach (array_slice($images, 0, 4) as $index => $image): ?>
-                            <div class="aspect-square bg-gray-100 rounded cursor-pointer overflow-hidden border <?php echo $index === 0 ? 'border-green-500' : 'border-gray-200 hover:border-gray-400'; ?>"
-                                 onclick="switchDetailedImage('<?php echo htmlspecialchars($image['image_path']); ?>', this)">
-                                <img src="<?php echo htmlspecialchars($image['image_path']); ?>" 
-                                     alt="View <?php echo $index + 1; ?>"
-                                     class="w-full h-full object-cover">
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <!-- Right Column - Product Details (Compact) -->
-                    <div class="flex-1 space-y-4">
-                        <!-- Category and SKU -->
-                        <div>
-                            <div class="text-sm text-gray-500 uppercase tracking-wide"><?php echo htmlspecialchars($item['category'] ?? 'Product'); ?></div>
-                            <div class="text-xs text-gray-400 font-mono">SKU: <?php echo htmlspecialchars($item['sku']); ?></div>
-                        </div>
-                        
-                        <!-- Price and Stock -->
-                        <div class="flex items-center justify-between">
-                            <div id="detailedPriceSection">
-                                <div class="text-2xl font-bold text-green-600">
-                                    $<?php echo number_format($item['retailPrice'], 2); ?>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <?php if ($item['stockLevel'] > 0): ?>
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <?php echo $item['stockLevel']; ?> in stock
+                
+                <div class="p-6">
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Left Column - Images -->
+                        <div class="space-y-4">
+                            <!-- Main Image with Click-to-Zoom -->
+                            <div class="relative">
+                                <!-- Sale Badge -->
+                                <div id="detailedSaleBadge" class="absolute top-3 left-3 z-10 hidden">
+                                    <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                                        <span id="detailedSaleText">SALE</span>
                                     </span>
-                                <?php else: ?>
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        Out of stock
-                                    </span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        
-                        <!-- Description -->
-                        <?php if (hasData($item['description'])): ?>
-                        <div>
-                            <p class="text-gray-700 text-sm leading-relaxed">
-                                <?php echo nl2br(htmlspecialchars($item['description'])); ?>
-                            </p>
-                        </div>
-                        <?php endif; ?>
-                        
-                        <!-- Color and Size Options (will be loaded dynamically) -->
-                        <div id="detailedOptionsContainer" class="space-y-3">
-                            <!-- Options will be loaded here by JavaScript -->
-                        </div>
-                        
-                        <!-- Quantity and Add to Cart -->
-                        <div class="space-y-3 pt-3 border-t">
-                            <div class="flex items-center space-x-3">
-                                <label class="text-sm font-medium text-gray-700">Quantity:</label>
-                                <div class="flex items-center border rounded">
-                                    <button onclick="adjustDetailedQuantity(-1)" class="px-2 py-1 text-gray-600 hover:text-gray-800 text-sm">-</button>
-                                    <input type="number" id="detailedQuantity" value="1" min="1" max="<?php echo $item['stockLevel']; ?>" 
-                                           class="w-12 text-center border-0 focus:ring-0 text-sm">
-                                    <button onclick="adjustDetailedQuantity(1)" class="px-2 py-1 text-gray-600 hover:text-gray-800 text-sm">+</button>
                                 </div>
-                            </div>
-                            
-                            <?php if ($item['stockLevel'] > 0): ?>
-                            <button onclick="addDetailedToCart('<?php echo $item['sku']; ?>')" 
-                                    class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
-                                <?php 
-                                require_once __DIR__ . '/../api/business_settings_helper.php';
-                                echo htmlspecialchars(getRandomCartButtonText()); 
-                                ?>
-                            </button>
-                            <?php else: ?>
-                            <button disabled class="w-full bg-gray-400 text-white py-2 px-4 rounded-lg font-medium cursor-not-allowed">
-                                Out of Stock
-                            </button>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <!-- Additional Details (Collapsible) -->
-                        <?php 
-                        $hasAdditionalDetails = hasData($item['materials']) || hasData($item['dimensions']) || 
-                                              hasData($item['weight']) || hasData($item['features']) || 
-                                              hasData($item['care_instructions']) || hasData($item['technical_details']);
-                        ?>
-                        <?php if ($hasAdditionalDetails): ?>
-                        <div class="pt-3 border-t">
-                            <button onclick="toggleDetailedInfo()" class="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900">
-                                <span>Additional Details</span>
-                                <svg id="detailedInfoChevron" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
-                            
-                            <div id="detailedInfoContent" class="hidden mt-3 space-y-3 text-sm">
-                                <!-- Materials -->
-                                <?php if (hasData($item['materials'])): ?>
-                                <div>
-                                    <span class="font-medium text-gray-600">Materials:</span>
-                                    <span class="text-gray-700"><?php echo htmlspecialchars($item['materials']); ?></span>
-                                </div>
-                                <?php endif; ?>
                                 
-                                <!-- Dimensions & Weight -->
-                                <?php if (hasData($item['dimensions']) || hasData($item['weight'])): ?>
-                                <div class="grid grid-cols-2 gap-2">
+                                <!-- Limited Stock Badge -->
+                                <div id="detailedStockBadge" class="absolute top-3 right-3 z-10 hidden">
+                                    <span class="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                                        LIMITED STOCK
+                                    </span>
+                                </div>
+                                
+                                <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageZoom()">
+                                    <?php if (!empty($images)): ?>
+                                        <img id="detailedMainImage" 
+                                             src="<?php echo htmlspecialchars($images[0]['image_path']); ?>" 
+                                             alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                             class="w-full h-full object-contain">
+                                    <?php else: ?>
+                                        <img id="detailedMainImage" 
+                                             src="images/items/placeholder.png" 
+                                             alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                             class="w-full h-full object-contain">
+                                    <?php endif; ?>
+                                    
+                                    <!-- Zoom Icon Overlay -->
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                                        <svg class="w-8 h-8 text-white opacity-0 hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Thumbnail Gallery -->
+                            <?php if (count($images) > 1): ?>
+                            <div class="flex space-x-2 overflow-x-auto">
+                                <?php foreach ($images as $index => $image): ?>
+                                <div class="flex-shrink-0 w-20 h-20 border-2 <?php echo $index === 0 ? 'border-green-500' : 'border-gray-200'; ?> rounded cursor-pointer hover:border-green-400 transition-colors"
+                                     onclick="switchDetailedImage('<?php echo htmlspecialchars($image['image_path']); ?>', this)">
+                                    <img src="<?php echo htmlspecialchars($image['image_path']); ?>" 
+                                         alt="<?php echo htmlspecialchars($item['name']); ?> - Image <?php echo $index + 1; ?>"
+                                         class="w-full h-full object-contain rounded">
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <!-- Right Column - Product Details -->
+                        <div class="space-y-6">
+                            <!-- Header -->
+                            <div>
+                                <div class="text-sm text-gray-500 mb-1">
+                                    <?php echo htmlspecialchars($item['category'] ?? 'Product'); ?> • SKU: <?php echo htmlspecialchars($item['sku']); ?>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-2"><?php echo htmlspecialchars($item['name']); ?></h2>
+                                
+                                <!-- Price Section -->
+                                <div id="detailedPriceSection" class="flex items-center space-x-3 mb-4">
+                                    <span id="detailedCurrentPrice" class="text-2xl font-bold text-green-600">
+                                        $<?php echo number_format($item['retailPrice'], 2); ?>
+                                    </span>
+                                    <span id="detailedOriginalPrice" class="text-lg text-gray-500 line-through hidden"></span>
+                                    <span id="detailedSavings" class="text-sm bg-red-100 text-red-800 px-2 py-1 rounded hidden"></span>
+                                </div>
+                                
+                                <!-- Stock Status -->
+                                <div class="flex items-center space-x-2 mb-4">
+                                    <?php if ($item['stockLevel'] > 0): ?>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            In Stock (<?php echo $item['stockLevel']; ?> available)
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Out of Stock
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            
+                            <!-- Selling Points -->
+                            <?php if (!empty($sellingPoints) && count($sellingPoints) > 0): ?>
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <h3 class="text-lg font-semibold text-green-800 mb-3">Why You'll Love This</h3>
+                                <div class="space-y-2">
+                                    <?php foreach (array_slice($sellingPoints, 0, 4) as $point): ?>
+                                    <div class="flex items-start space-x-2">
+                                        <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="text-green-700"><?php echo htmlspecialchars($point); ?></span>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <!-- Description -->
+                            <?php if (hasData($item['description'])): ?>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">Description</h3>
+                                <p class="text-gray-700 leading-relaxed"><?php echo nl2br(htmlspecialchars($item['description'])); ?></p>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <!-- Product Options -->
+                            <div id="detailedOptionsContainer" class="space-y-3">
+                                <!-- Options will be loaded dynamically -->
+                            </div>
+                            
+                            <!-- Quantity and Add to Cart -->
+                            <?php if ($item['stockLevel'] > 0): ?>
+                            <div class="space-y-4">
+                                <!-- Quantity Selector -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantity:</label>
+                                    <div class="flex items-center space-x-3">
+                                        <button onclick="adjustDetailedQuantity(-1)" class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                            </svg>
+                                        </button>
+                                        <input type="number" 
+                                               id="detailedQuantity" 
+                                               value="1" 
+                                               min="1" 
+                                               max="<?php echo $item['stockLevel']; ?>"
+                                               class="w-20 text-center border border-gray-300 rounded-md py-2">
+                                        <button onclick="adjustDetailedQuantity(1)" class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Add to Cart Button -->
+                                <button onclick="addDetailedToCart('<?php echo htmlspecialchars($item['sku']); ?>')" 
+                                        class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13h10m-10 0v6a1 1 0 001 1h8a1 1 0 001-1v-6m-9 0h9"></path>
+                                    </svg>
+                                    <span>Add to Cart</span>
+                                </button>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <!-- Additional Details (Expandable) -->
+                            <div class="border-t pt-4">
+                                <button onclick="toggleDetailedInfo()" class="flex items-center justify-between w-full text-left">
+                                    <h3 class="text-lg font-semibold text-gray-800">Additional Details</h3>
+                                    <svg id="detailedInfoChevron" class="w-5 h-5 text-gray-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                
+                                <div id="detailedInfoContent" class="hidden mt-4 space-y-3 text-sm text-gray-600">
+                                    <!-- Material -->
+                                    <?php if (hasData($item['material'])): ?>
+                                    <div>
+                                        <span class="font-medium text-gray-700">Material:</span>
+                                        <span class="text-gray-600"><?php echo htmlspecialchars($item['material']); ?></span>
+                                    </div>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Dimensions -->
                                     <?php if (hasData($item['dimensions'])): ?>
                                     <div>
-                                        <span class="font-medium text-gray-600">Dimensions:</span>
-                                        <span class="text-gray-700"><?php echo htmlspecialchars($item['dimensions']); ?></span>
+                                        <span class="font-medium text-gray-700">Dimensions:</span>
+                                        <span class="text-gray-600"><?php echo htmlspecialchars($item['dimensions']); ?></span>
                                     </div>
                                     <?php endif; ?>
+                                    
+                                    <!-- Weight -->
                                     <?php if (hasData($item['weight'])): ?>
                                     <div>
-                                        <span class="font-medium text-gray-600">Weight:</span>
-                                        <span class="text-gray-700"><?php echo htmlspecialchars($item['weight']); ?></span>
+                                        <span class="font-medium text-gray-700">Weight:</span>
+                                        <span class="text-gray-600"><?php echo htmlspecialchars($item['weight']); ?></span>
+                                    </div>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Features -->
+                                    <?php if (hasData($item['features'])): ?>
+                                    <div>
+                                        <span class="font-medium text-gray-700">Features:</span>
+                                        <span class="text-gray-600"><?php echo htmlspecialchars($item['features']); ?></span>
+                                    </div>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Care Instructions -->
+                                    <?php if (hasData($item['care_instructions'])): ?>
+                                    <div>
+                                        <span class="font-medium text-gray-700">Care Instructions:</span>
+                                        <span class="text-gray-600"><?php echo htmlspecialchars($item['care_instructions']); ?></span>
+                                    </div>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Reorder Point -->
+                                    <?php if (hasData($item['reorderPoint'])): ?>
+                                    <div>
+                                        <span class="font-medium text-gray-700">Reorder Point:</span>
+                                        <span class="text-gray-600"><?php echo htmlspecialchars($item['reorderPoint']); ?> units</span>
                                     </div>
                                     <?php endif; ?>
                                 </div>
-                                <?php endif; ?>
-                                
-                                <!-- Features -->
-                                <?php if (hasData($item['features'])): ?>
-                                <div>
-                                    <span class="font-medium text-gray-600">Features:</span>
-                                    <span class="text-gray-700"><?php echo htmlspecialchars($item['features']); ?></span>
-                                </div>
-                                <?php endif; ?>
-                                
-                                <!-- Care Instructions -->
-                                <?php if (hasData($item['care_instructions'])): ?>
-                                <div>
-                                    <span class="font-medium text-gray-600">Care:</span>
-                                    <span class="text-gray-700"><?php echo htmlspecialchars($item['care_instructions']); ?></span>
-                                </div>
-                                <?php endif; ?>
                             </div>
                         </div>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- Image Zoom Modal -->
+    <div id="imageZoomModal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-[60]" onclick="closeImageZoom()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <button onclick="closeImageZoom()" class="absolute top-4 right-4 z-10 bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition-all">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <img id="zoomedImage" src="" alt="" class="max-w-full max-h-full object-contain" onclick="event.stopPropagation()">
+        </div>
+    </div>
+    
     <script>
+    // Global variable to store current item data for sale checking
+    let currentDetailedItem = null;
+    
     // Switch main image when thumbnail is clicked
     function switchDetailedImage(imagePath, thumbnail) {
         const mainImage = document.getElementById('detailedMainImage');
@@ -210,6 +286,29 @@ function renderDetailedProductModal($item, $images = []) {
         });
         thumbnail.classList.remove('border-gray-200');
         thumbnail.classList.add('border-green-500');
+    }
+    
+    // Open image zoom modal
+    function openImageZoom() {
+        const mainImage = document.getElementById('detailedMainImage');
+        const zoomedImage = document.getElementById('zoomedImage');
+        const zoomModal = document.getElementById('imageZoomModal');
+        
+        if (mainImage && zoomedImage && zoomModal) {
+            zoomedImage.src = mainImage.src;
+            zoomedImage.alt = mainImage.alt;
+            zoomModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+    
+    // Close image zoom modal
+    function closeImageZoom() {
+        const zoomModal = document.getElementById('imageZoomModal');
+        if (zoomModal) {
+            zoomModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
     }
     
     // Adjust quantity
@@ -235,6 +334,73 @@ function renderDetailedProductModal($item, $images = []) {
             } else {
                 content.classList.add('hidden');
                 chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+    }
+    
+    // Check for active sales and update display
+    async function checkDetailedItemSale(sku) {
+        try {
+            const response = await fetch(`/api/sales.php?action=get_active_sales&item_sku=${sku}`);
+            const data = await response.json();
+            
+            const saleBadge = document.getElementById('detailedSaleBadge');
+            const currentPriceEl = document.getElementById('detailedCurrentPrice');
+            const originalPriceEl = document.getElementById('detailedOriginalPrice');
+            const savingsEl = document.getElementById('detailedSavings');
+            const saleTextEl = document.getElementById('detailedSaleText');
+            
+            if (data.success && data.sale) {
+                const sale = data.sale;
+                const originalPrice = parseFloat(currentDetailedItem.retailPrice);
+                const salePrice = originalPrice * (1 - sale.discount_percentage / 100);
+                const savings = originalPrice - salePrice;
+                
+                // Show sale badge
+                if (saleBadge && saleTextEl) {
+                    saleTextEl.textContent = `${sale.discount_percentage}% OFF`;
+                    saleBadge.classList.remove('hidden');
+                }
+                
+                // Update prices
+                if (currentPriceEl) {
+                    currentPriceEl.textContent = `$${salePrice.toFixed(2)}`;
+                    currentPriceEl.classList.remove('text-green-600');
+                    currentPriceEl.classList.add('text-red-600');
+                }
+                
+                if (originalPriceEl) {
+                    originalPriceEl.textContent = `$${originalPrice.toFixed(2)}`;
+                    originalPriceEl.classList.remove('hidden');
+                }
+                
+                if (savingsEl) {
+                    savingsEl.textContent = `Save $${savings.toFixed(2)}`;
+                    savingsEl.classList.remove('hidden');
+                }
+            } else {
+                // No sale - hide sale elements
+                if (saleBadge) saleBadge.classList.add('hidden');
+                if (originalPriceEl) originalPriceEl.classList.add('hidden');
+                if (savingsEl) savingsEl.classList.add('hidden');
+                if (currentPriceEl) {
+                    currentPriceEl.classList.remove('text-red-600');
+                    currentPriceEl.classList.add('text-green-600');
+                }
+            }
+        } catch (error) {
+            console.log('Error checking sale status:', error);
+        }
+    }
+    
+    // Check for limited stock and show badge
+    function checkDetailedLimitedStock(stockLevel) {
+        const stockBadge = document.getElementById('detailedStockBadge');
+        if (stockBadge) {
+            if (stockLevel > 0 && stockLevel < 5) {
+                stockBadge.classList.remove('hidden');
+            } else {
+                stockBadge.classList.add('hidden');
             }
         }
     }
@@ -325,7 +491,7 @@ function renderDetailedProductModal($item, $images = []) {
         
         // Get item data from the modal
         const itemName = modal.querySelector('h2').textContent;
-        const priceText = modal.querySelector('#detailedPriceSection .text-2xl').textContent;
+        const priceText = modal.querySelector('#detailedCurrentPrice').textContent;
         const price = parseFloat(priceText.replace('$', ''));
         const imageUrl = modal.querySelector('#detailedMainImage')?.src || 'images/items/placeholder.png';
         
@@ -361,10 +527,41 @@ function renderDetailedProductModal($item, $images = []) {
         const modal = document.getElementById('detailedProductModal');
         if (modal) {
             modal.style.display = 'none';
+            modal.classList.add('hidden');
             document.body.classList.remove('modal-open');
             document.documentElement.classList.remove('modal-open');
         }
+        closeImageZoom(); // Also close zoom if open
     }
+    
+    // Close modal when clicking on overlay (but not on modal content)
+    function closeDetailedModalOnOverlay(event) {
+        if (event.target === event.currentTarget) {
+            closeDetailedModal();
+        }
+    }
+    
+    // Function to show the detailed modal (called from shop page)
+    function showDetailedModalComponent(sku, itemData) {
+        currentDetailedItem = itemData;
+        const modal = document.getElementById('detailedProductModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+            document.body.classList.add('modal-open');
+            document.documentElement.classList.add('modal-open');
+            
+            // Load product options
+            loadDetailedProductOptions(sku);
+            
+            // Check for sales and limited stock
+            checkDetailedItemSale(sku);
+            checkDetailedLimitedStock(itemData.stockLevel || 0);
+        }
+    }
+    
+    // Make the function globally available
+    window.showDetailedModalComponent = showDetailedModalComponent;
     </script>
     
     <?php

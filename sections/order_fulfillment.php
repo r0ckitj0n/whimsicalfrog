@@ -331,38 +331,38 @@ $messageType = $_GET['type'] ?? '';
                         <td class="font-semibold">$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
                         <td>
                             <select class="order-field-select order-field-update" data-field="status" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
-                                <option value="Pending" <?= ($order['status'] ?? 'Pending') === 'Pending' ? 'selected' : '' ?>>Pending</option>
-                                <option value="Processing" <?= ($order['status'] ?? '') === 'Processing' ? 'selected' : '' ?>>Processing</option>
-                                <option value="Shipped" <?= ($order['status'] ?? '') === 'Shipped' ? 'selected' : '' ?>>Shipped</option>
-                                <option value="Delivered" <?= ($order['status'] ?? '') === 'Delivered' ? 'selected' : '' ?>>Delivered</option>
-                                <option value="Cancelled" <?= ($order['status'] ?? '') === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                                <option value="Pending" <?= strtolower($order['status'] ?? 'Pending') === strtolower('Pending') ? 'selected' : '' ?>>Pending</option>
+                                <option value="Processing" <?= strtolower($order['status'] ?? '') === strtolower('Processing') ? 'selected' : '' ?>>Processing</option>
+                                <option value="Shipped" <?= strtolower($order['status'] ?? '') === strtolower('Shipped') ? 'selected' : '' ?>>Shipped</option>
+                                <option value="Delivered" <?= strtolower($order['status'] ?? '') === strtolower('Delivered') ? 'selected' : '' ?>>Delivered</option>
+                                <option value="Cancelled" <?= strtolower($order['status'] ?? '') === strtolower('Cancelled') ? 'selected' : '' ?>>Cancelled</option>
                             </select>
                         </td>
                         <td>
                             <select class="order-field-select order-field-update" data-field="paymentMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
-                                <option value="Credit Card" <?= ($order['paymentMethod'] ?? 'Credit Card') === 'Credit Card' ? 'selected' : '' ?>>Credit Card</option>
-                                <option value="Cash" <?= ($order['paymentMethod'] ?? '') === 'Cash' ? 'selected' : '' ?>>Cash</option>
-                                <option value="Check" <?= ($order['paymentMethod'] ?? '') === 'Check' ? 'selected' : '' ?>>Check</option>
-                                <option value="PayPal" <?= ($order['paymentMethod'] ?? '') === 'PayPal' ? 'selected' : '' ?>>PayPal</option>
-                                <option value="Venmo" <?= ($order['paymentMethod'] ?? '') === 'Venmo' ? 'selected' : '' ?>>Venmo</option>
-                                <option value="Other" <?= ($order['paymentMethod'] ?? '') === 'Other' ? 'selected' : '' ?>>Other</option>
+                                <option value="Credit Card" <?= strtolower($order['paymentMethod'] ?? 'Credit Card') === strtolower('Credit Card') ? 'selected' : '' ?>>Credit Card</option>
+                                <option value="Cash" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Cash') ? 'selected' : '' ?>>Cash</option>
+                                <option value="Check" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Check') ? 'selected' : '' ?>>Check</option>
+                                <option value="PayPal" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('PayPal') ? 'selected' : '' ?>>PayPal</option>
+                                <option value="Venmo" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Venmo') ? 'selected' : '' ?>>Venmo</option>
+                                <option value="Other" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Other') ? 'selected' : '' ?>>Other</option>
                             </select>
                         </td>
                         <td>
                             <select class="order-field-select order-field-update" data-field="shippingMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
-                                <option value="Customer Pickup" <?= ($order['shippingMethod'] ?? 'Customer Pickup') === 'Customer Pickup' ? 'selected' : '' ?>>Customer Pickup</option>
-                                <option value="Local Delivery" <?= ($order['shippingMethod'] ?? '') === 'Local Delivery' ? 'selected' : '' ?>>Local Delivery</option>
-                                <option value="USPS" <?= ($order['shippingMethod'] ?? '') === 'USPS' ? 'selected' : '' ?>>USPS</option>
-                                <option value="FedEx" <?= ($order['shippingMethod'] ?? '') === 'FedEx' ? 'selected' : '' ?>>FedEx</option>
-                                <option value="UPS" <?= ($order['shippingMethod'] ?? '') === 'UPS' ? 'selected' : '' ?>>UPS</option>
+                                <option value="Customer Pickup" <?= strtolower($order['shippingMethod'] ?? 'Customer Pickup') === strtolower('Customer Pickup') ? 'selected' : '' ?>>Customer Pickup</option>
+                                <option value="Local Delivery" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('Local Delivery') ? 'selected' : '' ?>>Local Delivery</option>
+                                <option value="USPS" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('USPS') ? 'selected' : '' ?>>USPS</option>
+                                <option value="FedEx" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('FedEx') ? 'selected' : '' ?>>FedEx</option>
+                                <option value="UPS" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('UPS') ? 'selected' : '' ?>>UPS</option>
                             </select>
                         </td>
                         <td>
                             <select class="order-field-select order-field-update" data-field="paymentStatus" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
-                                <option value="Pending" <?= ($order['paymentStatus'] ?? 'Pending') === 'Pending' ? 'selected' : '' ?>>Pending</option>
-                                <option value="Received" <?= ($order['paymentStatus'] ?? '') === 'Received' ? 'selected' : '' ?>>Received</option>
-                                <option value="Refunded" <?= ($order['paymentStatus'] ?? '') === 'Refunded' ? 'selected' : '' ?>>Refunded</option>
-                                <option value="Failed" <?= ($order['paymentStatus'] ?? '') === 'Failed' ? 'selected' : '' ?>>Failed</option>
+                                <option value="Pending" <?= strtolower($order['paymentStatus'] ?? 'Pending') === strtolower('Pending') ? 'selected' : '' ?>>Pending</option>
+                                <option value="Received" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Received') ? 'selected' : '' ?>>Received</option>
+                                <option value="Refunded" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Refunded') ? 'selected' : '' ?>>Refunded</option>
+                                <option value="Failed" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Failed') ? 'selected' : '' ?>>Failed</option>
                             </select>
                         </td>
                         <td class="text-sm text-gray-600">

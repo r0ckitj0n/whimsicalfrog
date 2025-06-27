@@ -150,12 +150,12 @@ class WhimsicalFrogNotifications {
     getTypeConfig(type) {
         const configs = {
             success: {
-                background: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
-                border: '#87ac3a',
-                color: '#065f46',
-                titleColor: '#047857',
-                closeColor: '#059669',
-                shadow: 'rgba(16, 185, 129, 0.2)',
+                background: '#87ac3a',
+                border: '#6b8e23',
+                color: 'white',
+                titleColor: 'white',
+                closeColor: 'white',
+                shadow: 'rgba(135, 172, 58, 0.3)',
                 icon: '✅'
             },
             error: {

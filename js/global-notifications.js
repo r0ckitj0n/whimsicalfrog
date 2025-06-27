@@ -84,6 +84,7 @@ class WhimsicalFrogNotifications {
                 pointer-events: auto;
                 position: relative;
                 overflow: hidden;
+                cursor: pointer;
             `;
         } else {
             notification.style.cssText = `
@@ -104,8 +105,14 @@ class WhimsicalFrogNotifications {
                 pointer-events: auto;
                 position: relative;
                 overflow: hidden;
+                cursor: pointer;
             `;
         }
+
+        // Add click-to-dismiss functionality
+        notification.addEventListener('click', () => {
+            this.remove(id);
+        });
 
         // Create HTML content without inline color styles for success notifications
         if (type === 'success') {
@@ -122,7 +129,7 @@ class WhimsicalFrogNotifications {
                         ${actions ? this.createActions(actions) : ''}
                     </div>
                     ${!persistent ? `
-                        <button class="wf-notification-close" onclick="window.wfNotifications.remove(${id})" 
+                        <button class="wf-notification-close" onclick="event.stopPropagation(); window.wfNotifications.remove(${id})" 
                                 style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0;"
                                 onmouseover="this.style.backgroundColor='rgba(255,255,255,0.2)'"
                                 onmouseout="this.style.backgroundColor='transparent'">&times;</button>
@@ -143,7 +150,7 @@ class WhimsicalFrogNotifications {
                         ${actions ? this.createActions(actions) : ''}
                     </div>
                     ${!persistent ? `
-                        <button class="wf-notification-close" onclick="window.wfNotifications.remove(${id})" 
+                        <button class="wf-notification-close" onclick="event.stopPropagation(); window.wfNotifications.remove(${id})" 
                                 style="background: none; border: none; color: ${config.closeColor}; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0;"
                                 onmouseover="this.style.backgroundColor='rgba(0,0,0,0.1)'"
                                 onmouseout="this.style.backgroundColor='transparent'">&times;</button>
@@ -245,14 +252,8 @@ class WhimsicalFrogNotifications {
     }
 
     getDefaultDuration(type) {
-        const durations = {
-            success: 4000,
-            error: 6000,
-            warning: 6000,
-            info: 5000,
-            validation: 6000
-        };
-        return durations[type] || 5000;
+        // All notifications now auto-dismiss after 5 seconds (as requested)
+        return 5000;
     }
 
     remove(id) {

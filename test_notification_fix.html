@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Fix Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/notification-overrides.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #87ac3a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background: #6b8e23;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Notification System Fix Test</h1>
+        <p>Test the notification system to verify cart notifications auto-dismiss after 5 seconds and can be clicked to dismiss immediately.</p>
+        
+        <button class="test-button" onclick="testCartNotification()">
+            🛒 Test Cart Notification (Should Auto-Dismiss)
+        </button>
+        
+        <button class="test-button" onclick="testRegularAlert()">
+            ℹ️ Test Regular Alert (Should Auto-Dismiss)
+        </button>
+        
+        <button class="test-button" onclick="testPersistentNotification()">
+            📌 Test Persistent Notification (Click Only)
+        </button>
+        
+        <div id="console-output" style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 4px; font-family: monospace; font-size: 12px;">
+            <strong>Console Output:</strong><br>
+        </div>
+    </div>
+
+    <!-- Load notification system -->
+    <script src="js/global-notifications.js"></script>
+    
+    <script>
+        // Override console.log to show output on page
+        const originalLog = console.log;
+        const outputDiv = document.getElementById('console-output');
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            outputDiv.innerHTML += args.join(' ') + '<br>';
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        };
+        
+        function testCartNotification() {
+            console.log('🧪 Testing cart notification...');
+            alert('Rebel Threads: Your Personality, Perfectly Printed 🎨 - L added to your cart!');
+        }
+        
+        function testRegularAlert() {
+            console.log('🧪 Testing regular alert...');
+            alert('This is a regular alert message');
+        }
+        
+        function testPersistentNotification() {
+            console.log('🧪 Testing persistent notification...');
+            if (window.wfNotifications) {
+                window.wfNotifications.info('This notification requires manual dismissal', { persistent: true });
+            }
+        }
+        
+        // Log initialization
+        console.log('🚀 Test page loaded, notification system should be ready');
+    </script>
+</body>
+</html> 

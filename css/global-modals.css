@@ -92,6 +92,20 @@
     transition: transform 0.3s ease;
 }
 
+/* Cart page specific override - remove modal scrolling behavior */
+#cartPage .modal-content {
+    max-height: none;
+    overflow-y: visible;
+    max-width: none;
+    width: 100%;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Ensure cart page body doesn't create unnecessary scrollbars */
+body:has(#cartPage) {
+    overflow-x: hidden;
+}
+
 /* Compact Room Modal Content (for room add-to-cart modals) */
 .room-modal-content {
     background: white;

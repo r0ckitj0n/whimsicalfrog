@@ -573,7 +573,7 @@ async function showProductDetails(sku) {
             
             // Create and append new detailed modal
             const modalContainer = document.getElementById('detailedModalContainer');
-            modalContainer.innerHTML = await generateDetailedModal(data.item, data.images);
+            // This line is now handled by the new showDetailedModal function
             
             // Show the modal
             showDetailedModal();
@@ -595,216 +595,7 @@ async function showProductDetails(sku) {
     }
 }
 
-// Generate detailed modal HTML
-async function generateDetailedModal(item, images) {
-    const primaryImage = images.length > 0 ? images[0] : null;
-    
-    // Helper function to check if field has data
-    function hasData(value) {
-        return value && value.trim() !== '';
-    }
-    
-    // Ensure we have the right field name for price - API returns 'retailPrice'
-    const priceValue = parseFloat(item.retailPrice || item.price || 0);
-    item.price = isNaN(priceValue) ? 0 : priceValue;
-    item.productName = item.name || item.productName;
-    
-    return `
-    <!-- Detailed Product Modal -->
-    <div id="detailedProductModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto;">
-            <!-- Modal Header -->
-            <div class="modal-header">
-                <h2 class="modal-title">${item.productName}</h2>
-                <button onclick="closeDetailedModal()" class="modal-close">&times;</button>
-            </div>
-            
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Product Images -->
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-lg overflow-hidden cursor-pointer relative group" style="height: 400px; position: relative;" onclick="openImageViewer('${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}', '${item.productName.replace(/'/g, "\\'")}', ${JSON.stringify(images)})">
-                            <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain transition-transform group-hover:scale-105">
-                            <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                🔍 Click to enlarge
-                            </div>
-                        </div>
-                        
-                        ${images.length > 1 ? `
-                        <div class="flex space-x-2 overflow-x-auto">
-                            ${images.map((img, index) => `
-                                <img src="${img.image_path}" alt="${img.alt_text || item.productName}" 
-                                     class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 ${index === 0 ? 'border-green-500' : 'border-transparent'} hover:border-green-300 transition-colors"
-                                     onclick="switchDetailedImage('${img.image_path}', this)">
-                            `).join('')}
-                        </div>
-                        ` : ''}
-                    </div>
-                    
-                    <!-- Product Details -->
-                    <div class="space-y-6">
-                        <div>
-                            <p class="text-3xl font-bold text-green-600">$${item.price.toFixed(2)}</p>
-                            <p class="text-sm text-gray-500 mt-1">SKU: ${item.sku}</p>
-                        </div>
-                        
-                        <div class="prose max-w-none">
-                            <p class="text-gray-700 leading-relaxed">${item.description}</p>
-                        </div>
-                        
-                        <!-- Stock Status & Urgency -->
-                        <div class="space-y-3">
-                            <div class="flex items-center space-x-2">
-                                ${item.stockLevel > 0 ? 
-                                    `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                        ✓ In Stock (${item.stockLevel} available)
-                                    </span>` :
-                                    `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                        ✗ Out of Stock
-                                    </span>`
-                                }
-                            </div>
-                            
-                            ${item.stockLevel > 0 && item.stockLevel <= 5 ? `
-                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                                <div class="flex items-center">
-                                    <span class="text-orange-600 mr-2">⚡</span>
-                                    <span class="text-orange-800 font-medium">Only ${item.stockLevel} left in stock!</span>
-                                </div>
-                                <p class="text-orange-700 text-sm mt-1">Order soon to avoid disappointment</p>
-                            </div>
-                            ` : ''}
-                            
-                            <!-- Trust Signals -->
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                <div class="flex items-center justify-between text-sm">
-                                    <div class="flex items-center text-blue-700">
-                                        <span class="mr-2">🚚</span>
-                                        <span>Fast shipping</span>
-                                    </div>
-                                    <div class="flex items-center text-blue-700">
-                                        <span class="mr-2">🔄</span>
-                                        <span>Easy returns</span>
-                                    </div>
-                                    <div class="flex items-center text-blue-700">
-                                        <span class="mr-2">💯</span>
-                                        <span>Quality guaranteed</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Add to Cart Section -->
-                        <div class="border-t pt-4">
-                            <div class="flex items-center space-x-4 mb-4">
-                                <label class="text-sm font-medium text-gray-700">Quantity:</label>
-                                <div class="flex items-center border rounded-md">
-                                    <button onclick="adjustDetailedQuantity(-1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">-</button>
-                                    <input type="number" id="detailedQuantity" value="1" min="1" max="${item.stockLevel}" 
-                                           class="w-16 text-center border-0 focus:ring-0">
-                                    <button onclick="adjustDetailedQuantity(1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">+</button>
-                                </div>
-                            </div>
-                            
-                            ${item.stockLevel > 0 ? `
-                            <button onclick="addDetailedToCart('${item.sku}')" 
-                                    class="modal-button btn-primary w-full py-3 px-6 rounded-lg font-medium text-lg">
-                                🛒 Add to Cart
-                            </button>
-                            <p class="text-center text-sm text-gray-600 mt-2">Choose colors & sizes in the next step</p>
-                            ` : `
-                            <button disabled class="modal-button w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
-                                Out of Stock
-                            </button>
-                            `}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    `;
-}
-
-// Detailed modal functions
-function switchDetailedImage(imagePath, thumbnail) {
-    const mainImage = document.getElementById('detailedMainImage');
-    mainImage.src = imagePath;
-    
-    // Update the onclick attribute of the main image container to use global image viewer
-    const imageContainer = mainImage.parentElement;
-    const productName = document.querySelector('#detailedProductModal h2').textContent;
-    
-    // Get all images for the global viewer
-    const modal = document.getElementById('detailedProductModal');
-    const thumbnails = modal.querySelectorAll('.overflow-x-auto img');
-    const allImages = Array.from(thumbnails).map(img => ({
-        image_path: img.src,
-        alt_text: img.alt
-    }));
-    
-    imageContainer.setAttribute('onclick', `openImageViewer('${imagePath}', '${productName.replace(/'/g, "\\'")}', ${JSON.stringify(allImages)})`);
-    
-    // Update thumbnail borders
-    const thumbs = thumbnail.parentElement.children;
-    for (let i = 0; i < thumbs.length; i++) {
-        thumbs[i].classList.remove('border-green-500');
-        thumbs[i].classList.add('border-transparent');
-    }
-    thumbnail.classList.remove('border-transparent');
-    thumbnail.classList.add('border-green-500');
-}
-
-function adjustDetailedQuantity(change) {
-    const input = document.getElementById('detailedQuantity');
-    const currentValue = parseInt(input.value);
-    const newValue = currentValue + change;
-    const max = parseInt(input.getAttribute('max'));
-    
-    if (newValue >= 1 && newValue <= max) {
-        input.value = newValue;
-    }
-}
-
-function addDetailedToCart(sku) {
-    // Get product info from the detailed modal before closing
-    const productName = document.querySelector('#detailedProductModal h2').textContent;
-    const priceText = document.querySelector('#detailedProductModal .text-3xl').textContent;
-    const price = parseFloat(priceText.replace('$', '').replace(',', '')) || 0;
-    const image = document.getElementById('detailedMainImage').src;
-    
-    // Close the detailed modal
-    closeDetailedModal();
-    
-    // Add to cart directly without opening quantity modal
-    if (typeof window.cart !== 'undefined') {
-        const cartItem = {
-            sku: sku, // Use sku instead of id
-            name: productName,
-            price: price,
-            image: image,
-            quantity: 1
-        };
-        
-        window.cart.addItem(cartItem);
-        
-        // Show confirmation
-        const customAlert = document.getElementById('customAlertBox');
-        const customAlertMessage = document.getElementById('customAlertMessage');
-        if (customAlert && customAlertMessage) {
-            customAlertMessage.textContent = `${productName} added to your cart!`;
-            customAlert.style.display = 'block';
-            
-            setTimeout(() => {
-                customAlert.style.display = 'none';
-            }, 5000);
-        }
-    } else {
-        console.error('Cart functionality not available');
-    }
-}
+// Detailed modal functions will be provided by the standardized component
 
 function closeDetailedModal() {
     const modal = document.getElementById('detailedProductModal');
@@ -854,10 +645,7 @@ function showDetailedModal() {
 window.showShopPopup = showShopPopup;
 window.hideShopPopup = hideShopPopup;
 window.showProductDetails = showProductDetails;
-window.generateDetailedModal = generateDetailedModal;
-window.switchDetailedImage = switchDetailedImage;
-window.adjustDetailedQuantity = adjustDetailedQuantity;
-window.addDetailedToCart = addDetailedToCart;
+// Modal functions are now handled by the standardized component
 window.closeDetailedModal = closeDetailedModal;
 window.showDetailedModal = showDetailedModal;
 </script>
@@ -1100,4 +888,89 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+</script>
+
+<!-- Show detailed modal for an item -->
+<script>
+async function showDetailedModal(sku) {
+    try {
+        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load item details');
+        }
+        
+        const item = data.item;
+        const images = data.images || [];
+        
+        // Remove any existing modal
+        const existingModal = document.getElementById('detailedProductModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Create modal container if it doesn't exist
+        let modalContainer = document.getElementById('detailedModalContainer');
+        if (!modalContainer) {
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'detailedModalContainer';
+            document.body.appendChild(modalContainer);
+        }
+        
+        // Use PHP to render the standardized modal component
+        const modalResponse = await fetch('/api/render_detailed_modal.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                item: item,
+                images: images
+            })
+        });
+        
+        if (!modalResponse.ok) {
+            throw new Error('Failed to render modal');
+        }
+        
+        const modalHTML = await modalResponse.text();
+        modalContainer.innerHTML = modalHTML;
+        
+        // Show the modal
+        const modal = document.getElementById('detailedProductModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            
+            // Add modal-open class to prevent scrolling
+            document.body.classList.add('modal-open');
+            document.documentElement.classList.add('modal-open');
+            
+            // Add click-outside-to-close functionality
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeDetailedModal();
+                }
+            });
+            
+            // Add escape key to close
+            document.addEventListener('keydown', function escapeHandler(e) {
+                if (e.key === 'Escape') {
+                    closeDetailedModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            });
+            
+            // Add enlarge tooltips to modal images
+            if (typeof addEnlargeTooltip === 'function') {
+                const modalImages = modal.querySelectorAll('img');
+                modalImages.forEach(img => addEnlargeTooltip(img));
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error showing detailed modal:', error);
+        alert('Error loading product details. Please try again.');
+    }
+}
 </script>

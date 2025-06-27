@@ -681,6 +681,29 @@ button.btn-primary,
     color: var(--brand-bg-text-color, white) !important;
 }
 
+/* Automatic white text for red and dark gray buttons */
+button[style*="background-color: #dc2626"],
+button[style*="background-color: #b91c1c"],
+button[style*="background-color: #991b1b"],
+button[style*="background-color: #6b7280"],
+button[style*="background-color: #4b5563"],
+button[style*="background-color: #374151"],
+button.bg-red-500,
+button.bg-red-600,
+button.bg-red-700,
+button.bg-gray-500,
+button.bg-gray-600,
+button.bg-gray-700,
+button.bg-gray-800,
+[style*="background-color: #dc2626"],
+[style*="background-color: #b91c1c"],
+[style*="background-color: #991b1b"],
+[style*="background-color: #6b7280"],
+[style*="background-color: #4b5563"],
+[style*="background-color: #374151"] {
+    color: white !important;
+}
+
 /* Ensure child elements also get white text */
 .brand-bg *,
 button[style*="background-color: var(--button-bg-primary"] *,
@@ -696,6 +719,29 @@ button.btn-primary *,
 [style*="background-color: #87ac3a"] *,
 [style*="background: linear-gradient"][style*="#87ac3a"] * {
     color: var(--brand-bg-text-color, white) !important;
+}
+
+/* Ensure child elements of red and gray buttons get white text */
+button[style*="background-color: #dc2626"] *,
+button[style*="background-color: #b91c1c"] *,
+button[style*="background-color: #991b1b"] *,
+button[style*="background-color: #6b7280"] *,
+button[style*="background-color: #4b5563"] *,
+button[style*="background-color: #374151"] *,
+button.bg-red-500 *,
+button.bg-red-600 *,
+button.bg-red-700 *,
+button.bg-gray-500 *,
+button.bg-gray-600 *,
+button.bg-gray-700 *,
+button.bg-gray-800 *,
+[style*="background-color: #dc2626"] *,
+[style*="background-color: #b91c1c"] *,
+[style*="background-color: #991b1b"] *,
+[style*="background-color: #6b7280"] *,
+[style*="background-color: #4b5563"] *,
+[style*="background-color: #374151"] * {
+    color: white !important;
 }
 
 /* Specific class for brand background elements */

@@ -6,6 +6,8 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // Load environment variables
 require_once __DIR__ . '/api/config.php';
+// Load centralized authentication system
+require_once __DIR__ . '/includes/auth.php';
 // Load marketing helper for dynamic content
 require_once __DIR__ . '/api/marketing_helper.php';
 // Start or resume session (already started at the top)
@@ -28,54 +30,11 @@ if (!in_array($page, $allowed_pages)) {
 
 
 
-// Check if user is logged in and process user data
-$isLoggedIn = isset($_SESSION['user']);
-$isAdmin = false;
-$userData = [];
-$welcomeMessage = "";
-
-if ($isLoggedIn) {
-    $currentSessionUser = $_SESSION['user']; // Work with a copy for processing
-    $processedUserData = null; 
-
-    if (is_string($currentSessionUser)) {
-        $decodedUser = json_decode($currentSessionUser, true);
-        // Check if decoding was successful and resulted in an array
-        if (is_array($decodedUser)) {
-            $_SESSION['user'] = $decodedUser; // Normalize: store the array back into the session
-            $processedUserData = $decodedUser;
-        } else {
-            // Invalid JSON string in session. Treat as not logged in for safety.
-            unset($_SESSION['user']);
-            $isLoggedIn = false; // Update $isLoggedIn status
-        }
-    } elseif (is_array($currentSessionUser)) {
-        $processedUserData = $currentSessionUser; // It's already an array
-    } else {
-        // $_SESSION['user'] is set but is neither a string nor an array (e.g. number, bool).
-        // This is an unexpected/corrupt state. Treat as not logged in.
-        unset($_SESSION['user']);
-        $isLoggedIn = false; // Update $isLoggedIn status
-    }
-
-    // If still logged in after processing and data is valid
-    if ($isLoggedIn && $processedUserData !== null) {
-        $userData = $processedUserData; 
-        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
-        
-        // Welcome message with user's name if available
-        if (isset($userData['firstName']) || isset($userData['lastName'])) {
-            $welcomeMessage = "Welcome, " . ($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? '');
-        }
-    } else {
-        // If $isLoggedIn became false due to session processing, ensure $isAdmin is false and $userData is empty
-        $isAdmin = false;
-        $userData = []; 
-        // $welcomeMessage remains its initial ""
-    }
-}
-// Set isAdmin as a global variable for use in components
-$GLOBALS['isAdmin'] = $isAdmin;
+// Use centralized authentication system
+$isLoggedIn = isLoggedIn();
+$isAdmin = isAdmin();
+$userData = getCurrentUser() ?? [];
+$welcomeMessage = getWelcomeMessage();
 
 // This is the admin authentication check, correctly placed after $isAdmin is determined and before HTML output.
 // Redirect if trying to access admin pages without admin privileges

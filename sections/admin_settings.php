@@ -1002,8 +1002,8 @@ async function viewTable(tableName) {
             },
             body: new URLSearchParams({
                 action: 'query',
-                sql: `SELECT * FROM \`${tableName}\` LIMIT 100`,
-                admin_token: 'whimsical_admin_2024'
+                sql: `SELECT * FROM \`${tableName}\` LIMIT 100`
+                // Uses centralized auth - no token needed
             })
         });
         
@@ -1177,7 +1177,7 @@ async function compactRepairDatabase() {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
-                admin_token: 'whimsical_admin_2024'
+                // Uses centralized auth - no token needed
             })
         });
         
@@ -5346,7 +5346,7 @@ function fixSampleEmail() {
         // Proceed with fixing sample email using database manager
         const formData = new FormData();
         formData.append('action', 'fix_sample_email');
-        formData.append('admin_token', 'whimsical_admin_2024'); // Fallback auth
+                        // Uses centralized auth - no token needed
         
         return fetch('api/db_manager.php', {
             method: 'POST',
@@ -8066,8 +8066,8 @@ async function saveGlobalCSSRules() {
             },
             body: new URLSearchParams({
                 action: 'update_bulk',
-                rules: JSON.stringify(rules),
-                admin_token: 'whimsical_admin_2024'
+                rules: JSON.stringify(rules)
+                // Uses centralized auth - no token needed
             })
         });
         
@@ -8139,8 +8139,8 @@ async function resetToDefaults() {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
-                action: 'reset_defaults',
-                admin_token: 'whimsical_admin_2024'
+                action: 'reset_defaults'
+                // Uses centralized auth - no token needed
             })
         });
         

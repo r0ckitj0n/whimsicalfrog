@@ -1,12 +1,12 @@
 <?php
-// Simple Admin User Manager
-require_once 'api/config.php';
+require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/api/config.php';
 
-// Simple authentication check (you can improve this)
-$adminToken = $_GET['token'] ?? $_POST['token'] ?? '';
-if ($adminToken !== 'whimsical_admin_2024') {
-    die('<h2>Access Denied</h2><p>Please provide admin token: ?token=whimsical_admin_2024</p>');
-}
+// Use centralized authentication
+requireAdmin();
+
+// Authentication is handled by requireAdmin() above
+$userData = getCurrentUser();
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
@@ -58,14 +58,12 @@ try {
         
         if (!$isAdmin) {
             echo "<form method='post' style='display: inline;'>";
-            echo "<input type='hidden' name='token' value='whimsical_admin_2024'>";
             echo "<input type='hidden' name='action' value='make_admin'>";
             echo "<input type='hidden' name='username' value='" . htmlspecialchars($user['username']) . "'>";
             echo "<button type='submit' style='background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;'>Make Admin</button>";
             echo "</form>";
         } else {
             echo "<form method='post' style='display: inline;'>";
-            echo "<input type='hidden' name='token' value='whimsical_admin_2024'>";
             echo "<input type='hidden' name='action' value='make_customer'>";
             echo "<input type='hidden' name='username' value='" . htmlspecialchars($user['username']) . "'>";
             echo "<button type='submit' style='background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;'>Remove Admin</button>";

@@ -1,32 +1,11 @@
 <?php
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/config.php';
+
 header('Content-Type: application/json');
-require_once 'config.php';
 
-// Start session if not already started
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Security Check: Ensure user is logged in and is an Admin
-$isLoggedIn = isset($_SESSION['user']);
-$isAdmin = false;
-
-if ($isLoggedIn) {
-    $userData = $_SESSION['user'];
-    // Handle both string and array formats
-    if (is_string($userData)) {
-        $userData = json_decode($userData, true);
-    }
-    if (is_array($userData)) {
-        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
-    }
-}
-
-if (!$isLoggedIn || !$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized access. Admin privileges required.']);
-    exit;
-}
+// Use centralized authentication
+requireAdmin();
 
 // Check if the request method is GET
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {

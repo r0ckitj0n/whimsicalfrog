@@ -1,9 +1,15 @@
 <?php
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/ai_providers.php';
+require_once __DIR__ . '/marketing_helper.php';
+
 // Suppress all output before JSON header
 ob_start();
 header('Content-Type: application/json');
-require_once 'config.php';
-require_once 'ai_providers.php';
+
+// Use centralized authentication
+requireAdmin();
 
 // Turn off error display for this API to prevent HTML in JSON response
 ini_set('display_errors', 0);
@@ -13,31 +19,8 @@ error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
 set_time_limit(120); // 2 minutes for complex AI operations
 ini_set('max_execution_time', 120);
 
-// Start session if not already started
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Security Check: Ensure user is logged in and is an Admin
-$isLoggedIn = isset($_SESSION['user']);
-$isAdmin = false;
-
-if ($isLoggedIn) {
-    $userData = $_SESSION['user'];
-    // Handle both string and array formats
-    if (is_string($userData)) {
-        $userData = json_decode($userData, true);
-    }
-    if (is_array($userData)) {
-        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
-    }
-}
-
-if (!$isLoggedIn || !$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized access. Admin privileges required.']);
-    exit;
-}
+// Authentication is handled by requireAdmin() above
+$userData = getCurrentUser();
 
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

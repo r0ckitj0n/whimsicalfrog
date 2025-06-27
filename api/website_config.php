@@ -4,33 +4,16 @@
  * Manages website settings, CSS variables, and UI component configurations
  */
 
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
 
-// Start session if not already started
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+header('Content-Type: application/json');
 
-// Security Check: Ensure user is logged in and is an Admin
-$isLoggedIn = isset($_SESSION['user']);
-$isAdmin = false;
+// Use centralized authentication
+requireAdmin();
 
-if ($isLoggedIn) {
-    $userData = $_SESSION['user'];
-    if (is_string($userData)) {
-        $userData = json_decode($userData, true);
-    }
-    if (is_array($userData)) {
-        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
-    }
-}
-
-if (!$isLoggedIn || !$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized access. Admin privileges required.']);
-    exit;
-}
+// Authentication is handled by requireAdmin() above
+$userData = getCurrentUser();
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);

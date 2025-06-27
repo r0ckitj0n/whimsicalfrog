@@ -6,46 +6,17 @@ ob_start();
 ob_clean();
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
-// Security: Only allow access from admin session
-session_start();
-
-// Check authentication with multiple session structures
-$isAdmin = false;
-if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin') {
-    $isAdmin = true;
-} elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
-    $isAdmin = true;
-} elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
-    $isAdmin = true;
-}
-
-// Additional security: Check for specific admin token (you can set this)
-$adminToken = $_POST['admin_token'] ?? $_GET['admin_token'] ?? '';
-$validToken = 'whimsical_admin_2024'; // Change this to something secure
-
-if (!$isAdmin && $adminToken !== $validToken) {
-    ob_clean();
-    http_response_code(403);
-    echo json_encode([
-        'success' => false, 
-        'error' => 'Access denied - admin authentication required',
-        'debug' => [
-            'isAdmin' => $isAdmin,
-            'adminToken' => $adminToken,
-            'validToken' => $validToken,
-            'session_keys' => array_keys($_SESSION ?? []),
-            'session_user' => $_SESSION['user'] ?? 'not set',
-            'session_role' => $_SESSION['role'] ?? 'not set',
-            'session_user_role' => $_SESSION['user_role'] ?? 'not set',
-            'post_data' => $_POST,
-            'get_data' => $_GET
-        ]
-    ]);
-    exit;
-}
+// Authentication is handled by requireAdmin() above
+$userData = getCurrentUser();
 
 // Include database configuration
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
+
+header('Content-Type: application/json');
+
+// Use centralized authentication
+requireAdmin();
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);

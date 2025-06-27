@@ -44,24 +44,15 @@ try {
     $user = $stmt->fetch();
     
     if ($user) {
-        // Start session if not already started
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+        // Include centralized auth system
+        require_once __DIR__ . '/includes/auth.php';
         
         // Check for redirect after login
         $redirectUrl = $_SESSION['redirect_after_login'] ?? null;
         unset($_SESSION['redirect_after_login']); // Clear it
         
-        // Store user data in session
-        $_SESSION['user'] = [
-            'userId' => $user['id'],
-            'username' => $user['username'],
-            'email' => $user['email'],
-            'role' => $user['role'],
-            'firstName' => $user['firstName'] ?? null,
-            'lastName' => $user['lastName'] ?? null
-        ];
+        // Use centralized login function
+        loginUser($user);
         
         // User authenticated successfully
         echo json_encode([

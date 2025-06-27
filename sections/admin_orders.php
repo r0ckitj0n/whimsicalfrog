@@ -177,7 +177,7 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
         transition: opacity 0.3s, transform 0.3s;
     }
     .toast-notification.show { opacity: 1; transform: translateY(0); }
-    .toast-notification.success { background-color: #48bb78; } /* Tailwind green-500 */
+            .toast-notification.success { background-color: #87ac3a; } /* Brand green */
     .toast-notification.error { background-color: #f56565; } /* Tailwind red-500 */
     .toast-notification.info { background-color: #4299e1; } /* Tailwind blue-500 */
 
@@ -1433,7 +1433,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!orderIdToDelete) return;
             
             // Assuming your delete API is at /api/delete-order.php and takes orderId as a query param
-            fetch(`/api/delete-order.php?orderId=${orderIdToDelete}&admin_token=whimsical_admin_2024`, { // Make sure this endpoint exists and works
+                                fetch(`/api/delete-order.php?orderId=${orderIdToDelete}`, { // Uses centralized auth
                 method: 'DELETE' // Or POST if your server expects that for deletion
             })
             .then(response => response.json()) // Assuming it returns JSON

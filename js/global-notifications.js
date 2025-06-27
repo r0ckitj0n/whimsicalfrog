@@ -151,7 +151,7 @@ class WhimsicalFrogNotifications {
         const configs = {
             success: {
                 background: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
-                border: '#10b981',
+                border: '#87ac3a',
                 color: '#065f46',
                 titleColor: '#047857',
                 closeColor: '#059669',

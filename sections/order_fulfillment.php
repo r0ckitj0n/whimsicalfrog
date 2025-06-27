@@ -88,7 +88,7 @@ $messageType = $_GET['type'] ?? '';
         transition: opacity 0.3s, transform 0.3s;
     }
     .toast-notification.show { opacity: 1; transform: translateY(0); }
-    .toast-notification.success { background-color: #48bb78; } /* Tailwind green-500 */
+            .toast-notification.success { background-color: #87ac3a; } /* Brand green */
     .toast-notification.error { background-color: #f56565; } /* Tailwind red-500 */
     .toast-notification.info { background-color: #4299e1; } /* Tailwind blue-500 */
 

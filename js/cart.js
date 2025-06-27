@@ -102,15 +102,13 @@ class ShoppingCart {
     addItem(item) {
         const quantity = item.quantity || 1; // Use provided quantity or default to 1
         const color = item.color || null; // Color selection support
+        const size = item.size || null; // Size selection support
         
-        // Create unique identifier for item+color combination
-        const itemKey = color ? `${item.sku}_${color}` : item.sku;
+        // Create unique identifier for item+color+size combination
         const existingItem = this.items.find(cartItem => {
-            if (color) {
-                return cartItem.sku === item.sku && cartItem.color === color;
-            } else {
-                return cartItem.sku === item.sku && !cartItem.color;
-            }
+            return cartItem.sku === item.sku && 
+                   cartItem.color === color && 
+                   cartItem.size === size;
         });
         
         if (existingItem) {
@@ -124,13 +122,27 @@ class ShoppingCart {
                 quantity: quantity
             };
             
+            // Build display name with color and size
+            let displayParts = [item.name];
+            
             // Add color if specified
             if (color) {
                 cartItem.color = color;
-                cartItem.displayName = `${item.name} (${color})`;
-            } else {
-                cartItem.displayName = item.name;
+                cartItem.colorCode = item.colorCode; // Store color code for display
+                displayParts.push(color);
             }
+            
+            // Add size if specified
+            if (size) {
+                cartItem.size = size;
+                cartItem.sizeName = item.sizeName || size;
+                cartItem.sizeAdjustment = item.sizeAdjustment || 0;
+                displayParts.push(cartItem.sizeName);
+            }
+            
+            cartItem.displayName = displayParts.length > 1 ? 
+                `${displayParts[0]} (${displayParts.slice(1).join(', ')})` : 
+                displayParts[0];
             
             this.items.push(cartItem);
         }
@@ -145,13 +157,15 @@ class ShoppingCart {
         }
     }
 
-    removeItem(itemSku, color = null) {
+    removeItem(itemSku, color = null, size = null) {
+        // Normalize null values (handle 'null' strings from onclick handlers)
+        const normalizedColor = (color === 'null' || color === '' || color === undefined) ? null : color;
+        const normalizedSize = (size === 'null' || size === '' || size === undefined) ? null : size;
+        
         this.items = this.items.filter(item => {
-            if (color) {
-                return !(item.sku === itemSku && item.color === color);
-            } else {
-                return !(item.sku === itemSku && !item.color);
-            }
+            const itemColor = item.color || null;
+            const itemSize = item.size || null;
+            return !(item.sku === itemSku && itemColor === normalizedColor && itemSize === normalizedSize);
         });
         this.saveCart();
         this.updateCartCount();
@@ -163,18 +177,20 @@ class ShoppingCart {
         }
     }
 
-    updateQuantity(itemSku, quantity, color = null) {
+    updateQuantity(itemSku, quantity, color = null, size = null) {
+        // Normalize null values (handle 'null' strings from onclick handlers)
+        const normalizedColor = (color === 'null' || color === '' || color === undefined) ? null : color;
+        const normalizedSize = (size === 'null' || size === '' || size === undefined) ? null : size;
+        
         const item = this.items.find(cartItem => {
-            if (color) {
-                return cartItem.sku === itemSku && cartItem.color === color;
-            } else {
-                return cartItem.sku === itemSku && !cartItem.color;
-            }
+            const itemColor = cartItem.color || null;
+            const itemSize = cartItem.size || null;
+            return cartItem.sku === itemSku && itemColor === normalizedColor && itemSize === normalizedSize;
         });
         if (item) {
             item.quantity = Math.max(0, quantity);
             if (item.quantity === 0) {
-                this.removeItem(itemSku, color);
+                this.removeItem(itemSku, normalizedColor, normalizedSize);
             } else {
                 this.saveCart();
                 this.updateCartCount();
@@ -256,27 +272,31 @@ class ShoppingCart {
         await this.refreshProductData();
 
         const cartHTML = this.items.map(item => {
-            const itemKey = item.color ? `${item.sku}_${item.color}` : item.sku;
-            const displayName = item.color ? `${item.name} (${item.color})` : item.name;
-            
             return `
             <div class="flex items-center justify-between p-4 border-b border-gray-200">
                 <div class="flex items-center space-x-4">
                     <img src="${item.image || '/images/items/placeholder.png'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
                     <div>
-                        <h3 class="font-medium text-gray-900">${displayName}</h3>
+                        <h3 class="font-medium text-gray-900">${item.displayName}</h3>
                         <p class="text-sm text-gray-500">$${item.price.toFixed(2)}</p>
-                        ${item.color ? `<div class="flex items-center mt-1">
-                            <div class="w-3 h-3 rounded-full border border-gray-300 mr-2" style="background-color: ${item.colorCode || '#ccc'}"></div>
-                            <span class="text-xs text-gray-500">${item.color}</span>
-                        </div>` : ''}
+                        <div class="flex items-center mt-1 space-x-3">
+                            ${item.color ? `<div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full border border-gray-300 mr-2" style="background-color: ${item.colorCode || '#ccc'}"></div>
+                                <span class="text-xs text-gray-500">${item.color}</span>
+                            </div>` : ''}
+                            ${item.sizeName ? `<div class="flex items-center">
+                                <span class="text-xs text-gray-500">Size: ${item.sizeName}</span>
+                                ${item.sizeAdjustment && item.sizeAdjustment !== 0 ? 
+                                    `<span class="text-xs text-gray-600 ml-1">(${item.sizeAdjustment > 0 ? '+' : ''}$${item.sizeAdjustment.toFixed(2)})</span>` : ''}
+                            </div>` : ''}
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button onclick="updateQuantity('${item.sku}', ${item.quantity - 1}, '${item.color || ''}')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">-</button>
+                    <button onclick="updateQuantity('${item.sku}', ${item.quantity - 1}, ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">-</button>
                     <span class="px-3 py-1 bg-gray-100 rounded">${item.quantity}</span>
-                    <button onclick="updateQuantity('${item.sku}', ${item.quantity + 1}, '${item.color || ''}')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">+</button>
-                    <button onclick="removeFromCart('${item.sku}', '${item.color || ''}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded ml-2">Remove</button>
+                    <button onclick="updateQuantity('${item.sku}', ${item.quantity + 1}, ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">+</button>
+                    <button onclick="removeFromCart('${item.sku}', ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'})" class="px-2 py-1 rounded ml-2" style="background-color: #dc2626; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Remove</button>
                 </div>
             </div>
             `;
@@ -286,9 +306,9 @@ class ShoppingCart {
             <div class="p-4 border-t border-gray-200 bg-gray-50">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-lg font-semibold">Total: $${this.getTotal().toFixed(2)}</span>
-                    <button onclick="cart.clearCart()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Clear Cart</button>
+                    <button onclick="cart.clearCart()" class="px-4 py-2 rounded" style="background-color: #6b7280; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
                 </div>
-                <button onclick="cart.checkout()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg font-semibold">Proceed to Checkout</button>
+                <button onclick="cart.checkout()" class="w-full py-3 px-6 rounded-lg font-semibold" style="background-color: #87ac3a; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">Proceed to Checkout</button>
             </div>
         `;
     }
@@ -381,8 +401,8 @@ class ShoppingCart {
                 </div>
 
                 <div class="flex space-x-2">
-                    <button onclick="document.getElementById('paymentMethodModal').remove()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">Cancel</button>
-                    <button onclick="cart.proceedToCheckout()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Place Order</button>
+                    <button onclick="document.getElementById('paymentMethodModal').remove()" class="flex-1 py-2 px-4 rounded" style="background-color: #6b7280; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Cancel</button>
+                    <button onclick="cart.proceedToCheckout()" class="flex-1 text-white py-2 px-4 rounded" style="background-color: #87ac3a; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">Place Order</button>
                 </div>
             </div>
         `;
@@ -551,28 +571,26 @@ function emergencyCartCleanup() {
     }
 }
 
-function removeFromCart(sku, color = null) {
+function removeFromCart(sku, color = null, size = null) {
     if (cart) {
-        cart.removeItem(sku, color);
+        cart.removeItem(sku, color, size);
     }
 }
 
-function updateQuantity(sku, newQuantity, color = null) {
+function updateQuantity(sku, newQuantity, color = null, size = null) {
     if (cart) {
-        cart.updateQuantity(sku, newQuantity, color);
+        cart.updateQuantity(sku, newQuantity, color, size);
     }
 }
 
 // Global function to add items to cart with quantity modal
 window.addToCartWithModal = async function(sku, name, price, image) {
-    // Always go to quantity modal, but check for colors to populate dropdown
+    // Always go to quantity modal, but check for colors and sizes to populate dropdowns
     await showQuantityModal(sku, name, price, image);
 };
 
-
-
-// Function to show quantity modal (updated to handle colors)
-window.showQuantityModal = async function(sku, name, price, image, selectedColor = null) {
+// Function to show quantity modal (updated to handle colors and sizes)
+window.showQuantityModal = async function(sku, name, price, image, selectedColor = null, selectedSize = null) {
     // Find the quantity modal elements
     const quantityModal = document.getElementById('quantityModal');
     const modalProductImage = document.getElementById('modalProductImage');
@@ -613,7 +631,34 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
         console.log('Error fetching colors for', sku, ':', error);
     }
     
-    // Set current product data including available colors
+    // Check for size options and populate dropdown
+    let availableSizes = [];
+    let generalSizes = [];
+    let colorSpecificSizes = {};
+    try {
+        // First get general sizes (not color-specific)
+        const generalSizeResponse = await fetch(`/api/item_sizes.php?action=get_sizes&item_sku=${sku}&color_id=null`);
+        const generalSizeData = await generalSizeResponse.json();
+        if (generalSizeData.success && generalSizeData.sizes.length > 0) {
+            generalSizes = generalSizeData.sizes;
+            availableSizes = generalSizes;
+        }
+        
+        // If there are colors, check for color-specific sizes
+        if (availableColors.length > 0) {
+            for (const color of availableColors) {
+                const colorSizeResponse = await fetch(`/api/item_sizes.php?action=get_sizes&item_sku=${sku}&color_id=${color.id}`);
+                const colorSizeData = await colorSizeResponse.json();
+                if (colorSizeData.success && colorSizeData.sizes.length > 0) {
+                    colorSpecificSizes[color.id] = colorSizeData.sizes;
+                }
+            }
+        }
+    } catch (error) {
+        console.log('Error fetching sizes for', sku, ':', error);
+    }
+    
+    // Set current product data including available colors and sizes
     window.currentModalProduct = { 
         id: sku, 
         name: name, 
@@ -622,7 +667,11 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
         originalImage: image, // Store original image for fallback
         originalPrice: price,
         selectedColor: selectedColor,
-        availableColors: availableColors
+        selectedSize: selectedSize,
+        availableColors: availableColors,
+        availableSizes: availableSizes,
+        generalSizes: generalSizes,
+        colorSpecificSizes: colorSpecificSizes
     };
     
     // Update modal content with proper image handling
@@ -659,8 +708,9 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
     // Update product name 
     if (modalProductName) modalProductName.textContent = name;
     
-    // Handle color dropdown
+    // Handle color and size dropdowns
     await setupColorDropdown(availableColors, selectedColor);
+    await setupSizeDropdown(availableSizes, generalSizes, colorSpecificSizes, selectedSize);
     
     // Display price with sale formatting if applicable
     if (finalPrice < price) {
@@ -801,17 +851,7 @@ window.updateColorSwatch = function() {
     }
 };
 
-// Function called when color selection changes
-window.updateSelectedColor = function() {
-    const colorSelect = document.getElementById('colorSelect');
-    if (colorSelect && window.currentModalProduct) {
-        window.currentModalProduct.selectedColor = colorSelect.value || null;
-        updateColorSwatch();
-        
-        // Update product image based on color selection
-        updateProductImageForColor();
-    }
-};
+
 
 // Function to update product image when color is selected
 window.updateProductImageForColor = async function() {
@@ -862,15 +902,32 @@ window.updateModalTotal = function() {
     const quantityInput = document.getElementById('quantityInput');
     const modalQuantity = document.getElementById('modalQuantity');
     const modalTotal = document.getElementById('modalTotal');
+    const modalUnitPrice = document.getElementById('modalUnitPrice');
     
     if (!window.currentModalProduct || !quantityInput) return;
     
     const quantity = parseInt(quantityInput.value) || 1;
-    const unitPrice = window.currentModalProduct.price;
+    let unitPrice = window.currentModalProduct.price;
+    
+    // Add size price adjustment if applicable
+    const sizeAdjustment = window.currentModalProduct.sizeAdjustment || 0;
+    unitPrice += sizeAdjustment;
+    
     const total = quantity * unitPrice;
     
     if (modalQuantity) modalQuantity.textContent = quantity;
     if (modalTotal) modalTotal.textContent = '$' + total.toFixed(2);
+    
+    // Update unit price display to show size adjustment if applicable
+    if (modalUnitPrice) {
+        if (sizeAdjustment !== 0) {
+            const basePrice = window.currentModalProduct.price;
+            const adjustmentText = sizeAdjustment > 0 ? `+$${sizeAdjustment.toFixed(2)}` : `$${sizeAdjustment.toFixed(2)}`;
+            modalUnitPrice.innerHTML = `$${basePrice.toFixed(2)} ${adjustmentText} = $${unitPrice.toFixed(2)}`;
+        } else {
+            modalUnitPrice.textContent = '$' + unitPrice.toFixed(2);
+        }
+    }
 };
 
 // Global function to close modal
@@ -905,8 +962,8 @@ window.confirmAddToCart = function() {
                 window.cart.showNotification('Please select a color before adding to cart.');
             } else {
                 showValidation('Please select a color before adding to cart.');
-                return;
             }
+            return;
         }
         // Update the selected color from dropdown
         window.currentModalProduct.selectedColor = selectedColor;
@@ -915,12 +972,36 @@ window.confirmAddToCart = function() {
         window.currentModalProduct.selectedColor = window.currentModalProduct.availableColors[0].color_name;
     }
     
+    // Check if size selection is required but not selected
+    const sizeSelect = document.getElementById('sizeSelect');
+    if (sizeSelect && (window.currentModalProduct.generalSizes?.length > 0 || 
+        Object.keys(window.currentModalProduct.colorSpecificSizes || {}).length > 0)) {
+        const selectedSize = sizeSelect.value;
+        if (!selectedSize) {
+            if (window.cart && window.cart.showErrorNotification) {
+                window.cart.showErrorNotification('Please select a size before adding to cart.');
+            } else if (window.cart && window.cart.showNotification) {
+                window.cart.showNotification('Please select a size before adding to cart.');
+            } else {
+                showValidation('Please select a size before adding to cart.');
+            }
+            return;
+        }
+        // Update the selected size from dropdown
+        window.currentModalProduct.selectedSize = selectedSize;
+    }
+    
     // Add to cart using the existing cart system
     if (typeof window.cart !== 'undefined') {
+        // Calculate final price with size adjustment
+        let finalPrice = window.currentModalProduct.price;
+        const sizeAdjustment = window.currentModalProduct.sizeAdjustment || 0;
+        finalPrice += sizeAdjustment;
+        
         const cartItem = {
             sku: window.currentModalProduct.id,  // Use sku property as expected by cart
             name: window.currentModalProduct.name,
-            price: window.currentModalProduct.price,
+            price: finalPrice, // Use adjusted price
             image: window.currentModalProduct.image,
             quantity: quantity
         };
@@ -938,6 +1019,15 @@ window.confirmAddToCart = function() {
             }
         }
         
+        // Add size if selected
+        if (window.currentModalProduct.selectedSize) {
+            cartItem.size = window.currentModalProduct.selectedSize;
+            cartItem.sizeName = window.currentModalProduct.selectedSizeName;
+            if (sizeAdjustment !== 0) {
+                cartItem.sizeAdjustment = sizeAdjustment;
+            }
+        }
+        
         window.cart.addItem(cartItem);
         
         // Show confirmation
@@ -945,8 +1035,9 @@ window.confirmAddToCart = function() {
         const customAlertMessage = document.getElementById('customAlertMessage');
         if (customAlert && customAlertMessage) {
             const quantityText = quantity > 1 ? ` (${quantity})` : '';
-            const colorText = window.currentModalProduct.selectedColor ? ` (${window.currentModalProduct.selectedColor})` : '';
-            customAlertMessage.textContent = `${window.currentModalProduct.name}${colorText}${quantityText} added to your cart!`;
+            const colorText = window.currentModalProduct.selectedColor ? ` - ${window.currentModalProduct.selectedColor}` : '';
+            const sizeText = window.currentModalProduct.selectedSizeName ? ` - ${window.currentModalProduct.selectedSizeName}` : '';
+            customAlertMessage.textContent = `${window.currentModalProduct.name}${colorText}${sizeText}${quantityText} added to your cart!`;
             customAlert.style.display = 'block';
             
             // Auto-hide after 5 seconds
@@ -955,15 +1046,14 @@ window.confirmAddToCart = function() {
             }, 5000);
         }
     } else {
-        const colorText = window.currentModalProduct.selectedColor ? ` (${window.currentModalProduct.selectedColor})` : '';
-        showSuccess(`Added ${quantity} ${window.currentModalProduct.name}${colorText} to cart!`);
+        const colorText = window.currentModalProduct.selectedColor ? ` - ${window.currentModalProduct.selectedColor}` : '';
+        const sizeText = window.currentModalProduct.selectedSizeName ? ` - ${window.currentModalProduct.selectedSizeName}` : '';
+        showSuccess(`Added ${quantity} ${window.currentModalProduct.name}${colorText}${sizeText} to cart!`);
     }
     
     // Close modal
     closeCartModal();
 };
-
-
 
 // Global popup management functions
 window.globalPopupTimeout = null;
@@ -1308,4 +1398,138 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize modal and popup event listeners
     window.initializeModalEventListeners();
     window.initializePopupEventListeners();
-}); 
+});
+
+// Function to setup size dropdown in quantity modal
+window.setupSizeDropdown = async function(availableSizes, generalSizes, colorSpecificSizes, selectedSize = null) {
+    // Find or create size dropdown container
+    let sizeContainer = document.getElementById('sizeDropdownContainer');
+    
+    if (!sizeContainer) {
+        // Create size dropdown container and insert it after color container or before quantity controls
+        const colorContainer = document.getElementById('colorDropdownContainer');
+        const quantityControls = document.querySelector('.quantity-controls');
+        const insertBefore = quantityControls;
+        
+        if (insertBefore) {
+            sizeContainer = document.createElement('div');
+            sizeContainer.id = 'sizeDropdownContainer';
+            sizeContainer.className = 'size-dropdown-container';
+            insertBefore.parentNode.insertBefore(sizeContainer, insertBefore);
+        } else {
+            console.error('Could not find location to insert size dropdown');
+            return;
+        }
+    }
+    
+    // Clear existing content
+    sizeContainer.innerHTML = '';
+    
+    // Determine which sizes to show
+    let sizesToShow = availableSizes;
+    
+    // If color is selected and has specific sizes, use those instead
+    if (window.currentModalProduct && window.currentModalProduct.selectedColor) {
+        const selectedColorData = window.currentModalProduct.availableColors?.find(
+            c => c.color_name === window.currentModalProduct.selectedColor
+        );
+        if (selectedColorData && colorSpecificSizes[selectedColorData.id]) {
+            sizesToShow = colorSpecificSizes[selectedColorData.id];
+        }
+    }
+    
+    if (sizesToShow && sizesToShow.length > 0) {
+        // Create size dropdown
+        const sizeHTML = `
+            <div class="size-selection">
+                <label for="sizeSelect">Size:</label>
+                <div class="size-dropdown-wrapper">
+                    <select id="sizeSelect" class="size-select" onchange="updateSelectedSize()">
+                        <option value="">Choose a size...</option>
+                        ${sizesToShow.map(size => {
+                            const priceAdjustment = parseFloat(size.price_adjustment || 0);
+                            const adjustmentText = priceAdjustment !== 0 ? 
+                                ` (${priceAdjustment > 0 ? '+' : ''}$${priceAdjustment.toFixed(2)})` : '';
+                            const stockText = size.stock_level > 0 ? 
+                                ` (${size.stock_level} available)` : ' (Out of stock)';
+                            
+                            return `
+                                <option value="${size.size_code}" 
+                                        data-size-name="${size.size_name}" 
+                                        data-price-adjustment="${priceAdjustment}"
+                                        data-stock="${size.stock_level}"
+                                        ${selectedSize === size.size_code ? 'selected' : ''}
+                                        ${size.stock_level <= 0 ? 'disabled' : ''}>
+                                    ${size.size_name}${adjustmentText}${stockText}
+                                </option>
+                            `;
+                        }).join('')}
+                    </select>
+                </div>
+            </div>
+        `;
+        
+        sizeContainer.innerHTML = sizeHTML;
+        
+        // Add CSS if not already added
+        if (!document.getElementById('sizeDropdownStyles')) {
+            const style = document.createElement('style');
+            style.id = 'sizeDropdownStyles';
+            style.textContent = `
+                .size-dropdown-container {
+                    margin-bottom: 15px;
+                }
+                .size-selection label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: 500;
+                    color: #374151;
+                }
+                .size-dropdown-wrapper {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .size-select {
+                    flex: 1;
+                    padding: 8px 12px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    background: white;
+                    font-size: 14px;
+                    color: #374151;
+                }
+                .size-select:focus {
+                    outline: none;
+                    border-color: #87ac3a;
+                    box-shadow: 0 0 0 2px rgba(135, 172, 58, 0.2);
+                }
+                .size-select option:disabled {
+                    color: #9ca3af;
+                    background-color: #f3f4f6;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Update price if size has adjustment
+        updateModalTotal();
+    }
+};
+
+// Function to update selected size and price
+window.updateSelectedSize = function() {
+    const sizeSelect = document.getElementById('sizeSelect');
+    if (!sizeSelect || !window.currentModalProduct) return;
+    
+    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+    const selectedSize = sizeSelect.value;
+    const priceAdjustment = parseFloat(selectedOption?.getAttribute('data-price-adjustment') || 0);
+    
+    window.currentModalProduct.selectedSize = selectedSize;
+    window.currentModalProduct.selectedSizeName = selectedOption?.getAttribute('data-size-name') || '';
+    window.currentModalProduct.sizeAdjustment = priceAdjustment;
+    
+    // Update modal total with size price adjustment
+    updateModalTotal();
+}; 

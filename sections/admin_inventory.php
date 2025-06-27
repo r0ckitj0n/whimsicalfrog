@@ -1042,10 +1042,13 @@ $messageType = $_GET['type'] ?? '';
                                 <span class="mr-2">🎨</span> Color Options
                             </h3>
                             <div class="flex space-x-2">
+                                <button type="button" onclick="openColorTemplateModal()" class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors" title="Apply color template">
+                                    📋 Templates
+                                </button>
                                 <button type="button" onclick="syncStockLevels()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" title="Sync total stock with color quantities">
                                     🔄 Sync Stock
                                 </button>
-                                <button type="button" onclick="addNewColor()" class="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors">
+                                <button type="button" onclick="addNewColor()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
                                     + Add Color
                                 </button>
                             </div>
@@ -1054,6 +1057,64 @@ $messageType = $_GET['type'] ?? '';
                         <div id="colorsList" class="space-y-2">
                             <!-- Colors will be loaded here -->
                             <div class="text-center text-gray-500 text-sm" id="colorsLoading">Loading colors...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Size Management Section -->
+                    <div class="size-management-section mt-4" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <span class="mr-2">📏</span> Size Options
+                            </h3>
+                            <div class="flex space-x-2">
+                                <button type="button" onclick="openSizeTemplateModal()" class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors" title="Apply size template">
+                                    📋 Templates
+                                </button>
+                                <button type="button" onclick="syncSizeStock()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" title="Sync stock levels with size quantities">
+                                    🔄 Sync Stock
+                                </button>
+                                <button type="button" onclick="addNewSize()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                    + Add Size
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Size Configuration Toggle -->
+                        <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-blue-800 text-sm">📋 Size Configuration</h4>
+                                <div class="text-xs text-blue-600">
+                                    Choose how sizes work for this item
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="radio" name="sizeConfiguration" value="none" class="mr-2" checked onchange="updateSizeConfiguration()">
+                                    <span class="text-sm">No sizes - Single item</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="sizeConfiguration" value="general" class="mr-2" onchange="updateSizeConfiguration()">
+                                    <span class="text-sm">General sizes - Same item in different sizes</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="sizeConfiguration" value="color_specific" class="mr-2" onchange="updateSizeConfiguration()">
+                                    <span class="text-sm">Color-specific sizes - Different sizes for each color</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Size Type Selector (for color-specific mode) -->
+                        <div id="sizeTypeSelector" class="mb-3 hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Color for Size Management:</label>
+                            <select id="sizeColorFilter" class="w-full px-3 py-2 border border-gray-300 rounded text-sm" onchange="loadItemSizes()">
+                                <option value="general">General Sizes (No Color)</option>
+                                <!-- Color options will be loaded here -->
+                            </select>
+                        </div>
+                        
+                        <div id="sizesList" class="space-y-2">
+                            <!-- Sizes will be loaded here -->
+                            <div class="text-center text-gray-500 text-sm" id="sizesLoading">Loading sizes...</div>
                         </div>
                     </div>
                 </div>
@@ -8696,20 +8757,20 @@ function createColorModal() {
                         
                         <div class="mb-4">
                             <label for="colorName" class="block text-sm font-medium text-gray-700 mb-2">Color Name *</label>
-                            <input type="text" id="colorName" name="colorName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <input type="text" id="colorName" name="colorName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                         </div>
                         
                         <div class="mb-4">
                             <label for="colorCode" class="block text-sm font-medium text-gray-700 mb-2">Color Code</label>
                             <div class="flex items-center space-x-2">
                                 <input type="color" id="colorCode" name="colorCode" class="w-16 h-10 border border-gray-300 rounded cursor-pointer">
-                                <input type="text" id="colorCodeText" name="colorCodeText" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="#000000">
+                                <input type="text" id="colorCodeText" name="colorCodeText" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" placeholder="#000000">
                             </div>
                         </div>
                         
                         <div class="mb-4">
                             <label for="colorImagePath" class="block text-sm font-medium text-gray-700 mb-2">Associated Image</label>
-                            <select id="colorImagePath" name="colorImagePath" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <select id="colorImagePath" name="colorImagePath" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                                 <option value="">No specific image (use default)</option>
                             </select>
                             <p class="text-xs text-gray-500 mt-1">Choose which item image to show when this color is selected</p>
@@ -8717,12 +8778,12 @@ function createColorModal() {
                         
                         <div class="mb-4">
                             <label for="colorStockLevel" class="block text-sm font-medium text-gray-700 mb-2">Stock Level</label>
-                            <input type="number" id="colorStockLevel" name="stockLevel" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <input type="number" id="colorStockLevel" name="stockLevel" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                         </div>
                         
                         <div class="mb-4">
                             <label for="displayOrder" class="block text-sm font-medium text-gray-700 mb-2">Display Order</label>
-                            <input type="number" id="displayOrder" name="displayOrder" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <input type="number" id="displayOrder" name="displayOrder" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                         </div>
                         
                         <div class="mb-6">
@@ -8736,7 +8797,7 @@ function createColorModal() {
                             <button type="button" onclick="closeColorModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
                                 Cancel
                             </button>
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            <button type="submit" class="px-4 py-2 text-white rounded transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
                                 Save Color
                             </button>
                         </div>
@@ -8914,6 +8975,1179 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Size Management Functions
+let currentSizeConfiguration = 'none'; // Track current size configuration mode
+
+// Update size configuration based on radio button selection
+function updateSizeConfiguration() {
+    const selectedConfig = document.querySelector('input[name="sizeConfiguration"]:checked').value;
+    currentSizeConfiguration = selectedConfig;
+    
+    const sizeTypeSelector = document.getElementById('sizeTypeSelector');
+    const sizesSection = document.getElementById('sizesList');
+    
+    if (selectedConfig === 'none') {
+        // Hide size management completely
+        sizeTypeSelector.classList.add('hidden');
+        sizesSection.innerHTML = '<div class="text-center text-gray-500 text-sm">No sizes configured for this item</div>';
+    } else if (selectedConfig === 'general') {
+        // Show general sizes (not color-specific)
+        sizeTypeSelector.classList.add('hidden');
+        loadItemSizes('general');
+    } else if (selectedConfig === 'color_specific') {
+        // Show color selector and load color-specific sizes
+        sizeTypeSelector.classList.remove('hidden');
+        loadColorOptions();
+        loadItemSizes();
+    }
+}
+
+// Load available colors for the size color filter
+async function loadColorOptions() {
+    if (!currentItemSku) return;
+    
+    try {
+        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        const colorFilter = document.getElementById('sizeColorFilter');
+        if (!colorFilter) return;
+        
+        // Clear existing options except the first one
+        colorFilter.innerHTML = '<option value="general">General Sizes (No Color)</option>';
+        
+        if (data.success && data.colors && data.colors.length > 0) {
+            data.colors.forEach(color => {
+                if (color.is_active == 1) { // Only show active colors
+                    const option = document.createElement('option');
+                    option.value = color.id;
+                    option.textContent = `${color.color_name} (${color.stock_level} in stock)`;
+                    colorFilter.appendChild(option);
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error loading colors for size filter:', error);
+    }
+}
+
+// Load sizes for current item
+async function loadItemSizes(colorId = null) {
+    if (!currentItemSku) {
+        console.log('No currentItemSku available for loading sizes');
+        return;
+    }
+    
+    // Determine which color to load sizes for
+    let targetColorId = colorId;
+    if (targetColorId === null) {
+        const colorFilter = document.getElementById('sizeColorFilter');
+        if (colorFilter) {
+            targetColorId = colorFilter.value;
+        }
+    }
+    
+    try {
+        let url = `/api/item_sizes.php?action=get_all_sizes&item_sku=${currentItemSku}`;
+        if (targetColorId && targetColorId !== 'general') {
+            url += `&color_id=${targetColorId}`;
+        } else if (targetColorId === 'general') {
+            url += '&color_id=0'; // Explicitly request general sizes
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('Loaded sizes:', data.sizes);
+            renderSizes(data.sizes);
+        } else {
+            console.error('Error loading sizes:', data.message);
+            renderSizes([]);
+        }
+    } catch (error) {
+        console.error('Error fetching sizes:', error);
+        renderSizes([]);
+    }
+}
+
+// Render sizes list
+function renderSizes(sizes) {
+    const sizesList = document.getElementById('sizesList');
+    const sizesLoading = document.getElementById('sizesLoading');
+    
+    if (sizesLoading) {
+        sizesLoading.style.display = 'none';
+    }
+    
+    if (!sizesList) return;
+    
+    if (sizes.length === 0) {
+        sizesList.innerHTML = '<div class="text-center text-gray-500 text-sm">No sizes defined. Click "Add Size" to get started.</div>';
+        return;
+    }
+    
+    // Group sizes by color if they have color associations
+    const groupedSizes = {};
+    sizes.forEach(size => {
+        const key = size.color_id ? `color_${size.color_id}` : 'general';
+        if (!groupedSizes[key]) {
+            groupedSizes[key] = {
+                color_name: size.color_name || 'General Sizes',
+                color_code: size.color_code || null,
+                sizes: []
+            };
+        }
+        groupedSizes[key].sizes.push(size);
+    });
+    
+    let html = '';
+    
+    // Calculate total stock from all sizes
+    const totalSizeStock = sizes.reduce((sum, s) => sum + parseInt(s.stock_level || 0), 0);
+    
+    // Get current item stock level
+    const stockField = document.getElementById('stockLevel');
+    const currentItemStock = stockField ? parseInt(stockField.value || 0) : 0;
+    
+    // Check if stock is in sync
+    const isInSync = totalSizeStock === currentItemStock;
+    
+    // Add sync status indicator if there are sizes
+    if (sizes.length > 0) {
+        const syncClass = isInSync ? 'bg-green-50 border-green-200 text-green-800' : 'bg-yellow-50 border-yellow-200 text-yellow-800';
+        const syncIcon = isInSync ? '✅' : '⚠️';
+        const syncMessage = isInSync ? 
+            `Stock synchronized (${totalSizeStock} total)` : 
+            `Stock out of sync! Sizes total: ${totalSizeStock}, Item stock: ${currentItemStock}`;
+        
+        html += `
+            <div class="mb-3 p-2 border rounded-lg ${syncClass}">
+                <div class="text-sm font-medium">${syncIcon} ${syncMessage}</div>
+                ${!isInSync ? '<div class="text-xs mt-1">Click "Sync Stock" to fix this.</div>' : ''}
+            </div>
+        `;
+    }
+    
+    // Render each group
+    Object.keys(groupedSizes).forEach(groupKey => {
+        const group = groupedSizes[groupKey];
+        
+        // Add group header if there are multiple groups
+        if (Object.keys(groupedSizes).length > 1) {
+            html += `
+                <div class="mb-2 font-medium text-gray-700 flex items-center">
+                    ${group.color_code ? `<div class="w-4 h-4 rounded border mr-2" style="background-color: ${group.color_code}"></div>` : ''}
+                    ${group.color_name}
+                </div>
+            `;
+        }
+        
+        // Render sizes in this group
+        group.sizes.forEach(size => {
+            const isActive = size.is_active == 1;
+            const activeClass = isActive ? 'bg-white' : 'bg-gray-100 opacity-75';
+            const activeText = isActive ? '' : ' (Inactive)';
+            const priceAdjustmentText = size.price_adjustment > 0 ? ` (+$${size.price_adjustment})` : '';
+            
+            html += `
+                <div class="size-item flex items-center justify-between p-3 border border-gray-200 rounded-lg ${activeClass} ml-${Object.keys(groupedSizes).length > 1 ? '4' : '0'}">
+                    <div class="flex items-center space-x-3">
+                        <div class="size-badge bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                            ${size.size_code}
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">${size.size_name}${activeText}${priceAdjustmentText}</div>
+                            <div class="text-sm text-gray-500">${size.stock_level} in stock</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="editSize(${size.id})" class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
+                            Edit
+                        </button>
+                        <button type="button" onclick="deleteSize(${size.id})" class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+    
+    sizesList.innerHTML = html;
+}
+
+// Add new size
+function addNewSize() {
+    showSizeModal();
+}
+
+// Edit existing size
+async function editSize(sizeId) {
+    try {
+        const response = await fetch(`/api/item_sizes.php?action=get_all_sizes&item_sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const size = data.sizes.find(s => s.id == sizeId);
+            if (size) {
+                showSizeModal(size);
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching size for edit:', error);
+    }
+}
+
+// Delete size
+async function deleteSize(sizeId) {
+    const confirmResult = await showStyledConfirm(
+        'Delete Size',
+        'Are you sure you want to delete this size? This action cannot be undone.',
+        'Delete',
+        'Cancel'
+    );
+    
+    if (!confirmResult) return;
+    
+    try {
+        const response = await fetch('/api/item_sizes.php?action=delete_size', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ size_id: sizeId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Size deleted successfully');
+            loadItemSizes(); // Reload sizes
+            
+            // Update stock field if provided
+            if (data.new_total_stock !== undefined) {
+                const stockField = document.getElementById('stockLevel');
+                if (stockField) {
+                    stockField.value = data.new_total_stock;
+                }
+            }
+        } else {
+            showError('Error deleting size: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting size:', error);
+        showError('Error deleting size');
+    }
+}
+
+// Show size modal
+function showSizeModal(size = null) {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('sizeModal')) {
+        createSizeModal();
+    }
+    
+    const modal = document.getElementById('sizeModal');
+    const form = document.getElementById('sizeForm');
+    const modalTitle = document.getElementById('sizeModalTitle');
+    
+    // Reset form
+    form.reset();
+    
+    if (size) {
+        // Edit mode
+        modalTitle.textContent = 'Edit Size';
+        document.getElementById('sizeId').value = size.id;
+        document.getElementById('sizeName').value = size.size_name;
+        document.getElementById('sizeCode').value = size.size_code;
+        document.getElementById('sizeStockLevel').value = size.stock_level;
+        document.getElementById('sizePriceAdjustment').value = size.price_adjustment;
+        document.getElementById('sizeDisplayOrder').value = size.display_order;
+        document.getElementById('sizeIsActive').checked = size.is_active == 1;
+        
+        // Set color if it exists
+        if (size.color_id) {
+            const colorSelect = document.getElementById('sizeColorId');
+            if (colorSelect) {
+                colorSelect.value = size.color_id;
+            }
+        }
+    } else {
+        // Add mode
+        modalTitle.textContent = 'Add New Size';
+        document.getElementById('sizeId').value = '';
+        document.getElementById('sizePriceAdjustment').value = '0.00';
+        document.getElementById('sizeDisplayOrder').value = '0';
+        document.getElementById('sizeIsActive').checked = true;
+        
+        // Set default color based on current filter
+        const colorFilter = document.getElementById('sizeColorFilter');
+        const colorSelect = document.getElementById('sizeColorId');
+        if (colorFilter && colorSelect) {
+            colorSelect.value = colorFilter.value === 'general' ? '' : colorFilter.value;
+        }
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Create size modal
+function createSizeModal() {
+    const modalHTML = `
+        <div id="sizeModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 id="sizeModalTitle" class="text-xl font-semibold text-gray-800">Add New Size</h2>
+                    <button type="button" onclick="closeSizeModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="sizeForm" onsubmit="saveSize(event)">
+                        <input type="hidden" id="sizeId" name="sizeId">
+                        
+                        <div class="mb-4">
+                            <label for="sizeColorId" class="block text-sm font-medium text-gray-700 mb-2">Color Association</label>
+                            <select id="sizeColorId" name="sizeColorId" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                <option value="">General Size (No specific color)</option>
+                            </select>
+                            <div class="text-xs text-gray-500 mt-1">Choose a color if this size is specific to a particular color variant</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="sizeName" class="block text-sm font-medium text-gray-700 mb-2">Size Name *</label>
+                                <input type="text" id="sizeName" name="sizeName" placeholder="e.g., Medium" class="w-full px-3 py-2 border border-gray-300 rounded" required>
+                            </div>
+                            <div>
+                                <label for="sizeCode" class="block text-sm font-medium text-gray-700 mb-2">Size Code *</label>
+                                <select id="sizeCode" name="sizeCode" class="w-full px-3 py-2 border border-gray-300 rounded" required>
+                                    <option value="">Select size...</option>
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                    <option value="XXXL">XXXL</option>
+                                    <option value="OS">OS (One Size)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="sizeStockLevel" class="block text-sm font-medium text-gray-700 mb-2">Stock Level</label>
+                                <input type="number" id="sizeStockLevel" name="sizeStockLevel" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded">
+                            </div>
+                            <div>
+                                <label for="sizePriceAdjustment" class="block text-sm font-medium text-gray-700 mb-2">Price Adjustment ($)</label>
+                                <input type="number" id="sizePriceAdjustment" name="sizePriceAdjustment" step="0.01" value="0.00" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                <div class="text-xs text-gray-500 mt-1">Extra charge for this size (e.g., +$2 for XXL)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="sizeDisplayOrder" class="block text-sm font-medium text-gray-700 mb-2">Display Order</label>
+                                <input type="number" id="sizeDisplayOrder" name="sizeDisplayOrder" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                <div class="text-xs text-gray-500 mt-1">Lower numbers appear first</div>
+                            </div>
+                            <div class="flex items-center pt-6">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="sizeIsActive" name="sizeIsActive" class="mr-2">
+                                    <span class="text-sm font-medium text-gray-700">Active (available to customers)</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeSizeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 text-white rounded transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                Save Size
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Load colors for the color selector
+    loadSizeModalColors();
+}
+
+// Load colors for size modal
+async function loadSizeModalColors() {
+    if (!currentItemSku) return;
+    
+    try {
+        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        const colorSelect = document.getElementById('sizeColorId');
+        if (!colorSelect) return;
+        
+        // Clear existing options except the first one
+        colorSelect.innerHTML = '<option value="">General Size (No specific color)</option>';
+        
+        if (data.success && data.colors && data.colors.length > 0) {
+            data.colors.forEach(color => {
+                if (color.is_active == 1) {
+                    const option = document.createElement('option');
+                    option.value = color.id;
+                    option.textContent = `${color.color_name}`;
+                    colorSelect.appendChild(option);
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error loading colors for size modal:', error);
+    }
+}
+
+// Close size modal
+function closeSizeModal() {
+    const modal = document.getElementById('sizeModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Save size
+async function saveSize(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const sizeData = {
+        item_sku: currentItemSku,
+        color_id: formData.get('sizeColorId') || null,
+        size_name: formData.get('sizeName'),
+        size_code: formData.get('sizeCode'),
+        stock_level: parseInt(formData.get('sizeStockLevel')) || 0,
+        price_adjustment: parseFloat(formData.get('sizePriceAdjustment')) || 0.00,
+        display_order: parseInt(formData.get('sizeDisplayOrder')) || 0,
+        is_active: formData.get('sizeIsActive') ? 1 : 0
+    };
+    
+    const sizeId = formData.get('sizeId');
+    const isEdit = sizeId && sizeId !== '';
+    
+    if (isEdit) {
+        sizeData.size_id = parseInt(sizeId);
+    }
+    
+    try {
+        const response = await fetch(`/api/item_sizes.php?action=${isEdit ? 'update_size' : 'add_size'}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(sizeData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(`Size ${isEdit ? 'updated' : 'added'} successfully${data.new_total_stock ? ` - Total stock: ${data.new_total_stock}` : ''}`);
+            closeSizeModal();
+            loadItemSizes(); // Reload sizes
+            
+            // Update the stock level field if it exists
+            const stockField = document.getElementById('stockLevel');
+            if (stockField && data.new_total_stock !== undefined) {
+                stockField.value = data.new_total_stock;
+            }
+        } else {
+            showError(`Error ${isEdit ? 'updating' : 'adding'} size: ` + data.message);
+        }
+    } catch (error) {
+        console.error('Error saving size:', error);
+        showError(`Error ${isEdit ? 'updating' : 'adding'} size`);
+    }
+}
+
+// Sync size stock levels manually
+async function syncSizeStock() {
+    if (!currentItemSku) {
+        showError('No item selected');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/item_sizes.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'sync_stock',
+                item_sku: currentItemSku
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(`Stock synchronized - Total: ${data.new_total_stock}`);
+            
+            // Update the stock level field if it exists
+            const stockField = document.getElementById('stockLevel');
+            if (stockField && data.new_total_stock !== undefined) {
+                stockField.value = data.new_total_stock;
+            }
+            
+            // Reload sizes to show updated information
+            loadItemSizes();
+        } else {
+            showError(`Error syncing stock: ${data.message}`);
+        }
+    } catch (error) {
+        console.error('Error syncing stock:', error);
+        showError('Error syncing stock levels');
+    }
+}
+
+// Initialize size management when modal opens
+function initializeSizeManagement() {
+    if (!currentItemSku) return;
+    
+    // Load sizes to determine configuration
+    loadItemSizes();
+    
+    // Load colors for color-specific mode
+    if (currentSizeConfiguration === 'color_specific') {
+        loadColorOptions();
+    }
+}
+
+// Add to the existing DOMContentLoaded event listener
+const originalDOMContentLoaded = document.addEventListener;
+document.addEventListener('DOMContentLoaded', function() {
+    // Call existing color loading logic
+    console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemSku:', currentItemSku);
+    
+    // Load colors when in edit mode and we have a valid SKU
+    if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {
+        console.log('Loading colors for SKU:', currentItemSku);
+        setTimeout(loadItemColors, 500);
+        setTimeout(initializeSizeManagement, 600); // Initialize sizes after colors
+    } else if (document.getElementById('sku') || document.getElementById('skuDisplay')) {
+        // Fallback: try to get SKU from form fields
+        const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
+        if (skuField && skuField.value) {
+            currentItemSku = skuField.value;
+            console.log('Found SKU from field:', currentItemSku);
+            setTimeout(loadItemColors, 500);
+            setTimeout(initializeSizeManagement, 600);
+        }
+    }
+});
+
+// Color Template Management Functions
+let colorTemplates = [];
+let sizeTemplates = [];
+
+// Open Color Template Modal
+async function openColorTemplateModal() {
+    if (!currentItemSku) {
+        showError('Please save the item first before applying templates');
+        return;
+    }
+    
+    // Create modal if it doesn't exist
+    if (!document.getElementById('colorTemplateModal')) {
+        createColorTemplateModal();
+    }
+    
+    // Load templates
+    await loadColorTemplates();
+    
+    // Show modal
+    const modal = document.getElementById('colorTemplateModal');
+    modal.classList.remove('hidden');
+}
+
+// Create Color Template Modal
+function createColorTemplateModal() {
+    const modalHTML = `
+        <div id="colorTemplateModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2 class="text-xl font-bold text-gray-800">🎨 Color Templates</h2>
+                    <button type="button" onclick="closeColorTemplateModal()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
+                    <!-- Template Categories -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Category:</label>
+                        <select id="colorTemplateCategory" onchange="filterColorTemplates()" class="w-full px-3 py-2 border border-gray-300 rounded">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Template List -->
+                    <div id="colorTemplatesList" class="space-y-3">
+                        <div class="text-center text-gray-500">Loading templates...</div>
+                    </div>
+                    
+                    <!-- Application Options -->
+                    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 class="font-medium text-blue-800 mb-3">Application Options</h3>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="replaceExistingColors" class="mr-2">
+                                <span class="text-sm">Replace existing colors (clear current colors first)</span>
+                            </label>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Default Stock Level for New Colors:</label>
+                                <input type="number" id="defaultColorStock" value="0" min="0" class="w-32 px-3 py-2 border border-gray-300 rounded text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeColorTemplateModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="applySelectedColorTemplate()" id="applyColorTemplateBtn" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" disabled>
+                        Apply Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Load Color Templates
+async function loadColorTemplates() {
+    try {
+        const response = await fetch('/api/color_templates.php?action=get_all');
+        const data = await response.json();
+        
+        if (data.success) {
+            colorTemplates = data.templates;
+            renderColorTemplates();
+            loadColorTemplateCategories();
+        } else {
+            showError('Error loading color templates: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading color templates:', error);
+        showError('Error loading color templates');
+    }
+}
+
+// Load Color Template Categories
+function loadColorTemplateCategories() {
+    const categorySelect = document.getElementById('colorTemplateCategory');
+    if (!categorySelect) return;
+    
+    const categories = [...new Set(colorTemplates.map(t => t.category))].sort();
+    
+    categorySelect.innerHTML = '<option value="">All Categories</option>';
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+    });
+}
+
+// Filter Color Templates
+function filterColorTemplates() {
+    renderColorTemplates();
+}
+
+// Render Color Templates
+function renderColorTemplates() {
+    const container = document.getElementById('colorTemplatesList');
+    if (!container) return;
+    
+    const selectedCategory = document.getElementById('colorTemplateCategory')?.value || '';
+    const filteredTemplates = selectedCategory 
+        ? colorTemplates.filter(t => t.category === selectedCategory)
+        : colorTemplates;
+    
+    if (filteredTemplates.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500">No templates found</div>';
+        return;
+    }
+    
+    container.innerHTML = filteredTemplates.map(template => `
+        <div class="template-item border border-gray-200 rounded-lg p-4 hover:border-purple-300 cursor-pointer" 
+             onclick="selectColorTemplate(${template.id})" data-template-id="${template.id}">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <h4 class="font-medium text-gray-800">${template.template_name}</h4>
+                    <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">${template.category}</span>
+                    <div class="text-xs text-gray-500 mt-1">${template.color_count} colors</div>
+                </div>
+            </div>
+            <div class="template-preview" id="colorPreview${template.id}">
+                <div class="text-xs text-gray-500">Loading colors...</div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Load color previews
+    filteredTemplates.forEach(template => {
+        loadColorTemplatePreview(template.id);
+    });
+}
+
+// Load Color Template Preview
+async function loadColorTemplatePreview(templateId) {
+    try {
+        const response = await fetch(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
+        const data = await response.json();
+        
+        if (data.success && data.template.colors) {
+            const previewContainer = document.getElementById(`colorPreview${templateId}`);
+            if (previewContainer) {
+                previewContainer.innerHTML = `
+                    <div class="flex flex-wrap gap-1 mt-2">
+                        ${data.template.colors.map(color => `
+                            <div class="flex items-center space-x-1 text-xs">
+                                <div class="w-4 h-4 rounded border border-gray-300" style="background-color: ${color.color_code || '#ccc'}"></div>
+                                <span>${color.color_name}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading color template preview:', error);
+    }
+}
+
+// Select Color Template
+function selectColorTemplate(templateId) {
+    // Remove previous selection
+    document.querySelectorAll('.template-item').forEach(item => {
+        item.classList.remove('border-purple-500', 'bg-purple-50');
+    });
+    
+    // Add selection to clicked template
+    const templateItem = document.querySelector(`[data-template-id="${templateId}"]`);
+    if (templateItem) {
+        templateItem.classList.add('border-purple-500', 'bg-purple-50');
+    }
+    
+    // Enable apply button
+    const applyBtn = document.getElementById('applyColorTemplateBtn');
+    if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.setAttribute('data-template-id', templateId);
+    }
+}
+
+// Apply Selected Color Template
+async function applySelectedColorTemplate() {
+    const applyBtn = document.getElementById('applyColorTemplateBtn');
+    const templateId = applyBtn?.getAttribute('data-template-id');
+    
+    if (!templateId) {
+        showError('Please select a template first');
+        return;
+    }
+    
+    const replaceExisting = document.getElementById('replaceExistingColors')?.checked || false;
+    const defaultStock = parseInt(document.getElementById('defaultColorStock')?.value) || 0;
+    
+    try {
+        applyBtn.disabled = true;
+        applyBtn.textContent = 'Applying...';
+        
+        const response = await fetch('/api/color_templates.php?action=apply_to_item', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                template_id: parseInt(templateId),
+                item_sku: currentItemSku,
+                replace_existing: replaceExisting,
+                default_stock: defaultStock
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(`Template applied successfully! Added ${data.colors_added} colors.`);
+            closeColorTemplateModal();
+            loadItemColors(); // Reload colors
+        } else {
+            showError('Error applying template: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error applying color template:', error);
+        showError('Error applying color template');
+    } finally {
+        applyBtn.disabled = false;
+        applyBtn.textContent = 'Apply Template';
+    }
+}
+
+// Close Color Template Modal
+function closeColorTemplateModal() {
+    const modal = document.getElementById('colorTemplateModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Size Template Management Functions
+
+// Open Size Template Modal
+async function openSizeTemplateModal() {
+    if (!currentItemSku) {
+        showError('Please save the item first before applying templates');
+        return;
+    }
+    
+    // Create modal if it doesn't exist
+    if (!document.getElementById('sizeTemplateModal')) {
+        createSizeTemplateModal();
+    }
+    
+    // Load templates
+    await loadSizeTemplates();
+    
+    // Show modal
+    const modal = document.getElementById('sizeTemplateModal');
+    modal.classList.remove('hidden');
+}
+
+// Create Size Template Modal
+function createSizeTemplateModal() {
+    const modalHTML = `
+        <div id="sizeTemplateModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2 class="text-xl font-bold text-gray-800">📏 Size Templates</h2>
+                    <button type="button" onclick="closeSizeTemplateModal()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
+                    <!-- Template Categories -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Category:</label>
+                        <select id="sizeTemplateCategory" onchange="filterSizeTemplates()" class="w-full px-3 py-2 border border-gray-300 rounded">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Template List -->
+                    <div id="sizeTemplatesList" class="space-y-3">
+                        <div class="text-center text-gray-500">Loading templates...</div>
+                    </div>
+                    
+                    <!-- Application Options -->
+                    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 class="font-medium text-blue-800 mb-3">Application Options</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Apply Mode:</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="sizeApplyMode" value="general" class="mr-2" checked>
+                                        <span class="text-sm">General sizes (not color-specific)</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="sizeApplyMode" value="color_specific" class="mr-2">
+                                        <span class="text-sm">Color-specific sizes</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="colorSelectionForSizes" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Select Color:</label>
+                                <select id="sizeTemplateColorId" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+                                    <option value="">Loading colors...</option>
+                                </select>
+                            </div>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="replaceExistingSizes" class="mr-2">
+                                <span class="text-sm">Replace existing sizes</span>
+                            </label>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Default Stock Level for New Sizes:</label>
+                                <input type="number" id="defaultSizeStock" value="0" min="0" class="w-32 px-3 py-2 border border-gray-300 rounded text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeSizeTemplateModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="applySelectedSizeTemplate()" id="applySizeTemplateBtn" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" disabled>
+                        Apply Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners for apply mode radio buttons
+    document.querySelectorAll('input[name="sizeApplyMode"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const colorSelection = document.getElementById('colorSelectionForSizes');
+            if (this.value === 'color_specific') {
+                colorSelection.classList.remove('hidden');
+                loadColorsForSizeTemplate();
+            } else {
+                colorSelection.classList.add('hidden');
+            }
+        });
+    });
+}
+
+// Load Size Templates
+async function loadSizeTemplates() {
+    try {
+        const response = await fetch('/api/size_templates.php?action=get_all');
+        const data = await response.json();
+        
+        if (data.success) {
+            sizeTemplates = data.templates;
+            renderSizeTemplates();
+            loadSizeTemplateCategories();
+        } else {
+            showError('Error loading size templates: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading size templates:', error);
+        showError('Error loading size templates');
+    }
+}
+
+// Load Size Template Categories
+function loadSizeTemplateCategories() {
+    const categorySelect = document.getElementById('sizeTemplateCategory');
+    if (!categorySelect) return;
+    
+    const categories = [...new Set(sizeTemplates.map(t => t.category))].sort();
+    
+    categorySelect.innerHTML = '<option value="">All Categories</option>';
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+    });
+}
+
+// Filter Size Templates
+function filterSizeTemplates() {
+    renderSizeTemplates();
+}
+
+// Render Size Templates
+function renderSizeTemplates() {
+    const container = document.getElementById('sizeTemplatesList');
+    if (!container) return;
+    
+    const selectedCategory = document.getElementById('sizeTemplateCategory')?.value || '';
+    const filteredTemplates = selectedCategory 
+        ? sizeTemplates.filter(t => t.category === selectedCategory)
+        : sizeTemplates;
+    
+    if (filteredTemplates.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500">No templates found</div>';
+        return;
+    }
+    
+    container.innerHTML = filteredTemplates.map(template => `
+        <div class="template-item border border-gray-200 rounded-lg p-4 hover:border-purple-300 cursor-pointer" 
+             onclick="selectSizeTemplate(${template.id})" data-template-id="${template.id}">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <h4 class="font-medium text-gray-800">${template.template_name}</h4>
+                    <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">${template.category}</span>
+                    <div class="text-xs text-gray-500 mt-1">${template.size_count} sizes</div>
+                </div>
+            </div>
+            <div class="template-preview" id="sizePreview${template.id}">
+                <div class="text-xs text-gray-500">Loading sizes...</div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Load size previews
+    filteredTemplates.forEach(template => {
+        loadSizeTemplatePreview(template.id);
+    });
+}
+
+// Load Size Template Preview
+async function loadSizeTemplatePreview(templateId) {
+    try {
+        const response = await fetch(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
+        const data = await response.json();
+        
+        if (data.success && data.template.sizes) {
+            const previewContainer = document.getElementById(`sizePreview${templateId}`);
+            if (previewContainer) {
+                previewContainer.innerHTML = `
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        ${data.template.sizes.map(size => `
+                            <span class="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                ${size.size_name} (${size.size_code})${size.price_adjustment > 0 ? ' +$' + size.price_adjustment : size.price_adjustment < 0 ? ' $' + size.price_adjustment : ''}
+                            </span>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading size template preview:', error);
+    }
+}
+
+// Select Size Template
+function selectSizeTemplate(templateId) {
+    // Remove previous selection
+    document.querySelectorAll('.template-item').forEach(item => {
+        item.classList.remove('border-purple-500', 'bg-purple-50');
+    });
+    
+    // Add selection to clicked template
+    const templateItem = document.querySelector(`[data-template-id="${templateId}"]`);
+    if (templateItem) {
+        templateItem.classList.add('border-purple-500', 'bg-purple-50');
+    }
+    
+    // Enable apply button
+    const applyBtn = document.getElementById('applySizeTemplateBtn');
+    if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.setAttribute('data-template-id', templateId);
+    }
+}
+
+// Load Colors for Size Template
+async function loadColorsForSizeTemplate() {
+    if (!currentItemSku) return;
+    
+    try {
+        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        const colorSelect = document.getElementById('sizeTemplateColorId');
+        if (!colorSelect) return;
+        
+        colorSelect.innerHTML = '<option value="">Select a color...</option>';
+        
+        if (data.success && data.colors && data.colors.length > 0) {
+            data.colors.forEach(color => {
+                if (color.is_active == 1) {
+                    const option = document.createElement('option');
+                    option.value = color.id;
+                    option.textContent = color.color_name;
+                    colorSelect.appendChild(option);
+                }
+            });
+        } else {
+            colorSelect.innerHTML = '<option value="">No colors available - add colors first</option>';
+        }
+    } catch (error) {
+        console.error('Error loading colors for size template:', error);
+    }
+}
+
+// Apply Selected Size Template
+async function applySelectedSizeTemplate() {
+    const applyBtn = document.getElementById('applySizeTemplateBtn');
+    const templateId = applyBtn?.getAttribute('data-template-id');
+    
+    if (!templateId) {
+        showError('Please select a template first');
+        return;
+    }
+    
+    const applyMode = document.querySelector('input[name="sizeApplyMode"]:checked')?.value || 'general';
+    const replaceExisting = document.getElementById('replaceExistingSizes')?.checked || false;
+    const defaultStock = parseInt(document.getElementById('defaultSizeStock')?.value) || 0;
+    
+    let colorId = null;
+    if (applyMode === 'color_specific') {
+        colorId = document.getElementById('sizeTemplateColorId')?.value;
+        if (!colorId) {
+            showError('Please select a color for color-specific sizes');
+            return;
+        }
+    }
+    
+    try {
+        applyBtn.disabled = true;
+        applyBtn.textContent = 'Applying...';
+        
+        const response = await fetch('/api/size_templates.php?action=apply_to_item', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                template_id: parseInt(templateId),
+                item_sku: currentItemSku,
+                apply_mode: applyMode,
+                color_id: colorId ? parseInt(colorId) : null,
+                replace_existing: replaceExisting,
+                default_stock: defaultStock
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(`Template applied successfully! Added ${data.sizes_added} sizes.`);
+            closeSizeTemplateModal();
+            loadItemSizes(); // Reload sizes
+        } else {
+            showError('Error applying template: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error applying size template:', error);
+        showError('Error applying size template');
+    } finally {
+        applyBtn.disabled = false;
+        applyBtn.textContent = 'Apply Template';
+    }
+}
+
+// Close Size Template Modal
+function closeSizeTemplateModal() {
+    const modal = document.getElementById('sizeTemplateModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
 
 </script>
 

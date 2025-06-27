@@ -1,21 +1,22 @@
 <?php
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/config.php';
+
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-header('Access-Control-Allow-Headers: Content-Type');
 
-require_once 'config.php';
+// Check if this is a public CSS generation request
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
+$isPublicAction = ($action === 'generate_css');
 
-// Check if admin token is provided for write operations
-$method = $_SERVER['REQUEST_METHOD'];
-if (in_array($method, ['POST', 'PUT', 'DELETE'])) {
-    $adminToken = $_POST['admin_token'] ?? $_GET['admin_token'] ?? '';
-    if ($adminToken !== 'whimsical_admin_2024') {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
-        exit;
-    }
+if (!$isPublicAction) {
+    // Use centralized authentication for admin actions
+    requireAdmin();
+    $userData = getCurrentUser();
+} else {
+    // Allow public access for CSS generation
+    $userData = null;
 }
+$method = $_SERVER['REQUEST_METHOD'];
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [

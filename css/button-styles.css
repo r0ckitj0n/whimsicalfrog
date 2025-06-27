@@ -122,9 +122,9 @@
 
 /* Success Button */
 .btn-success {
-    background-color: #10b981 !important;
+    background-color: #87ac3a !important;
     color: #ffffff !important;
-    border-color: #10b981 !important;
+    border-color: #87ac3a !important;
 }
 
 .btn-success:hover:not(:disabled) {

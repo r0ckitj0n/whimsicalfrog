@@ -248,7 +248,7 @@
 .admin-modal-header {
     padding: 24px 24px 16px 24px;
     border-bottom: 1px solid #e5e7eb;
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #87ac3a, #6b8e23);
     color: white;
     border-radius: 0.5rem 0.5rem 0 0;
     margin: -1.5rem -1.5rem 1.5rem -1.5rem;
@@ -361,7 +361,7 @@
 }
 
 .confirmation-modal-icon.success {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #87ac3a, #6b8e23);
     color: white;
 }
 
@@ -441,18 +441,18 @@
 }
 
 .modal-button.btn-primary {
-    background: #10b981;
+    background: #87ac3a;
     color: white;
-    border: 1px solid #10b981;
+    border: 1px solid #87ac3a;
 }
 
 .modal-button.btn-primary:hover {
-    background: #059669;
-    border-color: #059669;
+    background: #6b8e23;
+    border-color: #6b8e23;
 }
 
 .modal-button.btn-primary:focus {
-    ring-color: #10b981;
+    ring-color: #87ac3a;
 }
 
 .modal-button.btn-secondary {
@@ -525,16 +525,16 @@
 }
 
 .confirmation-modal-button.confirm {
-    background: #10b981;
+    background: #87ac3a;
     color: white;
 }
 
 .confirmation-modal-button.confirm:hover {
-    background: #059669;
+    background: #6b8e23;
 }
 
 .confirmation-modal-button.confirm:focus {
-    ring-color: #10b981;
+    ring-color: #87ac3a;
 }
 
 .confirmation-modal-button.danger {

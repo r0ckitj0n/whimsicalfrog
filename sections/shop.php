@@ -124,7 +124,7 @@ if (!isset($GLOBALS['marketingHelper'])) {
         filter: grayscale(10%);
     }
 
-    /* Modal Scrollbar Styling */
+    /* Simplified modal styling - no custom scrollbars to avoid conflicts */
     .modal-with-scrollbar {
         overflow: hidden;
         display: flex;
@@ -132,38 +132,607 @@ if (!isset($GLOBALS['marketingHelper'])) {
     }
 
     .modal-content-scrollable {
-        overflow-y: auto;
-        overflow-x: hidden;
         flex: 1;
         max-height: calc(90vh - 80px); /* Account for header height */
     }
 
-    /* Custom Scrollbar for Modal */
-    .modal-content-scrollable::-webkit-scrollbar {
-        width: 12px;
+    /* Popup Options Styling */
+    .popup-options-container {
+        margin: 12px 0;
+        padding: 8px 0;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
     }
 
-    .modal-content-scrollable::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 6px;
+    .popup-option-group {
+        margin-bottom: 8px;
     }
 
-    .modal-content-scrollable::-webkit-scrollbar-thumb {
-        background: var(--wf-green);
-        border-radius: 6px;
-        border: 2px solid #f1f1f1;
+    .popup-option-group:last-child {
+        margin-bottom: 0;
     }
 
-    .modal-content-scrollable::-webkit-scrollbar-thumb:hover {
-        background: var(--wf-green-light);
+    .popup-option-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 4px;
     }
 
-    /* Firefox scrollbar styling */
-    .modal-content-scrollable {
-        scrollbar-width: thin;
-        scrollbar-color: var(--wf-green) #f1f1f1;
+    .popup-color-select,
+    .popup-size-select,
+    .popup-quantity-input {
+        width: 100%;
+        padding: 4px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 12px;
+        background: white;
+        color: #374151;
+    }
+
+    .popup-color-select:focus,
+    .popup-size-select:focus,
+    .popup-quantity-input:focus {
+        outline: none;
+        border-color: #87ac3a;
+        box-shadow: 0 0 0 1px rgba(135, 172, 58, 0.2);
+    }
+
+    .popup-quantity-input {
+        max-width: 80px;
     }
 </style>
+
+<script>
+// Shop popup and modal functions - DEFINED EARLY FOR INLINE EVENT HANDLERS
+
+// Shop popup system variables
+let shopCurrentProduct = null;
+let shopPopupTimeout = null;
+let shopPopupOpen = false;
+let shopIsShowingPopup = false;
+let shopLastShowTime = 0;
+
+function showShopPopup(element, product) {
+    const now = Date.now();
+    
+    // Debounce rapid calls (prevent multiple calls within 100ms)
+    if (now - shopLastShowTime < 100) {
+        return;
+    }
+    shopLastShowTime = now;
+    
+    // Prevent rapid re-triggering of same popup (anti-flashing protection)
+    if (shopCurrentProduct && shopCurrentProduct.sku === product.sku && shopIsShowingPopup) {
+        clearTimeout(shopPopupTimeout);
+        return;
+    }
+    
+    clearTimeout(shopPopupTimeout);
+    shopCurrentProduct = product;
+    shopIsShowingPopup = true;
+    shopPopupOpen = true;
+
+    const popup = document.getElementById('shopProductPopup');
+    if (!popup) {
+        console.warn('Shop popup element not found');
+        return;
+    }
+    
+    const popupImage = popup.querySelector('.popup-image-enhanced');
+    const popupCategory = popup.querySelector('.popup-category-enhanced');
+    const popupTitle = popup.querySelector('.popup-title-enhanced');
+    const popupSku = popup.querySelector('.popup-sku');
+    const popupStock = popup.querySelector('.popup-stock');
+    const popupDescription = popup.querySelector('.popup-description-enhanced');
+    const popupPrice = popup.querySelector('.popup-price-enhanced');
+    const popupAddBtn = popup.querySelector('.popup-add-btn-enhanced');
+    const popupDetailsBtn = popup.querySelector('.popup-details-btn-enhanced');
+
+    // Get the image URL - use SKU-based system
+    const imageUrl = `images/items/${product.sku}A.png`;
+
+    // Populate popup content
+    popupImage.src = imageUrl;
+    popupImage.onerror = function() {
+        this.src = 'images/items/placeholder.png';
+        this.onerror = null;
+    };
+    
+    popupCategory.textContent = product.category ?? 'Category';
+    popupTitle.textContent = product.name ?? 'Item Name';
+    popupSku.textContent = `SKU: ${product.sku}`;
+    
+    // Display stock information with color coding
+    const stockLevel = product.stockLevel || 0;
+    const stockText = stockLevel > 0 ? `${stockLevel} in stock` : 'Out of stock';
+    const stockColor = stockLevel > 10 ? '#22c55e' : stockLevel > 0 ? '#f59e0b' : '#ef4444';
+    popupStock.textContent = stockText;
+    popupStock.style.color = stockColor;
+    popupStock.style.fontWeight = '600';
+    
+    popupDescription.textContent = product.description ?? 'No description available';
+    
+    // Set price - use the price field that was passed  
+    const price = parseFloat(product.price || product.retailPrice || 0);
+    popupPrice.textContent = `$${price.toFixed(2)}`;
+
+    // Load color and size options for this product and add them to popup
+    loadProductOptionsForPopup(product.sku, popup);
+
+    // Better positioning relative to the element
+    const rect = element.getBoundingClientRect();
+    const shopContainer = document.querySelector('.shop-container') || document.body;
+    const containerRect = shopContainer.getBoundingClientRect();
+
+    let left = rect.left - containerRect.left + rect.width + 10;
+    let top = rect.top - containerRect.top - 50;
+
+    // Show popup temporarily to get actual dimensions
+    popup.style.display = 'block';
+    popup.style.opacity = '';
+    popup.classList.add('show');
+
+    const popupRect = popup.getBoundingClientRect();
+    const popupWidth = popupRect.width;
+    const popupHeight = popupRect.height;
+
+    // Reset for measurement
+    popup.style.display = '';
+
+    // Adjust if popup would go off screen horizontally
+    if (left + popupWidth > window.innerWidth) {
+        left = rect.left - containerRect.left - popupWidth - 10;
+    }
+    
+    // Adjust if popup would go off screen vertically (top)
+    if (top < 0) {
+        top = rect.top - containerRect.top + rect.height + 10;
+    }
+    
+    // Adjust if popup would go off screen vertically (bottom)
+    if (top + popupHeight > window.innerHeight) {
+        const topAbove = rect.top - containerRect.top - popupHeight - 10;
+        if (topAbove >= 0) {
+            top = topAbove;
+        } else {
+            top = window.innerHeight - popupHeight - 20;
+            if (top < 0) {
+                top = 10;
+            }
+        }
+    }
+
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+
+    // Clear any inline styles that might interfere and show the popup
+    popup.style.opacity = '';
+    popup.classList.add('show');
+
+    // Store product data directly on the popup element for later access
+    popup.dataset.productSku = product.sku;
+    popup.dataset.productName = product.name;
+    popup.dataset.productPrice = product.price || product.retailPrice || 0;
+    
+    // Add to cart functionality - use selected options directly
+    popupAddBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        popup.classList.remove('show');
+        
+        // Get product data from popup dataset
+        const productSku = popup.dataset.productSku;
+        const productName = popup.dataset.productName;
+        const productPrice = popup.dataset.productPrice;
+        
+        // Get selected options from popup
+        const colorSelect = popup.querySelector('.popup-color-select');
+        const sizeSelect = popup.querySelector('.popup-size-select');
+        const quantityInput = popup.querySelector('.popup-quantity-input') || { value: 1 };
+        
+        const selectedColor = colorSelect ? colorSelect.value : null;
+        const selectedSize = sizeSelect ? sizeSelect.value : null;
+        const quantity = parseInt(quantityInput.value) || 1;
+        
+        // Validate required selections
+        if (colorSelect && colorSelect.dataset.required === 'true' && !selectedColor) {
+            alert('Please select a color before adding to cart.');
+            popup.classList.add('show'); // Show popup again
+            return;
+        }
+        
+        if (sizeSelect && sizeSelect.dataset.required === 'true' && !selectedSize) {
+            alert('Please select a size before adding to cart.');
+            popup.classList.add('show'); // Show popup again
+            return;
+        }
+        
+        // Add to cart directly with selected options
+        if (typeof window.cart !== 'undefined') {
+            const cartItem = {
+                sku: productSku,
+                name: productName,
+                price: parseFloat(productPrice),
+                image: imageUrl,
+                quantity: quantity
+            };
+            
+            // Add color if selected
+            if (selectedColor) {
+                cartItem.color = selectedColor;
+            }
+            
+            // Add size if selected
+            if (selectedSize) {
+                cartItem.size = selectedSize;
+            }
+            
+            window.cart.addItem(cartItem);
+            
+            // Show confirmation
+            const customAlert = document.getElementById('customAlertBox');
+            const customAlertMessage = document.getElementById('customAlertMessage');
+            if (customAlert && customAlertMessage) {
+                const colorText = selectedColor ? ` - ${selectedColor}` : '';
+                const sizeText = selectedSize ? ` - ${selectedSize}` : '';
+                const quantityText = quantity > 1 ? ` (${quantity})` : '';
+                customAlertMessage.textContent = `${productName}${colorText}${sizeText}${quantityText} added to your cart!`;
+                customAlert.style.display = 'block';
+                
+                setTimeout(() => {
+                    customAlert.style.display = 'none';
+                }, 5000);
+            }
+        } else {
+            console.error('Cart functionality not available');
+        }
+    };
+    
+    // View details functionality
+    popupDetailsBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        popup.classList.remove('show');
+        showProductDetails(product.sku);
+    };
+}
+
+// New function to load product options for popup
+async function loadProductOptionsForPopup(sku, popup) {
+    const optionsContainer = popup.querySelector('.popup-options-container');
+    if (!optionsContainer) return;
+    
+    // Clear existing options
+    optionsContainer.innerHTML = '';
+    
+    try {
+        // Load colors
+        const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${sku}`);
+        const colorData = await colorResponse.json();
+        
+        if (colorData.success && colorData.colors.length > 0) {
+            const colorHTML = `
+                <div class="popup-option-group">
+                    <label>Color:</label>
+                    <select class="popup-color-select" ${colorData.colors.length > 1 ? 'data-required="true"' : ''}>
+                        ${colorData.colors.length > 1 ? '<option value="">Choose color...</option>' : ''}
+                        ${colorData.colors.map(color => `
+                            <option value="${color.color_name}" ${colorData.colors.length === 1 ? 'selected' : ''}>
+                                ${color.color_name} ${color.stock_level > 0 ? `(${color.stock_level} available)` : '(Out of stock)'}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+            `;
+            optionsContainer.innerHTML += colorHTML;
+        }
+        
+        // Load sizes
+        const sizeResponse = await fetch(`/api/item_sizes.php?action=get_sizes&item_sku=${sku}&color_id=null`);
+        const sizeData = await sizeResponse.json();
+        
+        if (sizeData.success && sizeData.sizes.length > 0) {
+            const sizeHTML = `
+                <div class="popup-option-group">
+                    <label>Size:</label>
+                    <select class="popup-size-select" ${sizeData.sizes.length > 1 ? 'data-required="true"' : ''}>
+                        ${sizeData.sizes.length > 1 ? '<option value="">Choose size...</option>' : ''}
+                        ${sizeData.sizes.map(size => {
+                            const priceAdjustment = parseFloat(size.price_adjustment || 0);
+                            const adjustmentText = priceAdjustment !== 0 ? 
+                                ` (${priceAdjustment > 0 ? '+' : ''}$${priceAdjustment.toFixed(2)})` : '';
+                            return `
+                                <option value="${size.size_code}" ${sizeData.sizes.length === 1 ? 'selected' : ''}>
+                                    ${size.size_name}${adjustmentText} ${size.stock_level > 0 ? `(${size.stock_level} available)` : '(Out of stock)'}
+                                </option>
+                            `;
+                        }).join('')}
+                    </select>
+                </div>
+            `;
+            optionsContainer.innerHTML += sizeHTML;
+        }
+        
+        // Add quantity selector if there are options
+        if (colorData.success || sizeData.success) {
+            const quantityHTML = `
+                <div class="popup-option-group">
+                    <label>Quantity:</label>
+                    <input type="number" class="popup-quantity-input" value="1" min="1" max="99">
+                </div>
+            `;
+            optionsContainer.innerHTML += quantityHTML;
+        }
+        
+    } catch (error) {
+        console.log('Error loading product options:', error);
+    }
+}
+
+function hideShopPopup() {
+    // Clear any existing timeout
+    clearTimeout(shopPopupTimeout);
+    
+    // Add a small delay before hiding to allow moving mouse to popup
+    shopPopupTimeout = setTimeout(() => {
+        hideShopPopupImmediate();
+    }, 200);
+}
+
+function hideShopPopupImmediate() {
+    const popup = document.getElementById('shopProductPopup');
+    if (popup) {
+        popup.classList.remove('show');
+        shopPopupOpen = false;
+        shopIsShowingPopup = false;
+        shopCurrentProduct = null;
+    }
+}
+
+// Show product details in large modal
+async function showProductDetails(sku) {
+    try {
+        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
+        const data = await response.json();
+        
+        if (data.success && data.item) {
+            // Remove any existing detailed modal
+            const existingModal = document.getElementById('detailedProductModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Create and append new detailed modal
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = await generateDetailedModal(data.item, data.images);
+            document.body.appendChild(modalContainer.firstElementChild);
+            
+            // Show the modal
+            showDetailedModal();
+        } else {
+            console.error('Failed to load product details:', data.message);
+            alert('Error: ' + (data.message || 'Failed to load product details'));
+        }
+    } catch (error) {
+        console.error('Error loading product details:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Generate detailed modal HTML
+async function generateDetailedModal(item, images) {
+    const primaryImage = images.length > 0 ? images[0] : null;
+    
+    // Helper function to check if field has data
+    function hasData(value) {
+        return value && value.trim() !== '';
+    }
+    
+    return `
+    <!-- Detailed Product Modal -->
+    <div id="detailedProductModal" class="modal-overlay" style="display: none;">
+        <div class="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] shadow-2xl modal-with-scrollbar">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900">${item.productName}</h2>
+                <button onclick="closeDetailedModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <div class="modal-content-scrollable p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Product Images -->
+                    <div class="space-y-4">
+                        <div class="aspect-square bg-gray-50 rounded-lg overflow-hidden">
+                            <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain">
+                        </div>
+                        
+                        ${images.length > 1 ? `
+                        <div class="flex space-x-2 overflow-x-auto">
+                            ${images.map((img, index) => `
+                                <img src="${img.image_path}" alt="${img.alt_text || item.productName}" 
+                                     class="w-20 h-20 object-cover rounded-lg cursor-pointer border-2 ${index === 0 ? 'border-green-500' : 'border-transparent'} hover:border-green-300 transition-colors"
+                                     onclick="switchDetailedImage('${img.image_path}', this)">
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Product Details -->
+                    <div class="space-y-6">
+                        <div>
+                            <p class="text-3xl font-bold text-green-600">$${parseFloat(item.price).toFixed(2)}</p>
+                            <p class="text-sm text-gray-500 mt-1">SKU: ${item.sku}</p>
+                        </div>
+                        
+                        <div class="prose max-w-none">
+                            <p class="text-gray-700 leading-relaxed">${item.description}</p>
+                        </div>
+                        
+                        <!-- Stock Status & Urgency -->
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-2">
+                                ${item.stockLevel > 0 ? 
+                                    `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                        ✓ In Stock (${item.stockLevel} available)
+                                    </span>` :
+                                    `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                        ✗ Out of Stock
+                                    </span>`
+                                }
+                            </div>
+                            
+                            ${item.stockLevel > 0 && item.stockLevel <= 5 ? `
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                <div class="flex items-center">
+                                    <span class="text-orange-600 mr-2">⚡</span>
+                                    <span class="text-orange-800 font-medium">Only ${item.stockLevel} left in stock!</span>
+                                </div>
+                                <p class="text-orange-700 text-sm mt-1">Order soon to avoid disappointment</p>
+                            </div>
+                            ` : ''}
+                            
+                            <!-- Trust Signals -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex items-center text-blue-700">
+                                        <span class="mr-2">🚚</span>
+                                        <span>Fast shipping</span>
+                                    </div>
+                                    <div class="flex items-center text-blue-700">
+                                        <span class="mr-2">🔄</span>
+                                        <span>Easy returns</span>
+                                    </div>
+                                    <div class="flex items-center text-blue-700">
+                                        <span class="mr-2">💯</span>
+                                        <span>Quality guaranteed</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Add to Cart Section -->
+                        <div class="border-t pt-4">
+                            <div class="flex items-center space-x-4 mb-4">
+                                <label class="text-sm font-medium text-gray-700">Quantity:</label>
+                                <div class="flex items-center border rounded-md">
+                                    <button onclick="adjustDetailedQuantity(-1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">-</button>
+                                    <input type="number" id="detailedQuantity" value="1" min="1" max="${item.stockLevel}" 
+                                           class="w-16 text-center border-0 focus:ring-0">
+                                    <button onclick="adjustDetailedQuantity(1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">+</button>
+                                </div>
+                            </div>
+                            
+                            ${item.stockLevel > 0 ? `
+                            <button onclick="addDetailedToCart('${item.sku}')" 
+                                    class="w-full py-3 px-6 rounded-lg font-medium text-lg transition-colors shadow-lg hover:shadow-xl" style="background-color: #87ac3a; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                🛒 Add to Cart
+                            </button>
+                            <p class="text-center text-sm text-gray-600 mt-2">Choose colors & sizes in the next step</p>
+                            ` : `
+                            <button disabled class="w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
+                                Out of Stock
+                            </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// Detailed modal functions
+function switchDetailedImage(imagePath, thumbnail) {
+    document.getElementById('detailedMainImage').src = imagePath;
+    
+    // Update thumbnail borders
+    const thumbnails = thumbnail.parentElement.children;
+    for (let i = 0; i < thumbnails.length; i++) {
+        thumbnails[i].classList.remove('border-green-500');
+        thumbnails[i].classList.add('border-transparent');
+    }
+    thumbnail.classList.remove('border-transparent');
+    thumbnail.classList.add('border-green-500');
+}
+
+function adjustDetailedQuantity(change) {
+    const input = document.getElementById('detailedQuantity');
+    const currentValue = parseInt(input.value);
+    const newValue = currentValue + change;
+    const max = parseInt(input.getAttribute('max'));
+    
+    if (newValue >= 1 && newValue <= max) {
+        input.value = newValue;
+    }
+}
+
+function addDetailedToCart(sku) {
+    // Get product info from the detailed modal before closing
+    const productName = document.querySelector('#detailedProductModal h2').textContent;
+    const priceText = document.querySelector('#detailedProductModal .text-3xl').textContent;
+    const price = parseFloat(priceText.replace('$', ''));
+    const image = document.getElementById('detailedMainImage').src;
+    
+    // Close the detailed modal
+    closeDetailedModal();
+    
+    // Add to cart directly without opening quantity modal
+    if (typeof window.cart !== 'undefined') {
+        const cartItem = {
+            sku: sku, // Use sku instead of id
+            name: productName,
+            price: price,
+            image: image,
+            quantity: 1
+        };
+        
+        window.cart.addItem(cartItem);
+        
+        // Show confirmation
+        const customAlert = document.getElementById('customAlertBox');
+        const customAlertMessage = document.getElementById('customAlertMessage');
+        if (customAlert && customAlertMessage) {
+            customAlertMessage.textContent = `${productName} added to your cart!`;
+            customAlert.style.display = 'block';
+            
+            setTimeout(() => {
+                customAlert.style.display = 'none';
+            }, 5000);
+        }
+    } else {
+        console.error('Cart functionality not available');
+    }
+}
+
+function closeDetailedModal() {
+    const modal = document.getElementById('detailedProductModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function showDetailedModal() {
+    const modal = document.getElementById('detailedProductModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// Make all functions globally available
+window.showShopPopup = showShopPopup;
+window.hideShopPopup = hideShopPopup;
+window.showProductDetails = showProductDetails;
+window.generateDetailedModal = generateDetailedModal;
+window.switchDetailedImage = switchDetailedImage;
+window.adjustDetailedQuantity = adjustDetailedQuantity;
+window.addDetailedToCart = addDetailedToCart;
+window.closeDetailedModal = closeDetailedModal;
+window.showDetailedModal = showDetailedModal;
+</script>
 
 <section id="shopPage" class="py-6">
     <h1 class="text-3xl font-merienda text-center mb-6">Welcome to Our Shop</h1>
@@ -201,8 +770,18 @@ if (!isset($GLOBALS['marketingHelper'])) {
                 $stock = isset($product['stock']) ? (int)$product['stock'] : 0;
                 
                 // Use enhanced marketing description if available
-                $description = getEnhancedDescription($sku, $product['description'] ?? '');
-                $description = htmlspecialchars($description);
+                $enhancedDescription = getEnhancedDescription($sku, $product['description'] ?? '');
+                $description = htmlspecialchars($enhancedDescription);
+                
+                // Clean description for JavaScript (remove HTML entities and limit length)
+                $jsDescription = strip_tags($product['description'] ?? '');
+                $jsDescription = html_entity_decode($jsDescription, ENT_QUOTES, 'UTF-8');
+                if (strlen($jsDescription) > 100) {
+                    $jsDescription = substr($jsDescription, 0, 100) . '...';
+                }
+                
+                // Clean product name for JavaScript (remove HTML entities)
+                $jsProductName = html_entity_decode($productName, ENT_QUOTES, 'UTF-8');
                 
                 // Get selling points for this product
                 $sellingPoints = getSellingPoints($sku);
@@ -220,17 +799,10 @@ if (!isset($GLOBALS['marketingHelper'])) {
                 <div class="out-of-stock-badge">Out of Stock</div>
             <?php endif; ?>
             <!-- Sale badge will be added dynamically by JavaScript -->
-                                <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full cursor-pointer product-card" 
-                         onclick="showProductDetails('<?php echo $sku; ?>')"
-                         onmouseenter="showShopPopup(this, {
-                             sku: '<?php echo $sku; ?>',
-                             name: '<?php echo htmlspecialchars($product['name']); ?>',
-                             description: '<?php echo htmlspecialchars($product['description'] ?? ''); ?>',
-                             category: '<?php echo htmlspecialchars($product['category'] ?? ''); ?>',
-                             retailPrice: '<?php echo $product['retailPrice']; ?>',
-                             stockLevel: <?php echo $product['stockLevel'] ?? 0; ?>
-                         })"
-                         onmouseleave="hideShopPopup()">
+            <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full cursor-pointer" 
+                 onclick="showProductDetails('<?php echo $sku; ?>')"
+                 onmouseenter="showShopPopup(this, {sku: <?php echo json_encode($sku, JSON_UNESCAPED_UNICODE); ?>, name: <?php echo json_encode($jsProductName, JSON_UNESCAPED_UNICODE); ?>, description: <?php echo json_encode($jsDescription, JSON_UNESCAPED_UNICODE); ?>, category: <?php echo json_encode($category, JSON_UNESCAPED_UNICODE); ?>, price: <?php echo json_encode($price, JSON_UNESCAPED_UNICODE); ?>, retailPrice: <?php echo json_encode($price, JSON_UNESCAPED_UNICODE); ?>, stockLevel: <?php echo $stock; ?>})"
+                 onmouseleave="hideShopPopup()">
                 <?php 
                 // Display product images using database-driven system
                 if ($primaryImageData && !empty($primaryImageData['image_path'])) {
@@ -268,7 +840,7 @@ if (!isset($GLOBALS['marketingHelper'])) {
                         <span class="product-price font-bold text-[#87ac3a]" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
                         <button class="add-to-cart-btn <?php echo $stock>0 ? 'bg-[#87ac3a] hover:bg-[#a3cc4a]' : 'bg-gray-400 cursor-not-allowed'; ?> text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg"
                                 <?php if($stock==0) echo 'disabled'; ?>
-                                onclick="event.stopPropagation(); openQuickAddModal('<?php echo $sku; ?>', '<?php echo str_replace(["'", '"'], ["\'", '\"'], $productName); ?>', <?php echo $price; ?>, '<?php echo $imageUrl; ?>')"
+                                onclick="event.stopPropagation(); showProductDetails('<?php echo $sku; ?>')"
                                 data-product-id="<?php echo $productId; ?>"
                                 data-product-name="<?php echo $productName; ?>"
                                 data-product-price="<?php echo $price; ?>"
@@ -297,47 +869,37 @@ if (!isset($GLOBALS['marketingHelper'])) {
     </div>
 </section>
 
-<!-- Quantity Selection Modal -->
-<div id="quantityModal" class="modal-overlay hidden">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-[#87ac3a]">Select Quantity</h3>
-            <button id="closeQuantityModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-        </div>
-        
-        <div class="flex items-center mb-4">
-            <img id="modalProductImage" src="" alt="" class="w-16 h-16 object-contain bg-gray-100 rounded mr-4">
-            <div>
-                <h4 id="modalProductName" class="font-medium text-gray-800"></h4>
-                <p id="modalProductPrice" class="text-[#87ac3a] font-semibold"></p>
+<?php
+// Include the quantity modal component for color and size selection
+require_once __DIR__ . '/../components/quantity_modal.php';
+?>
+
+<!-- Enhanced Product Popup for Shop -->
+<div id="shopProductPopup" class="product-popup-enhanced">
+    <div class="popup-content-enhanced">
+        <img class="popup-image-enhanced" src="" alt="">
+        <div class="popup-details-enhanced">
+            <div class="popup-title-enhanced"></div>
+            <div class="popup-category-enhanced"></div>
+            <div class="popup-sku" style="font-size: 12px; color: #888; margin-bottom: 4px; font-family: monospace;"></div>
+            <div class="popup-stock" style="font-size: 12px; margin-bottom: 8px;"></div>
+            <div class="popup-description-enhanced"></div>
+            <div class="popup-price-enhanced"></div>
+            
+            <!-- Options Container for Colors, Sizes, and Quantity -->
+            <div class="popup-options-container"></div>
+            
+            <div class="popup-actions-enhanced">
+                <button class="popup-add-btn-enhanced">Add to Cart</button>
+                <button class="popup-details-btn-enhanced">View Details</button>
+                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
             </div>
-        </div>
-        
-        <div class="mb-6">
-            <label for="quantityInput" class="block text-sm font-medium text-gray-700 mb-2">Quantity:</label>
-            <div class="flex items-center justify-center gap-4">
-                <button id="decreaseQty" class="bg-gray-200 hover:bg-gray-300 text-gray-800 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold">-</button>
-                <input type="number" id="quantityInput" value="1" min="1" max="999" class="w-20 text-center border border-gray-300 rounded-md py-2 text-lg font-semibold">
-                <button id="increaseQty" class="bg-gray-200 hover:bg-gray-300 text-gray-800 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold">+</button>
-            </div>
-        </div>
-        
-        <div class="bg-gray-50 p-4 rounded-lg mb-6">
-            <div class="flex justify-between items-center text-lg">
-                <span class="font-medium text-gray-700">Total:</span>
-                <span id="modalTotal" class="font-bold text-[#87ac3a] text-xl">$0.00</span>
-            </div>
-            <div class="text-sm text-gray-500 mt-1">
-                <span id="modalUnitPrice">$0.00</span> × <span id="modalQuantity">1</span>
-            </div>
-        </div>
-        
-        <div class="flex gap-3">
-            <button id="cancelQuantityModal" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-md font-medium">Cancel</button>
-            <button id="confirmAddToCart" class="flex-1 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white py-2 px-4 rounded-md font-medium">Add to Cart</button>
         </div>
     </div>
 </div>
+
+<!-- Placeholder for detailed modal (will be dynamically created) -->
+<div id="detailedModalContainer"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -378,674 +940,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Make functions globally available
     window.openQuickAddModal = openQuickAddModal;
     
-    // Quantity modal functionality - initialize elements when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-        quantityModal = document.getElementById('quantityModal');
-        modalProductImage = document.getElementById('modalProductImage');
-        modalProductName = document.getElementById('modalProductName');
-        modalProductPrice = document.getElementById('modalProductPrice');
-        modalUnitPrice = document.getElementById('modalUnitPrice');
-        modalQuantity = document.getElementById('modalQuantity');
-        modalTotal = document.getElementById('modalTotal');
-        quantityInput = document.getElementById('quantityInput');
-        const decreaseQtyBtn = document.getElementById('decreaseQty');
-        const increaseQtyBtn = document.getElementById('increaseQty');
-        const closeModalBtn = document.getElementById('closeQuantityModal');
-        const cancelModalBtn = document.getElementById('cancelQuantityModal');
-        const confirmAddBtn = document.getElementById('confirmAddToCart');
-
-        // Quantity input event listeners
-        quantityInput.addEventListener('input', function() {
-            const value = Math.max(1, Math.min(999, parseInt(this.value) || 1));
-            this.value = value;
-            updateTotal();
-        });
-
-        decreaseQtyBtn.addEventListener('click', function() {
-            const current = parseInt(quantityInput.value) || 1;
-            if (current > 1) {
-                quantityInput.value = current - 1;
-                updateTotal();
-            }
-        });
-
-        increaseQtyBtn.addEventListener('click', function() {
-            const current = parseInt(quantityInput.value) || 1;
-            if (current < 999) {
-                quantityInput.value = current + 1;
-                updateTotal();
-            }
-        });
-
-        closeModalBtn.addEventListener('click', closeModal);
-        cancelModalBtn.addEventListener('click', closeModal);
-
-        // Close modal when clicking outside
-        quantityModal.addEventListener('click', function(e) {
-            if (e.target === quantityModal) {
-                closeModal();
-            }
-        });
-
-        // Add to cart functionality - open quantity modal for selection
-        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+    // Shop page now uses detailed modal directly - no quantity modal needed
         
-        addToCartButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                // Prevent the default onclick behavior and use the modal instead
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const productId = this.getAttribute('data-product-id');
-                const productName = this.getAttribute('data-product-name');
-                const productPrice = parseFloat(this.getAttribute('data-product-price'));
-                const productImage = this.getAttribute('data-product-image');
-                
-                // Open the quantity modal instead of directly adding to cart
-                openQuickAddModal(productId, productName, productPrice, productImage);
-            });
-        });
-
-        // Confirm add to cart
-        confirmAddBtn.addEventListener('click', function() {
-            if (currentProduct && typeof window.cart !== 'undefined') {
-                const quantity = parseInt(quantityInput.value) || 1;
-                
-                window.cart.addItem({
-                    id: currentProduct.id,
-                    name: currentProduct.name,
-                    price: currentProduct.price,
-                    image: currentProduct.image,
-                    quantity: quantity
-                });
-                
-                // Show confirmation
-                const customAlert = document.getElementById('customAlertBox');
-                const customAlertMessage = document.getElementById('customAlertMessage');
-                const quantityText = quantity > 1 ? ` (${quantity})` : '';
-                customAlertMessage.textContent = `${currentProduct.name}${quantityText} added to your cart!`;
-                customAlert.style.display = 'block';
-                
-                // Auto-hide after 5 seconds (more readable)
-                setTimeout(() => {
-                    customAlert.style.display = 'none';
-                }, 5000);
-                
-                // Close modal
-                closeModal();
-            } else {
-                console.error('Cart functionality not available');
-            }
-        });
+    // Check for sales on all products when page loads
+    const productPriceElements = document.querySelectorAll('.product-price');
+    
+    productPriceElements.forEach(async (priceElement) => {
+        const sku = priceElement.getAttribute('data-sku');
+        const originalPrice = parseFloat(priceElement.getAttribute('data-original-price'));
         
-        // Check for sales on all products when page loads
-        const productPriceElements = document.querySelectorAll('.product-price');
-        
-        productPriceElements.forEach(async (priceElement) => {
-            const sku = priceElement.getAttribute('data-sku');
-            const originalPrice = parseFloat(priceElement.getAttribute('data-original-price'));
+        if (sku && originalPrice) {
+            // Create a product object for the sales checker
+            const product = {
+                sku: sku,
+                price: originalPrice,
+                retailPrice: originalPrice
+            };
             
-            if (sku && originalPrice) {
-                // Create a product object for the sales checker
-                const product = {
-                    sku: sku,
-                    price: originalPrice,
-                    retailPrice: originalPrice
-                };
-                
-                // Check for sales and update price display
-                await checkAndDisplaySalePrice(product, priceElement, null, 'card');
-                
-                // Also add sale badge to the product card if item is on sale
-                const productCard = priceElement.closest('.product-card');
-                if (productCard) {
-                    await addSaleBadgeToCard(sku, productCard);
-                }
+            // Check for sales and update price display
+            await checkAndDisplaySalePrice(product, priceElement, null, 'card');
+            
+            // Also add sale badge to the product card if item is on sale
+            const productCard = priceElement.closest('.product-card');
+            if (productCard) {
+                await addSaleBadgeToCard(sku, productCard);
             }
-        });
+        }
     });
-
-    // Show product details in large modal
-    async function showProductDetails(sku) {
-        try {
-            const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
-            const data = await response.json();
-            
-            if (data.success && data.item) {
-                // Remove any existing detailed modal
-                const existingModal = document.getElementById('detailedProductModal');
-                if (existingModal) {
-                    existingModal.remove();
-                }
-                
-                // Create and append new detailed modal
-                const modalContainer = document.createElement('div');
-                modalContainer.innerHTML = await generateDetailedModal(data.item, data.images);
-                document.body.appendChild(modalContainer.firstElementChild);
-                
-                // Show the modal
-                showDetailedModal();
-            } else {
-                console.error('Failed to load product details:', data.message);
-                showError('Sorry, we could not load the product details. Please try again.');
-            }
-        } catch (error) {
-            console.error('Error loading product details:', error);
-            showError('Sorry, there was an error loading the product details.');
-        }
-    }
-    
-    // Make functions globally available
-    window.showProductDetails = showProductDetails;
-
-    // Generate detailed modal HTML
-    async function generateDetailedModal(item, images) {
-        const primaryImage = images.length > 0 ? images[0] : null;
-        
-        // Helper function to check if field has data
-        function hasData(value) {
-            return value && value.trim() !== '';
-        }
-        
-        return `
-        <!-- Detailed Product Modal -->
-        <div id="detailedProductModal" class="modal-overlay" style="display: none;">
-            <div class="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] shadow-2xl modal-with-scrollbar">
-                <!-- Modal Header -->
-                <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
-                    <h2 class="text-2xl font-bold text-gray-800">${item.name}</h2>
-                    <button onclick="closeDetailedModal()" class="text-gray-500 hover:text-gray-700 text-3xl font-bold">
-                        &times;
-                    </button>
-                </div>
-                
-                <!-- Modal Content with Scrollable Area -->
-                <div class="modal-content-scrollable">
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <!-- Left Column - Images -->
-                            <div class="space-y-4">
-                                <!-- Main Image -->
-                                <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                                    ${primaryImage ? 
-                                        `<img id="detailedMainImage" 
-                                             src="${primaryImage.image_path}" 
-                                             alt="${item.name}"
-                                             class="w-full h-full object-cover">` :
-                                        `<div class="w-full h-full flex items-center justify-center text-gray-400">
-                                            <span>No image available</span>
-                                        </div>`
-                                    }
-                                </div>
-                                
-                                <!-- Thumbnail Gallery -->
-                                ${images.length > 1 ? `
-                                <div class="grid grid-cols-4 gap-2">
-                                    ${images.map((image, index) => `
-                                    <div class="aspect-square bg-gray-100 rounded cursor-pointer overflow-hidden border-2 ${index === 0 ? 'border-green-500' : 'border-transparent hover:border-gray-300'}"
-                                         onclick="switchDetailedImage('${image.image_path}', this)">
-                                        <img src="${image.image_path}" 
-                                             alt="${item.name} - View ${index + 1}"
-                                             class="w-full h-full object-cover">
-                                    </div>
-                                    `).join('')}
-                                </div>
-                                ` : ''}
-                            </div>
-                            
-                            <!-- Right Column - Product Details -->
-                            <div class="space-y-6">
-                                <!-- Basic Info -->
-                                <div>
-                                    <div class="text-3xl font-bold text-green-600 mb-2">
-                                        $${parseFloat(item.retailPrice).toFixed(2)}
-                                    </div>
-                                    ${hasData(item.description) ? `
-                                    <p class="text-gray-700 text-lg leading-relaxed">
-                                        ${item.description.replace(/\n/g, '<br>')}
-                                    </p>
-                                    ` : ''}
-                                </div>
-                                
-                                <!-- Stock Status -->
-                                <div class="flex items-center space-x-2">
-                                    ${item.stockLevel > 0 ? 
-                                        `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                            ✓ In Stock (${item.stockLevel} available)
-                                        </span>` :
-                                        `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                            ✗ Out of Stock
-                                        </span>`
-                                    }
-                                </div>
-                                
-                                <!-- Add to Cart Section -->
-                                <div class="border-t pt-4">
-                                    <div class="flex items-center space-x-4 mb-4">
-                                        <label class="text-sm font-medium text-gray-700">Quantity:</label>
-                                        <div class="flex items-center border rounded-md">
-                                            <button onclick="adjustDetailedQuantity(-1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">-</button>
-                                            <input type="number" id="detailedQuantity" value="1" min="1" max="${item.stockLevel}" 
-                                                   class="w-16 text-center border-0 focus:ring-0">
-                                            <button onclick="adjustDetailedQuantity(1)" class="px-3 py-1 text-gray-600 hover:text-gray-800">+</button>
-                                        </div>
-                                    </div>
-                                    
-                                    ${item.stockLevel > 0 ? `
-                                    <button onclick="addDetailedToCart('${item.sku}')" 
-                                            class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium text-lg transition-colors">
-                                        Add to Cart
-                                    </button>
-                                    ` : `
-                                    <button disabled class="w-full bg-gray-400 text-white py-3 px-6 rounded-lg font-medium text-lg cursor-not-allowed">
-                                        Out of Stock
-                                    </button>
-                                    `}
-                                </div>
-                                
-                                <!-- Detailed Information -->
-                                <div class="border-t pt-6">
-                                    <div class="space-y-4">
-                                        ${hasData(item.materials) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Materials</h3>
-                                            <p class="text-gray-700">${item.materials.replace(/\n/g, '<br>')}</p>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${(hasData(item.dimensions) || hasData(item.weight)) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Specifications</h3>
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                ${hasData(item.dimensions) ? `
-                                                <div>
-                                                    <span class="font-medium text-gray-600">Dimensions:</span>
-                                                    <span class="text-gray-700">${item.dimensions}</span>
-                                                </div>
-                                                ` : ''}
-                                                ${hasData(item.weight) ? `
-                                                <div>
-                                                    <span class="font-medium text-gray-600">Weight:</span>
-                                                    <span class="text-gray-700">${item.weight}</span>
-                                                </div>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${hasData(item.features) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Features</h3>
-                                            <p class="text-gray-700">${item.features.replace(/\n/g, '<br>')}</p>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${(hasData(item.color_options) || hasData(item.size_options)) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Available Options</h3>
-                                            <div class="space-y-2">
-                                                ${hasData(item.color_options) ? `
-                                                <div>
-                                                    <span class="font-medium text-gray-600">Colors:</span>
-                                                    <span class="text-gray-700">${item.color_options}</span>
-                                                </div>
-                                                ` : ''}
-                                                ${hasData(item.size_options) ? `
-                                                <div>
-                                                    <span class="font-medium text-gray-600">Sizes:</span>
-                                                    <span class="text-gray-700">${item.size_options}</span>
-                                                </div>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${hasData(item.technical_details) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Technical Details</h3>
-                                            <p class="text-gray-700">${item.technical_details.replace(/\n/g, '<br>')}</p>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${hasData(item.care_instructions) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Care Instructions</h3>
-                                            <p class="text-gray-700">${item.care_instructions.replace(/\n/g, '<br>')}</p>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${hasData(item.customization_options) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Customization</h3>
-                                            <p class="text-gray-700">${item.customization_options.replace(/\n/g, '<br>')}</p>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${hasData(item.usage_tips) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Usage Tips</h3>
-                                            <p class="text-gray-700">${item.usage_tips.replace(/\n/g, '<br>')}</p>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${hasData(item.production_time) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Production Time</h3>
-                                            <p class="text-gray-700">${item.production_time}</p>
-                                        </div>
-                                        ` : ''}
-                                        
-                                        ${hasData(item.warranty_info) ? `
-                                        <div>
-                                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Warranty</h3>
-                                            <p class="text-gray-700">${item.warranty_info}</p>
-                                        </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    }
-
-
-
-    // Detailed modal functions
-    function switchDetailedImage(imagePath, thumbnail) {
-        document.getElementById('detailedMainImage').src = imagePath;
-        
-        // Update thumbnail borders
-        const thumbnails = thumbnail.parentElement.children;
-        for (let i = 0; i < thumbnails.length; i++) {
-            thumbnails[i].classList.remove('border-green-500');
-            thumbnails[i].classList.add('border-transparent');
-        }
-        thumbnail.classList.remove('border-transparent');
-        thumbnail.classList.add('border-green-500');
-    }
-
-    function adjustDetailedQuantity(change) {
-        const input = document.getElementById('detailedQuantity');
-        const currentValue = parseInt(input.value);
-        const newValue = currentValue + change;
-        const max = parseInt(input.getAttribute('max'));
-        
-        if (newValue >= 1 && newValue <= max) {
-            input.value = newValue;
-        }
-    }
-
-    function addDetailedToCart(sku) {
-        const quantity = parseInt(document.getElementById('detailedQuantity').value);
-        
-        // Use existing cart functionality
-        if (typeof window.cart !== 'undefined') {
-            // Get product info from the detailed modal
-            const productName = document.querySelector('#detailedProductModal h2').textContent;
-            const priceText = document.querySelector('#detailedProductModal .text-3xl').textContent;
-            const price = parseFloat(priceText.replace('$', ''));
-            const image = document.getElementById('detailedMainImage').src;
-            
-            window.cart.addItem({
-                id: sku,
-                name: productName,
-                price: price,
-                image: image,
-                quantity: quantity
-            });
-            
-            // Show confirmation
-            const customAlert = document.getElementById('customAlertBox');
-            const customAlertMessage = document.getElementById('customAlertMessage');
-            const quantityText = quantity > 1 ? ` (${quantity})` : '';
-            customAlertMessage.textContent = `${productName}${quantityText} added to your cart!`;
-            customAlert.style.display = 'block';
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                customAlert.style.display = 'none';
-            }, 5000);
-            
-            closeDetailedModal();
-        } else {
-            showSuccess('Added ' + quantity + ' item(s) to cart!');
-            closeDetailedModal();
-        }
-    }
-
-    function closeDetailedModal() {
-        const modal = document.getElementById('detailedProductModal');
-        if (modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
-
-    function showDetailedModal() {
-        const modal = document.getElementById('detailedProductModal');
-        if (modal) {
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-    }
-    
-    // Make modal functions globally available
-    window.switchDetailedImage = switchDetailedImage;
-    window.adjustDetailedQuantity = adjustDetailedQuantity;
-    window.addDetailedToCart = addDetailedToCart;
-    window.closeDetailedModal = closeDetailedModal;
-    window.showDetailedModal = showDetailedModal;
-    
-    // Shop popup system variables
-    let shopCurrentProduct = null;
-    let shopPopupTimeout = null;
-    let shopPopupOpen = false;
-    let shopIsShowingPopup = false;
-    let shopLastShowTime = 0;
-
-    function showShopPopup(element, product) {
-        const now = Date.now();
-        
-        // Debounce rapid calls (prevent multiple calls within 100ms)
-        if (now - shopLastShowTime < 100) {
-            return;
-        }
-        shopLastShowTime = now;
-        
-        // Prevent rapid re-triggering of same popup (anti-flashing protection)
-        if (shopCurrentProduct && shopCurrentProduct.sku === product.sku && shopIsShowingPopup) {
-            clearTimeout(shopPopupTimeout);
-            return;
-        }
-        
-        clearTimeout(shopPopupTimeout);
-        shopCurrentProduct = product;
-        shopIsShowingPopup = true;
-        shopPopupOpen = true;
-
-        const popup = document.getElementById('shopProductPopup');
-        const popupImage = popup.querySelector('.popup-image-enhanced');
-        const popupCategory = popup.querySelector('.popup-category-enhanced');
-        const popupTitle = popup.querySelector('.popup-title-enhanced');
-        const popupSku = popup.querySelector('.popup-sku');
-        const popupStock = popup.querySelector('.popup-stock');
-        const popupDescription = popup.querySelector('.popup-description-enhanced');
-        const popupPrice = popup.querySelector('.popup-price-enhanced');
-        const popupAddBtn = popup.querySelector('.popup-add-btn-enhanced');
-        const popupDetailsBtn = popup.querySelector('.popup-details-btn-enhanced');
-
-        // Get the image URL - use SKU-based system
-        const imageUrl = `images/items/${product.sku}A.png`;
-
-        // Populate popup content
-        popupImage.src = imageUrl;
-        popupImage.onerror = function() {
-            this.src = 'images/items/placeholder.png';
-            this.onerror = null;
-        };
-        
-        popupCategory.textContent = product.category ?? 'Category';
-        popupTitle.textContent = product.name ?? 'Item Name';
-        popupSku.textContent = `SKU: ${product.sku}`;
-        
-        // Display stock information with color coding
-        const stockLevel = product.stockLevel || 0;
-        const stockText = stockLevel > 0 ? `${stockLevel} in stock` : 'Out of stock';
-        const stockColor = stockLevel > 10 ? '#22c55e' : stockLevel > 0 ? '#f59e0b' : '#ef4444';
-        popupStock.textContent = stockText;
-        popupStock.style.color = stockColor;
-        popupStock.style.fontWeight = '600';
-        
-        popupDescription.textContent = product.description ?? 'No description available';
-        
-        // Set price
-        popupPrice.textContent = `$${parseFloat(product.retailPrice).toFixed(2)}`;
-
-        // Better positioning relative to the element
-        const rect = element.getBoundingClientRect();
-        const shopContainer = document.querySelector('.shop-container') || document.body;
-        const containerRect = shopContainer.getBoundingClientRect();
-
-        let left = rect.left - containerRect.left + rect.width + 10;
-        let top = rect.top - containerRect.top - 50;
-
-        // Show popup temporarily to get actual dimensions
-        popup.style.display = 'block';
-        popup.style.opacity = '';
-        popup.classList.add('show');
-
-        const popupRect = popup.getBoundingClientRect();
-        const popupWidth = popupRect.width;
-        const popupHeight = popupRect.height;
-
-        // Reset for measurement
-        popup.style.display = '';
-
-        // Adjust if popup would go off screen horizontally
-        if (left + popupWidth > window.innerWidth) {
-            left = rect.left - containerRect.left - popupWidth - 10;
-        }
-        
-        // Adjust if popup would go off screen vertically (top)
-        if (top < 0) {
-            top = rect.top - containerRect.top + rect.height + 10;
-        }
-        
-        // Adjust if popup would go off screen vertically (bottom)
-        if (top + popupHeight > window.innerHeight) {
-            const topAbove = rect.top - containerRect.top - popupHeight - 10;
-            if (topAbove >= 0) {
-                top = topAbove;
-            } else {
-                top = window.innerHeight - popupHeight - 20;
-                if (top < 0) {
-                    top = 10;
-                }
-            }
-        }
-
-        popup.style.left = left + 'px';
-        popup.style.top = top + 'px';
-
-        // Clear any inline styles that might interfere and show the popup
-        popup.style.opacity = '';
-        popup.classList.add('show');
-
-        // Add to cart functionality
-        popupAddBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            popup.classList.remove('show');
-            
-            if (typeof window.cart !== 'undefined') {
-                window.cart.addItem({
-                    id: product.sku,
-                    name: product.name,
-                    price: parseFloat(product.retailPrice),
-                    image: imageUrl,
-                    quantity: 1
-                });
-                
-                // Show confirmation
-                const customAlert = document.getElementById('customAlertBox');
-                const customAlertMessage = document.getElementById('customAlertMessage');
-                customAlertMessage.textContent = `${product.name} added to your cart!`;
-                customAlert.style.display = 'block';
-                
-                setTimeout(() => {
-                    customAlert.style.display = 'none';
-                }, 5000);
-            } else {
-                console.error('Cart functionality not available');
-            }
-        };
-        
-        // View details functionality
-        popupDetailsBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            popup.classList.remove('show');
-            showProductDetails(product.sku);
-        };
-    }
-
-    function hideShopPopup() {
-        // Clear any existing timeout
-        clearTimeout(shopPopupTimeout);
-        
-        // Add a small delay before hiding to allow moving mouse to popup
-        shopPopupTimeout = setTimeout(() => {
-            hideShopPopupImmediate();
-        }, 200);
-    }
-
-    function hideShopPopupImmediate() {
-        const popup = document.getElementById('shopProductPopup');
-        if (popup) {
-            popup.classList.remove('show');
-            shopPopupOpen = false;
-            shopIsShowingPopup = false;
-            shopCurrentProduct = null;
-        }
-    }
-
-    // Make shop popup functions globally available
-    window.showShopPopup = showShopPopup;
-    window.hideShopPopup = hideShopPopup;
-
-    // Check for sales and display sale prices on page load
-    setTimeout(() => {
-        // Check for sales on all product prices
-        checkAndDisplaySalePrice();
-        
-        // Add sale badges to product cards
-        addSaleBadgeToCard();
-    }, 100);
 });
 </script>
-
-<!-- Enhanced Product Popup for Shop -->
-<div id="shopProductPopup" class="product-popup-enhanced">
-    <div class="popup-content-enhanced">
-        <img class="popup-image-enhanced" src="" alt="">
-        <div class="popup-details-enhanced">
-            <div class="popup-title-enhanced"></div>
-            <div class="popup-category-enhanced"></div>
-            <div class="popup-sku" style="font-size: 12px; color: #888; margin-bottom: 4px; font-family: monospace;"></div>
-            <div class="popup-stock" style="font-size: 12px; margin-bottom: 8px;"></div>
-            <div class="popup-description-enhanced"></div>
-            <div class="popup-price-enhanced"></div>
-            <div class="popup-actions-enhanced">
-                <button class="popup-add-btn-enhanced">Add to Cart</button>
-                <button class="popup-details-btn-enhanced">View Details</button>
-                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Placeholder for detailed modal (will be dynamically created) -->
-<div id="detailedModalContainer"></div>

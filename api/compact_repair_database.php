@@ -1,17 +1,11 @@
 <?php
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/config.php';
+
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
 
-require_once 'config.php';
-
-// Check if admin token is provided
-if (!isset($_POST['admin_token']) || $_POST['admin_token'] !== 'whimsical_admin_2024') {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
-    exit;
-}
+// Use centralized authentication
+requireAdmin();
 
 try {
     // Create database connection

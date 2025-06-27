@@ -4,35 +4,15 @@
  * Returns available models for each AI provider
  */
 
-require_once 'config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/config.php';
 require_once 'ai_providers.php';
 
 // Set JSON header
 header('Content-Type: application/json');
 
-// Check if user is admin
-session_start();
-
-// Security Check: Ensure user is logged in and is an Admin
-$isLoggedIn = isset($_SESSION['user']);
-$isAdmin = false;
-
-if ($isLoggedIn) {
-    $userData = $_SESSION['user'];
-    // Handle both string and array formats
-    if (is_string($userData)) {
-        $userData = json_decode($userData, true);
-    }
-    if (is_array($userData)) {
-        $isAdmin = isset($userData['role']) && strtolower($userData['role']) === 'admin';
-    }
-}
-
-if (!$isLoggedIn || !$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Access denied. Admin privileges required.']);
-    exit;
-}
+// Use centralized authentication
+requireAdmin();
 
 try {
     $method = $_SERVER['REQUEST_METHOD'];

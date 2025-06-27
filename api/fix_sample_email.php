@@ -23,47 +23,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 session_start();
 
 // Include database configuration
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
 
-// Enhanced authentication function
-function isAuthenticated() {
-    // Check for admin token first
-    $adminToken = $_POST['admin_token'] ?? $_GET['admin_token'] ?? null;
-    if ($adminToken === 'whimsical_admin_2024') {
-        return true;
-    }
-    
-    // Check session-based authentication
-    if (isset($_SESSION['user']) && is_array($_SESSION['user'])) {
-        return isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin';
-    }
-    
-    // Check alternative session structure
-    if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
-        return true;
-    }
-    
-    // Check if user is set as admin directly
-    if (isset($_SESSION['isAdmin']) && $_SESSION['isAdmin'] === true) {
-        return true;
-    }
-    
-    return false;
-}
+// Use centralized authentication
+requireAdmin();
 
-// Check authentication
-if (!isAuthenticated()) {
-    echo json_encode([
-        'success' => false,
-        'error' => 'Access denied - admin authentication required',
-        'debug' => [
-            'session_keys' => array_keys($_SESSION),
-            'user_data' => isset($_SESSION['user']) ? 'user key exists' : 'no user key',
-            'admin_token_provided' => isset($_POST['admin_token']) || isset($_GET['admin_token'])
-        ]
-    ]);
-    exit;
-}
+// Authentication is handled by requireAdmin() above
+$userData = getCurrentUser();
 
 try {
     // Database connection

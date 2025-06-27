@@ -156,9 +156,15 @@ button[onclick*="addDetailedToCart"]:focus,
 
 /* ULTRA-SPECIFIC OVERRIDE FOR TAILWIND CLASSES IN DETAILED MODAL */
 /* This targets the exact Tailwind classes used in the detailed modal button */
-#detailedProductModal .w-full.bg-green-600.hover\\:bg-green-700.text-white,
+#detailedProductModal button.w-full.bg-green-600.hover\\:bg-green-700.text-white.font-semibold,
+#detailedProductModal button.w-full.bg-green-600.hover\\:bg-green-700.text-white,
+#detailedProductModal button.w-full.bg-green-600.hover\\:bg-green-700,
+#detailedProductModal button.w-full.bg-green-600,
+#detailedProductModal button.w-full.bg-green-700,
 #detailedProductModal .w-full.bg-green-600,
 #detailedProductModal .w-full.bg-green-700,
+button.w-full.bg-green-600[onclick*="addDetailedToCart"],
+button.w-full.bg-green-700[onclick*="addDetailedToCart"],
 .w-full.bg-green-600[onclick*="addDetailedToCart"],
 .w-full.bg-green-700[onclick*="addDetailedToCart"] {
     background: var(--wf-brand-green) !important;
@@ -168,13 +174,32 @@ button[onclick*="addDetailedToCart"]:focus,
     color: white !important;
 }
 
-#detailedProductModal .w-full.bg-green-600.hover\\:bg-green-700.text-white:hover,
+#detailedProductModal button.w-full.bg-green-600.hover\\:bg-green-700.text-white.font-semibold:hover,
+#detailedProductModal button.w-full.bg-green-600.hover\\:bg-green-700.text-white:hover,
+#detailedProductModal button.w-full.bg-green-600.hover\\:bg-green-700:hover,
+#detailedProductModal button.w-full.bg-green-600:hover,
+#detailedProductModal button.w-full.bg-green-700:hover,
 #detailedProductModal .w-full.bg-green-600:hover,
 #detailedProductModal .w-full.bg-green-700:hover,
+button.w-full.bg-green-600[onclick*="addDetailedToCart"]:hover,
+button.w-full.bg-green-700[onclick*="addDetailedToCart"]:hover,
 .w-full.bg-green-600[onclick*="addDetailedToCart"]:hover,
 .w-full.bg-green-700[onclick*="addDetailedToCart"]:hover {
     background: var(--wf-brand-green-dark) !important;
     background-color: var(--wf-brand-green-dark) !important;
     border-color: var(--wf-brand-green-darker) !important;
     color: white !important;
+}
+
+/* ABSOLUTE NUCLEAR OPTION - Target the exact button structure with maximum CSS specificity */
+div#detailedProductModal div div div div button[onclick*="addDetailedToCart"].w-full.bg-green-600.hover\\:bg-green-700.text-white.font-semibold,
+div#detailedProductModal div div div div button[onclick*="addDetailedToCart"].w-full,
+div#detailedProductModal div div div div button[onclick*="addDetailedToCart"],
+div#detailedProductModal button[onclick*="addDetailedToCart"] {
+    background: var(--wf-brand-green) !important;
+    background-color: var(--wf-brand-green) !important;
+    border: 2px solid var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-dark) !important;
+    color: white !important;
+    text-shadow: none !important;
 } 

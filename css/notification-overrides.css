@@ -6,6 +6,8 @@
     --wf-brand-green: #87ac3a;
     --wf-brand-green-dark: #6b8e23;
     --wf-brand-green-darker: #556B2F;
+    /* Temporary test color to verify CSS is applying */
+    --wf-test-color: #ff6b35;
 }
 
 /* NUCLEAR OPTION: Override ALL notification styling with maximum specificity */
@@ -196,10 +198,10 @@ div#detailedProductModal div div div div button[onclick*="addDetailedToCart"].w-
 div#detailedProductModal div div div div button[onclick*="addDetailedToCart"].w-full,
 div#detailedProductModal div div div div button[onclick*="addDetailedToCart"],
 div#detailedProductModal button[onclick*="addDetailedToCart"] {
-    background: var(--wf-brand-green) !important;
-    background-color: var(--wf-brand-green) !important;
-    border: 2px solid var(--wf-brand-green-dark) !important;
-    border-color: var(--wf-brand-green-dark) !important;
+    background: var(--wf-test-color) !important;
+    background-color: var(--wf-test-color) !important;
+    border: 2px solid #d63384 !important;
+    border-color: #d63384 !important;
     color: white !important;
     text-shadow: none !important;
 } 

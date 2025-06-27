@@ -129,12 +129,12 @@ if (!isset($GLOBALS['marketingHelper'])) {
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        max-height: 90vh;
+        max-height: 80vh;
     }
 
     .modal-content-scrollable {
         flex: 1;
-        max-height: calc(90vh - 80px); /* Account for header height */
+        max-height: calc(80vh - 80px); /* Account for header height */
         overflow-y: auto;
         overflow-x: hidden;
         /* Ensure smooth scrolling without double scrollbars */
@@ -165,6 +165,16 @@ if (!isset($GLOBALS['marketingHelper'])) {
     body.modal-open {
         overflow: hidden !important;
         padding-right: 0px; /* Prevent layout shift */
+    }
+    
+    /* Ensure modal overlay handles overflow properly */
+    .modal-overlay {
+        overflow: hidden !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
     }
 
     /* Popup Options Styling */
@@ -570,7 +580,7 @@ async function generateDetailedModal(item, images) {
     return `
     <!-- Detailed Product Modal -->
     <div id="detailedProductModal" class="modal-overlay" style="display: none;">
-        <div class="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] shadow-2xl modal-with-scrollbar">
+        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] shadow-2xl modal-with-scrollbar">
             <div class="flex justify-between items-center p-6 border-b border-gray-200">
                 <h2 class="text-2xl font-bold text-gray-900">${item.productName}</h2>
                 <button onclick="closeDetailedModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
@@ -580,7 +590,7 @@ async function generateDetailedModal(item, images) {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Product Images -->
                     <div class="space-y-4">
-                        <div class="aspect-square bg-gray-50 rounded-lg overflow-hidden">
+                        <div class="aspect-square bg-gray-50 rounded-lg overflow-hidden" style="max-width: 50%; margin: 0 auto;">
                             <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain">
                         </div>
                         
@@ -748,6 +758,8 @@ function closeDetailedModal() {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
         document.body.classList.remove('modal-open');
+        // Restore document scroll
+        document.documentElement.style.overflow = 'auto';
     }
 }
 
@@ -757,6 +769,8 @@ function showDetailedModal() {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         document.body.classList.add('modal-open');
+        // Ensure proper scroll handling
+        document.documentElement.style.overflow = 'hidden';
     }
 }
 

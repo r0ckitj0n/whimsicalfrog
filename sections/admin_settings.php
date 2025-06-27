@@ -251,7 +251,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4 4 4 0 004-4V5z"></path>
           </svg>
           <span class="button-text">Global Colors & Sizes</span>
-          <span class="button-badge">New</span>
         </button>
         
         <button id="roomsBtn" onclick="openRoomSettingsModal()" class="settings-button">
@@ -439,13 +438,11 @@
           <span class="button-text">AI Settings</span>
         </button>
         
-        <div class="coming-soon-notice">
-          <strong>Square Integration:</strong> Synchronize your store items with Square for seamless payment processing and inventory management.
-        </div>
+
         
         <button id="squareSettingsBtn" onclick="openSquareSettingsModal()" class="settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
           </svg>
           <span class="button-text">Configure Square</span>
         </button>
@@ -496,7 +493,7 @@
                 <div class="flex flex-wrap gap-2 mb-2 text-sm">
                     <div class="flex items-center">
                         <input type="text" id="mapNameInput" placeholder="Map name..." class="px-2 py-1 border border-gray-300 rounded mr-1 text-sm" />
-                        <button onclick="saveRoomMap()" class="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm">Save</button>
+                        <button onclick="saveRoomMap()" class="btn-primary btn-small">Save</button>
                     </div>
                     <div class="flex items-center">
                         <select id="savedMapsSelect" class="px-2 py-1 border border-gray-300 rounded mr-1 text-sm">
@@ -4106,7 +4103,7 @@ function showContentToneModal() {
                 
                 <div class="border-t p-4 flex justify-end space-x-2">
                     <button onclick="closeContentToneModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-                    <button onclick="saveContentToneOptions()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Save Changes</button>
+                    <button onclick="saveContentToneOptions()" class="btn-primary">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -4366,7 +4363,7 @@ function showBrandVoiceModal() {
                 
                 <div class="border-t p-4 flex justify-end space-x-2">
                     <button onclick="closeBrandVoiceModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-                    <button onclick="saveBrandVoiceOptions()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Save Changes</button>
+                    <button onclick="saveBrandVoiceOptions()" class="btn-primary">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -4612,7 +4609,7 @@ async function loadBackgroundsForRoom(roomType) {
                 
                 // Build action buttons
                 const applyButton = !bg.is_active ? 
-                    `<button onclick="applyBackground('${roomType}', ${bg.id})" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-medium">Apply</button>` : '';
+                    `<button onclick="applyBackground('${roomType}', ${bg.id})" class="btn-primary btn-small">Apply</button>` : '';
                 
                 const deleteButton = bg.background_name !== 'Original' ? 
                     `<button onclick="deleteBackground(${bg.id}, '${bg.background_name}')" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">Delete</button>` : '';
@@ -5280,7 +5277,7 @@ function displayEmailHistory(emails, pagination) {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </button>
-                        <button onclick="editAndResendEmail(${email.id})" class="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600" title="Edit & Resend">
+                        <button onclick="editAndResendEmail(${email.id})" class="btn-primary btn-small" title="Edit & Resend">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                             </svg>
@@ -13044,10 +13041,10 @@ function openGlobalColorSizeModal() {
 function createGlobalColorSizeModal() {
     const modalHtml = `
         <div id="globalColorSizeModal" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header">
-                    <h2>🎨 Global Color & Size Management</h2>
-                    <span class="close" onclick="closeGlobalColorSizeModal()">&times;</span>
+            <div class="modal-content" style="max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto; background: white;">
+                <div class="modal-header" style="background: white; color: #1f2937; border-bottom: 1px solid #e5e7eb;">
+                    <h2 style="color: #1f2937; margin: 0; font-weight: 600;">🎨 Global Color & Size Management</h2>
+                    <span class="close" onclick="closeGlobalColorSizeModal()" style="color: #6b7280;">&times;</span>
                 </div>
                 <div class="modal-body">
                     <div class="tabs-container">
@@ -13058,10 +13055,7 @@ function createGlobalColorSizeModal() {
                         
                         <!-- Global Colors Tab -->
                         <div id="globalColorsTab" class="tab-content active">
-                            <div class="section-header" style="margin-bottom: 20px;">
-                                <h3 style="color: #059669; margin-bottom: 10px;">Master Color List</h3>
-                                <p style="color: #6b7280;">Manage all available colors for your products. These colors will be available when setting up individual items.</p>
-                            </div>
+
                             
                             <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
                                 <button onclick="showAddColorForm()" class="btn btn-primary" style="background: #059669; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
@@ -13111,10 +13105,7 @@ function createGlobalColorSizeModal() {
                         
                         <!-- Global Sizes Tab -->
                         <div id="globalSizesTab" class="tab-content" style="display: none;">
-                            <div class="section-header" style="margin-bottom: 20px;">
-                                <h3 style="color: #7c3aed; margin-bottom: 10px;">Master Size List</h3>
-                                <p style="color: #6b7280;">Manage all available sizes for your products. These sizes will be available when setting up individual items.</p>
-                            </div>
+
                             
                             <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
                                 <button onclick="showAddSizeForm()" class="btn btn-primary" style="background: #7c3aed; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">

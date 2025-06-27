@@ -660,6 +660,15 @@ button.hover\\:bg-indigo-700:hover,
     color: var(--admin-text-color) !important;
 }
 
+/* Section Header Classes - Admin Settings Page */
+.section-title {
+    color: var(--section_title_text_color, #ffffff) !important;
+}
+
+.section-description {
+    color: var(--section_description_text_color, #ffffff) !important;
+}
+
 /* ==============================================
    BRAND COLOR CONTRAST RULES
    ============================================== */

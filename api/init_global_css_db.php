@@ -138,7 +138,11 @@ try {
         ['modal_close_font_size', '--modal-close-font-size', '24px', 'modal_close', 'Font size of the X symbol'],
         ['modal_close_color', '--modal-close-color', '#6b7280', 'modal_close', 'Color of the close button'],
         ['modal_close_hover_color', '--modal-close-hover-color', '#374151', 'modal_close', 'Color when hovering over close button'],
-        ['modal_close_bg_hover', '--modal-close-bg-hover', '#f3f4f6', 'modal_close', 'Background color when hovering']
+        ['modal_close_bg_hover', '--modal-close-bg-hover', '#f3f4f6', 'modal_close', 'Background color when hovering'],
+        
+        // Section Headers - Admin Settings Page
+        ['section_title_text_color', 'color', '#ffffff', 'admin_sections', 'Section title text color (white for visibility on gradient backgrounds)'],
+        ['section_description_text_color', 'color', '#ffffff', 'admin_sections', 'Section description text color (white for visibility on gradient backgrounds)']
     ];
 
     $stmt = $pdo->prepare("

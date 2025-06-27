@@ -86,7 +86,8 @@ div[style*="background-color"][class*="notification"] * {
 }
 
 /* ITEM DETAILS MODAL "ADD TO CART" BUTTON STYLING */
-/* Target all possible Add to Cart button selectors */
+/* Target all possible Add to Cart button selectors with maximum specificity */
+#detailedProductModal button[onclick*="addDetailedToCart"],
 .detailed-product-modal .add-to-cart-btn,
 .modal-content .add-to-cart-btn,
 .modal .add-to-cart-btn,
@@ -96,7 +97,9 @@ button:contains("Add to Cart"),
 .detailed-modal button[onclick*="addDetailedToCart"],
 #detailed-modal button[onclick*="addDetailedToCart"],
 .modal button[class*="add-to-cart"],
-.modal button[class*="btn-primary"] {
+.modal button[class*="btn-primary"],
+.bg-green-600[onclick*="addDetailedToCart"],
+.bg-green-700[onclick*="addDetailedToCart"] {
     background: var(--wf-brand-green) !important;
     background-color: var(--wf-brand-green) !important;
     border: 2px solid var(--wf-brand-green-dark) !important;
@@ -107,6 +110,7 @@ button:contains("Add to Cart"),
 }
 
 /* Hover states for Add to Cart buttons */
+#detailedProductModal button[onclick*="addDetailedToCart"]:hover,
 .detailed-product-modal .add-to-cart-btn:hover,
 .modal-content .add-to-cart-btn:hover,
 .modal .add-to-cart-btn:hover,
@@ -116,7 +120,9 @@ button:contains("Add to Cart"):hover,
 .detailed-modal button[onclick*="addDetailedToCart"]:hover,
 #detailed-modal button[onclick*="addDetailedToCart"]:hover,
 .modal button[class*="add-to-cart"]:hover,
-.modal button[class*="btn-primary"]:hover {
+.modal button[class*="btn-primary"]:hover,
+.bg-green-600[onclick*="addDetailedToCart"]:hover,
+.bg-green-700[onclick*="addDetailedToCart"]:hover {
     background: var(--wf-brand-green-dark) !important;
     background-color: var(--wf-brand-green-dark) !important;
     border-color: var(--wf-brand-green-darker) !important;
@@ -127,12 +133,18 @@ button:contains("Add to Cart"):hover,
 }
 
 /* Active/focus states */
+#detailedProductModal button[onclick*="addDetailedToCart"]:active,
+#detailedProductModal button[onclick*="addDetailedToCart"]:focus,
 .detailed-product-modal .add-to-cart-btn:active,
 .detailed-product-modal .add-to-cart-btn:focus,
 .modal-content .add-to-cart-btn:active,
 .modal-content .add-to-cart-btn:focus,
 button[onclick*="addDetailedToCart"]:active,
-button[onclick*="addDetailedToCart"]:focus {
+button[onclick*="addDetailedToCart"]:focus,
+.bg-green-600[onclick*="addDetailedToCart"]:active,
+.bg-green-600[onclick*="addDetailedToCart"]:focus,
+.bg-green-700[onclick*="addDetailedToCart"]:active,
+.bg-green-700[onclick*="addDetailedToCart"]:focus {
     background: var(--wf-brand-green-dark) !important;
     background-color: var(--wf-brand-green-dark) !important;
     border-color: var(--wf-brand-green-darker) !important;
@@ -140,4 +152,29 @@ button[onclick*="addDetailedToCart"]:focus {
     text-shadow: none !important;
     outline: none !important;
     box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.3) !important;
+}
+
+/* ULTRA-SPECIFIC OVERRIDE FOR TAILWIND CLASSES IN DETAILED MODAL */
+/* This targets the exact Tailwind classes used in the detailed modal button */
+#detailedProductModal .w-full.bg-green-600.hover\\:bg-green-700.text-white,
+#detailedProductModal .w-full.bg-green-600,
+#detailedProductModal .w-full.bg-green-700,
+.w-full.bg-green-600[onclick*="addDetailedToCart"],
+.w-full.bg-green-700[onclick*="addDetailedToCart"] {
+    background: var(--wf-brand-green) !important;
+    background-color: var(--wf-brand-green) !important;
+    border: 2px solid var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-dark) !important;
+    color: white !important;
+}
+
+#detailedProductModal .w-full.bg-green-600.hover\\:bg-green-700.text-white:hover,
+#detailedProductModal .w-full.bg-green-600:hover,
+#detailedProductModal .w-full.bg-green-700:hover,
+.w-full.bg-green-600[onclick*="addDetailedToCart"]:hover,
+.w-full.bg-green-700[onclick*="addDetailedToCart"]:hover {
+    background: var(--wf-brand-green-dark) !important;
+    background-color: var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-darker) !important;
+    color: white !important;
 } 

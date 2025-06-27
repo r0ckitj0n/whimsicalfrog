@@ -33,7 +33,41 @@ class ShoppingCart {
 
     dispatchCartUpdate() {
         // Dispatch custom event for cart updates
-        window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { items: this.items } }));
+        const event = new CustomEvent('cartUpdated', {
+            detail: {
+                items: this.items,
+                count: this.getItemCount(),
+                total: this.getTotal()
+            }
+        });
+        document.dispatchEvent(event);
+        
+        // Refresh modal size dropdown if modal is open
+        this.refreshModalSizeDropdown();
+    }
+
+    refreshModalSizeDropdown() {
+        // Check if the modal is open and has size options
+        const quantityModal = document.getElementById('quantityModal');
+        const sizeSelect = document.getElementById('sizeSelect');
+        
+        if (quantityModal && !quantityModal.classList.contains('hidden') && sizeSelect && window.currentModalProduct) {
+            // Get current selection
+            const currentSelection = sizeSelect.value;
+            
+            // Rebuild the size dropdown with updated cart quantities
+            if (window.currentModalProduct.availableSizes || 
+                window.currentModalProduct.generalSizes || 
+                window.currentModalProduct.colorSpecificSizes) {
+                
+                window.setupSizeDropdown(
+                    window.currentModalProduct.availableSizes,
+                    window.currentModalProduct.generalSizes,
+                    window.currentModalProduct.colorSpecificSizes,
+                    currentSelection
+                );
+            }
+        }
     }
 
     async refreshProductData() {
@@ -608,12 +642,14 @@ class ShoppingCart {
             const itemIds = this.items.map(item => item.sku);
             const quantities = this.items.map(item => item.quantity);
             const colors = this.items.map(item => item.color || null);
+            const sizes = this.items.map(item => item.size || null);
 
             const orderData = {
                 customerId: customerId,
                 itemIds: itemIds,
                 quantities: quantities,
                 colors: colors,
+                sizes: sizes,
                 paymentMethod: paymentMethod,
                 shippingMethod: shippingMethod,
                 total: this.getTotal()
@@ -1138,6 +1174,26 @@ window.confirmAddToCart = function() {
             }
             return;
         }
+        
+        // Check if there's enough inventory available (considering what's already in cart)
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+        const availableQuantity = parseInt(selectedOption.getAttribute('data-available')) || 0;
+        
+        if (quantity > availableQuantity) {
+            const errorMsg = availableQuantity === 0 ? 
+                'This size is currently out of stock.' :
+                `Only ${availableQuantity} of this size available (considering items already in your cart).`;
+            
+            if (window.cart && window.cart.showErrorNotification) {
+                window.cart.showErrorNotification(errorMsg);
+            } else if (window.cart && window.cart.showNotification) {
+                window.cart.showNotification(errorMsg);
+            } else {
+                showValidation(errorMsg);
+            }
+            return;
+        }
+        
         // Update the selected size from dropdown
         window.currentModalProduct.selectedSize = selectedSize;
     }
@@ -1551,6 +1607,41 @@ document.addEventListener('DOMContentLoaded', function() {
     window.initializePopupEventListeners();
 });
 
+// Function to calculate how many of each size are already in the cart for a specific item
+window.getCartQuantityForSize = function(itemSku, colorName, sizeCode) {
+    if (!window.cart || !window.cart.items) return 0;
+    
+    return window.cart.items.reduce((total, cartItem) => {
+        if (cartItem.sku === itemSku) {
+            const cartColor = cartItem.color || null;
+            const cartSize = cartItem.size || null;
+            
+            // Match color (or both null)
+            const colorMatch = (colorName === cartColor) || (colorName === null && cartColor === null);
+            
+            // Match size
+            const sizeMatch = cartSize === sizeCode;
+            
+            if (colorMatch && sizeMatch) {
+                return total + (cartItem.quantity || 0);
+            }
+        }
+        return total;
+    }, 0);
+};
+
+// Function to get total cart quantity for an item (all colors/sizes combined)
+window.getCartQuantityForItem = function(itemSku) {
+    if (!window.cart || !window.cart.items) return 0;
+    
+    return window.cart.items.reduce((total, cartItem) => {
+        if (cartItem.sku === itemSku) {
+            return total + (cartItem.quantity || 0);
+        }
+        return total;
+    }, 0);
+};
+
 // Function to setup size dropdown in quantity modal
 window.setupSizeDropdown = async function(availableSizes, generalSizes, colorSpecificSizes, selectedSize = null) {
     // Find or create size dropdown container
@@ -1590,6 +1681,9 @@ window.setupSizeDropdown = async function(availableSizes, generalSizes, colorSpe
     }
     
     if (sizesToShow && sizesToShow.length > 0) {
+        // Get current selected color for cart quantity calculation
+        const currentColor = window.currentModalProduct?.selectedColor || null;
+        
         // Create size dropdown
         const sizeHTML = `
             <div class="size-selection">
@@ -1601,16 +1695,33 @@ window.setupSizeDropdown = async function(availableSizes, generalSizes, colorSpe
                             const priceAdjustment = parseFloat(size.price_adjustment || 0);
                             const adjustmentText = priceAdjustment !== 0 ? 
                                 ` (${priceAdjustment > 0 ? '+' : ''}$${priceAdjustment.toFixed(2)})` : '';
-                            const stockText = size.stock_level > 0 ? 
-                                ` (${size.stock_level} available)` : ' (Out of stock)';
+                            
+                            // Calculate actual available quantity (stock - cart quantity)
+                            const cartQuantity = window.getCartQuantityForSize(
+                                window.currentModalProduct?.sku, 
+                                currentColor, 
+                                size.size_code
+                            );
+                            const actualAvailable = Math.max(0, (size.stock_level || 0) - cartQuantity);
+                            
+                            let stockText;
+                            if (cartQuantity > 0) {
+                                stockText = actualAvailable > 0 ? 
+                                    ` (${actualAvailable} available, ${cartQuantity} in cart)` : 
+                                    ` (Out of stock - ${cartQuantity} in cart)`;
+                            } else {
+                                stockText = actualAvailable > 0 ? 
+                                    ` (${actualAvailable} available)` : ' (Out of stock)';
+                            }
                             
                             return `
                                 <option value="${size.size_code}" 
                                         data-size-name="${size.size_name}" 
                                         data-price-adjustment="${priceAdjustment}"
                                         data-stock="${size.stock_level}"
+                                        data-available="${actualAvailable}"
                                         ${selectedSize === size.size_code ? 'selected' : ''}
-                                        ${size.stock_level <= 0 ? 'disabled' : ''}>
+                                        ${actualAvailable <= 0 ? 'disabled' : ''}>
                                     ${size.size_name}${adjustmentText}${stockText}
                                 </option>
                             `;

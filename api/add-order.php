@@ -88,6 +88,18 @@ if (!$input) {
 error_log("add-order.php: Parsed input: " . print_r($input, true));
 
 $pdo = new PDO($dsn, $user, $pass, $options);
+
+// Ensure order_items table has size column (migration)
+try {
+    $stmt = $pdo->query("SHOW COLUMNS FROM order_items LIKE 'size'");
+    if ($stmt->rowCount() === 0) {
+        $pdo->exec("ALTER TABLE order_items ADD COLUMN size VARCHAR(10) DEFAULT NULL AFTER color");
+        error_log("add-order.php: Added 'size' column to order_items table");
+    }
+} catch (Exception $e) {
+    error_log("add-order.php: Warning - Could not check/add size column: " . $e->getMessage());
+}
+
 // Validate required fields
 $required = ['customerId','itemIds','quantities','paymentMethod','total'];
 foreach ($required as $field) {
@@ -99,20 +111,25 @@ foreach ($required as $field) {
     $itemIds = $input['itemIds'];  // These are actually SKUs now
     $quantities = $input['quantities'];
     $colors = $input['colors'] ?? []; // Color information for each item
+    $sizes = $input['sizes'] ?? []; // Size information for each item
     
     // Debug the itemIds array
     error_log("add-order.php: itemIds array: " . print_r($itemIds, true));
     error_log("add-order.php: quantities array: " . print_r($quantities, true));
     error_log("add-order.php: colors array: " . print_r($colors, true));
+    error_log("add-order.php: sizes array: " . print_r($sizes, true));
     
     if (!is_array($itemIds) || !is_array($quantities) || count($itemIds)!==count($quantities)) {
     echo json_encode(['success'=>false,'error'=>'Invalid items array']);
     exit;
 }
 
-// Ensure colors array has same length as items (fill with nulls if needed)
+// Ensure colors and sizes arrays have same length as items (fill with nulls if needed)
 if (count($colors) < count($itemIds)) {
     $colors = array_pad($colors, count($itemIds), null);
+}
+if (count($sizes) < count($itemIds)) {
+    $sizes = array_pad($sizes, count($itemIds), null);
 }
 
 $paymentMethod = $input['paymentMethod'];
@@ -178,16 +195,17 @@ try {
     
     // Prepare statements for order items and stock updates
     $priceStmt = $pdo->prepare("SELECT retailPrice FROM items WHERE sku = ?");
-    $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price, color) VALUES (?, ?, ?, ?, ?, ?)");
+    $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price, color, size) VALUES (?, ?, ?, ?, ?, ?, ?)");
     
     // Process each item (SKU)
     for ($i = 0; $i < count($itemIds); $i++) {
         $sku = $itemIds[$i];
         $quantity = (int)$quantities[$i];
         $color = !empty($colors[$i]) ? $colors[$i] : null;
+        $size = !empty($sizes[$i]) ? $sizes[$i] : null;
         
         // Debug each SKU being processed
-        error_log("add-order.php: Processing item $i: SKU='$sku', Quantity=$quantity, Color='$color'");
+        error_log("add-order.php: Processing item $i: SKU='$sku', Quantity=$quantity, Color='$color', Size='$size'");
         
         // Check if SKU is null or empty
         if (empty($sku)) {
@@ -207,24 +225,91 @@ try {
         // Generate order item ID
         $orderItemId = 'OI' . str_pad($itemCount + $i + 1, 10, '0', STR_PAD_LEFT);
         
-        // Insert order item with color information
-        error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$sku, Qty=$quantity, Price=$price, Color=$color");
-        $orderItemStmt->execute([$orderItemId, $orderId, $sku, $quantity, $price, $color]);
+        // Insert order item with color and size information
+        error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$sku, Qty=$quantity, Price=$price, Color=$color, Size=$size");
+        $orderItemStmt->execute([$orderItemId, $orderId, $sku, $quantity, $price, $color, $size]);
         
-        // Handle stock reduction using direct function call instead of HTTP request
-        if (!empty($color)) {
+        // Handle stock reduction - prioritize size-specific, then color-specific, then general
+        $stockReduced = false;
+        
+        if (!empty($size)) {
+            // Size-specific stock reduction - need to get color ID if color is specified
+            $colorId = null;
+            if (!empty($color)) {
+                $colorStmt = $pdo->prepare("SELECT id FROM item_colors WHERE item_sku = ? AND color_name = ? AND is_active = 1");
+                $colorStmt->execute([$sku, $color]);
+                $colorResult = $colorStmt->fetch(PDO::FETCH_ASSOC);
+                $colorId = $colorResult ? $colorResult['id'] : null;
+            }
+            
+            // Use size-specific stock reduction function from item_sizes.php
+            include_once __DIR__ . '/item_sizes.php';
+            
+            // Manually reduce size-specific stock
+            try {
+                $whereClause = "item_sku = ? AND size_code = ? AND is_active = 1";
+                $params = [$sku, $size];
+                
+                if ($colorId) {
+                    $whereClause .= " AND color_id = ?";
+                    $params[] = $colorId;
+                } else {
+                    $whereClause .= " AND color_id IS NULL";
+                }
+                
+                // Reduce size-specific stock
+                $sizeStockStmt = $pdo->prepare("UPDATE item_sizes SET stock_level = GREATEST(stock_level - ?, 0) WHERE $whereClause");
+                $sizeStockStmt->execute(array_merge([$quantity], $params));
+                
+                // Sync stock levels using functions from item_sizes.php
+                if ($colorId) {
+                    // Sync color stock with its sizes
+                    $colorSyncStmt = $pdo->prepare("
+                        UPDATE item_colors 
+                        SET stock_level = (
+                            SELECT COALESCE(SUM(stock_level), 0) 
+                            FROM item_sizes 
+                            WHERE color_id = ? AND is_active = 1
+                        ) 
+                        WHERE id = ?
+                    ");
+                    $colorSyncStmt->execute([$colorId, $colorId]);
+                }
+                
+                // Sync total item stock with all sizes
+                $totalSyncStmt = $pdo->prepare("
+                    UPDATE items 
+                    SET stockLevel = (
+                        SELECT COALESCE(SUM(stock_level), 0) 
+                        FROM item_sizes 
+                        WHERE item_sku = ? AND is_active = 1
+                    ) 
+                    WHERE sku = ?
+                ");
+                $totalSyncStmt->execute([$sku, $sku]);
+                
+                $stockReduced = true;
+                error_log("add-order.php: Size-specific stock reduced for SKU '$sku', Size '$size', Color '$color'");
+            } catch (Exception $e) {
+                error_log("add-order.php: ERROR - Failed to reduce size-specific stock: " . $e->getMessage());
+            }
+        }
+        
+        if (!$stockReduced && !empty($color)) {
             // Use color-specific stock reduction with direct function call (no nested transaction)
             $stockReduced = reduceStockForSale($pdo, $sku, $color, $quantity, false);
-            if (!$stockReduced) {
+            if ($stockReduced) {
+                error_log("add-order.php: Color-specific stock reduced for SKU '$sku', Color '$color'");
+            } else {
                 error_log("add-order.php: WARNING - Failed to reduce color stock for SKU '$sku', Color '$color'");
-                // Fall back to regular stock reduction
-                $updateStockStmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");
-                $updateStockStmt->execute([$quantity, $sku]);
             }
-        } else {
-            // Regular stock reduction for items without colors
+        }
+        
+        if (!$stockReduced) {
+            // Fall back to regular stock reduction for items without colors/sizes
             $updateStockStmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");
             $updateStockStmt->execute([$quantity, $sku]);
+            error_log("add-order.php: General stock reduced for SKU '$sku'");
         }
     }
     

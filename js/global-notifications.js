@@ -67,25 +67,45 @@ class WhimsicalFrogNotifications {
         
         const config = this.getTypeConfig(type);
         
-        notification.style.cssText = `
-            background: ${config.background};
-            border: 2px solid ${config.border};
-            color: ${config.color};
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 12px;
-            box-shadow: 0 10px 25px ${config.shadow};
-            backdrop-filter: blur(10px);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            opacity: 0;
-            transform: translateX(100%) scale(0.9);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: auto;
-            position: relative;
-            overflow: hidden;
-        `;
+        // Apply base styles without colors for success notifications (to allow CSS override)
+        if (type === 'success') {
+            notification.style.cssText = `
+                border-radius: 12px;
+                padding: 16px 20px;
+                margin-bottom: 12px;
+                box-shadow: 0 10px 25px ${config.shadow};
+                backdrop-filter: blur(10px);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 14px;
+                font-weight: 500;
+                opacity: 0;
+                transform: translateX(100%) scale(0.9);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                pointer-events: auto;
+                position: relative;
+                overflow: hidden;
+            `;
+        } else {
+            notification.style.cssText = `
+                background: ${config.background};
+                border: 2px solid ${config.border};
+                color: ${config.color};
+                border-radius: 12px;
+                padding: 16px 20px;
+                margin-bottom: 12px;
+                box-shadow: 0 10px 25px ${config.shadow};
+                backdrop-filter: blur(10px);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-size: 14px;
+                font-weight: 500;
+                opacity: 0;
+                transform: translateX(100%) scale(0.9);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                pointer-events: auto;
+                position: relative;
+                overflow: hidden;
+            `;
+        }
 
         notification.innerHTML = `
             <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">

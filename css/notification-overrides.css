@@ -78,10 +78,43 @@ div[class*="wf-notification"]:has(div:contains("✅")) {
 /* Success notification styling using CSS variables */
 .wf-success-notification {
     background: var(--wf-notification-success-bg) !important;
-    border-color: var(--wf-notification-success-border) !important;
+    border: 2px solid var(--wf-notification-success-border) !important;
     color: var(--wf-notification-success-text) !important;
 }
 
 .wf-success-notification * {
     color: var(--wf-notification-success-text) !important;
+}
+
+.wf-success-notification .wf-notification-title {
+    color: var(--wf-notification-success-text) !important;
+}
+
+.wf-success-notification .wf-notification-message {
+    color: var(--wf-notification-success-text) !important;
+}
+
+.wf-success-notification .wf-notification-close {
+    color: var(--wf-notification-success-text) !important;
+}
+
+/* Add to Cart Button Styling in Item Details Modal */
+.detailed-product-modal .add-to-cart-btn,
+.modal-content .add-to-cart-btn,
+[class*="modal"] .add-to-cart-btn,
+button[onclick*="addDetailedToCart"] {
+    background: var(--wf-brand-green) !important;
+    border-color: var(--wf-brand-green-dark) !important;
+    color: white !important;
+}
+
+.detailed-product-modal .add-to-cart-btn:hover,
+.modal-content .add-to-cart-btn:hover,
+[class*="modal"] .add-to-cart-btn:hover,
+button[onclick*="addDetailedToCart"]:hover {
+    background: var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-dark) !important;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(135, 172, 58, 0.3);
 } 

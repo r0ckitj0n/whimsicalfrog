@@ -6,8 +6,6 @@
     --wf-brand-green: #87ac3a;
     --wf-brand-green-dark: #6b8e23;
     --wf-brand-green-darker: #556B2F;
-    /* Temporary test color to verify CSS is applying */
-    --wf-test-color: #ff6b35;
 }
 
 /* NUCLEAR OPTION: Override ALL notification styling with maximum specificity */
@@ -198,12 +196,23 @@ div#detailedProductModal div div div div button[onclick*="addDetailedToCart"].w-
 div#detailedProductModal div div div div button[onclick*="addDetailedToCart"].w-full,
 div#detailedProductModal div div div div button[onclick*="addDetailedToCart"],
 div#detailedProductModal button[onclick*="addDetailedToCart"] {
-    background: var(--wf-test-color) !important;
-    background-color: var(--wf-test-color) !important;
-    border: 2px solid #d63384 !important;
-    border-color: #d63384 !important;
+    background: var(--wf-brand-green) !important;
+    background-color: var(--wf-brand-green) !important;
+    border: 2px solid var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-dark) !important;
     color: white !important;
     text-shadow: none !important;
+}
+
+/* Target ALL child elements within Add to Cart button to ensure white text */
+div#detailedProductModal button[onclick*="addDetailedToCart"] *,
+.wf-add-to-cart-btn *,
+#detailedProductModal button[onclick*="addDetailedToCart"] span,
+#detailedProductModal button[onclick*="addDetailedToCart"] svg,
+#detailedProductModal button[onclick*="addDetailedToCart"] text,
+button[onclick*="addDetailedToCart"] * {
+    color: white !important;
+    fill: white !important;
 }
 
 /* SIMPLE CUSTOM CLASS APPROACH - Should have highest priority */
@@ -214,6 +223,11 @@ div#detailedProductModal button[onclick*="addDetailedToCart"] {
     border-color: var(--wf-brand-green-dark) !important;
     color: white !important;
     text-shadow: none !important;
+}
+
+.wf-add-to-cart-btn * {
+    color: white !important;
+    fill: white !important;
 }
 
 .wf-add-to-cart-btn:hover {

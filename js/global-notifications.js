@@ -52,13 +52,15 @@ class WhimsicalFrogNotifications {
         // Debug logging
         console.log(`Notification ${id}: duration=${duration}, persistent=${persistent}, type=${type}`);
 
-        // Auto-remove if not persistent
+        // Auto-remove if not persistent (this should work for ALL non-persistent notifications)
         if (!persistent && duration > 0) {
             console.log(`Setting timeout for notification ${id} with duration ${duration}ms`);
             setTimeout(() => {
                 console.log(`Auto-removing notification ${id} after ${duration}ms`);
                 this.remove(id);
             }, duration);
+        } else if (persistent) {
+            console.log(`Notification ${id} is persistent - will not auto-dismiss`);
         }
 
         return id;
@@ -122,19 +124,25 @@ class WhimsicalFrogNotifications {
             this.remove(id);
         });
 
-        // Also add click-to-dismiss to the notification content area
+        // Prevent event bubbling on button clicks
         notification.addEventListener('mousedown', (event) => {
-            event.stopPropagation();
+            console.log(`Notification ${id} mousedown event`);
+            // Don't stop propagation here - let the click through for dismiss
         });
 
         // Add hover effect to indicate clickability
         notification.addEventListener('mouseenter', () => {
             notification.style.transform = 'translateX(0) scale(1.02)';
+            notification.style.cursor = 'pointer';
         });
 
         notification.addEventListener('mouseleave', () => {
             notification.style.transform = 'translateX(0) scale(1)';
         });
+
+        // Make the entire notification clearly clickable
+        notification.style.cursor = 'pointer';
+        notification.title = 'Click to dismiss';
 
         // Create HTML content without inline color styles for success notifications
         if (type === 'success') {
@@ -332,31 +340,38 @@ window.wfNotifications = new WhimsicalFrogNotifications();
 
 // Global convenience functions that replace alert(), showToast(), etc.
 window.showNotification = (message, type = 'info', options = {}) => {
+    console.log('showNotification called:', {message, type, options});
     return window.wfNotifications.show(message, type, options);
 };
 
 window.showSuccess = (message, options = {}) => {
+    console.log('showSuccess called:', {message, options});
     return window.wfNotifications.success(message, options);
 };
 
 window.showError = (message, options = {}) => {
+    console.log('showError called:', {message, options});
     return window.wfNotifications.error(message, options);
 };
 
 window.showWarning = (message, options = {}) => {
+    console.log('showWarning called:', {message, options});
     return window.wfNotifications.warning(message, options);
 };
 
 window.showInfo = (message, options = {}) => {
+    console.log('showInfo called:', {message, options});
     return window.wfNotifications.info(message, options);
 };
 
 window.showValidation = (message, options = {}) => {
+    console.log('showValidation called:', {message, options});
     return window.wfNotifications.validation(message, options);
 };
 
 // Replace common alert patterns
 window.alert = (message) => {
+    console.log('Alert called with message:', message);
     return window.wfNotifications.info(message, { persistent: true });
 };
 

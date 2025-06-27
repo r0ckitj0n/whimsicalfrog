@@ -587,21 +587,7 @@ async function showDetailedModal(sku) {
         const item = data.item;
         const images = data.images || [];
         
-        // Remove any existing modal
-        const existingModal = document.getElementById('detailedProductModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-        
-        // Create modal container if it doesn't exist
-        let modalContainer = document.getElementById('detailedModalContainer');
-        if (!modalContainer) {
-            modalContainer = document.createElement('div');
-            modalContainer.id = 'detailedModalContainer';
-            document.body.appendChild(modalContainer);
-        }
-        
-        // Use PHP to render the standardized modal component
+        // Render the modal using the API
         const modalResponse = await fetch('/api/render_detailed_modal.php', {
             method: 'POST',
             headers: {
@@ -613,47 +599,34 @@ async function showDetailedModal(sku) {
             })
         });
         
-        if (!modalResponse.ok) {
-            throw new Error('Failed to render modal');
-        }
+        const modalHtml = await modalResponse.text();
         
-        const modalHTML = await modalResponse.text();
-        modalContainer.innerHTML = modalHTML;
+        // Insert the modal HTML
+        const modalContainer = document.getElementById('detailedModalContainer');
+        modalContainer.innerHTML = modalHtml;
         
         // Show the modal
         const modal = document.getElementById('detailedProductModal');
         if (modal) {
             modal.style.display = 'flex';
-            
-            // Add modal-open class to prevent scrolling
             document.body.classList.add('modal-open');
             document.documentElement.classList.add('modal-open');
             
-            // Add click-outside-to-close functionality
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeDetailedModal();
-                }
-            });
+            // Load product options (colors, sizes) after modal is shown
+            if (typeof loadDetailedProductOptions === 'function') {
+                await loadDetailedProductOptions(sku);
+            }
             
-            // Add escape key to close
-            document.addEventListener('keydown', function escapeHandler(e) {
-                if (e.key === 'Escape') {
-                    closeDetailedModal();
-                    document.removeEventListener('keydown', escapeHandler);
-                }
-            });
-            
-            // Add enlarge tooltips to modal images
-            if (typeof addEnlargeTooltip === 'function') {
-                const modalImages = modal.querySelectorAll('img');
-                modalImages.forEach(img => addEnlargeTooltip(img));
+            // Check for sales and update price display
+            if (typeof checkAndDisplaySalePrice === 'function') {
+                const priceElement = modal.querySelector('#detailedPriceSection .text-2xl');
+                await checkAndDisplaySalePrice(item, priceElement, null, 'modal');
             }
         }
         
     } catch (error) {
         console.error('Error showing detailed modal:', error);
-        alert('Error loading product details. Please try again.');
+        alert('Error: ' + error.message);
     }
 }
 

@@ -129,12 +129,12 @@ if (!isset($GLOBALS['marketingHelper'])) {
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        max-height: 80vh;
+        max-height: 90vh;
     }
 
     .modal-content-scrollable {
         flex: 1;
-        max-height: calc(80vh - 80px); /* Account for header height */
+        max-height: calc(90vh - 80px); /* Account for header height */
         overflow-y: auto;
         overflow-x: hidden;
         /* Ensure smooth scrolling without double scrollbars */
@@ -175,6 +175,16 @@ if (!isset($GLOBALS['marketingHelper'])) {
         left: 0;
         width: 100%;
         height: 100%;
+    }
+    
+    /* Fix for shop page double scrollbar issue */
+    #shopPage {
+        overflow-x: hidden;
+    }
+    
+    /* Ensure product grid doesn't cause horizontal overflow */
+    #productsGrid {
+        overflow-x: hidden;
     }
 
     /* Popup Options Styling */
@@ -598,7 +608,7 @@ async function generateDetailedModal(item, images) {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Product Images -->
                     <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-lg overflow-hidden cursor-pointer relative group" style="height: 400px; max-height: 50vh; position: relative;" onclick="openImageViewer('${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}', '${item.productName}', images)">
+                        <div class="bg-gray-50 rounded-lg overflow-hidden cursor-pointer relative group" style="height: 400px; max-height: 50vh; position: relative;" onclick="openImageViewer('${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}', '${item.productName.replace(/'/g, "\\'")}', ${JSON.stringify(images)})">
                             <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain transition-transform group-hover:scale-105">
                         </div>
                         
@@ -716,7 +726,7 @@ function switchDetailedImage(imagePath, thumbnail) {
         alt_text: img.alt
     }));
     
-    imageContainer.setAttribute('onclick', `openImageViewer('${imagePath}', '${productName}', ${JSON.stringify(allImages)})`);
+    imageContainer.setAttribute('onclick', `openImageViewer('${imagePath}', '${productName.replace(/'/g, "\\'")}', ${JSON.stringify(allImages)})`);
     
     // Update thumbnail borders
     const thumbs = thumbnail.parentElement.children;

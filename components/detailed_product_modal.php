@@ -49,7 +49,7 @@ function renderDetailedProductModal($item, $images = []) {
                                         </span>
                                     </div>
                                     
-                                    <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageZoom()">
+                                    <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageZoom(document.getElementById('detailedMainImage').src)">
                                         <?php if (!empty($images)): ?>
                                             <img id="detailedMainImage" 
                                                  src="<?php echo htmlspecialchars($images[0]['image_path']); ?>" 
@@ -76,7 +76,7 @@ function renderDetailedProductModal($item, $images = []) {
                                 <div class="flex space-x-2 overflow-x-auto">
                                     <?php foreach ($images as $index => $image): ?>
                                     <div class="flex-shrink-0 w-16 h-16 border-2 <?php echo $index === 0 ? 'border-green-500' : 'border-gray-200'; ?> rounded cursor-pointer hover:border-green-400 transition-colors"
-                                         onclick="switchDetailedImage('<?php echo htmlspecialchars($image['image_path']); ?>', this)">
+                                         onclick="switchDetailedImage('<?php echo htmlspecialchars($image['image_path']); ?>')">
                                         <img src="<?php echo htmlspecialchars($image['image_path']); ?>" 
                                              alt="<?php echo htmlspecialchars($item['name']); ?> - Image <?php echo $index + 1; ?>"
                                              class="w-full h-full object-contain rounded">
@@ -263,311 +263,322 @@ function renderDetailedProductModal($item, $images = []) {
     </div>
     
     <script>
-    // Global variable to store current item data for sale checking
-    let currentDetailedItem = null;
-    
-    // Switch main image when thumbnail is clicked
-    function switchDetailedImage(imagePath, thumbnail) {
-        const mainImage = document.getElementById('detailedMainImage');
-        if (mainImage) {
-            mainImage.src = imagePath;
-        }
+    // Ensure functions are immediately available when script loads
+    (function() {
+        // Current item data
+        let currentDetailedItem = null;
         
-        // Update active thumbnail
-        const thumbnails = thumbnail.parentElement.querySelectorAll('div');
-        thumbnails.forEach(thumb => {
-            thumb.classList.remove('border-green-500');
-            thumb.classList.add('border-gray-200');
-        });
-        thumbnail.classList.remove('border-gray-200');
-        thumbnail.classList.add('border-green-500');
-    }
-    
-    // Open image zoom modal
-    function openImageZoom() {
-        const mainImage = document.getElementById('detailedMainImage');
-        const zoomedImage = document.getElementById('zoomedImage');
-        const zoomModal = document.getElementById('imageZoomModal');
-        
-        if (mainImage && zoomedImage && zoomModal) {
-            zoomedImage.src = mainImage.src;
-            zoomedImage.alt = mainImage.alt;
-            zoomModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-    }
-    
-    // Close image zoom modal
-    function closeImageZoom() {
-        const zoomModal = document.getElementById('imageZoomModal');
-        if (zoomModal) {
-            zoomModal.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-    }
-    
-    // Adjust quantity
-    function adjustDetailedQuantity(change) {
-        const quantityInput = document.getElementById('detailedQuantity');
-        if (quantityInput) {
-            const currentValue = parseInt(quantityInput.value) || 1;
-            const newValue = Math.max(1, Math.min(parseInt(quantityInput.max) || 99, currentValue + change));
-            quantityInput.value = newValue;
-        }
-    }
-    
-    // Toggle additional details
-    function toggleDetailedInfo() {
-        const content = document.getElementById('detailedInfoContent');
-        const chevron = document.getElementById('detailedInfoChevron');
-        
-        if (content && chevron) {
-            const isHidden = content.classList.contains('hidden');
-            if (isHidden) {
-                content.classList.remove('hidden');
-                chevron.style.transform = 'rotate(180deg)';
-            } else {
-                content.classList.add('hidden');
-                chevron.style.transform = 'rotate(0deg)';
+        // Adjust quantity in detailed modal
+        function adjustDetailedQuantity(change) {
+            const quantityInput = document.getElementById('detailedQuantity');
+            if (quantityInput) {
+                const currentValue = parseInt(quantityInput.value) || 1;
+                const newValue = Math.max(1, Math.min(999, currentValue + change));
+                quantityInput.value = newValue;
             }
         }
-    }
-    
-    // Check for active sales and update display
-    async function checkDetailedItemSale(sku) {
-        try {
-            const response = await fetch(`/api/sales.php?action=get_active_sales&item_sku=${sku}`);
-            const data = await response.json();
-            
-            const saleBadge = document.getElementById('detailedSaleBadge');
-            const currentPriceEl = document.getElementById('detailedCurrentPrice');
-            const originalPriceEl = document.getElementById('detailedOriginalPrice');
-            const savingsEl = document.getElementById('detailedSavings');
-            const saleTextEl = document.getElementById('detailedSaleText');
-            
-            if (data.success && data.sale) {
-                const sale = data.sale;
-                const originalPrice = parseFloat(currentDetailedItem.retailPrice);
-                const salePrice = originalPrice * (1 - sale.discount_percentage / 100);
-                const savings = originalPrice - salePrice;
-                
-                // Show sale badge
-                if (saleBadge && saleTextEl) {
-                    saleTextEl.textContent = `${sale.discount_percentage}% OFF`;
-                    saleBadge.classList.remove('hidden');
-                }
-                
-                // Update prices
-                if (currentPriceEl) {
-                    currentPriceEl.textContent = `$${salePrice.toFixed(2)}`;
-                    currentPriceEl.classList.remove('text-green-600');
-                    currentPriceEl.classList.add('text-red-600');
-                }
-                
-                if (originalPriceEl) {
-                    originalPriceEl.textContent = `$${originalPrice.toFixed(2)}`;
-                    originalPriceEl.classList.remove('hidden');
-                }
-                
-                if (savingsEl) {
-                    savingsEl.textContent = `Save $${savings.toFixed(2)}`;
-                    savingsEl.classList.remove('hidden');
-                }
-            } else {
-                // No sale - hide sale elements
-                if (saleBadge) saleBadge.classList.add('hidden');
-                if (originalPriceEl) originalPriceEl.classList.add('hidden');
-                if (savingsEl) savingsEl.classList.add('hidden');
-                if (currentPriceEl) {
-                    currentPriceEl.classList.remove('text-red-600');
-                    currentPriceEl.classList.add('text-green-600');
-                }
-            }
-        } catch (error) {
-            console.log('Error checking sale status:', error);
-        }
-    }
-    
-    // Check for limited stock and show badge
-    function checkDetailedLimitedStock(stockLevel) {
-        const stockBadge = document.getElementById('detailedStockBadge');
-        if (stockBadge) {
-            if (stockLevel > 0 && stockLevel < 5) {
-                stockBadge.classList.remove('hidden');
-            } else {
-                stockBadge.classList.add('hidden');
-            }
-        }
-    }
-    
-    // Load product options (colors, sizes) for the detailed modal
-    async function loadDetailedProductOptions(sku) {
-        const optionsContainer = document.getElementById('detailedOptionsContainer');
-        if (!optionsContainer) return;
         
-        try {
-            // Load colors
-            const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${sku}`);
-            const colorData = await colorResponse.json();
+        // Toggle additional details
+        function toggleDetailedInfo() {
+            const content = document.getElementById('detailedInfoContent');
+            const chevron = document.getElementById('detailedInfoChevron');
             
-            let optionsHTML = '';
-            
-            if (colorData.success && colorData.colors.length > 0) {
-                optionsHTML += `
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Color:</label>
-                        <select class="detailed-color-select w-full border border-gray-300 rounded px-2 py-1 text-xs" ${colorData.colors.length > 1 ? 'data-required="true"' : ''}>
-                            ${colorData.colors.length > 1 ? '<option value="">Choose color...</option>' : ''}
-                            ${colorData.colors.map(color => `
-                                <option value="${color.color_name}" ${colorData.colors.length === 1 ? 'selected' : ''}>
-                                    ${color.color_name} ${color.stock_level > 0 ? `(${color.stock_level} available)` : '(Out of stock)'}
-                                </option>
-                            `).join('')}
-                        </select>
-                    </div>
-                `;
+            if (content && chevron) {
+                const isHidden = content.classList.contains('hidden');
+                if (isHidden) {
+                    content.classList.remove('hidden');
+                    chevron.style.transform = 'rotate(180deg)';
+                } else {
+                    content.classList.add('hidden');
+                    chevron.style.transform = 'rotate(0deg)';
+                }
             }
+        }
+        
+        // Switch main image in detailed modal
+        function switchDetailedImage(imageUrl) {
+            const mainImage = document.getElementById('detailedMainImage');
+            if (mainImage) {
+                mainImage.src = imageUrl;
+                
+                // Update thumbnail borders
+                const thumbnails = document.querySelectorAll('#detailedProductModal .flex-shrink-0');
+                thumbnails.forEach(thumb => {
+                    const thumbImg = thumb.querySelector('img');
+                    if (thumbImg && thumbImg.src === imageUrl) {
+                        thumb.classList.remove('border-gray-200');
+                        thumb.classList.add('border-green-500');
+                    } else {
+                        thumb.classList.remove('border-green-500');
+                        thumb.classList.add('border-gray-200');
+                    }
+                });
+            }
+        }
+        
+        // Image zoom functionality
+        function openImageZoom(imageSrc) {
+            const zoomModal = document.getElementById('imageZoomModal');
+            const zoomImage = document.getElementById('zoomedImage');
             
-            // Load sizes
-            const sizeResponse = await fetch(`/api/item_sizes.php?action=get_sizes&item_sku=${sku}&color_id=null`);
-            const sizeData = await sizeResponse.json();
+            if (zoomModal && zoomImage) {
+                zoomImage.src = imageSrc;
+                zoomModal.style.display = 'flex';
+                zoomModal.classList.remove('hidden');
+            }
+        }
+        
+        function closeImageZoom() {
+            const zoomModal = document.getElementById('imageZoomModal');
+            if (zoomModal) {
+                zoomModal.style.display = 'none';
+                zoomModal.classList.add('hidden');
+            }
+        }
+        
+        // Check for active sales and update display
+        async function checkDetailedItemSale(sku) {
+            try {
+                const response = await fetch(`/api/sales.php?action=get_active_sales&item_sku=${sku}`);
+                const data = await response.json();
+                
+                const saleBadge = document.getElementById('detailedSaleBadge');
+                const currentPriceEl = document.getElementById('detailedCurrentPrice');
+                const originalPriceEl = document.getElementById('detailedOriginalPrice');
+                const savingsEl = document.getElementById('detailedSavings');
+                const saleTextEl = document.getElementById('detailedSaleText');
+                
+                if (data.success && data.sale) {
+                    const sale = data.sale;
+                    const originalPrice = parseFloat(currentDetailedItem.retailPrice);
+                    const salePrice = originalPrice * (1 - sale.discount_percentage / 100);
+                    const savings = originalPrice - salePrice;
+                    
+                    // Show sale badge
+                    if (saleBadge && saleTextEl) {
+                        saleTextEl.textContent = `${sale.discount_percentage}% OFF`;
+                        saleBadge.classList.remove('hidden');
+                    }
+                    
+                    // Update prices
+                    if (currentPriceEl) {
+                        currentPriceEl.textContent = `$${salePrice.toFixed(2)}`;
+                        currentPriceEl.classList.remove('text-green-600');
+                        currentPriceEl.classList.add('text-red-600');
+                    }
+                    
+                    if (originalPriceEl) {
+                        originalPriceEl.textContent = `$${originalPrice.toFixed(2)}`;
+                        originalPriceEl.classList.remove('hidden');
+                    }
+                    
+                    if (savingsEl) {
+                        savingsEl.textContent = `Save $${savings.toFixed(2)}`;
+                        savingsEl.classList.remove('hidden');
+                    }
+                } else {
+                    // No sale - hide sale elements
+                    if (saleBadge) saleBadge.classList.add('hidden');
+                    if (originalPriceEl) originalPriceEl.classList.add('hidden');
+                    if (savingsEl) savingsEl.classList.add('hidden');
+                    if (currentPriceEl) {
+                        currentPriceEl.classList.remove('text-red-600');
+                        currentPriceEl.classList.add('text-green-600');
+                    }
+                }
+            } catch (error) {
+                console.log('Error checking sale status:', error);
+            }
+        }
+        
+        // Check for limited stock and show badge
+        function checkDetailedLimitedStock(stockLevel) {
+            const stockBadge = document.getElementById('detailedStockBadge');
+            if (stockBadge) {
+                if (stockLevel > 0 && stockLevel < 5) {
+                    stockBadge.classList.remove('hidden');
+                } else {
+                    stockBadge.classList.add('hidden');
+                }
+            }
+        }
+        
+        // Load product options (colors, sizes) for the detailed modal
+        async function loadDetailedProductOptions(sku) {
+            const optionsContainer = document.getElementById('detailedOptionsContainer');
+            if (!optionsContainer) return;
             
-            if (sizeData.success && sizeData.sizes.length > 0) {
-                optionsHTML += `
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Size:</label>
-                        <select class="detailed-size-select w-full border border-gray-300 rounded px-2 py-1 text-xs" ${sizeData.sizes.length > 1 ? 'data-required="true"' : ''}>
-                            ${sizeData.sizes.length > 1 ? '<option value="">Choose size...</option>' : ''}
-                            ${sizeData.sizes.map(size => {
-                                const priceAdjustment = parseFloat(size.price_adjustment || 0);
-                                const adjustmentText = priceAdjustment !== 0 ? 
-                                    ` (${priceAdjustment > 0 ? '+' : ''}$${priceAdjustment.toFixed(2)})` : '';
-                                return `
-                                    <option value="${size.size_code}" ${sizeData.sizes.length === 1 ? 'selected' : ''}>
-                                        ${size.size_name}${adjustmentText} ${size.stock_level > 0 ? `(${size.stock_level} available)` : '(Out of stock)'}
+            try {
+                // Load colors
+                const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${sku}`);
+                const colorData = await colorResponse.json();
+                
+                let optionsHTML = '';
+                
+                if (colorData.success && colorData.colors.length > 0) {
+                    optionsHTML += `
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Color:</label>
+                            <select class="detailed-color-select w-full border border-gray-300 rounded px-2 py-1 text-xs" ${colorData.colors.length > 1 ? 'data-required="true"' : ''}>
+                                ${colorData.colors.length > 1 ? '<option value="">Choose color...</option>' : ''}
+                                ${colorData.colors.map(color => `
+                                    <option value="${color.color_name}" ${colorData.colors.length === 1 ? 'selected' : ''}>
+                                        ${color.color_name} ${color.stock_level > 0 ? `(${color.stock_level} available)` : '(Out of stock)'}
                                     </option>
-                                `;
-                            }).join('')}
-                        </select>
-                    </div>
-                `;
+                                `).join('')}
+                            </select>
+                        </div>
+                    `;
+                }
+                
+                // Load sizes
+                const sizeResponse = await fetch(`/api/item_sizes.php?action=get_sizes&item_sku=${sku}&color_id=null`);
+                const sizeData = await sizeResponse.json();
+                
+                if (sizeData.success && sizeData.sizes.length > 0) {
+                    optionsHTML += `
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Size:</label>
+                            <select class="detailed-size-select w-full border border-gray-300 rounded px-2 py-1 text-xs" ${sizeData.sizes.length > 1 ? 'data-required="true"' : ''}>
+                                ${sizeData.sizes.length > 1 ? '<option value="">Choose size...</option>' : ''}
+                                ${sizeData.sizes.map(size => {
+                                    const priceAdjustment = parseFloat(size.price_adjustment || 0);
+                                    const adjustmentText = priceAdjustment !== 0 ? 
+                                        ` (${priceAdjustment > 0 ? '+' : ''}$${priceAdjustment.toFixed(2)})` : '';
+                                    return `
+                                        <option value="${size.size_code}" ${sizeData.sizes.length === 1 ? 'selected' : ''}>
+                                            ${size.size_name}${adjustmentText} ${size.stock_level > 0 ? `(${size.stock_level} available)` : '(Out of stock)'}
+                                        </option>
+                                    `;
+                                }).join('')}
+                            </select>
+                        </div>
+                    `;
+                }
+                
+                optionsContainer.innerHTML = optionsHTML;
+                
+            } catch (error) {
+                console.log('Error loading detailed product options:', error);
+            }
+        }
+        
+        // Add to cart from detailed modal
+        function addDetailedToCart(sku) {
+            const modal = document.getElementById('detailedProductModal');
+            if (!modal) return;
+            
+            const quantityInput = document.getElementById('detailedQuantity');
+            const colorSelect = modal.querySelector('.detailed-color-select');
+            const sizeSelect = modal.querySelector('.detailed-size-select');
+            
+            const quantity = parseInt(quantityInput?.value) || 1;
+            const selectedColor = colorSelect?.value || null;
+            const selectedSize = sizeSelect?.value || null;
+            
+            // Validate required selections
+            if (colorSelect && colorSelect.dataset.required === 'true' && !selectedColor) {
+                alert('Please select a color before adding to cart.');
+                return;
             }
             
-            optionsContainer.innerHTML = optionsHTML;
+            if (sizeSelect && sizeSelect.dataset.required === 'true' && !selectedSize) {
+                alert('Please select a size before adding to cart.');
+                return;
+            }
             
-        } catch (error) {
-            console.log('Error loading detailed product options:', error);
+            // Get item data from the modal
+            const itemName = modal.querySelector('h2').textContent;
+            const priceText = modal.querySelector('#detailedCurrentPrice').textContent;
+            const price = parseFloat(priceText.replace('$', ''));
+            const imageUrl = modal.querySelector('#detailedMainImage')?.src || 'images/items/placeholder.png';
+            
+            // Add to cart
+            if (typeof window.cart !== 'undefined') {
+                const cartItem = {
+                    sku: sku,
+                    name: itemName,
+                    price: price,
+                    image: imageUrl,
+                    quantity: quantity
+                };
+                
+                if (selectedColor) cartItem.color = selectedColor;
+                if (selectedSize) cartItem.size = selectedSize;
+                
+                window.cart.addItem(cartItem);
+                
+                // Show confirmation and close modal
+                const colorText = selectedColor ? ` - ${selectedColor}` : '';
+                const sizeText = selectedSize ? ` - ${selectedSize}` : '';
+                const quantityText = quantity > 1 ? ` (${quantity})` : '';
+                
+                alert(`${itemName}${colorText}${sizeText}${quantityText} added to your cart!`);
+                closeDetailedModal();
+            } else {
+                console.error('Cart functionality not available');
+            }
         }
-    }
-    
-    // Add to cart from detailed modal
-    function addDetailedToCart(sku) {
-        const modal = document.getElementById('detailedProductModal');
-        if (!modal) return;
         
-        const quantityInput = document.getElementById('detailedQuantity');
-        const colorSelect = modal.querySelector('.detailed-color-select');
-        const sizeSelect = modal.querySelector('.detailed-size-select');
-        
-        const quantity = parseInt(quantityInput?.value) || 1;
-        const selectedColor = colorSelect?.value || null;
-        const selectedSize = sizeSelect?.value || null;
-        
-        // Validate required selections
-        if (colorSelect && colorSelect.dataset.required === 'true' && !selectedColor) {
-            alert('Please select a color before adding to cart.');
-            return;
+        // Close modal function
+        function closeDetailedModal() {
+            const modal = document.getElementById('detailedProductModal');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
+                document.body.classList.remove('modal-open');
+                document.documentElement.classList.remove('modal-open');
+            }
+            closeImageZoom(); // Also close zoom if open
         }
         
-        if (sizeSelect && sizeSelect.dataset.required === 'true' && !selectedSize) {
-            alert('Please select a size before adding to cart.');
-            return;
+        // Close modal when clicking on overlay (but not on modal content)
+        function closeDetailedModalOnOverlay(event) {
+            if (event.target === event.currentTarget) {
+                closeDetailedModal();
+            }
         }
         
-        // Get item data from the modal
-        const itemName = modal.querySelector('h2').textContent;
-        const priceText = modal.querySelector('#detailedCurrentPrice').textContent;
-        const price = parseFloat(priceText.replace('$', ''));
-        const imageUrl = modal.querySelector('#detailedMainImage')?.src || 'images/items/placeholder.png';
+        // Function to show the detailed modal (called from shop page)
+        function showDetailedModalComponent(sku, itemData) {
+            currentDetailedItem = itemData;
+            const modal = document.getElementById('detailedProductModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.classList.remove('hidden');
+                document.body.classList.add('modal-open');
+                document.documentElement.classList.add('modal-open');
+                
+                // Load product options
+                loadDetailedProductOptions(sku);
+                
+                // Check for sales and limited stock
+                checkDetailedItemSale(sku);
+                checkDetailedLimitedStock(itemData.stockLevel || 0);
+            }
+        }
         
-        // Add to cart
-        if (typeof window.cart !== 'undefined') {
-            const cartItem = {
-                sku: sku,
-                name: itemName,
-                price: price,
-                image: imageUrl,
-                quantity: quantity
-            };
-            
-            if (selectedColor) cartItem.color = selectedColor;
-            if (selectedSize) cartItem.size = selectedSize;
-            
-            window.cart.addItem(cartItem);
-            
-            // Show confirmation and close modal
-            const colorText = selectedColor ? ` - ${selectedColor}` : '';
-            const sizeText = selectedSize ? ` - ${selectedSize}` : '';
-            const quantityText = quantity > 1 ? ` (${quantity})` : '';
-            
-            alert(`${itemName}${colorText}${sizeText}${quantityText} added to your cart!`);
-            closeDetailedModal();
-        } else {
-            console.error('Cart functionality not available');
-        }
-    }
-    
-    // Close modal function
-    function closeDetailedModal() {
-        const modal = document.getElementById('detailedProductModal');
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.add('hidden');
-            document.body.classList.remove('modal-open');
-            document.documentElement.classList.remove('modal-open');
-        }
-        closeImageZoom(); // Also close zoom if open
-    }
-    
-    // Close modal when clicking on overlay (but not on modal content)
-    function closeDetailedModalOnOverlay(event) {
-        if (event.target === event.currentTarget) {
-            closeDetailedModal();
-        }
-    }
-    
-    // Function to show the detailed modal (called from shop page)
-    function showDetailedModalComponent(sku, itemData) {
-        currentDetailedItem = itemData;
-        const modal = document.getElementById('detailedProductModal');
-        if (modal) {
-            modal.style.display = 'flex';
-            modal.classList.remove('hidden');
-            document.body.classList.add('modal-open');
-            document.documentElement.classList.add('modal-open');
-            
-            // Load product options
-            loadDetailedProductOptions(sku);
-            
-            // Check for sales and limited stock
-            checkDetailedItemSale(sku);
-            checkDetailedLimitedStock(itemData.stockLevel || 0);
-        }
-    }
-    
-    // Make all functions globally available
-    window.showDetailedModalComponent = showDetailedModalComponent;
-    window.addDetailedToCart = addDetailedToCart;
-    window.adjustDetailedQuantity = adjustDetailedQuantity;
-    window.toggleDetailedInfo = toggleDetailedInfo;
-    window.switchDetailedImage = switchDetailedImage;
-    window.openImageZoom = openImageZoom;
-    window.closeImageZoom = closeImageZoom;
-    window.closeDetailedModal = closeDetailedModal;
-    window.closeDetailedModalOnOverlay = closeDetailedModalOnOverlay;
-    window.loadDetailedProductOptions = loadDetailedProductOptions;
-    window.checkDetailedItemSale = checkDetailedItemSale;
-    window.checkDetailedLimitedStock = checkDetailedLimitedStock;
+        // Make all functions globally available immediately
+        window.showDetailedModalComponent = showDetailedModalComponent;
+        window.addDetailedToCart = addDetailedToCart;
+        window.adjustDetailedQuantity = adjustDetailedQuantity;
+        window.toggleDetailedInfo = toggleDetailedInfo;
+        window.switchDetailedImage = switchDetailedImage;
+        window.openImageZoom = openImageZoom;
+        window.closeImageZoom = closeImageZoom;
+        window.closeDetailedModal = closeDetailedModal;
+        window.closeDetailedModalOnOverlay = closeDetailedModalOnOverlay;
+        window.loadDetailedProductOptions = loadDetailedProductOptions;
+        window.checkDetailedItemSale = checkDetailedItemSale;
+        window.checkDetailedLimitedStock = checkDetailedLimitedStock;
+        
+        // Debug log to confirm functions are available
+        console.log('Detailed modal functions loaded:', {
+            toggleDetailedInfo: typeof window.toggleDetailedInfo,
+            closeDetailedModalOnOverlay: typeof window.closeDetailedModalOnOverlay,
+            addDetailedToCart: typeof window.addDetailedToCart
+        });
+    })();
     </script>
     
     <?php

@@ -477,22 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </main>
 
-<!-- Product popup template -->
-<div id="productPopup" class="product-popup">
-    <div class="popup-content">
-        <img class="popup-image" src="" alt="">
-        <div class="popup-details">
-            <div class="popup-name"></div>
-            <div class="popup-category"></div>
-            <div class="popup-description"></div>
-            <div class="popup-price"></div>
-            <div class="popup-actions">
-                <button class="popup-add-btn">Add to Cart</button>
-                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
-            </div>
-        </div>
-    </div>
-</div>
+<?php include 'components/global_popup.php'; ?>
 
 <!-- Quantity Modal -->
 <div id="quantityModal" class="modal-overlay hidden">
@@ -545,182 +530,33 @@ document.addEventListener('DOMContentLoaded', function() {
 const ROOM_NUMBER = <?php echo json_encode($roomNumber); ?>;
 const ROOM_TYPE = <?php echo json_encode($roomType); ?>;
 
-// Popup system variables
-let currentProduct = null;
-let popupTimeout = null;
-let popupOpen = false;
-let isShowingPopup = false;
-let lastShowTime = 0;
+// Global popup system is now handled by js/global-popup.js
 
+// Popup functions now use the global system
 function showPopup(element, product) {
-    const now = Date.now();
-    
-    // Reduce debounce time for better responsiveness
-    if (now - lastShowTime < 50) {
-        return;
+    if (typeof window.showGlobalPopup === 'function') {
+        window.showGlobalPopup(element, product);
+    } else {
+        console.error('Global popup system not available');
     }
-    lastShowTime = now;
-    
-    console.log('showPopup called with:', element, product);
-    
-    // Prevent rapid re-triggering of same popup (anti-flashing protection)
-    if (currentProduct && currentProduct.sku === product.sku && isShowingPopup) {
-        clearTimeout(popupTimeout);
-        return;
-    }
-    
-    clearTimeout(popupTimeout);
-    currentProduct = product;
-    isShowingPopup = true;
-    popupOpen = true;
-
-    const popup = document.getElementById('productPopup');
-    const popupImage = document.getElementById('popupImage');
-    const popupCategory = document.getElementById('popupCategory');
-    const popupTitle = document.getElementById('popupTitle');
-    const popupDescription = document.getElementById('popupDescription');
-    const popupPrice = document.getElementById('popupPrice');
-    const popupAddBtn = document.getElementById('popupAddBtn');
-
-    // Get the image URL - use SKU-based system
-    const imageUrl = `images/items/${product.sku}A.png`;
-
-    // Populate popup content
-    popupImage.src = imageUrl;
-    popupImage.onerror = function() {
-        this.src = 'images/items/placeholder.png';
-        this.onerror = null;
-    };
-    popupCategory.textContent = product.category ?? 'Category';
-    popupTitle.textContent = product.name ?? product.productName ?? 'Item Name';
-    popupDescription.textContent = product.description ?? 'No description available';
-    
-    // Check for sales and update price display
-    checkAndDisplaySalePrice(product, popupPrice, null, 'popup');
-
-    // Better positioning relative to the element
-    const rect = element.getBoundingClientRect();
-    const roomContainer = element.closest('.room-container');
-    const containerRect = roomContainer.getBoundingClientRect();
-
-    let left = rect.left - containerRect.left + rect.width + 10;
-    let top = rect.top - containerRect.top - 50;
-
-    // Show popup temporarily to get actual dimensions
-    popup.style.display = 'block';
-    popup.style.opacity = '';
-    popup.classList.add('show');
-
-    const popupRect = popup.getBoundingClientRect();
-    const popupWidth = popupRect.width;
-    const popupHeight = popupRect.height;
-
-    // Reset for measurement
-    popup.style.display = '';
-
-    // Adjust if popup would go off screen horizontally
-    if (left + popupWidth > containerRect.width) {
-        left = rect.left - containerRect.left - popupWidth - 10;
-    }
-    
-    // Adjust if popup would go off screen vertically (top)
-    if (top < 0) {
-        top = rect.top - containerRect.top + rect.height + 10;
-    }
-    
-    // Adjust if popup would go off screen vertically (bottom) - PREVENT DOUBLE SCROLLBAR
-    if (top + popupHeight > containerRect.height) {
-        // Try positioning above the element first
-        const topAbove = rect.top - containerRect.top - popupHeight - 10;
-        if (topAbove >= 0) {
-            top = topAbove;
-        } else {
-            // If still doesn't fit, position at bottom of container with padding
-            top = containerRect.height - popupHeight - 20;
-            // Ensure it doesn't go above the top
-            if (top < 0) {
-                top = 10;
-            }
-        }
-    }
-
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-
-    // Clear any inline styles that might interfere and show the popup
-    popup.style.opacity = '';
-    popup.classList.add('show');
-
-    // Make popup content clickable for product details
-    const popupContent = popup.querySelector('.popup-content');
-    popupContent.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent bubbling to background click handler
-        popup.classList.remove('show');
-        showProductDetails(product.sku);
-    };
-
-    // Add to cart functionality using global modal system
-    popupAddBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent triggering the popup content click and background
-        popup.classList.remove('show');
-        
-        // Use the global modal system
-        if (typeof window.showGlobalItemModal === 'function') {
-            window.showGlobalItemModal(product.sku);
-        } else {
-            console.error('Global modal system not available');
-        }
-    };
 }
 
 function hidePopup() {
-    // Clear any existing timeout
-    clearTimeout(popupTimeout);
-    
-    // Reduce delay for faster hiding when appropriate
-    popupTimeout = setTimeout(() => {
-        hidePopupImmediate();
-    }, 150);
+    if (typeof window.hideGlobalPopup === 'function') {
+        window.hideGlobalPopup();
+    }
 }
 
 function hidePopupImmediate() {
-    const popup = document.getElementById('productPopup');
-    if (popup && popup.classList.contains('show')) {
-        popup.classList.remove('show');
-        currentProduct = null;
-        popupOpen = false;
-        isShowingPopup = false;
+    if (typeof window.hideGlobalPopupImmediate === 'function') {
+        window.hideGlobalPopupImmediate();
     }
 }
 
-// Make functions globally available
+// Make functions globally available for backward compatibility
 window.showPopup = showPopup;
 window.hidePopup = hidePopup;
 window.hidePopupImmediate = hidePopupImmediate;
-
-// Keep popup visible when hovering over it
-document.getElementById('productPopup').addEventListener('mouseenter', () => {
-    clearTimeout(popupTimeout);
-    // Ensure popup stays visible while hovering
-    isShowingPopup = true;
-    popupOpen = true;
-});
-
-document.getElementById('productPopup').addEventListener('mouseleave', () => {
-    hidePopup();
-});
-
-// Simple document click listener for popup closing
-document.addEventListener('click', function(e) {
-    const popup = document.getElementById('productPopup');
-    
-    // Close popup if it's open and click is outside it
-    if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
-        hidePopupImmediate();
-    }
-});
 
 // Quantity modal functionality - now handled by global functions in cart.js
 // Local event listeners removed to prevent conflicts with global handlers
@@ -986,6 +822,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<!-- Load global popup script -->
+<script src="js/global-popup.js?v=<?php echo time(); ?>"></script>
 
 <!-- Load dynamic background script -->
 <script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>

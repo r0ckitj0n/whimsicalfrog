@@ -477,22 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </main>
 
-<!-- Product popup template -->
-<div id="productPopup" class="product-popup">
-    <div class="popup-content">
-        <img class="popup-image" src="" alt="">
-        <div class="popup-details">
-            <div class="popup-name"></div>
-            <div class="popup-category"></div>
-            <div class="popup-description"></div>
-            <div class="popup-price"></div>
-            <div class="popup-actions">
-                <button class="popup-add-btn">Add to Cart</button>
-                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
-            </div>
-        </div>
-    </div>
-</div>
+<?php include 'components/global_popup.php'; ?>
 
 <!-- Quantity modal now provided by centralized component -->
 
@@ -981,6 +966,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="js/room-functions.js?v=<?php echo time(); ?>"></script>
 <script src="js/cart.js?v=<?php echo time(); ?>"></script>
 <script src="js/sales.js?v=<?php echo time(); ?>"></script>
+<script src="js/global-popup.js?v=<?php echo time(); ?>"></script>
 <script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>
 
 <!-- Container for global item modal -->

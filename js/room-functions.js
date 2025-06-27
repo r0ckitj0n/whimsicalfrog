@@ -41,121 +41,31 @@ window.initializeRoom = function(roomNumber, roomType) {
 };
 
 /**
- * Universal popup system for all rooms
+ * Universal popup system for all rooms - now uses global system
  */
 window.showPopup = function(element, product) {
-    const now = Date.now();
-    
-    // Reduce debounce time for better responsiveness
-    if (now - window.roomState.lastShowTime < 50) {
-        return;
+    if (typeof window.showGlobalPopup === 'function') {
+        window.showGlobalPopup(element, product);
+    } else {
+        console.error('Global popup system not available');
     }
-    window.roomState.lastShowTime = now;
-    
-    // Prevent rapid re-triggering of same popup (anti-flashing protection)
-    if (window.roomState.currentProduct && window.roomState.currentProduct.sku === product.sku && window.roomState.isShowingPopup) {
-        clearTimeout(window.roomState.popupTimeout);
-        return;
-    }
-    
-    clearTimeout(window.roomState.popupTimeout);
-    window.roomState.currentProduct = product;
-    window.roomState.isShowingPopup = true;
-    window.roomState.popupOpen = true;
-
-    const popup = document.getElementById('productPopup');
-    const popupImage = document.getElementById('popupImage');
-    const popupCategory = document.getElementById('popupCategory');
-    const popupTitle = document.getElementById('popupTitle');
-    const popupDescription = document.getElementById('popupDescription');
-    const popupPrice = document.getElementById('popupPrice');
-    const popupAddBtn = document.getElementById('popupAddBtn');
-
-    if (!popup) {
-        console.error('Product popup not found on this page');
-        return;
-    }
-
-    // Get the image URL - use SKU-based system with fallback
-    const imageUrl = product.primaryImageUrl || `images/items/${product.sku}A.png`;
-
-    // Populate popup content
-    if (popupImage) {
-        popupImage.src = imageUrl;
-        popupImage.onerror = function() {
-            this.src = 'images/items/placeholder.png';
-            this.onerror = null;
-        };
-    }
-    
-    if (popupCategory) popupCategory.textContent = product.category || 'Category';
-    if (popupTitle) popupTitle.textContent = product.name || product.productName || 'Product';
-    if (popupDescription) {
-        const description = product.description || product.productDescription || 'No description available';
-        popupDescription.textContent = description;
-    }
-
-    // Handle pricing with sales integration
-    if (popupPrice && typeof window.checkAndDisplaySalePrice === 'function') {
-        window.checkAndDisplaySalePrice(product, popupPrice, null, 'popup');
-    } else if (popupPrice) {
-        const price = parseFloat(product.retailPrice || product.price || 0);
-        popupPrice.textContent = '$' + price.toFixed(2);
-    }
-
-    // Set up add to cart button
-    if (popupAddBtn) {
-        popupAddBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            hidePopupImmediate();
-            
-            // Use the global modal system
-            if (typeof window.showGlobalItemModal === 'function') {
-                window.showGlobalItemModal(product.sku);
-            } else if (typeof window.addToCartWithModal === 'function') {
-                const sku = product.sku;
-                const name = product.name || product.productName;
-                const price = parseFloat(product.retailPrice || product.price);
-                const image = imageUrl;
-                
-                window.addToCartWithModal(sku, name, price, image);
-            } else {
-                console.error('Global modal system not available');
-            }
-        };
-    }
-
-    // Position popup relative to the clicked element
-    positionPopup(popup, element);
-    
-    // Show popup with transition
-    popup.classList.add('show');
 };
 
 /**
- * Hide popup with delay for mouse movement
+ * Hide popup with delay for mouse movement - now uses global system
  */
 window.hidePopup = function() {
-    // Clear any existing timeout
-    clearTimeout(window.roomState.popupTimeout);
-    
-    // Add a small delay before hiding to allow moving mouse to popup
-    window.roomState.popupTimeout = setTimeout(() => {
-        hidePopupImmediate();
-    }, 150); // Reduced delay for better responsiveness
+    if (typeof window.hideGlobalPopup === 'function') {
+        window.hideGlobalPopup();
+    }
 };
 
 /**
- * Hide popup immediately
+ * Hide popup immediately - now uses global system
  */
 window.hidePopupImmediate = function() {
-    const popup = document.getElementById('productPopup');
-    if (popup && popup.classList.contains('show')) {
-        popup.classList.remove('show');
-        window.roomState.currentProduct = null;
-        window.roomState.popupOpen = false;
-        window.roomState.isShowingPopup = false;
+    if (typeof window.hideGlobalPopupImmediate === 'function') {
+        window.hideGlobalPopupImmediate();
     }
 };
 

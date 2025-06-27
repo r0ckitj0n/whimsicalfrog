@@ -115,52 +115,19 @@ async function checkAndDisplaySalePrice(product, priceElement, unitPriceElement 
 let hoverTimeout = null;
 let hideTimeout = null;
 
-// Simple show popup function
+// Popup functions now use the global system
 function showPopup(element, product) {
-    console.log('showPopup called with:', element, product);
-    
-    // Clear any existing timeouts
-    if (hoverTimeout) clearTimeout(hoverTimeout);
-    if (hideTimeout) clearTimeout(hideTimeout);
-    
-    const popup = document.getElementById('productPopup');
-    if (!popup) {
-        console.error('Popup element not found!');
-        return;
+    if (typeof window.showGlobalPopup === 'function') {
+        window.showGlobalPopup(element, product);
+    } else {
+        console.error('Global popup system not available');
     }
-    
-    // Update popup content immediately
-    updatePopupContent(popup, product);
-    
-    // Position and show popup
-    positionPopupSimple(element, popup);
-    popup.style.display = 'block';
-    popup.style.opacity = '1';
-    popup.classList.add('show');
-    
-    // Set up hover listeners on the popup to keep it visible
-    popup.addEventListener('mouseenter', keepPopupVisible);
-    popup.addEventListener('mouseleave', hidePopup);
-    
-    console.log('Popup should now be visible');
 }
 
-// Simple hide popup function
 function hidePopup() {
-    console.log('hidePopup called');
-    
-    // Clear any existing show timeout
-    if (hoverTimeout) clearTimeout(hoverTimeout);
-    
-    // Set a short delay before hiding
-    hideTimeout = setTimeout(() => {
-        const popup = document.getElementById('productPopup');
-        if (popup) {
-            popup.style.display = 'none';
-            popup.style.opacity = '0';
-            popup.classList.remove('show');
-        }
-    }, 100);
+    if (typeof window.hideGlobalPopup === 'function') {
+        window.hideGlobalPopup();
+    }
 }
 
 // Keep popup visible when hovering over it

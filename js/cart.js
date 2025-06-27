@@ -693,6 +693,10 @@ class ShoppingCart {
                 orderData.shippingAddress = shippingAddress;
             }
 
+            console.log('Order data being sent:', orderData);
+            console.log('Cart items:', this.items);
+            console.log('Cart total:', this.getTotal());
+
             const response = await fetch('api/add-order.php', {
                 method: 'POST',
                 headers: {

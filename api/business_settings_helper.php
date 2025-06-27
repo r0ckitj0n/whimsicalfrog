@@ -10,7 +10,13 @@ class BusinessSettings {
     
     private static function getPDO() {
         if (self::$pdo === null) {
-            global $dsn, $user, $pass, $options;
+            require_once __DIR__ . '/config.php';
+            
+            // Check if variables are properly set
+            if (!isset($dsn) || $dsn === null) {
+                throw new Exception('Database configuration not available');
+            }
+            
             self::$pdo = new PDO($dsn, $user, $pass, $options);
         }
         return self::$pdo;

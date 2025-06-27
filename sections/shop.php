@@ -566,11 +566,94 @@ function hideShopPopupImmediate() {
 // Show product details in large modal
 async function showProductDetails(sku) {
     try {
-        // Call the new showDetailedModal function with the SKU
+        // Call the showDetailedModal function with the SKU
         await showDetailedModal(sku);
     } catch (error) {
         console.error('Error loading product details:', error);
         alert('Error: ' + error.message);
+    }
+}
+
+// Show detailed modal for an item - moved before showProductDetails
+async function showDetailedModal(sku) {
+    try {
+        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load item details');
+        }
+        
+        const item = data.item;
+        const images = data.images || [];
+        
+        // Remove any existing modal
+        const existingModal = document.getElementById('detailedProductModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Create modal container if it doesn't exist
+        let modalContainer = document.getElementById('detailedModalContainer');
+        if (!modalContainer) {
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'detailedModalContainer';
+            document.body.appendChild(modalContainer);
+        }
+        
+        // Use PHP to render the standardized modal component
+        const modalResponse = await fetch('/api/render_detailed_modal.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                item: item,
+                images: images
+            })
+        });
+        
+        if (!modalResponse.ok) {
+            throw new Error('Failed to render modal');
+        }
+        
+        const modalHTML = await modalResponse.text();
+        modalContainer.innerHTML = modalHTML;
+        
+        // Show the modal
+        const modal = document.getElementById('detailedProductModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            
+            // Add modal-open class to prevent scrolling
+            document.body.classList.add('modal-open');
+            document.documentElement.classList.add('modal-open');
+            
+            // Add click-outside-to-close functionality
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeDetailedModal();
+                }
+            });
+            
+            // Add escape key to close
+            document.addEventListener('keydown', function escapeHandler(e) {
+                if (e.key === 'Escape') {
+                    closeDetailedModal();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            });
+            
+            // Add enlarge tooltips to modal images
+            if (typeof addEnlargeTooltip === 'function') {
+                const modalImages = modal.querySelectorAll('img');
+                modalImages.forEach(img => addEnlargeTooltip(img));
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error showing detailed modal:', error);
+        alert('Error loading product details. Please try again.');
     }
 }
 
@@ -584,7 +667,7 @@ function closeDetailedModal() {
         document.body.classList.remove('modal-open');
         document.documentElement.classList.remove('modal-open');
         
-        // Reset body styles
+        // Reset body styles completely
         document.body.style.overflow = '';
         document.body.style.position = '';
         document.body.style.width = '';
@@ -592,15 +675,13 @@ function closeDetailedModal() {
         document.body.style.top = '';
         document.body.style.left = '';
         
-        // Reset html styles
+        // Reset html styles completely
         document.documentElement.style.overflow = '';
         document.documentElement.style.position = '';
         document.documentElement.style.width = '';
         document.documentElement.style.height = '';
     }
 }
-
-// showDetailedModal function is now defined later with proper SKU handling
 
 // Image viewer functionality is now handled by global js/image-viewer.js
 
@@ -657,6 +738,8 @@ window.showDetailedModal = showDetailedModal;
                 $jsDescription = html_entity_decode($jsDescription, ENT_QUOTES, 'UTF-8');
                 // Remove emojis and special characters that break JavaScript
                 $jsDescription = preg_replace('/[\x{1F600}-\x{1F64F}]|[\x{1F300}-\x{1F5FF}]|[\x{1F680}-\x{1F6FF}]|[\x{1F1E0}-\x{1F1FF}]|[\x{2600}-\x{26FF}]|[\x{2700}-\x{27BF}]/u', '', $jsDescription);
+                // Remove quotes and backslashes that break JavaScript
+                $jsDescription = str_replace(['\\', '"', "'", "\n", "\r", "\t"], ['', '', '', ' ', ' ', ' '], $jsDescription);
                 if (strlen($jsDescription) > 100) {
                     $jsDescription = substr($jsDescription, 0, 100) . '...';
                 }
@@ -665,6 +748,20 @@ window.showDetailedModal = showDetailedModal;
                 $jsProductName = html_entity_decode($productName, ENT_QUOTES, 'UTF-8');
                 // Remove emojis and special characters that break JavaScript
                 $jsProductName = preg_replace('/[\x{1F600}-\x{1F64F}]|[\x{1F300}-\x{1F5FF}]|[\x{1F680}-\x{1F6FF}]|[\x{1F1E0}-\x{1F1FF}]|[\x{2600}-\x{26FF}]|[\x{2700}-\x{27BF}]/u', '', $jsProductName);
+                // Remove quotes and backslashes that break JavaScript
+                $jsProductName = str_replace(['\\', '"', "'", "\n", "\r", "\t"], ['', '', '', ' ', ' ', ' '], $jsProductName);
+                
+                // Create safe JSON data for JavaScript
+                $productData = [
+                    'sku' => $sku,
+                    'name' => $jsProductName,
+                    'description' => $jsDescription,
+                    'category' => $category,
+                    'price' => $price,
+                    'retailPrice' => $price,
+                    'stockLevel' => $stock
+                ];
+                $safeJsonData = htmlspecialchars(json_encode($productData, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
                 
                 // Get selling points for this product
                 $sellingPoints = getSellingPoints($sku);
@@ -684,7 +781,8 @@ window.showDetailedModal = showDetailedModal;
             <!-- Sale badge will be added dynamically by JavaScript -->
             <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full cursor-pointer" 
                  onclick="showProductDetails('<?php echo $sku; ?>')"
-                 onmouseenter="showShopPopup(this, {sku: <?php echo json_encode($sku, JSON_UNESCAPED_UNICODE); ?>, name: <?php echo json_encode($jsProductName, JSON_UNESCAPED_UNICODE); ?>, description: <?php echo json_encode($jsDescription, JSON_UNESCAPED_UNICODE); ?>, category: <?php echo json_encode($category, JSON_UNESCAPED_UNICODE); ?>, price: <?php echo json_encode($price, JSON_UNESCAPED_UNICODE); ?>, retailPrice: <?php echo json_encode($price, JSON_UNESCAPED_UNICODE); ?>, stockLevel: <?php echo $stock; ?>})"
+                 data-product-data="<?php echo $safeJsonData; ?>"
+                 onmouseenter="try { showShopPopup(this, JSON.parse(this.getAttribute('data-product-data'))); } catch(e) { console.warn('Product data parsing error:', e); }"
                  onmouseleave="hideShopPopup()">
                 <?php 
                 // Display product images using database-driven system
@@ -851,89 +949,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-</script>
-
-<!-- Show detailed modal for an item -->
-<script>
-async function showDetailedModal(sku) {
-    try {
-        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to load item details');
-        }
-        
-        const item = data.item;
-        const images = data.images || [];
-        
-        // Remove any existing modal
-        const existingModal = document.getElementById('detailedProductModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-        
-        // Create modal container if it doesn't exist
-        let modalContainer = document.getElementById('detailedModalContainer');
-        if (!modalContainer) {
-            modalContainer = document.createElement('div');
-            modalContainer.id = 'detailedModalContainer';
-            document.body.appendChild(modalContainer);
-        }
-        
-        // Use PHP to render the standardized modal component
-        const modalResponse = await fetch('/api/render_detailed_modal.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                item: item,
-                images: images
-            })
-        });
-        
-        if (!modalResponse.ok) {
-            throw new Error('Failed to render modal');
-        }
-        
-        const modalHTML = await modalResponse.text();
-        modalContainer.innerHTML = modalHTML;
-        
-        // Show the modal
-        const modal = document.getElementById('detailedProductModal');
-        if (modal) {
-            modal.style.display = 'flex';
-            
-            // Add modal-open class to prevent scrolling
-            document.body.classList.add('modal-open');
-            document.documentElement.classList.add('modal-open');
-            
-            // Add click-outside-to-close functionality
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeDetailedModal();
-                }
-            });
-            
-            // Add escape key to close
-            document.addEventListener('keydown', function escapeHandler(e) {
-                if (e.key === 'Escape') {
-                    closeDetailedModal();
-                    document.removeEventListener('keydown', escapeHandler);
-                }
-            });
-            
-            // Add enlarge tooltips to modal images
-            if (typeof addEnlargeTooltip === 'function') {
-                const modalImages = modal.querySelectorAll('img');
-                modalImages.forEach(img => addEnlargeTooltip(img));
-            }
-        }
-        
-    } catch (error) {
-        console.error('Error showing detailed modal:', error);
-        alert('Error loading product details. Please try again.');
-    }
-}
 </script>

@@ -1147,4 +1147,38 @@ input[type="color"]::-moz-color-swatch {
     background: #9ca3af;
     border-radius: 6px;
     border: 2px solid #f3f4f6;
+}
+
+/* Enhanced Modal Open State - Prevents Double Scrollbars */
+body.modal-open,
+html.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Additional scrollbar prevention for modal overlays */
+.modal-overlay,
+.admin-modal-overlay,
+.fullscreen-modal-overlay {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure modal content doesn't inherit scroll issues */
+.modal-content,
+.admin-modal-content,
+.room-modal-content,
+.compact-modal-content,
+.fullscreen-modal-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-hidden {
+    display: none !important;
 } 

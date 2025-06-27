@@ -637,17 +637,19 @@ async function generateDetailedModal(item, images) {
     return `
     <!-- Detailed Product Modal -->
     <div id="detailedProductModal" class="modal-overlay" style="display: none;">
-        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[85vh] shadow-2xl overflow-hidden">
-            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <div class="modal-container">
+            <!-- Modal Header -->
+            <div class="modal-header">
                 <h2 class="text-2xl font-bold text-gray-900">${item.productName}</h2>
-                <button onclick="closeDetailedModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+                <button onclick="closeDetailedModal()" class="modal-close-btn">&times;</button>
             </div>
             
-            <div class="p-6 overflow-y-auto" style="max-height: calc(85vh - 120px);">
+            <!-- Modal Body -->
+            <div class="modal-body">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Product Images -->
                     <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-lg overflow-hidden cursor-pointer relative group" style="height: 400px; max-height: 50vh; position: relative;" onclick="openImageViewer('${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}', '${item.productName.replace(/'/g, "\\'")}', ${JSON.stringify(images)})">
+                        <div class="bg-gray-50 rounded-lg overflow-hidden cursor-pointer relative group" style="height: 400px; position: relative;" onclick="openImageViewer('${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}', '${item.productName.replace(/'/g, "\\'")}', ${JSON.stringify(images)})">
                             <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain transition-transform group-hover:scale-105">
                         </div>
                         
@@ -830,14 +832,15 @@ function closeDetailedModal() {
     const modal = document.getElementById('detailedProductModal');
     if (modal) {
         modal.style.display = 'none';
-        // Remove modal-open class from both body and html
+        // Remove modal-open class and reset styles
         document.body.classList.remove('modal-open');
         document.documentElement.classList.remove('modal-open');
-        // Reset overflow styles
         document.body.style.overflow = '';
         document.body.style.position = '';
         document.body.style.width = '';
         document.body.style.height = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
         document.documentElement.style.overflow = '';
     }
 }
@@ -846,9 +849,24 @@ function showDetailedModal() {
     const modal = document.getElementById('detailedProductModal');
     if (modal) {
         modal.style.display = 'flex';
-        // Add modal-open class to both body and html
+        // Add modal-open class to prevent scrolling
         document.body.classList.add('modal-open');
         document.documentElement.classList.add('modal-open');
+        
+        // Add click-outside-to-close functionality
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeDetailedModal();
+            }
+        });
+        
+        // Add escape key to close
+        document.addEventListener('keydown', function escapeHandler(e) {
+            if (e.key === 'Escape') {
+                closeDetailedModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        });
     }
 }
 

@@ -462,8 +462,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="product-icon <?php echo $area_class . $outOfStockClass; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($item['sku']); ?>"
                                  data-stock="<?php echo $stockLevel; ?>"
-                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
-                                 onmouseleave="hidePopup()"
+                                                              onmouseenter="showGlobalPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
+                             onmouseleave="hideGlobalPopup()"
                                  onclick="showProductDetails('<?php echo htmlspecialchars($item['sku']); ?>')"
                                  style="cursor: pointer;">
                                 <img src="<?php echo htmlspecialchars($primaryImageUrl); ?>" 
@@ -483,22 +483,12 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </main>
 
-<!-- Product popup template -->
-<div id="productPopup" class="product-popup">
-    <div class="popup-content">
-        <img class="popup-image" src="" alt="">
-        <div class="popup-details">
-            <div class="popup-name"></div>
-            <div class="popup-category"></div>
-            <div class="popup-description"></div>
-            <div class="popup-price"></div>
-            <div class="popup-actions">
-                <button class="popup-add-btn">Add to Cart</button>
-                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Global Product Popup -->
+<?php 
+require_once __DIR__ . '/../components/global_popup.php';
+echo renderGlobalPopup();
+echo renderGlobalPopupCSS();
+?>
 
 <!-- Quantity Modal -->
 <div id="quantityModal" class="modal-overlay hidden">
@@ -551,25 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
 const ROOM_NUMBER = <?php echo json_encode($roomNumber); ?>;
 const ROOM_TYPE = <?php echo json_encode($roomType); ?>;
 
-// Popup system variables
-let currentProduct = null;
-let popupTimeout = null;
-let popupOpen = false;
-let isShowingPopup = false;
-let lastShowTime = 0;
-
-// Hover functions are now handled by js/sales-checker.js for consistency
-// This ensures all rooms use the same standard hover implementation
-
-// Simple document click listener for popup closing
-document.addEventListener('click', function(e) {
-    const popup = document.getElementById('productPopup');
-    
-    // Close popup if it's open and click is outside it
-    if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
-        hidePopupImmediate();
-    }
-});
+// Global popup system is now handled by js/global-popup.js
 
 // Product details functionality
 function showProductDetails(sku) {
@@ -983,6 +955,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="js/room-functions.js?v=<?php echo time(); ?>"></script>
 <script src="js/cart.js?v=<?php echo time(); ?>"></script>
 <script src="js/sales.js?v=<?php echo time(); ?>"></script>
+<script src="js/global-popup.js?v=<?php echo time(); ?>"></script>
 <script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>
 
 <!-- Container for global item modal -->

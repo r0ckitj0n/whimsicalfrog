@@ -47,11 +47,32 @@ class ShoppingCart {
     }
 
     refreshModalSizeDropdown() {
-        // Check if the modal is open and has size options
+        // Check if any modal is open and has size options
         const quantityModal = document.getElementById('quantityModal');
+        const detailedModal = document.getElementById('detailedProductModal');
         const sizeSelect = document.getElementById('sizeSelect');
         
+        // Check for quantity modal (room pages)
         if (quantityModal && !quantityModal.classList.contains('hidden') && sizeSelect && window.currentModalProduct) {
+            // Get current selection
+            const currentSelection = sizeSelect.value;
+            
+            // Rebuild the size dropdown with updated cart quantities
+            if (window.currentModalProduct.availableSizes || 
+                window.currentModalProduct.generalSizes || 
+                window.currentModalProduct.colorSpecificSizes) {
+                
+                window.setupSizeDropdown(
+                    window.currentModalProduct.availableSizes,
+                    window.currentModalProduct.generalSizes,
+                    window.currentModalProduct.colorSpecificSizes,
+                    currentSelection
+                );
+            }
+        }
+        
+        // Check for detailed modal (global modal system)
+        else if (detailedModal && !detailedModal.classList.contains('hidden') && sizeSelect && window.currentModalProduct) {
             // Get current selection
             const currentSelection = sizeSelect.value;
             

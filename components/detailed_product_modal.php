@@ -441,18 +441,52 @@ function renderDetailedProductModal($item, $images = []) {
                 const sizeData = await sizeResponse.json();
                 
                 if (sizeData.success && sizeData.sizes.length > 0) {
+                    // Update window.currentModalProduct with size data for cart refresh system
+                    if (window.currentModalProduct) {
+                        window.currentModalProduct.generalSizes = sizeData.sizes.map(size => ({
+                            size_code: size.size_code,
+                            size_name: size.size_name,
+                            stock_level: size.stock_level,
+                            price_adjustment: size.price_adjustment || 0
+                        }));
+                    }
+                    
                     optionsHTML += `
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Size:</label>
-                            <select class="detailed-size-select w-full border border-gray-300 rounded px-2 py-1 text-xs" ${sizeData.sizes.length > 1 ? 'data-required="true"' : ''}>
+                            <select id="sizeSelect" class="detailed-size-select w-full border border-gray-300 rounded px-2 py-1 text-xs" data-sku="${sku}" ${sizeData.sizes.length > 1 ? 'data-required="true"' : ''}>
                                 ${sizeData.sizes.length > 1 ? '<option value="">Choose size...</option>' : ''}
                                 ${sizeData.sizes.map(size => {
                                     const priceAdjustment = parseFloat(size.price_adjustment || 0);
                                     const adjustmentText = priceAdjustment !== 0 ? 
                                         ` (${priceAdjustment > 0 ? '+' : ''}$${priceAdjustment.toFixed(2)})` : '';
+                                    
+                                    // Calculate cart quantity for this size
+                                    const cartQuantity = typeof window.getCartQuantityForSize === 'function' ? 
+                                        window.getCartQuantityForSize(sku, null, size.size_code) : 0;
+                                    
+                                    // Calculate available quantity
+                                    const availableQuantity = Math.max(0, size.stock_level - cartQuantity);
+                                    
+                                    // Build availability text
+                                    let availabilityText = '';
+                                    if (availableQuantity > 0) {
+                                        if (cartQuantity > 0) {
+                                            availabilityText = ` (${availableQuantity} available, ${cartQuantity} in cart)`;
+                                        } else {
+                                            availabilityText = ` (${availableQuantity} available)`;
+                                        }
+                                    } else {
+                                        if (cartQuantity > 0) {
+                                            availabilityText = ` (Out of stock - ${cartQuantity} in cart)`;
+                                        } else {
+                                            availabilityText = ' (Out of stock)';
+                                        }
+                                    }
+                                    
                                     return `
-                                        <option value="${size.size_code}" ${sizeData.sizes.length === 1 ? 'selected' : ''}>
-                                            ${size.size_name}${adjustmentText} ${size.stock_level > 0 ? `(${size.stock_level} available)` : '(Out of stock)'}
+                                        <option value="${size.size_code}" ${sizeData.sizes.length === 1 ? 'selected' : ''} ${availableQuantity <= 0 ? 'disabled' : ''}>
+                                            ${size.size_name}${adjustmentText}${availabilityText}
                                         </option>
                                     `;
                                 }).join('')}
@@ -546,6 +580,22 @@ function renderDetailedProductModal($item, $images = []) {
         // Function to show the detailed modal (called from shop page)
         function showDetailedModalComponent(sku, itemData) {
             currentDetailedItem = itemData;
+            
+            // Set up window.currentModalProduct for cart refresh system compatibility
+            window.currentModalProduct = {
+                sku: sku,
+                name: itemData.name,
+                retailPrice: itemData.retailPrice || itemData.price,
+                stockLevel: itemData.stockLevel,
+                selectedColor: null,
+                selectedSize: null,
+                selectedSizeName: null,
+                // These will be populated by loadDetailedProductOptions
+                availableSizes: null,
+                generalSizes: null,
+                colorSpecificSizes: null
+            };
+            
             const modal = document.getElementById('detailedProductModal');
             if (modal) {
                 modal.style.display = 'flex';

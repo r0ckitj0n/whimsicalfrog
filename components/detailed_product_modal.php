@@ -505,11 +505,10 @@ function renderDetailedProductModal($item, $images = []) {
                     name: itemName,
                     price: price,
                     image: imageUrl,
-                    quantity: quantity
+                    quantity: quantity,
+                    color: selectedColor,
+                    size: selectedSize
                 };
-                
-                if (selectedColor) cartItem.color = selectedColor;
-                if (selectedSize) cartItem.size = selectedSize;
                 
                 window.cart.addItem(cartItem);
                 

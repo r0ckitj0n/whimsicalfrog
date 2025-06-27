@@ -106,9 +106,11 @@ class ShoppingCart {
         
         // Create unique identifier for item+color+size combination
         const existingItem = this.items.find(cartItem => {
+            const cartColor = cartItem.color || null;
+            const cartSize = cartItem.size || null;
             return cartItem.sku === item.sku && 
-                   cartItem.color === color && 
-                   cartItem.size === size;
+                   cartColor === color && 
+                   cartSize === size;
         });
         
         if (existingItem) {

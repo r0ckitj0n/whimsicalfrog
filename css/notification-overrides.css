@@ -204,4 +204,23 @@ div#detailedProductModal button[onclick*="addDetailedToCart"] {
     border-color: #d63384 !important;
     color: white !important;
     text-shadow: none !important;
+}
+
+/* SIMPLE CUSTOM CLASS APPROACH - Should have highest priority */
+.wf-add-to-cart-btn {
+    background: var(--wf-brand-green) !important;
+    background-color: var(--wf-brand-green) !important;
+    border: 2px solid var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-dark) !important;
+    color: white !important;
+    text-shadow: none !important;
+}
+
+.wf-add-to-cart-btn:hover {
+    background: var(--wf-brand-green-dark) !important;
+    background-color: var(--wf-brand-green-dark) !important;
+    border-color: var(--wf-brand-green-darker) !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(135, 172, 58, 0.3) !important;
 } 

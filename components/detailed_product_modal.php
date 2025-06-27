@@ -185,9 +185,9 @@ function renderDetailedProductModal($item, $images = []) {
                                         </div>
                                     </div>
                                     
-                                    <!-- Add to Cart Button -->
-                                    <button onclick="addDetailedToCart('<?php echo htmlspecialchars($item['sku']); ?>')" 
-                                            class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                                                        <!-- Add to Cart Button -->
+                    <button onclick="addDetailedToCart('<?php echo htmlspecialchars($item['sku']); ?>')" 
+                            class="wf-add-to-cart-btn w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13h10m-10 0v6a1 1 0 001 1h8a1 1 0 001-1v-6m-9 0h9"></path>
                                         </svg>

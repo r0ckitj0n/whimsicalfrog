@@ -753,14 +753,9 @@ window.openQuantityModal = function(product) {
     // Hide any existing popup first
     hidePopupImmediate();
     
-    // Use global modal function if available
-    if (typeof window.addToCartWithModal === 'function') {
-        const sku = product.sku;
-        const name = product.name || product.productName;
-        const price = parseFloat(product.retailPrice || product.price);
-        const image = `images/items/${product.sku}A.png`;
-        
-        window.addToCartWithModal(sku, name, price, image);
+    // Use the global modal system
+    if (typeof window.showGlobalItemModal === 'function') {
+        window.showGlobalItemModal(product.sku);
         return;
     }
     

@@ -660,21 +660,17 @@ function showPopup(element, product) {
         showProductDetails(product.sku);
     };
 
-    // Add to cart functionality using global function
+    // Add to cart functionality using global modal system
     popupAddBtn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation(); // Prevent triggering the popup content click and background
         popup.classList.remove('show');
         
-        const sku = product.sku;
-        const name = product.name;
-        const price = parseFloat(product.retailPrice);
-        const image = `images/items/${product.sku}A.png`;
-        
-        if (typeof window.addToCartWithModal === 'function') {
-            window.addToCartWithModal(sku, name, price, image);
+        // Use the global modal system
+        if (typeof window.showGlobalItemModal === 'function') {
+            window.showGlobalItemModal(product.sku);
         } else {
-            console.error('Global addToCartWithModal function not available');
+            console.error('Global modal system not available');
         }
     };
 }
@@ -734,14 +730,9 @@ window.openQuantityModal = function(product) {
     // Hide any existing popup first
     hidePopupImmediate();
     
-    // Use global modal function if available
-    if (typeof window.addToCartWithModal === 'function') {
-        const sku = product.sku;
-        const name = product.name || product.productName;
-        const price = parseFloat(product.retailPrice || product.price);
-        const image = `images/items/${product.sku}A.png`;
-        
-        window.addToCartWithModal(sku, name, price, image);
+    // Use the global modal system
+    if (typeof window.showGlobalItemModal === 'function') {
+        window.showGlobalItemModal(product.sku);
         return;
     }
     

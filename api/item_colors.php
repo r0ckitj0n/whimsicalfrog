@@ -72,7 +72,15 @@ function reduceStockForSale($pdo, $itemSku, $colorName, $quantity) {
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
+    // Parse action from GET, POST, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
+    
+    // If no action found in GET/POST, try parsing from JSON body
+    if (empty($action)) {
+        $jsonInput = json_decode(file_get_contents('php://input'), true);
+        $action = $jsonInput['action'] ?? '';
+    }
+    
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     
     switch ($action) {

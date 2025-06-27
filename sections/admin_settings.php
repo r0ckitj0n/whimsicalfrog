@@ -246,6 +246,14 @@
           <span class="button-text">Categories</span>
         </button>
         
+        <button id="globalColorSizeBtn" onclick="openGlobalColorSizeModal()" class="settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4 4 4 0 004-4V5z"></path>
+          </svg>
+          <span class="button-text">Global Colors & Sizes</span>
+          <span class="button-badge">New</span>
+        </button>
+        
         <button id="roomsBtn" onclick="openRoomSettingsModal()" class="settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
@@ -13021,5 +13029,496 @@ function deleteReceiptMessage(id) {
     }
     
     renderReceiptSettings();
+}
+
+// ========== GLOBAL COLOR & SIZE MANAGEMENT ==========
+function openGlobalColorSizeModal() {
+    const modal = document.getElementById('globalColorSizeModal');
+    if (!modal) {
+        createGlobalColorSizeModal();
+    }
+    document.getElementById('globalColorSizeModal').style.display = 'block';
+    loadGlobalColorSizeData();
+}
+
+function createGlobalColorSizeModal() {
+    const modalHtml = `
+        <div id="globalColorSizeModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2>🎨 Global Color & Size Management</h2>
+                    <span class="close" onclick="closeGlobalColorSizeModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="tabs-container">
+                        <div class="tab-buttons" style="display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px;">
+                            <button class="tab-button active" onclick="switchGlobalTab('colors')" style="padding: 10px 20px; border: none; background: #059669; color: white; cursor: pointer; border-radius: 8px 8px 0 0; margin-right: 5px;">🎨 Global Colors</button>
+                            <button class="tab-button" onclick="switchGlobalTab('sizes')" style="padding: 10px 20px; border: none; background: #6b7280; color: white; cursor: pointer; border-radius: 8px 8px 0 0;">📏 Global Sizes</button>
+                        </div>
+                        
+                        <!-- Global Colors Tab -->
+                        <div id="globalColorsTab" class="tab-content active">
+                            <div class="section-header" style="margin-bottom: 20px;">
+                                <h3 style="color: #059669; margin-bottom: 10px;">Master Color List</h3>
+                                <p style="color: #6b7280;">Manage all available colors for your products. These colors will be available when setting up individual items.</p>
+                            </div>
+                            
+                            <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                                <button onclick="showAddColorForm()" class="btn btn-primary" style="background: #059669; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
+                                    <i class="fas fa-plus"></i> Add New Color
+                                </button>
+                                <select id="colorCategoryFilter" onchange="filterColorsByCategory()" class="form-select" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                    <option value="">All Categories</option>
+                                </select>
+                            </div>
+                            
+                            <div id="addColorForm" class="form-section" style="display: none; background: #f0f9ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #0ea5e9;">
+                                <h4 style="color: #0369a1; margin-bottom: 15px;">Add New Global Color</h4>
+                                <form onsubmit="saveGlobalColor(event)">
+                                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Color Name *</label>
+                                            <input type="text" id="newColorName" required style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Color Code</label>
+                                            <input type="color" id="newColorCode" style="width: 100%; height: 40px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Category</label>
+                                            <input type="text" id="newColorCategory" placeholder="e.g., Basic, Vibrant, Pastel" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Description</label>
+                                            <input type="text" id="newColorDescription" placeholder="Optional description" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Display Order</label>
+                                            <input type="number" id="newColorOrder" min="0" value="0" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                    </div>
+                                    <div class="form-actions" style="display: flex; gap: 10px;">
+                                        <button type="submit" class="btn btn-success" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Save Color</button>
+                                        <button type="button" onclick="cancelAddColor()" class="btn btn-secondary" style="background: #6b7280; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <div id="globalColorsList" class="data-grid">
+                                <!-- Colors will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Global Sizes Tab -->
+                        <div id="globalSizesTab" class="tab-content" style="display: none;">
+                            <div class="section-header" style="margin-bottom: 20px;">
+                                <h3 style="color: #7c3aed; margin-bottom: 10px;">Master Size List</h3>
+                                <p style="color: #6b7280;">Manage all available sizes for your products. These sizes will be available when setting up individual items.</p>
+                            </div>
+                            
+                            <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                                <button onclick="showAddSizeForm()" class="btn btn-primary" style="background: #7c3aed; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
+                                    <i class="fas fa-plus"></i> Add New Size
+                                </button>
+                                <select id="sizeCategoryFilter" onchange="filterSizesByCategory()" class="form-select" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                    <option value="">All Categories</option>
+                                </select>
+                            </div>
+                            
+                            <div id="addSizeForm" class="form-section" style="display: none; background: #faf5ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #7c3aed;">
+                                <h4 style="color: #6b21a8; margin-bottom: 15px;">Add New Global Size</h4>
+                                <form onsubmit="saveGlobalSize(event)">
+                                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Size Name *</label>
+                                            <input type="text" id="newSizeName" required placeholder="e.g., Small, Large, XL" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Size Code *</label>
+                                            <input type="text" id="newSizeCode" required placeholder="e.g., S, L, XL" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Category</label>
+                                            <input type="text" id="newSizeCategory" placeholder="e.g., T-Shirts, Youth, Tumblers" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Description</label>
+                                            <input type="text" id="newSizeDescription" placeholder="Optional description" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Display Order</label>
+                                            <input type="number" id="newSizeOrder" min="0" value="0" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                        </div>
+                                    </div>
+                                    <div class="form-actions" style="display: flex; gap: 10px;">
+                                        <button type="submit" class="btn btn-success" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Save Size</button>
+                                        <button type="button" onclick="cancelAddSize()" class="btn btn-secondary" style="background: #6b7280; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <div id="globalSizesList" class="data-grid">
+                                <!-- Sizes will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeGlobalColorSizeModal() {
+    document.getElementById('globalColorSizeModal').style.display = 'none';
+}
+
+function switchGlobalTab(tab) {
+    // Update tab buttons
+    document.querySelectorAll('#globalColorSizeModal .tab-button').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = '#6b7280';
+    });
+    event.target.classList.add('active');
+    event.target.style.background = tab === 'colors' ? '#059669' : '#7c3aed';
+    
+    // Update tab content
+    document.getElementById('globalColorsTab').style.display = tab === 'colors' ? 'block' : 'none';
+    document.getElementById('globalSizesTab').style.display = tab === 'sizes' ? 'block' : 'none';
+    
+    // Load appropriate data
+    if (tab === 'colors') {
+        loadGlobalColors();
+    } else if (tab === 'sizes') {
+        loadGlobalSizes();
+    }
+}
+
+async function loadGlobalColorSizeData() {
+    await loadGlobalColors();
+    await loadGlobalSizes();
+    await loadColorCategories();
+    await loadSizeCategories();
+}
+
+async function loadGlobalColors() {
+    try {
+        const response = await fetch('/api/global_color_size_management.php?action=get_global_colors');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayGlobalColors(data.colors);
+        } else {
+            showError('Failed to load global colors: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading global colors:', error);
+        showError('Error loading global colors');
+    }
+}
+
+async function loadGlobalSizes() {
+    try {
+        const response = await fetch('/api/global_color_size_management.php?action=get_global_sizes');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayGlobalSizes(data.sizes);
+        } else {
+            showError('Failed to load global sizes: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading global sizes:', error);
+        showError('Error loading global sizes');
+    }
+}
+
+async function loadColorCategories() {
+    try {
+        const response = await fetch('/api/global_color_size_management.php?action=get_color_categories');
+        const data = await response.json();
+        
+        if (data.success) {
+            const select = document.getElementById('colorCategoryFilter');
+            if (select) {
+                select.innerHTML = '<option value="">All Categories</option>';
+                data.categories.forEach(category => {
+                    select.innerHTML += `<option value="${category}">${category}</option>`;
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading color categories:', error);
+    }
+}
+
+async function loadSizeCategories() {
+    try {
+        const response = await fetch('/api/global_color_size_management.php?action=get_size_categories');
+        const data = await response.json();
+        
+        if (data.success) {
+            const select = document.getElementById('sizeCategoryFilter');
+            if (select) {
+                select.innerHTML = '<option value="">All Categories</option>';
+                data.categories.forEach(category => {
+                    select.innerHTML += `<option value="${category}">${category}</option>`;
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading size categories:', error);
+    }
+}
+
+function displayGlobalColors(colors) {
+    const container = document.getElementById('globalColorsList');
+    
+    if (colors.length === 0) {
+        container.innerHTML = '<p class="no-data" style="text-align: center; padding: 40px; color: #6b7280;">No global colors found. Add some colors to get started!</p>';
+        return;
+    }
+    
+    let html = `
+        <div class="grid-container" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div class="grid-header" style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                <div class="grid-row" style="display: grid; grid-template-columns: 80px 1fr 120px 1fr 80px 160px; gap: 15px; padding: 15px; font-weight: 600; color: #374151;">
+                    <div class="grid-cell">Color</div>
+                    <div class="grid-cell">Name</div>
+                    <div class="grid-cell">Category</div>
+                    <div class="grid-cell">Description</div>
+                    <div class="grid-cell">Order</div>
+                    <div class="grid-cell">Actions</div>
+                </div>
+            </div>
+            <div class="grid-body">
+    `;
+    
+    colors.forEach((color, index) => {
+        const bgColor = index % 2 === 0 ? '#ffffff' : '#f9fafb';
+        html += `
+            <div class="grid-row" style="display: grid; grid-template-columns: 80px 1fr 120px 1fr 80px 160px; gap: 15px; padding: 15px; background: ${bgColor}; border-bottom: 1px solid #e5e7eb;">
+                <div class="grid-cell">
+                    <div class="color-preview" style="background-color: ${color.color_code || '#ccc'}; width: 40px; height: 30px; border-radius: 4px; border: 1px solid #d1d5db;"></div>
+                </div>
+                <div class="grid-cell" style="font-weight: 600; color: #111827;">${color.color_name}</div>
+                <div class="grid-cell" style="color: #6b7280;">${color.category}</div>
+                <div class="grid-cell" style="color: #6b7280;">${color.description || '-'}</div>
+                <div class="grid-cell" style="color: #6b7280;">${color.display_order}</div>
+                <div class="grid-cell">
+                    <button onclick="editGlobalColor(${color.id})" class="btn btn-sm btn-outline" style="background: #f3f4f6; color: #374151; padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 4px; margin-right: 8px; cursor: pointer;">Edit</button>
+                    <button onclick="deleteGlobalColor(${color.id})" class="btn btn-sm btn-danger" style="background: #ef4444; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div></div>';
+    container.innerHTML = html;
+}
+
+function displayGlobalSizes(sizes) {
+    const container = document.getElementById('globalSizesList');
+    
+    if (sizes.length === 0) {
+        container.innerHTML = '<p class="no-data" style="text-align: center; padding: 40px; color: #6b7280;">No global sizes found. Add some sizes to get started!</p>';
+        return;
+    }
+    
+    let html = `
+        <div class="grid-container" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div class="grid-header" style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                <div class="grid-row" style="display: grid; grid-template-columns: 1fr 120px 120px 1fr 80px 160px; gap: 15px; padding: 15px; font-weight: 600; color: #374151;">
+                    <div class="grid-cell">Size Name</div>
+                    <div class="grid-cell">Size Code</div>
+                    <div class="grid-cell">Category</div>
+                    <div class="grid-cell">Description</div>
+                    <div class="grid-cell">Order</div>
+                    <div class="grid-cell">Actions</div>
+                </div>
+            </div>
+            <div class="grid-body">
+    `;
+    
+    sizes.forEach((size, index) => {
+        const bgColor = index % 2 === 0 ? '#ffffff' : '#f9fafb';
+        html += `
+            <div class="grid-row" style="display: grid; grid-template-columns: 1fr 120px 120px 1fr 80px 160px; gap: 15px; padding: 15px; background: ${bgColor}; border-bottom: 1px solid #e5e7eb;">
+                <div class="grid-cell" style="font-weight: 600; color: #111827;">${size.size_name}</div>
+                <div class="grid-cell"><code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px; font-family: monospace;">${size.size_code}</code></div>
+                <div class="grid-cell" style="color: #6b7280;">${size.category}</div>
+                <div class="grid-cell" style="color: #6b7280;">${size.description || '-'}</div>
+                <div class="grid-cell" style="color: #6b7280;">${size.display_order}</div>
+                <div class="grid-cell">
+                    <button onclick="editGlobalSize(${size.id})" class="btn btn-sm btn-outline" style="background: #f3f4f6; color: #374151; padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 4px; margin-right: 8px; cursor: pointer;">Edit</button>
+                    <button onclick="deleteGlobalSize(${size.id})" class="btn btn-sm btn-danger" style="background: #ef4444; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div></div>';
+    container.innerHTML = html;
+}
+
+// Color management functions
+function showAddColorForm() {
+    document.getElementById('addColorForm').style.display = 'block';
+}
+
+function cancelAddColor() {
+    document.getElementById('addColorForm').style.display = 'none';
+    document.getElementById('addColorForm').querySelector('form').reset();
+}
+
+async function saveGlobalColor(event) {
+    event.preventDefault();
+    
+    const formData = {
+        color_name: document.getElementById('newColorName').value,
+        color_code: document.getElementById('newColorCode').value,
+        category: document.getElementById('newColorCategory').value || 'General',
+        description: document.getElementById('newColorDescription').value,
+        display_order: parseInt(document.getElementById('newColorOrder').value) || 0
+    };
+    
+    try {
+        const response = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'add_global_color', ...formData })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Global color added successfully!');
+            cancelAddColor();
+            loadGlobalColors();
+            loadColorCategories();
+        } else {
+            showError('Failed to add color: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error saving color:', error);
+        showError('Error saving color');
+    }
+}
+
+// Size management functions
+function showAddSizeForm() {
+    document.getElementById('addSizeForm').style.display = 'block';
+}
+
+function cancelAddSize() {
+    document.getElementById('addSizeForm').style.display = 'none';
+    document.getElementById('addSizeForm').querySelector('form').reset();
+}
+
+async function saveGlobalSize(event) {
+    event.preventDefault();
+    
+    const formData = {
+        size_name: document.getElementById('newSizeName').value,
+        size_code: document.getElementById('newSizeCode').value,
+        category: document.getElementById('newSizeCategory').value || 'General',
+        description: document.getElementById('newSizeDescription').value,
+        display_order: parseInt(document.getElementById('newSizeOrder').value) || 0
+    };
+    
+    try {
+        const response = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'add_global_size', ...formData })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Global size added successfully!');
+            cancelAddSize();
+            loadGlobalSizes();
+            loadSizeCategories();
+        } else {
+            showError('Failed to add size: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error saving size:', error);
+        showError('Error saving size');
+    }
+}
+
+async function deleteGlobalColor(colorId) {
+    if (!confirm('Are you sure you want to delete this color? If it\'s in use by items, it will be deactivated instead.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_global_color', color_id: colorId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            loadGlobalColors();
+        } else {
+            showError('Failed to delete color: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting color:', error);
+        showError('Error deleting color');
+    }
+}
+
+async function deleteGlobalSize(sizeId) {
+    if (!confirm('Are you sure you want to delete this size? If it\'s in use by items, it will be deactivated instead.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_global_size', size_id: sizeId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            loadGlobalSizes();
+        } else {
+            showError('Failed to delete size: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting size:', error);
+        showError('Error deleting size');
+    }
+}
+
+function filterColorsByCategory() {
+    const category = document.getElementById('colorCategoryFilter').value;
+    loadGlobalColors(category);
+}
+
+function filterSizesByCategory() {
+    const category = document.getElementById('sizeCategoryFilter').value;
+    loadGlobalSizes(category);
+}
+
+function editGlobalColor(colorId) {
+    // Placeholder for edit functionality
+    showInfo('Edit functionality coming soon!');
+}
+
+function editGlobalSize(sizeId) {
+    // Placeholder for edit functionality
+    showInfo('Edit functionality coming soon!');
 }
 </script>

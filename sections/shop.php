@@ -129,6 +129,7 @@ if (!isset($GLOBALS['marketingHelper'])) {
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        max-height: 90vh;
     }
 
     .modal-content-scrollable {
@@ -136,11 +137,34 @@ if (!isset($GLOBALS['marketingHelper'])) {
         max-height: calc(90vh - 80px); /* Account for header height */
         overflow-y: auto;
         overflow-x: hidden;
+        /* Ensure smooth scrolling without double scrollbars */
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+    }
+    
+    /* Webkit scrollbar styling for modal content only */
+    .modal-content-scrollable::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .modal-content-scrollable::-webkit-scrollbar-track {
+        background: #f7fafc;
+        border-radius: 4px;
+    }
+    
+    .modal-content-scrollable::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+    }
+    
+    .modal-content-scrollable::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
     }
     
     /* Prevent double scrollbars by ensuring body doesn't scroll when modal is open */
     body.modal-open {
-        overflow: hidden;
+        overflow: hidden !important;
+        padding-right: 0px; /* Prevent layout shift */
     }
 
     /* Popup Options Styling */
@@ -538,6 +562,10 @@ async function generateDetailedModal(item, images) {
         return value && value.trim() !== '';
     }
     
+    // Ensure we have the right field name for price - API returns 'retailPrice'
+    item.price = item.retailPrice || item.price || 0;
+    item.productName = item.name || item.productName;
+    
     return `
     <!-- Detailed Product Modal -->
     <div id="detailedProductModal" class="modal-overlay" style="display: none;">
@@ -569,7 +597,7 @@ async function generateDetailedModal(item, images) {
                     <!-- Product Details -->
                     <div class="space-y-6">
                         <div>
-                            <p class="text-3xl font-bold text-green-600">$${parseFloat(item.price).toFixed(2)}</p>
+                            <p class="text-3xl font-bold text-green-600">$${parseFloat(item.retailPrice || item.price || 0).toFixed(2)}</p>
                             <p class="text-sm text-gray-500 mt-1">SKU: ${item.sku}</p>
                         </div>
                         
@@ -679,7 +707,7 @@ function addDetailedToCart(sku) {
     // Get product info from the detailed modal before closing
     const productName = document.querySelector('#detailedProductModal h2').textContent;
     const priceText = document.querySelector('#detailedProductModal .text-3xl').textContent;
-    const price = parseFloat(priceText.replace('$', ''));
+    const price = parseFloat(priceText.replace('$', '').replace(',', '')) || 0;
     const image = document.getElementById('detailedMainImage').src;
     
     // Close the detailed modal

@@ -257,311 +257,9 @@ if (!isset($GLOBALS['marketingHelper'])) {
 </style>
 
 <script>
-// Shop popup and modal functions - DEFINED EARLY FOR INLINE EVENT HANDLERS
 
-// Shop popup system variables
-let shopCurrentProduct = null;
-let shopPopupTimeout = null;
-let shopPopupOpen = false;
-let shopIsShowingPopup = false;
-let shopLastShowTime = 0;
 
-function showShopPopup(element, product) {
-    const now = Date.now();
-    
-    // Debounce rapid calls (prevent multiple calls within 100ms)
-    if (now - shopLastShowTime < 100) {
-        return;
-    }
-    shopLastShowTime = now;
-    
-    // Prevent rapid re-triggering of same popup (anti-flashing protection)
-    if (shopCurrentProduct && shopCurrentProduct.sku === product.sku && shopIsShowingPopup) {
-        clearTimeout(shopPopupTimeout);
-        return;
-    }
-    
-    clearTimeout(shopPopupTimeout);
-    shopCurrentProduct = product;
-    shopIsShowingPopup = true;
-    shopPopupOpen = true;
 
-    const popup = document.getElementById('shopProductPopup');
-    if (!popup) {
-        console.warn('Shop popup element not found');
-        return;
-    }
-    
-    const popupImage = popup.querySelector('.popup-image-enhanced');
-    const popupCategory = popup.querySelector('.popup-category-enhanced');
-    const popupTitle = popup.querySelector('.popup-title-enhanced');
-    const popupSku = popup.querySelector('.popup-sku');
-    const popupStock = popup.querySelector('.popup-stock');
-    const popupDescription = popup.querySelector('.popup-description-enhanced');
-    const popupPrice = popup.querySelector('.popup-price-enhanced');
-    const popupAddBtn = popup.querySelector('.popup-add-btn-enhanced');
-    const popupDetailsBtn = popup.querySelector('.popup-details-btn-enhanced');
-
-    // Get the image URL - use SKU-based system
-    const imageUrl = `images/items/${product.sku}A.png`;
-
-    // Populate popup content
-    popupImage.src = imageUrl;
-    popupImage.onerror = function() {
-        this.src = 'images/items/placeholder.png';
-        this.onerror = null;
-    };
-    
-    popupCategory.textContent = product.category ?? 'Category';
-    popupTitle.textContent = product.name ?? 'Item Name';
-    popupSku.textContent = `SKU: ${product.sku}`;
-    
-    // Display stock information with color coding
-    const stockLevel = product.stockLevel || 0;
-    const stockText = stockLevel > 0 ? `${stockLevel} in stock` : 'Out of stock';
-    const stockColor = stockLevel > 10 ? '#22c55e' : stockLevel > 0 ? '#f59e0b' : '#ef4444';
-    popupStock.textContent = stockText;
-    popupStock.style.color = stockColor;
-    popupStock.style.fontWeight = '600';
-    
-    popupDescription.textContent = product.description ?? 'No description available';
-    
-    // Set price - use the price field that was passed  
-    const price = parseFloat(product.price || product.retailPrice || 0);
-    popupPrice.textContent = `$${price.toFixed(2)}`;
-
-    // Load color and size options for this product and add them to popup
-    loadProductOptionsForPopup(product.sku, popup);
-
-    // Better positioning relative to the element
-    const rect = element.getBoundingClientRect();
-    const shopContainer = document.querySelector('.shop-container') || document.body;
-    const containerRect = shopContainer.getBoundingClientRect();
-
-    let left = rect.left - containerRect.left + rect.width + 10;
-    let top = rect.top - containerRect.top - 50;
-
-    // Show popup temporarily to get actual dimensions
-    popup.style.display = 'block';
-    popup.style.opacity = '';
-    popup.classList.add('show');
-
-    const popupRect = popup.getBoundingClientRect();
-    const popupWidth = popupRect.width;
-    const popupHeight = popupRect.height;
-
-    // Reset for measurement
-    popup.style.display = '';
-
-    // Adjust if popup would go off screen horizontally
-    if (left + popupWidth > window.innerWidth) {
-        left = rect.left - containerRect.left - popupWidth - 10;
-    }
-    
-    // Adjust if popup would go off screen vertically (top)
-    if (top < 0) {
-        top = rect.top - containerRect.top + rect.height + 10;
-    }
-    
-    // Adjust if popup would go off screen vertically (bottom)
-    if (top + popupHeight > window.innerHeight) {
-        const topAbove = rect.top - containerRect.top - popupHeight - 10;
-        if (topAbove >= 0) {
-            top = topAbove;
-        } else {
-            top = window.innerHeight - popupHeight - 20;
-            if (top < 0) {
-                top = 10;
-            }
-        }
-    }
-
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-
-    // Clear any inline styles that might interfere and show the popup
-    popup.style.opacity = '';
-    popup.classList.add('show');
-
-    // Store product data directly on the popup element for later access
-    popup.dataset.productSku = product.sku;
-    popup.dataset.productName = product.name;
-    popup.dataset.productPrice = product.price || product.retailPrice || 0;
-    
-    // Add to cart functionality - use selected options directly
-    popupAddBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        popup.classList.remove('show');
-        
-        // Get product data from popup dataset
-        const productSku = popup.dataset.productSku;
-        const productName = popup.dataset.productName;
-        const productPrice = popup.dataset.productPrice;
-        
-        // Get selected options from popup
-        const colorSelect = popup.querySelector('.popup-color-select');
-        const sizeSelect = popup.querySelector('.popup-size-select');
-        const quantityInput = popup.querySelector('.popup-quantity-input') || { value: 1 };
-        
-        const selectedColor = colorSelect ? colorSelect.value : null;
-        const selectedSize = sizeSelect ? sizeSelect.value : null;
-        const quantity = parseInt(quantityInput.value) || 1;
-        
-        // Validate required selections
-        if (colorSelect && colorSelect.dataset.required === 'true' && !selectedColor) {
-            alert('Please select a color before adding to cart.');
-            popup.classList.add('show'); // Show popup again
-            return;
-        }
-        
-        if (sizeSelect && sizeSelect.dataset.required === 'true' && !selectedSize) {
-            alert('Please select a size before adding to cart.');
-            popup.classList.add('show'); // Show popup again
-            return;
-        }
-        
-        // Add to cart directly with selected options
-        if (typeof window.cart !== 'undefined') {
-            const cartItem = {
-                sku: productSku,
-                name: productName,
-                price: parseFloat(productPrice),
-                image: imageUrl,
-                quantity: quantity
-            };
-            
-            // Add color if selected
-            if (selectedColor) {
-                cartItem.color = selectedColor;
-            }
-            
-            // Add size if selected
-            if (selectedSize) {
-                cartItem.size = selectedSize;
-            }
-            
-            window.cart.addItem(cartItem);
-            
-            // Show confirmation
-            const customAlert = document.getElementById('customAlertBox');
-            const customAlertMessage = document.getElementById('customAlertMessage');
-            if (customAlert && customAlertMessage) {
-                const colorText = selectedColor ? ` - ${selectedColor}` : '';
-                const sizeText = selectedSize ? ` - ${selectedSize}` : '';
-                const quantityText = quantity > 1 ? ` (${quantity})` : '';
-                customAlertMessage.textContent = `${productName}${colorText}${sizeText}${quantityText} added to your cart!`;
-                customAlert.style.display = 'block';
-                
-                setTimeout(() => {
-                    customAlert.style.display = 'none';
-                }, 5000);
-            }
-        } else {
-            console.error('Cart functionality not available');
-        }
-    };
-    
-    // View details functionality
-    popupDetailsBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        popup.classList.remove('show');
-        showProductDetails(product.sku);
-    };
-}
-
-// New function to load product options for popup
-async function loadProductOptionsForPopup(sku, popup) {
-    const optionsContainer = popup.querySelector('.popup-options-container');
-    if (!optionsContainer) return;
-    
-    // Clear existing options
-    optionsContainer.innerHTML = '';
-    
-    try {
-        // Load colors
-        const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${sku}`);
-        const colorData = await colorResponse.json();
-        
-        if (colorData.success && colorData.colors.length > 0) {
-            const colorHTML = `
-                <div class="popup-option-group">
-                    <label>Color:</label>
-                    <select class="popup-color-select" ${colorData.colors.length > 1 ? 'data-required="true"' : ''}>
-                        ${colorData.colors.length > 1 ? '<option value="">Choose color...</option>' : ''}
-                        ${colorData.colors.map(color => `
-                            <option value="${color.color_name}" ${colorData.colors.length === 1 ? 'selected' : ''}>
-                                ${color.color_name} ${color.stock_level > 0 ? `(${color.stock_level} available)` : '(Out of stock)'}
-                            </option>
-                        `).join('')}
-                    </select>
-                </div>
-            `;
-            optionsContainer.innerHTML += colorHTML;
-        }
-        
-        // Load sizes
-        const sizeResponse = await fetch(`/api/item_sizes.php?action=get_sizes&item_sku=${sku}&color_id=null`);
-        const sizeData = await sizeResponse.json();
-        
-        if (sizeData.success && sizeData.sizes.length > 0) {
-            const sizeHTML = `
-                <div class="popup-option-group">
-                    <label>Size:</label>
-                    <select class="popup-size-select" ${sizeData.sizes.length > 1 ? 'data-required="true"' : ''}>
-                        ${sizeData.sizes.length > 1 ? '<option value="">Choose size...</option>' : ''}
-                        ${sizeData.sizes.map(size => {
-                            const priceAdjustment = parseFloat(size.price_adjustment || 0);
-                            const adjustmentText = priceAdjustment !== 0 ? 
-                                ` (${priceAdjustment > 0 ? '+' : ''}$${priceAdjustment.toFixed(2)})` : '';
-                            return `
-                                <option value="${size.size_code}" ${sizeData.sizes.length === 1 ? 'selected' : ''}>
-                                    ${size.size_name}${adjustmentText} ${size.stock_level > 0 ? `(${size.stock_level} available)` : '(Out of stock)'}
-                                </option>
-                            `;
-                        }).join('')}
-                    </select>
-                </div>
-            `;
-            optionsContainer.innerHTML += sizeHTML;
-        }
-        
-        // Add quantity selector if there are options
-        if (colorData.success || sizeData.success) {
-            const quantityHTML = `
-                <div class="popup-option-group">
-                    <label>Quantity:</label>
-                    <input type="number" class="popup-quantity-input" value="1" min="1" max="99">
-                </div>
-            `;
-            optionsContainer.innerHTML += quantityHTML;
-        }
-        
-    } catch (error) {
-        console.log('Error loading product options:', error);
-    }
-}
-
-function hideShopPopup() {
-    // Clear any existing timeout
-    clearTimeout(shopPopupTimeout);
-    
-    // Add a small delay before hiding to allow moving mouse to popup
-    shopPopupTimeout = setTimeout(() => {
-        hideShopPopupImmediate();
-    }, 200);
-}
-
-function hideShopPopupImmediate() {
-    const popup = document.getElementById('shopProductPopup');
-    if (popup) {
-        popup.classList.remove('show');
-        shopPopupOpen = false;
-        shopIsShowingPopup = false;
-        shopCurrentProduct = null;
-    }
-}
 
 // Show product details in large modal
 async function showProductDetails(sku) {
@@ -612,6 +310,14 @@ async function showDetailedModal(sku) {
             document.body.classList.add('modal-open');
             document.documentElement.classList.add('modal-open');
             
+            // Add click-outside-to-close functionality
+            modal.addEventListener('click', function(e) {
+                // Check if the click was on the modal overlay (not the modal content)
+                if (e.target === modal) {
+                    closeDetailedModal();
+                }
+            });
+            
             // Load product options (colors, sizes) after modal is shown
             if (typeof loadDetailedProductOptions === 'function') {
                 await loadDetailedProductOptions(sku);
@@ -629,8 +335,6 @@ async function showDetailedModal(sku) {
         alert('Error: ' + error.message);
     }
 }
-
-// Detailed modal functions will be provided by the standardized component
 
 function closeDetailedModal() {
     const modal = document.getElementById('detailedProductModal');
@@ -659,10 +363,7 @@ function closeDetailedModal() {
 // Image viewer functionality is now handled by global js/image-viewer.js
 
 // Make all functions globally available
-window.showShopPopup = showShopPopup;
-window.hideShopPopup = hideShopPopup;
 window.showProductDetails = showProductDetails;
-// Modal functions are now handled by the standardized component
 window.closeDetailedModal = closeDetailedModal;
 window.showDetailedModal = showDetailedModal;
 </script>
@@ -754,9 +455,7 @@ window.showDetailedModal = showDetailedModal;
             <!-- Sale badge will be added dynamically by JavaScript -->
             <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full cursor-pointer" 
                  onclick="showProductDetails('<?php echo $sku; ?>')"
-                 data-product-data="<?php echo $safeJsonData; ?>"
-                 onmouseenter="try { showShopPopup(this, JSON.parse(this.getAttribute('data-product-data'))); } catch(e) { console.warn('Product data parsing error:', e); }"
-                 onmouseleave="hideShopPopup()">
+                 data-product-data="<?php echo $safeJsonData; ?>">
                 <?php 
                 // Display product images using database-driven system
                 if ($primaryImageData && !empty($primaryImageData['image_path'])) {
@@ -828,29 +527,7 @@ window.showDetailedModal = showDetailedModal;
 require_once __DIR__ . '/../components/quantity_modal.php';
 ?>
 
-<!-- Enhanced Product Popup for Shop -->
-<div id="shopProductPopup" class="product-popup-enhanced">
-    <div class="popup-content-enhanced">
-        <img class="popup-image-enhanced" src="" alt="">
-        <div class="popup-details-enhanced">
-            <div class="popup-title-enhanced"></div>
-            <div class="popup-category-enhanced"></div>
-            <div class="popup-sku" style="font-size: 12px; color: #888; margin-bottom: 4px; font-family: monospace;"></div>
-            <div class="popup-stock" style="font-size: 12px; margin-bottom: 8px;"></div>
-            <div class="popup-description-enhanced"></div>
-            <div class="popup-price-enhanced"></div>
-            
-            <!-- Options Container for Colors, Sizes, and Quantity -->
-            <div class="popup-options-container"></div>
-            
-            <div class="popup-actions-enhanced">
-                <button class="popup-add-btn-enhanced">Add to Cart</button>
-                <button class="popup-details-btn-enhanced">View Details</button>
-                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Placeholder for detailed modal (will be dynamically created) -->
 <div id="detailedModalContainer"></div>

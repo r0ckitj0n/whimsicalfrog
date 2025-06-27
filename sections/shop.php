@@ -590,8 +590,12 @@ async function generateDetailedModal(item, images) {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Product Images -->
                     <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-lg overflow-hidden" style="height: 400px; max-height: 50vh;">
-                            <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain">
+                        <div class="bg-gray-50 rounded-lg overflow-hidden cursor-pointer relative group" style="height: 400px; max-height: 50vh;" onclick="openImageViewer('${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}', '${item.productName}')">
+                            <img id="detailedMainImage" src="${primaryImage ? primaryImage.image_path : 'images/items/placeholder.png'}" alt="${item.productName}" class="w-full h-full object-contain transition-transform group-hover:scale-105">
+                            <!-- Zoom indicator -->
+                            <div class="absolute top-3 right-3 bg-black bg-opacity-60 text-white px-2 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                🔍 Click to enlarge
+                            </div>
                         </div>
                         
                         ${images.length > 1 ? `
@@ -686,12 +690,45 @@ async function generateDetailedModal(item, images) {
                 </div>
             </div>
         </div>
+    </div>
+    
+    <!-- Full-Size Image Viewer Modal -->
+    <div id="imageViewerModal" class="modal-overlay" style="display: none; background-color: rgba(0, 0, 0, 0.9); z-index: 1000;">
+        <div class="relative w-full h-full flex items-center justify-center p-4">
+            <!-- Close button -->
+            <button onclick="closeImageViewer()" class="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center">&times;</button>
+            
+            <!-- Previous/Next buttons for multiple images -->
+            ${images.length > 1 ? `
+            <button onclick="previousImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-3xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center">‹</button>
+            <button onclick="nextImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-3xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center">›</button>
+            ` : ''}
+            
+            <!-- Large image -->
+            <img id="viewerImage" src="" alt="" class="max-w-full max-h-full object-contain">
+            
+            <!-- Image info -->
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center bg-black bg-opacity-50 px-4 py-2 rounded-lg">
+                <p id="viewerImageTitle" class="font-medium"></p>
+                ${images.length > 1 ? `<p id="viewerImageCounter" class="text-sm opacity-75"></p>` : ''}
+            </div>
+        </div>
     </div>`;
 }
 
+// Image viewer variables
+let currentViewerImages = [];
+let currentViewerIndex = 0;
+
 // Detailed modal functions
 function switchDetailedImage(imagePath, thumbnail) {
-    document.getElementById('detailedMainImage').src = imagePath;
+    const mainImage = document.getElementById('detailedMainImage');
+    mainImage.src = imagePath;
+    
+    // Update the onclick attribute of the main image container
+    const imageContainer = mainImage.parentElement;
+    const productName = document.querySelector('#detailedProductModal h2').textContent;
+    imageContainer.setAttribute('onclick', `openImageViewer('${imagePath}', '${productName}')`);
     
     // Update thumbnail borders
     const thumbnails = thumbnail.parentElement.children;
@@ -774,9 +811,124 @@ function showDetailedModal() {
     }
 }
 
+// Image viewer functions
+function openImageViewer(imagePath, productName) {
+    // Get all images for this product
+    const modal = document.getElementById('detailedProductModal');
+    const thumbnails = modal.querySelectorAll('.overflow-x-auto img');
+    
+    currentViewerImages = [];
+    currentViewerIndex = 0;
+    
+    if (thumbnails.length > 0) {
+        // Multiple images - build array from thumbnails
+        thumbnails.forEach((thumbnail, index) => {
+            currentViewerImages.push({
+                src: thumbnail.src,
+                alt: thumbnail.alt
+            });
+            if (thumbnail.src === imagePath) {
+                currentViewerIndex = index;
+            }
+        });
+    } else {
+        // Single image
+        currentViewerImages = [{
+            src: imagePath,
+            alt: productName
+        }];
+    }
+    
+    // Set up the viewer
+    const viewerModal = document.getElementById('imageViewerModal');
+    const viewerImage = document.getElementById('viewerImage');
+    const viewerTitle = document.getElementById('viewerImageTitle');
+    const viewerCounter = document.getElementById('viewerImageCounter');
+    
+    viewerImage.src = currentViewerImages[currentViewerIndex].src;
+    viewerImage.alt = currentViewerImages[currentViewerIndex].alt;
+    viewerTitle.textContent = productName;
+    
+    if (viewerCounter && currentViewerImages.length > 1) {
+        viewerCounter.textContent = `${currentViewerIndex + 1} of ${currentViewerImages.length}`;
+    }
+    
+    // Show the viewer
+    viewerModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Add keyboard support
+    document.addEventListener('keydown', handleImageViewerKeyboard);
+}
+
+function closeImageViewer() {
+    const viewerModal = document.getElementById('imageViewerModal');
+    viewerModal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Remove keyboard support
+    document.removeEventListener('keydown', handleImageViewerKeyboard);
+}
+
+function previousImage() {
+    if (currentViewerImages.length <= 1) return;
+    
+    currentViewerIndex = (currentViewerIndex - 1 + currentViewerImages.length) % currentViewerImages.length;
+    updateViewerImage();
+}
+
+function nextImage() {
+    if (currentViewerImages.length <= 1) return;
+    
+    currentViewerIndex = (currentViewerIndex + 1) % currentViewerImages.length;
+    updateViewerImage();
+}
+
+function updateViewerImage() {
+    const viewerImage = document.getElementById('viewerImage');
+    const viewerCounter = document.getElementById('viewerImageCounter');
+    
+    viewerImage.src = currentViewerImages[currentViewerIndex].src;
+    viewerImage.alt = currentViewerImages[currentViewerIndex].alt;
+    
+    if (viewerCounter) {
+        viewerCounter.textContent = `${currentViewerIndex + 1} of ${currentViewerImages.length}`;
+    }
+}
+
+function handleImageViewerKeyboard(event) {
+    switch(event.key) {
+        case 'Escape':
+            closeImageViewer();
+            break;
+        case 'ArrowLeft':
+            previousImage();
+            break;
+        case 'ArrowRight':
+            nextImage();
+            break;
+    }
+}
+
+// Close image viewer when clicking outside the image
+document.addEventListener('DOMContentLoaded', function() {
+    const imageViewerModal = document.getElementById('imageViewerModal');
+    if (imageViewerModal) {
+        imageViewerModal.addEventListener('click', function(event) {
+            if (event.target === imageViewerModal) {
+                closeImageViewer();
+            }
+        });
+    }
+});
+
 // Make all functions globally available
 window.showShopPopup = showShopPopup;
 window.hideShopPopup = hideShopPopup;
+window.openImageViewer = openImageViewer;
+window.closeImageViewer = closeImageViewer;
+window.previousImage = previousImage;
+window.nextImage = nextImage;
 window.showProductDetails = showProductDetails;
 window.generateDetailedModal = generateDetailedModal;
 window.switchDetailedImage = switchDetailedImage;

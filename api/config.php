@@ -1,8 +1,15 @@
 <?php
 // Set error reporting for development
-ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+// For API endpoints, don't display HTML errors - only log them
+if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+    ini_set('display_errors', 0);
+    ini_set('html_errors', 0);
+} else {
+    ini_set('display_errors', 1);
+}
 
 // Helper function to detect if this is an AJAX request
 function isAjaxRequest() {

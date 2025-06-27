@@ -99,31 +99,16 @@
     padding: 1.5rem;
   }
   
-  .settings-button {
+  /* Global button styling using CSS variables - buttons now use .btn-primary class */
+  .admin-settings-button {
     width: 100%;
     display: flex;
     align-items: center;
-    padding: 0.875rem 1rem;
     margin-bottom: 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    background: white;
-    color: #374151;
-    font-weight: 500;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    text-decoration: none;
+    text-align: left;
   }
   
-  .settings-button:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    transform: translateX(4px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  }
-  
-  .settings-button:last-child {
+  .admin-settings-button:last-child {
     margin-bottom: 0;
   }
   
@@ -132,7 +117,7 @@
     height: 1.25rem;
     margin-right: 0.75rem;
     flex-shrink: 0;
-    color: #6366f1;
+    color: currentColor;
   }
   
   .button-text {
@@ -141,8 +126,8 @@
   }
   
   .button-badge {
-    background: #f3f4f6;
-    color: #6b7280;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
     padding: 0.25rem 0.5rem;
     border-radius: 6px;
     font-size: 0.75rem;
@@ -154,63 +139,24 @@
     background: linear-gradient(135deg, #059669, #10b981);
   }
   
-  .content-section .button-icon {
-    color: #059669;
-  }
-  
   .visual-section .section-header {
     background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-  }
-  
-  .visual-section .button-icon {
-    color: #7c3aed;
   }
   
   .business-section .section-header {
     background: linear-gradient(135deg, #dc2626, #ef4444);
   }
   
-  .business-section .button-icon {
-    color: #dc2626;
-  }
-  
   .communication-section .section-header {
     background: linear-gradient(135deg, #ea580c, #f97316);
-  }
-  
-  .communication-section .button-icon {
-    color: #ea580c;
   }
   
   .technical-section .section-header {
     background: linear-gradient(135deg, #0369a1, #0284c7);
   }
   
-  .technical-section .button-icon {
-    color: #0369a1;
-  }
-  
   .integration-section .section-header {
     background: linear-gradient(135deg, #7c2d12, #9a3412);
-  }
-  
-  .integration-section .button-icon {
-    color: #7c2d12;
-  }
-  
-  /* Special styling for disabled/coming soon items */
-  .settings-button:disabled,
-  .settings-button.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background: #f9fafb;
-  }
-  
-  .settings-button:disabled:hover,
-  .settings-button.disabled:hover {
-    transform: none;
-    background: #f9fafb;
-    box-shadow: none;
   }
   
   .coming-soon-notice {
@@ -239,35 +185,35 @@
         <p class="section-description">Organize products, categories, and room content</p>
       </div>
       <div class="section-content">
-        <button id="categoriesBtn" onclick="openCategoriesModal()" class="settings-button">
+        <button id="categoriesBtn" onclick="openCategoriesModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
           </svg>
           <span class="button-text">Categories</span>
         </button>
         
-        <button id="globalColorSizeBtn" onclick="openGlobalColorSizeModal()" class="settings-button">
+        <button id="globalColorSizeBtn" onclick="openGlobalColorSizeModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4 4 4 0 004-4V5z"></path>
           </svg>
           <span class="button-text">Global Colors & Sizes</span>
         </button>
         
-        <button id="roomsBtn" onclick="openRoomSettingsModal()" class="settings-button">
+        <button id="roomsBtn" onclick="openRoomSettingsModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
           </svg>
           <span class="button-text">Room Settings</span>
         </button>
         
-        <button id="roomCategoryBtn" onclick="openRoomCategoryManagerModal()" class="settings-button">
+        <button id="roomCategoryBtn" onclick="openRoomCategoryManagerModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
           <span class="button-text">Room-Category Links</span>
         </button>
         
-        <button id="templateManagerBtn" onclick="openTemplateManagerModal()" class="settings-button">
+        <button id="templateManagerBtn" onclick="openTemplateManagerModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -283,28 +229,28 @@
         <p class="section-description">Customize appearance and interactive elements</p>
       </div>
       <div class="section-content">
-        <button id="globalCSSBtn" onclick="openGlobalCSSModal()" class="settings-button">
+        <button id="globalCSSBtn" onclick="openGlobalCSSModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
           </svg>
           <span class="button-text">Global CSS Rules</span>
         </button>
         
-        <button id="backgroundManagerBtn" onclick="openBackgroundManagerModal()" class="settings-button">
+        <button id="backgroundManagerBtn" onclick="openBackgroundManagerModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
           <span class="button-text">Background Manager</span>
         </button>
         
-        <button id="roomMapperBtn" onclick="openRoomMapperModal()" class="settings-button">
+        <button id="roomMapperBtn" onclick="openRoomMapperModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
           </svg>
           <span class="button-text">Room Mapper</span>
         </button>
         
-        <button id="areaItemMapperBtn" onclick="openAreaItemMapperModal()" class="settings-button">
+        <button id="areaItemMapperBtn" onclick="openAreaItemMapperModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
           </svg>
@@ -320,28 +266,28 @@
         <p class="section-description">Manage sales, promotions, and business insights</p>
       </div>
       <div class="section-content">
-        <button id="websiteConfigBtn" onclick="openWebsiteConfigModal()" class="settings-button">
+        <button id="websiteConfigBtn" onclick="openWebsiteConfigModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
           </svg>
           <span class="button-text">Website Configuration</span>
         </button>
         
-        <button id="analyticsBtn" onclick="openAnalyticsModal()" class="settings-button">
+        <button id="analyticsBtn" onclick="openAnalyticsModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
           <span class="button-text">Analytics & Insights</span>
         </button>
         
-        <button id="salesAdminBtn" onclick="openSalesAdminModal()" class="settings-button">
+        <button id="salesAdminBtn" onclick="openSalesAdminModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
           </svg>
           <span class="button-text">Sales Administration</span>
         </button>
         
-        <button id="cartButtonTextBtn" onclick="openCartButtonTextModal()" class="settings-button">
+        <button id="cartButtonTextBtn" onclick="openCartButtonTextModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0L12 13m0 0l2.5 5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"></path>
           </svg>
@@ -357,21 +303,21 @@
         <p class="section-description">Email configuration and customer messaging</p>
       </div>
       <div class="section-content">
-        <button id="emailConfigBtn" onclick="openEmailConfigModal()" class="settings-button">
+        <button id="emailConfigBtn" onclick="openEmailConfigModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
           <span class="button-text">Email Configuration</span>
         </button>
         
-        <button id="emailHistoryBtn" onclick="openEmailHistoryModal()" class="settings-button">
+        <button id="emailHistoryBtn" onclick="openEmailHistoryModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <span class="button-text">Email History</span>
         </button>
         
-        <button onclick="fixSampleEmail()" class="settings-button" id="fixSampleEmailBtn">
+        <button onclick="fixSampleEmail()" class="btn-primary btn-full-width admin-settings-button" id="fixSampleEmailBtn">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
           </svg>
@@ -387,35 +333,35 @@
         <p class="section-description">System management and technical configuration</p>
       </div>
       <div class="section-content">
-        <button id="systemConfigBtn" onclick="openSystemConfigModal()" class="settings-button">
+        <button id="systemConfigBtn" onclick="openSystemConfigModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
           </svg>
           <span class="button-text">System Reference</span>
         </button>
         
-        <button id="databaseTablesBtn" onclick="openDatabaseTablesModal()" class="settings-button">
+        <button id="databaseTablesBtn" onclick="openDatabaseTablesModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
           <span class="button-text">Database Tables</span>
         </button>
         
-        <button id="fileExplorerBtn" onclick="openFileExplorerModal()" class="settings-button">
+        <button id="fileExplorerBtn" onclick="openFileExplorerModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
           </svg>
           <span class="button-text">File Explorer</span>
         </button>
         
-        <button onclick="openHelpHintsModal()" id="help-hints-btn" class="settings-button">
+        <button onclick="openHelpHintsModal()" id="help-hints-btn" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <span class="button-text">Help Hints Management</span>
         </button>
         
-        <button id="databaseMaintenanceBtn" onclick="openDatabaseMaintenanceModal()" class="settings-button">
+        <button id="databaseMaintenanceBtn" onclick="openDatabaseMaintenanceModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
           </svg>
@@ -431,7 +377,7 @@
         <p class="section-description">Artificial intelligence and automated features</p>
       </div>
       <div class="section-content">
-        <button id="aiSettingsBtn" onclick="openAISettingsModal()" class="settings-button">
+        <button id="aiSettingsBtn" onclick="openAISettingsModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
@@ -440,14 +386,14 @@
         
 
         
-        <button id="squareSettingsBtn" onclick="openSquareSettingsModal()" class="settings-button">
+        <button id="squareSettingsBtn" onclick="openSquareSettingsModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
           </svg>
           <span class="button-text">Configure Square</span>
         </button>
         
-        <button id="receiptSettingsBtn" onclick="openReceiptSettingsModal()" class="settings-button">
+        <button id="receiptSettingsBtn" onclick="openReceiptSettingsModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>

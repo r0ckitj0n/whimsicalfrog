@@ -8,10 +8,16 @@ ini_set('html_errors', 0);
 
 header('Content-Type: application/json');
 
+// Add error handling for fatal errors
+try {
+
 // Add debugging
 error_log("add-order.php: Received request");
 error_log("add-order.php: Request method: " . $_SERVER['REQUEST_METHOD']);
-error_log("add-order.php: Raw input: " . file_get_contents('php://input'));
+error_log("add-order.php: Headers: " . print_r(getallheaders(), true));
+$rawInput = file_get_contents('php://input');
+error_log("add-order.php: Raw input: " . $rawInput);
+error_log("add-order.php: Raw input length: " . strlen($rawInput));
 
 // Function to sync total stock with color quantities
 function syncTotalStockWithColors($pdo, $itemSku) {
@@ -83,9 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success'=>false,'error'=>'Method not allowed']);
     exit;
 }
-$input = json_decode(file_get_contents('php://input'), true);
+$input = json_decode($rawInput, true);
 if (!$input) {
-    echo json_encode(['success'=>false,'error'=>'Invalid JSON']);
+    $jsonError = json_last_error_msg();
+    error_log("add-order.php: JSON decode error: " . $jsonError);
+    echo json_encode(['success'=>false,'error'=>'Invalid JSON: ' . $jsonError]);
     exit;
 }
 
@@ -350,5 +358,11 @@ try {
     error_log("add-order.php: General error: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['success'=>false,'error'=>$e->getMessage()]);
+}
+
+} catch (Exception $e) {
+    error_log("add-order.php: Fatal error: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success'=>false,'error'=>'Fatal error: ' . $e->getMessage()]);
 }
 ?> 

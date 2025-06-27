@@ -610,7 +610,9 @@ class ShoppingCart {
 
     async submitCheckout(paymentMethod, shippingMethod) {
         try {
+            console.log('Session storage user:', sessionStorage.getItem('user'));
             const customerId = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')).userId : null;
+            console.log('Customer ID:', customerId);
             
             if (!customerId) {
                 this.showValidationError('Please log in to complete your order.');
@@ -698,6 +700,14 @@ class ShoppingCart {
                 },
                 body: JSON.stringify(orderData)
             });
+
+            if (!response.ok) {
+                console.error('Server error:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                this.showErrorNotification(`Server error (${response.status}): Please try again or contact support.`);
+                return;
+            }
 
             const result = await response.json();
 

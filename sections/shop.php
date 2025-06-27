@@ -303,23 +303,30 @@ async function showDetailedModal(sku) {
         const modalContainer = document.getElementById('detailedModalContainer');
         modalContainer.innerHTML = modalHtml;
         
-        // The modal component now handles its own showing via the showDetailedModalComponent function it defines
-        // Call the modal's own showDetailedModalComponent function
-        if (typeof window.showDetailedModalComponent !== 'undefined') {
-            // Wait a moment for the DOM to update, then call the modal's function
-            setTimeout(() => {
+        // Execute any script tags in the loaded HTML
+        const scripts = modalContainer.querySelectorAll('script');
+        scripts.forEach(script => {
+            const newScript = document.createElement('script');
+            newScript.textContent = script.textContent;
+            document.head.appendChild(newScript);
+            document.head.removeChild(newScript);
+        });
+        
+        // Wait a moment for scripts to execute, then call the modal's function
+        setTimeout(() => {
+            if (typeof window.showDetailedModalComponent !== 'undefined') {
                 window.showDetailedModalComponent(sku, item);
-            }, 100);
-        } else {
-            // Fallback - show modal manually
-            const modal = document.getElementById('detailedProductModal');
-            if (modal) {
-                modal.style.display = 'flex';
-                modal.classList.remove('hidden');
-                document.body.classList.add('modal-open');
-                document.documentElement.classList.add('modal-open');
+            } else {
+                // Fallback - show modal manually
+                const modal = document.getElementById('detailedProductModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    modal.classList.remove('hidden');
+                    document.body.classList.add('modal-open');
+                    document.documentElement.classList.add('modal-open');
+                }
             }
-        }
+        }, 50);
         
     } catch (error) {
         console.error('Error showing detailed modal:', error);

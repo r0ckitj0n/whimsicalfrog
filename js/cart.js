@@ -228,6 +228,11 @@ class ShoppingCart {
         this.updateCartCount();
         this.dispatchCartUpdate();
         
+        // Force re-render if we're on the cart page
+        if (document.getElementById('cartItems') || document.getElementById('cartContainer')) {
+            this.renderCart();
+        }
+        
         // Track cart action for analytics
         if (window.analyticsTracker) {
             window.analyticsTracker.trackCartAction('remove', itemSku);
@@ -252,6 +257,11 @@ class ShoppingCart {
                 this.saveCart();
                 this.updateCartCount();
                 this.dispatchCartUpdate();
+                
+                // Force re-render if we're on the cart page
+                if (document.getElementById('cartItems') || document.getElementById('cartContainer')) {
+                    this.renderCart();
+                }
             }
         }
     }

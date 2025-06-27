@@ -229,11 +229,11 @@
         <p class="section-description">Customize appearance and interactive elements</p>
       </div>
       <div class="section-content">
-        <button id="globalCSSBtn" onclick="openGlobalCSSModal()" class="btn-primary btn-full-width admin-settings-button">
+        <button id="cssRulesBtn" onclick="openCSSRulesModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
           </svg>
-          <span class="button-text">Global CSS Rules</span>
+          <span class="button-text">CSS Rules</span>
         </button>
         
         <button id="backgroundManagerBtn" onclick="openBackgroundManagerModal()" class="btn-primary btn-full-width admin-settings-button">
@@ -266,12 +266,7 @@
         <p class="section-description">Manage sales, promotions, and business insights</p>
       </div>
       <div class="section-content">
-        <button id="websiteConfigBtn" onclick="openWebsiteConfigModal()" class="btn-primary btn-full-width admin-settings-button">
-          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-          </svg>
-          <span class="button-text">Website Configuration</span>
-        </button>
+
         
         <button id="analyticsBtn" onclick="openAnalyticsModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -7641,54 +7636,336 @@ async function loadAndInjectGlobalCSS() {
     }
 }
 
-// Global CSS Rules Management
-function openGlobalCSSModal() {
-    const modal = document.getElementById('globalCSSModal');
+// CSS Rules Management
+function openCSSRulesModal() {
+    const modal = document.getElementById('cssRulesModal');
     modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    loadGlobalCSSRules();
-    initializeSettingsChangeTracking();
+    loadCSSRules();
+    switchCSSTab('colors'); // Start with colors tab
 }
 
-function closeGlobalCSSModal() {
-    const modal = document.getElementById('globalCSSModal');
+function closeCSSRulesModal() {
+    const modal = document.getElementById('cssRulesModal');
     modal.classList.add('hidden');
-    modal.classList.remove('flex');
     // Clear search when closing modal
     clearCSSSearch();
 }
 
-async function loadGlobalCSSRules() {
-    const loadingDiv = document.getElementById('globalCSSLoading');
-    const contentDiv = document.getElementById('globalCSSContent');
+// Tab management
+function switchCSSTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.css-tab-button').forEach(tab => {
+        tab.classList.remove('border-green-500', 'text-green-600');
+        tab.classList.add('border-transparent', 'text-gray-500');
+    });
     
-    loadingDiv.style.display = 'block';
+    const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeTab) {
+        activeTab.classList.remove('border-transparent', 'text-gray-500');
+        activeTab.classList.add('border-green-500', 'text-green-600');
+    }
+    
+    // Load tab content
+    loadCSSTabContent(tabName);
+}
+
+async function loadCSSRules() {
+    const loadingDiv = document.getElementById('cssRulesLoading');
+    const contentDiv = document.getElementById('cssRulesContent');
+    
+    loadingDiv.style.display = 'flex';
     contentDiv.style.display = 'none';
     
     try {
-        const response = await fetch('/api/global_css_rules.php?action=list');
-        const result = await response.json();
+        // Load both global CSS rules and CSS variables
+        const [cssRulesResponse, cssVariablesResponse] = await Promise.all([
+            fetch('/api/global_css_rules.php?action=list'),
+            fetch('/api/website_config.php?action=get_css_variables')
+        ]);
         
-        if (result.success) {
+        const cssRulesData = await cssRulesResponse.json();
+        const cssVariablesData = await cssVariablesResponse.json();
+        
+        if (cssRulesData.success && cssVariablesData.success) {
+            window.cssRulesData = cssRulesData.grouped;
+            window.cssVariablesData = cssVariablesData.data;
+            
             loadingDiv.style.display = 'none';
             contentDiv.style.display = 'block';
-            renderGlobalCSSRules(result.grouped);
+            
+            // Load default tab
+            switchCSSTab('colors');
         } else {
-            throw new Error(result.error || 'Failed to load CSS rules');
+            throw new Error('Failed to load CSS settings');
         }
     } catch (error) {
         console.error('Error loading CSS rules:', error);
         loadingDiv.innerHTML = `
-            <div class="modal-loading">
-                <div class="text-red-500 mb-3">⚠️</div>
-                <p class="text-red-600">Failed to load CSS rules</p>
-                <p class="text-sm text-gray-500">${error.message}</p>
-                <button onclick="loadGlobalCSSRules()" class="mt-3 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                    Retry
+            <div class="flex flex-col items-center justify-center h-full">
+                <div class="text-red-500 mb-3 text-4xl">⚠️</div>
+                <p class="text-red-600 text-lg">Failed to load CSS settings</p>
+                <p class="text-sm text-gray-500 mb-4">${error.message}</p>
+                <button onclick="loadCSSRules()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                    Try Again
                 </button>
             </div>
         `;
     }
+}
+
+async function loadCSSTabContent(tabName) {
+    const contentDiv = document.getElementById('cssRulesContent');
+    
+    switch(tabName) {
+        case 'colors':
+            renderColorsAndBrandingTab(contentDiv);
+            break;
+        case 'buttons':
+            renderButtonsTab(contentDiv);
+            break;
+        case 'typography':
+            renderTypographyTab(contentDiv);
+            break;
+        case 'layout':
+            renderLayoutTab(contentDiv);
+            break;
+        case 'components':
+            renderComponentsTab(contentDiv);
+            break;
+        case 'advanced':
+            renderAdvancedTab(contentDiv);
+            break;
+        default:
+            contentDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Select a tab to begin customizing your website styling.</p>';
+    }
+}
+
+function renderColorsAndBrandingTab(contentDiv) {
+    const brandRules = window.cssRulesData?.brand || [];
+    const colorVariables = window.cssVariablesData?.colors || [];
+    
+    let html = `
+        <div class="space-y-8">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+                <h3 class="text-xl font-bold text-blue-800 mb-3 flex items-center">
+                    <span class="text-2xl mr-2">🎨</span>
+                    Your Brand Colors
+                </h3>
+                <p class="text-blue-700 mb-6">These colors define your brand identity throughout the website. Changes will be applied everywhere instantly!</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    `;
+    
+    // Add brand color rules
+    brandRules.forEach(rule => {
+        const friendlyName = getFriendlyColorName(rule.rule_name);
+        html += createColorControl(rule, friendlyName);
+    });
+    
+    // Add CSS color variables
+    colorVariables.forEach(variable => {
+        const friendlyName = getFriendlyColorName(variable.variable_name);
+        html += createColorVariableControl(variable, friendlyName);
+    });
+    
+    html += `
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+                <h3 class="text-xl font-bold text-green-800 mb-3">💡 Color Tips for Beginners</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-white rounded-lg p-4 border border-green-100">
+                        <h4 class="font-semibold text-green-700 mb-2">🟢 Primary Color</h4>
+                        <p class="text-gray-600">Your main brand color - used for buttons, links, and key highlights. This should be your most recognizable color!</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-green-100">
+                        <h4 class="font-semibold text-green-700 mb-2">🎯 Accent Colors</h4>
+                        <p class="text-gray-600">Supporting colors that work well with your primary color. Use these for secondary elements.</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-green-100">
+                        <h4 class="font-semibold text-green-700 mb-2">📝 Text Colors</h4>
+                        <p class="text-gray-600">Colors for different types of text. Keep these easy to read - usually dark on light backgrounds.</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border border-green-100">
+                        <h4 class="font-semibold text-green-700 mb-2">🏠 Background Colors</h4>
+                        <p class="text-gray-600">Colors for page backgrounds and sections. Usually light colors work best for readability.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+}
+
+function renderButtonsTab(contentDiv) {
+    const buttonRules = window.cssRulesData?.buttons || [];
+    
+    let html = `
+        <div class="space-y-8">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+                <h3 class="text-xl font-bold text-green-800 mb-3 flex items-center">
+                    <span class="text-2xl mr-2">🔘</span>
+                    Button Styles
+                </h3>
+                <p class="text-green-700 mb-6">Customize how all buttons look and feel across your website. These settings apply to shopping cart buttons, form buttons, and more!</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    `;
+    
+    buttonRules.forEach(rule => {
+        const friendlyName = getFriendlyButtonName(rule.rule_name);
+        html += createButtonControl(rule, friendlyName);
+    });
+    
+    html += `
+                </div>
+                
+                <div class="mt-6 p-4 bg-white rounded-lg border border-green-100">
+                    <h4 class="font-semibold text-gray-800 mb-3">🔍 Preview Your Buttons</h4>
+                    <p class="text-sm text-gray-600 mb-3">See how your button changes will look:</p>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">Primary Button</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">Secondary Button</button>
+                        <button class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">Action Button</button>
+                        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+}
+
+function renderTypographyTab(contentDiv) {
+    const typographyRules = window.cssRulesData?.typography || [];
+    const roomHeaderRules = window.cssRulesData?.room_headers || [];
+    
+    let html = `
+        <div class="space-y-8">
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
+                <h3 class="text-xl font-bold text-purple-800 mb-3 flex items-center">
+                    <span class="text-2xl mr-2">📝</span>
+                    Text & Fonts
+                </h3>
+                <p class="text-purple-700 mb-6">Control how text appears throughout your website - from headings to body text.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    `;
+    
+    [...typographyRules, ...roomHeaderRules].forEach(rule => {
+        const friendlyName = getFriendlyTypographyName(rule.rule_name);
+        html += createTypographyControl(rule, friendlyName);
+    });
+    
+    html += `
+                </div>
+                
+                <div class="mt-6 p-4 bg-white rounded-lg border border-purple-100">
+                    <h4 class="font-semibold text-gray-800 mb-3">📖 Text Preview</h4>
+                    <div class="space-y-3">
+                        <h1 class="text-3xl font-bold">This is a Main Heading</h1>
+                        <h2 class="text-2xl font-semibold">This is a Section Heading</h2>
+                        <p class="text-base">This is regular paragraph text that shows how your body text will appear to visitors.</p>
+                        <a href="#" class="text-blue-500 hover:text-blue-700">This is a link</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+}
+
+function renderLayoutTab(contentDiv) {
+    const layoutRules = window.cssRulesData?.layout || [];
+    
+    let html = `
+        <div class="space-y-8">
+            <div class="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-6 border border-orange-200">
+                <h3 class="text-xl font-bold text-orange-800 mb-3 flex items-center">
+                    <span class="text-2xl mr-2">📐</span>
+                    Layout & Spacing
+                </h3>
+                <p class="text-orange-700 mb-6">Adjust spacing, margins, and overall page layout for better visual appeal.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    `;
+    
+    layoutRules.forEach(rule => {
+        const friendlyName = getFriendlyLayoutName(rule.rule_name);
+        html += createLayoutControl(rule, friendlyName);
+    });
+    
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+}
+
+function renderComponentsTab(contentDiv) {
+    const modalRules = window.cssRulesData?.modals || [];
+    const formRules = window.cssRulesData?.forms || [];
+    
+    let html = `
+        <div class="space-y-8">
+            <div class="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg p-6 border border-teal-200">
+                <h3 class="text-xl font-bold text-teal-800 mb-3 flex items-center">
+                    <span class="text-2xl mr-2">🧩</span>
+                    Website Components
+                </h3>
+                <p class="text-teal-700 mb-6">Customize popups, forms, and other interactive elements that users interact with.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    `;
+    
+    [...modalRules, ...formRules].forEach(rule => {
+        const friendlyName = getFriendlyComponentName(rule.rule_name);
+        html += createComponentControl(rule, friendlyName);
+    });
+    
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+}
+
+function renderAdvancedTab(contentDiv) {
+    const adminRules = window.cssRulesData?.admin || [];
+    const navigationRules = window.cssRulesData?.navigation || [];
+    
+    let html = `
+        <div class="space-y-8">
+            <div class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-6 border border-gray-300">
+                <h3 class="text-xl font-bold text-gray-800 mb-3 flex items-center">
+                    <span class="text-2xl mr-2">⚙️</span>
+                    Advanced Settings
+                </h3>
+                <p class="text-gray-700 mb-6">Advanced styling options for admin interface and navigation. These are more technical settings.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    `;
+    
+    [...adminRules, ...navigationRules].forEach(rule => {
+        const friendlyName = getFriendlyAdvancedName(rule.rule_name);
+        html += createAdvancedControl(rule, friendlyName);
+    });
+    
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
 }
 
 function renderGlobalCSSRules(groupedRules) {
@@ -7972,6 +8249,351 @@ function getHelpText(ruleName) {
         'modal_close_bg_hover': 'Background color when hovering'
     };
     
+    return helpTexts[ruleName] || '';
+}
+
+// Helper functions for creating controls
+function createColorControl(rule, friendlyName) {
+    return `
+        <div class="bg-white rounded-lg p-4 border">
+            <label class="block text-sm font-medium text-gray-700 mb-3">${friendlyName}</label>
+            <div class="flex items-center space-x-3">
+                <input type="color" 
+                       class="w-12 h-10 border border-gray-300 rounded cursor-pointer" 
+                       value="${rule.css_value.startsWith('#') ? rule.css_value : '#87ac3a'}"
+                       onchange="updateCSSRule(${rule.id}, this.value)">
+                <input type="text" 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                       value="${rule.css_value}"
+                       onchange="updateCSSRule(${rule.id}, this.value)"
+                       placeholder="#87ac3a">
+                <div class="w-8 h-8 rounded border border-gray-300" style="background-color: ${rule.css_value}"></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">${getColorHelpText(rule.rule_name)}</p>
+        </div>
+    `;
+}
+
+function createColorVariableControl(variable, friendlyName) {
+    return `
+        <div class="bg-white rounded-lg p-4 border border-blue-100">
+            <label class="block text-sm font-medium text-blue-700 mb-3">${friendlyName}</label>
+            <div class="flex items-center space-x-3">
+                <input type="color" 
+                       class="w-12 h-10 border border-gray-300 rounded cursor-pointer" 
+                       value="${variable.variable_value.startsWith('#') ? variable.variable_value : '#87ac3a'}"
+                       onchange="updateCSSVariable('${variable.variable_name}', this.value, 'colors')">
+                <input type="text" 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                       value="${variable.variable_value}"
+                       onchange="updateCSSVariable('${variable.variable_name}', this.value, 'colors')"
+                       placeholder="#87ac3a">
+                <div class="w-8 h-8 rounded border border-gray-300" style="background-color: ${variable.variable_value}"></div>
+            </div>
+            <p class="text-xs text-blue-600 mt-2">${variable.description || ''}</p>
+        </div>
+    `;
+}
+
+function createButtonControl(rule, friendlyName) {
+    const isColor = rule.css_property && rule.css_property.includes('color');
+    if (isColor) {
+        return createColorControl(rule, friendlyName);
+    }
+    
+    return `
+        <div class="bg-white rounded-lg p-4 border">
+            <label class="block text-sm font-medium text-gray-700 mb-3">${friendlyName}</label>
+            <input type="text" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                   value="${rule.css_value}"
+                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   placeholder="${getPlaceholder(rule.css_property)}">
+            <p class="text-xs text-gray-500 mt-2">${getHelpText(rule.rule_name)}</p>
+        </div>
+    `;
+}
+
+function createTypographyControl(rule, friendlyName) {
+    return `
+        <div class="bg-white rounded-lg p-4 border">
+            <label class="block text-sm font-medium text-gray-700 mb-3">${friendlyName}</label>
+            <input type="text" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                   value="${rule.css_value}"
+                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   placeholder="${getPlaceholder(rule.css_property)}">
+            <p class="text-xs text-gray-500 mt-2">${getHelpText(rule.rule_name)}</p>
+        </div>
+    `;
+}
+
+function createLayoutControl(rule, friendlyName) {
+    return `
+        <div class="bg-white rounded-lg p-4 border">
+            <label class="block text-sm font-medium text-gray-700 mb-3">${friendlyName}</label>
+            <input type="text" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                   value="${rule.css_value}"
+                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   placeholder="${getPlaceholder(rule.css_property)}">
+            <p class="text-xs text-gray-500 mt-2">${getHelpText(rule.rule_name)}</p>
+        </div>
+    `;
+}
+
+function createComponentControl(rule, friendlyName) {
+    const isModalPosition = rule.rule_name === 'modal_close_position';
+    
+    if (isModalPosition) {
+        return `
+            <div class="bg-white rounded-lg p-4 border">
+                <label class="block text-sm font-medium text-gray-700 mb-3">${friendlyName}</label>
+                <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        onchange="updateCSSRule(${rule.id}, this.value)">
+                    <option value="top-right" ${rule.css_value === 'top-right' ? 'selected' : ''}>Top Right (Default)</option>
+                    <option value="top-left" ${rule.css_value === 'top-left' ? 'selected' : ''}>Top Left</option>
+                    <option value="top-center" ${rule.css_value === 'top-center' ? 'selected' : ''}>Top Center</option>
+                    <option value="bottom-right" ${rule.css_value === 'bottom-right' ? 'selected' : ''}>Bottom Right</option>
+                    <option value="bottom-left" ${rule.css_value === 'bottom-left' ? 'selected' : ''}>Bottom Left</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">${getHelpText(rule.rule_name)}</p>
+            </div>
+        `;
+    }
+    
+    const isColor = rule.css_property && rule.css_property.includes('color');
+    if (isColor) {
+        return createColorControl(rule, friendlyName);
+    }
+    
+    return `
+        <div class="bg-white rounded-lg p-4 border">
+            <label class="block text-sm font-medium text-gray-700 mb-3">${friendlyName}</label>
+            <input type="text" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                   value="${rule.css_value}"
+                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   placeholder="${getPlaceholder(rule.css_property)}">
+            <p class="text-xs text-gray-500 mt-2">${getHelpText(rule.rule_name)}</p>
+        </div>
+    `;
+}
+
+function createAdvancedControl(rule, friendlyName) {
+    const isColor = rule.css_property && rule.css_property.includes('color');
+    if (isColor) {
+        return createColorControl(rule, friendlyName);
+    }
+    
+    return `
+        <div class="bg-white rounded-lg p-4 border">
+            <label class="block text-sm font-medium text-gray-700 mb-3">${friendlyName}</label>
+            <input type="text" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                   value="${rule.css_value}"
+                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   placeholder="${getPlaceholder(rule.css_property)}">
+            <p class="text-xs text-gray-500 mt-2">${getHelpText(rule.rule_name)}</p>
+        </div>
+    `;
+}
+
+// Save functions
+async function updateCSSRule(ruleId, value) {
+    try {
+        const response = await fetch('/api/global_css_rules.php?action=update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                id: ruleId,
+                css_value: value
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            updateSaveStatus('Changes auto-saved!', 'text-green-600');
+        } else {
+            updateSaveStatus('Save failed!', 'text-red-600');
+        }
+    } catch (error) {
+        console.error('Error updating CSS rule:', error);
+        updateSaveStatus('Save failed!', 'text-red-600');
+    }
+}
+
+async function saveCSSRules() {
+    const saveStatus = document.getElementById('saveStatus');
+    updateSaveStatus('Saving all changes...', 'text-blue-600');
+    
+    try {
+        // Additional save logic if needed
+        updateSaveStatus('All changes saved!', 'text-green-600');
+        
+        setTimeout(() => {
+            updateSaveStatus('', '');
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Error saving CSS rules:', error);
+        updateSaveStatus('Save failed!', 'text-red-600');
+    }
+}
+
+function updateSaveStatus(message, className) {
+    const saveStatus = document.getElementById('saveStatus');
+    if (saveStatus) {
+        saveStatus.textContent = message;
+        saveStatus.className = `text-sm ${className}`;
+    }
+}
+
+async function resetCSSToDefaults() {
+    if (confirm('Are you sure you want to reset all styling to defaults? This cannot be undone.')) {
+        updateSaveStatus('Resetting to defaults...', 'text-blue-600');
+        try {
+            const response = await fetch('/api/global_css_rules.php?action=reset_defaults', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await response.json();
+            if (data.success) {
+                updateSaveStatus('Reset complete!', 'text-green-600');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                updateSaveStatus('Reset failed!', 'text-red-600');
+            }
+        } catch (error) {
+            console.error('Error resetting CSS:', error);
+            updateSaveStatus('Reset failed!', 'text-red-600');
+        }
+    }
+}
+
+function previewChanges() {
+    // Implementation for preview functionality
+    alert('🔍 Preview functionality will show your changes in a new window (feature coming soon!)');
+}
+
+// Helper functions for friendly names
+function getFriendlyColorName(ruleName) {
+    const colorNames = {
+        'primary_color': 'Primary Brand Color',
+        'secondary_color': 'Secondary Color',
+        'accent_color': 'Accent Color',
+        'text_color': 'Main Text Color',
+        'heading_color': 'Heading Color',
+        'link_color': 'Link Color',
+        'background_color': 'Page Background',
+        'border_color': 'Border Color',
+        'button_bg_primary': 'Primary Button Background',
+        'button_text_primary': 'Button Text Color',
+        'room_title_color': 'Room Title Color',
+        'room_description_color': 'Room Description Color'
+    };
+    return colorNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getFriendlyButtonName(ruleName) {
+    const buttonNames = {
+        'button_bg_primary': 'Button Background Color',
+        'button_bg_primary_hover': 'Button Hover Color',
+        'button_text_primary': 'Button Text Color',
+        'button_padding': 'Button Padding',
+        'button_border_radius': 'Button Corner Roundness',
+        'button_font_size': 'Button Text Size',
+        'button_font_weight': 'Button Text Weight'
+    };
+    return buttonNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getFriendlyTypographyName(ruleName) {
+    const typographyNames = {
+        'font_family_primary': 'Main Website Font',
+        'font_size_base': 'Regular Text Size',
+        'font_size_heading': 'Heading Text Size',
+        'line_height_base': 'Line Spacing',
+        'text_color_primary': 'Main Text Color',
+        'heading_color': 'Heading Color',
+        'room_title_font_family': 'Room Title Font',
+        'room_title_font_size': 'Room Title Size',
+        'room_description_font_size': 'Room Description Size'
+    };
+    return typographyNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getFriendlyLayoutName(ruleName) {
+    const layoutNames = {
+        'spacing_small': 'Small Spacing',
+        'spacing_medium': 'Medium Spacing',
+        'spacing_large': 'Large Spacing',
+        'container_max_width': 'Page Width',
+        'border_radius_default': 'Corner Roundness',
+        'shadow_default': 'Drop Shadow'
+    };
+    return layoutNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getFriendlyComponentName(ruleName) {
+    const componentNames = {
+        'modal_bg_color': 'Popup Background Color',
+        'modal_border_radius': 'Popup Corner Roundness',
+        'modal_shadow': 'Popup Shadow',
+        'modal_close_position': 'Close Button Position',
+        'modal_close_color': 'Close Button Color',
+        'input_border_color': 'Form Input Border',
+        'input_focus_color': 'Form Input Focus Color',
+        'input_padding': 'Form Input Padding'
+    };
+    return componentNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getFriendlyAdvancedName(ruleName) {
+    const advancedNames = {
+        'admin_bg_color': 'Admin Background Color',
+        'admin_text_color': 'Admin Text Color',
+        'nav_bg_color': 'Navigation Background',
+        'nav_text_color': 'Navigation Text Color',
+        'nav_link_hover': 'Navigation Hover Color'
+    };
+    return advancedNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getColorHelpText(ruleName) {
+    const helpTexts = {
+        'primary_color': 'Your main brand color used for buttons and highlights throughout the site',
+        'secondary_color': 'Supporting color that complements your primary color',
+        'text_color': 'Color for regular paragraph text - keep it easy to read!',
+        'heading_color': 'Color for page and section headings',
+        'button_bg_primary': 'Background color for all "Add to Cart" and action buttons',
+        'room_title_color': 'Color for room names (T-Shirts, Tumblers, etc.)'
+    };
+    return helpTexts[ruleName] || '';
+}
+
+// Search functionality
+function filterCSSRules(searchTerm) {
+    // Implementation for search functionality
+    const searchResults = document.getElementById('searchResultsCount');
+    if (searchTerm.length > 0) {
+        searchResults.style.display = 'block';
+        searchResults.textContent = `Searching for "${searchTerm}"...`;
+    } else {
+        searchResults.style.display = 'none';
+    }
+}
+
+function clearCSSSearch() {
+    const searchInput = document.getElementById('cssSearchInput');
+    const searchResults = document.getElementById('searchResultsCount');
+    if (searchInput) searchInput.value = '';
+    if (searchResults) searchResults.style.display = 'none';
+    };
+    
     return helpTexts[ruleName] || 'Customize this style property';
 }
 
@@ -8229,18 +8851,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Global CSS Rules Modal -->
-<div id="globalCSSModal" class="admin-modal-overlay hidden" onclick="closeGlobalCSSModal()">
-    <div class="admin-modal-content" onclick="event.stopPropagation()">
+<!-- CSS Rules Modal (Fullscreen) -->
+<div id="cssRulesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeCSSRulesModal()">
+    <div class="bg-white w-full h-full flex flex-col" onclick="event.stopPropagation()">
         <!-- Header -->
-        <div class="admin-modal-header">
-            <h2 class="modal-title">🎨 Website Style Settings</h2>
-            <button onclick="closeGlobalCSSModal()" class="modal-close">&times;</button>
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <div class="flex items-center">
+                <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
+                </svg>
+                <div>
+                    <h2 class="text-2xl font-bold">🎨 Website Style Settings</h2>
+                    <p class="text-green-100 text-sm">Customize colors, fonts, buttons, and more - no coding required!</p>
+                </div>
+            </div>
+            <button onclick="closeCSSRulesModal()" class="text-white hover:text-gray-200 text-3xl font-bold">&times;</button>
         </div>
         
         <!-- Search Bar -->
-        <div class="px-6 py-4 bg-white border-b border-gray-200">
-            <div class="relative">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="relative max-w-md">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -8249,34 +8879,75 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="text" 
                        id="cssSearchInput"
                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm"
-                       placeholder="Search CSS settings... (e.g., 'button color', 'font size', 'modal')"
+                       placeholder="Search for colors, fonts, buttons, etc..."
                        onkeyup="filterCSSRules(this.value)">
             </div>
             <div id="searchResultsCount" class="text-xs text-gray-500 mt-1" style="display: none;">
                 <!-- Search results count will appear here -->
             </div>
         </div>
-            
-            <!-- Body -->
-            <div class="modal-body" id="globalCSSScrollContainer">
-                <!-- Loading State -->
-                <div id="globalCSSLoading" class="modal-loading">
-                    <div class="modal-loading-spinner"></div>
-                    <p class="text-gray-600">Loading style settings...</p>
-                </div>
-                
-                <!-- Content -->
-                <div id="globalCSSContent" style="display: none;">
-                    <!-- User-friendly sections will be loaded here -->
-                </div>
+        
+        <!-- Tab Navigation -->
+        <div class="px-6 py-2 bg-white border-b border-gray-200">
+            <nav class="flex space-x-6">
+                <button onclick="switchCSSTab('colors')" data-tab="colors" 
+                        class="css-tab-button border-b-2 border-green-500 text-green-600 py-2 px-1 text-sm font-medium">
+                    🎨 Colors & Branding
+                </button>
+                <button onclick="switchCSSTab('buttons')" data-tab="buttons" 
+                        class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                    🔘 Buttons & Interactive
+                </button>
+                <button onclick="switchCSSTab('typography')" data-tab="typography" 
+                        class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                    📝 Text & Fonts
+                </button>
+                <button onclick="switchCSSTab('layout')" data-tab="layout" 
+                        class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                    📐 Layout & Spacing
+                </button>
+                <button onclick="switchCSSTab('components')" data-tab="components" 
+                        class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                    🧩 Components
+                </button>
+                <button onclick="switchCSSTab('advanced')" data-tab="advanced" 
+                        class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                    ⚙️ Advanced
+                </button>
+            </nav>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <!-- Loading State -->
+            <div id="cssRulesLoading" class="flex flex-col items-center justify-center h-full">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                <p class="mt-4 text-gray-600">Loading your style settings...</p>
             </div>
             
-            <!-- Footer -->
-            <div class="modal-footer">
-                <button onclick="resetToDefaults()" class="modal-button btn-secondary">Reset to Defaults</button>
-                <button onclick="closeGlobalCSSModal()" class="modal-button btn-secondary">Cancel</button>
-                <button onclick="saveGlobalCSSRules()" class="modal-button btn-primary" style="display: none;">
-                    💾 Save Changes
+            <!-- Content -->
+            <div id="cssRulesContent" style="display: none;">
+                <!-- Tab content will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <button onclick="resetCSSToDefaults()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
+                    🔄 Reset to Defaults
+                </button>
+                <button onclick="previewChanges()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                    👁️ Preview Changes
+                </button>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span id="saveStatus" class="text-sm text-gray-500"></span>
+                <button onclick="closeCSSRulesModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                    Cancel
+                </button>
+                <button onclick="saveCSSRules()" class="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium">
+                    💾 Save All Changes
                 </button>
             </div>
         </div>
@@ -9248,14 +9919,7 @@ function cancelCategoryEdit(element, originalName) {
 }
 
 // Website Configuration Modal Functions
-function openWebsiteConfigModal() {
-    document.getElementById('websiteConfigModal').classList.remove('hidden');
-    showWebsiteConfigTab('marketingDefaults');
-}
 
-function closeWebsiteConfigModal() {
-    document.getElementById('websiteConfigModal').classList.add('hidden');
-}
 
 function showWebsiteConfigTab(tabName) {
     // Update tab buttons
@@ -10033,38 +10697,7 @@ async function saveCartButtonTexts(texts) {
 
 </script>
 
-<!-- Website Configuration Modal -->
-<div id="websiteConfigModal" class="admin-modal-overlay hidden">
-    <div class="admin-modal-content">
-        <!-- Modal Header -->
-        <div class="admin-modal-header">
-            <h2 class="modal-title">🌐 Website Configuration</h2>
-            <button onclick="closeWebsiteConfigModal()" class="modal-close">&times;</button>
-        </div>
-        
-        <!-- Tab Navigation -->
-        <div class="bg-gray-50 px-6 py-2 border-b flex-shrink-0">
-            <div class="flex space-x-4 overflow-x-auto">
-                <button id="marketingDefaultsTab" class="website-config-tab px-4 py-2 rounded-t-lg bg-white text-teal-600 border-b-2 border-teal-600 font-semibold whitespace-nowrap" onclick="showWebsiteConfigTab('marketingDefaults')">Marketing Defaults</button>
-                <button id="cssVariablesTab" class="website-config-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-teal-600 whitespace-nowrap" onclick="showWebsiteConfigTab('cssVariables')">CSS Variables</button>
-                <button id="uiComponentsTab" class="website-config-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-teal-600 whitespace-nowrap" onclick="showWebsiteConfigTab('uiComponents')">UI Components</button>
-                <button id="generalConfigTab" class="website-config-tab px-4 py-2 rounded-t-lg text-gray-600 hover:text-teal-600 whitespace-nowrap" onclick="showWebsiteConfigTab('generalConfig')">General Config</button>
-            </div>
-        </div>
-        
-        <!-- Content Area -->
-        <div class="modal-body" style="flex: 1; overflow-y: auto;">
-            <div id="websiteConfigContent">
-                <!-- Content will be loaded dynamically -->
-            </div>
-        </div>
-        
-        <!-- Footer -->
-        <div class="bg-gray-50 px-6 py-4 border-t flex justify-end space-x-2 flex-shrink-0">
-            <button onclick="closeWebsiteConfigModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Close</button>
-        </div>
-    </div>
-</div>
+
 
 <!-- Cart Button Text Modal -->
 <div id="cartButtonTextModal" class="admin-modal-overlay" style="display: none;" onclick="closeCartButtonTextModal()">

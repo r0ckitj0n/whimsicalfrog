@@ -117,6 +117,8 @@ if (count($colors) < count($itemIds)) {
 
 $paymentMethod = $input['paymentMethod'];
 $shippingMethod = $input['shippingMethod'] ?? 'Customer Pickup'; // Default to Customer Pickup if not provided
+$shippingAddress = $input['shippingAddress'] ?? null; // Shipping address data (optional)
+
 // Payment status defaults to Pending unless it's a verified credit card payment
 $paymentStatus = 'Pending'; // All payments start as Pending until manually verified
 $orderStatus   = in_array($paymentMethod, ['Cash','Check']) ? 'Pending' : 'Processing';
@@ -159,9 +161,15 @@ $orderId = $customerNum . $compactDate . $shippingCode . $randomNum;
 
 $pdo->beginTransaction();
 try {
-    // Add shippingMethod to the insert statement
-    $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?)");
-    $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $orderStatus, $date, $paymentStatus]);
+    // Format shipping address for storage
+    $shippingAddressJson = null;
+    if ($shippingAddress && is_array($shippingAddress)) {
+        $shippingAddressJson = json_encode($shippingAddress);
+    }
+    
+    // Add shippingMethod and shippingAddress to the insert statement
+    $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, shippingAddress, status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?,?)");
+    $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $shippingAddressJson, $orderStatus, $date, $paymentStatus]);
     
     // Get the next order item ID sequence number
     $itemCountStmt = $pdo->prepare('SELECT COUNT(*) FROM order_items');

@@ -257,6 +257,71 @@ class ShoppingCart {
         return window.showValidation(message);
     }
 
+    async loadProfileAddress() {
+        try {
+            const user = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
+            if (!user) return;
+
+            // Fetch user profile data
+            const response = await fetch(`api/users.php?id=${user.userId}`);
+            const userData = await response.json();
+            
+            if (userData && !userData.error) {
+                const addressParts = [];
+                if (userData.addressLine1) addressParts.push(userData.addressLine1);
+                if (userData.addressLine2) addressParts.push(userData.addressLine2);
+                
+                const cityStateZip = [];
+                if (userData.city) cityStateZip.push(userData.city);
+                if (userData.state) cityStateZip.push(userData.state);
+                if (userData.zipCode) cityStateZip.push(userData.zipCode);
+                
+                if (cityStateZip.length > 0) {
+                    addressParts.push(cityStateZip.join(', '));
+                }
+                
+                const profileAddressText = document.getElementById('profileAddressText');
+                if (profileAddressText) {
+                    if (addressParts.length > 0) {
+                        profileAddressText.innerHTML = addressParts.join('<br>');
+                    } else {
+                        profileAddressText.innerHTML = '<em>No address on file. Please enter a delivery address below.</em>';
+                        // Auto-select custom address option if no profile address
+                        const customOption = document.querySelector('input[name="addressOption"][value="custom"]');
+                        if (customOption) {
+                            customOption.checked = true;
+                            this.toggleAddressFields();
+                        }
+                    }
+                }
+                
+                // Store user data for later use
+                this.userProfileData = userData;
+            }
+        } catch (error) {
+            console.error('Error loading profile address:', error);
+            const profileAddressText = document.getElementById('profileAddressText');
+            if (profileAddressText) {
+                profileAddressText.innerHTML = '<em>Error loading address. Please enter a delivery address below.</em>';
+            }
+        }
+    }
+
+    toggleAddressFields() {
+        const profileOption = document.querySelector('input[name="addressOption"][value="profile"]');
+        const customOption = document.querySelector('input[name="addressOption"][value="custom"]');
+        const profileDisplay = document.getElementById('profileAddressDisplay');
+        const customFields = document.getElementById('customAddressFields');
+        
+        if (profileOption && profileOption.checked) {
+            if (profileDisplay) profileDisplay.style.display = 'block';
+            if (customFields) customFields.style.display = 'none';
+        } else if (customOption && customOption.checked) {
+            if (profileDisplay) profileDisplay.style.display = 'none';
+            if (customFields) customFields.style.display = 'block';
+        }
+    }
+
     async renderCart() {
         let cartContainer = document.getElementById('cartContainer');
         if (!cartContainer) {
@@ -403,7 +468,34 @@ class ShoppingCart {
 
                 <div id="shippingInfo" style="display: none;" class="mb-4 p-3 bg-gray-100 rounded">
                     <h4 class="font-semibold mb-2">Shipping Address</h4>
-                    <textarea id="shippingAddress" placeholder="Enter your shipping address..." class="w-full p-2 border rounded" rows="3"></textarea>
+                    
+                    <!-- Address Selection Options -->
+                    <div class="mb-3">
+                        <label class="flex items-center mb-2">
+                            <input type="radio" name="addressOption" value="profile" class="mr-2" checked onchange="cart.toggleAddressFields()">
+                            <span>Use my profile address</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="addressOption" value="custom" class="mr-2" onchange="cart.toggleAddressFields()">
+                            <span>Enter a different delivery address</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Profile Address Display -->
+                    <div id="profileAddressDisplay" class="mb-3 p-3 bg-white border rounded">
+                        <div class="text-sm text-gray-600" id="profileAddressText">Loading your address...</div>
+                    </div>
+                    
+                    <!-- Custom Address Fields -->
+                    <div id="customAddressFields" style="display: none;" class="space-y-2">
+                        <input type="text" id="customAddressLine1" placeholder="Address Line 1" class="w-full p-2 border rounded">
+                        <input type="text" id="customAddressLine2" placeholder="Address Line 2 (Optional)" class="w-full p-2 border rounded">
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="text" id="customCity" placeholder="City" class="p-2 border rounded">
+                            <input type="text" id="customState" placeholder="State" class="p-2 border rounded">
+                            <input type="text" id="customZipCode" placeholder="ZIP Code" class="p-2 border rounded">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex space-x-2">
@@ -419,6 +511,9 @@ class ShoppingCart {
         modal.querySelectorAll('input[name="shippingMethod"]').forEach(input => {
             input.addEventListener('change', window.toggleShippingInfo);
         });
+        
+        // Load user profile address when shipping info is shown
+        this.loadProfileAddress();
     }
 
     async proceedToCheckout() {
@@ -465,24 +560,76 @@ class ShoppingCart {
                 return;
             }
 
+            // Collect shipping address information if needed
+            let shippingAddress = null;
+            if (shippingMethod !== 'pickup') {
+                const addressOption = document.querySelector('input[name="addressOption"]:checked')?.value;
+                
+                if (addressOption === 'profile') {
+                    // Use profile address
+                    if (this.userProfileData) {
+                        shippingAddress = {
+                            addressLine1: this.userProfileData.addressLine1 || '',
+                            addressLine2: this.userProfileData.addressLine2 || '',
+                            city: this.userProfileData.city || '',
+                            state: this.userProfileData.state || '',
+                            zipCode: this.userProfileData.zipCode || ''
+                        };
+                    }
+                } else if (addressOption === 'custom') {
+                    // Use custom address
+                    const line1 = document.getElementById('customAddressLine1')?.value?.trim() || '';
+                    const line2 = document.getElementById('customAddressLine2')?.value?.trim() || '';
+                    const city = document.getElementById('customCity')?.value?.trim() || '';
+                    const state = document.getElementById('customState')?.value?.trim() || '';
+                    const zipCode = document.getElementById('customZipCode')?.value?.trim() || '';
+                    
+                    if (!line1 || !city || !state || !zipCode) {
+                        this.showValidationError('Please fill in all required address fields (Address Line 1, City, State, ZIP Code).');
+                        return;
+                    }
+                    
+                    shippingAddress = {
+                        addressLine1: line1,
+                        addressLine2: line2,
+                        city: city,
+                        state: state,
+                        zipCode: zipCode
+                    };
+                }
+                
+                // Validate that we have a shipping address for non-pickup orders
+                if (!shippingAddress || !shippingAddress.addressLine1) {
+                    this.showValidationError('Please provide a shipping address for delivery orders.');
+                    return;
+                }
+            }
+
             const itemIds = this.items.map(item => item.sku);
             const quantities = this.items.map(item => item.quantity);
             const colors = this.items.map(item => item.color || null);
+
+            const orderData = {
+                customerId: customerId,
+                itemIds: itemIds,
+                quantities: quantities,
+                colors: colors,
+                paymentMethod: paymentMethod,
+                shippingMethod: shippingMethod,
+                total: this.getTotal()
+            };
+
+            // Add shipping address if provided
+            if (shippingAddress) {
+                orderData.shippingAddress = shippingAddress;
+            }
 
             const response = await fetch('api/add-order.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    customerId: customerId,
-                    itemIds: itemIds,
-                    quantities: quantities,
-                    colors: colors,
-                    paymentMethod: paymentMethod,
-                    shippingMethod: shippingMethod,
-                    total: this.getTotal()
-                })
+                body: JSON.stringify(orderData)
             });
 
             const result = await response.json();

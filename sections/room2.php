@@ -979,8 +979,17 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Load dynamic background script -->
+<!-- Load centralized room functions and cart functionality -->
+<script src="js/room-functions.js?v=<?php echo time(); ?>"></script>
+<script src="js/cart.js?v=<?php echo time(); ?>"></script>
+<script src="js/sales.js?v=<?php echo time(); ?>"></script>
 <script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>
+
+<!-- Container for global item modal -->
+<div id="globalModalContainer"></div>
+
+<!-- Include centralized quantity modal -->
+<?php include 'components/quantity_modal.php'; ?>
 
 <!-- Load dynamic room settings -->
 <script>

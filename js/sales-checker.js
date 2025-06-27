@@ -244,16 +244,23 @@ function updatePopupContent(popup, product) {
             // Hide popup first
             hidePopup();
             
-            // Add to cart with modal
-            const sku = product.sku;
-            const name = product.name || product.productName;
-            const price = parseFloat(product.retailPrice || product.price || 0);
-            const image = product.primaryImageUrl || product.image || product.imageUrl || `images/items/${product.sku}A.png`;
-            
-            if (typeof window.addToCartWithModal === 'function') {
-                window.addToCartWithModal(sku, name, price, image);
+            // Use the global modal system
+            if (typeof window.showGlobalItemModal === 'function') {
+                window.showGlobalItemModal(product.sku);
             } else {
-                console.error('Global addToCartWithModal function not available');
+                console.error('Global modal system not available, falling back to quantity modal');
+                
+                // Fallback to old system
+                const sku = product.sku;
+                const name = product.name || product.productName;
+                const price = parseFloat(product.retailPrice || product.price || 0);
+                const image = product.primaryImageUrl || product.image || product.imageUrl || `images/items/${product.sku}A.png`;
+                
+                if (typeof window.addToCartWithModal === 'function') {
+                    window.addToCartWithModal(sku, name, price, image);
+                } else {
+                    console.error('No modal system available');
+                }
             }
         };
     }

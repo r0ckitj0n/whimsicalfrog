@@ -11,18 +11,29 @@ $filterShippingMethod = $_GET['filter_shipping_method'] ?? '';
 $filterPaymentStatus = $_GET['filter_payment_status'] ?? '';
 
 // Build the WHERE clause based on filters
-$whereConditions = ["o.status IN ('Pending','Processing')"];
+$whereConditions = [];
 $params = [];
+
+// Default to Processing status if no status filter is provided, but allow "All" to show everything
+if (!isset($_GET['filter_status'])) {
+    // No filter parameter provided at all (first page load), default to Processing
+    $defaultStatus = 'Processing';
+} else {
+    // Filter parameter exists - could be empty string for "All" or specific status
+    $defaultStatus = $filterStatus;
+}
 
 if (!empty($filterDate)) {
     $whereConditions[] = "DATE(o.date) = ?";
     $params[] = $filterDate;
 }
 
-if (!empty($filterStatus)) {
+// Apply status filter (defaults to Processing if not specified, but allows "All" to show everything)
+if (!empty($defaultStatus)) {
     $whereConditions[] = "o.status = ?";
-    $params[] = $filterStatus;
+    $params[] = $defaultStatus;
 }
+// Note: If $defaultStatus is empty (user selected "All"), no status filter is applied
 
 if (!empty($filterPaymentMethod)) {
     $whereConditions[] = "o.paymentMethod = ?";
@@ -46,11 +57,11 @@ if (!empty($filterItems)) {
     $params[] = "%{$filterItems}%";
 }
 
-$whereClause = implode(' AND ', $whereConditions);
+$whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
 
-$stmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id WHERE {$whereClause} ORDER BY o.date DESC");
+$stmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id {$whereClause} ORDER BY o.date DESC");
 $stmt->execute($params);
-$unfulfilled = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get unique values for filter dropdowns
 $statusOptions = $pdo->query("SELECT DISTINCT status FROM orders WHERE status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY status")->fetchAll(PDO::FETCH_COLUMN);
@@ -261,7 +272,7 @@ $messageType = $_GET['type'] ?? '';
             <select name="filter_status" id="filter_status">
                 <option value="">All</option>
                 <?php foreach ($statusOptions as $status): ?>
-                <option value="<?= htmlspecialchars($status) ?>" <?= $filterStatus === $status ? 'selected' : '' ?>><?= htmlspecialchars($status) ?></option>
+                <option value="<?= htmlspecialchars($status) ?>" <?= $defaultStatus === $status ? 'selected' : '' ?>><?= htmlspecialchars($status) ?></option>
                 <?php endforeach; ?>
             </select>
             
@@ -301,11 +312,11 @@ $messageType = $_GET['type'] ?? '';
     <?php endif; ?>
 
     <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <?php if (empty($unfulfilled)): ?>
+        <?php if (empty($orders)): ?>
             <div class="text-center text-gray-500 py-12">
-                <div class="text-4xl mb-4">🎉</div>
-                <div class="text-lg font-medium mb-2">All orders are fulfilled!</div>
-                <div class="text-sm">No pending shipments at this time.</div>
+                <div class="text-4xl mb-4">📋</div>
+                <div class="text-lg font-medium mb-2">No orders found</div>
+                <div class="text-sm">Try adjusting your filters to see more orders.</div>
             </div>
         <?php else: ?>
             <table class="fulfillment-table">
@@ -315,7 +326,7 @@ $messageType = $_GET['type'] ?? '';
                     </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($unfulfilled as $order): ?>
+                <?php foreach ($orders as $order): ?>
                     <tr class="hover:bg-gray-50">
                         <td class="font-medium text-gray-900">#<?= htmlspecialchars($order['id'] ?? '') ?></td>
                         <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>

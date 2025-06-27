@@ -563,7 +563,8 @@ async function generateDetailedModal(item, images) {
     }
     
     // Ensure we have the right field name for price - API returns 'retailPrice'
-    item.price = item.retailPrice || item.price || 0;
+    const priceValue = parseFloat(item.retailPrice || item.price || 0);
+    item.price = isNaN(priceValue) ? 0 : priceValue;
     item.productName = item.name || item.productName;
     
     return `
@@ -597,7 +598,7 @@ async function generateDetailedModal(item, images) {
                     <!-- Product Details -->
                     <div class="space-y-6">
                         <div>
-                            <p class="text-3xl font-bold text-green-600">$${parseFloat(item.retailPrice || item.price || 0).toFixed(2)}</p>
+                            <p class="text-3xl font-bold text-green-600">$${item.price.toFixed(2)}</p>
                             <p class="text-sm text-gray-500 mt-1">SKU: ${item.sku}</p>
                         </div>
                         

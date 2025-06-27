@@ -144,11 +144,16 @@ if (!isset($GLOBALS['marketingHelper'])) {
         position: fixed !important;
         width: 100% !important;
         height: 100% !important;
+        top: 0 !important;
+        left: 0 !important;
     }
     
     /* Ensure html doesn't scroll when modal is open */
     html.modal-open {
         overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
     }
     
     /* Modal overlay - prevent any scrolling */
@@ -561,34 +566,8 @@ function hideShopPopupImmediate() {
 // Show product details in large modal
 async function showProductDetails(sku) {
     try {
-        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
-        const data = await response.json();
-        
-        if (data.success && data.item) {
-            // Remove any existing detailed modal
-            const existingModal = document.getElementById('detailedProductModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            // Create and append new detailed modal
-            const modalContainer = document.getElementById('detailedModalContainer');
-            // This line is now handled by the new showDetailedModal function
-            
-            // Show the modal
-            showDetailedModal();
-            
-            // Add brand-styled tooltip to the main image container after modal is shown
-            setTimeout(() => {
-                const imageContainer = document.querySelector('#detailedProductModal .cursor-pointer.relative.group');
-                if (imageContainer && typeof addEnlargeTooltip === 'function') {
-                    addEnlargeTooltip(imageContainer);
-                }
-            }, 100);
-        } else {
-            console.error('Failed to load product details:', data.message);
-            alert('Error: ' + (data.message || 'Failed to load product details'));
-        }
+        // Call the new showDetailedModal function with the SKU
+        await showDetailedModal(sku);
     } catch (error) {
         console.error('Error loading product details:', error);
         alert('Error: ' + error.message);
@@ -604,40 +583,24 @@ function closeDetailedModal() {
         // Remove modal-open class and reset styles
         document.body.classList.remove('modal-open');
         document.documentElement.classList.remove('modal-open');
+        
+        // Reset body styles
         document.body.style.overflow = '';
         document.body.style.position = '';
         document.body.style.width = '';
         document.body.style.height = '';
         document.body.style.top = '';
         document.body.style.left = '';
+        
+        // Reset html styles
         document.documentElement.style.overflow = '';
+        document.documentElement.style.position = '';
+        document.documentElement.style.width = '';
+        document.documentElement.style.height = '';
     }
 }
 
-function showDetailedModal() {
-    const modal = document.getElementById('detailedProductModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        // Add modal-open class to prevent scrolling
-        document.body.classList.add('modal-open');
-        document.documentElement.classList.add('modal-open');
-        
-        // Add click-outside-to-close functionality
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeDetailedModal();
-            }
-        });
-        
-        // Add escape key to close
-        document.addEventListener('keydown', function escapeHandler(e) {
-            if (e.key === 'Escape') {
-                closeDetailedModal();
-                document.removeEventListener('keydown', escapeHandler);
-            }
-        });
-    }
-}
+// showDetailedModal function is now defined later with proper SKU handling
 
 // Image viewer functionality is now handled by global js/image-viewer.js
 

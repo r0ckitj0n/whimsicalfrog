@@ -369,10 +369,18 @@ window.showValidation = (message, options = {}) => {
     return window.wfNotifications.validation(message, options);
 };
 
-// Replace common alert patterns
-window.alert = (message) => {
+// Override the global alert function to use our notification system
+window.alert = function(message) {
     console.log('Alert called with message:', message);
-    return window.wfNotifications.info(message, { persistent: true });
+    
+    // Detect if this is a cart-related message (contains "added to your cart")
+    if (message.includes('added to your cart') || message.includes('added to cart')) {
+        // Use success notification with auto-dismiss for cart messages
+        window.wfNotifications.success(message);
+    } else {
+        // For other alert messages, use info type with auto-dismiss (not persistent)
+        window.wfNotifications.info(message);
+    }
 };
 
 // Enhanced showToast function for backward compatibility

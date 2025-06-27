@@ -20,9 +20,12 @@ function openImageViewer(imagePath, productName, allImages = null) {
     currentViewerImages = [];
     currentViewerIndex = 0;
     
-    if (allImages && allImages.length > 0) {
+    if (allImages && (allImages.length > 0 || (allImages instanceof HTMLCollection && allImages.length > 0))) {
+        // Convert HTMLCollection to Array if needed
+        const imagesArray = allImages instanceof HTMLCollection ? Array.from(allImages) : allImages;
+        
         // Use provided images array
-        currentViewerImages = allImages.map(img => ({
+        currentViewerImages = imagesArray.map(img => ({
             src: img.image_path || img.src || img,
             alt: img.alt_text || img.alt || productName
         }));

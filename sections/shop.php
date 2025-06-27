@@ -134,6 +134,13 @@ if (!isset($GLOBALS['marketingHelper'])) {
     .modal-content-scrollable {
         flex: 1;
         max-height: calc(90vh - 80px); /* Account for header height */
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Prevent double scrollbars by ensuring body doesn't scroll when modal is open */
+    body.modal-open {
+        overflow: hidden;
     }
 
     /* Popup Options Styling */
@@ -711,6 +718,7 @@ function closeDetailedModal() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+        document.body.classList.remove('modal-open');
     }
 }
 
@@ -719,6 +727,7 @@ function showDetailedModal() {
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
     }
 }
 
@@ -773,15 +782,19 @@ window.showDetailedModal = showDetailedModal;
                 $enhancedDescription = getEnhancedDescription($sku, $product['description'] ?? '');
                 $description = htmlspecialchars($enhancedDescription);
                 
-                // Clean description for JavaScript (remove HTML entities and limit length)
+                // Clean description for JavaScript (remove HTML entities, emojis, and limit length)
                 $jsDescription = strip_tags($product['description'] ?? '');
                 $jsDescription = html_entity_decode($jsDescription, ENT_QUOTES, 'UTF-8');
+                // Remove emojis and special characters that break JavaScript
+                $jsDescription = preg_replace('/[\x{1F600}-\x{1F64F}]|[\x{1F300}-\x{1F5FF}]|[\x{1F680}-\x{1F6FF}]|[\x{1F1E0}-\x{1F1FF}]|[\x{2600}-\x{26FF}]|[\x{2700}-\x{27BF}]/u', '', $jsDescription);
                 if (strlen($jsDescription) > 100) {
                     $jsDescription = substr($jsDescription, 0, 100) . '...';
                 }
                 
-                // Clean product name for JavaScript (remove HTML entities)
+                // Clean product name for JavaScript (remove HTML entities and emojis)
                 $jsProductName = html_entity_decode($productName, ENT_QUOTES, 'UTF-8');
+                // Remove emojis and special characters that break JavaScript
+                $jsProductName = preg_replace('/[\x{1F600}-\x{1F64F}]|[\x{1F300}-\x{1F5FF}]|[\x{1F680}-\x{1F6FF}]|[\x{1F1E0}-\x{1F1FF}]|[\x{2600}-\x{26FF}]|[\x{2700}-\x{27BF}]/u', '', $jsProductName);
                 
                 // Get selling points for this product
                 $sellingPoints = getSellingPoints($sku);

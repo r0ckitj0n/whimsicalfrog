@@ -194,13 +194,93 @@ function positionPopup(popup, element) {
 }
 
 /**
- * Universal quantity modal opener for all rooms
+ * Universal quantity modal opener for all rooms - now uses detailed modal system
  */
-window.openQuantityModal = function(product) {
+window.openQuantityModal = async function(product) {
     // Hide any existing popup first
     hidePopupImmediate();
     
-    // Use global modal function from cart.js
+    const sku = product.sku;
+    
+    try {
+        // Use the detailed modal system like the shop page
+        const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
+        const data = await response.json();
+        
+        if (data.success && data.item) {
+            // Remove any existing detailed modal
+            const existingModal = document.getElementById('detailedProductModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Get the modal HTML from the API
+            const modalResponse = await fetch('/api/render_detailed_modal.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    item: data.item,
+                    images: data.images || []
+                })
+            });
+            
+            const modalHtml = await modalResponse.text();
+            
+            // Insert the modal into a container
+            let modalContainer = document.getElementById('detailedModalContainer');
+            if (!modalContainer) {
+                modalContainer = document.createElement('div');
+                modalContainer.id = 'detailedModalContainer';
+                document.body.appendChild(modalContainer);
+            }
+            modalContainer.innerHTML = modalHtml;
+            
+            // Execute any script tags in the loaded HTML
+            const scripts = modalContainer.querySelectorAll('script');
+            scripts.forEach(script => {
+                const newScript = document.createElement('script');
+                newScript.textContent = script.textContent;
+                document.head.appendChild(newScript);
+                document.head.removeChild(newScript);
+            });
+            
+            // Wait a moment for scripts to execute, then show the modal
+            setTimeout(() => {
+                if (typeof window.showDetailedModalComponent !== 'undefined') {
+                    window.showDetailedModalComponent(sku, data.item);
+                } else {
+                    // Fallback - show modal manually
+                    const modal = document.getElementById('detailedProductModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        modal.classList.remove('hidden');
+                        document.body.classList.add('modal-open');
+                        document.documentElement.classList.add('modal-open');
+                    }
+                }
+            }, 50);
+            
+        } else {
+            console.error('Failed to load product details:', data.message);
+            // Fallback to old system if API fails
+            fallbackToSimpleModal(product);
+        }
+    } catch (error) {
+        console.error('Error loading detailed modal:', error);
+        // Fallback to old system if there's an error
+        fallbackToSimpleModal(product);
+    }
+};
+
+/**
+ * Fallback to simple modal if detailed modal fails
+ */
+function fallbackToSimpleModal(product) {
+    console.log('Using fallback simple modal for:', product.sku);
+    
+    // Use the old addToCartWithModal system as fallback
     if (typeof window.addToCartWithModal === 'function') {
         const sku = product.sku;
         const name = product.name || product.productName;
@@ -211,39 +291,8 @@ window.openQuantityModal = function(product) {
         return;
     }
     
-    console.error('Global cart functions not available - falling back to basic modal');
-    
-    // Basic fallback modal (should rarely be used)
-    const quantityModal = document.getElementById('quantityModal');
-    if (!quantityModal) {
-        console.error('Quantity modal not found!');
-        return;
-    }
-    
-    // Store product for later use
-    window.currentModalProduct = product;
-    
-    // Basic modal population
-    const modalProductImage = document.getElementById('modalProductImage');
-    const modalProductName = document.getElementById('modalProductName');
-    const modalProductPrice = document.getElementById('modalProductPrice');
-    const quantityInput = document.getElementById('quantityInput');
-    
-    if (modalProductImage) {
-        modalProductImage.src = product.primaryImageUrl || `images/items/${product.sku}A.png`;
-        modalProductImage.onerror = function() {
-            this.src = 'images/items/placeholder.png';
-            this.onerror = null;
-        };
-    }
-    
-    if (modalProductName) modalProductName.textContent = product.name || product.productName || 'Product';
-    if (modalProductPrice) modalProductPrice.textContent = '$' + parseFloat(product.retailPrice || product.price || 0).toFixed(2);
-    if (quantityInput) quantityInput.value = 1;
-    
-    // Show modal
-    quantityModal.classList.remove('hidden');
-};
+    console.error('Both detailed modal and fallback systems failed');
+}
 
 /**
  * Universal detailed modal opener for all rooms

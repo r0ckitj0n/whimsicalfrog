@@ -542,6 +542,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<!-- Container for detailed product modal -->
+<div id="detailedModalContainer"></div>
+
 <script>
 // Universal room functionality
 const ROOM_NUMBER = <?php echo json_encode($roomNumber); ?>;

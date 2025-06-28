@@ -16662,87 +16662,138 @@ function displaySystemAnalysis(analysis) {
 }
 
 async function cleanupStaleFiles() {
-    showCleanupConfirmation(
-        '🗑️ Clean Stale Files',
-        'Remove backup and temporary files?',
-        'This action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.',
-        'Very Safe',
-        'success',
-        async () => {
-            try {
-                showSuccess('Scanning for stale files...');
-                
-                const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files&admin_token=whimsical_admin_2024');
-                const data = await response.json();
-                
-                if (data.success) {
-                    showCleanupResults('🗑️ File Cleanup Results', data);
-                    runSystemAnalysis(); // Refresh analysis
-                } else {
-                    showError('File cleanup failed: ' + data.error);
-                }
-            } catch (error) {
-                console.error('File cleanup error:', error);
-                showError('File cleanup failed: ' + error.message);
-            }
+    console.log('cleanupStaleFiles called');
+    
+    // Fallback notification functions if global ones don't exist
+    const showSuccessLocal = (msg) => {
+        if (typeof showSuccess === 'function') {
+            showSuccess(msg);
+        } else {
+            alert('✅ ' + msg);
         }
-    );
+    };
+    
+    const showErrorLocal = (msg) => {
+        if (typeof showError === 'function') {
+            showError(msg);
+        } else {
+            alert('❌ ' + msg);
+        }
+    };
+    
+    // Use simple confirm dialog instead of custom modal for now
+    if (!confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.')) {
+        return;
+    }
+    
+    try {
+        showSuccessLocal('Scanning for stale files...');
+        
+        const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        console.log('Cleanup response:', data);
+        
+        if (data.success) {
+            showCleanupResults('🗑️ File Cleanup Results', data);
+            runSystemAnalysis(); // Refresh analysis
+        } else {
+            showErrorLocal('File cleanup failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('File cleanup error:', error);
+        showErrorLocal('File cleanup failed: ' + error.message);
+    }
 }
 
 async function removeUnusedCode() {
-    showCleanupConfirmation(
-        '💬 Remove Stale Comments',
-        'Remove stale comments from code files?',
-        'This action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.',
-        'Very Safe',
-        'success',
-        async () => {
-            try {
-                showSuccess('Scanning code files for stale comments...');
-                
-                const response = await fetch('/api/cleanup_system.php?action=remove_unused_code&admin_token=whimsical_admin_2024');
-                const data = await response.json();
-                
-                if (data.success) {
-                    showCleanupResults('💬 Code Cleanup Results', data);
-                    runSystemAnalysis(); // Refresh analysis
-                } else {
-                    showError('Code cleanup failed: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Code cleanup error:', error);
-                showError('Code cleanup failed: ' + error.message);
-            }
+    console.log('removeUnusedCode called');
+    
+    // Fallback notification functions if global ones don't exist
+    const showSuccessLocal = (msg) => {
+        if (typeof showSuccess === 'function') {
+            showSuccess(msg);
+        } else {
+            alert('✅ ' + msg);
         }
-    );
+    };
+    
+    const showErrorLocal = (msg) => {
+        if (typeof showError === 'function') {
+            showError(msg);
+        } else {
+            alert('❌ ' + msg);
+        }
+    };
+    
+    // Use simple confirm dialog instead of custom modal for now
+    if (!confirm('💬 Remove Stale Comments\n\nRemove stale comments from code files?\n\nThis action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.')) {
+        return;
+    }
+    
+    try {
+        showSuccessLocal('Scanning code files for stale comments...');
+        
+        const response = await fetch('/api/cleanup_system.php?action=remove_unused_code&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        console.log('Code cleanup response:', data);
+        
+        if (data.success) {
+            showCleanupResults('💬 Code Cleanup Results', data);
+            runSystemAnalysis(); // Refresh analysis
+        } else {
+            showErrorLocal('Code cleanup failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Code cleanup error:', error);
+        showErrorLocal('Code cleanup failed: ' + error.message);
+    }
 }
 
 async function optimizeDatabase() {
-    showCleanupConfirmation(
-        '⚡ Optimize Database',
-        'Optimize all database tables?',
-        'This action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.',
-        'Very Safe',
-        'success',
-        async () => {
-            try {
-                showSuccess('Starting database optimization... This may take a moment.');
-                
-                const response = await fetch('/api/cleanup_system.php?action=optimize_database&admin_token=whimsical_admin_2024');
-                const data = await response.json();
-                
-                if (data.success) {
-                    showDatabaseOptimizationResults(data);
-                    runSystemAnalysis(); // Refresh analysis
-                } else {
-                    showError('Database optimization failed: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Database optimization error:', error);
-                showError('Database optimization failed: ' + error.message);
-            }
+    console.log('optimizeDatabase called');
+    
+    // Fallback notification functions if global ones don't exist
+    const showSuccessLocal = (msg) => {
+        if (typeof showSuccess === 'function') {
+            showSuccess(msg);
+        } else {
+            alert('✅ ' + msg);
         }
-    );
+    };
+    
+    const showErrorLocal = (msg) => {
+        if (typeof showError === 'function') {
+            showError(msg);
+        } else {
+            alert('❌ ' + msg);
+        }
+    };
+    
+    // Use simple confirm dialog instead of custom modal for now
+    if (!confirm('⚡ Optimize Database\n\nOptimize all database tables?\n\nThis action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.')) {
+        return;
+    }
+    
+    try {
+        showSuccessLocal('Starting database optimization... This may take a moment.');
+        
+        const response = await fetch('/api/cleanup_system.php?action=optimize_database&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        console.log('Database optimization response:', data);
+        
+        if (data.success) {
+            showDatabaseOptimizationResults(data);
+            runSystemAnalysis(); // Refresh analysis
+        } else {
+            showErrorLocal('Database optimization failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Database optimization error:', error);
+        showErrorLocal('Database optimization failed: ' + error.message);
+    }
 }
 
 function showDatabaseOptimizationResults(data) {
@@ -16870,11 +16921,21 @@ function closeOptimizationResults() {
 }
 
 function showCleanupResults(title, data) {
-    const removedFiles = data.removed_files || [];
-    const processedFiles = data.processed_files || [];
-    const errors = data.errors || [];
+    console.log('showCleanupResults called:', {title, data});
     
-    let resultsHtml = `
+    try {
+        const removedFiles = data.removed_files || [];
+        const processedFiles = data.processed_files || [];
+        const errors = data.errors || [];
+        
+        // Fallback if modal system doesn't work
+        if (!document.body) {
+            const summary = `${title}\n\n${data.message}\n\nFiles removed: ${removedFiles.length}\nFiles processed: ${processedFiles.length}\nErrors: ${errors.length}`;
+            alert(summary);
+            return;
+        }
+        
+        let resultsHtml = `
         <div id="cleanupResultsModal" class="admin-modal-overlay" onclick="closeCleanupResults()">
             <div class="admin-modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
                 <div class="admin-modal-header">
@@ -16975,7 +17036,18 @@ function showCleanupResults(title, data) {
     document.body.insertAdjacentHTML('beforeend', resultsHtml);
     
     // Also show a summary notification
-    showSuccess(data.message);
+    if (typeof showSuccess === 'function') {
+        showSuccess(data.message);
+    } else {
+        alert('✅ ' + data.message);
+    }
+    
+    } catch (error) {
+        console.error('Error showing cleanup results:', error);
+        // Fallback to simple alert
+        const summary = `${title}\n\n${data.message}\n\nFiles removed: ${(data.removed_files || []).length}\nFiles processed: ${(data.processed_files || []).length}\nErrors: ${(data.errors || []).length}`;
+        alert(summary);
+    }
 }
 
 function closeCleanupResults() {

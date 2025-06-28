@@ -16402,6 +16402,184 @@ function closeSystemCleanupModal() {
     document.getElementById('systemCleanupModal').classList.add('hidden');
 }
 
+// Branded confirmation modal for cleanup actions
+function showCleanupConfirmation(title, question, description, safetyLevel, safetyType, onConfirm) {
+    const safetyColor = safetyType === 'success' ? 'text-green-600' : 
+                       safetyType === 'warning' ? 'text-orange-600' : 'text-red-600';
+    
+    const confirmationHtml = `
+        <div id="cleanupConfirmationModal" class="admin-modal-overlay" onclick="closeCleanupConfirmation()">
+            <div class="admin-modal-content" style="max-width: 500px;" onclick="event.stopPropagation()">
+                <div class="admin-modal-header">
+                    <h2 class="modal-title">${title}</h2>
+                    <button onclick="closeCleanupConfirmation()" class="modal-close">&times;</button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-2">${question}</h4>
+                        <p class="text-gray-600 mb-4">${description}</p>
+                        
+                        <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                            <div class="flex items-center">
+                                <span class="font-medium text-gray-700 mr-2">Safety Level:</span>
+                                <span class="font-bold ${safetyColor}">${safetyLevel}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button onclick="closeCleanupConfirmation()" class="modal-button btn-secondary mr-3">
+                        Cancel
+                    </button>
+                    <button onclick="confirmCleanupAction()" class="modal-button btn-primary">
+                        Proceed
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', confirmationHtml);
+    
+    // Store the confirmation callback
+    window.currentCleanupAction = onConfirm;
+}
+
+function closeCleanupConfirmation() {
+    const modal = document.getElementById('cleanupConfirmationModal');
+    if (modal) {
+        modal.remove();
+    }
+    window.currentCleanupAction = null;
+}
+
+async function confirmCleanupAction() {
+    closeCleanupConfirmation();
+    if (window.currentCleanupAction) {
+        await window.currentCleanupAction();
+    }
+}
+
+// Special dangerous confirmation for Start Over
+function showStartOverConfirmation() {
+    const confirmationHtml = `
+        <div id="startOverConfirmationModal" class="admin-modal-overlay" onclick="closeStartOverConfirmation()">
+            <div class="admin-modal-content" style="max-width: 600px;" onclick="event.stopPropagation()">
+                <div class="admin-modal-header bg-red-50">
+                    <h2 class="modal-title text-red-800">⚠️ DANGER: Start Over</h2>
+                    <button onclick="closeStartOverConfirmation()" class="modal-close">&times;</button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
+                        <h4 class="text-lg font-bold text-red-800 mb-2">⚠️ WARNING: This action is IRREVERSIBLE!</h4>
+                        <p class="text-red-700 mb-3">This will permanently delete ALL of the following data:</p>
+                        <ul class="text-red-700 list-disc list-inside mb-3 space-y-1">
+                            <li><strong>All orders and order items</strong></li>
+                            <li><strong>All inventory items and product images</strong></li>
+                            <li><strong>All customer accounts</strong></li>
+                            <li><strong>All related data and files</strong></li>
+                        </ul>
+                        <p class="text-red-700 font-medium">Only admin accounts will be preserved.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">
+                            To confirm this dangerous action, type <strong class="text-red-600">START OVER</strong> exactly:
+                        </label>
+                        <input type="text" id="startOverConfirmText" class="modal-input w-full" 
+                               placeholder="Type START OVER to confirm" 
+                               onkeyup="checkStartOverConfirmation()"
+                               style="border-color: #dc2626;">
+                    </div>
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="font-medium text-yellow-800 mr-2">Safety Level:</span>
+                            <span class="font-bold text-red-600">EXTREMELY DANGEROUS</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button onclick="closeStartOverConfirmation()" class="modal-button btn-secondary mr-3">
+                        Cancel
+                    </button>
+                    <button id="startOverProceedBtn" onclick="executeStartOver()" 
+                            class="modal-button btn-danger" disabled>
+                        Start Over (IRREVERSIBLE)
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', confirmationHtml);
+}
+
+function closeStartOverConfirmation() {
+    const modal = document.getElementById('startOverConfirmationModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function checkStartOverConfirmation() {
+    const input = document.getElementById('startOverConfirmText');
+    const button = document.getElementById('startOverProceedBtn');
+    
+    if (input.value === 'START OVER') {
+        button.disabled = false;
+        button.classList.remove('opacity-50', 'cursor-not-allowed');
+        input.style.borderColor = '#10b981';
+        input.style.backgroundColor = '#ecfdf5';
+    } else {
+        button.disabled = true;
+        button.classList.add('opacity-50', 'cursor-not-allowed');
+        input.style.borderColor = '#dc2626';
+        input.style.backgroundColor = '#fef2f2';
+    }
+}
+
+async function executeStartOver() {
+    const input = document.getElementById('startOverConfirmText');
+    
+    if (input.value !== 'START OVER') {
+        showError('You must type "START OVER" exactly to confirm this action.');
+        return;
+    }
+    
+    closeStartOverConfirmation();
+    
+    try {
+        showSuccess('Starting system wipe... This may take a moment.');
+        
+        const response = await fetch('/api/start_over.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                confirmation: 'START OVER'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('System successfully reset! All data except admin accounts has been removed.');
+            runSystemAnalysis(); // Refresh analysis
+        } else {
+            showError('Start Over failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Start Over error:', error);
+        showError('Start Over failed: ' + error.message);
+    }
+}
+
 async function runSystemAnalysis() {
     try {
         const response = await fetch('/api/cleanup_system.php?action=analyze');
@@ -16472,8 +16650,8 @@ function displaySystemAnalysis(analysis) {
                     </div>
                     
                     <div class="space-y-2">
-                        <button onclick="confirmStartOver()" class="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
-                            🔥 Start Over
+                        <button onclick="showStartOverConfirmation()" class="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                            ⚠️ Start Over
                         </button>
                         <p class="text-xs text-gray-600">⚠️ Wipe all data except admin accounts (DANGEROUS)</p>
                     </div>
@@ -16484,99 +16662,104 @@ function displaySystemAnalysis(analysis) {
 }
 
 async function cleanupStaleFiles() {
-    if (!confirm('Remove backup and temporary files? This is generally safe.')) return;
-    
-    try {
-        const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files');
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess(data.message);
-            runSystemAnalysis(); // Refresh analysis
-        } else {
-            showError('File cleanup failed: ' + data.error);
+    showCleanupConfirmation(
+        '🗑️ Clean Stale Files',
+        'Remove backup and temporary files?',
+        'This action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.',
+        'Very Safe',
+        'success',
+        async () => {
+            try {
+                const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.message);
+                    runSystemAnalysis(); // Refresh analysis
+                } else {
+                    showError('File cleanup failed: ' + data.error);
+                }
+            } catch (error) {
+                console.error('File cleanup error:', error);
+                showError('File cleanup failed: ' + error.message);
+            }
         }
-    } catch (error) {
-        console.error('File cleanup error:', error);
-        showError('File cleanup failed: ' + error.message);
-    }
+    );
 }
 
 async function removeUnusedCode() {
-    if (!confirm('Remove stale comments (TODO, FIXME, DEBUG) from code files? This only removes comments, not actual code.')) return;
-    
-    try {
-        const response = await fetch('/api/cleanup_system.php?action=remove_unused_code');
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess(data.message);
-            runSystemAnalysis(); // Refresh analysis
-        } else {
-            showError('Code cleanup failed: ' + data.error);
+    showCleanupConfirmation(
+        '💬 Remove Stale Comments',
+        'Remove stale comments from code files?',
+        'This action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.',
+        'Very Safe',
+        'success',
+        async () => {
+            try {
+                const response = await fetch('/api/cleanup_system.php?action=remove_unused_code');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.message);
+                    runSystemAnalysis(); // Refresh analysis
+                } else {
+                    showError('Code cleanup failed: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Code cleanup error:', error);
+                showError('Code cleanup failed: ' + error.message);
+            }
         }
-    } catch (error) {
-        console.error('Code cleanup error:', error);
-        showError('Code cleanup failed: ' + error.message);
-    }
+    );
 }
 
 async function optimizeDatabase() {
-    if (!confirm('Optimize all database tables? This is a standard maintenance operation.')) return;
-    
-    try {
-        const response = await fetch('/api/cleanup_system.php?action=optimize_database');
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess(data.message);
-            runSystemAnalysis(); // Refresh analysis
-        } else {
-            showError('Database optimization failed: ' + data.error);
+    showCleanupConfirmation(
+        '⚡ Optimize Database',
+        'Optimize all database tables?',
+        'This action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.',
+        'Very Safe',
+        'success',
+        async () => {
+            try {
+                const response = await fetch('/api/cleanup_system.php?action=optimize_database');
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.message);
+                    runSystemAnalysis(); // Refresh analysis
+                } else {
+                    showError('Database optimization failed: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Database optimization error:', error);
+                showError('Database optimization failed: ' + error.message);
+            }
         }
-    } catch (error) {
-        console.error('Database optimization error:', error);
-        showError('Database optimization failed: ' + error.message);
-    }
+    );
 }
 
-function confirmStartOver() {
-    const modal = document.getElementById('startOverConfirmModal');
-    modal.classList.remove('hidden');
-}
-
-function closeStartOverConfirmModal() {
-    document.getElementById('startOverConfirmModal').classList.add('hidden');
-}
-
-async function executeStartOver() {
-    const confirmText = document.getElementById('startOverConfirmText').value;
-    
-    if (confirmText.toUpperCase() !== 'START OVER') {
-        showError('You must type "START OVER" exactly to confirm');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/start_over.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ confirm: true })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess('System reset completed! All data wiped except admin accounts.');
-            closeStartOverConfirmModal();
-            closeSystemCleanupModal();
-        } else {
-            showError('Start over failed: ' + data.error);
+// Add btn-danger CSS class if not already defined
+if (!document.querySelector('style[data-cleanup-styles]')) {
+    const style = document.createElement('style');
+    style.setAttribute('data-cleanup-styles', 'true');
+    style.textContent = `
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+            border: 1px solid #dc2626;
         }
-    } catch (error) {
-        console.error('Start over error:', error);
-        showError('Start over failed: ' + error.message);
-    }
+        .btn-danger:hover {
+            background-color: #b91c1c;
+            border-color: #b91c1c;
+        }
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #dc2626;
+        }
+    `;
+    document.head.appendChild(style);
 }
 </script>
 

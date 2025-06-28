@@ -1,9 +1,7 @@
 <?php
 // Comprehensive script to automatically fix sample email content
-ob_start();
-ob_clean();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 // Set JSON header
 header('Content-Type: application/json');
@@ -22,15 +20,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Start session
 session_start();
 
-// Include database configuration
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/config.php';
+try {
+    // Include database configuration
+    require_once __DIR__ . '/../includes/auth.php';
+    require_once __DIR__ . '/config.php';
 
-// Use centralized authentication
-requireAdmin();
+    // Use centralized authentication with API response mode
+    requireAdmin(true);
 
-// Authentication is handled by requireAdmin() above
-$userData = getCurrentUser();
+    // Authentication is handled by requireAdmin() above
+    $userData = getCurrentUser();
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Configuration error: ' . $e->getMessage()
+    ]);
+    exit;
+}
 
 try {
     // Database connection

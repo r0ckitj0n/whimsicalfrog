@@ -16556,7 +16556,7 @@ async function executeStartOver() {
     try {
         showSuccess('Starting system wipe... This may take a moment.');
         
-        const response = await fetch('/api/start_over.php', {
+        const response = await fetch('/api/start_over.php?admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16582,7 +16582,7 @@ async function executeStartOver() {
 
 async function runSystemAnalysis() {
     try {
-        const response = await fetch('/api/cleanup_system.php?action=analyze');
+        const response = await fetch('/api/cleanup_system.php?action=analyze&admin_token=whimsical_admin_2024');
         const data = await response.json();
         
         if (data.success) {
@@ -16672,7 +16672,7 @@ async function cleanupStaleFiles() {
             try {
                 showSuccess('Scanning for stale files...');
                 
-                const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files');
+                const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files&admin_token=whimsical_admin_2024');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -16700,7 +16700,7 @@ async function removeUnusedCode() {
             try {
                 showSuccess('Scanning code files for stale comments...');
                 
-                const response = await fetch('/api/cleanup_system.php?action=remove_unused_code');
+                const response = await fetch('/api/cleanup_system.php?action=remove_unused_code&admin_token=whimsical_admin_2024');
                 const data = await response.json();
                 
                 if (data.success) {
@@ -16728,7 +16728,7 @@ async function optimizeDatabase() {
             try {
                 showSuccess('Starting database optimization... This may take a moment.');
                 
-                const response = await fetch('/api/cleanup_system.php?action=optimize_database');
+                const response = await fetch('/api/cleanup_system.php?action=optimize_database&admin_token=whimsical_admin_2024');
                 const data = await response.json();
                 
                 if (data.success) {

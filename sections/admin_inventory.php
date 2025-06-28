@@ -11387,8 +11387,8 @@ function renderSizeColorCombinations(data) {
             sizeHtml += '</div></div>';
             sizeHtml += '<div class="flex items-center space-x-2">';
             sizeHtml += '<div class="inline-stock-editor cursor-pointer px-2 py-1 bg-white border border-gray-200 rounded text-sm hover:border-blue-400 transition-colors" data-type="color" data-id="' + color.size_id + '" data-field="stock_level" data-value="' + color.stock_level + '" onclick="editInlineStock(this)" title="Click to edit stock level">' + color.stock_level + '</div>';
-            sizeHtml += '<button type="button" onclick="editCombination(\'' + (color.size_id || '').replace(/'/g, '\\\'') + '\', \'' + (color.size_id || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-blue-600 hover:text-blue-800 transition-colors" title="Edit this combination">Edit</button>';
-            sizeHtml += '<button type="button" onclick="deleteCombination(\'' + (color.size_id || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-red-600 hover:text-red-800 transition-colors" title="Delete this combination">Delete</button>';
+            sizeHtml += '<button type="button" onclick="editCombination(\'' + String(color.size_id || '').replace(/'/g, '\\\'') + '\', \'' + String(color.size_id || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-blue-600 hover:text-blue-800 transition-colors" title="Edit this combination">Edit</button>';
+            sizeHtml += '<button type="button" onclick="deleteCombination(\'' + String(color.size_id || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-red-600 hover:text-red-800 transition-colors" title="Delete this combination">Delete</button>';
             sizeHtml += '</div></div>';
         });
         sizeHtml += '</div>';

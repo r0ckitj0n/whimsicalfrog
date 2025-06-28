@@ -16666,7 +16666,15 @@ async function cleanupStaleFiles() {
     console.log('showSuccess available:', typeof window.showSuccess);
     console.log('wfNotifications available:', typeof window.wfNotifications);
     
-    // Wait a bit for notifications to load if needed
+    // Wait for notifications to load if they're not available yet
+    let retryCount = 0;
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
+        console.log(`Waiting for notification system... attempt ${retryCount + 1}`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retryCount++;
+    }
+    
+    // Set up notification functions if needed
     if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
         console.log('Setting up notification functions from wfNotifications');
         window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
@@ -16738,7 +16746,15 @@ async function removeUnusedCode() {
     console.log('showSuccess available:', typeof window.showSuccess);
     console.log('wfNotifications available:', typeof window.wfNotifications);
     
-    // Wait a bit for notifications to load if needed
+    // Wait for notifications to load if they're not available yet
+    let retryCount = 0;
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
+        console.log(`Waiting for notification system... attempt ${retryCount + 1}`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retryCount++;
+    }
+    
+    // Set up notification functions if needed
     if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
         console.log('Setting up notification functions from wfNotifications');
         window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
@@ -16802,7 +16818,15 @@ async function optimizeDatabase() {
     console.log('showSuccess available:', typeof window.showSuccess);
     console.log('wfNotifications available:', typeof window.wfNotifications);
     
-    // Wait a bit for notifications to load if needed
+    // Wait for notifications to load if they're not available yet
+    let retryCount = 0;
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
+        console.log(`Waiting for notification system... attempt ${retryCount + 1}`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retryCount++;
+    }
+    
+    // Set up notification functions if needed
     if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
         console.log('Setting up notification functions from wfNotifications');
         window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);

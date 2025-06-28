@@ -1121,24 +1121,31 @@ async function compactRepairDatabase() {
     const progressTitle = document.getElementById('backupProgressTitle');
     const progressSubtitle = document.getElementById('backupProgressSubtitle');
     
-    progressTitle.textContent = '🔧 Database Compact & Repair';
-    progressSubtitle.textContent = 'Optimizing and repairing database tables...';
+    // Safely update progress elements with null checks
+    if (progressTitle) {
+        progressTitle.textContent = '🔧 Database Compact & Repair';
+    }
+    if (progressSubtitle) {
+        progressSubtitle.textContent = 'Optimizing and repairing database tables...';
+    }
     
     try {
         // Step 1: Create backup first
-        progressSteps.innerHTML = `
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                        <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+        if (progressSteps) {
+            progressSteps.innerHTML = `
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Creating safety backup...</p>
+                        <p class="text-xs text-gray-500">Backing up database before optimization</p>
                     </div>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">Creating safety backup...</p>
-                    <p class="text-xs text-gray-500">Backing up database before optimization</p>
-                </div>
-            </div>
-        `;
+            `;
+        }
         
         // Create database backup first
         const backupResponse = await fetch('/api/backup_database.php', {
@@ -1157,32 +1164,34 @@ async function compactRepairDatabase() {
         }
         
         // Step 2: Compact and repair
-        progressSteps.innerHTML = `
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+        if (progressSteps) {
+            progressSteps.innerHTML = `
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Safety backup created</p>
+                        <p class="text-xs text-gray-500">Database backed up successfully</p>
                     </div>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">Safety backup created</p>
-                    <p class="text-xs text-gray-500">Database backed up successfully</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                        <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Optimizing database tables...</p>
+                        <p class="text-xs text-gray-500">Running OPTIMIZE and REPAIR operations</p>
                     </div>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">Optimizing database tables...</p>
-                    <p class="text-xs text-gray-500">Running OPTIMIZE and REPAIR operations</p>
-                </div>
-            </div>
-        `;
+            `;
+        }
         
         // Run compact and repair operations
         const repairResponse = await fetch('/api/compact_repair_database.php', {
@@ -1201,34 +1210,36 @@ async function compactRepairDatabase() {
         }
         
         // Step 3: Complete
-        progressSteps.innerHTML = `
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+        if (progressSteps) {
+            progressSteps.innerHTML = `
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Safety backup created</p>
+                        <p class="text-xs text-gray-500">Database backed up successfully</p>
                     </div>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">Safety backup created</p>
-                    <p class="text-xs text-gray-500">Database backed up successfully</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Database optimization complete</p>
+                        <p class="text-xs text-gray-500">${repairResult.tables_processed || 0} tables optimized and repaired</p>
                     </div>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">Database optimization complete</p>
-                    <p class="text-xs text-gray-500">${repairResult.tables_processed || 0} tables optimized and repaired</p>
-                </div>
-            </div>
-        `;
+            `;
+        }
         
         // Show completion details
         showBackupCompletionDetails({
@@ -1251,21 +1262,23 @@ async function compactRepairDatabase() {
         console.error('Database compact/repair error:', error);
         
         // Show error state
-        progressSteps.innerHTML = `
-            <div class="flex items-center space-x-3 mb-4">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                        </svg>
+        if (progressSteps) {
+            progressSteps.innerHTML = `
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-red-900">Database optimization failed</p>
+                        <p class="text-xs text-red-600">${error.message}</p>
                     </div>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-red-900">Database optimization failed</p>
-                    <p class="text-xs text-red-600">${error.message}</p>
-                </div>
-            </div>
-        `;
+            `;
+        }
         
         // Add retry button
         const retryButton = document.createElement('button');
@@ -1275,7 +1288,9 @@ async function compactRepairDatabase() {
             closeBackupProgressModal();
             compactRepairDatabase();
         };
-        progressSteps.appendChild(retryButton);
+        if (progressSteps) {
+            progressSteps.appendChild(retryButton);
+        }
     }
 }
 

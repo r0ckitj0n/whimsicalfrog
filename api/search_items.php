@@ -172,7 +172,7 @@ try {
                 $item['image_url'] = '/images/items/' . $item['image_path'];
             }
         } else {
-            $item['image_url'] = '/images/items/placeholder.png';
+            $item['image_url'] = '/images/items/placeholder.webp';
         }
         
         // Format price

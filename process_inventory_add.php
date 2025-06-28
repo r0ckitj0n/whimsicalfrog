@@ -52,7 +52,7 @@ try {
     $reorderPoint = min(floor($stockLevel / 2), 5);
     
     // Default image URL - use products folder
-    $imageUrl = 'images/items/placeholder.png';
+            $imageUrl = 'images/items/placeholder.webp';
     
     // Create database connection using config
     $pdo = new PDO($dsn, $user, $pass, $options);

@@ -102,33 +102,44 @@ function getImageCountBySku($sku) {
 }
 
 /**
- * Get placeholder image info
+ * Get placeholder image info - DEPRECATED: Use CSS-only solution instead
  */
 function getPlaceholderImage() {
     return [
-        'image_path' => 'images/items/placeholder.png',
-        'alt_text' => 'Placeholder image'
+        'image_path' => null, // No longer using placeholder image
+        'alt_text' => 'No image available',
+        'css_fallback' => true // Flag to use CSS-only display
     ];
 }
 
 /**
  * Get image URL with fallback to image server if needed
  */
-function getImageUrlWithFallback($imagePath) {
-    // Check if we're on IONOS hosting
-    $isIONOS = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] === 'whimsicalfrog.us';
-    
-    if ($isIONOS) {
-        // On IONOS, use image server as fallback
-        $imageUrl = '/' . ltrim($imagePath, '/');
-        $fallbackUrl = '/api/image_server.php?image=' . urlencode($imagePath);
-        
-        // Return the image URL with fallback
-        return $imageUrl . '" onerror="this.src=\'' . $fallbackUrl . '\'';  
-    } else {
-        // Local development - direct path
-        return '/' . ltrim($imagePath, '/');
+function getImageUrlWithFallback($imagePath, $sku = null) {
+    if (empty($imagePath)) {
+        return null; // Let CSS handle the fallback
     }
+    
+    // Check if the image file exists
+    $fullPath = __DIR__ . '/../' . ltrim($imagePath, '/');
+    if (file_exists($fullPath)) {
+        return $imagePath;
+    }
+    
+    // If we have a SKU, try alternative formats
+    if ($sku) {
+        $formats = ['webp', 'png', 'jpg', 'jpeg'];
+        foreach ($formats as $format) {
+            $altPath = "/images/items/{$sku}A.{$format}";
+            $altFullPath = __DIR__ . '/../' . ltrim($altPath, '/');
+            if (file_exists($altFullPath)) {
+                return $altPath;
+            }
+        }
+    }
+    
+    // Return null - let CSS handle the fallback
+    return null;
 }
 
 /**
@@ -139,7 +150,7 @@ function getImageWithFallback($sku) {
     if ($primaryImage && !empty($primaryImage['image_path'])) {
         return $primaryImage['image_path'];
     }
-    return 'images/items/placeholder.png';
+    return null; // No placeholder needed - use CSS fallback
 }
 
 /**
@@ -346,7 +357,7 @@ function getItemImagePath($sku, $pdo = null) {
         return $primaryImage['image_path'];
     }
     
-    return 'images/items/placeholder.png';
+    return null; // No placeholder needed - use CSS fallback
 }
 
 /**
@@ -375,9 +386,10 @@ function renderItemImageDisplay($sku, $options = []) {
     $opts = array_merge($defaults, $options);
     
     if (empty($images)) {
-        // Show placeholder
-        return '<div class="item-image-placeholder" style="height: ' . $opts['height'] . '; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
-            <img src="images/items/placeholder.png" alt="No image available" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+        // Show elegant CSS-only fallback instead of placeholder image
+        return '<div class="item-image-placeholder" style="height: ' . $opts['height'] . '; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6b7280;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">📷</div>
+            <div style="font-size: 0.875rem; font-weight: 500;">No Image Available</div>
         </div>';
     }
     
@@ -388,7 +400,7 @@ function renderItemImageDisplay($sku, $options = []) {
             <img src="' . htmlspecialchars($image['image_path']) . '" 
                  alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
                  style="width: 100%; height: 100%; object-fit: contain; background: white; border-radius: 8px;"
-                 onerror="this.src=\'images/items/placeholder.png\'">
+                 onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<div style=\\\'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6b7280;\\\'><div style=\\\'font-size: 3rem; margin-bottom: 0.5rem;\\\'>📷</div><div style=\\\'font-size: 0.875rem; font-weight: 500;\\\'>Image Not Found</div></div>\';">
         </div>';
     }
     
@@ -399,9 +411,79 @@ function renderItemImageDisplay($sku, $options = []) {
         $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" 
                              alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
                              style="width: 100%; height: 100%; object-fit: contain; background: white; border-radius: 8px; display: ' . $display . ';"
-                             onerror="this.src=\'images/items/placeholder.png\'">';
+                             onerror="this.style.display=\'none\'; this.parentElement.innerHTML+=\'<div style=\\\'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6b7280; display: ' . $display . '\\\'><div style=\\\'font-size: 3rem; margin-bottom: 0.5rem;\\\'>📷</div><div style=\\\'font-size: 0.875rem; font-weight: 500;\\\'>Image Not Found</div></div>\';">';
     }
     $carouselHtml .= '</div>';
     return $carouselHtml;
+}
+
+function getPrimaryImageUrl($sku) {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE item_sku = ? AND is_primary = 1 LIMIT 1");
+        $stmt->execute([$sku]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            return getImageUrlWithFallback($result['image_path'], $sku);
+        }
+        
+        // Try to get any image for this SKU
+        $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE item_sku = ? LIMIT 1");
+        $stmt->execute([$sku]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            return getImageUrlWithFallback($result['image_path'], $sku);
+        }
+        
+        // Return null - let CSS handle the fallback
+        return null;
+    } catch (Exception $e) {
+        error_log("Error getting primary image for SKU {$sku}: " . $e->getMessage());
+        return null;
+    }
+}
+
+function getAllImagesForSku($sku) {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM item_images WHERE item_sku = ? ORDER BY is_primary DESC, id ASC");
+        $stmt->execute([$sku]);
+        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Process each image through the fallback system
+        foreach ($images as &$image) {
+            $image['url'] = getImageUrlWithFallback($image['image_path'], $sku);
+        }
+        
+        return $images;
+    } catch (Exception $e) {
+        error_log("Error getting images for SKU {$sku}: " . $e->getMessage());
+        return [];
+    }
+}
+
+function getItemImageForDisplay($item) {
+    // Try database images first
+    if (!empty($item['sku'])) {
+        $imageUrl = getPrimaryImageUrl($item['sku']);
+        if ($imageUrl) {
+            return $imageUrl;
+        }
+    }
+    
+    // Try imageUrl field as fallback
+    if (!empty($item['imageUrl'])) {
+        $imageUrl = getImageUrlWithFallback($item['imageUrl'], $item['sku'] ?? null);
+        if ($imageUrl) {
+            return $imageUrl;
+        }
+    }
+    
+    // Return null - let CSS handle the fallback
+    return null;
 }
 ?>

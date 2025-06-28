@@ -583,7 +583,7 @@ function generateDetailedProductModal(item) {
                     <div class="relative">
                         <img id="detailedMainImage" src="images/items/${item.sku}A.webp" alt="${item.name}" 
                              class="w-full h-64 md:h-80 object-contain rounded-lg" 
-                             onerror="this.onerror=null; this.src='images/items/${item.sku}A.png'; this.onerror=function(){this.src='images/items/placeholder.webp'; this.onerror=function(){this.src='images/items/placeholder.png'; this.onerror=null;};}">
+                             onerror="this.onerror=null; this.src='images/items/${item.sku}A.png'; this.onerror=function(){this.src='images/items/placeholder.webp'; this.onerror=null;}">
                         <button onclick="closeDetailedModal()" 
                                 class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600">
                             ×
@@ -595,7 +595,7 @@ function generateDetailedProductModal(item) {
                         <div class="w-16 h-16 border-2 border-green-500 rounded cursor-pointer"
                              onclick="switchDetailedImage('images/items/${item.sku}A.webp', this)">
                             <img src="images/items/${item.sku}A.webp" alt="Thumbnail" class="w-full h-full object-contain rounded"
-                                 onerror="this.onerror=null; this.src='images/items/${item.sku}A.png'; this.onerror=function(){this.src='images/items/placeholder.webp'; this.onerror=function(){this.src='images/items/placeholder.png'; this.onerror=null;};}">
+                                 onerror="this.onerror=null; this.src='images/items/${item.sku}A.png'; this.onerror=function(){this.src='images/items/placeholder.webp'; this.onerror=null;}">
                         </div>
                     </div>
                 </div>

@@ -411,7 +411,7 @@ class ShoppingCart {
             return `
             <div class="flex items-center justify-between p-4 border-b border-gray-200">
                 <div class="flex items-center space-x-4">
-                    <img src="${item.image || '/images/items/placeholder.png'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                    <img src="${item.image || '/images/items/placeholder.webp'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
                     <div>
                         <h3 class="font-medium text-gray-900">${item.displayName}</h3>
                         <p class="text-sm text-gray-500">$${item.price.toFixed(2)}</p>
@@ -938,7 +938,7 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
                     const pngUrl = `images/items/${sku}A.png`;
                     this.src = pngUrl;
                     this.onerror = function() {
-                        this.src = 'images/items/placeholder.png';
+                        this.src = 'images/items/placeholder.webp';
                         this.onerror = null;
                     };
                 };
@@ -946,7 +946,7 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
                 const pngUrl = `images/items/${sku}A.png`;
                 this.src = pngUrl;
                 this.onerror = function() {
-                    this.src = 'images/items/placeholder.png';
+                    this.src = 'images/items/placeholder.webp';
                     this.onerror = null;
                 };
             }
@@ -1353,7 +1353,7 @@ window.showGlobalPopup = function(element, product) {
     if (popupImage) {
         popupImage.src = `images/items/${product.sku}A.png`;
         popupImage.onerror = function() {
-            this.src = 'images/items/placeholder.png';
+            this.src = 'images/items/placeholder.webp';
             this.onerror = null;
         };
     }

@@ -5376,7 +5376,7 @@ function displayCurrentImages(images, isViewModal = false) {
                 <div class="relative carousel-image-container" style="height: 150px;">
                     <img src="${image.image_path}" alt="${image.alt_text}" 
                          class="w-full h-full object-contain bg-gray-50 carousel-image" 
-                         onerror="this.src='images/items/placeholder.png'"
+                                                     onerror="this.style.display='none'; this.parentElement.innerHTML = '<div style=\'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;\'><div style=\'font-size:2rem;margin-bottom:0.5rem;opacity:0.7;\'>📷</div><div style=\'font-size:0.8rem;font-weight:500;\'>Image Not Found</div></div>';"
                          style="object-position: center;">
                 </div>
                 <div class="p-2 bg-gray-50">
@@ -8813,7 +8813,7 @@ function showColorModal(color = null) {
 function createColorModal() {
     const modalHTML = `
         <div id="colorModal" class="modal-overlay hidden">
-            <div class="modal-content" style="max-width: 900px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-content" style="max-width: 1100px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h2 id="colorModalTitle">Add New Color</h2>
                     <button type="button" class="modal-close" onclick="closeColorModal()">&times;</button>
@@ -8823,7 +8823,7 @@ function createColorModal() {
                         <input type="hidden" id="colorId" name="colorId">
                         
                         <!-- Two-column layout -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <!-- Left Column: Color Selection & Basic Info -->
                             <div class="space-y-4">
                                 <div>
@@ -8849,7 +8849,7 @@ function createColorModal() {
                                 <div id="selectedColorPreview" class="hidden">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Selected Color Preview</label>
                                     <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                        <div id="colorPreviewSwatch" class="w-10 h-10 rounded border-2 border-gray-300 shadow-sm"></div>
+                                        <div id="colorPreviewSwatch" class="w-12 h-12 rounded border-2 border-gray-300 shadow-sm"></div>
                                         <div>
                                             <div id="colorPreviewName" class="font-medium text-gray-900"></div>
                                             <div id="colorPreviewCode" class="text-sm text-gray-500"></div>
@@ -8890,9 +8890,9 @@ function createColorModal() {
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Image Preview</label>
                                     <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
                                         <div class="flex justify-center">
-                                            <img id="imagePreview" src="" alt="Selected image preview" class="max-w-full max-h-48 object-contain rounded border border-gray-200 shadow-sm">
+                                            <img id="imagePreview" src="" alt="Selected image preview" class="max-w-full max-h-64 object-contain rounded border border-gray-200 shadow-sm">
                                         </div>
-                                        <div id="imagePreviewInfo" class="mt-2 text-center">
+                                        <div id="imagePreviewInfo" class="mt-3 text-center">
                                             <div id="imagePreviewName" class="text-sm font-medium text-gray-700"></div>
                                             <div id="imagePreviewPath" class="text-xs text-gray-500"></div>
                                         </div>
@@ -8901,8 +8901,11 @@ function createColorModal() {
                                 
                                 <!-- Available Images Grid -->
                                 <div id="availableImagesGrid" class="hidden">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Available Images</label>
-                                    <div class="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Available Images
+                                        <span class="text-xs text-gray-500 font-normal">(click to select)</span>
+                                    </label>
+                                    <div class="grid grid-cols-4 gap-3 max-h-40 overflow-y-auto border border-gray-200 rounded p-3 bg-gray-50">
                                         <!-- Images will be populated here -->
                                     </div>
                                 </div>
@@ -8910,7 +8913,7 @@ function createColorModal() {
                         </div>
                         
                         <!-- Action Buttons -->
-                        <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                        <div class="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-200">
                             <button type="button" onclick="closeColorModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
                                 Cancel
                             </button>
@@ -8963,19 +8966,20 @@ async function loadAvailableImages() {
                 
                 data.images.forEach(image => {
                     const imgContainer = document.createElement('div');
-                    imgContainer.className = 'relative cursor-pointer hover:opacity-75 transition-opacity';
+                    imgContainer.className = 'relative cursor-pointer hover:opacity-75 transition-all hover:scale-105 hover:shadow-md p-1 rounded';
                     imgContainer.onclick = () => selectImageFromGrid(image.image_path);
                     
                     const img = document.createElement('img');
                     img.src = `/images/items/${image.image_path}`;
                     img.alt = image.image_path;
-                    img.className = 'w-full h-16 object-cover rounded border border-gray-200';
+                    img.className = 'w-full h-20 object-cover rounded border border-gray-200 hover:border-green-400 transition-colors';
                     img.onerror = () => {
-                        img.src = '/images/items/placeholder.png';
+                        img.style.display = 'none';
+                img.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.8rem;font-weight:500;">Image Not Found</div></div>';
                     };
                     
                     const label = document.createElement('div');
-                    label.className = 'text-xs text-gray-600 mt-1 truncate';
+                    label.className = 'text-xs text-gray-600 mt-1 truncate text-center';
                     label.textContent = image.image_path;
                     
                     if (image.is_primary) {
@@ -8990,6 +8994,7 @@ async function loadAvailableImages() {
                     gridContainer.appendChild(imgContainer);
                 });
                 
+                // Show grid by default when images are available
                 availableImagesGrid.classList.remove('hidden');
             }
         } else {
@@ -9028,7 +9033,8 @@ function updateImagePreview() {
         // Show preview
         imagePreview.src = `/images/items/${selectedImagePath}`;
         imagePreview.onerror = () => {
-            imagePreview.src = '/images/items/placeholder.png';
+                            imagePreview.style.display = 'none';
+                imagePreview.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:3rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.9rem;font-weight:500;">No Image Available</div></div>';
         };
         
         imagePreviewName.textContent = selectedImagePath;
@@ -9056,9 +9062,11 @@ function highlightSelectedImageInGrid(selectedPath) {
         if (img) {
             const imagePath = img.alt;
             if (selectedPath && imagePath === selectedPath) {
-                container.classList.add('ring-2', 'ring-green-500');
+                container.classList.add('ring-2', 'ring-green-500', 'bg-green-50');
+                img.classList.add('border-green-400');
             } else {
-                container.classList.remove('ring-2', 'ring-green-500');
+                container.classList.remove('ring-2', 'ring-green-500', 'bg-green-50');
+                img.classList.remove('border-green-400');
             }
         }
     });
@@ -9607,31 +9615,31 @@ function showSizeModal(size = null) {
 function createSizeModal() {
     const modalHTML = `
         <div id="sizeModal" class="modal-overlay hidden">
-            <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h2 id="sizeModalTitle" class="text-xl font-semibold text-gray-800">Add New Size</h2>
-                    <button type="button" onclick="closeSizeModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+                    <button type="button" onclick="closeSizeModal()" class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <form id="sizeForm" onsubmit="saveSize(event)">
                         <input type="hidden" id="sizeId" name="sizeId">
                         
-                        <div class="mb-4">
+                        <div class="mb-6">
                             <label for="sizeColorId" class="block text-sm font-medium text-gray-700 mb-2">Color Association</label>
-                            <select id="sizeColorId" name="sizeColorId" class="w-full px-3 py-2 border border-gray-300 rounded">
+                            <select id="sizeColorId" name="sizeColorId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                                 <option value="">General Size (No specific color)</option>
                             </select>
                             <div class="text-xs text-gray-500 mt-1">Choose a color if this size is specific to a particular color variant</div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label for="sizeName" class="block text-sm font-medium text-gray-700 mb-2">Size Name *</label>
-                                <input type="text" id="sizeName" name="sizeName" placeholder="e.g., Medium" class="w-full px-3 py-2 border border-gray-300 rounded" required>
+                                <input type="text" id="sizeName" name="sizeName" placeholder="e.g., Medium" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" required>
                             </div>
                             <div>
                                 <label for="sizeCode" class="block text-sm font-medium text-gray-700 mb-2">Size Code *</label>
-                                <select id="sizeCode" name="sizeCode" class="w-full px-3 py-2 border border-gray-300 rounded" required>
+                                <select id="sizeCode" name="sizeCode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" required>
                                     <option value="">Select size...</option>
                                     <option value="XS">XS</option>
                                     <option value="S">S</option>
@@ -9645,22 +9653,22 @@ function createSizeModal() {
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label for="sizeStockLevel" class="block text-sm font-medium text-gray-700 mb-2">Stock Level</label>
-                                <input type="number" id="sizeStockLevel" name="sizeStockLevel" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                <input type="number" id="sizeStockLevel" name="sizeStockLevel" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                             </div>
                             <div>
                                 <label for="sizePriceAdjustment" class="block text-sm font-medium text-gray-700 mb-2">Price Adjustment ($)</label>
-                                <input type="number" id="sizePriceAdjustment" name="sizePriceAdjustment" step="0.01" value="0.00" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                <input type="number" id="sizePriceAdjustment" name="sizePriceAdjustment" step="0.01" value="0.00" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                                 <div class="text-xs text-gray-500 mt-1">Extra charge for this size (e.g., +$2 for XXL)</div>
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label for="sizeDisplayOrder" class="block text-sm font-medium text-gray-700 mb-2">Display Order</label>
-                                <input type="number" id="sizeDisplayOrder" name="sizeDisplayOrder" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                <input type="number" id="sizeDisplayOrder" name="sizeDisplayOrder" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                                 <div class="text-xs text-gray-500 mt-1">Lower numbers appear first</div>
                             </div>
                             <div class="flex items-center pt-6">
@@ -9671,8 +9679,8 @@ function createSizeModal() {
                             </div>
                         </div>
                         
-                        <div class="flex justify-end space-x-3">
-                            <button type="button" onclick="closeSizeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                        <div class="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-200">
+                            <button type="button" onclick="closeSizeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
                                 Cancel
                             </button>
                             <button type="submit" class="px-4 py-2 text-white rounded transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">

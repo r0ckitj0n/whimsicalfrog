@@ -62,7 +62,7 @@ function renderDetailedProductModal($item, $images = []) {
                                                  class="w-full h-full object-contain">
                                         <?php else: ?>
                                             <img id="detailedMainImage" 
-                                                 src="images/items/placeholder.png" 
+                                                 src="images/items/placeholder.webp" 
                                                  alt="<?php echo htmlspecialchars($item['name']); ?>"
                                                  class="w-full h-full object-contain">
                                         <?php endif; ?>
@@ -530,7 +530,7 @@ function renderDetailedProductModal($item, $images = []) {
             const itemName = modal.querySelector('h2').textContent;
             const priceText = modal.querySelector('#detailedCurrentPrice').textContent;
             const price = parseFloat(priceText.replace('$', ''));
-            const imageUrl = modal.querySelector('#detailedMainImage')?.src || 'images/items/placeholder.png';
+            const imageUrl = modal.querySelector('#detailedMainImage')?.src || 'images/items/placeholder.webp';
             
             // Add to cart
             if (typeof window.cart !== 'undefined') {

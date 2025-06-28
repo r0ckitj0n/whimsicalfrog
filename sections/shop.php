@@ -352,7 +352,7 @@ window.showProductDetails = showProductDetails;
                 
                 // Get primary image using database-driven system
                 $primaryImageData = getPrimaryImageBySku($sku);
-                $imageUrl = ($primaryImageData && !empty($primaryImageData['image_path'])) ? htmlspecialchars($primaryImageData['image_path'] ?? '') : 'images/items/placeholder.png';
+                $imageUrl = ($primaryImageData && !empty($primaryImageData['image_path'])) ? htmlspecialchars($primaryImageData['image_path'] ?? '') : null;
         ?>
         <div class="product-card<?php echo ($stock <= 0) ? ' out-of-stock' : ''; ?>" data-category="<?php echo htmlspecialchars($category); ?>" data-stock="<?php echo $stock; ?>" data-sku="<?php echo $sku; ?>">
             <?php if ($stock <= 0): ?>
@@ -366,12 +366,13 @@ window.showProductDetails = showProductDetails;
                 // Display product images using database-driven system
                 if ($primaryImageData && !empty($primaryImageData['image_path'])) {
                     echo '<div class="product-image-container" style="height: 192px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; overflow: hidden;">';
-                    echo '<img src="' . htmlspecialchars($primaryImageData['image_path'] ?? '') . '" alt="' . htmlspecialchars($primaryImageData['alt_text'] ?: $productName) . '" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.onerror=null; this.src=\'images/items/placeholder.png\';">';
+                    echo '<img src="' . htmlspecialchars($primaryImageData['image_path'] ?? '') . '" alt="' . htmlspecialchars($primaryImageData['alt_text'] ?: $productName) . '" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.style.display=\'none\'; this.parentElement.innerHTML = \'<div style=\\\'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;\\\'><div style=\\\'font-size:3rem;margin-bottom:0.5rem;opacity:0.7;\\\'>📷</div><div style=\\\'font-size:0.9rem;font-weight:500;\\\'>Image Not Found</div></div>\';">';
                     echo '</div>';
                 } else {
-                    // Show placeholder if no images
-                    echo '<div class="product-image-placeholder" style="height: 192px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">';
-                    echo '<img src="images/items/placeholder.png" alt="No image available" style="max-width: 100%; max-height: 100%; object-fit: contain;">';
+                    // Show CSS-only fallback if no images
+                    echo '<div class="product-image-placeholder" style="height: 192px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6c757d;">';
+                    echo '<div style="font-size: 3rem; margin-bottom: 0.5rem; opacity: 0.7;">📷</div>';
+                    echo '<div style="font-size: 0.9rem; font-weight: 500;">No Image Available</div>';
                     echo '</div>';
                 }
                 ?>

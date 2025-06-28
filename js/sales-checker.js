@@ -164,7 +164,7 @@ function updatePopupContent(popup, product) {
         }
         // Priority 4: Fallback to placeholder
         else {
-            imageSrc = 'images/items/placeholder.png';
+            imageSrc = 'images/items/placeholder.webp';
         }
         
         popupImage.src = imageSrc;
@@ -173,17 +173,17 @@ function updatePopupContent(popup, product) {
             if (product.sku && this.src.includes('.webp')) {
                 this.src = `images/items/${product.sku}A.png`;
                 this.onerror = function() {
-                    this.src = 'images/items/placeholder.png';
+                    this.src = 'images/items/placeholder.webp';
                     this.onerror = null;
                 };
             } else if (product.sku && this.src.includes('A.png')) {
                 this.src = `images/items/${product.sku}.webp`;
                 this.onerror = function() {
-                    this.src = 'images/items/placeholder.png';
+                    this.src = 'images/items/placeholder.webp';
                     this.onerror = null;
                 };
             } else {
-                this.src = 'images/items/placeholder.png';
+                this.src = 'images/items/placeholder.webp';
                 this.onerror = null;
             }
         };

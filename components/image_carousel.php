@@ -22,11 +22,12 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
     $carouselId = $opts['id'];
     
     if (empty($images)) {
-        // Show placeholder if no images
+        // Show elegant CSS-only fallback instead of placeholder image
         return '
         <div class="image-carousel-container ' . $opts['className'] . '" style="height: ' . $opts['height'] . ';">
-            <div class="carousel-placeholder">
-                <img src="images/items/placeholder.png" alt="No image available" style="width: 100%; height: 100%; object-fit: contain;">
+            <div class="carousel-placeholder" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6b7280;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">📷</div>
+                <div style="font-size: 0.875rem; font-weight: 500;">No Image Available</div>
             </div>
         </div>';
     }
@@ -64,7 +65,7 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
                     <img src="<?= htmlspecialchars($image['image_path']) ?>" 
                          alt="<?= htmlspecialchars($image['alt_text'] ?: 'Item image') ?>"
                          style="width: 100%; height: 100%; object-fit: contain; background: white;"
-                         onerror="this.onerror=null; this.src='images/items/placeholder.png';">
+                         onerror="this.style.display='none'; this.parentElement.innerHTML += '<div style=\'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;\'><div style=\'font-size:3rem;margin-bottom:0.5rem;opacity:0.7;\'>📷</div><div style=\'font-size:0.9rem;font-weight:500;\'>Image Not Found</div></div>';">
                     <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin'] && isset($_GET['page']) && strpos($_GET['page'], 'admin') === 0): ?>
                         <div class="primary-badge" style="position: absolute; top: 10px; right: 10px; background: #87ac3a; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
                             Primary
@@ -97,7 +98,7 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
                         <img src="<?= htmlspecialchars($image['image_path']) ?>" 
                              alt="Thumbnail <?= $index + 1 ?>"
                              style="width: 100%; height: 100%; object-fit: cover;"
-                             onerror="this.onerror=null; this.src='images/items/placeholder.png';">
+                             onerror="this.style.display='none'; this.parentElement.innerHTML = '<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;font-size:1.5rem;\'>📷</div>';">
                         <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin'] && isset($_GET['page']) && strpos($_GET['page'], 'admin') === 0): ?>
                             <div style="position: absolute; top: 2px; right: 2px; background: #87ac3a; color: white; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px;">
                                 ⭐
@@ -216,9 +217,10 @@ function displayImageCarousel($sku, $showPrimaryBadge = false, $extraClasses = '
         $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         if (empty($images)) {
-            // No images found, show placeholder
-            echo '<div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center ' . $extraClasses . '">';
-            echo '<img src="images/items/placeholder.png" alt="No image available" class="max-h-full max-w-full object-contain" loading="lazy">';
+            // No images found, show elegant CSS-only fallback
+            echo '<div class="w-full h-48 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-500 ' . $extraClasses . '">';
+            echo '<div class="text-5xl mb-2">📷</div>';
+            echo '<div class="text-sm font-medium">No Image Available</div>';
             echo '</div>';
             return;
         }
@@ -229,4 +231,6 @@ function displayImageCarousel($sku, $showPrimaryBadge = false, $extraClasses = '
         echo "Database connection error: " . $e->getMessage();
     }
 }
+
+
 ?> 

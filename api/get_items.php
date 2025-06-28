@@ -60,7 +60,7 @@ try {
                 if (!empty($item['imageUrl'])) {
                     $item['image'] = $item['imageUrl'];
                 } else {
-                    $item['image'] = 'images/items/placeholder.png';
+                    $item['image'] = 'images/items/placeholder.webp';
                 }
             }
         }
@@ -115,7 +115,7 @@ try {
             if (!empty($item['imageUrl'])) {
                 $item['image'] = $item['imageUrl'];
             } else {
-                $item['image'] = 'images/items/placeholder.png';
+                $item['image'] = 'images/items/placeholder.webp';
             }
         }
     }

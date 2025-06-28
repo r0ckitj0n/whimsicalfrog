@@ -108,7 +108,7 @@ function updateGlobalPopupContent(popup, product) {
         popupImage.src = imageUrl;
         popupImage.alt = product.name || product.productName || 'Product';
         popupImage.onerror = function() {
-            this.src = 'images/items/placeholder.png';
+            this.src = 'images/items/placeholder.webp';
             this.onerror = null;
         };
     }

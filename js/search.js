@@ -160,7 +160,7 @@ class SearchModal {
                 <div class="search-result-item">
                     <div class="search-result-clickable" onclick="searchModal.viewItemDetails('${item.sku}')">
                         <img src="${item.image_url}" alt="${item.name}" class="search-result-image" 
-                             onerror="this.src='/images/items/placeholder.png'">
+                             onerror="this.src='/images/items/placeholder.webp'">
                         <div class="search-result-content">
                             <h3 class="search-result-name">${item.name}</h3>
                             <span class="search-result-category">${item.category}</span>

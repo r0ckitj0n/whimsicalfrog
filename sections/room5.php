@@ -600,7 +600,7 @@ window.openQuantityModal = function(product) {
     const imageUrl = `images/items/${product.sku}A.png`;
     modalProductImage.src = imageUrl;
     modalProductImage.onerror = function() {
-        this.src = 'images/items/placeholder.png';
+                    this.src = 'images/items/placeholder.webp';
         this.onerror = null;
     };
     

@@ -8766,10 +8766,11 @@ function showColorModal(color = null) {
             }
             
                          // Set image path if available
-            const imageSelect = document.getElementById('colorImagePath');
-            if (imageSelect && color.image_path) {
-                imageSelect.value = color.image_path;
+            const hiddenInput = document.getElementById('colorImagePath');
+            if (hiddenInput && color.image_path) {
+                hiddenInput.value = color.image_path;
                 updateImagePreview(); // Update preview when editing existing color
+                highlightSelectedImageInGrid(color.image_path); // Highlight in grid
             }
         }, 300); // Small delay to ensure options are loaded
     } else {
@@ -8802,6 +8803,10 @@ function showColorModal(color = null) {
             document.getElementById('colorCode').value = '';
             
             // Clear image selection and highlighting
+            const hiddenInput = document.getElementById('colorImagePath');
+            if (hiddenInput) {
+                hiddenInput.value = '';
+            }
             highlightSelectedImageInGrid(null);
         }, 100);
     }
@@ -8877,17 +8882,20 @@ function createColorModal() {
                             
                             <!-- Right Column: Image Selection & Preview -->
                             <div class="space-y-4">
-                                <div>
-                                    <label for="colorImagePath" class="block text-sm font-medium text-gray-700 mb-2">Associated Image</label>
-                                    <select id="colorImagePath" name="colorImagePath" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" onchange="updateImagePreview()">
-                                        <option value="">No specific image (use default)</option>
-                                    </select>
-                                    <p class="text-xs text-gray-500 mt-1">Choose which item image to show when this color is selected</p>
+                                <!-- Available Images Grid (moved to top) -->
+                                <div id="availableImagesGrid">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Available Images
+                                        <span class="text-xs text-gray-500 font-normal">(click to select for this color)</span>
+                                    </label>
+                                    <div class="grid grid-cols-4 gap-3 max-h-48 overflow-y-auto border border-gray-200 rounded p-3 bg-gray-50">
+                                        <!-- Images will be populated here -->
+                                    </div>
                                 </div>
                                 
                                 <!-- Image Preview -->
                                 <div id="imagePreviewContainer" class="hidden">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Image Preview</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Selected Image Preview</label>
                                     <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
                                         <div class="flex justify-center">
                                             <img id="imagePreview" src="" alt="Selected image preview" class="max-w-full max-h-64 object-contain rounded border border-gray-200 shadow-sm">
@@ -8899,16 +8907,8 @@ function createColorModal() {
                                     </div>
                                 </div>
                                 
-                                <!-- Available Images Grid -->
-                                <div id="availableImagesGrid" class="hidden">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Available Images
-                                        <span class="text-xs text-gray-500 font-normal">(click to select)</span>
-                                    </label>
-                                    <div class="grid grid-cols-4 gap-3 max-h-40 overflow-y-auto border border-gray-200 rounded p-3 bg-gray-50">
-                                        <!-- Images will be populated here -->
-                                    </div>
-                                </div>
+                                <!-- Hidden field for storing selected image path -->
+                                <input type="hidden" id="colorImagePath" name="colorImagePath" value="">
                             </div>
                         </div>
                         
@@ -8942,112 +8942,101 @@ async function loadAvailableImages() {
         const response = await fetch(`/api/get_item_images.php?sku=${currentItemSku}`);
         const data = await response.json();
         
-        const imageSelect = document.getElementById('colorImagePath');
         const availableImagesGrid = document.getElementById('availableImagesGrid');
+        if (!availableImagesGrid) return;
         
-        if (!imageSelect) return;
-        
-        // Clear existing options except the first one
-        imageSelect.innerHTML = '<option value="">No specific image (use default)</option>';
+        const gridContainer = availableImagesGrid.querySelector('.grid');
         
         if (data.success && data.images && data.images.length > 0) {
-            // Populate dropdown
-            data.images.forEach(image => {
-                const option = document.createElement('option');
-                option.value = image.image_path;
-                option.textContent = `${image.image_path}${image.is_primary ? ' (Primary)' : ''}`;
-                imageSelect.appendChild(option);
-            });
+            // Clear existing grid content
+            gridContainer.innerHTML = '';
             
             // Populate images grid
-            if (availableImagesGrid) {
-                const gridContainer = availableImagesGrid.querySelector('.grid');
-                gridContainer.innerHTML = '';
+            data.images.forEach(image => {
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'relative cursor-pointer hover:opacity-75 transition-all hover:scale-105 hover:shadow-md p-1 rounded';
+                imgContainer.onclick = () => selectImageFromGrid(image.image_path);
                 
-                data.images.forEach(image => {
-                    const imgContainer = document.createElement('div');
-                    imgContainer.className = 'relative cursor-pointer hover:opacity-75 transition-all hover:scale-105 hover:shadow-md p-1 rounded';
-                    imgContainer.onclick = () => selectImageFromGrid(image.image_path);
-                    
-                    const img = document.createElement('img');
-                    img.src = `/images/items/${image.image_path}`;
-                    img.alt = image.image_path;
-                    img.className = 'w-full h-20 object-cover rounded border border-gray-200 hover:border-green-400 transition-colors';
-                    img.onerror = () => {
-                        img.style.display = 'none';
-                img.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.8rem;font-weight:500;">Image Not Found</div></div>';
-                    };
-                    
-                    const label = document.createElement('div');
-                    label.className = 'text-xs text-gray-600 mt-1 truncate text-center';
-                    label.textContent = image.image_path;
-                    
-                    if (image.is_primary) {
-                        const primaryBadge = document.createElement('div');
-                        primaryBadge.className = 'absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl';
-                        primaryBadge.textContent = '1°';
-                        imgContainer.appendChild(primaryBadge);
-                    }
-                    
-                    imgContainer.appendChild(img);
-                    imgContainer.appendChild(label);
-                    gridContainer.appendChild(imgContainer);
-                });
+                const img = document.createElement('img');
+                img.src = `/images/items/${image.image_path}`;
+                img.alt = image.image_path;
+                img.className = 'w-full h-20 object-cover rounded border border-gray-200 hover:border-green-400 transition-colors';
+                img.onerror = () => {
+                    img.style.display = 'none';
+                    img.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.8rem;font-weight:500;">Image Not Found</div></div>';
+                };
                 
-                // Show grid by default when images are available
-                availableImagesGrid.classList.remove('hidden');
-            }
+                const label = document.createElement('div');
+                label.className = 'text-xs text-gray-600 mt-1 truncate text-center';
+                label.textContent = image.image_path;
+                
+                if (image.is_primary) {
+                    const primaryBadge = document.createElement('div');
+                    primaryBadge.className = 'absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl';
+                    primaryBadge.textContent = '1°';
+                    imgContainer.appendChild(primaryBadge);
+                }
+                
+                imgContainer.appendChild(img);
+                imgContainer.appendChild(label);
+                gridContainer.appendChild(imgContainer);
+            });
+            
+            // Always show the grid when images are available
+            availableImagesGrid.style.display = 'block';
         } else {
-            // Hide grid if no images
-            if (availableImagesGrid) {
-                availableImagesGrid.classList.add('hidden');
-            }
+            // Show message when no images available
+            gridContainer.innerHTML = '<div class="col-span-4 text-center text-gray-500 py-8"><div class="text-3xl mb-2">📷</div><div class="text-sm">No images available for this item</div></div>';
+            availableImagesGrid.style.display = 'block';
         }
     } catch (error) {
         console.error('Error loading available images:', error);
+        const gridContainer = availableImagesGrid?.querySelector('.grid');
+        if (gridContainer) {
+            gridContainer.innerHTML = '<div class="col-span-4 text-center text-red-500 py-8"><div class="text-sm">Error loading images</div></div>';
+        }
     }
 }
 
 // Select image from grid
 function selectImageFromGrid(imagePath) {
-    const imageSelect = document.getElementById('colorImagePath');
-    if (imageSelect) {
-        imageSelect.value = imagePath;
+    const hiddenInput = document.getElementById('colorImagePath');
+    if (hiddenInput) {
+        hiddenInput.value = imagePath;
         updateImagePreview();
+        
+        // Highlight selected image in grid
+        highlightSelectedImageInGrid(imagePath);
     }
 }
 
 // Update image preview when selection changes
 function updateImagePreview() {
-    const imageSelect = document.getElementById('colorImagePath');
+    const hiddenInput = document.getElementById('colorImagePath');
     const imagePreviewContainer = document.getElementById('imagePreviewContainer');
     const imagePreview = document.getElementById('imagePreview');
     const imagePreviewName = document.getElementById('imagePreviewName');
     const imagePreviewPath = document.getElementById('imagePreviewPath');
     
-    if (!imageSelect || !imagePreviewContainer) return;
+    if (!hiddenInput || !imagePreviewContainer) return;
     
-    const selectedImagePath = imageSelect.value;
+    const selectedImagePath = hiddenInput.value;
     
     if (selectedImagePath) {
         // Show preview
         imagePreview.src = `/images/items/${selectedImagePath}`;
         imagePreview.onerror = () => {
-                            imagePreview.style.display = 'none';
-                imagePreview.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:3rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.9rem;font-weight:500;">No Image Available</div></div>';
+            imagePreview.style.display = 'none';
+            imagePreview.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:3rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.9rem;font-weight:500;">No Image Available</div></div>';
         };
         
         imagePreviewName.textContent = selectedImagePath;
         imagePreviewPath.textContent = `/images/items/${selectedImagePath}`;
         
         imagePreviewContainer.classList.remove('hidden');
-        
-        // Highlight selected image in grid
-        highlightSelectedImageInGrid(selectedImagePath);
     } else {
         // Hide preview
         imagePreviewContainer.classList.add('hidden');
-        highlightSelectedImageInGrid(null);
     }
 }
 

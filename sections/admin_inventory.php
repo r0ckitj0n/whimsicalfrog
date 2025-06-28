@@ -8765,10 +8765,11 @@ function showColorModal(color = null) {
                 }
             }
             
-            // Set image path if available
+                         // Set image path if available
             const imageSelect = document.getElementById('colorImagePath');
             if (imageSelect && color.image_path) {
                 imageSelect.value = color.image_path;
+                updateImagePreview(); // Update preview when editing existing color
             }
         }, 300); // Small delay to ensure options are loaded
     } else {
@@ -8791,9 +8792,17 @@ function showColorModal(color = null) {
                 selectedColorPreview.classList.add('hidden');
             }
             
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            if (imagePreviewContainer) {
+                imagePreviewContainer.classList.add('hidden');
+            }
+            
             // Clear hidden fields
             document.getElementById('colorName').value = '';
             document.getElementById('colorCode').value = '';
+            
+            // Clear image selection and highlighting
+            highlightSelectedImageInGrid(null);
         }, 100);
     }
     
@@ -8804,7 +8813,7 @@ function showColorModal(color = null) {
 function createColorModal() {
     const modalHTML = `
         <div id="colorModal" class="modal-overlay hidden">
-            <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-content" style="max-width: 900px; max-height: 85vh; overflow-y: auto;">
                 <div class="modal-header">
                     <h2 id="colorModalTitle">Add New Color</h2>
                     <button type="button" class="modal-close" onclick="closeColorModal()">&times;</button>
@@ -8813,64 +8822,96 @@ function createColorModal() {
                     <form id="colorForm" onsubmit="saveColor(event)">
                         <input type="hidden" id="colorId" name="colorId">
                         
-                        <div class="mb-4">
-                            <label for="globalColorSelect" class="block text-sm font-medium text-gray-700 mb-2">
-                                Select Color *
-                                <span class="text-xs text-gray-500">(from predefined colors)</span>
-                            </label>
-                            <select id="globalColorSelect" name="globalColorSelect" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" onchange="handleGlobalColorSelection()">
-                                <option value="">Choose a color...</option>
-                            </select>
-                            <div class="mt-2 text-xs">
-                                <a href="#" onclick="openGlobalColorsManagement()" class="text-blue-600 hover:text-blue-800">
-                                    ⚙️ Manage Global Colors in Settings
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <!-- Hidden fields populated by global color selection -->
-                        <input type="hidden" id="colorName" name="colorName">
-                        <input type="hidden" id="colorCode" name="colorCode">
-                        
-                        <!-- Display selected color -->
-                        <div id="selectedColorPreview" class="mb-4 hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Selected Color Preview</label>
-                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                <div id="colorPreviewSwatch" class="w-8 h-8 rounded border-2 border-gray-300"></div>
+                        <!-- Two-column layout -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Left Column: Color Selection & Basic Info -->
+                            <div class="space-y-4">
                                 <div>
-                                    <div id="colorPreviewName" class="font-medium text-gray-900"></div>
-                                    <div id="colorPreviewCode" class="text-sm text-gray-500"></div>
+                                    <label for="globalColorSelect" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Select Color *
+                                        <span class="text-xs text-gray-500">(from predefined colors)</span>
+                                    </label>
+                                    <select id="globalColorSelect" name="globalColorSelect" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" onchange="handleGlobalColorSelection()">
+                                        <option value="">Choose a color...</option>
+                                    </select>
+                                    <div class="mt-2 text-xs">
+                                        <a href="#" onclick="openGlobalColorsManagement()" class="text-blue-600 hover:text-blue-800">
+                                            ⚙️ Manage Global Colors in Settings
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hidden fields populated by global color selection -->
+                                <input type="hidden" id="colorName" name="colorName">
+                                <input type="hidden" id="colorCode" name="colorCode">
+                                
+                                <!-- Display selected color -->
+                                <div id="selectedColorPreview" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Selected Color Preview</label>
+                                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <div id="colorPreviewSwatch" class="w-10 h-10 rounded border-2 border-gray-300 shadow-sm"></div>
+                                        <div>
+                                            <div id="colorPreviewName" class="font-medium text-gray-900"></div>
+                                            <div id="colorPreviewCode" class="text-sm text-gray-500"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="colorStockLevel" class="block text-sm font-medium text-gray-700 mb-2">Stock Level</label>
+                                    <input type="number" id="colorStockLevel" name="stockLevel" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
+                                </div>
+                                
+                                <div>
+                                    <label for="displayOrder" class="block text-sm font-medium text-gray-700 mb-2">Display Order</label>
+                                    <input type="number" id="displayOrder" name="displayOrder" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
+                                </div>
+                                
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="isActive" name="isActive" class="mr-2">
+                                        <span class="text-sm font-medium text-gray-700">Active (visible to customers)</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column: Image Selection & Preview -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="colorImagePath" class="block text-sm font-medium text-gray-700 mb-2">Associated Image</label>
+                                    <select id="colorImagePath" name="colorImagePath" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" onchange="updateImagePreview()">
+                                        <option value="">No specific image (use default)</option>
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">Choose which item image to show when this color is selected</p>
+                                </div>
+                                
+                                <!-- Image Preview -->
+                                <div id="imagePreviewContainer" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Image Preview</label>
+                                    <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                                        <div class="flex justify-center">
+                                            <img id="imagePreview" src="" alt="Selected image preview" class="max-w-full max-h-48 object-contain rounded border border-gray-200 shadow-sm">
+                                        </div>
+                                        <div id="imagePreviewInfo" class="mt-2 text-center">
+                                            <div id="imagePreviewName" class="text-sm font-medium text-gray-700"></div>
+                                            <div id="imagePreviewPath" class="text-xs text-gray-500"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Available Images Grid -->
+                                <div id="availableImagesGrid" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Available Images</label>
+                                    <div class="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto border border-gray-200 rounded p-2">
+                                        <!-- Images will be populated here -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="colorImagePath" class="block text-sm font-medium text-gray-700 mb-2">Associated Image</label>
-                            <select id="colorImagePath" name="colorImagePath" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
-                                <option value="">No specific image (use default)</option>
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Choose which item image to show when this color is selected</p>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="colorStockLevel" class="block text-sm font-medium text-gray-700 mb-2">Stock Level</label>
-                            <input type="number" id="colorStockLevel" name="stockLevel" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="displayOrder" class="block text-sm font-medium text-gray-700 mb-2">Display Order</label>
-                            <input type="number" id="displayOrder" name="displayOrder" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
-                        </div>
-                        
-                        <div class="mb-6">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="isActive" name="isActive" class="mr-2">
-                                <span class="text-sm font-medium text-gray-700">Active (visible to customers)</span>
-                            </label>
-                        </div>
-                        
-                        <div class="flex justify-end space-x-3">
-                            <button type="button" onclick="closeColorModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                            <button type="button" onclick="closeColorModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
                                 Cancel
                             </button>
                             <button type="submit" class="px-4 py-2 text-white rounded transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
@@ -8899,22 +8940,128 @@ async function loadAvailableImages() {
         const data = await response.json();
         
         const imageSelect = document.getElementById('colorImagePath');
+        const availableImagesGrid = document.getElementById('availableImagesGrid');
+        
         if (!imageSelect) return;
         
         // Clear existing options except the first one
         imageSelect.innerHTML = '<option value="">No specific image (use default)</option>';
         
         if (data.success && data.images && data.images.length > 0) {
+            // Populate dropdown
             data.images.forEach(image => {
                 const option = document.createElement('option');
                 option.value = image.image_path;
                 option.textContent = `${image.image_path}${image.is_primary ? ' (Primary)' : ''}`;
                 imageSelect.appendChild(option);
             });
+            
+            // Populate images grid
+            if (availableImagesGrid) {
+                const gridContainer = availableImagesGrid.querySelector('.grid');
+                gridContainer.innerHTML = '';
+                
+                data.images.forEach(image => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.className = 'relative cursor-pointer hover:opacity-75 transition-opacity';
+                    imgContainer.onclick = () => selectImageFromGrid(image.image_path);
+                    
+                    const img = document.createElement('img');
+                    img.src = `/images/items/${image.image_path}`;
+                    img.alt = image.image_path;
+                    img.className = 'w-full h-16 object-cover rounded border border-gray-200';
+                    img.onerror = () => {
+                        img.src = '/images/items/placeholder.png';
+                    };
+                    
+                    const label = document.createElement('div');
+                    label.className = 'text-xs text-gray-600 mt-1 truncate';
+                    label.textContent = image.image_path;
+                    
+                    if (image.is_primary) {
+                        const primaryBadge = document.createElement('div');
+                        primaryBadge.className = 'absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl';
+                        primaryBadge.textContent = '1°';
+                        imgContainer.appendChild(primaryBadge);
+                    }
+                    
+                    imgContainer.appendChild(img);
+                    imgContainer.appendChild(label);
+                    gridContainer.appendChild(imgContainer);
+                });
+                
+                availableImagesGrid.classList.remove('hidden');
+            }
+        } else {
+            // Hide grid if no images
+            if (availableImagesGrid) {
+                availableImagesGrid.classList.add('hidden');
+            }
         }
     } catch (error) {
         console.error('Error loading available images:', error);
     }
+}
+
+// Select image from grid
+function selectImageFromGrid(imagePath) {
+    const imageSelect = document.getElementById('colorImagePath');
+    if (imageSelect) {
+        imageSelect.value = imagePath;
+        updateImagePreview();
+    }
+}
+
+// Update image preview when selection changes
+function updateImagePreview() {
+    const imageSelect = document.getElementById('colorImagePath');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const imagePreviewName = document.getElementById('imagePreviewName');
+    const imagePreviewPath = document.getElementById('imagePreviewPath');
+    
+    if (!imageSelect || !imagePreviewContainer) return;
+    
+    const selectedImagePath = imageSelect.value;
+    
+    if (selectedImagePath) {
+        // Show preview
+        imagePreview.src = `/images/items/${selectedImagePath}`;
+        imagePreview.onerror = () => {
+            imagePreview.src = '/images/items/placeholder.png';
+        };
+        
+        imagePreviewName.textContent = selectedImagePath;
+        imagePreviewPath.textContent = `/images/items/${selectedImagePath}`;
+        
+        imagePreviewContainer.classList.remove('hidden');
+        
+        // Highlight selected image in grid
+        highlightSelectedImageInGrid(selectedImagePath);
+    } else {
+        // Hide preview
+        imagePreviewContainer.classList.add('hidden');
+        highlightSelectedImageInGrid(null);
+    }
+}
+
+// Highlight selected image in the grid
+function highlightSelectedImageInGrid(selectedPath) {
+    const gridContainer = document.querySelector('#availableImagesGrid .grid');
+    if (!gridContainer) return;
+    
+    const imageContainers = gridContainer.querySelectorAll('div[onclick]');
+    imageContainers.forEach(container => {
+        const img = container.querySelector('img');
+        if (img) {
+            const imagePath = img.alt;
+            if (selectedPath && imagePath === selectedPath) {
+                container.classList.add('ring-2', 'ring-green-500');
+            } else {
+                container.classList.remove('ring-2', 'ring-green-500');
+            }
+        }
+    });
 }
 
 // Load global colors for selection dropdown

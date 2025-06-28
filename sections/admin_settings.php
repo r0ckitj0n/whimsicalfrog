@@ -583,6 +583,59 @@
     min-height: calc(90vh - 100px);
     padding-bottom: 100px;
 }
+
+/* System cleanup action button styles */
+.cleanup-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-height: 100px;
+    font-size: 0.875rem;
+}
+
+.cleanup-action-btn:hover {
+    border-color: #87ac3a;
+    background: #f0fdf4;
+    color: #15803d;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cleanup-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.cleanup-action-btn.cleanup-warning:hover {
+    border-color: #dc2626;
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.cleanup-action-btn .action-desc {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    line-height: 1.2;
+    display: block;
+}
+
+.cleanup-action-btn:hover .action-desc {
+    color: inherit;
+    opacity: 0.8;
+}
 </style>
 
 <script>
@@ -8986,6 +9039,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 data-tab="email-templates">
                             📧 Email Templates
                         </button>
+                        <button onclick="switchTemplateTab('documentation')" 
+                                class="css-category-tab" 
+                                data-tab="documentation">
+                            📚 Documentation
+                        </button>
                     </nav>
                 </div>
                 
@@ -9157,6 +9215,28 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </div>
+                
+                <!-- Documentation Tab -->
+                <div id="documentation-tab" class="css-category-content p-6 hidden">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">WhimsicalFrog System Documentation</h4>
+                            <div class="flex space-x-2">
+                                <button onclick="exportDocumentation()" class="modal-button btn-secondary">
+                                    📥 Export Documentation
+                                </button>
+                                <button onclick="refreshDocumentation()" class="modal-button btn-primary">
+                                    🔄 Refresh
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Documentation Content -->
+                        <div id="documentationContent" class="space-y-6">
+                            <!-- Documentation will be loaded here -->
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Footer -->
@@ -9295,6 +9375,7 @@ function openTemplateManagerModal() {
     loadCostTemplates();
     loadSuggestionHistory();
     loadEmailTemplates();
+    loadDocumentation();
 }
 
 function closeTemplateManagerModal() {
@@ -15418,6 +15499,671 @@ function editGlobalColor(colorId) {
 function editGlobalSize(sizeId) {
     // Placeholder for edit functionality
     showInfo('Edit functionality coming soon!');
+}
+
+// ========== DOCUMENTATION FUNCTIONS ==========
+
+async function loadDocumentation() {
+    const content = document.getElementById('documentationContent');
+    if (!content) return;
+    
+    content.innerHTML = '<div class="text-center py-4">Loading documentation...</div>';
+    
+    try {
+        const [systemResponse, databaseResponse] = await Promise.all([
+            fetch('/api/get_system_config.php'),
+            fetch('/api/get_database_info.php')
+        ]);
+        
+        const systemData = await systemResponse.json();
+        const databaseData = await databaseResponse.json();
+        
+        if (systemData.success && databaseData.success) {
+            renderDocumentation(systemData.data, databaseData.data);
+        } else {
+            throw new Error('Failed to load system information');
+        }
+    } catch (error) {
+        console.error('Error loading documentation:', error);
+        content.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load documentation</div>';
+    }
+}
+
+function renderDocumentation(systemData, databaseData) {
+    const content = document.getElementById('documentationContent');
+    
+    const documentation = generateSystemDocumentation(systemData, databaseData);
+    content.innerHTML = documentation;
+}
+
+function generateSystemDocumentation(systemData, databaseData) {
+    const activeTables = databaseData.organized || {};
+    const tableDetails = databaseData.table_details || {};
+    
+    return `
+        <!-- System Overview -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                🏢 WhimsicalFrog E-commerce System Overview
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 class="font-semibold text-blue-800">Total Items</h4>
+                    <p class="text-2xl font-bold text-blue-900">${systemData.items_count || 0}</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h4 class="font-semibold text-green-800">Total Orders</h4>
+                    <p class="text-2xl font-bold text-green-900">${systemData.orders_count || 0}</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <h4 class="font-semibold text-purple-800">Database Tables</h4>
+                    <p class="text-2xl font-bold text-purple-900">${databaseData.total_active || 0}</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <h4 class="font-semibold text-orange-800">Active Users</h4>
+                    <p class="text-2xl font-bold text-orange-900">${tableDetails.users?.row_count || 0}</p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-gray-800 mb-2">Key Features</h4>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>✅ Multi-room virtual showroom with interactive navigation</li>
+                    <li>✅ Advanced inventory management with color/size variants</li>
+                    <li>✅ Dynamic pricing with AI-powered cost/price suggestions</li>
+                    <li>✅ Email template system with order notifications</li>
+                    <li>✅ Analytics tracking and conversion optimization</li>
+                    <li>✅ Social media integration and marketing tools</li>
+                    <li>✅ Mobile-responsive design with room-specific themes</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Database Schema Documentation -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                🗄️ Database Schema & Usage Analysis
+            </h3>
+            
+            ${generateDatabaseDocumentation(activeTables, tableDetails)}
+        </div>
+        
+        <!-- System Cleanup Recommendations -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                🧹 System Cleanup & Optimization
+            </h3>
+            
+            ${generateCleanupRecommendations(tableDetails)}
+            
+            <!-- Cleanup Actions -->
+            <div class="mt-6 border-t border-gray-200 pt-6">
+                <h4 class="font-semibold text-gray-800 mb-4">🔧 Automated Cleanup Actions</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <button onclick="runSystemAnalysis()" class="cleanup-action-btn">
+                        🔍 Analyze System
+                        <span class="action-desc">Scan for cleanup opportunities</span>
+                    </button>
+                    <button onclick="removeEmptyTables()" class="cleanup-action-btn cleanup-warning">
+                        🗑️ Remove Empty Tables
+                        <span class="action-desc">Remove unused database tables</span>
+                    </button>
+                    <button onclick="cleanupStaleFiles()" class="cleanup-action-btn">
+                        📁 Clean Stale Files
+                        <span class="action-desc">Remove backup and temporary files</span>
+                    </button>
+                    <button onclick="removeUnusedCode()" class="cleanup-action-btn">
+                        💬 Clean Comments
+                        <span class="action-desc">Remove TODO/DEBUG comments</span>
+                    </button>
+                    <button onclick="optimizeDatabase()" class="cleanup-action-btn">
+                        ⚡ Optimize Database
+                        <span class="action-desc">Optimize all database tables</span>
+                    </button>
+                    <button onclick="generateCleanupReport()" class="cleanup-action-btn">
+                        📊 Generate Report
+                        <span class="action-desc">Create detailed cleanup report</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Cleanup Results -->
+            <div id="cleanupResults" class="mt-6 hidden">
+                <h4 class="font-semibold text-gray-800 mb-3">Cleanup Results</h4>
+                <div id="cleanupResultsContent" class="bg-gray-50 p-4 rounded-lg">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function generateDatabaseDocumentation(activeTables, tableDetails) {
+    let html = '<div class="space-y-4">';
+    
+    const categoryDescriptions = {
+        'core_ecommerce': 'Core e-commerce functionality including items, orders, and inventory',
+        'email_system': 'Email template management and notification logging',
+        'room_management': 'Virtual showroom configuration and navigation',
+        'user_management': 'User accounts and authentication',
+        'business_config': 'Site-wide settings and business configuration',
+        'inventory_cost': 'Advanced inventory costing and pricing',
+        'analytics_receipts': 'User analytics and receipt generation',
+        'marketing_social': 'Marketing tools and social media integration',
+        'styling_theme': 'Dynamic CSS and theming system',
+        'content_data': 'Content management and data storage',
+        'integrations': 'Third-party service integrations',
+        'other': 'Miscellaneous system tables'
+    };
+    
+    Object.keys(activeTables).forEach(category => {
+        const tables = activeTables[category];
+        const description = categoryDescriptions[category] || 'System tables';
+        
+        html += `
+            <div class="border border-gray-200 rounded-lg">
+                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                    <h4 class="font-semibold text-gray-800 capitalize">${category.replace(/_/g, ' ')}</h4>
+                    <p class="text-sm text-gray-600 mt-1">${description}</p>
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">`;
+        
+        Object.keys(tables).forEach(tableName => {
+            const tableInfo = tableDetails[tableName];
+            const rowCount = tableInfo?.row_count || 0;
+            const fieldCount = tableInfo?.field_count || 0;
+            
+            const statusColor = rowCount > 0 ? 'text-green-600' : 'text-orange-600';
+            const statusIcon = rowCount > 0 ? '✅' : '⚠️';
+            
+            html += `
+                <div class="bg-white border border-gray-200 rounded p-3 text-sm">
+                    <div class="font-medium text-gray-900">${tableName}</div>
+                    <div class="${statusColor} text-xs mt-1">${statusIcon} ${rowCount} rows, ${fieldCount} fields</div>
+                </div>`;
+        });
+        
+        html += `
+                    </div>
+                </div>
+            </div>`;
+    });
+    
+    html += '</div>';
+    return html;
+}
+
+function generateCleanupRecommendations(tableDetails) {
+    const emptyTables = [];
+    const lowUsageTables = [];
+    
+    Object.keys(tableDetails).forEach(tableName => {
+        const rowCount = tableDetails[tableName]?.row_count || 0;
+        if (rowCount === 0) {
+            emptyTables.push(tableName);
+        } else if (rowCount <= 5 && !['categories', 'users', 'items'].includes(tableName)) {
+            lowUsageTables.push(tableName);
+        }
+    });
+    
+    return `
+        <div class="space-y-4">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 class="font-semibold text-yellow-800 mb-3">⚠️ Empty Tables (${emptyTables.length})</h4>
+                <p class="text-sm text-yellow-700 mb-3">These tables contain no data and may be candidates for removal:</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-sm">
+                    ${emptyTables.map(table => `<code class="bg-yellow-100 px-2 py-1 rounded">${table}</code>`).join('')}
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 class="font-semibold text-blue-800 mb-3">📊 Low Usage Tables (${lowUsageTables.length})</h4>
+                <p class="text-sm text-blue-700 mb-3">These tables have minimal data and may need review:</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-sm">
+                    ${lowUsageTables.map(table => `<code class="bg-blue-100 px-2 py-1 rounded">${table}</code>`).join('')}
+                </div>
+            </div>
+            
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 class="font-semibold text-green-800 mb-3">✅ Cleanup Actions</h4>
+                <div class="text-sm text-green-700 space-y-2">
+                    <div><strong>Safe to Remove:</strong> Empty tables that are not referenced in current code</div>
+                    <div><strong>Review Needed:</strong> Tables with minimal data but potential future use</div>
+                    <div><strong>Keep:</strong> Core tables (items, orders, users) regardless of current data volume</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function refreshDocumentation() {
+    loadDocumentation();
+}
+
+function exportDocumentation() {
+    const content = document.getElementById('documentationContent');
+    if (!content) return;
+    
+    const html = content.innerHTML;
+    const blob = new Blob([`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>WhimsicalFrog System Documentation</title>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+                .space-y-6 > * + * { margin-top: 1.5rem; }
+                .border { border: 1px solid #e5e7eb; }
+                .rounded-lg { border-radius: 0.5rem; }
+                .p-6 { padding: 1.5rem; }
+                .bg-white { background-color: white; }
+                .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+                .text-xl { font-size: 1.25rem; }
+                .font-bold { font-weight: 700; }
+                .mb-4 { margin-bottom: 1rem; }
+                .grid { display: grid; }
+                .gap-3 { gap: 0.75rem; }
+                .gap-4 { gap: 1rem; }
+                .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+                .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+                code { background-color: #f3f4f6; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.875rem; }
+                .bg-yellow-50 { background-color: #fefce8; }
+                .bg-blue-50 { background-color: #eff6ff; }
+                .bg-green-50 { background-color: #f0fdf4; }
+                .border-yellow-200 { border-color: #fde047; }
+                .border-blue-200 { border-color: #bfdbfe; }
+                .border-green-200 { border-color: #bbf7d0; }
+                .text-yellow-800 { color: #92400e; }
+                .text-blue-800 { color: #1e40af; }
+                .text-green-800 { color: #166534; }
+                .text-yellow-700 { color: #a16207; }
+                .text-blue-700 { color: #1d4ed8; }
+                .text-green-700 { color: #15803d; }
+            </style>
+        </head>
+        <body>
+            <h1>WhimsicalFrog System Documentation</h1>
+            <p>Generated on: ${new Date().toLocaleString()}</p>
+            <hr style="margin: 20px 0;">
+            ${html}
+        </body>
+        </html>
+    `], { type: 'text/html' });
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `whimsicalfrog-documentation-${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showSuccess('Documentation exported successfully!');
+}
+
+// ========== SYSTEM CLEANUP FUNCTIONS ==========
+
+async function runSystemAnalysis() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Analyzing...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=analyze');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayCleanupResults({
+                title: 'System Analysis Complete',
+                type: 'analysis',
+                data: data.analysis,
+                recommendations: data.recommendations
+            });
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        console.error('System analysis error:', error);
+        showError('System analysis failed: ' + error.message);
+    } finally {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+async function removeEmptyTables() {
+    if (!confirm('⚠️ This will permanently remove empty database tables. Continue?')) {
+        return;
+    }
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Removing...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=remove_empty_tables');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayCleanupResults({
+                title: 'Empty Tables Cleanup',
+                type: 'success',
+                message: data.message,
+                removed: data.removed_tables,
+                errors: data.errors
+            });
+            showSuccess(data.message);
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        console.error('Table cleanup error:', error);
+        showError('Table cleanup failed: ' + error.message);
+    } finally {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+async function cleanupStaleFiles() {
+    if (!confirm('This will remove backup and temporary files. Continue?')) {
+        return;
+    }
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Cleaning...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayCleanupResults({
+                title: 'Stale Files Cleanup',
+                type: 'success',
+                message: data.message,
+                removed: data.removed_files,
+                errors: data.errors
+            });
+            showSuccess(data.message);
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        console.error('File cleanup error:', error);
+        showError('File cleanup failed: ' + error.message);
+    } finally {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+async function removeUnusedCode() {
+    if (!confirm('This will remove stale comments (TODO, FIXME, DEBUG) from code files. Continue?')) {
+        return;
+    }
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Processing...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=remove_unused_code');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayCleanupResults({
+                title: 'Code Cleanup',
+                type: 'success',
+                message: data.message,
+                processed: data.processed_files,
+                errors: data.errors
+            });
+            showSuccess(data.message);
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        console.error('Code cleanup error:', error);
+        showError('Code cleanup failed: ' + error.message);
+    } finally {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+async function optimizeDatabase() {
+    if (!confirm('This will optimize all database tables. This may take a moment. Continue?')) {
+        return;
+    }
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Optimizing...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=optimize_database');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayCleanupResults({
+                title: 'Database Optimization',
+                type: 'success',
+                message: data.message,
+                optimized: data.optimized_tables,
+                errors: data.errors
+            });
+            showSuccess(data.message);
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        console.error('Database optimization error:', error);
+        showError('Database optimization failed: ' + error.message);
+    } finally {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+async function generateCleanupReport() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '🔄 Generating...';
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=analyze');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Create detailed report
+            const reportHtml = generateCleanupReportHTML(data.analysis, data.recommendations);
+            
+            const blob = new Blob([reportHtml], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `whimsicalfrog-cleanup-report-${new Date().toISOString().split('T')[0]}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showSuccess('Cleanup report generated and downloaded!');
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        console.error('Report generation error:', error);
+        showError('Report generation failed: ' + error.message);
+    } finally {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+function displayCleanupResults(result) {
+    const resultsDiv = document.getElementById('cleanupResults');
+    const contentDiv = document.getElementById('cleanupResultsContent');
+    
+    let html = `<h5 class="font-semibold text-gray-800 mb-2">${result.title}</h5>`;
+    
+    if (result.type === 'analysis') {
+        html += `
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span>Empty Tables:</span>
+                    <span class="font-medium">${result.data.empty_tables.length}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span>Stale Comments:</span>
+                    <span class="font-medium">${result.data.stale_comments.length}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span>Unused Files:</span>
+                    <span class="font-medium">${result.data.unused_files.length}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span>Optimization Opportunities:</span>
+                    <span class="font-medium">${result.data.optimization_opportunities.length}</span>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h6 class="font-medium text-gray-700 mb-2">Recommendations:</h6>
+                <div class="space-y-1 text-sm">
+                    ${result.recommendations.slice(0, 5).map(rec => 
+                        `<div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 bg-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-400 rounded-full"></span>
+                            <span>${rec.description}</span>
+                        </div>`
+                    ).join('')}
+                    ${result.recommendations.length > 5 ? `<div class="text-gray-500">... and ${result.recommendations.length - 5} more</div>` : ''}
+                </div>
+            </div>
+        `;
+    } else {
+        html += `<p class="text-sm text-gray-600 mb-3">${result.message}</p>`;
+        
+        if (result.removed && result.removed.length > 0) {
+            html += `
+                <div class="mb-3">
+                    <strong class="text-green-600">Removed:</strong>
+                    <div class="text-sm text-gray-600 ml-4">
+                        ${result.removed.map(item => `• ${item}`).join('<br>')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (result.processed && result.processed.length > 0) {
+            html += `
+                <div class="mb-3">
+                    <strong class="text-blue-600">Processed:</strong>
+                    <div class="text-sm text-gray-600 ml-4">
+                        ${result.processed.map(item => `• ${item}`).join('<br>')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (result.optimized && result.optimized.length > 0) {
+            html += `
+                <div class="mb-3">
+                    <strong class="text-green-600">Optimized Tables:</strong>
+                    <div class="text-sm text-gray-600 ml-4">
+                        ${result.optimized.slice(0, 10).map(item => `• ${item}`).join('<br>')}
+                        ${result.optimized.length > 10 ? `<br>... and ${result.optimized.length - 10} more tables` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (result.errors && result.errors.length > 0) {
+            html += `
+                <div class="mb-3">
+                    <strong class="text-red-600">Errors:</strong>
+                    <div class="text-sm text-red-600 ml-4">
+                        ${result.errors.map(error => `• ${error.error || error}`).join('<br>')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    contentDiv.innerHTML = html;
+    resultsDiv.classList.remove('hidden');
+}
+
+function generateCleanupReportHTML(analysis, recommendations) {
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>WhimsicalFrog System Cleanup Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+                .section { margin-bottom: 2rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+                .priority-high { color: #dc2626; }
+                .priority-medium { color: #d97706; }
+                .priority-low { color: #059669; }
+                .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+            </style>
+        </head>
+        <body>
+            <h1>WhimsicalFrog System Cleanup Report</h1>
+            <p>Generated on: ${new Date().toLocaleString()}</p>
+            
+            <div class="section">
+                <h2>Summary</h2>
+                <div class="grid">
+                    <div><strong>Empty Tables:</strong> ${analysis.empty_tables.length}</div>
+                    <div><strong>Stale Comments:</strong> ${analysis.stale_comments.length}</div>
+                    <div><strong>Unused Files:</strong> ${analysis.unused_files.length}</div>
+                    <div><strong>Redundant Code:</strong> ${analysis.redundant_code.length}</div>
+                    <div><strong>Optimization Opportunities:</strong> ${analysis.optimization_opportunities.length}</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Recommendations</h2>
+                ${recommendations.map(rec => `
+                    <div class="priority-${rec.priority}">
+                        <strong>[${rec.priority.toUpperCase()}]</strong> ${rec.description}
+                        <br><small>Impact: ${rec.impact}, Effort: ${rec.effort}</small>
+                    </div>
+                `).join('<br>')}
+            </div>
+            
+            <div class="section">
+                <h2>Details</h2>
+                <h3>Empty Tables</h3>
+                ${analysis.empty_tables.map(table => `
+                    <div>• ${table.name} (${table.references.length} references)</div>
+                `).join('')}
+                
+                <h3>Stale Comments (first 20)</h3>
+                ${analysis.stale_comments.slice(0, 20).map(comment => `
+                    <div>• ${comment.file}:${comment.line} - ${comment.content}</div>
+                `).join('')}
+                
+                <h3>Optimization Opportunities</h3>
+                ${analysis.optimization_opportunities.map(opp => `
+                    <div>• ${opp.table}: ${opp.suggestion} (${opp.row_count} rows)</div>
+                `).join('')}
+            </div>
+        </body>
+        </html>
+    `;
 }
 
 // ========== EMAIL TEMPLATE MODAL FUNCTIONS ==========

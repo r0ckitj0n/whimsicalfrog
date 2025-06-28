@@ -48,12 +48,6 @@ function renderGlobalPopup() {
                     </svg>
                     Add to Cart
                 </button>
-                <button id="popupDetailsBtn" class="popup-details-btn">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Details
-                </button>
             </div>
         </div>
     </div>
@@ -243,56 +237,43 @@ function renderGlobalPopupCSS() {
     
     /* Action Buttons */
     .popup-actions {
-        display: flex;
-        gap: 8px;
-    }
-    
-    .popup-add-btn, .popup-details-btn {
-        flex: 1;
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        border: none;
-        cursor: pointer;
+        margin-top: 12px;
     }
     
     .popup-add-btn {
-        background: #059669;
+        width: 100%;
+        padding: 10px 16px;
+        background: #87ac3a;
         color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
     }
     
     .popup-add-btn:hover {
-        background: #047857;
+        background: #6b8e23;
         transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        box-shadow: 0 4px 8px rgba(135, 172, 58, 0.3);
     }
     
-    .popup-details-btn {
-        background: #f3f4f6;
-        color: #374151;
-        border: 1px solid #d1d5db;
-    }
-    
-    .popup-details-btn:hover {
-        background: #e5e7eb;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .popup-add-btn:disabled, .popup-details-btn:disabled {
+    .popup-add-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
         transform: none;
+        background: #9ca3af;
     }
     
-    .popup-add-btn:disabled:hover, .popup-details-btn:disabled:hover {
+    .popup-add-btn:disabled:hover {
         transform: none;
         box-shadow: none;
+        background: #9ca3af;
     }
     
     /* Responsive */

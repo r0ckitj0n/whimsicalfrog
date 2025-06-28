@@ -407,11 +407,54 @@ class ShoppingCart {
         // Refresh product data before rendering
         await this.refreshProductData();
 
-        const cartHTML = this.items.map(item => {
+        // Process each item to get the correct color-specific image
+        const processedItems = await Promise.all(this.items.map(async (item) => {
+            let finalImageUrl = item.image || `/images/items/${item.sku}A.webp`;
+            
+            // If item has a color, try to get the color-specific image
+            if (item.color) {
+                try {
+                    const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${item.sku}`);
+                    const colorData = await colorResponse.json();
+                    
+                    if (colorData.success && colorData.colors) {
+                        const selectedColorData = colorData.colors.find(c => c.color_name === item.color);
+                        if (selectedColorData && selectedColorData.image_path) {
+                            // Handle image path correctly
+                            const imagePath = selectedColorData.image_path;
+                            const imageUrl = imagePath.startsWith('/images/items/') || imagePath.startsWith('images/items/') 
+                                ? imagePath 
+                                : `images/items/${imagePath}`;
+                            
+                            // Test if the color-specific image exists
+                            const imageExists = await new Promise(resolve => {
+                                const testImage = new Image();
+                                testImage.onload = () => resolve(true);
+                                testImage.onerror = () => resolve(false);
+                                testImage.src = imageUrl;
+                            });
+                            
+                            if (imageExists) {
+                                finalImageUrl = imageUrl;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log(`Could not fetch color data for ${item.sku}:`, error);
+                }
+            }
+            
+            return { ...item, finalImageUrl };
+        }));
+
+        const cartHTML = processedItems.map(item => {
             return `
             <div class="flex items-center justify-between p-4 border-b border-gray-200">
                 <div class="flex items-center space-x-4">
-                    <img src="${item.image || '/images/items/placeholder.webp'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+                    <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                        <img src="${item.finalImageUrl}" alt="${item.name}" class="w-full h-full object-contain" 
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;font-size:0.75rem;\\'><div style=\\'font-size:1.5rem;margin-bottom:0.25rem;\\'>📷</div><div>No Image</div></div>';">
+                    </div>
                     <div>
                         <h3 class="font-medium text-gray-900">${item.displayName}</h3>
                         <p class="text-sm text-gray-500">$${item.price.toFixed(2)}</p>
@@ -1002,6 +1045,11 @@ window.setupColorDropdown = async function(availableColors, selectedColor = null
     colorContainer.innerHTML = '';
     
     if (availableColors && availableColors.length > 1) {
+        // Store available colors in currentModalProduct for image switching
+        if (window.currentModalProduct) {
+            window.currentModalProduct.availableColors = availableColors;
+        }
+        
         // Create color dropdown
         const colorHTML = `
             <div class="color-selection">
@@ -1009,11 +1057,36 @@ window.setupColorDropdown = async function(availableColors, selectedColor = null
                 <div class="color-dropdown-wrapper">
                     <select id="colorSelect" class="color-select" onchange="updateSelectedColor()">
                         <option value="">Choose a color...</option>
-                        ${availableColors.map(color => `
-                            <option value="${color.color_name}" data-color-code="${color.color_code || ''}" ${selectedColor === color.color_name ? 'selected' : ''}>
-                                ${color.color_name} ${color.stock_level > 0 ? `(${color.stock_level} available)` : '(Out of stock)'}
-                            </option>
-                        `).join('')}
+                        ${availableColors.map(color => {
+                            // Calculate cart quantity for this color
+                            const cartQuantity = typeof window.getCartQuantityForColor === 'function' ? 
+                                window.getCartQuantityForColor(window.currentModalProduct?.sku, color.color_name) : 0;
+                            
+                            // Calculate available quantity
+                            const availableQuantity = Math.max(0, color.stock_level - cartQuantity);
+                            
+                            // Build availability text
+                            let availabilityText = '';
+                            if (availableQuantity > 0) {
+                                if (cartQuantity > 0) {
+                                    availabilityText = ` (${availableQuantity} available, ${cartQuantity} in cart)`;
+                                } else {
+                                    availabilityText = ` (${availableQuantity} available)`;
+                                }
+                            } else {
+                                if (cartQuantity > 0) {
+                                    availabilityText = ` (Out of stock - ${cartQuantity} in cart)`;
+                                } else {
+                                    availabilityText = ' (Out of stock)';
+                                }
+                            }
+                            
+                            return `
+                                <option value="${color.color_name}" data-color-code="${color.color_code || ''}" data-image-path="${color.image_path || ''}" ${selectedColor === color.color_name ? 'selected' : ''} ${availableQuantity <= 0 ? 'disabled' : ''}>
+                                    ${color.color_name}${availabilityText}
+                                </option>
+                            `;
+                        }).join('')}
                     </select>
                     <div id="colorSwatch" class="color-swatch-display"></div>
                 </div>
@@ -1073,6 +1146,7 @@ window.setupColorDropdown = async function(availableColors, selectedColor = null
         // If there's only one color, automatically select it without showing dropdown
         if (window.currentModalProduct) {
             window.currentModalProduct.selectedColor = availableColors[0].color_name;
+            window.currentModalProduct.availableColors = availableColors;
             
             // Update product image for the single color if it has a specific image
             updateProductImageForColor();
@@ -1099,6 +1173,26 @@ window.updateColorSwatch = function() {
     }
 };
 
+// Function to handle color selection changes
+window.updateSelectedColor = function() {
+    const colorSelect = document.getElementById('colorSelect');
+    if (!colorSelect || !window.currentModalProduct) return;
+    
+    const selectedColor = colorSelect.value;
+    window.currentModalProduct.selectedColor = selectedColor;
+    
+    // Update color swatch
+    updateColorSwatch();
+    
+    // Update product image for the selected color
+    updateProductImageForColor();
+    
+    // Refresh size dropdown if needed (some items have color-specific sizes)
+    if (typeof window.refreshModalSizeDropdown === 'function') {
+        window.refreshModalSizeDropdown();
+    }
+};
+
 // Function to update product image when color is selected
 window.updateProductImageForColor = async function() {
     if (!window.currentModalProduct || !window.currentModalProduct.selectedColor) {
@@ -1113,26 +1207,30 @@ window.updateProductImageForColor = async function() {
         
         if (selectedColorData && selectedColorData.image_path) {
             // Update the modal image
-            const modalImage = document.querySelector('#quantityModal .product-image img');
+            const modalImage = document.querySelector('#quantityModal .product-image img') || document.querySelector('#modalProductImage');
             if (modalImage) {
-                const newImageSrc = `images/items/${selectedColorData.image_path}`;
+                // Handle image path correctly
+                const imagePath = selectedColorData.image_path;
+                const imageUrl = imagePath.startsWith('/images/items/') || imagePath.startsWith('images/items/') 
+                    ? imagePath 
+                    : `images/items/${imagePath}`;
                 
                 // Create a new image to test if it loads successfully
                 const testImage = new Image();
                 testImage.onload = function() {
-                    modalImage.src = newImageSrc;
+                    modalImage.src = imageUrl;
                     // Update the current modal product image for cart
-                    window.currentModalProduct.image = newImageSrc;
+                    window.currentModalProduct.image = imageUrl;
                 };
                 testImage.onerror = function() {
                     // If color-specific image fails, fall back to default
-                    console.log(`Color-specific image not found: ${newImageSrc}, keeping current image`);
+                    console.log(`Color-specific image not found: ${imageUrl}, keeping current image`);
                 };
-                testImage.src = newImageSrc;
+                testImage.src = imageUrl;
             }
         } else {
             // No specific image for this color, use default
-            const modalImage = document.querySelector('#quantityModal .product-image img');
+            const modalImage = document.querySelector('#quantityModal .product-image img') || document.querySelector('#modalProductImage');
             if (modalImage && window.currentModalProduct.originalImage) {
                 modalImage.src = window.currentModalProduct.originalImage;
                 window.currentModalProduct.image = window.currentModalProduct.originalImage;
@@ -1211,6 +1309,31 @@ window.confirmAddToCart = function() {
             }
             return;
         }
+        
+        // Check if there's enough color inventory available (considering what's already in cart)
+        const selectedOption = colorSelect.options[colorSelect.selectedIndex];
+        const colorData = window.currentModalProduct.availableColors.find(c => c.color_name === selectedColor);
+        if (colorData) {
+            const cartQuantity = typeof window.getCartQuantityForColor === 'function' ? 
+                window.getCartQuantityForColor(window.currentModalProduct.id, selectedColor) : 0;
+            const availableQuantity = Math.max(0, colorData.stock_level - cartQuantity);
+            
+            if (quantity > availableQuantity) {
+                const errorMsg = availableQuantity === 0 ? 
+                    'This color is currently out of stock.' :
+                    `Only ${availableQuantity} of this color available (considering items already in your cart).`;
+                
+                if (window.cart && window.cart.showErrorNotification) {
+                    window.cart.showErrorNotification(errorMsg);
+                } else if (window.cart && window.cart.showNotification) {
+                    window.cart.showNotification(errorMsg);
+                } else {
+                    showValidation(errorMsg);
+                }
+                return;
+            }
+        }
+        
         // Update the selected color from dropdown
         window.currentModalProduct.selectedColor = selectedColor;
     } else if (window.currentModalProduct.availableColors && window.currentModalProduct.availableColors.length === 1) {
@@ -1295,6 +1418,13 @@ window.confirmAddToCart = function() {
         }
         
         window.cart.addItem(cartItem);
+        
+        // Refresh modal options to show updated availability
+        setTimeout(() => {
+            if (typeof window.refreshModalOptions === 'function') {
+                window.refreshModalOptions();
+            }
+        }, 100);
         
         // Show confirmation
         const customAlert = document.getElementById('customAlertBox');
@@ -1689,6 +1819,25 @@ window.getCartQuantityForSize = function(itemSku, colorName, sizeCode) {
     }, 0);
 };
 
+// Function to calculate how many of each color are already in the cart for a specific item
+window.getCartQuantityForColor = function(itemSku, colorName) {
+    if (!window.cart || !window.cart.items) return 0;
+    
+    return window.cart.items.reduce((total, cartItem) => {
+        if (cartItem.sku === itemSku) {
+            const cartColor = cartItem.color || null;
+            
+            // Match color (or both null)
+            const colorMatch = (colorName === cartColor) || (colorName === null && cartColor === null);
+            
+            if (colorMatch) {
+                return total + (cartItem.quantity || 0);
+            }
+        }
+        return total;
+    }, 0);
+};
+
 // Function to get total cart quantity for an item (all colors/sizes combined)
 window.getCartQuantityForItem = function(itemSku) {
     if (!window.cart || !window.cart.items) return 0;
@@ -1853,4 +2002,26 @@ window.updateSelectedSize = function() {
     
     // Update modal total with size price adjustment
     updateModalTotal();
+};
+
+// Function to refresh modal options after cart changes
+window.refreshModalOptions = function() {
+    if (window.currentModalProduct && window.currentModalProduct.id) {
+        // Refresh color dropdown if it exists
+        const colorSelect = document.getElementById('colorSelect');
+        if (colorSelect && window.currentModalProduct.availableColors) {
+            setupColorDropdown(window.currentModalProduct.availableColors, window.currentModalProduct.selectedColor);
+        }
+        
+        // Refresh size dropdown if it exists
+        const sizeSelect = document.getElementById('sizeSelect');
+        if (sizeSelect && (window.currentModalProduct.generalSizes || window.currentModalProduct.colorSpecificSizes)) {
+            setupSizeDropdown(
+                window.currentModalProduct.availableSizes,
+                window.currentModalProduct.generalSizes,
+                window.currentModalProduct.colorSpecificSizes,
+                window.currentModalProduct.selectedSize
+            );
+        }
+    }
 }; 

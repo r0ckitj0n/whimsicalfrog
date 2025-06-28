@@ -240,7 +240,6 @@ function positionGlobalPopup(popup, element) {
  */
 function setupGlobalPopupHandlers(popup, product) {
     const popupAddBtn = popup.querySelector('#popupAddBtn');
-    const popupDetailsBtn = popup.querySelector('#popupDetailsBtn');
     const popupContent = popup.querySelector('.popup-content');
 
     // Add to cart button
@@ -274,26 +273,11 @@ function setupGlobalPopupHandlers(popup, product) {
         }
     }
 
-    // Details button
-    if (popupDetailsBtn) {
-        popupDetailsBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            hideGlobalPopupImmediate();
-            
-            if (typeof window.showProductDetails === 'function') {
-                window.showProductDetails(product.sku);
-            } else {
-                console.log('Product details function not available for:', product.sku);
-            }
-        };
-    }
-
     // Click on popup content for details (excluding buttons)
     if (popupContent) {
         popupContent.onclick = function(e) {
             // Don't trigger if clicking on buttons
-            if (e.target.closest('.popup-add-btn, .popup-details-btn')) {
+            if (e.target.closest('.popup-add-btn')) {
                 return;
             }
             

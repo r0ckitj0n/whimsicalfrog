@@ -202,7 +202,7 @@ try {
             $sizesStmt->execute([$itemSku]);
             $sizes = $sizesStmt->fetchAll(PDO::FETCH_ASSOC);
             
-            $colorsStmt = $pdo->prepare("SELECT c.size_id, c.color_name, c.color_code, c.stock_level, s.size_name 
+            $colorsStmt = $pdo->prepare("SELECT c.id, c.size_id, c.color_name, c.color_code, c.stock_level, s.size_name 
                                         FROM item_colors c 
                                         JOIN item_sizes s ON c.size_id = s.id 
                                         WHERE c.item_sku = ? AND c.is_active = 1 

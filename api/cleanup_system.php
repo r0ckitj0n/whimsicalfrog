@@ -18,12 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Check authentication
+// Check authentication with fallback token support
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!requireAdmin()) {
+// Check if user is admin or has valid admin token
+if (!isAdminWithToken()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Admin access required']);
     exit;

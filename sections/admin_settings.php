@@ -16663,26 +16663,53 @@ function displaySystemAnalysis(analysis) {
 
 async function cleanupStaleFiles() {
     console.log('cleanupStaleFiles called');
+    console.log('showSuccess available:', typeof window.showSuccess);
+    console.log('wfNotifications available:', typeof window.wfNotifications);
     
-    // Fallback notification functions if global ones don't exist
+    // Wait a bit for notifications to load if needed
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
+        console.log('Setting up notification functions from wfNotifications');
+        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+        window.showError = window.wfNotifications.error.bind(window.wfNotifications);
+    }
+    
+    // Robust notification functions with branded modals
     const showSuccessLocal = (msg) => {
-        if (typeof showSuccess === 'function') {
-            showSuccess(msg);
+        if (typeof window.showSuccess === 'function') {
+            console.log('Using branded success notification');
+            window.showSuccess(msg);
+        } else if (typeof window.wfNotifications === 'object') {
+            console.log('Using wfNotifications directly');
+            window.wfNotifications.success(msg);
         } else {
+            console.log('Falling back to alert');
             alert('✅ ' + msg);
         }
     };
     
     const showErrorLocal = (msg) => {
-        if (typeof showError === 'function') {
-            showError(msg);
+        if (typeof window.showError === 'function') {
+            console.log('Using branded error notification');
+            window.showError(msg);
+        } else if (typeof window.wfNotifications === 'object') {
+            console.log('Using wfNotifications directly');
+            window.wfNotifications.error(msg);
         } else {
+            console.log('Falling back to alert');
             alert('❌ ' + msg);
         }
     };
     
-    // Use simple confirm dialog instead of custom modal for now
-    if (!confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.')) {
+    // Use branded confirmation if available, otherwise simple confirm
+    let userConfirmed = false;
+    if (typeof window.wfNotifications === 'object') {
+        // For now, still use confirm but will add branded confirmation later
+        userConfirmed = confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.');
+    } else {
+        userConfirmed = confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.');
+    }
+    
+    if (!userConfirmed) {
         return;
     }
     
@@ -16708,25 +16735,44 @@ async function cleanupStaleFiles() {
 
 async function removeUnusedCode() {
     console.log('removeUnusedCode called');
+    console.log('showSuccess available:', typeof window.showSuccess);
+    console.log('wfNotifications available:', typeof window.wfNotifications);
     
-    // Fallback notification functions if global ones don't exist
+    // Wait a bit for notifications to load if needed
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
+        console.log('Setting up notification functions from wfNotifications');
+        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+        window.showError = window.wfNotifications.error.bind(window.wfNotifications);
+    }
+    
+    // Robust notification functions with branded modals
     const showSuccessLocal = (msg) => {
-        if (typeof showSuccess === 'function') {
-            showSuccess(msg);
+        if (typeof window.showSuccess === 'function') {
+            console.log('Using branded success notification');
+            window.showSuccess(msg);
+        } else if (typeof window.wfNotifications === 'object') {
+            console.log('Using wfNotifications directly');
+            window.wfNotifications.success(msg);
         } else {
+            console.log('Falling back to alert');
             alert('✅ ' + msg);
         }
     };
     
     const showErrorLocal = (msg) => {
-        if (typeof showError === 'function') {
-            showError(msg);
+        if (typeof window.showError === 'function') {
+            console.log('Using branded error notification');
+            window.showError(msg);
+        } else if (typeof window.wfNotifications === 'object') {
+            console.log('Using wfNotifications directly');
+            window.wfNotifications.error(msg);
         } else {
+            console.log('Falling back to alert');
             alert('❌ ' + msg);
         }
     };
     
-    // Use simple confirm dialog instead of custom modal for now
+    // Use branded confirmation if available, otherwise simple confirm
     if (!confirm('💬 Remove Stale Comments\n\nRemove stale comments from code files?\n\nThis action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.')) {
         return;
     }
@@ -16753,25 +16799,44 @@ async function removeUnusedCode() {
 
 async function optimizeDatabase() {
     console.log('optimizeDatabase called');
+    console.log('showSuccess available:', typeof window.showSuccess);
+    console.log('wfNotifications available:', typeof window.wfNotifications);
     
-    // Fallback notification functions if global ones don't exist
+    // Wait a bit for notifications to load if needed
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
+        console.log('Setting up notification functions from wfNotifications');
+        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+        window.showError = window.wfNotifications.error.bind(window.wfNotifications);
+    }
+    
+    // Robust notification functions with branded modals
     const showSuccessLocal = (msg) => {
-        if (typeof showSuccess === 'function') {
-            showSuccess(msg);
+        if (typeof window.showSuccess === 'function') {
+            console.log('Using branded success notification');
+            window.showSuccess(msg);
+        } else if (typeof window.wfNotifications === 'object') {
+            console.log('Using wfNotifications directly');
+            window.wfNotifications.success(msg);
         } else {
+            console.log('Falling back to alert');
             alert('✅ ' + msg);
         }
     };
     
     const showErrorLocal = (msg) => {
-        if (typeof showError === 'function') {
-            showError(msg);
+        if (typeof window.showError === 'function') {
+            console.log('Using branded error notification');
+            window.showError(msg);
+        } else if (typeof window.wfNotifications === 'object') {
+            console.log('Using wfNotifications directly');
+            window.wfNotifications.error(msg);
         } else {
+            console.log('Falling back to alert');
             alert('❌ ' + msg);
         }
     };
     
-    // Use simple confirm dialog instead of custom modal for now
+    // Use branded confirmation if available, otherwise simple confirm
     if (!confirm('⚡ Optimize Database\n\nOptimize all database tables?\n\nThis action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.')) {
         return;
     }
@@ -17036,9 +17101,14 @@ function showCleanupResults(title, data) {
     document.body.insertAdjacentHTML('beforeend', resultsHtml);
     
     // Also show a summary notification
-    if (typeof showSuccess === 'function') {
-        showSuccess(data.message);
+    if (typeof window.showSuccess === 'function') {
+        console.log('Using branded success notification in showCleanupResults');
+        window.showSuccess(data.message);
+    } else if (typeof window.wfNotifications === 'object') {
+        console.log('Using wfNotifications directly in showCleanupResults');
+        window.wfNotifications.success(data.message);
     } else {
+        console.log('Falling back to alert in showCleanupResults');
         alert('✅ ' + data.message);
     }
     

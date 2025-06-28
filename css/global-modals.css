@@ -138,6 +138,27 @@ body:has(#cartPage) {
     padding: 1.5rem;
     transform: scale(1);
     transition: transform 0.3s ease;
+    /* Enhanced scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.admin-modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-modal-content::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 4px;
+}
+
+.admin-modal-content::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.admin-modal-content::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }
 
 .admin-modal-overlay.hidden .admin-modal-content {
@@ -1195,4 +1216,318 @@ html.modal-open {
 
 .modal-hidden {
     display: none !important;
+}
+
+/* Z-Index Hierarchy Fix for Room Overlays and Modals */
+/* Ensure modals always appear above room overlay elements */
+
+/* Room overlay elements should have lower z-index when modals are open */
+.room-header-overlay {
+    z-index: 100;
+}
+
+/* When any modal is open, reduce room overlay z-index */
+body:has(.modal-overlay:not(.hidden)),
+body:has(#detailedProductModal:not(.hidden)),
+body:has(#quantityModal:not(.hidden)) {
+    .room-header-overlay {
+        z-index: 10 !important;
+    }
+    
+    .back-button-container,
+    .back-to-main-button {
+        z-index: 10 !important;
+    }
+    
+    .room-title-overlay {
+        z-index: 10 !important;
+    }
+}
+
+/* Fallback for browsers that don't support :has() */
+.modal-open .room-header-overlay,
+.modal-open .back-button-container,
+.modal-open .back-to-main-button,
+.modal-open .room-title-overlay {
+    z-index: 10 !important;
+}
+
+/* Ensure all modals have consistent high z-index */
+.modal-overlay,
+#detailedProductModal,
+#quantityModal,
+.admin-modal-overlay {
+    z-index: 9999 !important;
+}
+
+/* Ensure modal content is above modal overlay */
+.modal-content,
+.admin-modal-content {
+    z-index: 10000 !important;
+    position: relative;
+}
+
+/* ========== STRUCTURE ANALYSIS & REDESIGN STYLES ========== */
+
+.structure-analysis-section {
+    margin-bottom: 1rem;
+}
+
+.structure-analysis-section .bg-yellow-50 {
+    background-color: #fefce8;
+    border-color: #fbbf24;
+}
+
+.structure-analysis-section .text-yellow-800 {
+    color: #92400e;
+}
+
+.structure-analysis-section .text-yellow-700 {
+    color: #a16207;
+}
+
+/* Restructure Modal Styles */
+#restructureModal .modal-content,
+#structureViewModal .modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#restructureModal .grid,
+#structureViewModal .grid {
+    gap: 1.5rem;
+}
+
+#restructureModal .size-checkbox,
+#restructureModal .color-checkbox {
+    transform: scale(1.2);
+    margin-left: 0.5rem;
+}
+
+#restructureModal .color-stock {
+    width: 4rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+/* Structure view specific styles */
+#structureViewModal .size-badge {
+    background-color: #dbeafe;
+    color: #1e40af;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Inline Stock Editor Styles */
+.inline-stock-editor {
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #374151;
+    background-color: transparent;
+    border: 1px solid transparent;
+}
+
+.inline-stock-editor:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+    color: #111827;
+}
+
+.inline-stock-editor.editing {
+    background-color: #fff;
+    border-color: #3b82f6;
+    padding: 0;
+}
+
+.inline-stock-input {
+    width: 60px;
+    padding: 2px 6px;
+    border: 2px solid #3b82f6;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    outline: none;
+    background-color: #fff;
+}
+
+.inline-stock-input:focus {
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Analysis Results Styling */
+#structureAnalysisResult .bg-white {
+    background-color: #fff;
+    border: 1px solid #fbbf24;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+#structureAnalysisResult .text-red-700 {
+    color: #b91c1c;
+}
+
+#structureAnalysisResult .text-red-600 {
+    color: #dc2626;
+}
+
+#structureAnalysisResult .text-blue-700 {
+    color: #1d4ed8;
+}
+
+#structureAnalysisResult .text-blue-600 {
+    color: #2563eb;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #restructureModal .grid,
+    #structureViewModal .grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    #restructureModal .max-w-4xl,
+    #structureViewModal .max-w-4xl {
+        max-width: 95vw;
+        margin: 0.5rem;
+    }
+    
+    .structure-analysis-section .flex.space-x-2 {
+        flex-direction: column;
+        space-x: 0;
+        gap: 0.5rem;
+    }
+    
+    .structure-analysis-section .flex.space-x-2 button {
+        width: 100%;
+    }
+}
+
+/* Color swatch improvements */
+.color-swatch {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 2px solid #e5e7eb;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.color-swatch.small {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.color-swatch.large {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+/* Size badge improvements */
+.size-badge {
+    background-color: #dbeafe;
+    color: #1e40af;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.size-badge.small {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.75rem;
+}
+
+.size-badge.large {
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+}
+
+/* Success/Error state styling for inline editing */
+.inline-stock-editor.success {
+    background-color: #dcfce7;
+    border-color: #16a34a;
+    color: #166534;
+}
+
+.inline-stock-editor.error {
+    background-color: #fef2f2;
+    border-color: #dc2626;
+    color: #991b1b;
+}
+
+/* Loading state for inline editing */
+.inline-stock-editor.loading {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f9fafb;
+}
+
+/* Hover effects for restructure buttons */
+.structure-analysis-section button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.structure-analysis-section button:active {
+    transform: translateY(0);
+}
+
+/* Checkbox styling improvements */
+input[type="checkbox"].size-checkbox,
+input[type="checkbox"].color-checkbox {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: #3b82f6;
+    cursor: pointer;
+}
+
+input[type="checkbox"].size-checkbox:checked,
+input[type="checkbox"].color-checkbox:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+/* Tooltip improvements for analysis section */
+.structure-analysis-section [title] {
+    position: relative;
+}
+
+.structure-analysis-section [title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f2937;
+    color: #fff;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 0.25rem;
+}
+
+.structure-analysis-section [title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #1f2937;
+    z-index: 1000;
 } 

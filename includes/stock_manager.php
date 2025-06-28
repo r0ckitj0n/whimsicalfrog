@@ -170,7 +170,7 @@ function reduceStockForSaleByColor($pdo, $itemSku, $colorName, $quantity, $useTr
  * @param bool $useTransaction Whether to use transaction
  * @return bool Success status
  */
-function reduceStockForSaleBySize($pdo, $itemSku, $sizeCode, $colorName = null, $quantity, $useTransaction = true) {
+function reduceStockForSaleBySize($pdo, $itemSku, $sizeCode, $quantity, $colorName = null, $useTransaction = true) {
     try {
         if ($useTransaction) {
             $pdo->beginTransaction();
@@ -244,7 +244,7 @@ function reduceStockForSale($pdo, $itemSku, $quantity, $colorName = null, $sizeC
         
         // Priority 1: Size-specific stock reduction (most specific)
         if (!empty($sizeCode)) {
-            $stockReduced = reduceStockForSaleBySize($pdo, $itemSku, $sizeCode, $colorName, $quantity, false);
+            $stockReduced = reduceStockForSaleBySize($pdo, $itemSku, $sizeCode, $quantity, $colorName, false);
             if ($stockReduced) {
                 error_log("Stock reduced by size for SKU '$itemSku', Size '$sizeCode', Color '$colorName'");
             }

@@ -311,6 +311,49 @@ $messageType = $_GET['type'] ?? '';
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
     }
     
+    /* Inline Stock Editor Styles */
+    .inline-stock-editor {
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+        background-color: #f8f9fa;
+        min-width: 30px;
+        display: inline-block;
+        text-align: center;
+        font-weight: 500;
+    }
+    
+    .inline-stock-editor:hover {
+        background-color: #e9ecef;
+        border-color: #87ac3a;
+        box-shadow: 0 0 0 1px rgba(135, 172, 58, 0.2);
+    }
+    
+    .inline-stock-editor.editing {
+        background-color: white;
+        border-color: #87ac3a;
+        box-shadow: 0 0 0 2px rgba(135, 172, 58, 0.2);
+    }
+    
+    .inline-stock-input {
+        width: 60px;
+        padding: 2px 6px;
+        border: 1px solid #87ac3a;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 14px;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(135, 172, 58, 0.2);
+        background-color: white;
+    }
+    
+    .inline-stock-input:focus {
+        border-color: #6b8e23;
+        box-shadow: 0 0 0 2px rgba(107, 142, 35, 0.3);
+    }
+    
     .nav-arrow:active {
         transform: translateY(-50%) scale(0.95);
     }
@@ -458,8 +501,12 @@ $messageType = $_GET['type'] ?? '';
     .cost-label { font-size: 0.8rem; color: #6b7280; }
     
     .modal-outer { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
-    .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: calc(80rem + 10px); /* Increased max-width for wider modal */ max-height: calc(90vh + 10px); display: flex; flex-direction: column; }
-    .modal-form-container { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-right: 0.5rem; /* For scrollbar */ }
+    .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: calc(80rem + 10px); /* Increased max-width for wider modal */ max-height: calc(90vh); display: flex; flex-direction: column; overflow: hidden; }
+    .modal-form-container { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-right: 0.5rem; /* For scrollbar */ scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc; }
+    .modal-form-container::-webkit-scrollbar { width: 8px; }
+    .modal-form-container::-webkit-scrollbar-track { background: #f7fafc; border-radius: 4px; }
+    .modal-form-container::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
+    .modal-form-container::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
     @media (min-width: 768px) { .modal-form-container { flex-direction: row; } }
     .modal-form-main-column { flex: 1; padding-right: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; /* Reduced gap */ }
     @media (max-width: 767px) { .modal-form-main-column { padding-right: 0; } }
@@ -899,227 +946,190 @@ $messageType = $_GET['type'] ?? '';
             <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
-        <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col flex-grow overflow-hidden">
+        <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col flex-grow overflow-y-auto">
             <input type="hidden" name="action" value="<?= $modalMode === 'add' ? 'add' : 'update'; ?>">
             <?php if ($modalMode === 'edit' && isset($editItem['sku'])): ?>
                 <input type="hidden" name="itemSku" value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
             <?php endif; ?>
 
-            <div class="modal-form-container gap-5">
-                <div class="modal-form-main-column">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label for="skuEdit" class="block text-gray-700">SKU *</label>
-                            <input type="text" id="skuEdit" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('sku', $field_errors) ? 'field-error-highlight' : '' ?>" required 
-                                   value="<?= htmlspecialchars($editItem['sku'] ?? ($nextSku ?? '')); ?>" placeholder="Auto-generated if empty">
-                        </div>
-                        <div>
-                            <label for="name" class="block text-gray-700">Name *</label>
-                            <input type="text" id="name" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('name', $field_errors) ? 'field-error-highlight' : '' ?>" required 
-                                   value="<?= htmlspecialchars($editItem['name'] ?? ''); ?>"
-                                   data-tooltip="The name of your item. Try to be more creative than 'Thing' or 'Stuff'. Your customers deserve better than that.">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label for="categoryEdit" class="block text-gray-700">Category *</label>
-                            <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'style="display:none;"' : '' ?>
-                                    data-tooltip="Which category does this belong to? If you can't figure this out, maybe running a business isn't for you.">
-                                <option value="">Select Category</option>
-                                <?php foreach ($categories as $cat): ?>
-                                    <option value="<?= htmlspecialchars($cat); ?>" <?= (isset($editItem['category']) && $editItem['category'] === $cat) ? 'selected' : ''; ?>><?= htmlspecialchars($cat); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?php if ($modalMode === 'add'): ?>
-                            <div id="aiCategoryMessage" class="mt-1 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
-                                🤖 AI will automatically select the best category after you upload a photo and we analyze your item!
+            <!-- 3-Grid Layout: Top Row (2 boxes) + Bottom Row (1 full-width box) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Left Box: Item Information -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">📝</span> Item Information
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label for="skuEdit" class="block text-gray-700">SKU *</label>
+                                <input type="text" id="skuEdit" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('sku', $field_errors) ? 'field-error-highlight' : '' ?>" required 
+                                       value="<?= htmlspecialchars($editItem['sku'] ?? ($nextSku ?? '')); ?>" placeholder="Auto-generated if empty">
                             </div>
-                            <?php endif; ?>
+                            <div>
+                                <label for="name" class="block text-gray-700">Name *</label>
+                                <input type="text" id="name" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('name', $field_errors) ? 'field-error-highlight' : '' ?>" required 
+                                       value="<?= htmlspecialchars($editItem['name'] ?? ''); ?>"
+                                       data-tooltip="The name of your item. Try to be more creative than 'Thing' or 'Stuff'. Your customers deserve better than that.">
+                            </div>
                         </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label for="categoryEdit" class="block text-gray-700">Category *</label>
+                                <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'style="display:none;"' : '' ?>
+                                        data-tooltip="Which category does this belong to? If you can't figure this out, maybe running a business isn't for you.">
+                                    <option value="">Select Category</option>
+                                    <?php foreach ($categories as $cat): ?>
+                                        <option value="<?= htmlspecialchars($cat); ?>" <?= (isset($editItem['category']) && $editItem['category'] === $cat) ? 'selected' : ''; ?>><?= htmlspecialchars($cat); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if ($modalMode === 'add'): ?>
+                                <div id="aiCategoryMessage" class="mt-1 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                                    🤖 AI will automatically select the best category after you upload a photo and we analyze your item!
+                                </div>
+                                <?php endif; ?>
+                            </div>
                             <div class="flex items-end">
                                 <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm"
                                         data-tooltip="Let AI write your marketing copy because apparently describing your own products is too hard. Don't worry, the robots are better at it anyway.">
                                      🎯 Marketing Manager
                                 </button>
+                            </div>
                         </div>
-                    </div>
 
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label for="stockLevel" class="block text-gray-700">Stock Level *</label>
-                            <input type="number" id="stockLevel" name="stockLevel" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('stockLevel', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
-                                   value="<?= htmlspecialchars($editItem['stockLevel'] ?? '0'); ?>"
-                                   data-tooltip="How many of these do you actually have? Don't lie - we're not your accountant, but your customers will be mad if you oversell.">
-                        </div>
-                        <div>
-                            <label for="reorderPoint" class="block text-gray-700">Reorder Point *</label>
-                            <input type="number" id="reorderPoint" name="reorderPoint" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('reorderPoint', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
-                                   value="<?= htmlspecialchars($editItem['reorderPoint'] ?? '5'); ?>"
-                                   data-tooltip="When to panic and order more. Set this too low and you'll run out. Set it too high and you'll have a warehouse full of stuff nobody wants.">
-                        </div>
-                    </div>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label for="costPrice" class="block text-gray-700">Cost Price ($) *</label>
-                            <input type="number" id="costPrice" name="costPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('costPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
-                                   value="<?= htmlspecialchars($editItem['costPrice'] ?? '0.00'); ?>"
-                                   data-tooltip="How much you paid for this. Don't include your tears and frustration - those are free. This is just the cold, hard cash you spent.">
-                        </div>
-                        <div>
-                            <label for="retailPrice" class="block text-gray-700">Retail Price ($) *</label>
-                            <input type="number" id="retailPrice" name="retailPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('retailPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
-                                   value="<?= htmlspecialchars($editItem['retailPrice'] ?? '0.00'); ?>"
-                                   data-tooltip="What you're charging customers. Try to make it higher than your cost price - that's how profit works. Revolutionary concept, I know.">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="description" class="block text-gray-700">Description</label>
-                        <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="3" placeholder="Enter item description or click 'Marketing Manager' for AI-powered suggestions..."
-                                  data-tooltip="Describe your item. Be more creative than 'It's good' or 'People like it'. Your customers have questions, and this is where you answer them."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
-                    </div>
-                    <!-- Item Images Section - Now spans full width when needed -->
-                    <div class="images-section-container" id="imagesSection">
-                        
-                        <!-- Current Images Display -->
-                        <div id="currentImagesContainer" class="current-images-section">
-                            <div class="flex justify-between items-center mb-2">
-                                <div class="text-sm text-gray-600">Current Images:</div>
-                                <button type="button" id="processExistingImagesBtn" onclick="processExistingImagesWithAI()" class="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>" data-tooltip="Let AI automatically crop all existing images to their edges and convert them to WebP format. Because apparently manually cropping photos is too much work for you.">
-                                    🎨 AI Process All
-                                </button>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label for="stockLevel" class="block text-gray-700">Stock Level *</label>
+                                <input type="number" id="stockLevel" name="stockLevel" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('stockLevel', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
+                                       value="<?= htmlspecialchars($editItem['stockLevel'] ?? '0'); ?>"
+                                       data-tooltip="How many of these do you actually have? Don't lie - we're not your accountant, but your customers will be mad if you oversell.">
                             </div>
-                            <div id="currentImagesList" class="w-full">
-                                <!-- Current images will be loaded here with dynamic layout -->
+                            <div>
+                                <label for="reorderPoint" class="block text-gray-700">Reorder Point *</label>
+                                <input type="number" id="reorderPoint" name="reorderPoint" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('reorderPoint', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
+                                       value="<?= htmlspecialchars($editItem['reorderPoint'] ?? '5'); ?>"
+                                       data-tooltip="When to panic and order more. Set this too low and you'll run out. Set it too high and you'll have a warehouse full of stuff nobody wants.">
                             </div>
                         </div>
                         
-                        <!-- Multi-Image Upload Section - Only show in edit/add mode -->
-                        <div class="multi-image-upload-section mt-3" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
-                            <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden">
-                            <?php if ($modalMode === 'add'): ?>
-                            <input type="file" id="aiAnalysisUpload" accept="image/*" class="hidden">
-                            <?php endif; ?>
-                            <div class="upload-controls mb-3">
-                                <div class="flex gap-2 flex-wrap">
-                                    <?php if ($modalMode === 'add'): ?>
-                                    <button type="button" onclick="document.getElementById('aiAnalysisUpload').click()" class="px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm">
-                                        🤖 Upload Photo for AI Analysis
-                                    </button>
-                                    <?php endif; ?>
-                                    <button type="button" onclick="document.getElementById('multiImageUpload').click()" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
-                                        📁 Upload Images
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label for="costPrice" class="block text-gray-700">Cost Price ($) *</label>
+                                <input type="number" id="costPrice" name="costPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('costPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
+                                       value="<?= htmlspecialchars($editItem['costPrice'] ?? '0.00'); ?>"
+                                       data-tooltip="How much you paid for this. Don't include your tears and frustration - those are free. This is just the cold, hard cash you spent.">
+                            </div>
+                            <div>
+                                <label for="retailPrice" class="block text-gray-700">Retail Price ($) *</label>
+                                <input type="number" id="retailPrice" name="retailPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('retailPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
+                                       value="<?= htmlspecialchars($editItem['retailPrice'] ?? '0.00'); ?>"
+                                       data-tooltip="What you're charging customers. Try to make it higher than your cost price - that's how profit works. Revolutionary concept, I know.">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="description" class="block text-gray-700">Description</label>
+                            <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="3" placeholder="Enter item description or click 'Marketing Manager' for AI-powered suggestions..."
+                                      data-tooltip="Describe your item. Be more creative than 'It's good' or 'People like it'. Your customers have questions, and this is where you answer them."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
+                        </div>
+
+                        <!-- Item Images Section -->
+                        <div class="images-section-container" id="imagesSection">
+                            <!-- Current Images Display -->
+                            <div id="currentImagesContainer" class="current-images-section">
+                                <div class="flex justify-between items-center mb-2">
+                                    <div class="text-sm text-gray-600">Current Images:</div>
+                                    <button type="button" id="processExistingImagesBtn" onclick="processExistingImagesWithAI()" class="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>" data-tooltip="Let AI automatically crop all existing images to their edges and convert them to WebP format. Because apparently manually cropping photos is too much work for you.">
+                                        🎨 AI Process All
                                     </button>
                                 </div>
-                                <div class="text-xs text-gray-500 mt-1">
-                                    Maximum file size: 10MB per image. Supported formats: PNG, JPG, JPEG, WebP, GIF
+                                <div id="currentImagesList" class="w-full">
+                                    <!-- Current images will be loaded here with dynamic layout -->
                                 </div>
-                                <div class="mt-2">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" id="useAIProcessing" name="useAIProcessing" class="mr-2" checked>
-                                        <span class="text-sm font-medium text-gray-700">🎨 Auto-crop to edges with AI</span>
-                                    </label>
-                                    <div class="text-xs text-gray-500 mt-1 ml-6">
-                                        Automatically detect and crop to the outermost edges of objects in your images
+                            </div>
+                            
+                            <!-- Multi-Image Upload Section - Only show in edit/add mode -->
+                            <div class="multi-image-upload-section mt-3" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
+                                <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden">
+                                <?php if ($modalMode === 'add'): ?>
+                                <input type="file" id="aiAnalysisUpload" accept="image/*" class="hidden">
+                                <?php endif; ?>
+                                <div class="upload-controls mb-3">
+                                    <div class="flex gap-2 flex-wrap">
+                                        <?php if ($modalMode === 'add'): ?>
+                                        <button type="button" onclick="document.getElementById('aiAnalysisUpload').click()" class="px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm">
+                                            🤖 Upload Photo for AI Analysis
+                                        </button>
+                                        <?php endif; ?>
+                                        <button type="button" onclick="document.getElementById('multiImageUpload').click()" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                                            📁 Upload Images
+                                        </button>
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        Maximum file size: 10MB per image. Supported formats: PNG, JPG, JPEG, WebP, GIF
+                                    </div>
+                                    <div class="mt-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="useAIProcessing" name="useAIProcessing" class="mr-2" checked>
+                                            <span class="text-sm font-medium text-gray-700">🎨 Auto-crop to edges with AI</span>
+                                        </label>
+                                        <div class="text-xs text-gray-500 mt-1 ml-6">
+                                            Automatically detect and crop to the outermost edges of objects in your images
+                                        </div>
+                                    </div>
+                                    <div id="uploadProgress" class="mt-2 hidden">
+                                        <div class="text-sm text-gray-600 mb-2">Uploading images...</div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div id="uploadProgressBar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div id="uploadProgress" class="mt-2 hidden">
-                                    <div class="text-sm text-gray-600 mb-2">Uploading images...</div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2">
-                                        <div id="uploadProgressBar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Structure Analysis & Redesign Section (conditionally displayed) -->
+                        <div id="structureAnalysisSection" class="structure-analysis-section" style="display: none;">
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <h3 class="text-sm font-medium text-yellow-800">🎯 Size/Color System Analysis</h3>
+                                        <div class="mt-2 text-sm text-yellow-700">
+                                            <p>Your current structure may be backwards! For better inventory management, you should have <strong>sizes first</strong> (S, M, L, XL), then colors available for each size.</p>
+                                            <div class="mt-2" id="structureAnalysisResult">
+                                                <em>Click "Analyze" to check your current structure...</em>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 flex space-x-2">
+                                            <button type="button" onclick="analyzeStructure()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded text-sm font-medium">
+                                                🔍 Analyze Current Structure
+                                            </button>
+                                            <button type="button" onclick="showRestructureModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm font-medium">
+                                                🎯 Restructure System
+                                            </button>
+                                            <button type="button" onclick="showNewStructureView()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-medium">
+                                                👀 View New Structure
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Note: Images now managed through item_images table and image carousel above -->
-                    </div>
-                    
-                    <!-- Color Management Section -->
-                    <div class="color-management-section mt-4" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                                <span class="mr-2">🎨</span> Color Options
-                            </h3>
-                            <div class="flex space-x-2">
-                                <button type="button" onclick="openColorTemplateModal()" class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors" title="Apply color template">
-                                    📋 Templates
-                                </button>
-                                <button type="button" onclick="syncStockLevels()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" title="Sync total stock with color quantities">
-                                    🔄 Sync Stock
-                                </button>
-                                <button type="button" onclick="addNewColor()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
-                                    + Add Color
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="colorsList" class="space-y-2">
-                            <!-- Colors will be loaded here -->
-                            <div class="text-center text-gray-500 text-sm" id="colorsLoading">Loading colors...</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Size Management Section -->
-                    <div class="size-management-section mt-4" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                                <span class="mr-2">📏</span> Size Options
-                            </h3>
-                            <div class="flex space-x-2">
-                                <button type="button" onclick="openSizeTemplateModal()" class="px-3 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors" title="Apply size template">
-                                    📋 Templates
-                                </button>
-                                <button type="button" onclick="syncSizeStock()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" title="Sync stock levels with size quantities">
-                                    🔄 Sync Stock
-                                </button>
-                                <button type="button" onclick="addNewSize()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
-                                    + Add Size
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Size Configuration Toggle -->
-                        <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="font-medium text-blue-800 text-sm">📋 Size Configuration</h4>
-                                <div class="text-xs text-blue-600">
-                                    Choose how sizes work for this item
-                                </div>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="radio" name="sizeConfiguration" value="none" class="mr-2" checked onchange="updateSizeConfiguration()">
-                                    <span class="text-sm">No sizes - Single item</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="sizeConfiguration" value="general" class="mr-2" onchange="updateSizeConfiguration()">
-                                    <span class="text-sm">General sizes - Same item in different sizes</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="sizeConfiguration" value="color_specific" class="mr-2" onchange="updateSizeConfiguration()">
-                                    <span class="text-sm">Color-specific sizes - Different sizes for each color</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Size Type Selector (for color-specific mode) -->
-                        <div id="sizeTypeSelector" class="mb-3 hidden">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Color for Size Management:</label>
-                            <select id="sizeColorFilter" class="w-full px-3 py-2 border border-gray-300 rounded text-sm" onchange="loadItemSizes()">
-                                <option value="general">General Sizes (No Color)</option>
-                                <!-- Color options will be loaded here -->
-                            </select>
-                        </div>
-                        
-                        <div id="sizesList" class="space-y-2">
-                            <!-- Sizes will be loaded here -->
-                            <div class="text-center text-gray-500 text-sm" id="sizesLoading">Loading sizes...</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="modal-form-suggestions-column">
+                <!-- Right Box: Cost & Price Suggestions -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">💰</span> Cost & Price Analysis
+                    </h3>
+                    
                     <div class="suggestions-container">
                         <!-- Cost Breakdown Section -->
                         <div class="cost-breakdown-wrapper">
@@ -1266,6 +1276,85 @@ $messageType = $_GET['type'] ?? '';
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Box: Size & Color Combinations (Full Width) -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
+                <div class="size-color-management-section">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <span class="mr-2">📦</span> Size & Color Combinations
+                        </h3>
+                        <div class="flex space-x-2">
+                            <button type="button" onclick="showLegacyManagement()" class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-colors" title="Show individual color/size management">
+                                🔧 Legacy Mode
+                            </button>
+                            <button type="button" onclick="syncAllStock()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" title="Sync all stock levels">
+                                🔄 Sync Stock
+                            </button>
+                            <button type="button" onclick="addNewCombination()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                + Add Combination
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Summary -->
+                    <div id="stockSummary" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div class="text-sm text-gray-600" id="stockSummaryText">Loading stock summary...</div>
+                    </div>
+                    
+                    <!-- Size-Color Combinations Display -->
+                    <div id="sizeColorCombinations" class="space-y-3">
+                        <!-- Combinations will be loaded here -->
+                        <div class="text-center text-gray-500 text-sm" id="combinationsLoading">Loading combinations...</div>
+                    </div>
+                    
+                    <!-- Legacy Color Management (hidden by default) -->
+                    <div id="legacyColorSection" class="mt-6 hidden">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-md font-semibold text-gray-700 flex items-center">
+                                <span class="mr-2">🎨</span> Individual Colors (Legacy)
+                            </h4>
+                            <div class="flex space-x-2">
+                                <button type="button" onclick="openColorTemplateModal()" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
+                                    📋 Templates
+                                </button>
+                                <button type="button" onclick="addNewColor()" class="px-2 py-1 text-white rounded text-xs" style="background-color: #87ac3a;">
+                                    + Add Color
+                                </button>
+                                <button type="button" onclick="toggleLegacyColors()" class="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600">
+                                    Hide
+                                </button>
+                            </div>
+                        </div>
+                        <div id="colorsList" class="space-y-2">
+                            <div class="text-center text-gray-500 text-sm" id="colorsLoading">Loading colors...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Legacy Size Management (hidden by default) -->
+                    <div id="legacySizeSection" class="mt-4 hidden">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-md font-semibold text-gray-700 flex items-center">
+                                <span class="mr-2">📏</span> Individual Sizes (Legacy)
+                            </h4>
+                            <div class="flex space-x-2">
+                                <button type="button" onclick="openSizeTemplateModal()" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
+                                    📋 Templates
+                                </button>
+                                <button type="button" onclick="addNewSize()" class="px-2 py-1 text-white rounded text-xs" style="background-color: #87ac3a;">
+                                    + Add Size
+                                </button>
+                                <button type="button" onclick="toggleLegacySizes()" class="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600">
+                                    Hide
+                                </button>
+                            </div>
+                        </div>
+                        <div id="sizesList" class="space-y-2">
+                            <div class="text-center text-gray-500 text-sm" id="sizesLoading">Loading sizes...</div>
                         </div>
                     </div>
                 </div>
@@ -8611,16 +8700,24 @@ function renderColors(colors) {
             <div class="color-item flex items-center justify-between p-3 border border-gray-200 rounded-lg ${activeClass}">
                 <div class="flex items-center space-x-3">
                     <div class="color-swatch w-8 h-8 rounded-full border-2 border-gray-300" style="background-color: ${color.color_code || '#ccc'}"></div>
-                    <div>
-                        <div class="font-medium text-gray-800">${color.color_name}${activeText}</div>
-                        <div class="text-sm text-gray-500">${color.stock_level} in stock</div>
-                        ${color.image_path ? `<div class="text-xs text-blue-600">Image: ${color.image_path}</div>` : ''}
-                    </div>
+                                            <div>
+                            <div class="font-medium text-gray-800">${color.color_name}${activeText}</div>
+                            <div class="text-sm text-gray-500 flex items-center">
+                                <span class="inline-stock-editor" 
+                                      data-type="color" 
+                                      data-id="${color.id}" 
+                                      data-field="stock_level" 
+                                      data-value="${color.stock_level}"
+                                      onclick="editInlineStock(this)"
+                                      title="Click to edit stock level">
+                                    ${color.stock_level}
+                                </span>
+                                <span class="ml-1">in stock</span>
+                            </div>
+                            ${color.image_path ? `<div class="text-xs text-blue-600">Image: ${color.image_path}</div>` : ''}
+                        </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button type="button" onclick="editColor(${color.id})" class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
-                        Edit
-                    </button>
                     <button type="button" onclick="deleteColor(${color.id})" class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">
                         Delete
                     </button>
@@ -9238,13 +9335,12 @@ async function syncStockLevels() {
     }
     
     try {
-        const response = await fetch('/api/item_colors.php', {
+        const response = await fetch(`/api/item_colors.php?action=sync_stock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                action: 'sync_stock',
                 item_sku: currentItemSku
             })
         });
@@ -9279,6 +9375,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {
         console.log('Loading colors for SKU:', currentItemSku);
         setTimeout(loadItemColors, 500); // Small delay to ensure elements are ready
+        
+        // Check if structure analysis should be shown (only in edit mode)
+        if (modalMode === 'edit') {
+            setTimeout(checkAndShowStructureAnalysis, 600);
+        }
     } else if (document.getElementById('sku') || document.getElementById('skuDisplay')) {
         // Fallback: try to get SKU from form fields
         const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
@@ -9286,6 +9387,11 @@ document.addEventListener('DOMContentLoaded', function() {
             currentItemSku = skuField.value;
             console.log('Found SKU from field:', currentItemSku);
             setTimeout(loadItemColors, 500);
+            
+            // Check if structure analysis should be shown
+            if (modalMode === 'edit') {
+                setTimeout(checkAndShowStructureAnalysis, 600);
+            }
         }
     }
 });
@@ -9473,13 +9579,21 @@ function renderSizes(sizes) {
                         </div>
                         <div>
                             <div class="font-medium text-gray-800">${size.size_name}${activeText}${priceAdjustmentText}</div>
-                            <div class="text-sm text-gray-500">${size.stock_level} in stock</div>
+                            <div class="text-sm text-gray-500 flex items-center">
+                                <span class="inline-stock-editor" 
+                                      data-type="size" 
+                                      data-id="${size.id}" 
+                                      data-field="stock_level" 
+                                      data-value="${size.stock_level}"
+                                      onclick="editInlineStock(this)"
+                                      title="Click to edit stock level">
+                                    ${size.stock_level}
+                                </span>
+                                <span class="ml-1">in stock</span>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <button type="button" onclick="editSize(${size.id})" class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
-                            Edit
-                        </button>
                         <button type="button" onclick="deleteSize(${size.id})" class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">
                             Delete
                         </button>
@@ -9795,13 +9909,12 @@ async function syncSizeStock() {
     }
     
     try {
-        const response = await fetch('/api/item_sizes.php', {
+        const response = await fetch(`/api/item_sizes.php?action=sync_stock`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                action: 'sync_stock',
                 item_sku: currentItemSku
             })
         });
@@ -9850,14 +9963,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load colors when in edit mode and we have a valid SKU
     if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {
         console.log('Loading colors for SKU:', currentItemSku);
+        console.log('Initializing Size & Color Combinations interface...');
+        setTimeout(loadSizeColorCombinations, 400); // Load new interface first
         setTimeout(loadItemColors, 500);
         setTimeout(initializeSizeManagement, 600); // Initialize sizes after colors
+        // Also try immediate initialization
+        setTimeout(function() {
+            console.log('Attempting immediate Size & Color Combinations load...');
+            initializeSizeColorInterface();
+        }, 100);
     } else if (document.getElementById('sku') || document.getElementById('skuDisplay')) {
         // Fallback: try to get SKU from form fields
         const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
         if (skuField && skuField.value) {
             currentItemSku = skuField.value;
             console.log('Found SKU from field:', currentItemSku);
+            setTimeout(loadSizeColorCombinations, 400); // Load new interface first
             setTimeout(loadItemColors, 500);
             setTimeout(initializeSizeManagement, 600);
         }
@@ -10463,9 +10584,977 @@ function closeSizeTemplateModal() {
     }
 }
 
+// ========== INLINE STOCK EDITING FUNCTIONS ==========
+
+// Helper function to get current size data
+async function getCurrentSizeData(sizeId) {
+    try {
+        const response = await fetch(`/api/item_sizes.php?action=get_all_sizes&item_sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        if (data.success && data.sizes) {
+            return data.sizes.find(size => size.id == sizeId);
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching size data:', error);
+        return null;
+    }
+}
+
+// Edit stock level inline
+function editInlineStock(element) {
+    // Prevent multiple editors
+    if (element.classList.contains('editing')) return;
+    
+    const currentValue = element.getAttribute('data-value');
+    const type = element.getAttribute('data-type'); // 'color' or 'size'
+    const id = element.getAttribute('data-id');
+    
+    // Create input element
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.value = currentValue;
+    input.className = 'inline-stock-input';
+    
+    // Store original element for restoration
+    const originalContent = element.innerHTML;
+    
+    // Replace content with input
+    element.innerHTML = '';
+    element.appendChild(input);
+    element.classList.add('editing');
+    
+    // Focus and select the input
+    input.focus();
+    input.select();
+    
+    // Save function
+    const saveStock = async () => {
+        const newValue = parseInt(input.value) || 0;
+        
+        // If value hasn't changed, just restore
+        if (newValue == currentValue) {
+            restoreElement();
+            return;
+        }
+        
+        try {
+            // Show loading state
+            input.disabled = true;
+            input.style.opacity = '0.6';
+            
+            // Determine API endpoint and data
+            let apiUrl, updateData;
+            if (type === 'color') {
+                apiUrl = '/api/item_colors.php?action=update_stock';
+                updateData = {
+                    color_id: parseInt(id),
+                    stock_level: newValue
+                };
+            } else if (type === 'size') {
+                apiUrl = '/api/item_sizes.php?action=update_stock';
+                updateData = {
+                    size_id: parseInt(id),
+                    stock_level: newValue
+                };
+            }
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update the element's data attribute
+                element.setAttribute('data-value', newValue);
+                
+                // Restore element with new value
+                element.classList.remove('editing');
+                element.innerHTML = newValue;
+                
+                // Update total stock field if provided
+                if (data.new_total_stock !== undefined) {
+                    const stockField = document.getElementById('stockLevel');
+                    if (stockField) {
+                        stockField.value = data.new_total_stock;
+                    }
+                }
+                
+                // Reload the appropriate list to update sync status
+                if (type === 'color') {
+                    loadItemColors();
+                } else {
+                    loadItemSizes();
+                }
+                
+                // Show success message
+                showSuccess(`${type.charAt(0).toUpperCase() + type.slice(1)} stock updated to ${newValue}`);
+                
+            } else {
+                throw new Error(data.message || 'Failed to update stock');
+            }
+            
+        } catch (error) {
+            console.error('Error updating stock:', error);
+            showError(`Error updating ${type} stock: ${error.message}`);
+            restoreElement();
+        }
+    };
+    
+    // Cancel function
+    const restoreElement = () => {
+        element.classList.remove('editing');
+        element.innerHTML = originalContent;
+    };
+    
+    // Event listeners
+    input.addEventListener('blur', saveStock);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveStock();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            restoreElement();
+        }
+    });
+    
+    // Prevent event bubbling
+    input.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+}
+
+// ========== STRUCTURE ANALYSIS & REDESIGN FUNCTIONS ==========
+
+// Analyze current size/color structure
+async function analyzeStructure() {
+    if (!currentItemSku) {
+        showError('Please save the item first');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/redesign_size_color_system.php?action=analyze_current_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        if (data.success) {
+            const analysis = data.analysis;
+            const resultDiv = document.getElementById('structureAnalysisResult');
+            
+            let html = `
+                <div class="mt-3 p-3 bg-white border border-yellow-300 rounded-lg">
+                    <h4 class="font-medium text-gray-800 mb-2">📊 Analysis Results:</h4>
+                    <div class="text-sm space-y-1">
+                        <div><strong>Colors:</strong> ${analysis.total_colors}</div>
+                        <div><strong>Sizes:</strong> ${analysis.total_sizes}</div>
+                    </div>
+            `;
+            
+            if (analysis.structure_issues.length > 0) {
+                html += `
+                    <div class="mt-3">
+                        <h5 class="font-medium text-red-700 mb-1">⚠️ Issues Found:</h5>
+                        <ul class="text-sm text-red-600 space-y-1">
+                            ${analysis.structure_issues.map(issue => `<li>• ${issue}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (analysis.recommendations.length > 0) {
+                html += `
+                    <div class="mt-3">
+                        <h5 class="font-medium text-blue-700 mb-1">💡 Recommendations:</h5>
+                        <ul class="text-sm text-blue-600 space-y-1">
+                            ${analysis.recommendations.map(rec => `<li>• ${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            resultDiv.innerHTML = html;
+            
+        } else {
+            showError('Error analyzing structure: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error analyzing structure:', error);
+        showError('Error analyzing structure');
+    }
+}
+
+// Show restructure modal
+async function showRestructureModal() {
+    if (!currentItemSku) {
+        showError('Please save the item first');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/redesign_size_color_system.php?action=propose_new_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        if (data.success) {
+            createRestructureModal(data);
+        } else {
+            showError('Error getting proposal: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error getting proposal:', error);
+        showError('Error getting proposal');
+    }
+}
+
+// Create restructure modal
+function createRestructureModal(proposal) {
+    // Remove existing modal if it exists
+    const existingModal = document.getElementById('restructureModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Extract data from the CORRECT API response structure
+    const proposedSizes = proposal.proposedSizes || [];
+    const allColors = proposal.allColors || [];
+    const totalCombinations = proposal.totalCombinations || 0;
+    const message = proposal.message || 'Structure analysis complete';
+    
+    const modal = document.createElement('div');
+    modal.id = 'restructureModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Fixed Header -->
+            <div class="p-6 border-b border-gray-200 flex-shrink-0">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800">✅ Current Size/Color Structure</h2>
+                    <button type="button" onclick="closeRestructureModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto flex-1" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc; max-height: calc(90vh - 160px);">
+                <style>
+                    #restructureModal .overflow-y-auto::-webkit-scrollbar {
+                        width: 8px;
+                    }
+                    #restructureModal .overflow-y-auto::-webkit-scrollbar-track {
+                        background: #f7fafc;
+                        border-radius: 4px;
+                    }
+                    #restructureModal .overflow-y-auto::-webkit-scrollbar-thumb {
+                        background: #cbd5e0;
+                        border-radius: 4px;
+                    }
+                    #restructureModal .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                        background: #a0aec0;
+                    }
+                </style>
+                
+                <!-- Summary Section -->
+                <div class="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-gray-800">✅ Hierarchy is CORRECT</h3>
+                        <div class="text-sm text-gray-600">
+                            <span class="bg-white px-2 py-1 rounded shadow-sm">${proposedSizes.length} sizes × ${allColors.length} colors = ${totalCombinations} combinations</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-3">${message}</p>
+                    
+                    <!-- Structure Info -->
+                    <div class="bg-white bg-opacity-70 rounded-lg p-3">
+                        <div class="text-sm">
+                            <strong>Hierarchy:</strong> Item → Sizes → Colors → Stock<br>
+                            <strong>Structure:</strong> Each size contains multiple colors as options
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Content Sections -->
+                <div class="p-6">
+                    <!-- Size-Color Combinations -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-gray-700 flex items-center">
+                                📦 Size-Color Combinations
+                                <span class="ml-2 text-sm text-gray-500">(${totalCombinations} active combinations)</span>
+                            </h4>
+                        </div>
+                        
+                        <div class="space-y-3" id="sizeColorCombinations">
+                            ${proposedSizes.map((size, sizeIndex) => `
+                                <div class="border border-gray-200 rounded-lg p-3">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">${size.code}</span>
+                                            <span class="text-sm font-semibold">${size.name}</span>
+                                            ${size.price_adjustment > 0 ? `<span class="text-green-600 text-xs">+$${parseFloat(size.price_adjustment).toFixed(2)}</span>` : ''}
+                                        </div>
+                                        <span class="text-xs text-gray-500">${size.colors ? size.colors.length : 0} colors, ${size.stock || 0} total stock</span>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ml-6">
+                                        ${(size.colors || []).map((color, colorIndex) => `
+                                            <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                                <div class="flex items-center space-x-2">
+                                                    <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: ${color.color_code}"></div>
+                                                    <span class="text-xs font-medium">${color.color_name}</span>
+                                                </div>
+                                                <span class="text-xs text-gray-600">${color.stock_level}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="mt-3 text-xs text-gray-500 bg-yellow-50 p-3 rounded">
+                            💡 Each number represents the stock level for that specific size-color combination (e.g., "5" = 5 Small Red T-shirts)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fixed Footer -->
+            <div class="p-4 border-t border-gray-200 flex-shrink-0 bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        <span>✅ Structure is correct: Sizes → Colors → Stock</span>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeRestructureModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Utility functions for the new interface
+function setAllStock(value) {
+    document.querySelectorAll('.stock-input').forEach(input => {
+        const sizeCheckbox = input.closest('.border').querySelector('.size-checkbox');
+        const colorCheckbox = input.closest('.size-color-combo').querySelector('.color-checkbox');
+        if (sizeCheckbox && sizeCheckbox.checked && colorCheckbox && colorCheckbox.checked) {
+            input.value = value;
+        }
+    });
+    updateCombinations();
+}
+
+function updateCombinations() {
+    let totalCombinations = 0;
+    let totalStock = 0;
+    
+    // Update each size total and overall totals
+    document.querySelectorAll('.size-checkbox').forEach(sizeCheckbox => {
+        const sizeIndex = sizeCheckbox.dataset.sizeIndex;
+        const sizeTotal = document.getElementById(`sizeTotal_${sizeIndex}`);
+        const isChecked = sizeCheckbox.checked;
+        
+        let sizeStockTotal = 0;
+        let sizeColorCount = 0;
+        
+        // Update colors for this size
+        const colorsContainer = document.getElementById(`colorsFor_${sizeIndex}`);
+        if (colorsContainer) {
+            colorsContainer.style.opacity = isChecked ? '1' : '0.5';
+            
+            colorsContainer.querySelectorAll('.color-checkbox').forEach(colorCheckbox => {
+                const colorCombo = colorCheckbox.closest('.size-color-combo');
+                const stockInput = colorCombo.querySelector('.stock-input');
+                
+                colorCheckbox.disabled = !isChecked;
+                stockInput.disabled = !isChecked || !colorCheckbox.checked;
+                
+                if (isChecked && colorCheckbox.checked) {
+                    const stock = parseInt(stockInput.value) || 0;
+                    sizeStockTotal += stock;
+                    sizeColorCount++;
+                    totalCombinations++;
+                    totalStock += stock;
+                }
+                
+                // Visual feedback for disabled combinations
+                colorCombo.style.opacity = (!isChecked || !colorCheckbox.checked) ? '0.5' : '1';
+            });
+        }
+        
+        if (sizeTotal) {
+            sizeTotal.textContent = `${sizeColorCount} colors, ${sizeStockTotal} total stock`;
+        }
+    });
+    
+    // Update header count
+    const combinationCount = document.getElementById('combinationCount');
+    if (combinationCount) {
+        combinationCount.textContent = `(${totalCombinations} active combinations)`;
+    }
+    
+    // Update footer summary
+    const summaryElement = document.getElementById('restructureSummary');
+    const applyButton = document.getElementById('applyRestructureBtn');
+    
+    if (summaryElement && applyButton) {
+        if (totalCombinations === 0) {
+            summaryElement.textContent = 'Select at least 1 size and 1 color to continue';
+            summaryElement.className = 'text-sm text-red-600';
+            applyButton.disabled = true;
+            applyButton.className = 'px-4 py-2 bg-gray-400 text-gray-200 rounded cursor-not-allowed text-sm font-medium';
+        } else {
+            summaryElement.textContent = `Will create ${totalCombinations} size-color combinations with ${totalStock} total stock`;
+            summaryElement.className = 'text-sm text-gray-600';
+            applyButton.disabled = false;
+            applyButton.className = 'px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium';
+        }
+    }
+}
+
+// Apply restructure
+async function applyRestructure() {
+    if (!window.currentProposal || !currentItemSku) {
+        showError('Missing proposal data');
+        return;
+    }
+    
+    const proposal = window.currentProposal;
+    
+    // Build new structure from the size-color combinations
+    const newStructure = [];
+    
+    document.querySelectorAll('.size-checkbox:checked').forEach(sizeCheckbox => {
+        const sizeIndex = parseInt(sizeCheckbox.getAttribute('data-size-index'));
+        const size = proposal.proposed_sizes[sizeIndex];
+        
+        if (!size) return;
+        
+        const colors = [];
+        
+        // Get all color combinations for this size
+        document.querySelectorAll(`.color-checkbox[data-size-index="${sizeIndex}"]:checked`).forEach(colorCheckbox => {
+            const colorIndex = parseInt(colorCheckbox.getAttribute('data-color-index'));
+            const color = proposal.proposed_colors[colorIndex];
+            const stockInput = document.querySelector(`.stock-input[data-size-index="${sizeIndex}"][data-color-index="${colorIndex}"]`);
+            const stockLevel = parseInt(stockInput.value) || 0;
+            
+            if (color) {
+                colors.push({
+                    color_name: color.color_name,
+                    color_code: color.color_code,
+                    stock_level: stockLevel
+                });
+            }
+        });
+        
+        if (colors.length > 0) {
+            newStructure.push({
+                size_name: size.size_name,
+                size_code: size.size_code,
+                price_adjustment: size.price_adjustment,
+                colors: colors
+            });
+        }
+    });
+    
+    if (newStructure.length === 0) {
+        showError('Please select at least one size and one color combination');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/redesign_size_color_system.php?action=migrate_to_new_structure', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                item_sku: currentItemSku,
+                new_structure: newStructure,
+                preserve_stock: true
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(`Structure restructured successfully! Created ${data.structure_created}. New total stock: ${data.new_total_stock}`);
+            closeRestructureModal();
+            
+            // Reload colors and sizes
+            loadItemColors();
+            loadItemSizes();
+            
+            // Update main stock field
+            const stockField = document.getElementById('stockLevel');
+            if (stockField) {
+                stockField.value = data.new_total_stock;
+            }
+            
+        } else {
+            showError('Error applying restructure: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error applying restructure:', error);
+        showError('Error applying restructure: ' + error.message);
+    }
+}
+
+// Close restructure modal
+function closeRestructureModal() {
+    const modal = document.getElementById('restructureModal');
+    if (modal) {
+        modal.remove();
+    }
+    window.currentProposal = null;
+}
+
+// Show new structure view
+async function showNewStructureView() {
+    if (!currentItemSku) {
+        showError('Please save the item first');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/redesign_size_color_system.php?action=get_restructured_view&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        if (data.success) {
+            createStructureViewModal(data);
+        } else {
+            showError('Error getting structure view: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error getting structure view:', error);
+        showError('Error getting structure view');
+    }
+}
+
+// Create structure view modal
+function createStructureViewModal(data) {
+    // Remove existing modal if it exists
+    const existingModal = document.getElementById('structureViewModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'structureViewModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Fixed Header -->
+            <div class="p-6 border-b border-gray-200 flex-shrink-0">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800">👀 Current Structure View</h2>
+                    <button type="button" onclick="closeStructureViewModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="p-6 overflow-y-auto flex-1" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
+                <style>
+                    #structureViewModal .overflow-y-auto::-webkit-scrollbar {
+                        width: 8px;
+                    }
+                    #structureViewModal .overflow-y-auto::-webkit-scrollbar-track {
+                        background: #f7fafc;
+                        border-radius: 4px;
+                    }
+                    #structureViewModal .overflow-y-auto::-webkit-scrollbar-thumb {
+                        background: #cbd5e0;
+                        border-radius: 4px;
+                    }
+                    #structureViewModal .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                        background: #a0aec0;
+                    }
+                </style>
+                
+                <div class="mb-4">
+                    <div class="text-sm text-gray-600 mb-4">
+                        <strong>Item:</strong> ${data.item_sku} | <strong>Total Combinations:</strong> ${data.total_combinations}
+                    </div>
+                </div>
+                
+                ${data.structure.length === 0 ? `
+                    <div class="text-center text-gray-500 py-8">
+                        <p>No properly structured size-color combinations found.</p>
+                        <p class="mt-2">Use the "Restructure System" button to create a logical structure.</p>
+                    </div>
+                ` : `
+                    <div class="space-y-4">
+                        ${data.structure.map(size => `
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium mr-2">${size.size_code}</span>
+                                        ${size.size_name}
+                                        ${size.price_adjustment > 0 ? `<span class="ml-2 text-green-600 text-sm">+$${size.price_adjustment}</span>` : ''}
+                                    </h3>
+                                    <div class="text-sm text-gray-600">
+                                        <strong>Total Stock:</strong> ${size.total_stock}
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    ${size.colors.map(color => `
+                                        <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: ${color.color_code}"></div>
+                                                <span class="text-sm font-medium">${color.color_name}</span>
+                                            </div>
+                                            <span class="text-sm text-gray-600">${color.stock_level} stock</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+            
+            <!-- Fixed Footer -->
+            <div class="p-6 border-t border-gray-200 flex-shrink-0">
+                <div class="flex justify-center">
+                    <button type="button" onclick="closeStructureViewModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Close structure view modal
+function closeStructureViewModal() {
+    const modal = document.getElementById('structureViewModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Check if structure analysis should be shown (only for backwards structures)
+async function checkAndShowStructureAnalysis() {
+    if (!currentItemSku) {
+        console.log('No SKU available for structure analysis check');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/redesign_size_color_system.php?action=check_if_backwards&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        if (data.success && data.is_backwards) {
+            console.log('Structure is backwards, showing analysis section');
+            const analysisSection = document.getElementById('structureAnalysisSection');
+            if (analysisSection) {
+                analysisSection.style.display = 'block';
+            }
+        } else {
+            console.log('Structure is not backwards, hiding analysis section');
+            const analysisSection = document.getElementById('structureAnalysisSection');
+            if (analysisSection) {
+                analysisSection.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error checking structure backwards status:', error);
+        // Hide analysis section on error
+        const analysisSection = document.getElementById('structureAnalysisSection');
+        if (analysisSection) {
+            analysisSection.style.display = 'none';
+        }
+    }
+}
+
 </script>
 
-<script src="js/modal-close-positioning.js?v=<?= $cache_buster ?>"></script>
+<script>
+// ===== NEW SIZE-COLOR COMBINATIONS INTERFACE =====
+
+// Load size-color combinations in an intuitive format
+async function loadSizeColorCombinations() {
+    console.log('Loading size-color combinations for SKU:', currentItemSku);
+    
+    if (!currentItemSku) {
+        console.log('No SKU available for loading combinations');
+        const combinationsLoading = document.getElementById('combinationsLoading');
+        if (combinationsLoading) {
+            combinationsLoading.textContent = 'No SKU available';
+        }
+        return;
+    }
+    
+    // Show loading state
+    const combinationsLoading = document.getElementById('combinationsLoading');
+    if (combinationsLoading) {
+        combinationsLoading.textContent = 'Loading combinations...';
+        combinationsLoading.style.display = 'block';
+    }
+    
+    try {
+        console.log('Making API call to:', '/api/redesign_size_color_system.php?action=propose_new_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
+        const response = await fetch('/api/redesign_size_color_system.php?action=propose_new_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
+        console.log('API response status:', response.status);
+        const data = await response.json();
+        
+        console.log('Size-color combinations API response:', data);
+        
+        if (data.success) {
+            renderSizeColorCombinations(data);
+            updateStockSummary(data);
+        } else {
+            console.error('Error loading combinations:', data.message);
+            renderSizeColorCombinations({ proposedSizes: [], totalCombinations: 0 });
+        }
+    } catch (error) {
+        console.error('Error fetching combinations:', error);
+        renderSizeColorCombinations({ proposedSizes: [], totalCombinations: 0 });
+    }
+}
+
+// Render size-color combinations in an intuitive interface
+function renderSizeColorCombinations(data) {
+    const combinationsContainer = document.getElementById('sizeColorCombinations');
+    const combinationsLoading = document.getElementById('combinationsLoading');
+    
+    if (combinationsLoading) {
+        combinationsLoading.style.display = 'none';
+    }
+    
+    if (!combinationsContainer) return;
+    
+    if (!data.proposedSizes || data.proposedSizes.length === 0) {
+        combinationsContainer.innerHTML = '<div class="text-center text-gray-500 py-8">' +
+            '<div class="mb-4"><span class="text-4xl">📦</span></div>' +
+            '<p class="text-lg mb-2">No size-color combinations found</p>' +
+            '<p class="text-sm">Click "Add Combination" to create your first size-color combination, or use "Legacy Mode" to manage colors and sizes separately.</p>' +
+            '</div>';
+        return;
+    }
+    
+    let html = '';
+    
+    data.proposedSizes.forEach(function(size) {
+        const sizeTotal = size.colors.reduce(function(sum, color) { return sum + parseInt(color.stock_level || 0); }, 0);
+        
+        // Build HTML using string concatenation to avoid template literal issues
+        var sizeHtml = '<div class="size-group border border-gray-200 rounded-lg p-4 bg-white">';
+        sizeHtml += '<div class="flex items-center justify-between mb-3">';
+        sizeHtml += '<div class="flex items-center space-x-3">';
+        sizeHtml += '<div class="size-badge bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">' + (size.code || 'No code').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+        sizeHtml += '<h4 class="text-lg font-semibold text-gray-800">' + (size.name || 'No name').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</h4>';
+        if (parseFloat(size.price_adjustment) > 0) {
+            sizeHtml += '<span class="text-green-600 text-sm font-medium">+$' + size.price_adjustment + '</span>';
+        }
+        sizeHtml += '</div>';
+        sizeHtml += '<div class="text-sm text-gray-600"><span class="font-medium">' + sizeTotal + '</span> total stock</div>';
+        sizeHtml += '</div>';
+        
+        sizeHtml += '<div class="colors-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">';
+        size.colors.forEach(function(color) {
+            sizeHtml += '<div class="color-combination flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">';
+            sizeHtml += '<div class="flex items-center space-x-3">';
+            sizeHtml += '<div class="color-swatch w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm" style="background-color: ' + (color.color_code || '#ccc') + '" title="' + (color.color_name || 'No name').replace(/"/g, '&quot;') + '"></div>';
+            sizeHtml += '<div>';
+            sizeHtml += '<div class="font-medium text-gray-800 text-sm">' + (color.color_name || 'No name').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+            sizeHtml += '<div class="text-xs text-gray-500">' + (color.color_code || 'No code').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+            sizeHtml += '</div></div>';
+            sizeHtml += '<div class="flex items-center space-x-2">';
+            sizeHtml += '<div class="inline-stock-editor cursor-pointer px-2 py-1 bg-white border border-gray-200 rounded text-sm hover:border-blue-400 transition-colors" data-type="color" data-id="' + color.size_id + '" data-field="stock_level" data-value="' + color.stock_level + '" onclick="editInlineStock(this)" title="Click to edit stock level">' + color.stock_level + '</div>';
+            sizeHtml += '<button type="button" onclick="editCombination(\'' + (color.size_id || '').replace(/'/g, '\\\'') + '\', \'' + (color.size_id || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-blue-600 hover:text-blue-800 transition-colors" title="Edit this combination">Edit</button>';
+            sizeHtml += '<button type="button" onclick="deleteCombination(\'' + (color.size_id || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-red-600 hover:text-red-800 transition-colors" title="Delete this combination">Delete</button>';
+            sizeHtml += '</div></div>';
+        });
+        sizeHtml += '</div>';
+        
+        sizeHtml += '<div class="mt-3 flex justify-end">';
+        sizeHtml += '<button type="button" onclick="addColorToSize(\'' + (size.code || '').replace(/'/g, '\\\'') + '\')" class="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">+ Add Color to ' + (size.name || 'Size').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</button>';
+        sizeHtml += '</div></div>';
+        
+        html += sizeHtml;
+    });
+    
+    combinationsContainer.innerHTML = html;
+}
+
+// Update stock summary
+function updateStockSummary(data) {
+    const stockSummaryText = document.getElementById('stockSummaryText');
+    if (!stockSummaryText) return;
+    
+    const totalStock = data.proposedSizes.reduce(function(sum, size) {
+        return sum + size.colors.reduce(function(sizeSum, color) { return sizeSum + parseInt(color.stock_level || 0); }, 0);
+    }, 0);
+    
+    const totalSizes = data.proposedSizes.length;
+    const totalCombinations = data.totalCombinations || 0;
+    
+    // Get current item stock level for comparison
+    const stockField = document.getElementById('stockLevel');
+    const currentItemStock = stockField ? parseInt(stockField.value || 0) : 0;
+    
+    const isInSync = totalStock === currentItemStock;
+    const syncClass = isInSync ? 'text-green-700' : 'text-yellow-700';
+    const syncIcon = isInSync ? '✅' : '⚠️';
+    
+    stockSummaryText.innerHTML = '<div class="flex items-center justify-between">' +
+        '<div>' +
+        '<span class="font-medium">' + totalSizes + '</span> sizes × ' +
+        '<span class="font-medium">' + totalCombinations + '</span> combinations = ' +
+        '<span class="font-bold">' + totalStock + '</span> total stock' +
+        '</div>' +
+        '<div class="' + syncClass + '">' +
+        syncIcon + ' ' + (isInSync ? 'In sync' : 'Item shows ' + currentItemStock) +
+        '</div>' +
+        '</div>';
+}
+
+// Show legacy management sections
+function showLegacyManagement() {
+    const legacyColorSection = document.getElementById('legacyColorSection');
+    const legacySizeSection = document.getElementById('legacySizeSection');
+    
+    if (legacyColorSection) {
+        legacyColorSection.classList.remove('hidden');
+    }
+    if (legacySizeSection) {
+        legacySizeSection.classList.remove('hidden');
+    }
+    
+    // Load the legacy data
+    loadItemColors();
+    loadItemSizes();
+}
+
+// Toggle legacy color section
+function toggleLegacyColors() {
+    const legacyColorSection = document.getElementById('legacyColorSection');
+    if (legacyColorSection) {
+        legacyColorSection.classList.toggle('hidden');
+    }
+}
+
+// Toggle legacy size section
+function toggleLegacySizes() {
+    const legacySizeSection = document.getElementById('legacySizeSection');
+    if (legacySizeSection) {
+        legacySizeSection.classList.toggle('hidden');
+    }
+}
+
+// Add new combination
+function addNewCombination() {
+    // Show a modal to add new size-color combination
+    showCombinationModal();
+}
+
+// Add color to specific size
+function addColorToSize(sizeId) {
+    // Show color modal with pre-selected size
+    showCombinationModal(null, sizeId);
+}
+
+// Edit combination
+function editCombination(sizeId, colorId) {
+    // Show modal to edit specific combination
+    showCombinationModal(colorId, sizeId);
+}
+
+// Delete combination
+async function deleteCombination(colorId) {
+    const confirmResult = await showStyledConfirm(
+        'Delete Combination',
+        'Are you sure you want to delete this size-color combination? This action cannot be undone.',
+        'Delete',
+        'Cancel'
+    );
+    
+    if (!confirmResult) return;
+    
+    try {
+        const response = await fetch('/api/item_colors.php?action=delete_color', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ color_id: colorId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Combination deleted successfully');
+            loadSizeColorCombinations(); // Reload combinations
+        } else {
+            showError('Error deleting combination: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting combination:', error);
+        showError('Error deleting combination');
+    }
+}
+
+// Show combination modal (for adding/editing combinations)
+function showCombinationModal(colorId, sizeId) {
+    // For now, fall back to the existing color modal
+    // This can be enhanced later with a dedicated combination modal
+    if (colorId) {
+        editColor(colorId);
+    } else {
+        showColorModal();
+    }
+}
+
+// Sync all stock levels
+async function syncAllStock() {
+    try {
+        // This would call an API to sync all stock levels
+        // For now, just reload the combinations
+        loadSizeColorCombinations();
+        showSuccess('Stock levels synchronized');
+    } catch (error) {
+        console.error('Error syncing stock:', error);
+        showError('Error syncing stock levels');
+    }
+}
+
+// Initialize the new interface when the modal loads
+function initializeSizeColorInterface() {
+    // Load combinations when the modal opens
+    if (currentItemSku) {
+        loadSizeColorCombinations();
+    }
+}
+
+</script>
+
+<script src="js/modal-close-positioning.js?v=<?php echo time(); ?>"></script>
 
 <?php
 $output = ob_get_clean();

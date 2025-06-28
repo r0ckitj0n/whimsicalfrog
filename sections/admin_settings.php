@@ -8960,22 +8960,100 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
                 <!-- Tab Navigation -->
                 <div class="admin-tab-bar">
-                    <nav class="flex space-x-8 px-6" aria-label="Tabs">
-                        <button onclick="switchTemplateTab('cost-templates')" 
+                    <nav class="flex space-x-4 px-6" aria-label="Tabs">
+                        <button onclick="switchTemplateTab('color-templates')" 
                                 class="css-category-tab active" 
+                                data-tab="color-templates">
+                            🎨 Color Templates
+                        </button>
+                        <button onclick="switchTemplateTab('size-templates')" 
+                                class="css-category-tab" 
+                                data-tab="size-templates">
+                            📏 Size Templates
+                        </button>
+                        <button onclick="switchTemplateTab('cost-templates')" 
+                                class="css-category-tab" 
                                 data-tab="cost-templates">
-                            🧮 Cost Breakdown Templates
+                            🧮 Cost Templates
                         </button>
                         <button onclick="switchTemplateTab('suggestion-history')" 
                                 class="css-category-tab" 
                                 data-tab="suggestion-history">
-                            📊 Suggestion History
+                            📊 History
                         </button>
                     </nav>
                 </div>
                 
+                <!-- Color Templates Tab -->
+                <div id="color-templates-tab" class="css-category-content p-6">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Color Templates</h4>
+                            <button onclick="createNewColorTemplate()" class="modal-button btn-primary">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Create Color Template
+                            </button>
+                        </div>
+                        
+                        <!-- Category Filter -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Category:</label>
+                            <select id="colorTemplateCategoryFilter" onchange="filterColorTemplates()" class="modal-select">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="colorTemplatesLoading" class="modal-loading">
+                            <div class="modal-loading-spinner"></div>
+                            <p class="text-gray-600">Loading color templates...</p>
+                        </div>
+                        
+                        <!-- Templates List -->
+                        <div id="colorTemplatesList" class="space-y-4" style="display: none;">
+                            <!-- Templates will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Size Templates Tab -->
+                <div id="size-templates-tab" class="css-category-content p-6 hidden">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Size Templates</h4>
+                            <button onclick="createNewSizeTemplate()" class="modal-button btn-primary">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Create Size Template
+                            </button>
+                        </div>
+                        
+                        <!-- Category Filter -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Category:</label>
+                            <select id="sizeTemplateCategoryFilter" onchange="filterSizeTemplates()" class="modal-select">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="sizeTemplatesLoading" class="modal-loading">
+                            <div class="modal-loading-spinner"></div>
+                            <p class="text-gray-600">Loading size templates...</p>
+                        </div>
+                        
+                        <!-- Templates List -->
+                        <div id="sizeTemplatesList" class="space-y-4" style="display: none;">
+                            <!-- Templates will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Cost Breakdown Templates Tab -->
-                <div id="cost-templates-tab" class="css-category-content p-6">
+                <div id="cost-templates-tab" class="css-category-content p-6 hidden">
                     <div class="mb-6">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="text-lg font-semibold text-gray-800">Cost Breakdown Templates</h4>
@@ -9043,6 +9121,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Template Manager Functions
 function openTemplateManagerModal() {
     document.getElementById('templateManagerModal').classList.remove('hidden');
+    loadColorTemplates();
+    loadSizeTemplates();
     loadCostTemplates();
     loadSuggestionHistory();
 }
@@ -9053,16 +9133,14 @@ function closeTemplateManagerModal() {
 
 function switchTemplateTab(tabName) {
     // Update tab buttons
-    document.querySelectorAll('.template-tab').forEach(tab => {
-        tab.classList.remove('border-purple-500', 'text-purple-600');
-        tab.classList.add('border-transparent', 'text-gray-500');
+    document.querySelectorAll('.css-category-tab').forEach(tab => {
+        tab.classList.remove('active');
     });
     
-    document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-transparent', 'text-gray-500');
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('border-purple-500', 'text-purple-600');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     
     // Show/hide content
-    document.querySelectorAll('.template-tab-content').forEach(content => {
+    document.querySelectorAll('.css-category-content').forEach(content => {
         content.classList.add('hidden');
     });
     
@@ -9196,6 +9274,845 @@ async function loadSuggestionHistory() {
 
 function refreshSuggestionHistory() {
     loadSuggestionHistory();
+}
+
+// ========== COLOR TEMPLATE MANAGEMENT ==========
+
+async function loadColorTemplates() {
+    const loading = document.getElementById('colorTemplatesLoading');
+    const list = document.getElementById('colorTemplatesList');
+    
+    loading.style.display = 'block';
+    list.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/color_templates.php?action=get_all');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderColorTemplates(data.templates);
+            loadColorTemplateCategories(data.templates);
+        } else {
+            throw new Error(data.message || 'Failed to load color templates');
+        }
+    } catch (error) {
+        console.error('Error loading color templates:', error);
+        list.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load color templates</div>';
+    } finally {
+        loading.style.display = 'none';
+        list.style.display = 'block';
+    }
+}
+
+function loadColorTemplateCategories(templates) {
+    const categorySelect = document.getElementById('colorTemplateCategoryFilter');
+    if (!categorySelect) return;
+    
+    const categories = [...new Set(templates.map(t => t.category))].sort();
+    
+    categorySelect.innerHTML = '<option value="">All Categories</option>';
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+    });
+}
+
+function filterColorTemplates() {
+    renderColorTemplates();
+}
+
+function renderColorTemplates(templates = null) {
+    const list = document.getElementById('colorTemplatesList');
+    if (!list) return;
+    
+    // Use cached templates if not provided
+    if (!templates) {
+        templates = window.colorTemplatesCache || [];
+    } else {
+        window.colorTemplatesCache = templates;
+    }
+    
+    const selectedCategory = document.getElementById('colorTemplateCategoryFilter')?.value || '';
+    const filteredTemplates = selectedCategory 
+        ? templates.filter(t => t.category === selectedCategory)
+        : templates;
+    
+    if (filteredTemplates.length === 0) {
+        list.innerHTML = '<div class="text-gray-500 text-center py-8">No color templates found. Create your first template!</div>';
+        return;
+    }
+    
+    list.innerHTML = filteredTemplates.map(template => `
+        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <h5 class="font-semibold text-gray-800">${template.template_name}</h5>
+                    <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
+                    <div class="flex items-center mt-2 space-x-4 text-xs text-gray-500">
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded">${template.category}</span>
+                        <span>${template.color_count} colors</span>
+                        <span>Created: ${new Date(template.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="editColorTemplate(${template.id})" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                    <button onclick="deleteColorTemplate(${template.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                </div>
+            </div>
+            
+            <div class="template-preview" id="colorPreview${template.id}">
+                <div class="text-xs text-gray-500">Loading colors...</div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Load color previews
+    filteredTemplates.forEach(template => {
+        loadColorTemplatePreview(template.id);
+    });
+}
+
+async function loadColorTemplatePreview(templateId) {
+    try {
+        const response = await fetch(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
+        const data = await response.json();
+        
+        if (data.success && data.template.colors) {
+            const previewContainer = document.getElementById(`colorPreview${templateId}`);
+            if (previewContainer) {
+                previewContainer.innerHTML = `
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        ${data.template.colors.map(color => `
+                            <div class="flex items-center space-x-2 bg-gray-50 px-2 py-1 rounded">
+                                <div class="w-4 h-4 rounded border border-gray-300" style="background-color: ${color.color_code}"></div>
+                                <span class="text-xs text-gray-700">${color.color_name}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading color template preview:', error);
+    }
+}
+
+function createNewColorTemplate() {
+    showColorTemplateEditModal();
+}
+
+async function editColorTemplate(templateId) {
+    try {
+        const response = await fetch(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showColorTemplateEditModal(data.template);
+        } else {
+            showError('Failed to load template: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading color template:', error);
+        showError('Error loading color template');
+    }
+}
+
+async function deleteColorTemplate(templateId) {
+    if (!confirm('Are you sure you want to delete this color template? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/color_templates.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=delete_template&template_id=${templateId}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Color template deleted successfully!');
+            loadColorTemplates();
+        } else {
+            showError('Failed to delete template: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting color template:', error);
+        showError('Error deleting color template');
+    }
+}
+
+// ========== SIZE TEMPLATE MANAGEMENT ==========
+
+async function loadSizeTemplates() {
+    const loading = document.getElementById('sizeTemplatesLoading');
+    const list = document.getElementById('sizeTemplatesList');
+    
+    loading.style.display = 'block';
+    list.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/size_templates.php?action=get_all');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderSizeTemplates(data.templates);
+            loadSizeTemplateCategories(data.templates);
+        } else {
+            throw new Error(data.message || 'Failed to load size templates');
+        }
+    } catch (error) {
+        console.error('Error loading size templates:', error);
+        list.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load size templates</div>';
+    } finally {
+        loading.style.display = 'none';
+        list.style.display = 'block';
+    }
+}
+
+function loadSizeTemplateCategories(templates) {
+    const categorySelect = document.getElementById('sizeTemplateCategoryFilter');
+    if (!categorySelect) return;
+    
+    const categories = [...new Set(templates.map(t => t.category))].sort();
+    
+    categorySelect.innerHTML = '<option value="">All Categories</option>';
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+    });
+}
+
+function filterSizeTemplates() {
+    renderSizeTemplates();
+}
+
+function renderSizeTemplates(templates = null) {
+    const list = document.getElementById('sizeTemplatesList');
+    if (!list) return;
+    
+    // Use cached templates if not provided
+    if (!templates) {
+        templates = window.sizeTemplatesCache || [];
+    } else {
+        window.sizeTemplatesCache = templates;
+    }
+    
+    const selectedCategory = document.getElementById('sizeTemplateCategoryFilter')?.value || '';
+    const filteredTemplates = selectedCategory 
+        ? templates.filter(t => t.category === selectedCategory)
+        : templates;
+    
+    if (filteredTemplates.length === 0) {
+        list.innerHTML = '<div class="text-gray-500 text-center py-8">No size templates found. Create your first template!</div>';
+        return;
+    }
+    
+    list.innerHTML = filteredTemplates.map(template => `
+        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <h5 class="font-semibold text-gray-800">${template.template_name}</h5>
+                    <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
+                    <div class="flex items-center mt-2 space-x-4 text-xs text-gray-500">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${template.category}</span>
+                        <span>${template.size_count} sizes</span>
+                        <span>Created: ${new Date(template.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="editSizeTemplate(${template.id})" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                    <button onclick="deleteSizeTemplate(${template.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                </div>
+            </div>
+            
+            <div class="template-preview" id="sizePreview${template.id}">
+                <div class="text-xs text-gray-500">Loading sizes...</div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Load size previews
+    filteredTemplates.forEach(template => {
+        loadSizeTemplatePreview(template.id);
+    });
+}
+
+async function loadSizeTemplatePreview(templateId) {
+    try {
+        const response = await fetch(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
+        const data = await response.json();
+        
+        if (data.success && data.template.sizes) {
+            const previewContainer = document.getElementById(`sizePreview${templateId}`);
+            if (previewContainer) {
+                previewContainer.innerHTML = `
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        ${data.template.sizes.map(size => `
+                            <span class="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                ${size.size_name} (${size.size_code})${size.price_adjustment > 0 ? ' +$' + size.price_adjustment : size.price_adjustment < 0 ? ' $' + size.price_adjustment : ''}
+                            </span>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading size template preview:', error);
+    }
+}
+
+function createNewSizeTemplate() {
+    showSizeTemplateEditModal();
+}
+
+async function editSizeTemplate(templateId) {
+    try {
+        const response = await fetch(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showSizeTemplateEditModal(data.template);
+        } else {
+            showError('Failed to load template: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading size template:', error);
+        showError('Error loading size template');
+    }
+}
+
+async function deleteSizeTemplate(templateId) {
+    if (!confirm('Are you sure you want to delete this size template? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/size_templates.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=delete_template&template_id=${templateId}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Size template deleted successfully!');
+            loadSizeTemplates();
+        } else {
+            showError('Failed to delete template: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting size template:', error);
+        showError('Error deleting size template');
+    }
+}
+
+// ========== COLOR TEMPLATE EDIT MODAL ==========
+
+function showColorTemplateEditModal(template = null) {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('colorTemplateEditModal')) {
+        createColorTemplateEditModal();
+    }
+    
+    const modal = document.getElementById('colorTemplateEditModal');
+    const form = document.getElementById('colorTemplateEditForm');
+    const modalTitle = document.getElementById('colorTemplateEditTitle');
+    const colorsContainer = document.getElementById('colorTemplateColors');
+    
+    // Reset form
+    form.reset();
+    colorsContainer.innerHTML = '';
+    
+    if (template) {
+        // Edit mode
+        modalTitle.textContent = 'Edit Color Template';
+        document.getElementById('colorTemplateId').value = template.id;
+        document.getElementById('colorTemplateName').value = template.template_name;
+        document.getElementById('colorTemplateDescription').value = template.description || '';
+        document.getElementById('colorTemplateCategory').value = template.category || 'General';
+        
+        // Load existing colors
+        if (template.colors && template.colors.length > 0) {
+            template.colors.forEach(color => {
+                addColorToTemplate(color);
+            });
+        }
+    } else {
+        // Create mode
+        modalTitle.textContent = 'Create New Color Template';
+        document.getElementById('colorTemplateId').value = '';
+        
+        // Add one empty color field
+        addColorToTemplate();
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function createColorTemplateEditModal() {
+    const modalHTML = `
+        <div id="colorTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeColorTemplateEditModal()">
+            <div class="admin-modal-content" style="max-width: 800px; max-height: 90vh;" onclick="event.stopPropagation()">
+                <div class="admin-modal-header">
+                    <h2 id="colorTemplateEditTitle" class="modal-title">Edit Color Template</h2>
+                    <button onclick="closeColorTemplateEditModal()" class="modal-close">&times;</button>
+                </div>
+                
+                <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
+                    <form id="colorTemplateEditForm" onsubmit="saveColorTemplate(event)">
+                        <input type="hidden" id="colorTemplateId" name="template_id">
+                        
+                        <!-- Template Details -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Template Details</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
+                                    <input type="text" id="colorTemplateName" name="template_name" required 
+                                           class="modal-input" placeholder="e.g., T-Shirt Colors">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                    <select id="colorTemplateCategory" name="category" class="modal-select">
+                                        <option value="General">General</option>
+                                        <option value="T-Shirts">T-Shirts</option>
+                                        <option value="Tumblers">Tumblers</option>
+                                        <option value="Artwork">Artwork</option>
+                                        <option value="Sublimation">Sublimation</option>
+                                        <option value="Window Wraps">Window Wraps</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <textarea id="colorTemplateDescription" name="description" rows="2" 
+                                          class="modal-input" placeholder="Optional description of this color template"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Colors Section -->
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800">Colors</h4>
+                                <button type="button" onclick="addColorToTemplate()" class="modal-button btn-primary">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add Color
+                                </button>
+                            </div>
+                            
+                            <div id="colorTemplateColors" class="space-y-3">
+                                <!-- Colors will be added here -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="closeColorTemplateEditModal()" class="modal-button btn-secondary">Cancel</button>
+                    <button type="submit" form="colorTemplateEditForm" class="modal-button btn-primary">Save Template</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeColorTemplateEditModal() {
+    const modal = document.getElementById('colorTemplateEditModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+let colorTemplateColorIndex = 0;
+
+function addColorToTemplate(colorData = null) {
+    const container = document.getElementById('colorTemplateColors');
+    const index = colorTemplateColorIndex++;
+    
+    const colorHTML = `
+        <div class="color-template-item border border-gray-200 rounded-lg p-4 bg-gray-50" data-index="${index}">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Color Name *</label>
+                    <input type="text" name="colors[${index}][color_name]" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                           placeholder="e.g., Red" value="${colorData?.color_name || ''}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Color Code</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="color" name="colors[${index}][color_code]" 
+                               class="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+                               value="${colorData?.color_code || '#ff0000'}"
+                               onchange="updateColorPreview(${index}, this.value)">
+                        <input type="text" name="colors[${index}][color_code_text]" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm font-mono"
+                               placeholder="#ff0000" value="${colorData?.color_code || '#ff0000'}"
+                               onchange="updateColorPicker(${index}, this.value)">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                    <input type="number" name="colors[${index}][display_order]" min="0" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                           value="${colorData?.display_order || index}">
+                </div>
+                <div class="flex items-end">
+                    <button type="button" onclick="removeColorFromTemplate(${index})" 
+                            class="px-3 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', colorHTML);
+    
+    // Sync the color inputs
+    if (colorData?.color_code) {
+        updateColorPreview(index, colorData.color_code);
+    }
+}
+
+function removeColorFromTemplate(index) {
+    const item = document.querySelector(`[data-index="${index}"]`);
+    if (item) {
+        item.remove();
+    }
+}
+
+function updateColorPreview(index, colorValue) {
+    const textInput = document.querySelector(`input[name="colors[${index}][color_code_text]"]`);
+    if (textInput) {
+        textInput.value = colorValue;
+    }
+}
+
+function updateColorPicker(index, colorValue) {
+    const colorInput = document.querySelector(`input[name="colors[${index}][color_code]"]`);
+    if (colorInput && /^#[0-9A-F]{6}$/i.test(colorValue)) {
+        colorInput.value = colorValue;
+    }
+}
+
+async function saveColorTemplate(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const templateId = formData.get('template_id');
+    const isEdit = templateId && templateId !== '';
+    
+    // Collect colors data
+    const colors = [];
+    const colorItems = document.querySelectorAll('.color-template-item');
+    
+    colorItems.forEach((item, index) => {
+        const colorName = item.querySelector('input[name*="[color_name]"]')?.value;
+        const colorCode = item.querySelector('input[name*="[color_code]"]')?.value;
+        const displayOrder = item.querySelector('input[name*="[display_order]"]')?.value;
+        
+        if (colorName) {
+            colors.push({
+                color_name: colorName,
+                color_code: colorCode || '#000000',
+                display_order: parseInt(displayOrder) || index
+            });
+        }
+    });
+    
+    if (colors.length === 0) {
+        showError('Please add at least one color to the template');
+        return;
+    }
+    
+    const templateData = {
+        template_name: formData.get('template_name'),
+        description: formData.get('description'),
+        category: formData.get('category'),
+        colors: colors
+    };
+    
+    if (isEdit) {
+        templateData.template_id = parseInt(templateId);
+    }
+    
+    try {
+        const action = isEdit ? 'update_template' : 'create_template';
+        const response = await fetch(`/api/color_templates.php?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(templateData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(isEdit ? 'Color template updated successfully!' : 'Color template created successfully!');
+            closeColorTemplateEditModal();
+            loadColorTemplates();
+        } else {
+            showError('Failed to save template: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error saving color template:', error);
+        showError('Error saving color template');
+    }
+}
+
+// ========== SIZE TEMPLATE EDIT MODAL ==========
+
+function showSizeTemplateEditModal(template = null) {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('sizeTemplateEditModal')) {
+        createSizeTemplateEditModal();
+    }
+    
+    const modal = document.getElementById('sizeTemplateEditModal');
+    const form = document.getElementById('sizeTemplateEditForm');
+    const modalTitle = document.getElementById('sizeTemplateEditTitle');
+    const sizesContainer = document.getElementById('sizeTemplateSizes');
+    
+    // Reset form
+    form.reset();
+    sizesContainer.innerHTML = '';
+    
+    if (template) {
+        // Edit mode
+        modalTitle.textContent = 'Edit Size Template';
+        document.getElementById('sizeTemplateId').value = template.id;
+        document.getElementById('sizeTemplateName').value = template.template_name;
+        document.getElementById('sizeTemplateDescription').value = template.description || '';
+        document.getElementById('sizeTemplateCategory').value = template.category || 'General';
+        
+        // Load existing sizes
+        if (template.sizes && template.sizes.length > 0) {
+            template.sizes.forEach(size => {
+                addSizeToTemplate(size);
+            });
+        }
+    } else {
+        // Create mode
+        modalTitle.textContent = 'Create New Size Template';
+        document.getElementById('sizeTemplateId').value = '';
+        
+        // Add one empty size field
+        addSizeToTemplate();
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function createSizeTemplateEditModal() {
+    const modalHTML = `
+        <div id="sizeTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeSizeTemplateEditModal()">
+            <div class="admin-modal-content" style="max-width: 900px; max-height: 90vh;" onclick="event.stopPropagation()">
+                <div class="admin-modal-header">
+                    <h2 id="sizeTemplateEditTitle" class="modal-title">Edit Size Template</h2>
+                    <button onclick="closeSizeTemplateEditModal()" class="modal-close">&times;</button>
+                </div>
+                
+                <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
+                    <form id="sizeTemplateEditForm" onsubmit="saveSizeTemplate(event)">
+                        <input type="hidden" id="sizeTemplateId" name="template_id">
+                        
+                        <!-- Template Details -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Template Details</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
+                                    <input type="text" id="sizeTemplateName" name="template_name" required 
+                                           class="modal-input" placeholder="e.g., T-Shirt Sizes">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                    <select id="sizeTemplateCategory" name="category" class="modal-select">
+                                        <option value="General">General</option>
+                                        <option value="T-Shirts">T-Shirts</option>
+                                        <option value="Tumblers">Tumblers</option>
+                                        <option value="Artwork">Artwork</option>
+                                        <option value="Sublimation">Sublimation</option>
+                                        <option value="Window Wraps">Window Wraps</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <textarea id="sizeTemplateDescription" name="description" rows="2" 
+                                          class="modal-input" placeholder="Optional description of this size template"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Sizes Section -->
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800">Sizes</h4>
+                                <button type="button" onclick="addSizeToTemplate()" class="modal-button btn-primary">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add Size
+                                </button>
+                            </div>
+                            
+                            <div id="sizeTemplateSizes" class="space-y-3">
+                                <!-- Sizes will be added here -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" onclick="closeSizeTemplateEditModal()" class="modal-button btn-secondary">Cancel</button>
+                    <button type="submit" form="sizeTemplateEditForm" class="modal-button btn-primary">Save Template</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeSizeTemplateEditModal() {
+    const modal = document.getElementById('sizeTemplateEditModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+let sizeTemplateIndex = 0;
+
+function addSizeToTemplate(sizeData = null) {
+    const container = document.getElementById('sizeTemplateSizes');
+    const index = sizeTemplateIndex++;
+    
+    const sizeHTML = `
+        <div class="size-template-item border border-gray-200 rounded-lg p-4 bg-gray-50" data-index="${index}">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Size Name *</label>
+                    <input type="text" name="sizes[${index}][size_name]" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                           placeholder="e.g., Small" value="${sizeData?.size_name || ''}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Size Code *</label>
+                    <input type="text" name="sizes[${index}][size_code]" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                           placeholder="e.g., S" value="${sizeData?.size_code || ''}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Price Adjustment</label>
+                    <input type="number" name="sizes[${index}][price_adjustment]" step="0.01" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                           placeholder="0.00" value="${sizeData?.price_adjustment || '0.00'}">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                    <input type="number" name="sizes[${index}][display_order]" min="0" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                           value="${sizeData?.display_order || index}">
+                </div>
+                <div class="flex items-end">
+                    <button type="button" onclick="removeSizeFromTemplate(${index})" 
+                            class="px-3 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', sizeHTML);
+}
+
+function removeSizeFromTemplate(index) {
+    const item = document.querySelector(`[data-index="${index}"]`);
+    if (item) {
+        item.remove();
+    }
+}
+
+async function saveSizeTemplate(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const templateId = formData.get('template_id');
+    const isEdit = templateId && templateId !== '';
+    
+    // Collect sizes data
+    const sizes = [];
+    const sizeItems = document.querySelectorAll('.size-template-item');
+    
+    sizeItems.forEach((item, index) => {
+        const sizeName = item.querySelector('input[name*="[size_name]"]')?.value;
+        const sizeCode = item.querySelector('input[name*="[size_code]"]')?.value;
+        const priceAdjustment = item.querySelector('input[name*="[price_adjustment]"]')?.value;
+        const displayOrder = item.querySelector('input[name*="[display_order]"]')?.value;
+        
+        if (sizeName && sizeCode) {
+            sizes.push({
+                size_name: sizeName,
+                size_code: sizeCode,
+                price_adjustment: parseFloat(priceAdjustment) || 0,
+                display_order: parseInt(displayOrder) || index
+            });
+        }
+    });
+    
+    if (sizes.length === 0) {
+        showError('Please add at least one size to the template');
+        return;
+    }
+    
+    const templateData = {
+        template_name: formData.get('template_name'),
+        description: formData.get('description'),
+        category: formData.get('category'),
+        sizes: sizes
+    };
+    
+    if (isEdit) {
+        templateData.template_id = parseInt(templateId);
+    }
+    
+    try {
+        const action = isEdit ? 'update_template' : 'create_template';
+        const response = await fetch(`/api/size_templates.php?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(templateData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(isEdit ? 'Size template updated successfully!' : 'Size template created successfully!');
+            closeSizeTemplateEditModal();
+            loadSizeTemplates();
+        } else {
+            showError('Failed to save template: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error saving size template:', error);
+        showError('Error saving size template');
+    }
 }
 </script>
 

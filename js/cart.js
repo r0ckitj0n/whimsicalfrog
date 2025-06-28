@@ -1020,6 +1020,10 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
     
     // Show modal
     quantityModal.classList.remove('hidden');
+    
+    // Add modal-open class to body for z-index hierarchy
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
 };
 
 // Function to setup color dropdown in quantity modal
@@ -1285,6 +1289,11 @@ window.closeCartModal = function() {
     if (quantityInput) {
         quantityInput.value = 1;
     }
+    
+    // Remove modal-open class from body for z-index hierarchy
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
+    
     window.currentModalProduct = null;
 };
 

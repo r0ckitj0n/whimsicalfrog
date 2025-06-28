@@ -307,6 +307,47 @@ try {
             ]);
             break;
             
+        case 'update_stock':
+            if (!$isAdmin) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Admin access required']);
+                exit;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            $sizeId = (int)($data['size_id'] ?? 0);
+            $stockLevel = (int)($data['stock_level'] ?? 0);
+            
+            if ($sizeId <= 0) {
+                throw new Exception('Size ID is required');
+            }
+            
+            // Get the current size info for stock sync
+            $currentStmt = $pdo->prepare("SELECT item_sku, color_id FROM item_sizes WHERE id = ?");
+            $currentStmt->execute([$sizeId]);
+            $currentSize = $currentStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$currentSize) {
+                throw new Exception('Size not found');
+            }
+            
+            // Update only the stock level
+            $stmt = $pdo->prepare("UPDATE item_sizes SET stock_level = ? WHERE id = ?");
+            $stmt->execute([$stockLevel, $sizeId]);
+            
+            // Sync stock levels
+            if ($currentSize['color_id']) {
+                syncColorStockWithSizes($pdo, $currentSize['color_id']);
+            }
+            $newTotalStock = syncTotalStockWithSizes($pdo, $currentSize['item_sku']);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Size stock updated successfully',
+                'new_total_stock' => $newTotalStock
+            ]);
+            break;
+
         case 'sync_stock':
             if (!$isAdmin) {
                 http_response_code(403);

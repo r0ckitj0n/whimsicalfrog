@@ -8981,6 +8981,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 data-tab="suggestion-history">
                             📊 History
                         </button>
+                        <button onclick="switchTemplateTab('email-templates')" 
+                                class="css-category-tab" 
+                                data-tab="email-templates">
+                            📧 Email Templates
+                        </button>
                     </nav>
                 </div>
                 
@@ -9107,12 +9112,176 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </div>
+                
+                <!-- Email Templates Tab -->
+                <div id="email-templates-tab" class="css-category-content p-6 hidden">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-gray-800">Email Templates</h4>
+                            <div class="flex space-x-2">
+                                <select id="emailTemplateTypeFilter" onchange="filterEmailTemplates()" class="modal-select">
+                                    <option value="">All Template Types</option>
+                                    <option value="order_confirmation">Order Confirmation</option>
+                                    <option value="admin_notification">Admin Notification</option>
+                                    <option value="welcome">Welcome</option>
+                                    <option value="password_reset">Password Reset</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                                <button onclick="createNewEmailTemplate()" class="modal-button btn-primary">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Create Email Template
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Template Assignments -->
+                        <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <h5 class="font-semibold text-blue-800 mb-3">📧 Email Template Assignments</h5>
+                            <p class="text-sm text-blue-700 mb-3">Configure which templates are used for different email types:</p>
+                            <div id="emailTemplateAssignments" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Assignments will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="emailTemplatesLoading" class="modal-loading">
+                            <div class="modal-loading-spinner"></div>
+                            <p class="text-gray-600">Loading email templates...</p>
+                        </div>
+                        
+                        <!-- Templates List -->
+                        <div id="emailTemplatesList" class="space-y-4" style="display: none;">
+                            <!-- Templates will be loaded here -->
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Footer -->
             <div class="modal-footer">
                 <button onclick="closeTemplateManagerModal()" class="modal-button btn-secondary">Close</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Email Template Edit Modal -->
+<div id="emailTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeEmailTemplateEditModal()">
+    <div class="admin-modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📧 Email Template Editor</h2>
+            <button onclick="closeEmailTemplateEditModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <form id="emailTemplateForm" class="space-y-4">
+                <input type="hidden" id="emailTemplateId" name="template_id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
+                        <input type="text" id="emailTemplateName" name="template_name" class="modal-input" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Template Type *</label>
+                        <select id="emailTemplateType" name="template_type" class="modal-select" required>
+                            <option value="">Select Type</option>
+                            <option value="order_confirmation">Order Confirmation</option>
+                            <option value="admin_notification">Admin Notification</option>
+                            <option value="welcome">Welcome Email</option>
+                            <option value="password_reset">Password Reset</option>
+                            <option value="custom">Custom Template</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <input type="text" id="emailTemplateDescription" name="description" class="modal-input" placeholder="Brief description of this template">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Subject *</label>
+                    <input type="text" id="emailTemplateSubject" name="subject" class="modal-input" required placeholder="Use {variable_name} for dynamic content">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">HTML Content *</label>
+                    <textarea id="emailTemplateHtmlContent" name="html_content" rows="12" class="modal-input font-mono text-sm" required placeholder="HTML email content with variables like {customer_name}, {order_id}, etc."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Plain Text Content</label>
+                    <textarea id="emailTemplateTextContent" name="text_content" rows="6" class="modal-input font-mono text-sm" placeholder="Plain text fallback content"></textarea>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="emailTemplateIsActive" name="is_active" class="mr-2" checked>
+                    <label for="emailTemplateIsActive" class="text-sm text-gray-700">Template is active</label>
+                </div>
+            </form>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" onclick="closeEmailTemplateEditModal()" class="modal-button btn-secondary">Cancel</button>
+            <button type="button" onclick="saveEmailTemplate()" class="modal-button btn-primary">Save Template</button>
+        </div>
+    </div>
+</div>
+
+<!-- Email Template Preview Modal -->
+<div id="emailTemplatePreviewModal" class="admin-modal-overlay hidden" onclick="closeEmailTemplatePreviewModal()">
+    <div class="admin-modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📧 Email Template Preview</h2>
+            <button onclick="closeEmailTemplatePreviewModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="mb-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 class="font-semibold text-blue-800 mb-2">Preview Information</h4>
+                <p class="text-sm text-blue-700 mb-2">This preview shows how the email will look with sample data. Variables are replaced with example values.</p>
+                <p class="text-sm text-blue-600"><strong>Subject:</strong> <span id="previewSubject"></span></p>
+            </div>
+            
+            <div class="border border-gray-300 rounded-lg overflow-hidden">
+                <iframe id="emailPreviewFrame" width="100%" height="600" frameborder="0" style="background: white;"></iframe>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" onclick="closeEmailTemplatePreviewModal()" class="modal-button btn-secondary">Close Preview</button>
+        </div>
+    </div>
+</div>
+
+<!-- Template Assignment Modal -->
+<div id="templateAssignmentModal" class="admin-modal-overlay hidden" onclick="closeTemplateAssignmentModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📧 Change Template Assignment</h2>
+            <button onclick="closeTemplateAssignmentModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="mb-4">
+                <h4 class="font-semibold text-gray-800 mb-2">Email Type: <span id="assignmentEmailType"></span></h4>
+                <p class="text-sm text-gray-600" id="assignmentEmailDescription"></p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Template</label>
+                <select id="assignmentTemplateSelect" class="modal-select">
+                    <option value="">No template assigned</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" onclick="closeTemplateAssignmentModal()" class="modal-button btn-secondary">Cancel</button>
+            <button type="button" onclick="saveTemplateAssignment()" class="modal-button btn-primary">Save Assignment</button>
         </div>
     </div>
 </div>
@@ -9125,6 +9294,7 @@ function openTemplateManagerModal() {
     loadSizeTemplates();
     loadCostTemplates();
     loadSuggestionHistory();
+    loadEmailTemplates();
 }
 
 function closeTemplateManagerModal() {
@@ -9274,6 +9444,254 @@ async function loadSuggestionHistory() {
 
 function refreshSuggestionHistory() {
     loadSuggestionHistory();
+}
+
+// ========== EMAIL TEMPLATE MANAGEMENT ==========
+
+async function loadEmailTemplates() {
+    const loading = document.getElementById('emailTemplatesLoading');
+    const list = document.getElementById('emailTemplatesList');
+    
+    loading.style.display = 'block';
+    list.style.display = 'none';
+    
+    try {
+        // Load templates and assignments simultaneously
+        const [templatesResponse, assignmentsResponse] = await Promise.all([
+            fetch('/api/email_templates.php?action=get_all'),
+            fetch('/api/email_templates.php?action=get_assignments')
+        ]);
+        
+        const templatesData = await templatesResponse.json();
+        const assignmentsData = await assignmentsResponse.json();
+        
+        if (templatesData.success) {
+            renderEmailTemplates(templatesData.templates);
+            window.emailTemplatesCache = templatesData.templates;
+        } else {
+            throw new Error(templatesData.error || 'Failed to load email templates');
+        }
+        
+        if (assignmentsData.success) {
+            renderEmailTemplateAssignments(assignmentsData.assignments);
+        }
+        
+    } catch (error) {
+        console.error('Error loading email templates:', error);
+        list.innerHTML = '<div class="text-red-600 text-center py-4">Failed to load email templates</div>';
+    } finally {
+        loading.style.display = 'none';
+        list.style.display = 'block';
+    }
+}
+
+function renderEmailTemplates(templates = null) {
+    const list = document.getElementById('emailTemplatesList');
+    if (!list) return;
+    
+    // Use cached templates if not provided
+    if (!templates) {
+        templates = window.emailTemplatesCache || [];
+    } else {
+        window.emailTemplatesCache = templates;
+    }
+    
+    const selectedType = document.getElementById('emailTemplateTypeFilter')?.value || '';
+    const filteredTemplates = selectedType 
+        ? templates.filter(t => t.template_type === selectedType)
+        : templates;
+    
+    if (filteredTemplates.length === 0) {
+        list.innerHTML = '<div class="text-gray-500 text-center py-8">No email templates found. Create your first template!</div>';
+        return;
+    }
+    
+    const typeDisplayMap = {
+        'order_confirmation': 'Order Confirmation',
+        'admin_notification': 'Admin Notification',
+        'welcome': 'Welcome Email',
+        'password_reset': 'Password Reset',
+        'custom': 'Custom Template'
+    };
+    
+    list.innerHTML = filteredTemplates.map(template => `
+        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+                <div>
+                    <h5 class="font-semibold text-gray-800">${template.template_name}</h5>
+                    <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
+                    <div class="flex items-center mt-2 space-x-4 text-xs text-gray-500">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${typeDisplayMap[template.template_type] || template.template_type}</span>
+                        <span class="${template.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'} px-2 py-1 rounded">
+                            ${template.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                        <span>Assignments: ${template.assignment_count || 0}</span>
+                        <span>Created: ${new Date(template.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="previewEmailTemplate(${template.id})" class="text-green-600 hover:text-green-800 text-sm">Preview</button>
+                    <button onclick="sendTestEmail(${template.id})" class="text-purple-600 hover:text-purple-800 text-sm">Test</button>
+                    <button onclick="editEmailTemplate(${template.id})" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                    <button onclick="deleteEmailTemplate(${template.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 p-3 rounded">
+                <p class="text-sm text-gray-700"><strong>Subject:</strong> ${template.subject}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderEmailTemplateAssignments(assignments) {
+    const container = document.getElementById('emailTemplateAssignments');
+    if (!container) return;
+    
+    const emailTypes = [
+        { key: 'order_confirmation', name: 'Order Confirmation', description: 'Sent to customers when they place orders' },
+        { key: 'admin_notification', name: 'Admin Notification', description: 'Sent to admins when new orders are received' },
+        { key: 'welcome', name: 'Welcome Email', description: 'Sent to new users when they register' },
+        { key: 'password_reset', name: 'Password Reset', description: 'Sent when users request password reset' }
+    ];
+    
+    container.innerHTML = emailTypes.map(emailType => {
+        const assignment = assignments.find(a => a.email_type === emailType.key);
+        const templateName = assignment ? assignment.template_name : 'No template assigned';
+        
+        return `
+            <div class="bg-white p-3 rounded border border-gray-200">
+                <div class="flex items-center justify-between mb-2">
+                    <h6 class="font-medium text-gray-800">${emailType.name}</h6>
+                    <button onclick="changeTemplateAssignment('${emailType.key}')" class="text-xs text-blue-600 hover:text-blue-800">
+                        Change
+                    </button>
+                </div>
+                <p class="text-xs text-gray-600 mb-2">${emailType.description}</p>
+                <p class="text-sm ${assignment ? 'text-green-700' : 'text-orange-700'}">
+                    <strong>Template:</strong> ${templateName}
+                </p>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterEmailTemplates() {
+    renderEmailTemplates();
+}
+
+function createNewEmailTemplate() {
+    showEmailTemplateEditModal();
+}
+
+async function editEmailTemplate(templateId) {
+    try {
+        const response = await fetch(`/api/email_templates.php?action=get_template&template_id=${templateId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showEmailTemplateEditModal(data.template);
+        } else {
+            showError('Failed to load template: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading email template:', error);
+        showError('Error loading email template');
+    }
+}
+
+async function deleteEmailTemplate(templateId) {
+    if (!confirm('Are you sure you want to delete this email template? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/email_templates.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=delete&template_id=${templateId}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Email template deleted successfully!');
+            loadEmailTemplates();
+        } else {
+            showError('Failed to delete template: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error deleting email template:', error);
+        showError('Error deleting email template');
+    }
+}
+
+async function previewEmailTemplate(templateId) {
+    try {
+        const response = await fetch(`/api/email_templates.php?action=preview&template_id=${templateId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showEmailTemplatePreviewModal(data.preview);
+        } else {
+            showError('Failed to preview template: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error previewing email template:', error);
+        showError('Error previewing email template');
+    }
+}
+
+async function changeTemplateAssignment(emailType) {
+    try {
+        const response = await fetch('/api/email_templates.php?action=get_all');
+        const data = await response.json();
+        
+        if (data.success) {
+            showTemplateAssignmentModal(emailType, data.templates);
+        } else {
+            showError('Failed to load templates: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading templates:', error);
+        showError('Error loading templates');
+    }
+}
+
+async function sendTestEmail(templateId) {
+    const testEmail = prompt('Enter email address to send test email to:');
+    
+    if (!testEmail) {
+        return;
+    }
+    
+    if (!testEmail.includes('@') || !testEmail.includes('.')) {
+        showError('Please enter a valid email address');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/email_templates.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'send_test',
+                template_id: templateId,
+                test_email: testEmail
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Test email sent successfully to ' + testEmail + '!');
+        } else {
+            showError('Failed to send test email: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error sending test email:', error);
+        showError('Error sending test email');
+    }
 }
 
 // ========== COLOR TEMPLATE MANAGEMENT ==========
@@ -15001,4 +15419,195 @@ function editGlobalSize(sizeId) {
     // Placeholder for edit functionality
     showInfo('Edit functionality coming soon!');
 }
+
+// ========== EMAIL TEMPLATE MODAL FUNCTIONS ==========
+
+function showEmailTemplateEditModal(template = null) {
+    const modal = document.getElementById('emailTemplateEditModal');
+    const form = document.getElementById('emailTemplateForm');
+    
+    // Reset form
+    form.reset();
+    document.getElementById('emailTemplateIsActive').checked = true;
+    
+    if (template) {
+        // Editing existing template
+        document.getElementById('emailTemplateId').value = template.id;
+        document.getElementById('emailTemplateName').value = template.template_name;
+        document.getElementById('emailTemplateType').value = template.template_type;
+        document.getElementById('emailTemplateDescription').value = template.description || '';
+        document.getElementById('emailTemplateSubject').value = template.subject;
+        document.getElementById('emailTemplateHtmlContent').value = template.html_content;
+        document.getElementById('emailTemplateTextContent').value = template.text_content || '';
+        document.getElementById('emailTemplateIsActive').checked = template.is_active;
+        
+        modal.querySelector('.modal-title').textContent = '📧 Edit Email Template';
+    } else {
+        // Creating new template
+        document.getElementById('emailTemplateId').value = '';
+        modal.querySelector('.modal-title').textContent = '📧 Create Email Template';
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeEmailTemplateEditModal() {
+    document.getElementById('emailTemplateEditModal').classList.add('hidden');
+}
+
+async function saveEmailTemplate() {
+    const form = document.getElementById('emailTemplateForm');
+    const formData = new FormData(form);
+    
+    const templateData = {
+        template_id: formData.get('template_id'),
+        template_name: formData.get('template_name'),
+        template_type: formData.get('template_type'),
+        subject: formData.get('subject'),
+        html_content: formData.get('html_content'),
+        text_content: formData.get('text_content'),
+        description: formData.get('description'),
+        is_active: document.getElementById('emailTemplateIsActive').checked ? 1 : 0
+    };
+    
+    // Validate required fields
+    if (!templateData.template_name || !templateData.template_type || !templateData.subject || !templateData.html_content) {
+        showError('Please fill in all required fields');
+        return;
+    }
+    
+    try {
+        const isEdit = templateData.template_id && templateData.template_id !== '';
+        const action = isEdit ? 'update' : 'create';
+        
+        const response = await fetch('/api/email_templates.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...templateData })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(isEdit ? 'Email template updated successfully!' : 'Email template created successfully!');
+            closeEmailTemplateEditModal();
+            loadEmailTemplates();
+        } else {
+            showError('Failed to save template: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error saving email template:', error);
+        showError('Error saving email template');
+    }
+}
+
+function showEmailTemplatePreviewModal(preview) {
+    const modal = document.getElementById('emailTemplatePreviewModal');
+    const iframe = document.getElementById('emailPreviewFrame');
+    const subjectSpan = document.getElementById('previewSubject');
+    
+    subjectSpan.textContent = preview.subject;
+    
+    // Create a blob URL for the iframe content
+    const blob = new Blob([preview.html_content], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    iframe.src = url;
+    
+    modal.classList.remove('hidden');
+    
+    // Clean up the blob URL when modal is closed
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 1000);
+}
+
+function closeEmailTemplatePreviewModal() {
+    document.getElementById('emailTemplatePreviewModal').classList.add('hidden');
+}
+
+function showTemplateAssignmentModal(emailType, templates) {
+    const modal = document.getElementById('templateAssignmentModal');
+    const select = document.getElementById('assignmentTemplateSelect');
+    const typeSpan = document.getElementById('assignmentEmailType');
+    const descSpan = document.getElementById('assignmentEmailDescription');
+    
+    const emailTypeInfo = {
+        'order_confirmation': { name: 'Order Confirmation', description: 'Sent to customers when they place orders' },
+        'admin_notification': { name: 'Admin Notification', description: 'Sent to admins when new orders are received' },
+        'welcome': { name: 'Welcome Email', description: 'Sent to new users when they register' },
+        'password_reset': { name: 'Password Reset', description: 'Sent when users request password reset' }
+    };
+    
+    const typeInfo = emailTypeInfo[emailType] || { name: emailType, description: 'Custom email type' };
+    
+    typeSpan.textContent = typeInfo.name;
+    descSpan.textContent = typeInfo.description;
+    
+    // Populate template select
+    select.innerHTML = '<option value="">No template assigned</option>';
+    
+    // Filter templates by type (or show all if custom)
+    const applicableTemplates = templates.filter(t => 
+        t.template_type === emailType || t.template_type === 'custom'
+    );
+    
+    applicableTemplates.forEach(template => {
+        const option = document.createElement('option');
+        option.value = template.id;
+        option.textContent = `${template.template_name} (${template.template_type})`;
+        select.appendChild(option);
+    });
+    
+    // Store current email type for saving
+    modal.dataset.emailType = emailType;
+    
+    modal.classList.remove('hidden');
+}
+
+function closeTemplateAssignmentModal() {
+    document.getElementById('templateAssignmentModal').classList.add('hidden');
+}
+
+async function saveTemplateAssignment() {
+    const modal = document.getElementById('templateAssignmentModal');
+    const select = document.getElementById('assignmentTemplateSelect');
+    const emailType = modal.dataset.emailType;
+    const templateId = select.value;
+    
+    if (!emailType) {
+        showError('Email type not specified');
+        return;
+    }
+    
+    if (!templateId) {
+        showError('Please select a template');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/email_templates.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'set_assignment',
+                email_type: emailType,
+                template_id: templateId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Template assignment updated successfully!');
+            closeTemplateAssignmentModal();
+            loadEmailTemplates();
+        } else {
+            showError('Failed to update assignment: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error updating template assignment:', error);
+        showError('Error updating template assignment');
+    }
+}
+
 </script>

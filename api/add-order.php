@@ -15,6 +15,7 @@ register_shutdown_function(function() {
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/email_config.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/email_notifications.php';
 
 // Ensure no HTML errors are displayed for this API endpoint
 ini_set('display_errors', 0);

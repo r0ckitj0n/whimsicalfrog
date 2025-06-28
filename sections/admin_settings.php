@@ -402,6 +402,13 @@
           </svg>
           <span class="button-text">Receipt Messages</span>
         </button>
+        
+        <button id="systemCleanupBtn" onclick="openSystemCleanupModal()" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          <span class="button-text">System Cleanup</span>
+        </button>
       </div>
     </div>
 
@@ -16384,4 +16391,271 @@ function openSystemDocumentationModal() {
 function closeSystemDocumentationModal() {
     document.getElementById('systemDocumentationModal').classList.add('hidden');
 }
+
+// System Cleanup Functions
+function openSystemCleanupModal() {
+    document.getElementById('systemCleanupModal').classList.remove('hidden');
+    runSystemAnalysis();
+}
+
+function closeSystemCleanupModal() {
+    document.getElementById('systemCleanupModal').classList.add('hidden');
+}
+
+async function runSystemAnalysis() {
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=analyze');
+        const data = await response.json();
+        
+        if (data.success) {
+            displaySystemAnalysis(data.analysis);
+        } else {
+            showError('Failed to analyze system: ' + data.error);
+        }
+    } catch (error) {
+        console.error('System analysis error:', error);
+        showError('System analysis failed: ' + error.message);
+    }
+}
+
+function displaySystemAnalysis(analysis) {
+    const container = document.getElementById('systemAnalysisResults');
+    
+    const staleFilesCount = analysis.unused_files ? analysis.unused_files.length : 0;
+    const staleCommentsCount = analysis.stale_comments ? analysis.stale_comments.length : 0;
+    const tablesNeedingOptimization = analysis.optimization_opportunities ? analysis.optimization_opportunities.filter(o => o.type === 'large_table').length : 0;
+    
+    container.innerHTML = `
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 class="font-semibold text-blue-800 mb-2">🗑️ Stale Files</h4>
+                    <p class="text-2xl font-bold text-blue-600">${staleFilesCount}</p>
+                    <p class="text-sm text-blue-700">Backup/temp files to remove</p>
+                </div>
+                
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h4 class="font-semibold text-yellow-800 mb-2">💬 Stale Comments</h4>
+                    <p class="text-2xl font-bold text-yellow-600">${staleCommentsCount}</p>
+                    <p class="text-sm text-yellow-700">TODO/FIXME/DEBUG comments</p>
+                </div>
+                
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h4 class="font-semibold text-green-800 mb-2">⚡ Database</h4>
+                    <p class="text-2xl font-bold text-green-600">${tablesNeedingOptimization}</p>
+                    <p class="text-sm text-green-700">Tables needing optimization</p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h4 class="font-semibold text-gray-800 mb-3">📋 Cleanup Actions Available</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="space-y-2">
+                        <button onclick="cleanupStaleFiles()" class="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                            🗑️ Clean Stale Files
+                        </button>
+                        <p class="text-xs text-gray-600">Remove backup and temporary files (Very Safe)</p>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <button onclick="removeUnusedCode()" class="w-full px-4 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors">
+                            💬 Remove Stale Comments
+                        </button>
+                        <p class="text-xs text-gray-600">Remove TODO/FIXME/DEBUG comments (Very Safe)</p>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <button onclick="optimizeDatabase()" class="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                            ⚡ Optimize Database
+                        </button>
+                        <p class="text-xs text-gray-600">Optimize all database tables (Very Safe)</p>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <button onclick="confirmStartOver()" class="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                            🔥 Start Over
+                        </button>
+                        <p class="text-xs text-gray-600">⚠️ Wipe all data except admin accounts (DANGEROUS)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function cleanupStaleFiles() {
+    if (!confirm('Remove backup and temporary files? This is generally safe.')) return;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files');
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            runSystemAnalysis(); // Refresh analysis
+        } else {
+            showError('File cleanup failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('File cleanup error:', error);
+        showError('File cleanup failed: ' + error.message);
+    }
+}
+
+async function removeUnusedCode() {
+    if (!confirm('Remove stale comments (TODO, FIXME, DEBUG) from code files? This only removes comments, not actual code.')) return;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=remove_unused_code');
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            runSystemAnalysis(); // Refresh analysis
+        } else {
+            showError('Code cleanup failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Code cleanup error:', error);
+        showError('Code cleanup failed: ' + error.message);
+    }
+}
+
+async function optimizeDatabase() {
+    if (!confirm('Optimize all database tables? This is a standard maintenance operation.')) return;
+    
+    try {
+        const response = await fetch('/api/cleanup_system.php?action=optimize_database');
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            runSystemAnalysis(); // Refresh analysis
+        } else {
+            showError('Database optimization failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Database optimization error:', error);
+        showError('Database optimization failed: ' + error.message);
+    }
+}
+
+function confirmStartOver() {
+    const modal = document.getElementById('startOverConfirmModal');
+    modal.classList.remove('hidden');
+}
+
+function closeStartOverConfirmModal() {
+    document.getElementById('startOverConfirmModal').classList.add('hidden');
+}
+
+async function executeStartOver() {
+    const confirmText = document.getElementById('startOverConfirmText').value;
+    
+    if (confirmText.toUpperCase() !== 'START OVER') {
+        showError('You must type "START OVER" exactly to confirm');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/start_over.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirm: true })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('System reset completed! All data wiped except admin accounts.');
+            closeStartOverConfirmModal();
+            closeSystemCleanupModal();
+        } else {
+            showError('Start over failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Start over error:', error);
+        showError('Start over failed: ' + error.message);
+    }
+}
 </script>
+
+<!-- System Cleanup Modal -->
+<div id="systemCleanupModal" class="admin-modal-overlay hidden" onclick="closeSystemCleanupModal()">
+    <div class="admin-modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
+            <h2 class="modal-title">🧹 System Cleanup</h2>
+            <button onclick="closeSystemCleanupModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-800">System Health & Cleanup</h4>
+                    <button onclick="runSystemAnalysis()" class="modal-button btn-primary">
+                        🔄 Refresh Analysis
+                    </button>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                    <h5 class="font-semibold text-blue-800 mb-2">ℹ️ Safety Information</h5>
+                    <ul class="text-sm text-blue-700 space-y-1">
+                        <li>• <strong>Clean Stale Files</strong>: Removes backup/temp files (Very Safe)</li>
+                        <li>• <strong>Remove Stale Comments</strong>: Removes TODO/FIXME comments only (Very Safe)</li>
+                        <li>• <strong>Optimize Database</strong>: Standard MySQL maintenance (Very Safe)</li>
+                        <li>• <strong>Start Over</strong>: ⚠️ Wipes all data except admin accounts (DANGEROUS)</li>
+                    </ul>
+                </div>
+                
+                <div id="systemAnalysisResults" class="space-y-4">
+                    <div class="modal-loading">
+                        <div class="modal-loading-spinner"></div>
+                        <p class="text-gray-600">Analyzing system...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="closeSystemCleanupModal()" class="modal-button btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Start Over Confirmation Modal -->
+<div id="startOverConfirmModal" class="admin-modal-overlay hidden" onclick="closeStartOverConfirmModal()">
+    <div class="admin-modal-content" style="max-width: 500px;" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
+            <h2 class="modal-title">⚠️ START OVER - DANGER ZONE</h2>
+            <button onclick="closeStartOverConfirmModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <h4 class="font-semibold text-red-800 mb-2">🚨 WARNING: This action cannot be undone!</h4>
+                <p class="text-sm text-red-700 mb-3">This will permanently delete:</p>
+                <ul class="text-sm text-red-700 list-disc list-inside space-y-1 mb-3">
+                    <li>All inventory items and images</li>
+                    <li>All customer orders and order history</li>
+                    <li>All customer accounts (except admins)</li>
+                    <li>All related data</li>
+                </ul>
+                <p class="text-sm text-red-700">
+                    <strong>Admin accounts will be preserved.</strong>
+                </p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Type "START OVER" to confirm:
+                </label>
+                <input type="text" id="startOverConfirmText" class="modal-input" placeholder="Type exactly: START OVER">
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="closeStartOverConfirmModal()" class="modal-button btn-secondary">Cancel</button>
+            <button onclick="executeStartOver()" class="modal-button btn-danger">🔥 START OVER</button>
+        </div>
+    </div>
+</div>

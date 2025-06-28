@@ -40,10 +40,6 @@ try {
             analyzeSystem($pdo);
             break;
             
-        case 'remove_empty_tables':
-            removeEmptyTables($pdo);
-            break;
-            
         case 'cleanup_stale_files':
             cleanupStaleFiles();
             break;
@@ -67,7 +63,6 @@ try {
 
 function analyzeSystem($pdo) {
     $analysis = [
-        'empty_tables' => getEmptyTables($pdo),
         'unused_files' => getUnusedFiles(),
         'stale_comments' => getStaleComments(),
         'redundant_code' => getRedundantCode(),
@@ -283,20 +278,6 @@ function getOptimizationOpportunities($pdo) {
 
 function generateRecommendations($analysis) {
     $recommendations = [];
-    
-    // Empty tables recommendations
-    foreach ($analysis['empty_tables'] as $table) {
-        if ($table['safe_to_remove']) {
-            $recommendations[] = [
-                'priority' => 'medium',
-                'action' => 'remove_table',
-                'target' => $table['name'],
-                'description' => "Remove empty table '{$table['name']}' - no data and no code references",
-                'impact' => 'low',
-                'effort' => 'low'
-            ];
-        }
-    }
     
     // Unused files recommendations
     foreach ($analysis['unused_files'] as $file) {

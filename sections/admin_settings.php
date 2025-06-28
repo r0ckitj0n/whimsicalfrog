@@ -363,6 +363,13 @@
           </svg>
           <span class="button-text">Database Maintenance</span>
         </button>
+        
+        <button id="systemDocumentationBtn" onclick="openSystemDocumentationModal()" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+          </svg>
+          <span class="button-text">System Documentation</span>
+        </button>
       </div>
     </div>
 
@@ -9039,11 +9046,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 data-tab="email-templates">
                             📧 Email Templates
                         </button>
-                        <button onclick="switchTemplateTab('documentation')" 
-                                class="css-category-tab" 
-                                data-tab="documentation">
-                            📚 Documentation
-                        </button>
                     </nav>
                 </div>
                 
@@ -9216,27 +9218,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 
-                <!-- Documentation Tab -->
-                <div id="documentation-tab" class="css-category-content p-6 hidden">
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="text-lg font-semibold text-gray-800">WhimsicalFrog System Documentation</h4>
-                            <div class="flex space-x-2">
-                                <button onclick="exportDocumentation()" class="modal-button btn-secondary">
-                                    📥 Export Documentation
-                                </button>
-                                <button onclick="refreshDocumentation()" class="modal-button btn-primary">
-                                    🔄 Refresh
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Documentation Content -->
-                        <div id="documentationContent" class="space-y-6">
-                            <!-- Documentation will be loaded here -->
-                        </div>
-                    </div>
-                </div>
+
             </div>
             
             <!-- Footer -->
@@ -9375,7 +9357,6 @@ function openTemplateManagerModal() {
     loadCostTemplates();
     loadSuggestionHistory();
     loadEmailTemplates();
-    loadDocumentation();
 }
 
 function closeTemplateManagerModal() {
@@ -16356,4 +16337,51 @@ async function saveTemplateAssignment() {
     }
 }
 
+</script>
+
+<!-- System Documentation Modal -->
+<div id="systemDocumentationModal" class="admin-modal-overlay hidden" onclick="closeSystemDocumentationModal()">
+    <div class="admin-modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📚 System Documentation</h2>
+            <button onclick="closeSystemDocumentationModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-800">WhimsicalFrog System Documentation</h4>
+                    <div class="flex space-x-2">
+                        <button onclick="exportDocumentation()" class="modal-button btn-secondary">
+                            📥 Export Documentation
+                        </button>
+                        <button onclick="refreshDocumentation()" class="modal-button btn-primary">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Documentation Content -->
+                <div id="documentationContent" class="space-y-6">
+                    <!-- Documentation will be loaded here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="closeSystemDocumentationModal()" class="modal-button btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// System Documentation Functions
+function openSystemDocumentationModal() {
+    document.getElementById('systemDocumentationModal').classList.remove('hidden');
+    loadDocumentation();
+}
+
+function closeSystemDocumentationModal() {
+    document.getElementById('systemDocumentationModal').classList.add('hidden');
+}
 </script>

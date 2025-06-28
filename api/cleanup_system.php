@@ -19,7 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Check authentication
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if (!requireAdmin()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Admin access required']);

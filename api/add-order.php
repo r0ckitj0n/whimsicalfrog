@@ -157,10 +157,20 @@ try {
     $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, shippingAddress, status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?,?)");
     $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $shippingAddressJson, $orderStatus, $date, $paymentStatus]);
     
-    // Get the next order item ID sequence number
-    $itemCountStmt = $pdo->prepare('SELECT COUNT(*) FROM order_items');
-    $itemCountStmt->execute();
-    $itemCount = $itemCountStmt->fetchColumn();
+    // Get the next order item ID sequence number by finding the highest existing ID
+    $maxIdStmt = $pdo->prepare("SELECT id FROM order_items WHERE id REGEXP '^OI[0-9]+$' ORDER BY CAST(SUBSTRING(id, 3) AS UNSIGNED) DESC LIMIT 1");
+    $maxIdStmt->execute();
+    $maxId = $maxIdStmt->fetchColumn();
+    
+    // Extract the sequence number from the highest ID
+    $nextSequence = 1; // Default starting sequence
+    if ($maxId) {
+        $currentSequence = (int)substr($maxId, 2); // Remove 'OI' prefix and convert to int
+        $nextSequence = $currentSequence + 1;
+        error_log("add-order.php: Found max existing ID '$maxId', next sequence will be $nextSequence");
+    } else {
+        error_log("add-order.php: No existing order item IDs found, starting from sequence 1");
+    }
     
     // Prepare statements for order items and stock updates
     $priceStmt = $pdo->prepare("SELECT retailPrice FROM items WHERE sku = ?");
@@ -191,8 +201,8 @@ try {
             $price = 0.00;  // Fallback price
         }
         
-        // Generate order item ID
-        $orderItemId = 'OI' . str_pad($itemCount + $i + 1, 10, '0', STR_PAD_LEFT);
+        // Generate order item ID using the next sequence number
+        $orderItemId = 'OI' . str_pad($nextSequence + $i, 10, '0', STR_PAD_LEFT);
         
         // Insert order item with color and size information
         error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$sku, Qty=$quantity, Price=$price, Color=$color, Size=$size");

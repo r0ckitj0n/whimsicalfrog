@@ -104,7 +104,7 @@ $adminRole = $userData['role'] ?? 'Administrator';
             <?php foreach ($tabs as $key => [$label, $bg, $text, $id]): ?>
                 <a href="/?page=admin<?php echo $key ? '&section=' . $key : ''; ?>"
                    id="<?php echo $id; ?>"
-                   class="px-3 py-1 rounded text-xs font-semibold <?php echo $bg . ' ' . $text; ?> <?php echo ($section === $key || ($key === '' && !$section)) ? 'ring-2 ring-green-400' : 'hover:bg-green-200'; ?>">
+                   class="px-4 py-2 rounded-lg text-sm font-semibold shadow-sm border border-gray-200 min-w-[100px] text-center <?php echo $bg . ' ' . $text; ?> <?php echo ($section === $key || ($key === '' && !$section)) ? 'ring-2 ring-green-400' : 'hover:bg-green-200'; ?>">
                     <?php echo $label; ?>
                 </a>
             <?php endforeach; ?>

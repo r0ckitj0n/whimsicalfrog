@@ -8717,26 +8717,84 @@ function showColorModal(color = null) {
         // Edit mode
         modalTitle.textContent = 'Edit Color';
         document.getElementById('colorId').value = color.id;
-        document.getElementById('colorName').value = color.color_name;
-        document.getElementById('colorCode').value = color.color_code || '#000000';
         document.getElementById('colorStockLevel').value = color.stock_level;
         document.getElementById('displayOrder').value = color.display_order;
         document.getElementById('isActive').checked = color.is_active == 1;
-        // Set image path if available
+        
+        // Try to find and select the matching global color
         setTimeout(() => {
+            const globalColorSelect = document.getElementById('globalColorSelect');
+            if (globalColorSelect && color.color_name) {
+                // Look for matching color by name and code
+                let foundMatch = false;
+                for (let i = 0; i < globalColorSelect.options.length; i++) {
+                    const option = globalColorSelect.options[i];
+                    if (option.value) {
+                        try {
+                            const colorData = JSON.parse(option.value);
+                            if (colorData.name === color.color_name && 
+                                colorData.code === color.color_code) {
+                                globalColorSelect.value = option.value;
+                                handleGlobalColorSelection(); // Trigger preview update
+                                foundMatch = true;
+                                break;
+                            }
+                        } catch (error) {
+                            // Skip invalid options
+                        }
+                    }
+                }
+                
+                // If no exact match found, manually populate fields for backward compatibility
+                if (!foundMatch) {
+                    document.getElementById('colorName').value = color.color_name;
+                    document.getElementById('colorCode').value = color.color_code || '#000000';
+                    
+                    // Show manual preview for existing colors not in global system
+                    const selectedColorPreview = document.getElementById('selectedColorPreview');
+                    const colorPreviewSwatch = document.getElementById('colorPreviewSwatch');
+                    const colorPreviewName = document.getElementById('colorPreviewName');
+                    const colorPreviewCode = document.getElementById('colorPreviewCode');
+                    
+                    if (selectedColorPreview) {
+                        selectedColorPreview.classList.remove('hidden');
+                        colorPreviewSwatch.style.backgroundColor = color.color_code || '#000000';
+                        colorPreviewName.textContent = color.color_name + ' (Legacy Color)';
+                        colorPreviewCode.textContent = color.color_code || 'No color code';
+                    }
+                }
+            }
+            
+            // Set image path if available
             const imageSelect = document.getElementById('colorImagePath');
             if (imageSelect && color.image_path) {
                 imageSelect.value = color.image_path;
             }
-        }, 200); // Small delay to ensure options are loaded
+        }, 300); // Small delay to ensure options are loaded
     } else {
         // Add mode
         modalTitle.textContent = 'Add New Color';
         document.getElementById('colorId').value = '';
-        document.getElementById('colorCode').value = '#000000';
         document.getElementById('colorStockLevel').value = '0';
         document.getElementById('displayOrder').value = '0';
         document.getElementById('isActive').checked = true;
+        
+        // Clear global color selection and preview
+        setTimeout(() => {
+            const globalColorSelect = document.getElementById('globalColorSelect');
+            if (globalColorSelect) {
+                globalColorSelect.value = '';
+            }
+            
+            const selectedColorPreview = document.getElementById('selectedColorPreview');
+            if (selectedColorPreview) {
+                selectedColorPreview.classList.add('hidden');
+            }
+            
+            // Clear hidden fields
+            document.getElementById('colorName').value = '';
+            document.getElementById('colorCode').value = '';
+        }, 100);
     }
     
     modal.classList.remove('hidden');
@@ -8756,15 +8814,33 @@ function createColorModal() {
                         <input type="hidden" id="colorId" name="colorId">
                         
                         <div class="mb-4">
-                            <label for="colorName" class="block text-sm font-medium text-gray-700 mb-2">Color Name *</label>
-                            <input type="text" id="colorName" name="colorName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
+                            <label for="globalColorSelect" class="block text-sm font-medium text-gray-700 mb-2">
+                                Select Color *
+                                <span class="text-xs text-gray-500">(from predefined colors)</span>
+                            </label>
+                            <select id="globalColorSelect" name="globalColorSelect" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" onchange="handleGlobalColorSelection()">
+                                <option value="">Choose a color...</option>
+                            </select>
+                            <div class="mt-2 text-xs">
+                                <a href="#" onclick="openGlobalColorsManagement()" class="text-blue-600 hover:text-blue-800">
+                                    ⚙️ Manage Global Colors in Settings
+                                </a>
+                            </div>
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="colorCode" class="block text-sm font-medium text-gray-700 mb-2">Color Code</label>
-                            <div class="flex items-center space-x-2">
-                                <input type="color" id="colorCode" name="colorCode" class="w-16 h-10 border border-gray-300 rounded cursor-pointer">
-                                <input type="text" id="colorCodeText" name="colorCodeText" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" placeholder="#000000">
+                        <!-- Hidden fields populated by global color selection -->
+                        <input type="hidden" id="colorName" name="colorName">
+                        <input type="hidden" id="colorCode" name="colorCode">
+                        
+                        <!-- Display selected color -->
+                        <div id="selectedColorPreview" class="mb-4 hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Selected Color Preview</label>
+                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                <div id="colorPreviewSwatch" class="w-8 h-8 rounded border-2 border-gray-300"></div>
+                                <div>
+                                    <div id="colorPreviewName" class="font-medium text-gray-900"></div>
+                                    <div id="colorPreviewCode" class="text-sm text-gray-500"></div>
+                                </div>
                             </div>
                         </div>
                         
@@ -8809,21 +8885,8 @@ function createColorModal() {
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Sync color picker with text input
-    const colorCode = document.getElementById('colorCode');
-    const colorCodeText = document.getElementById('colorCodeText');
-    
-    colorCode.addEventListener('change', function() {
-        colorCodeText.value = this.value;
-    });
-    
-    colorCodeText.addEventListener('input', function() {
-        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
-            colorCode.value = this.value;
-        }
-    });
-    
-    // Load available images for the dropdown
+    // Load global colors and available images for the dropdown
+    loadGlobalColorsForSelection();
     loadAvailableImages();
 }
 
@@ -8851,6 +8914,106 @@ async function loadAvailableImages() {
         }
     } catch (error) {
         console.error('Error loading available images:', error);
+    }
+}
+
+// Load global colors for selection dropdown
+async function loadGlobalColorsForSelection() {
+    try {
+        const response = await fetch('/api/global_color_size_management.php?action=get_global_colors');
+        const data = await response.json();
+        
+        const globalColorSelect = document.getElementById('globalColorSelect');
+        if (!globalColorSelect) return;
+        
+        // Clear existing options except the first one
+        globalColorSelect.innerHTML = '<option value="">Choose a color...</option>';
+        
+        if (data.success && data.colors && data.colors.length > 0) {
+            // Group colors by category
+            const colorsByCategory = {};
+            data.colors.forEach(color => {
+                const category = color.category || 'General';
+                if (!colorsByCategory[category]) {
+                    colorsByCategory[category] = [];
+                }
+                colorsByCategory[category].push(color);
+            });
+            
+            // Add colors grouped by category
+            Object.keys(colorsByCategory).sort().forEach(category => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = category;
+                
+                colorsByCategory[category].forEach(color => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify({
+                        id: color.id,
+                        name: color.color_name,
+                        code: color.color_code,
+                        category: color.category
+                    });
+                    option.textContent = `${color.color_name} ${color.color_code ? '(' + color.color_code + ')' : ''}`;
+                    optgroup.appendChild(option);
+                });
+                
+                globalColorSelect.appendChild(optgroup);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No global colors available - add some in Settings';
+            option.disabled = true;
+            globalColorSelect.appendChild(option);
+        }
+    } catch (error) {
+        console.error('Error loading global colors:', error);
+        showError('Error loading global colors');
+    }
+}
+
+// Handle global color selection
+function handleGlobalColorSelection() {
+    const globalColorSelect = document.getElementById('globalColorSelect');
+    const selectedValue = globalColorSelect.value;
+    
+    const colorNameInput = document.getElementById('colorName');
+    const colorCodeInput = document.getElementById('colorCode');
+    const selectedColorPreview = document.getElementById('selectedColorPreview');
+    const colorPreviewSwatch = document.getElementById('colorPreviewSwatch');
+    const colorPreviewName = document.getElementById('colorPreviewName');
+    const colorPreviewCode = document.getElementById('colorPreviewCode');
+    
+    if (selectedValue) {
+        try {
+            const colorData = JSON.parse(selectedValue);
+            
+            // Populate hidden fields
+            colorNameInput.value = colorData.name;
+            colorCodeInput.value = colorData.code || '#000000';
+            
+            // Show color preview
+            selectedColorPreview.classList.remove('hidden');
+            colorPreviewSwatch.style.backgroundColor = colorData.code || '#000000';
+            colorPreviewName.textContent = colorData.name;
+            colorPreviewCode.textContent = colorData.code || 'No color code';
+            
+        } catch (error) {
+            console.error('Error parsing color data:', error);
+        }
+    } else {
+        // Clear fields and hide preview
+        colorNameInput.value = '';
+        colorCodeInput.value = '';
+        selectedColorPreview.classList.add('hidden');
+    }
+}
+
+// Open global colors management (redirect to settings)
+function openGlobalColorsManagement() {
+    // Show info modal about managing colors in settings
+    if (confirm('Global colors are managed in Admin Settings > Content Management > Global Colors & Sizes.\n\nWould you like to open the Admin Settings page?')) {
+        window.location.href = '/?page=admin&section=settings';
     }
 }
 

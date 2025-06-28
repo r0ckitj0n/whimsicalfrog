@@ -5,126 +5,62 @@ ob_start();
 // Database connection
 $pdo = new PDO($dsn, $user, $pass, $options);
 
-$startDate = $_GET['start_date'] ?? '';
-$endDate   = $_GET['end_date']   ?? '';
+// Get filter parameters  
+$filterDate = $_GET['filter_date'] ?? '';
+$filterItems = $_GET['filter_items'] ?? '';
+$filterStatus = $_GET['filter_status'] ?? '';
+$filterPaymentMethod = $_GET['filter_payment_method'] ?? '';
+$filterShippingMethod = $_GET['filter_shipping_method'] ?? '';
+$filterPaymentStatus = $_GET['filter_payment_status'] ?? '';
 
-// Get orders with user information - simplified query for order list
-if ($startDate === '' && $endDate === '') {
-    $stmt = $pdo->prepare("
-        SELECT DISTINCT
-            o.id, 
-            o.userId, 
-            o.total,
-            o.paymentMethod,
-            o.paymentStatus,
-            o.status,
-            o.shippingMethod,
-            o.date,
-            o.paymentDate,
-            o.fulfillmentNotes,
-            o.paymentNotes,
-            o.shippingAddress,
-            u.username,
-            u.addressLine1,
-            u.addressLine2,
-            u.city,
-            u.state,
-            u.zipCode
-        FROM orders o
-        LEFT JOIN users u ON o.userId = u.id
-        ORDER BY o.date DESC
-    ");
-    
-    $stmt->execute();
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} elseif ($startDate === '') {
-    $stmt = $pdo->prepare("
-        SELECT DISTINCT
-            o.id, 
-            o.userId, 
-            o.total,
-            o.paymentMethod,
-            o.paymentStatus,
-            o.status,
-            o.shippingMethod,
-            o.date,
-            o.paymentDate,
-            o.fulfillmentNotes,
-            o.paymentNotes,
-            o.shippingAddress,
-            u.username,
-            u.addressLine1,
-            u.addressLine2,
-            u.city,
-            u.state,
-            u.zipCode
-        FROM orders o
-        LEFT JOIN users u ON o.userId = u.id
-        WHERE DATE(o.date) <= :end
-        ORDER BY o.date DESC
-    ");
-    
-    $stmt->execute([':end'=>$endDate]);
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} elseif ($endDate === '') {
-    $stmt = $pdo->prepare("
-        SELECT DISTINCT
-            o.id, 
-            o.userId, 
-            o.total,
-            o.paymentMethod,
-            o.paymentStatus,
-            o.status,
-            o.shippingMethod,
-            o.date,
-            o.paymentDate,
-            o.fulfillmentNotes,
-            o.paymentNotes,
-            o.shippingAddress,
-            u.username,
-            u.addressLine1,
-            u.addressLine2,
-            u.city,
-            u.state,
-            u.zipCode
-        FROM orders o
-        LEFT JOIN users u ON o.userId = u.id
-        WHERE DATE(o.date) >= :start
-        ORDER BY o.date DESC
-    ");
-    
-    $stmt->execute([':start'=>$startDate]);
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} else {
-    $stmt = $pdo->prepare("
-        SELECT DISTINCT
-            o.id, 
-            o.userId, 
-            o.total,
-            o.paymentMethod,
-            o.paymentStatus,
-            o.status,
-            o.shippingMethod,
-            o.date,
-            o.paymentDate,
-            o.fulfillmentNotes,
-            o.paymentNotes,
-            o.shippingAddress,
-            u.username,
-            u.addressLine1,
-            u.addressLine2,
-            u.city,
-            u.state,
-            u.zipCode
-        FROM orders o
-        LEFT JOIN users u ON o.userId = u.id
-        WHERE DATE(o.date) BETWEEN :start AND :end
-        ORDER BY o.date DESC
-    ");
-    
-    $stmt->execute([':start'=>$startDate, ':end'=>$endDate]);
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Build the WHERE clause based on filters
+$whereConditions = [];
+$params = [];
+
+// Show all orders by default (no default status filter like Order Fulfillment)
+if (!empty($filterDate)) {
+    $whereConditions[] = "DATE(o.date) = ?";
+    $params[] = $filterDate;
 }
+
+if (!empty($filterStatus)) {
+    $whereConditions[] = "o.status = ?";
+    $params[] = $filterStatus;
+}
+
+if (!empty($filterPaymentMethod)) {
+    $whereConditions[] = "o.paymentMethod = ?";
+    $params[] = $filterPaymentMethod;
+}
+
+if (!empty($filterShippingMethod)) {
+    $whereConditions[] = "o.shippingMethod = ?";
+    $params[] = $filterShippingMethod;
+}
+
+if (!empty($filterPaymentStatus)) {
+    $whereConditions[] = "o.paymentStatus = ?";
+    $params[] = $filterPaymentStatus;
+}
+
+// Handle items filter - this requires a subquery since items are in order_items table
+if (!empty($filterItems)) {
+    $whereConditions[] = "EXISTS (SELECT 1 FROM order_items oi LEFT JOIN items i ON oi.sku = i.sku WHERE oi.orderId = o.id AND (COALESCE(i.name, oi.sku) LIKE ? OR oi.sku LIKE ?))";
+    $params[] = "%{$filterItems}%";
+    $params[] = "%{$filterItems}%";
+}
+
+$whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+$stmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id {$whereClause} ORDER BY o.date DESC");
+$stmt->execute($params);
+$orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get unique values for filter dropdowns
+$statusOptions = $pdo->query("SELECT DISTINCT status FROM orders WHERE status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY status")->fetchAll(PDO::FETCH_COLUMN);
+$paymentMethodOptions = $pdo->query("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod")->fetchAll(PDO::FETCH_COLUMN);
+$shippingMethodOptions = $pdo->query("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod")->fetchAll(PDO::FETCH_COLUMN);
+$paymentStatusOptions = $pdo->query("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus")->fetchAll(PDO::FETCH_COLUMN);
 
 // Initialize modal state
 $modalMode = ''; // Default to no modal
@@ -220,6 +156,65 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
     .orders-table tr:hover { background-color: #f7fafc; }
     .orders-table th:first-child { border-top-left-radius: 6px; }
     .orders-table th:last-child { border-top-right-radius: 6px; }
+
+    /* Filter styling to match order fulfillment page */
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background-color: #f8fafc;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-form label {
+        color: var(--filter-label-color, #87ac3a) !important;
+        font-weight: var(--filter-label-font-weight, 500) !important;
+        font-size: var(--filter-label-font-size, 0.875rem) !important;
+    }
+
+    .filter-form input,
+    .filter-form select {
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        background-color: white;
+    }
+
+    .filter-form input:focus,
+    .filter-form select:focus {
+        outline: none;
+        border-color: #87ac3a;
+        box-shadow: 0 0 0 1px #87ac3a;
+    }
+
+    .filter-clear-link {
+        color: #87ac3a;
+        text-decoration: underline;
+        font-size: 0.875rem;
+    }
+
+    .filter-clear-link:hover {
+        color: #6b8e23;
+    }
+
+    .filter-apply-btn {
+        background-color: #87ac3a;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        border: none;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .filter-apply-btn:hover {
+        background-color: #6b8e23;
+    }
 
     .address-cell {
         max-width: 150px;
@@ -399,19 +394,78 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
 </style>
 
 <div class="container mx-auto px-4 py-2">
-    <div class="orders-section-header flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+    <div class="orders-section-header">
         
-        <form action="" method="GET" class="flex items-center gap-2">
+        <form method="GET" class="filter-form">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="orders">
-            <label for="start_date" class="filter-label">From:</label>
-            <input type="date" name="start_date" id="start_date" value="<?= htmlspecialchars($startDate); ?>" class="border rounded px-2 py-1 text-sm">
-            <label for="end_date" class="filter-label">To:</label>
-            <input type="date" name="end_date" id="end_date" value="<?= htmlspecialchars($endDate); ?>" class="border rounded px-2 py-1 text-sm">
-                            <a href="?page=admin&section=orders" class="filter-label underline">Clear</a>
-            <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">Apply</button>
+            
+            <label for="filter_date">Date:</label>
+            <input type="date" name="filter_date" id="filter_date" value="<?= htmlspecialchars($filterDate) ?>">
+            
+            <label for="filter_items">Items:</label>
+            <input type="text" name="filter_items" id="filter_items" value="<?= htmlspecialchars($filterItems) ?>" placeholder="Search...">
+            
+            <label for="filter_status">Status:</label>
+            <select name="filter_status" id="filter_status">
+                <option value="">All</option>
+                <?php foreach ($statusOptions as $status): ?>
+                <option value="<?= htmlspecialchars($status) ?>" <?= $filterStatus === $status ? 'selected' : '' ?>><?= htmlspecialchars($status) ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <label for="filter_payment_method">Payment:</label>
+            <select name="filter_payment_method" id="filter_payment_method">
+                <option value="">All</option>
+                <?php foreach ($paymentMethodOptions as $method): ?>
+                <option value="<?= htmlspecialchars($method) ?>" <?= $filterPaymentMethod === $method ? 'selected' : '' ?>><?= htmlspecialchars($method) ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <label for="filter_shipping_method">Shipping:</label>
+            <select name="filter_shipping_method" id="filter_shipping_method">
+                <option value="">All</option>
+                <?php foreach ($shippingMethodOptions as $method): ?>
+                <option value="<?= htmlspecialchars($method) ?>" <?= $filterShippingMethod === $method ? 'selected' : '' ?>><?= htmlspecialchars($method) ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <label for="filter_payment_status">Pay Status:</label>
+            <select name="filter_payment_status" id="filter_payment_status">
+                <option value="">All</option>
+                <?php foreach ($paymentStatusOptions as $status): ?>
+                <option value="<?= htmlspecialchars($status) ?>" <?= $filterPaymentStatus === $status ? 'selected' : '' ?>><?= htmlspecialchars($status) ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <a href="/?page=admin&section=orders" class="text-xs text-gray-500 hover:text-gray-700 underline ml-2">Clear All</a>
         </form>
     </div>
+
+    <script>
+    // Auto-submit form when any filter changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('.filter-form');
+        const filterInputs = filterForm.querySelectorAll('input, select');
+        
+        filterInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                filterForm.submit();
+            });
+            
+            // For text inputs, also submit after a short delay when typing stops
+            if (input.type === 'text') {
+                let timeout;
+                input.addEventListener('input', function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        filterForm.submit();
+                    }, 1000); // 1 second delay after typing stops
+                });
+            }
+        });
+    });
+    </script>
     
     <?php if ($message): ?>
         <div class="mb-4 p-3 rounded text-white <?= $messageType === 'success' ? 'bg-green-500' : 'bg-red-500'; ?>">
@@ -481,8 +535,24 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                             <?php
                             $customShip = trim($order['shippingAddress'] ?? '');
                             if ($customShip !== '') {
-                                echo nl2br(htmlspecialchars($customShip));
+                                // Check if it's JSON data
+                                $jsonData = json_decode($customShip, true);
+                                if (json_last_error() === JSON_ERROR_NONE && is_array($jsonData)) {
+                                    // It's JSON - format it properly
+                                    $addrParts = array_filter([
+                                        $jsonData['addressLine1'] ?? '',
+                                        $jsonData['addressLine2'] ?? '',
+                                        ($jsonData['city'] ?? '') . (isset($jsonData['state']) ? ', ' . $jsonData['state'] : ''),
+                                        $jsonData['zipCode'] ?? ''
+                                    ]);
+                                    $fullAddress = !empty($addrParts) ? implode('<br>', array_map('htmlspecialchars', $addrParts)) : 'N/A';
+                                    echo $fullAddress;
+                                } else {
+                                    // It's plain text - display as is
+                                    echo nl2br(htmlspecialchars($customShip));
+                                }
                             } else {
+                                // Fall back to individual user address fields
                                 $addrParts = array_filter([
                                     $order['addressLine1'] ?? '',
                                     $order['addressLine2'] ?? '',
@@ -625,8 +695,24 @@ $allItems = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
                                             <?php
                                                 $customShip = trim($orderDetails['shippingAddress'] ?? '');
                                                 if ($customShip !== '') {
-                                                    echo nl2br(htmlspecialchars($customShip));
+                                                    // Check if it's JSON data
+                                                    $jsonData = json_decode($customShip, true);
+                                                    if (json_last_error() === JSON_ERROR_NONE && is_array($jsonData)) {
+                                                        // It's JSON - format it properly
+                                                        $addrParts = array_filter([
+                                                            $jsonData['addressLine1'] ?? '',
+                                                            $jsonData['addressLine2'] ?? '',
+                                                            ($jsonData['city'] ?? '') . (isset($jsonData['state']) ? ', ' . $jsonData['state'] : ''),
+                                                            $jsonData['zipCode'] ?? ''
+                                                        ]);
+                                                        $fullAddress = !empty($addrParts) ? implode('<br>', array_map('htmlspecialchars', $addrParts)) : 'N/A';
+                                                        echo $fullAddress;
+                                                    } else {
+                                                        // It's plain text - display as is
+                                                        echo nl2br(htmlspecialchars($customShip));
+                                                    }
                                                 } else {
+                                                    // Fall back to individual user address fields
                                                     $addrParts = array_filter([
                                                         $orderDetails['addressLine1'] ?? '',
                                                         $orderDetails['addressLine2'] ?? '',
@@ -1161,8 +1247,13 @@ function navigateToOrder(direction) {
         
         // Preserve any existing date filter parameters
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('start_date')) newUrl += `&start_date=${encodeURIComponent(urlParams.get('start_date'))}`;
-        if (urlParams.get('end_date')) newUrl += `&end_date=${encodeURIComponent(urlParams.get('end_date'))}`;
+                    // Preserve filter parameters when navigating between orders
+            if (urlParams.get('filter_date')) newUrl += `&filter_date=${encodeURIComponent(urlParams.get('filter_date'))}`;
+            if (urlParams.get('filter_items')) newUrl += `&filter_items=${encodeURIComponent(urlParams.get('filter_items'))}`;
+            if (urlParams.get('filter_status')) newUrl += `&filter_status=${encodeURIComponent(urlParams.get('filter_status'))}`;
+            if (urlParams.get('filter_payment_method')) newUrl += `&filter_payment_method=${encodeURIComponent(urlParams.get('filter_payment_method'))}`;
+            if (urlParams.get('filter_shipping_method')) newUrl += `&filter_shipping_method=${encodeURIComponent(urlParams.get('filter_shipping_method'))}`;
+            if (urlParams.get('filter_payment_status')) newUrl += `&filter_payment_status=${encodeURIComponent(urlParams.get('filter_payment_status'))}`;
         
         window.location.href = newUrl;
     }

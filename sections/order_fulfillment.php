@@ -300,10 +300,34 @@ $messageType = $_GET['type'] ?? '';
                 <?php endforeach; ?>
             </select>
             
-            <a href="/?page=admin&section=order_fulfillment" class="filter-clear-link">Clear</a>
-            <button type="submit" class="filter-apply-btn">Apply</button>
+            <a href="/?page=admin&section=order_fulfillment" class="text-xs text-gray-500 hover:text-gray-700 underline ml-2">Clear All</a>
         </form>
     </div>
+
+    <script>
+    // Auto-submit form when any filter changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('.filter-form');
+        const filterInputs = filterForm.querySelectorAll('input, select');
+        
+        filterInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                filterForm.submit();
+            });
+            
+            // For text inputs, also submit after a short delay when typing stops
+            if (input.type === 'text') {
+                let timeout;
+                input.addEventListener('input', function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        filterForm.submit();
+                    }, 1000); // 1 second delay after typing stops
+                });
+            }
+        });
+    });
+    </script>
     
     <?php if ($message): ?>
         <div class="mb-4 p-3 rounded text-white <?= $messageType === 'success' ? 'bg-green-500' : 'bg-red-500'; ?>">
@@ -383,8 +407,24 @@ $messageType = $_GET['type'] ?? '';
                             <?php
                             $customShip = trim($order['shippingAddress'] ?? '');
                             if ($customShip !== '') {
-                                echo nl2br(htmlspecialchars($customShip));
+                                // Check if it's JSON data
+                                $jsonData = json_decode($customShip, true);
+                                if (json_last_error() === JSON_ERROR_NONE && is_array($jsonData)) {
+                                    // It's JSON - format it properly
+                                    $addrParts = array_filter([
+                                        $jsonData['addressLine1'] ?? '',
+                                        $jsonData['addressLine2'] ?? '',
+                                        ($jsonData['city'] ?? '') . (isset($jsonData['state']) ? ', ' . $jsonData['state'] : ''),
+                                        $jsonData['zipCode'] ?? ''
+                                    ]);
+                                    $fullAddress = !empty($addrParts) ? implode('<br>', array_map('htmlspecialchars', $addrParts)) : 'N/A';
+                                    echo $fullAddress;
+                                } else {
+                                    // It's plain text - display as is
+                                    echo nl2br(htmlspecialchars($customShip));
+                                }
                             } else {
+                                // Fall back to individual user address fields
                                 $addrParts = array_filter([
                                     $order['addressLine1'] ?? '',
                                     $order['addressLine2'] ?? '',

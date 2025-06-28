@@ -387,6 +387,53 @@ try {
             echo json_encode(['success' => true, 'options' => $sizeOptions]);
             break;
             
+        case 'delete_size_by_name':
+            if (!$isAdmin) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Admin access required']);
+                exit;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            $itemSku = $data['item_sku'] ?? '';
+            $sizeName = trim($data['size_name'] ?? '');
+            
+            if (empty($itemSku) || empty($sizeName)) {
+                throw new Exception('Item SKU and size name are required');
+            }
+            
+            // Get all size records for this size name to sync stock levels afterwards
+            $sizesStmt = $pdo->prepare("SELECT DISTINCT color_id FROM item_sizes WHERE item_sku = ? AND size_name = ?");
+            $sizesStmt->execute([$itemSku, $sizeName]);
+            $affectedColorIds = $sizesStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Delete all size records for this size name
+            $stmt = $pdo->prepare("DELETE FROM item_sizes WHERE item_sku = ? AND size_name = ?");
+            $stmt->execute([$itemSku, $sizeName]);
+            $deletedCount = $stmt->rowCount();
+            
+            if ($deletedCount === 0) {
+                throw new Exception('No size records found for the specified size name');
+            }
+            
+            // Sync stock levels for affected colors
+            foreach ($affectedColorIds as $colorId) {
+                if ($colorId) {
+                    syncColorStockWithSizes($pdo, $colorId);
+                }
+            }
+            
+            // Sync total stock
+            $newTotalStock = syncTotalStockWithSizes($pdo, $itemSku);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => "Size '{$sizeName}' deleted successfully ({$deletedCount} combinations removed)",
+                'deleted_count' => $deletedCount,
+                'new_total_stock' => $newTotalStock
+            ]);
+            break;
+            
         default:
             throw new Exception('Invalid action specified');
     }

@@ -235,6 +235,7 @@ try {
                 $sizeStock = array_sum(array_column($sizeColors, 'stock_level'));
                 
                 $proposedSizes[] = [
+                    'id' => $size['id'],
                     'name' => $size['size_name'],
                     'code' => $size['size_code'],
                     'price_adjustment' => $size['price_adjustment'],

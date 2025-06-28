@@ -11373,7 +11373,10 @@ function renderSizeColorCombinations(data) {
             sizeHtml += '<span class="text-green-600 text-sm font-medium">+$' + size.price_adjustment + '</span>';
         }
         sizeHtml += '</div>';
+        sizeHtml += '<div class="flex items-center space-x-3">';
         sizeHtml += '<div class="text-sm text-gray-600"><span class="font-medium">' + sizeTotal + '</span> total stock</div>';
+        sizeHtml += '<button type="button" onclick="deleteSize(\'' + String(size.id || '').replace(/'/g, '\\\'') + '\', \'' + String(size.name || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-red-600 hover:text-red-800 transition-colors" title="Delete this entire size and all its color combinations">🗑️ Delete Size</button>';
+        sizeHtml += '</div>';
         sizeHtml += '</div>';
         
         sizeHtml += '<div class="colors-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">';
@@ -11516,6 +11519,43 @@ async function deleteCombination(colorId) {
     } catch (error) {
         console.error('Error deleting combination:', error);
         showError('Error deleting combination');
+    }
+}
+
+// Delete size (all color combinations for this size)
+async function deleteSize(sizeId, sizeName) {
+    const confirmResult = await showStyledConfirm(
+        'Delete Size',
+        `Are you sure you want to delete the "${sizeName}" size and ALL its color combinations? This action cannot be undone.`,
+        'Delete Size',
+        'Cancel'
+    );
+    
+    if (!confirmResult) return;
+    
+    try {
+        const response = await fetch('/api/item_sizes.php?action=delete_size_by_name', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                item_sku: currentItemSku,
+                size_name: sizeName 
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(`Size "${sizeName}" and all its combinations deleted successfully`);
+            loadSizeColorCombinations(); // Reload combinations
+        } else {
+            showError('Error deleting size: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting size:', error);
+        showError('Error deleting size');
     }
 }
 

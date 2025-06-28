@@ -16670,11 +16670,13 @@ async function cleanupStaleFiles() {
         'success',
         async () => {
             try {
+                showSuccess('Scanning for stale files...');
+                
                 const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files');
                 const data = await response.json();
                 
                 if (data.success) {
-                    showSuccess(data.message);
+                    showCleanupResults('🗑️ File Cleanup Results', data);
                     runSystemAnalysis(); // Refresh analysis
                 } else {
                     showError('File cleanup failed: ' + data.error);
@@ -16696,11 +16698,13 @@ async function removeUnusedCode() {
         'success',
         async () => {
             try {
+                showSuccess('Scanning code files for stale comments...');
+                
                 const response = await fetch('/api/cleanup_system.php?action=remove_unused_code');
                 const data = await response.json();
                 
                 if (data.success) {
-                    showSuccess(data.message);
+                    showCleanupResults('💬 Code Cleanup Results', data);
                     runSystemAnalysis(); // Refresh analysis
                 } else {
                     showError('Code cleanup failed: ' + data.error);
@@ -16722,11 +16726,13 @@ async function optimizeDatabase() {
         'success',
         async () => {
             try {
+                showSuccess('Starting database optimization... This may take a moment.');
+                
                 const response = await fetch('/api/cleanup_system.php?action=optimize_database');
                 const data = await response.json();
                 
                 if (data.success) {
-                    showSuccess(data.message);
+                    showDatabaseOptimizationResults(data);
                     runSystemAnalysis(); // Refresh analysis
                 } else {
                     showError('Database optimization failed: ' + data.error);
@@ -16737,6 +16743,246 @@ async function optimizeDatabase() {
             }
         }
     );
+}
+
+function showDatabaseOptimizationResults(data) {
+    const summary = data.summary;
+    const details = data.details || [];
+    const errors = data.errors || [];
+    
+    let resultsHtml = `
+        <div id="optimizationResultsModal" class="admin-modal-overlay" onclick="closeOptimizationResults()">
+            <div class="admin-modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                <div class="admin-modal-header">
+                    <h2 class="modal-title">⚡ Database Optimization Results</h2>
+                    <button onclick="closeOptimizationResults()" class="modal-close">&times;</button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                        <h4 class="font-semibold text-green-800 mb-2">✅ Optimization Summary</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="font-medium text-green-700">Tables Optimized:</span>
+                                <span class="text-green-600"> ${summary.optimized_count}/${summary.total_tables}</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-green-700">Total Time:</span>
+                                <span class="text-green-600"> ${summary.total_time_seconds}s</span>
+                            </div>`;
+    
+    if (summary.total_space_reclaimed_mb > 0) {
+        resultsHtml += `
+                            <div>
+                                <span class="font-medium text-green-700">Space Reclaimed:</span>
+                                <span class="text-green-600"> ${summary.total_space_reclaimed_mb}MB</span>
+                            </div>`;
+    }
+    
+    resultsHtml += `
+                        </div>
+                    </div>`;
+    
+    if (details.length > 0) {
+        resultsHtml += `
+                    <div class="mb-4">
+                        <h5 class="font-semibold text-gray-800 mb-3">📊 Table Details</h5>
+                        <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left">Table</th>
+                                        <th class="px-3 py-2 text-left">Rows</th>
+                                        <th class="px-3 py-2 text-left">Size</th>
+                                        <th class="px-3 py-2 text-left">Time</th>
+                                        <th class="px-3 py-2 text-left">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+        
+        details.forEach(detail => {
+            const rowClass = detail.status === 'OK' || detail.status.includes('OK') ? 'text-green-600' : 'text-yellow-600';
+            resultsHtml += `
+                                    <tr class="border-t border-gray-100">
+                                        <td class="px-3 py-2 font-medium">${detail.table}</td>
+                                        <td class="px-3 py-2">${detail.rows.toLocaleString()}</td>
+                                        <td class="px-3 py-2">${detail.size_mb}MB</td>
+                                        <td class="px-3 py-2">${detail.time_seconds}s</td>
+                                        <td class="px-3 py-2 ${rowClass}">${detail.status}</td>
+                                    </tr>`;
+        });
+        
+        resultsHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+    }
+    
+    if (errors.length > 0) {
+        resultsHtml += `
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200 mb-4">
+                        <h5 class="font-semibold text-red-800 mb-2">⚠️ Errors (${errors.length})</h5>
+                        <div class="space-y-2">`;
+        
+        errors.forEach(error => {
+            resultsHtml += `
+                            <div class="text-sm">
+                                <span class="font-medium text-red-700">${error.table}:</span>
+                                <span class="text-red-600"> ${error.error}</span>
+                            </div>`;
+        });
+        
+        resultsHtml += `
+                        </div>
+                    </div>`;
+    }
+    
+    resultsHtml += `
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <p class="text-sm text-blue-700">
+                            <strong>What happened:</strong> MySQL OPTIMIZE TABLE reclaims unused space, defragments data, 
+                            and updates table statistics. This improves query performance and reduces storage usage.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button onclick="closeOptimizationResults()" class="modal-button btn-primary">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', resultsHtml);
+    
+    // Also show a summary notification
+    showSuccess(data.message);
+}
+
+function closeOptimizationResults() {
+    const modal = document.getElementById('optimizationResultsModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function showCleanupResults(title, data) {
+    const removedFiles = data.removed_files || [];
+    const processedFiles = data.processed_files || [];
+    const errors = data.errors || [];
+    
+    let resultsHtml = `
+        <div id="cleanupResultsModal" class="admin-modal-overlay" onclick="closeCleanupResults()">
+            <div class="admin-modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                <div class="admin-modal-header">
+                    <h2 class="modal-title">${title}</h2>
+                    <button onclick="closeCleanupResults()" class="modal-close">&times;</button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                        <h4 class="font-semibold text-green-800 mb-2">✅ Cleanup Summary</h4>
+                        <p class="text-green-700">${data.message}</p>
+                    </div>`;
+    
+    if (removedFiles.length > 0) {
+        resultsHtml += `
+                    <div class="mb-4">
+                        <h5 class="font-semibold text-gray-800 mb-3">🗑️ Files Removed (${removedFiles.length})</h5>
+                        <div class="max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-lg border">
+                            <div class="space-y-1">`;
+        
+        removedFiles.forEach(file => {
+            resultsHtml += `
+                                <div class="text-sm text-gray-700 font-mono">• ${file}</div>`;
+        });
+        
+        resultsHtml += `
+                            </div>
+                        </div>
+                    </div>`;
+    }
+    
+    if (processedFiles.length > 0) {
+        resultsHtml += `
+                    <div class="mb-4">
+                        <h5 class="font-semibold text-gray-800 mb-3">📝 Files Processed (${processedFiles.length})</h5>
+                        <div class="max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-lg border">
+                            <div class="space-y-1">`;
+        
+        processedFiles.forEach(file => {
+            resultsHtml += `
+                                <div class="text-sm text-gray-700 font-mono">• ${file}</div>`;
+        });
+        
+        resultsHtml += `
+                            </div>
+                        </div>
+                    </div>`;
+    }
+    
+    if (errors.length > 0) {
+        resultsHtml += `
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200 mb-4">
+                        <h5 class="font-semibold text-red-800 mb-2">⚠️ Errors (${errors.length})</h5>
+                        <div class="space-y-2">`;
+        
+        errors.forEach(error => {
+            const target = error.file || error.table || 'Unknown';
+            resultsHtml += `
+                            <div class="text-sm">
+                                <span class="font-medium text-red-700">${target}:</span>
+                                <span class="text-red-600"> ${error.error}</span>
+                            </div>`;
+        });
+        
+        resultsHtml += `
+                        </div>
+                    </div>`;
+    }
+    
+    if (removedFiles.length === 0 && processedFiles.length === 0) {
+        resultsHtml += `
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+                        <p class="text-blue-700">
+                            ℹ️ No files needed cleanup. Your system is already clean!
+                        </p>
+                    </div>`;
+    }
+    
+    resultsHtml += `
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-600">
+                            <strong>What happened:</strong> ${title.includes('File') ? 
+                                'Removed backup files, temporary files, and other safe-to-delete files to free up server space.' :
+                                'Cleaned stale comments (TODO, FIXME, DEBUG) from code files. No actual code was modified.'}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button onclick="closeCleanupResults()" class="modal-button btn-primary">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', resultsHtml);
+    
+    // Also show a summary notification
+    showSuccess(data.message);
+}
+
+function closeCleanupResults() {
+    const modal = document.getElementById('cleanupResultsModal');
+    if (modal) {
+        modal.remove();
+    }
 }
 
 // Add btn-danger CSS class if not already defined

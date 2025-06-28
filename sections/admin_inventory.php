@@ -8958,7 +8958,11 @@ async function loadAvailableImages() {
                 imgContainer.onclick = () => selectImageFromGrid(image.image_path);
                 
                 const img = document.createElement('img');
-                img.src = `/images/items/${image.image_path}`;
+                // Handle image path - don't double up the /images/items/ prefix
+                const imageSrc = image.image_path.startsWith('/images/items/') || image.image_path.startsWith('images/items/') 
+                    ? image.image_path 
+                    : `/images/items/${image.image_path}`;
+                img.src = imageSrc;
                 img.alt = image.image_path;
                 img.className = 'w-full h-20 object-cover rounded border border-gray-200 hover:border-green-400 transition-colors';
                 img.onerror = () => {
@@ -9023,15 +9027,18 @@ function updateImagePreview() {
     const selectedImagePath = hiddenInput.value;
     
     if (selectedImagePath) {
-        // Show preview
-        imagePreview.src = `/images/items/${selectedImagePath}`;
+        // Show preview - handle image path correctly
+        const previewSrc = selectedImagePath.startsWith('/images/items/') || selectedImagePath.startsWith('images/items/') 
+            ? selectedImagePath 
+            : `/images/items/${selectedImagePath}`;
+        imagePreview.src = previewSrc;
         imagePreview.onerror = () => {
             imagePreview.style.display = 'none';
             imagePreview.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:3rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.9rem;font-weight:500;">No Image Available</div></div>';
         };
         
         imagePreviewName.textContent = selectedImagePath;
-        imagePreviewPath.textContent = `/images/items/${selectedImagePath}`;
+        imagePreviewPath.textContent = previewSrc;
         
         imagePreviewContainer.classList.remove('hidden');
     } else {

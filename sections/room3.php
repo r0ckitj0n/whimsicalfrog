@@ -67,11 +67,8 @@ echo renderGlobalPopupCSS();
     $roomHelper->renderProductIcons()
 ); ?>
 
-<!-- Include Global Popup, Quantity Modal, and Item Details Modal -->
+<!-- Include Quantity Modal and Item Details Modal -->
 <?php 
-require_once __DIR__ . '/../components/global_popup.php';
-echo renderGlobalPopup();
-echo renderGlobalPopupCSS();
 include __DIR__ . '/../components/quantity_modal.php';
 
 // Include item details modal for yesterday's behavior
@@ -309,12 +306,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Extract the product data from the onmouseenter attribute
                 const match = onMouseEnterAttr.match(/showGlobalPopup\(this,\s*(.+)\)/);
                 if (match) {
-                    try {
-                        // Decode HTML entities and parse JSON
-                        const jsonString = match[1].replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-                        const productData = JSON.parse(jsonString);
-                        
-                        console.log(`Setting up popup for product ${index + 1}:`, productData.sku);
+                                            try {
+                            // Decode HTML entities and parse JSON
+                            const jsonString = match[1].replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+                            const productData = JSON.parse(jsonString);
+                            
+                            console.log(`Setting up popup for product ${index + 1}:`, productData.sku);
+                            console.log('Product data parsed:', productData);
                         
                         // Remove existing event listeners by cloning the element
                         const newIcon = icon.cloneNode(true);
@@ -322,7 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Add fresh event listeners
                         newIcon.addEventListener('mouseenter', function(e) {
-                            console.log('Mouse enter on product:', productData.sku);
                             if (typeof window.showGlobalPopup === 'function') {
                                 window.showGlobalPopup(this, productData);
                             } else {
@@ -331,7 +328,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         
                         newIcon.addEventListener('mouseleave', function(e) {
-                            console.log('Mouse leave on product:', productData.sku);
                             if (typeof window.hideGlobalPopup === 'function') {
                                 window.hideGlobalPopup();
                             } else {
@@ -340,7 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         
                         newIcon.addEventListener('click', function(e) {
-                            console.log('Click on product:', productData.sku);
                             if (typeof window.showGlobalPopup === 'function') {
                                 window.showGlobalPopup(this, productData);
                             } else {

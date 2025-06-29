@@ -67,11 +67,8 @@ echo renderGlobalPopupCSS();
     $roomHelper->renderProductIcons()
 ); ?>
 
-<!-- Include Global Popup, Quantity Modal, and Item Details Modal -->
+<!-- Include Quantity Modal and Item Details Modal -->
 <?php 
-require_once __DIR__ . '/../components/global_popup.php';
-echo renderGlobalPopup();
-echo renderGlobalPopupCSS();
 include __DIR__ . '/../components/quantity_modal.php';
 
 // Include item details modal for yesterday's behavior
@@ -323,29 +320,43 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Add fresh event listeners
                         newIcon.addEventListener('mouseenter', function(e) {
-                            console.log('Mouse enter on product:', productData.sku);
-                            if (typeof window.showGlobalPopup === 'function') {
-                                window.showGlobalPopup(this, productData);
-                            } else {
-                                console.error('showGlobalPopup function not available');
+                            try {
+                                console.log('Mouse enter on product:', productData.sku);
+                                console.log('typeof window.showGlobalPopup:', typeof window.showGlobalPopup);
+                                if (typeof window.showGlobalPopup === 'function') {
+                                    console.log('Calling window.showGlobalPopup...');
+                                    window.showGlobalPopup(this, productData);
+                                } else {
+                                    console.error('showGlobalPopup function not available. Type:', typeof window.showGlobalPopup);
+                                }
+                            } catch (error) {
+                                console.error('Error in mouseenter event:', error);
                             }
                         });
                         
                         newIcon.addEventListener('mouseleave', function(e) {
-                            console.log('Mouse leave on product:', productData.sku);
-                            if (typeof window.hideGlobalPopup === 'function') {
-                                window.hideGlobalPopup();
-                            } else {
-                                console.error('hideGlobalPopup function not available');
+                            try {
+                                console.log('Mouse leave on product:', productData.sku);
+                                if (typeof window.hideGlobalPopup === 'function') {
+                                    console.log('Calling window.hideGlobalPopup...');
+                                    window.hideGlobalPopup();
+                                } else {
+                                    console.error('hideGlobalPopup function not available');
+                                }
+                            } catch (error) {
+                                console.error('Error in mouseleave event:', error);
                             }
                         });
                         
                         newIcon.addEventListener('click', function(e) {
                             console.log('Click on product:', productData.sku);
+                            console.log('showGlobalPopup available:', typeof window.showGlobalPopup);
+                            console.log('Popup element exists:', !!document.getElementById('productPopup'));
                             if (typeof window.showGlobalPopup === 'function') {
+                                console.log('Calling showGlobalPopup on click...');
                                 window.showGlobalPopup(this, productData);
                             } else {
-                                console.error('showGlobalPopup function not available');
+                                console.error('showGlobalPopup function not available on click');
                             }
                         });
                         

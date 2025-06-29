@@ -3,6 +3,18 @@
  * Provides unified popup functionality across all pages
  */
 
+console.log('Loading global-popup.js...');
+
+// Immediately define placeholder functions to prevent timing issues
+window.showGlobalPopup = window.showGlobalPopup || function() { console.log('showGlobalPopup placeholder called'); };
+window.hideGlobalPopup = window.hideGlobalPopup || function() { console.log('hideGlobalPopup placeholder called'); };
+
+// Initialize global variables like original cart.js
+window.globalPopupTimeout = null;
+window.isShowingPopup = false;
+window.popupOpen = false;
+window.currentProduct = null;
+
 // Global popup state
 window.globalPopupState = {
     currentProduct: null,
@@ -13,74 +25,243 @@ window.globalPopupState = {
 };
 
 /**
- * Show product popup
+ * Show product popup - REAL FUNCTION (replaces placeholder)
  * @param {HTMLElement} element - The element that triggered the popup
  * @param {Object} product - Product data object
  */
 window.showGlobalPopup = function(element, product) {
-    const now = Date.now();
+    console.log('showGlobalPopup called with:', element, product);
     
-    // Debounce rapid calls - reduced for better responsiveness
-    if (now - window.globalPopupState.lastShowTime < 25) {
-        return;
-    }
-    window.globalPopupState.lastShowTime = now;
+    // Clear any existing timeout
+    clearTimeout(window.globalPopupTimeout);
     
-    // Prevent rapid re-triggering of same popup
-    if (window.globalPopupState.currentProduct && 
-        window.globalPopupState.currentProduct.sku === product.sku && 
-        window.globalPopupState.isShowingPopup) {
-        clearTimeout(window.globalPopupState.popupTimeout);
-        return;
-    }
-    
-    clearTimeout(window.globalPopupState.popupTimeout);
-    window.globalPopupState.currentProduct = product;
-    window.globalPopupState.isShowingPopup = true;
-    window.globalPopupState.popupOpen = true;
-
     const popup = document.getElementById('productPopup');
     if (!popup) {
-        console.error('Global popup element not found');
+        console.error('Popup element not found!');
         return;
     }
+    
+    // Don't show popup if already showing
+    if (window.isShowingPopup && window.popupOpen) return;
+    
+    window.isShowingPopup = true;
+    window.popupOpen = true;
+    window.currentProduct = product;
+    
+    // Update popup content using correct selectors from the HTML
+    const popupImage = popup.querySelector('#popupImage');
+    const popupTitle = popup.querySelector('#popupTitle');
+    const popupCategory = popup.querySelector('#popupCategory');
+    const popupSku = popup.querySelector('#popupSku');
+    const popupStock = popup.querySelector('#popupStock');
+    const popupCurrentPrice = popup.querySelector('#popupCurrentPrice');
+    const popupDescription = popup.querySelector('#popupDescription');
+    const popupAddBtn = popup.querySelector('#popupAddBtn');
+    
+    console.log('Found popup elements:', {
+        image: !!popupImage,
+        title: !!popupTitle,
+        price: !!popupCurrentPrice,
+        description: !!popupDescription,
+        addBtn: !!popupAddBtn
+    });
+    
+    if (popupImage) {
+        // Try .webp first (most common format), then .png
+        popupImage.src = `images/items/${product.sku}A.webp`;
+        popupImage.onerror = function() {
+            // Try .png if .webp fails
+            this.src = `images/items/${product.sku}A.png`;
+            this.onerror = function() {
+                // Finally fall back to placeholder
+                this.src = 'images/items/placeholder.webp';
+                this.onerror = null;
+            };
+        };
+    }
+    
+    if (popupTitle) {
+        popupTitle.textContent = product.name || product.productName || 'Product';
+    }
+    
+    if (popupCategory) {
+        popupCategory.textContent = product.category || 'Product';
+    }
+    
+    if (popupSku) {
+        popupSku.textContent = `SKU: ${product.sku}`;
+    }
+    
+    if (popupStock) {
+        const stockLevel = parseInt(product.stockLevel || product.stock || 0);
+        if (stockLevel <= 0) {
+            popupStock.textContent = 'Out of Stock';
+            popupStock.className = 'popup-stock-info out-of-stock';
+        } else if (stockLevel <= 5) {
+            popupStock.textContent = `${stockLevel} Left`;
+            popupStock.className = 'popup-stock-info limited-stock';
+        } else {
+            popupStock.textContent = 'In Stock';
+            popupStock.className = 'popup-stock-info in-stock';
+        }
+    }
+    
+    if (popupCurrentPrice) {
+        // Check for sales and update pricing
+        if (typeof window.checkAndDisplaySalePrice === 'function') {
+            window.checkAndDisplaySalePrice(product, popupCurrentPrice);
+        } else {
+            popupCurrentPrice.textContent = `$${parseFloat(product.retailPrice || product.price || 0).toFixed(2)}`;
+        }
+    }
+    
+    if (popupDescription) {
+        popupDescription.textContent = product.description || '';
+    }
+    
+    // Position and show popup
+    positionPopup(element, popup);
+    
+    // Set up button handlers
+    if (popupAddBtn) {
+        popupAddBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            popup.classList.remove('show');
+            
+            if (typeof window.showItemDetailsModal === 'function') {
+                window.showItemDetailsModal(product.sku);
+            }
+        };
+    }
+    
+    console.log('Popup should now be visible with show class:', popup.classList.contains('show'));
+};
 
-    // Update popup content
-    updateGlobalPopupContent(popup, product);
+/**
+ * Original cart.js positioning function
+ */
+window.positionPopup = function(element, popup) {
+    console.log('Positioning popup...', element, popup);
     
-    // Position popup relative to the element
-    positionGlobalPopup(popup, element);
+    const rect = element.getBoundingClientRect();
+    const roomContainer = element.closest('.room-container') || document.body;
+    const containerRect = roomContainer.getBoundingClientRect();
+
+    let left = rect.left - containerRect.left + rect.width + 10;
+    let top = rect.top - containerRect.top - 50;
+
+    console.log('Initial position calculations:', { left, top, rectLeft: rect.left, rectTop: rect.top });
+
+    // Show popup temporarily to get actual dimensions
+    popup.style.display = 'block';
+    popup.style.visibility = 'visible';
+    popup.style.opacity = '1';
+    popup.classList.add('show');
+
+    const popupRect = popup.getBoundingClientRect();
+    const popupWidth = popupRect.width;
+    const popupHeight = popupRect.height;
     
-    // Show popup with transition
+    console.log('Popup dimensions:', { width: popupWidth, height: popupHeight });
+
+    // Adjust if popup would go off screen horizontally
+    if (left + popupWidth > window.innerWidth) {
+        left = rect.left - popupWidth - 10;
+        console.log('Adjusted left for screen bounds:', left);
+    }
+    
+    // Adjust if popup would go off screen vertically (top)
+    if (top < 0) {
+        top = rect.top + rect.height + 10;
+        console.log('Adjusted top for screen bounds:', top);
+    }
+    
+    // Adjust if popup would go off screen vertically (bottom)
+    if (top + popupHeight > window.innerHeight) {
+        const topAbove = rect.top - popupHeight - 10;
+        if (topAbove >= 0) {
+            top = topAbove;
+        } else {
+            top = window.innerHeight - popupHeight - 20;
+            if (top < 0) {
+                top = 10;
+            }
+        }
+        console.log('Adjusted top for bottom bounds:', top);
+    }
+
+    // Set final position with force visibility
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    popup.style.position = 'fixed';
+    popup.style.zIndex = '9999';
+    popup.style.display = 'block !important';
+    popup.style.visibility = 'visible !important';
+    popup.style.opacity = '1 !important';
+    popup.style.transform = 'translateY(0) !important';
+    popup.style.pointerEvents = 'auto';
     popup.classList.add('show');
     
-    // Set up event handlers
-    setupGlobalPopupHandlers(popup, product);
-};
-
-/**
- * Hide popup with delay for mouse movement
- */
-window.hideGlobalPopup = function() {
-    clearTimeout(window.globalPopupState.popupTimeout);
+    // Force a layout recalculation
+    popup.offsetHeight;
     
-    window.globalPopupState.popupTimeout = setTimeout(() => {
-        hideGlobalPopupImmediate();
-    }, 100);
-};
-
-/**
- * Hide popup immediately
- */
-window.hideGlobalPopupImmediate = function() {
-    const popup = document.getElementById('productPopup');
-    if (popup && popup.classList.contains('show')) {
-        popup.classList.remove('show');
-        window.globalPopupState.currentProduct = null;
-        window.globalPopupState.popupOpen = false;
-        window.globalPopupState.isShowingPopup = false;
+    console.log('Final popup position:', { 
+        left, 
+        top, 
+        display: popup.style.display, 
+        visibility: popup.style.visibility, 
+        opacity: popup.style.opacity, 
+        hasShowClass: popup.classList.contains('show'),
+        computed: getComputedStyle(popup).display,
+        zIndex: popup.style.zIndex
+    });
+    
+    // Double-check that the popup is visible in the DOM
+    const rect = popup.getBoundingClientRect();
+    console.log('Popup getBoundingClientRect:', rect);
+    
+    if (rect.width === 0 || rect.height === 0) {
+        console.error('Popup has zero dimensions!');
+    }
+    
+    if (rect.left < -window.innerWidth || rect.top < -window.innerHeight || rect.left > window.innerWidth || rect.top > window.innerHeight) {
+        console.warn('Popup might be positioned off-screen:', rect);
     }
 };
+
+/**
+ * Hide popup with delay for mouse movement - REAL FUNCTION (replaces placeholder)
+ */
+window.hideGlobalPopup = function() {
+    console.log('hideGlobalPopup called');
+    clearTimeout(window.globalPopupTimeout);
+    
+    window.globalPopupTimeout = setTimeout(() => {
+        hidePopupImmediate();
+    }, 200);
+};
+
+/**
+ * Hide popup immediately - original cart.js style
+ */
+window.hidePopupImmediate = function() {
+    console.log('hidePopupImmediate called');
+    const popup = document.getElementById('productPopup');
+    if (popup) {
+        popup.classList.remove('show');
+        popup.style.display = 'none';
+        popup.style.visibility = 'hidden';
+        popup.style.opacity = '0';
+        window.currentProduct = null;
+        window.popupOpen = false;
+        window.isShowingPopup = false;
+        console.log('Popup hidden');
+    }
+};
+
+// Alias for compatibility
+window.hideGlobalPopupImmediate = window.hidePopupImmediate;
 
 /**
  * Update popup content with product data
@@ -357,20 +538,22 @@ function setupGlobalPopupHandlers(popup, product) {
 }
 
 /**
- * Initialize global popup system
+ * Initialize global popup system - original cart.js style
  */
 function initializeGlobalPopup() {
+    console.log('Initializing global popup system...');
     const popup = document.getElementById('productPopup');
     if (!popup) {
         console.warn('Global popup element not found');
         return;
     }
+    console.log('Global popup element found:', popup);
 
     // Keep popup visible when hovering over it
     popup.addEventListener('mouseenter', () => {
-        clearTimeout(window.globalPopupState.popupTimeout);
-        window.globalPopupState.isShowingPopup = true;
-        window.globalPopupState.popupOpen = true;
+        clearTimeout(window.globalPopupTimeout);
+        window.isShowingPopup = true;
+        window.popupOpen = true;
     });
 
     popup.addEventListener('mouseleave', () => {
@@ -382,7 +565,7 @@ function initializeGlobalPopup() {
         if (popup.classList.contains('show') && 
             !popup.contains(e.target) && 
             !e.target.closest('.product-icon')) {
-            hideGlobalPopupImmediate();
+            window.hidePopupImmediate();
         }
     });
 }
@@ -397,4 +580,46 @@ if (document.readyState === 'loading') {
 // Backward compatibility aliases
 window.showPopup = window.showGlobalPopup;
 window.hidePopup = window.hideGlobalPopup;
-window.hidePopupImmediate = window.hideGlobalPopupImmediate; 
+window.hidePopupImmediate = window.hideGlobalPopupImmediate;
+
+console.log('Global popup functions attached to window:');
+console.log('- showGlobalPopup:', typeof window.showGlobalPopup);
+console.log('- hideGlobalPopup:', typeof window.hideGlobalPopup);
+console.log('- initializeGlobalPopup executed');
+
+// Add a test function to manually verify popup works
+window.testPopup = function() {
+    console.log('Testing popup manually...');
+    const popup = document.getElementById('productPopup');
+    if (popup) {
+        const testProduct = {
+            sku: 'TEST-001',
+            name: 'Test Product',
+            category: 'Test',
+            retailPrice: '19.99',
+            description: 'This is a test popup',
+            stockLevel: 5
+        };
+        
+        // Create a fake element to position from
+        const fakeElement = document.createElement('div');
+        fakeElement.style.position = 'fixed';
+        fakeElement.style.left = '100px';
+        fakeElement.style.top = '100px';
+        fakeElement.style.width = '20px';
+        fakeElement.style.height = '20px';
+        document.body.appendChild(fakeElement);
+        
+        window.showGlobalPopup(fakeElement, testProduct);
+        
+        // Clean up after 3 seconds
+        setTimeout(() => {
+            document.body.removeChild(fakeElement);
+            window.hideGlobalPopup();
+        }, 3000);
+    } else {
+        console.error('Popup element not found for test');
+    }
+};
+
+console.log('Test function available: window.testPopup()'); 

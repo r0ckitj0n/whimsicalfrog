@@ -19,7 +19,7 @@ function renderDetailedProductModal($item, $images = []) {
     }
     
     // Get selling points for this item
-    $sellingPoints = getSellingPoints($item['sku']);
+    $sellingPoints = getSellingPoints($item['sku'] ?? '');
     
     ?>
     <div id="detailedProductModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4" onclick="closeDetailedModalOnOverlay(event)">
@@ -57,12 +57,12 @@ function renderDetailedProductModal($item, $images = []) {
                                     <?php if (!empty($images)): ?>
                                         <img id="detailedMainImage" 
                                              src="<?php echo htmlspecialchars($images[0]['image_path']); ?>" 
-                                             alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
                                              class="w-full h-full object-contain">
                                     <?php else: ?>
                                         <img id="detailedMainImage" 
                                              src="images/items/placeholder.webp" 
-                                             alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>"
                                              class="w-full h-full object-contain">
                                     <?php endif; ?>
                                     
@@ -82,7 +82,7 @@ function renderDetailedProductModal($item, $images = []) {
                                 <div class="flex-shrink-0 w-16 h-16 border-2 <?php echo $index === 0 ? 'border-green-500' : 'border-gray-200'; ?> rounded cursor-pointer hover:border-green-400 transition-colors"
                                      onclick="switchDetailedImage('<?php echo htmlspecialchars($image['image_path']); ?>')">
                                     <img src="<?php echo htmlspecialchars($image['image_path']); ?>" 
-                                         alt="<?php echo htmlspecialchars($item['name']); ?> - Image <?php echo $index + 1; ?>"
+                                         alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?> - Image <?php echo $index + 1; ?>"
                                          class="w-full h-full object-contain rounded">
                                 </div>
                                 <?php endforeach; ?>
@@ -95,14 +95,14 @@ function renderDetailedProductModal($item, $images = []) {
                             <!-- Header -->
                             <div>
                                 <div class="text-xs text-gray-500 mb-1">
-                                    <?php echo htmlspecialchars($item['category'] ?? 'Product'); ?> • SKU: <?php echo htmlspecialchars($item['sku']); ?>
+                                    <?php echo htmlspecialchars($item['category'] ?? 'Product'); ?> • SKU: <?php echo htmlspecialchars($item['sku'] ?? 'N/A'); ?>
                                 </div>
-                                <h2 class="text-xl font-bold text-gray-900 mb-2"><?php echo htmlspecialchars($item['name']); ?></h2>
+                                <h2 class="text-xl font-bold text-gray-900 mb-2"><?php echo htmlspecialchars($item['name'] ?? 'Product Name'); ?></h2>
                                 
                                 <!-- Price Section -->
                                 <div id="detailedPriceSection" class="flex items-center space-x-2 mb-3">
                                     <span id="detailedCurrentPrice" class="text-xl font-bold text-green-600">
-                                        $<?php echo number_format($item['retailPrice'], 2); ?>
+                                        $<?php echo number_format($item['retailPrice'] ?? 0, 2); ?>
                                     </span>
                                     <span id="detailedOriginalPrice" class="text-sm text-gray-500 line-through hidden"></span>
                                     <span id="detailedSavings" class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hidden"></span>
@@ -110,12 +110,12 @@ function renderDetailedProductModal($item, $images = []) {
                                 
                                 <!-- Stock Status -->
                                 <div class="flex items-center space-x-2 mb-3">
-                                    <?php if ($item['stockLevel'] > 0): ?>
+                                    <?php if (($item['stockLevel'] ?? 0) > 0): ?>
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                             </svg>
-                                            In Stock (<?php echo $item['stockLevel']; ?> available)
+                                            In Stock (<?php echo $item['stockLevel'] ?? 0; ?> available)
                                         </span>
                                     <?php else: ?>
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -185,7 +185,7 @@ function renderDetailedProductModal($item, $images = []) {
                                 </div>
                                 
                                                             <!-- Add to Cart Button -->
-                        <button onclick="addDetailedToCart('<?php echo htmlspecialchars($item['sku']); ?>')" 
+                        <button onclick="addDetailedToCart('<?php echo htmlspecialchars($item['sku'] ?? ''); ?>')" 
                                 class="wf-add-to-cart-btn w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13h10m-10 0v6a1 1 0 001 1h8a1 1 0 001-1v-6m-9 0h9"></path>

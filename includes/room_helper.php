@@ -219,7 +219,6 @@ class RoomHelper {
     public function renderJavaScript() {
         return "
         <!-- Room-specific JavaScript -->
-        <script src=\"js/room-functionality.js?v=" . time() . "\"></script>
         <script>
         // Set room-specific data
         window.roomItems = " . json_encode($this->roomItems) . ";

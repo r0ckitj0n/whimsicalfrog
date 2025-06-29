@@ -72,8 +72,6 @@ echo renderGlobalPopupCSS();
 
 <!-- Load centralized room functions and cart functionality -->
 <script src="js/room-functions.js?v=<?php echo time(); ?>"></script>
-<script src="js/cart.js?v=<?php echo time(); ?>"></script>
-<script src="js/sales.js?v=<?php echo time(); ?>"></script>
 <script src="js/global-popup.js?v=<?php echo time(); ?>"></script>
 <script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>
 

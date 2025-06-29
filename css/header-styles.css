@@ -211,7 +211,10 @@ html body .site-header .header-container .header-content .header-center .search-
 #headerSearchInput,
 input#headerSearchInput,
 .main-nav input#headerSearchInput,
-nav input#headerSearchInput {
+nav input#headerSearchInput,
+input[id="headerSearchInput"],
+html body nav input#headerSearchInput,
+html body input#headerSearchInput {
     background: transparent !important;
     background-color: transparent !important;
     border: 2px solid #87ac3a !important;
@@ -224,7 +227,10 @@ nav input#headerSearchInput {
 #headerSearchInput::placeholder,
 input#headerSearchInput::placeholder,
 .main-nav input#headerSearchInput::placeholder,
-nav input#headerSearchInput::placeholder {
+nav input#headerSearchInput::placeholder,
+input[id="headerSearchInput"]::placeholder,
+html body nav input#headerSearchInput::placeholder,
+html body input#headerSearchInput::placeholder {
     color: rgba(135, 172, 58, 0.8) !important;
     opacity: 1 !important;
 }
@@ -232,7 +238,10 @@ nav input#headerSearchInput::placeholder {
 #headerSearchInput:focus,
 input#headerSearchInput:focus,
 .main-nav input#headerSearchInput:focus,
-nav input#headerSearchInput:focus {
+nav input#headerSearchInput:focus,
+input[id="headerSearchInput"]:focus,
+html body nav input#headerSearchInput:focus,
+html body input#headerSearchInput:focus {
     border-color: #6b8e23 !important;
     outline: none !important;
     box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.1) !important;

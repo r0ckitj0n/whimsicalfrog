@@ -451,7 +451,7 @@ $seoData = generatePageSEO($page, $currentSku);
             <div class="flex-grow flex justify-center">
                 <div class="relative max-w-md w-full mx-4">
                     <input type="text" id="headerSearchInput" placeholder="Search products..." 
-                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 border-[#87ac3a] rounded-full text-[#87ac3a] placeholder-white focus:outline-none focus:ring-2 focus:ring-[#87ac3a] transition-all duration-200">
+                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 border-[#87ac3a] rounded-full text-[#87ac3a] placeholder-[#87ac3a] placeholder-opacity-80 focus:outline-none focus:ring-2 focus:ring-[#87ac3a] transition-all duration-200">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-4 w-4 text-[#87ac3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>

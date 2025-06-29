@@ -284,11 +284,23 @@ function setupGlobalPopupHandlers(popup, product) {
             hideGlobalPopupImmediate();
             
             // Open item details modal like yesterday
+            console.log('Add to Cart clicked - trying to open item details modal for:', product.sku);
+            console.log('showItemDetailsModal function available:', typeof window.showItemDetailsModal);
+            
             if (typeof window.showItemDetailsModal === 'function') {
+                console.log('Calling window.showItemDetailsModal');
                 window.showItemDetailsModal(product.sku);
             } else {
-                console.log('Opening item details for:', product.sku);
-                showItemDetailsModal(product.sku);
+                console.error('showItemDetailsModal function not available! Available functions:');
+                console.log('Available window functions:', Object.keys(window).filter(key => key.includes('show')));
+                
+                // Try fallback
+                if (typeof showItemDetailsModal === 'function') {
+                    console.log('Using local showItemDetailsModal function');
+                    showItemDetailsModal(product.sku);
+                } else {
+                    console.error('No showItemDetailsModal function found at all!');
+                }
             }
         };
         
@@ -322,11 +334,23 @@ function setupGlobalPopupHandlers(popup, product) {
             hideGlobalPopupImmediate();
             
             // Open item details modal like yesterday
+            console.log('Popup content clicked - trying to open item details modal for:', product.sku);
+            console.log('showItemDetailsModal function available:', typeof window.showItemDetailsModal);
+            
             if (typeof window.showItemDetailsModal === 'function') {
+                console.log('Calling window.showItemDetailsModal');
                 window.showItemDetailsModal(product.sku);
             } else {
-                console.log('Opening item details for:', product.sku);
-                showItemDetailsModal(product.sku);
+                console.error('showItemDetailsModal function not available! Available functions:');
+                console.log('Available window functions:', Object.keys(window).filter(key => key.includes('show')));
+                
+                // Try fallback
+                if (typeof showItemDetailsModal === 'function') {
+                    console.log('Using local showItemDetailsModal function');
+                    showItemDetailsModal(product.sku);
+                } else {
+                    console.error('No showItemDetailsModal function found at all!');
+                }
             }
         };
     }

@@ -92,7 +92,7 @@ const ROOM_TYPE = <?php echo json_encode($roomHelper->getRoomType()); ?>;
 console.log('Room 5 (Sublimation) loaded with <?php echo count($roomHelper->getRoomItems()); ?> items');
 
 // Item Details Modal functionality - like yesterday's behavior
-async function showItemDetailsModal(sku) {
+window.showItemDetailsModal = async function(sku) {
     try {
         console.log('Opening item details modal for SKU:', sku);
         
@@ -119,7 +119,7 @@ async function showItemDetailsModal(sku) {
     } catch (error) {
         console.error('Error opening item details modal:', error);
     }
-}
+};
 
 // Function to update detailed modal content
 function updateDetailedModalContent(item, images) {

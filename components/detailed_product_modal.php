@@ -159,7 +159,7 @@ function renderDetailedProductModal($item, $images = []) {
                             </div>
                             
                             <!-- Quantity and Add to Cart -->
-                            <?php if ($item['stockLevel'] > 0): ?>
+                            <?php if (($item['stockLevel'] ?? 0) > 0): ?>
                             <div class="space-y-3 border-t pt-3">
                                 <!-- Quantity Selector -->
                                 <div class="flex items-center space-x-3">
@@ -174,7 +174,7 @@ function renderDetailedProductModal($item, $images = []) {
                                                id="detailedQuantity" 
                                                value="1" 
                                                min="1" 
-                                               max="<?php echo $item['stockLevel']; ?>"
+                                               max="<?php echo $item['stockLevel'] ?? 1; ?>"
                                                class="w-16 text-center border border-gray-300 rounded py-1 text-sm">
                                         <button onclick="adjustDetailedQuantity(1)" class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

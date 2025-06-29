@@ -20,8 +20,8 @@ window.globalPopupState = {
 window.showGlobalPopup = function(element, product) {
     const now = Date.now();
     
-    // Debounce rapid calls
-    if (now - window.globalPopupState.lastShowTime < 50) {
+    // Debounce rapid calls - reduced for better responsiveness
+    if (now - window.globalPopupState.lastShowTime < 25) {
         return;
     }
     window.globalPopupState.lastShowTime = now;
@@ -66,7 +66,7 @@ window.hideGlobalPopup = function() {
     
     window.globalPopupState.popupTimeout = setTimeout(() => {
         hideGlobalPopupImmediate();
-    }, 150);
+    }, 100);
 };
 
 /**
@@ -103,13 +103,41 @@ function updateGlobalPopupContent(popup, product) {
     // Get the image URL with fallback
     const imageUrl = product.primaryImageUrl || product.imageUrl || `images/items/${product.sku}A.png`;
 
-    // Update image
+    // Update image with fallback logic
     if (popupImage) {
-        popupImage.src = imageUrl;
+        // Try .webp first, then .png, then placeholder
+        if (!imageUrl || imageUrl === '' || imageUrl === 'undefined') {
+            popupImage.src = `images/items/${product.sku}A.webp`;
+        } else {
+            popupImage.src = imageUrl;
+        }
+        
         popupImage.alt = product.name || product.productName || 'Product';
         popupImage.onerror = function() {
-            this.src = 'images/items/placeholder.webp';
-            this.onerror = null;
+            if (!this.src.includes('.webp') && !this.src.includes('placeholder')) {
+                // Try .webp version
+                this.src = `images/items/${product.sku}A.webp`;
+                this.onerror = function() {
+                    // Try .png version
+                    this.src = `images/items/${product.sku}A.png`;
+                    this.onerror = function() {
+                        // Finally use placeholder
+                        this.src = 'images/items/placeholder.webp';
+                        this.onerror = null;
+                    };
+                };
+            } else if (this.src.includes('.webp') && !this.src.includes('placeholder')) {
+                // If .webp failed, try .png
+                this.src = `images/items/${product.sku}A.png`;
+                this.onerror = function() {
+                    this.src = 'images/items/placeholder.webp';
+                    this.onerror = null;
+                };
+            } else {
+                // Final fallback
+                this.src = 'images/items/placeholder.webp';
+                this.onerror = null;
+            }
         };
     }
 
@@ -119,7 +147,8 @@ function updateGlobalPopupContent(popup, product) {
     }
     
     if (popupTitle) {
-        popupTitle.textContent = product.name || product.productName || 'Product Name';
+        const productName = product.name || product.productName || product.title || 'Product Name';
+        popupTitle.textContent = productName;
     }
     
     if (popupSku) {
@@ -196,33 +225,38 @@ function positionGlobalPopup(popup, element) {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
-    // Calculate position - try to position to the right of element first
-    let left = elementRect.right + 10;
+    // Smart positioning - prefer right side, then left, then below
+    let left = elementRect.right + 15; // Slightly more space from element
     let top = elementRect.top + (elementRect.height / 2) - (popupRect.height / 2);
     
     // Adjust for viewport boundaries - horizontal
-    if (left + popupRect.width > viewportWidth - 10) {
+    if (left + popupRect.width > viewportWidth - 20) {
         // Try left side
-        left = elementRect.left - popupRect.width - 10;
-        if (left < 10) {
-            // Center horizontally if neither side fits
+        left = elementRect.left - popupRect.width - 15;
+        if (left < 20) {
+            // Position below element if sides don't fit
             left = elementRect.left + (elementRect.width / 2) - (popupRect.width / 2);
-            if (left < 10) left = 10;
-            if (left + popupRect.width > viewportWidth - 10) {
-                left = viewportWidth - popupRect.width - 10;
-            }
-            // Position below element
             top = elementRect.bottom + 10;
+            
+            // Center horizontally if needed
+            if (left < 20) left = 20;
+            if (left + popupRect.width > viewportWidth - 20) {
+                left = viewportWidth - popupRect.width - 20;
+            }
         }
     }
     
     // Adjust for viewport boundaries - vertical
-    if (top < 10) {
-        top = 10;
-    } else if (top + popupRect.height > viewportHeight - 10) {
-        top = viewportHeight - popupRect.height - 10;
-        if (top < 10) {
-            top = 10;
+    if (top < 20) {
+        top = 20;
+    } else if (top + popupRect.height > viewportHeight - 20) {
+        // Try positioning above element
+        const topAbove = elementRect.top - popupRect.height - 10;
+        if (topAbove >= 20) {
+            top = topAbove;
+        } else {
+            top = viewportHeight - popupRect.height - 20;
+            if (top < 20) top = 20;
         }
     }
     
@@ -242,18 +276,19 @@ function setupGlobalPopupHandlers(popup, product) {
     const popupAddBtn = popup.querySelector('#popupAddBtn');
     const popupContent = popup.querySelector('.popup-content');
 
-    // Add to cart button
+    // Add to cart button - opens item details modal like yesterday
     if (popupAddBtn) {
         popupAddBtn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
             hideGlobalPopupImmediate();
             
-            // Use the global modal system
-            if (typeof window.showGlobalItemModal === 'function') {
-                window.showGlobalItemModal(product.sku);
+            // Open item details modal like yesterday
+            if (typeof window.showItemDetailsModal === 'function') {
+                window.showItemDetailsModal(product.sku);
             } else {
-                console.error('Global modal system not available');
+                console.log('Opening item details for:', product.sku);
+                showItemDetailsModal(product.sku);
             }
         };
         
@@ -273,8 +308,9 @@ function setupGlobalPopupHandlers(popup, product) {
         }
     }
 
-    // Click on popup content for details (excluding buttons)
+    // Click on popup content for details (excluding buttons) - opens item details modal like yesterday
     if (popupContent) {
+        popupContent.style.cursor = 'pointer';
         popupContent.onclick = function(e) {
             // Don't trigger if clicking on buttons
             if (e.target.closest('.popup-add-btn')) {
@@ -285,10 +321,12 @@ function setupGlobalPopupHandlers(popup, product) {
             e.stopPropagation();
             hideGlobalPopupImmediate();
             
-            if (typeof window.showProductDetails === 'function') {
-                window.showProductDetails(product.sku);
+            // Open item details modal like yesterday
+            if (typeof window.showItemDetailsModal === 'function') {
+                window.showItemDetailsModal(product.sku);
             } else {
-                console.log('Product details function not available for:', product.sku);
+                console.log('Opening item details for:', product.sku);
+                showItemDetailsModal(product.sku);
             }
         };
     }

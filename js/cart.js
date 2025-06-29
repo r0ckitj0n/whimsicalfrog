@@ -969,15 +969,17 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
     if (modalProductImage) {
         let imageUrl = image;
         if (!imageUrl || imageUrl === '' || imageUrl === 'undefined') {
-            imageUrl = `images/items/${sku}A.png`;
+            imageUrl = `images/items/${sku}A.webp`; // Try .webp first
         }
         
         modalProductImage.src = imageUrl;
         modalProductImage.onerror = function() {
             if (!imageUrl.includes('.webp')) {
+                // If original wasn't .webp, try .webp version
                 const webpUrl = imageUrl.replace(/\.(png|jpg|jpeg)$/i, '.webp');
                 this.src = webpUrl;
                 this.onerror = function() {
+                    // Then try .png
                     const pngUrl = `images/items/${sku}A.png`;
                     this.src = pngUrl;
                     this.onerror = function() {
@@ -986,6 +988,7 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
                     };
                 };
             } else {
+                // If original was .webp, try .png directly
                 const pngUrl = `images/items/${sku}A.png`;
                 this.src = pngUrl;
                 this.onerror = function() {
@@ -1490,10 +1493,16 @@ window.showGlobalPopup = function(element, product) {
     const popupDetailsBtn = popup.querySelector('.popup-details-btn');
     
     if (popupImage) {
-        popupImage.src = `images/items/${product.sku}A.png`;
+        // Try .webp first (most common format), then .png
+        popupImage.src = `images/items/${product.sku}A.webp`;
         popupImage.onerror = function() {
-            this.src = 'images/items/placeholder.webp';
-            this.onerror = null;
+            // Try .png if .webp fails
+            this.src = `images/items/${product.sku}A.png`;
+            this.onerror = function() {
+                // Finally fall back to placeholder
+                this.src = 'images/items/placeholder.webp';
+                this.onerror = null;
+            };
         };
     }
     
@@ -1523,7 +1532,7 @@ window.showGlobalPopup = function(element, product) {
             const sku = product.sku;
             const name = product.name || product.productName;
             const price = parseFloat(product.retailPrice || product.price);
-            const image = `images/items/${product.sku}A.png`;
+            const image = `images/items/${product.sku}A.webp`;
             
             if (typeof window.addToCartWithModal === 'function') {
                 window.addToCartWithModal(sku, name, price, image);

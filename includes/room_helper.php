@@ -295,7 +295,7 @@ class RoomHelper {
                  data-index=\"{$index}\"
                  onmouseenter=\"showGlobalPopup(this, " . htmlspecialchars(json_encode($itemWithImage)) . ")\"
                  onmouseleave=\"hideGlobalPopup()\"
-                 onclick=\"showProductDetails('" . htmlspecialchars($item['sku']) . "')\"
+                 onclick=\"showGlobalPopup(this, " . htmlspecialchars(json_encode($itemWithImage)) . ")\"
                  style=\"cursor: pointer;\">
                 <img src=\"{$imagePath}\" alt=\"" . htmlspecialchars($item['name'] ?? $item['productName'] ?? 'Product') . "\" loading=\"lazy\">
                 {$outOfStockBadge}

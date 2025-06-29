@@ -76,8 +76,8 @@ function renderGlobalPopupCSS() {
         z-index: 1000;
         opacity: 0;
         visibility: hidden;
-        transition: all 0.3s ease;
-        transform: translateY(10px);
+        transition: all 0.2s ease;
+        transform: translateY(8px);
     }
     
     .product-popup.show {
@@ -93,11 +93,11 @@ function renderGlobalPopupCSS() {
     }
     
     .popup-content:hover {
-        transform: scale(1.02);
-        background: rgba(135, 172, 58, 0.05);
+        transform: scale(1.01);
+        background: rgba(135, 172, 58, 0.03);
         border-radius: 10px;
-        padding: 4px;
-        margin: -4px;
+        padding: 3px;
+        margin: -3px;
     }
     
     /* Badges */

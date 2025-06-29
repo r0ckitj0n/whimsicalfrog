@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         left: 0;
     }
     
-    .product-icon {
+    .item-icon {
         position: absolute;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -263,12 +263,12 @@ document.addEventListener('DOMContentLoaded', function() {
         pointer-events: auto;
     }
     
-    .product-icon:hover {
+    .item-icon:hover {
         transform: scale(1.1);
         z-index: 100;
     }
     
-    .product-icon img {
+    .item-icon img {
         width: auto;
         height: auto;
         max-width: 100%;
@@ -294,12 +294,12 @@ document.addEventListener('DOMContentLoaded', function() {
         letter-spacing: 0.5px;
     }
     
-    .product-icon.out-of-stock {
+    .item-icon.out-of-stock {
         opacity: 0.7;
         filter: grayscale(30%);
     }
     
-    .product-icon.out-of-stock:hover {
+    .item-icon.out-of-stock:hover {
         opacity: 0.9;
         filter: grayscale(10%);
     }
@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             $itemWithImage = $item;
                             $itemWithImage['primaryImageUrl'] = $primaryImageUrl;
                             ?>
-                            <div class="product-icon <?php echo $area_class . $outOfStockClass; ?>" 
+                            <div class="item-icon <?php echo $area_class . $outOfStockClass; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($item['sku']); ?>"
                                  data-stock="<?php echo $stockLevel; ?>"
                                  onmouseenter="showGlobalPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
@@ -662,7 +662,7 @@ window.showItemDetails = async function() {
             hidePopup();
             
             // Remove any existing detailed modal
-            const existingModal = document.getElementById('detailedProductModal');
+            const existingModal = document.getElementById('detailedItemModal');
             if (existingModal) {
                 existingModal.remove();
             }
@@ -673,7 +673,7 @@ window.showItemDetails = async function() {
             document.body.appendChild(modalContainer.firstElementChild);
             
             // Show the modal
-            const detailedModal = document.getElementById('detailedProductModal');
+            const detailedModal = document.getElementById('detailedItemModal');
             if (detailedModal) {
                 detailedModal.classList.remove('hidden');
             }
@@ -839,7 +839,7 @@ async function showProductDetails(sku) {
             hidePopupImmediate();
             
             // Remove any existing detailed modal
-            const existingModal = document.getElementById('detailedProductModal');
+            const existingModal = document.getElementById('detailedItemModal');
             if (existingModal) {
                 existingModal.remove();
             }
@@ -872,7 +872,7 @@ async function generateDetailedModal(item, images) {
     
     return `
     <!-- Detailed Product Modal -->
-    <div id="detailedProductModal" class="modal-overlay" style="display: none;">
+    <div id="detailedItemModal" class="modal-overlay" style="display: none;">
         <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
             <!-- Modal Header -->
             <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">

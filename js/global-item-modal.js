@@ -54,7 +54,7 @@
             }
 
             // Remove any existing modal
-            const existingModal = document.getElementById('detailedProductModal');
+            const existingModal = document.getElementById('detailedItemModal');
             if (existingModal) {
                 existingModal.remove();
             }
@@ -98,7 +98,7 @@
                     window.showDetailedModalComponent(sku, item);
                 } else {
                     // Fallback - show modal manually
-                    const modal = document.getElementById('detailedProductModal');
+                    const modal = document.getElementById('detailedItemModal');
                     if (modal) {
                         modal.style.display = 'flex';
                         modal.classList.remove('hidden');
@@ -123,7 +123,7 @@
      * Close the global item modal
      */
     function closeGlobalItemModal() {
-        const modal = document.getElementById('detailedProductModal');
+        const modal = document.getElementById('detailedItemModal');
         if (modal) {
             modal.style.display = 'none';
             modal.classList.add('hidden');
@@ -158,16 +158,16 @@
 
     /**
      * Quick add to cart from popup (for room pages)
-     * @param {object} product - Product data from popup
+     * @param {object} item - Item data from popup
      */
-    function quickAddToCart(product) {
+    function quickAddToCart(item) {
         // Hide any popup first
         if (typeof window.hidePopupImmediate === 'function') {
             window.hidePopupImmediate();
         }
         
         // Show the detailed modal for quantity/options selection
-        showGlobalItemModal(product.sku, product);
+        showGlobalItemModal(item.sku, item);
     }
 
     /**
@@ -189,7 +189,7 @@
     window.quickAddToCart = quickAddToCart;
     
     // Legacy compatibility - these functions will call the new global system
-    window.showProductDetails = showGlobalItemModal;
+    window.showItemDetails = showGlobalItemModal;
     window.showDetailedModal = showGlobalItemModal;
     window.closeDetailedModal = closeGlobalItemModal;
     window.openQuantityModal = quickAddToCart;

@@ -5,7 +5,7 @@
 
 // Global room state variables
 window.roomState = {
-    currentProduct: null,
+    currentItem: null,
     popupTimeout: null,
     popupOpen: false,
     isShowingPopup: false,
@@ -29,10 +29,10 @@ window.initializeRoom = function(roomNumber, roomType) {
     
     // Set up document click listener for popup closing
     document.addEventListener('click', function(e) {
-        const popup = document.getElementById('productPopup');
+        const popup = document.getElementById('itemPopup');
         
         // Close popup if it's open and click is outside it
-        if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
+        if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.item-icon')) {
             hidePopupImmediate();
         }
     });
@@ -43,9 +43,9 @@ window.initializeRoom = function(roomNumber, roomType) {
 /**
  * Universal popup system for all rooms - now uses global system
  */
-window.showPopup = function(element, product) {
+window.showPopup = function(element, item) {
     if (typeof window.showGlobalPopup === 'function') {
-        window.showGlobalPopup(element, product);
+        window.showGlobalPopup(element, item);
     } else {
         console.error('Global popup system not available');
     }
@@ -109,33 +109,31 @@ function positionPopup(popup, element) {
 /**
  * Universal quantity modal opener for all rooms - now uses global modal system
  */
-window.openQuantityModal = function(product) {
-    // Hide any existing popup first
-    if (typeof hidePopupImmediate === 'function') {
-        hidePopupImmediate();
-    }
-    
-    // Use the global modal system
+window.openQuantityModal = function(item) {
+    // First try to use the new global modal system
     if (typeof window.showGlobalItemModal === 'function') {
-        window.showGlobalItemModal(product.sku);
+        hideGlobalPopup();
+        
+        // Use the global detailed modal instead
+        window.showGlobalItemModal(item.sku);
     } else {
-        console.error('Global modal system not available, falling back to simple modal');
-        fallbackToSimpleModal(product);
+        // Fallback to simple modal
+        fallbackToSimpleModal(item);
     }
 };
 
 /**
- * Fallback to simple modal if detailed modal fails
+ * Fallback function for when global modal system isn't available
  */
-function fallbackToSimpleModal(product) {
-    console.log('Using fallback simple modal for:', product.sku);
+function fallbackToSimpleModal(item) {
+    console.log('Using fallback simple modal for:', item.sku);
     
     // Use the old addToCartWithModal system as fallback
     if (typeof window.addToCartWithModal === 'function') {
-        const sku = product.sku;
-        const name = product.name || product.productName;
-        const price = parseFloat(product.retailPrice || product.price);
-        const image = product.primaryImageUrl || `images/items/${product.sku}A.png`;
+        const sku = item.sku;
+        const name = item.name || item.productName;
+        const price = parseFloat(item.retailPrice || item.price);
+        const image = item.primaryImageUrl || `images/items/${item.sku}A.png`;
         
         window.addToCartWithModal(sku, name, price, image);
         return;
@@ -160,7 +158,7 @@ window.showItemDetails = function(sku) {
  * Setup popup persistence when hovering over popup itself
  */
 window.setupPopupPersistence = function() {
-    const popup = document.getElementById('productPopup');
+    const popup = document.getElementById('itemPopup');
     if (!popup) return;
     
     // Keep popup visible when hovering over it

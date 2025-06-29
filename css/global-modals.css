@@ -1228,7 +1228,7 @@ html.modal-open {
 
 /* When any modal is open, reduce room overlay z-index */
 body:has(.modal-overlay:not(.hidden)),
-body:has(#detailedProductModal:not(.hidden)),
+body:has(#detailedItemModal:not(.hidden)),
 body:has(#quantityModal:not(.hidden)) {
     .room-header-overlay {
         z-index: 10 !important;
@@ -1254,7 +1254,7 @@ body:has(#quantityModal:not(.hidden)) {
 
 /* Ensure all modals have consistent high z-index */
 .modal-overlay,
-#detailedProductModal,
+#detailedItemModal,
 #quantityModal,
 .admin-modal-overlay {
     z-index: 9999 !important;

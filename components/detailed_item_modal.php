@@ -737,34 +737,26 @@ function renderDetailedItemModal($item, $images = []) {
             image: currentItem.primaryImageUrl || currentItem.image || currentItem.imageUrl || `images/items/${sku}A.png`
         };
         
-        // Add selected options
+        // Add selected options (cart expects string values, not objects)
         if (window.currentItemOptions.selectedColor) {
             const colorSelect = document.getElementById('itemColorSelect');
             const selectedColorOption = colorSelect.options[colorSelect.selectedIndex];
-            cartItem.color = {
-                id: window.currentItemOptions.selectedColor,
-                name: selectedColorOption.textContent,
-                code: selectedColorOption.dataset.colorCode
-            };
+            cartItem.color = selectedColorOption.textContent; // Just the color name
+            cartItem.colorCode = selectedColorOption.dataset.colorCode; // Separate color code field
         }
         
         if (window.currentItemOptions.selectedSize) {
             const sizeSelect = document.getElementById('itemSizeSelect');
             const selectedSizeOption = sizeSelect.options[sizeSelect.selectedIndex];
-            cartItem.size = {
-                id: window.currentItemOptions.selectedSize,
-                name: selectedSizeOption.textContent,
-                code: selectedSizeOption.dataset.sizeCode
-            };
+            cartItem.size = selectedSizeOption.textContent; // Just the size name
+            cartItem.sizeName = selectedSizeOption.textContent; // Duplicate for compatibility
+            cartItem.sizeCode = selectedSizeOption.dataset.sizeCode; // Separate size code field
         }
         
         if (window.currentItemOptions.selectedGender) {
             const genderSelect = document.getElementById('itemGenderSelect');
             const selectedGenderOption = genderSelect.options[genderSelect.selectedIndex];
-            cartItem.gender = {
-                id: window.currentItemOptions.selectedGender,
-                name: selectedGenderOption.textContent
-            };
+            cartItem.gender = selectedGenderOption.textContent; // Just the gender name
         }
         
         // Add to cart using the proper cart system

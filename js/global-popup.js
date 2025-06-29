@@ -53,7 +53,7 @@ window.globalPopupState = {
 window.showGlobalPopupMain = function(element, product) {
     console.log('showGlobalPopup called with:', element, product);
     
-    // Clear any existing timeout
+    // IMMEDIATELY clear any existing timeout and hide current popup
     clearTimeout(window.globalPopupTimeout);
     
     const popup = document.getElementById('productPopup');
@@ -62,120 +62,136 @@ window.showGlobalPopupMain = function(element, product) {
         return;
     }
     
-    // Don't show popup if already showing
-    if (window.isShowingPopup && window.popupOpen) return;
+    // Force immediate hide of any existing popup to release focus
+    if (window.isShowingPopup || popup.classList.contains('show')) {
+        popup.classList.remove('show');
+        popup.style.display = 'none';
+        popup.style.visibility = 'hidden';
+        popup.style.opacity = '0';
+        window.currentProduct = null;
+        window.popupOpen = false;
+        window.isShowingPopup = false;
+    }
     
-    window.isShowingPopup = true;
-    window.popupOpen = true;
-    window.currentProduct = product;
-    
-    // Update popup content using correct selectors from the HTML
-    const popupImage = popup.querySelector('#popupImage');
-    const popupTitle = popup.querySelector('#popupTitle');
-    const popupCategory = popup.querySelector('#popupCategory');
-    const popupSku = popup.querySelector('#popupSku');
-    const popupStock = popup.querySelector('#popupStock');
-    const popupCurrentPrice = popup.querySelector('#popupCurrentPrice');
-    const popupDescription = popup.querySelector('#popupDescription');
-    const popupAddBtn = popup.querySelector('#popupAddBtn');
-    
-    console.log('Found popup elements:', {
-        image: !!popupImage,
-        title: !!popupTitle,
-        price: !!popupCurrentPrice,
-        description: !!popupDescription,
-        addBtn: !!popupAddBtn
-    });
-    
-    if (popupImage) {
-        // Try .webp first (most common format), then .png
-        popupImage.src = `images/items/${product.sku}A.webp`;
-        popupImage.onerror = function() {
-            // Try .png if .webp fails
-            this.src = `images/items/${product.sku}A.png`;
-            this.onerror = function() {
-                // Finally fall back to placeholder
-                this.src = 'images/items/placeholder.webp';
-                this.onerror = null;
+    // Short delay to ensure clean state before showing new popup
+    setTimeout(() => {
+        // Double check that this is still the intended popup
+        window.isShowingPopup = true;
+        window.popupOpen = true;
+        window.currentProduct = product;
+        
+        // Update popup content using correct selectors from the HTML
+        const popupImage = popup.querySelector('#popupImage');
+        const popupTitle = popup.querySelector('#popupTitle');
+        const popupCategory = popup.querySelector('#popupCategory');
+        const popupSku = popup.querySelector('#popupSku');
+        const popupStock = popup.querySelector('#popupStock');
+        const popupCurrentPrice = popup.querySelector('#popupCurrentPrice');
+        const popupDescription = popup.querySelector('#popupDescription');
+        const popupAddBtn = popup.querySelector('#popupAddBtn');
+        
+        console.log('Found popup elements:', {
+            image: !!popupImage,
+            title: !!popupTitle,
+            price: !!popupCurrentPrice,
+            description: !!popupDescription,
+            addBtn: !!popupAddBtn
+        });
+        
+        if (popupImage) {
+            // Try .webp first (most common format), then .png
+            popupImage.src = `images/items/${product.sku}A.webp`;
+            popupImage.onerror = function() {
+                // Try .png if .webp fails
+                this.src = `images/items/${product.sku}A.png`;
+                this.onerror = function() {
+                    // Finally fall back to placeholder
+                    this.src = 'images/items/placeholder.webp';
+                    this.onerror = null;
+                };
             };
-        };
-    }
-    
-    if (popupTitle) {
-        popupTitle.textContent = product.name || product.productName || 'Product';
-    }
-    
-    if (popupCategory) {
-        popupCategory.textContent = product.category || 'Product';
-    }
-    
-    if (popupSku) {
-        popupSku.textContent = `SKU: ${product.sku}`;
-    }
-    
-    if (popupStock) {
-        const stockLevel = parseInt(product.stockLevel || product.stock || 0);
-        if (stockLevel <= 0) {
-            popupStock.textContent = 'Out of Stock';
-            popupStock.className = 'popup-stock-info out-of-stock';
-        } else if (stockLevel <= 5) {
-            popupStock.textContent = `${stockLevel} Left`;
-            popupStock.className = 'popup-stock-info limited-stock';
-        } else {
-            popupStock.textContent = 'In Stock';
-            popupStock.className = 'popup-stock-info in-stock';
         }
-    }
-    
-    if (popupCurrentPrice) {
-        // Check for sales and update pricing
-        if (typeof window.checkAndDisplaySalePrice === 'function') {
-            window.checkAndDisplaySalePrice(product, popupCurrentPrice);
-        } else {
-            popupCurrentPrice.textContent = `$${parseFloat(product.retailPrice || product.price || 0).toFixed(2)}`;
+        
+        if (popupTitle) {
+            popupTitle.textContent = product.name || product.productName || 'Product';
         }
-    }
-    
-    if (popupDescription) {
-        popupDescription.textContent = product.description || '';
-    }
-    
-    // Position and show popup
-    positionPopup(element, popup);
-    
-    // Set up button handlers
-    if (popupAddBtn) {
-        popupAddBtn.onclick = function(e) {
+        
+        if (popupCategory) {
+            popupCategory.textContent = product.category || 'Product';
+        }
+        
+        if (popupSku) {
+            popupSku.textContent = `SKU: ${product.sku}`;
+        }
+        
+        if (popupStock) {
+            const stockLevel = parseInt(product.stockLevel || product.stock || 0);
+            if (stockLevel <= 0) {
+                popupStock.textContent = 'Out of Stock';
+                popupStock.className = 'popup-stock-info out-of-stock';
+            } else if (stockLevel <= 5) {
+                popupStock.textContent = `${stockLevel} Left`;
+                popupStock.className = 'popup-stock-info limited-stock';
+            } else {
+                popupStock.textContent = 'In Stock';
+                popupStock.className = 'popup-stock-info in-stock';
+            }
+        }
+        
+        if (popupCurrentPrice) {
+            // Check for sales and update pricing
+            if (typeof window.checkAndDisplaySalePrice === 'function') {
+                window.checkAndDisplaySalePrice(product, popupCurrentPrice);
+            } else {
+                popupCurrentPrice.textContent = `$${parseFloat(product.retailPrice || product.price || 0).toFixed(2)}`;
+            }
+        }
+        
+        if (popupDescription) {
+            popupDescription.textContent = product.description || '';
+        }
+        
+        // Position and show popup
+        positionPopup(element, popup);
+        
+        // Set up button handlers
+        if (popupAddBtn) {
+            popupAddBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                hidePopupImmediate();
+                
+                if (typeof window.showGlobalItemModal === 'function') {
+                    window.showGlobalItemModal(product.sku);
+                } else if (typeof window.showItemDetailsModal === 'function') {
+                    window.showItemDetailsModal(product.sku);
+                }
+            };
+        }
+        
+        // Set up popup content click handler to open detailed modal
+        popup.onclick = function(e) {
+            // Don't interfere with button clicks
+            if (e.target === popupAddBtn || popupAddBtn.contains(e.target)) {
+                return;
+            }
+            
             e.preventDefault();
             e.stopPropagation();
-            popup.classList.remove('show');
+            hidePopupImmediate();
             
-            if (typeof window.showItemDetailsModal === 'function') {
+            if (typeof window.showGlobalItemModal === 'function') {
+                console.log('Opening detailed modal from popup click for:', product.sku);
+                window.showGlobalItemModal(product.sku);
+            } else if (typeof window.showItemDetailsModal === 'function') {
                 window.showItemDetailsModal(product.sku);
+            } else {
+                console.error('No modal function available from popup click');
             }
         };
-    }
-    
-    // Set up popup content click handler to open detailed modal
-    popup.onclick = function(e) {
-        // Don't interfere with button clicks
-        if (e.target === popupAddBtn || popupAddBtn.contains(e.target)) {
-            return;
-        }
         
-        e.preventDefault();
-        e.stopPropagation();
-        popup.classList.remove('show');
-        
-        if (typeof window.showItemDetailsModal === 'function') {
-            console.log('Opening detailed modal from popup click for:', product.sku);
-            window.showItemDetailsModal(product.sku);
-        } else {
-            console.error('showItemDetailsModal function not available from popup click');
-        }
-    };
-    
-    console.log('Popup should now be visible with show class:', popup.classList.contains('show'));
+        console.log('Popup should now be visible with show class:', popup.classList.contains('show'));
+    }, 50); // Short delay to ensure clean state transition
 };
 
 /**
@@ -277,9 +293,10 @@ window.hideGlobalPopupMain = function() {
     console.log('hideGlobalPopup called');
     clearTimeout(window.globalPopupTimeout);
     
+    // Reduced delay for faster response
     window.globalPopupTimeout = setTimeout(() => {
         hidePopupImmediate();
-    }, 200);
+    }, 150);
 };
 
 /**
@@ -293,9 +310,15 @@ window.hidePopupImmediate = function() {
         popup.style.display = 'none';
         popup.style.visibility = 'hidden';
         popup.style.opacity = '0';
+        
+        // Clear ALL state variables immediately
         window.currentProduct = null;
         window.popupOpen = false;
         window.isShowingPopup = false;
+        
+        // Clear any pending timeouts
+        clearTimeout(window.globalPopupTimeout);
+        
         console.log('Popup hidden');
     }
 };
@@ -604,7 +627,7 @@ function initializeGlobalPopup() {
     document.addEventListener('click', function(e) {
         if (popup.classList.contains('show') && 
             !popup.contains(e.target) && 
-            !e.target.closest('.product-icon')) {
+            !e.target.closest('.item-icon')) {
             window.hidePopupImmediate();
         }
     });

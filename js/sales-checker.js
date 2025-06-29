@@ -32,12 +32,12 @@ window.updateModalTotal = function() {
     const modalQuantity = document.getElementById('modalQuantity');
     const modalTotal = document.getElementById('modalTotal');
     
-    if (!quantityInput || !modalQuantity || !modalTotal || !window.currentModalProduct) {
+    if (!quantityInput || !modalQuantity || !modalTotal || !window.currentModalItem) {
         return;
     }
     
     const quantity = parseInt(quantityInput.value) || 1;
-    const price = window.currentModalProduct.salePrice || parseFloat(window.currentModalProduct.retailPrice || window.currentModalProduct.price);
+    const price = window.currentModalItem.salePrice || parseFloat(window.currentModalItem.retailPrice || window.currentModalItem.price);
     const total = quantity * price;
     
     modalQuantity.textContent = quantity;
@@ -56,18 +56,18 @@ window.closeCartModal = function() {
         quantityInput.value = 1;
     }
     
-    window.currentModalProduct = null;
+    window.currentModalItem = null;
 };
 
 // Enhanced checkAndDisplaySalePrice function
-async function checkAndDisplaySalePrice(product, priceElement, unitPriceElement = null, context = 'popup') {
-    if (!product || !priceElement) return;
+async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = null, context = 'popup') {
+    if (!item || !priceElement) return;
     
     try {
-        const saleData = await checkItemSale(product.sku);
+        const saleData = await checkItemSale(item.sku);
         
         if (saleData.isOnSale) {
-            const originalPrice = parseFloat(product.retailPrice || product.price);
+            const originalPrice = parseFloat(item.retailPrice || item.price);
             const salePrice = calculateSalePrice(originalPrice, saleData.discountPercentage);
             
             // Format sale price display
@@ -83,26 +83,26 @@ async function checkAndDisplaySalePrice(product, priceElement, unitPriceElement 
                 unitPriceElement.innerHTML = saleHTML;
             }
             
-            // Update product object with sale price for cart
-            product.salePrice = salePrice;
-            product.originalPrice = originalPrice;
-            product.isOnSale = true;
-            product.discountPercentage = saleData.discountPercentage;
+            // Update item object with sale price for cart
+            item.salePrice = salePrice;
+            item.originalPrice = originalPrice;
+            item.isOnSale = true;
+            item.discountPercentage = saleData.discountPercentage;
         } else {
             // No sale, display regular price
-            const price = parseFloat(product.retailPrice || product.price);
+            const price = parseFloat(item.retailPrice || item.price);
             priceElement.textContent = `$${price.toFixed(2)}`;
             
             if (unitPriceElement) {
                 unitPriceElement.textContent = `$${price.toFixed(2)}`;
             }
             
-            product.isOnSale = false;
+            item.isOnSale = false;
         }
     } catch (error) {
-        console.log('No sale data available for', product.sku);
+        console.log('No sale data available for', item.sku);
         // Display regular price on error
-        const price = parseFloat(product.retailPrice || product.price);
+        const price = parseFloat(item.retailPrice || item.price);
         priceElement.textContent = `$${price.toFixed(2)}`;
         
         if (unitPriceElement) {
@@ -116,12 +116,9 @@ let hoverTimeout = null;
 let hideTimeout = null;
 
 // Popup functions now use the global system
-function showPopup(element, product) {
-    if (typeof window.showGlobalPopup === 'function') {
-        window.showGlobalPopup(element, product);
-    } else {
-        console.error('Global popup system not available');
-    }
+function showPopup(element, item) {
+    // Delegate to global popup system
+    window.showGlobalPopup(element, item);
 }
 
 function hidePopup() {
@@ -136,121 +133,117 @@ function keepPopupVisible() {
 }
 
 // Update popup content
-function updatePopupContent(popup, product) {
+function updatePopupContent(popup, item) {
     const popupImage = popup.querySelector('.popup-image');
     const popupName = popup.querySelector('.popup-name');
     const popupPrice = popup.querySelector('.popup-price');
     const popupDescription = popup.querySelector('.popup-description');
     
     if (popupImage) {
-        // Use actual image data from product object with fallbacks
-        let imageSrc = '';
+        // Use actual image data from item object with fallbacks
+        let imageSrc = 'images/items/placeholder.webp';
         
-        // Priority 1: Use primary image path if available
-        if (product.primaryImageUrl) {
-            imageSrc = product.primaryImageUrl;
+        // Try to get the best available image
+        if (item.primaryImageUrl) {
+            imageSrc = item.primaryImageUrl;
         }
-        // Priority 2: Use image or imageUrl field if available
-        else if (product.image) {
-            imageSrc = product.image;
+        // Fallback to standard image property
+        else if (item.image) {
+            imageSrc = item.image;
         }
-        else if (product.imageUrl) {
-            imageSrc = product.imageUrl;
+        else if (item.imageUrl) {
+            imageSrc = item.imageUrl;
         }
-        // Priority 3: Try common SKU-based patterns
-        else if (product.sku) {
-            // Try the most common formats first
-            imageSrc = `images/items/${product.sku}A.webp`;
-        }
-        // Priority 4: Fallback to placeholder
-        else {
-            imageSrc = 'images/items/placeholder.webp';
+        // Generate SKU-based path
+        else if (item.sku) {
+            // Try WebP first, then PNG
+            imageSrc = `images/items/${item.sku}A.webp`;
         }
         
         popupImage.src = imageSrc;
         popupImage.onerror = function() {
-            // If primary image fails, try alternative formats
-            if (product.sku && this.src.includes('.webp')) {
-                this.src = `images/items/${product.sku}A.png`;
-                this.onerror = function() {
-                    this.src = 'images/items/placeholder.webp';
-                    this.onerror = null;
-                };
-            } else if (product.sku && this.src.includes('A.png')) {
-                this.src = `images/items/${product.sku}.webp`;
-                this.onerror = function() {
-                    this.src = 'images/items/placeholder.webp';
-                    this.onerror = null;
-                };
-            } else {
-                this.src = 'images/items/placeholder.webp';
-                this.onerror = null;
-            }
-        };
-    }
-    
-    if (popupName) {
-        popupName.textContent = product.name || product.productName || 'Product';
-    }
-    
-    if (popupPrice) {
-        checkAndDisplaySalePrice(product, popupPrice);
-    }
-    
-    if (popupDescription) {
-        popupDescription.textContent = product.description || '';
-    }
-    
-    // Set up Add to Cart button
-    const popupAddBtn = popup.querySelector('.popup-add-btn');
-    if (popupAddBtn) {
-        popupAddBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Hide popup first
-            hidePopup();
-            
-            // Use the global modal system
-            if (typeof window.showGlobalItemModal === 'function') {
-                window.showGlobalItemModal(product.sku);
-            } else {
-                console.error('Global modal system not available, falling back to quantity modal');
-                
-                // Fallback to old system
-                const sku = product.sku;
-                const name = product.name || product.productName;
-                const price = parseFloat(product.retailPrice || product.price || 0);
-                const image = product.primaryImageUrl || product.image || product.imageUrl || `images/items/${product.sku}A.png`;
-                
-                if (typeof window.addToCartWithModal === 'function') {
-                    window.addToCartWithModal(sku, name, price, image);
-                } else {
-                    console.error('No modal system available');
-                }
-            }
-        };
-    }
-    
-    // Set up click-to-view-details on popup content
-    const popupContent = popup.querySelector('.popup-content');
-    if (popupContent) {
-        popupContent.onclick = function(e) {
-            // Don't trigger if clicking the Add to Cart button
-            if (e.target.classList.contains('popup-add-btn')) {
+            // If WebP fails and we have a SKU, try PNG
+            if (item.sku && this.src.includes('.webp')) {
+                this.src = `images/items/${item.sku}A.png`;
                 return;
             }
             
+            // If PNG fails, try the base SKU without A
+            else if (item.sku && this.src.includes('A.png')) {
+                this.src = `images/items/${item.sku}.webp`;
+                return;
+            }
+            
+            // Final fallback
+            this.src = 'images/items/placeholder.webp';
+        };
+    }
+    
+    // Update item name
+    if (popupName) {
+        popupName.textContent = item.name || item.itemName || 'Item';
+    }
+    
+    // Update price with sale checking
+    checkAndDisplaySalePrice(item, popupPrice);
+    
+    // Update description
+    if (popupDescription) {
+        popupDescription.textContent = item.description || '';
+    }
+    
+    // Update "View Details" button to open item modal
+    const viewDetailsBtn = popup.querySelector('.btn-secondary');
+    if (viewDetailsBtn) {
+        viewDetailsBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideGlobalPopup();
+            
+            // Open item modal instead of item details
+            window.showGlobalItemModal(item.sku);
+        };
+    }
+    
+    // Update "Add to Cart" button for quick add
+    const addToCartBtn = popup.querySelector('.btn-primary');
+    if (addToCartBtn) {
+        const sku = item.sku;
+        const name = item.name || item.itemName;
+        const price = parseFloat(item.retailPrice || item.price || 0);
+        const image = item.primaryImageUrl || item.image || item.imageUrl || `images/items/${item.sku}A.png`;
+        
+        addToCartBtn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            // Hide popup and show product details
-            hidePopup();
+            // Hide popup
+            hideGlobalPopup();
             
-            if (typeof window.showProductDetails === 'function') {
-                window.showProductDetails(product.sku);
+            // Add to cart with quantity 1
+            if (window.cart && typeof window.cart.addItem === 'function') {
+                window.cart.addItem({
+                    sku: sku,
+                    name: name,
+                    price: price,
+                    image: image
+                }, 1);
+            }
+        };
+    }
+    
+    // Update "View Details" link to show item details
+    const viewDetailsLink = popup.querySelector('a[href*="javascript:"]');
+    if (viewDetailsLink) {
+        viewDetailsLink.onclick = function(e) {
+            e.preventDefault();
+            // Hide popup and show item details
+            hideGlobalPopup();
+            
+            if (typeof window.showItemDetails === 'function') {
+                window.showItemDetails(item.sku);
             } else {
-                console.log('Product details function not available');
+                console.log('Item details function not available');
             }
         };
     }
@@ -322,99 +315,85 @@ function positionPopupSimple(element, popup) {
     console.log(`Popup positioned at: left=${left}, top=${top}, width=${popupWidth}, height=${popupHeight}`);
 }
 
-// Function to add sale badges to product cards (for shop page)
+// Function to add sale badges to item cards (for shop page)
 function addSaleBadgeToCard(skuOrCard, discountPercentageOrCard) {
-    let productCard, discountPercentage;
+    let itemCard, discountPercentage;
     
-    // Handle different parameter patterns
     if (typeof skuOrCard === 'string') {
-        // Called with (sku, productCard) pattern
+        // Called with (sku, itemCard) pattern
         const sku = skuOrCard;
-        productCard = discountPercentageOrCard;
-        
-        // We need to get the discount percentage by checking the sale
+        itemCard = discountPercentageOrCard;
+        // Get discount from sale data
         checkItemSale(sku).then(saleData => {
-            if (saleData.isOnSale) {
-                addSaleBadgeToCardWithDiscount(productCard, saleData.discountPercentage);
+            if (saleData) {
+                addSaleBadgeToCardWithDiscount(itemCard, saleData.discountPercentage);
             }
-        }).catch(error => {
-            console.log('Error checking sale for badge:', error);
         });
         return;
     } else {
-        // Called with (productCard, discountPercentage) pattern
-        productCard = skuOrCard;
+        // Called with (itemCard, discountPercentage) pattern
+        itemCard = skuOrCard;
         discountPercentage = discountPercentageOrCard;
     }
     
-    addSaleBadgeToCardWithDiscount(productCard, discountPercentage);
+    addSaleBadgeToCardWithDiscount(itemCard, discountPercentage);
 }
 
-// Helper function to actually add the badge with discount percentage
-function addSaleBadgeToCardWithDiscount(productCard, discountPercentage) {
-    if (!productCard || !productCard.querySelector) {
-        console.error('Invalid product card element provided to addSaleBadgeToCard');
+function addSaleBadgeToCardWithDiscount(itemCard, discountPercentage) {
+    if (!itemCard || !itemCard.querySelector) {
+        console.error('Invalid item card element provided to addSaleBadgeToCard');
         return;
     }
     
-    // Remove existing sale badge if any
-    const existingBadge = productCard.querySelector('.sale-badge');
+    // Remove existing sale badge if present
+    const existingBadge = itemCard.querySelector('.sale-badge');
     if (existingBadge) {
         existingBadge.remove();
     }
     
-    // Create sale badge
+    // Create new sale badge
     const saleBadge = document.createElement('div');
     saleBadge.className = 'sale-badge';
+    saleBadge.innerHTML = `
+        <span class="sale-text">SALE</span>
+        <span class="sale-percentage">${Math.round(discountPercentage)}% OFF</span>
+    `;
+    
+    // Add sale badge styles
     saleBadge.style.cssText = `
         position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #dc2626;
+        top: 8px;
+        right: 8px;
+        background: linear-gradient(135deg, #ff4444, #cc0000);
         color: white;
         padding: 4px 8px;
         border-radius: 4px;
         font-size: 0.75rem;
         font-weight: bold;
         z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        text-align: center;
+        line-height: 1.2;
     `;
-    saleBadge.textContent = `-${discountPercentage}%`;
     
-    // Add badge to card
-    productCard.style.position = 'relative';
-    productCard.appendChild(saleBadge);
+    // Ensure item card has relative positioning
+    itemCard.style.position = 'relative';
+    itemCard.appendChild(saleBadge);
 }
 
 // Shop page functionality
 document.addEventListener('DOMContentLoaded', function() {
     // Only run shop-specific code on shop page
     if (window.location.search.includes('page=shop')) {
-        // Check for sales on all products
-        const productCards = document.querySelectorAll('[data-sku]');
+        // Check for sales on all items
+        const itemCards = document.querySelectorAll('[data-sku]');
         
-        productCards.forEach(async (card) => {
-            const sku = card.dataset.sku;
-            const originalPriceElement = card.querySelector('[data-original-price]');
-            
-            if (sku && originalPriceElement) {
-                try {
-                    const saleData = await checkItemSale(sku);
-                    
-                    if (saleData.isOnSale) {
-                        const originalPrice = parseFloat(originalPriceElement.dataset.originalPrice);
-                        const salePrice = calculateSalePrice(originalPrice, saleData.discountPercentage);
-                        
-                        // Update price display
-                        originalPriceElement.innerHTML = `
-                            <span style="text-decoration: line-through; color: #999;">$${originalPrice.toFixed(2)}</span>
-                            <span style="color: #dc2626; font-weight: bold; margin-left: 5px;">$${salePrice.toFixed(2)}</span>
-                        `;
-                        
-                        // Add sale badge
-                        addSaleBadgeToCard(card, saleData.discountPercentage);
-                    }
-                } catch (error) {
-                    console.log('Error checking sale for', sku, error);
+        itemCards.forEach(async (card) => {
+            const sku = card.getAttribute('data-sku');
+            if (sku) {
+                const saleData = await checkItemSale(sku);
+                if (saleData) {
+                    addSaleBadgeToCard(card, saleData.discountPercentage);
                 }
             }
         });

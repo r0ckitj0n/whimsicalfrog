@@ -37,7 +37,7 @@ function openImageViewer(imagePath, productName, allImages = null) {
         }
     } else {
         // Try to get images from the current modal context
-        const modal = document.getElementById('detailedProductModal');
+        const modal = document.getElementById('detailedItemModal');
         if (modal) {
             const thumbnails = modal.querySelectorAll('.overflow-x-auto img');
             if (thumbnails.length > 0) {

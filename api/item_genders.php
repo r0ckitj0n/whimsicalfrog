@@ -18,8 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Start session for authentication
+session_start();
+
 // Authentication check
-SessionManager::startSession();
 $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
 $isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
 
@@ -27,7 +29,17 @@ $isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSI
 $adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? '';
 $isValidToken = ($adminToken === 'whimsical_admin_2024');
 
-if (!$isAdmin && !$isValidToken) {
+// Parse action from GET, POST, or JSON body
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
+
+// If no action found in GET/POST, try parsing from JSON body
+if (empty($action)) {
+    $jsonInput = json_decode(file_get_contents('php://input'), true);
+    $action = $jsonInput['action'] ?? '';
+}
+
+// Only require authentication for non-read operations
+if ($action !== 'get_all' && !$isAdmin && !$isValidToken) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Admin access required']);
     exit;
@@ -35,15 +47,6 @@ if (!$isAdmin && !$isValidToken) {
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
-    
-    // Parse action from GET, POST, or JSON body
-    $action = $_GET['action'] ?? $_POST['action'] ?? '';
-    
-    // If no action found in GET/POST, try parsing from JSON body
-    if (empty($action)) {
-        $jsonInput = json_decode(file_get_contents('php://input'), true);
-        $action = $jsonInput['action'] ?? '';
-    }
     
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     

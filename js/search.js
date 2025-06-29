@@ -290,25 +290,17 @@ class SearchModal {
         // Check what page we're on and use the appropriate function
         const currentPage = new URLSearchParams(window.location.search).get('page');
         
-        if (currentPage === 'shop' && typeof showProductDetails === 'function') {
-            // On shop page, use showProductDetails
-            showProductDetails(sku);
-        } else if (typeof openQuantityModal === 'function') {
-            // On room pages, use openQuantityModal with converted data format
-            const convertedData = {
-                sku: itemData.sku,
-                name: itemData.name,
-                price: parseFloat(itemData.price),
-                image: itemData.image_url,
-                inStock: itemData.in_stock,
-                // Add other fields that might be needed
-                productName: itemData.name,
-                productId: itemData.sku
-            };
-            openQuantityModal(convertedData);
+        if (currentPage === 'shop' && typeof showItemDetails === 'function') {
+            // On shop page, use showItemDetails
+            showItemDetails(sku);
         } else {
-            // Fallback: redirect to shop page with the item highlighted
-            window.location.href = `/?page=shop&highlight=${sku}`;
+            // On other pages, use the global modal
+            showGlobalItemModal(sku, {
+                sku: sku,
+                name: itemData.name,
+                itemName: itemData.name,
+                itemId: itemData.sku
+            });
         }
     }
 

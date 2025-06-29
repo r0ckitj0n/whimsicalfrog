@@ -72,8 +72,8 @@ echo renderGlobalPopupCSS();
 include __DIR__ . '/../components/quantity_modal.php';
 
 // Include item details modal for yesterday's behavior
-require_once __DIR__ . '/../components/detailed_product_modal.php';
-echo renderDetailedProductModal([], []);
+require_once __DIR__ . '/../components/detailed_item_modal.php';
+echo renderDetailedItemModal([], []);
 ?>
 
 <!-- JavaScript -->
@@ -105,7 +105,7 @@ window.showItemDetailsModal = async function(sku) {
         
         if (data.success && data.item) {
             // Find and show the detailed modal (it's included in the page)
-            const modal = document.getElementById('detailedProductModal');
+            const modal = document.getElementById('detailedItemModal');
             if (modal) {
                 // Update modal content with the item data
                 updateDetailedModalContent(data.item, data.images || []);
@@ -127,10 +127,10 @@ window.showItemDetailsModal = async function(sku) {
 // Function to update detailed modal content
 function updateDetailedModalContent(item, images) {
     // Update basic info
-    const titleElement = document.querySelector('#detailedProductModal h2');
+    const titleElement = document.querySelector('#detailedItemModal h2');
     if (titleElement) titleElement.textContent = item.name;
     
-    const skuElement = document.querySelector('#detailedProductModal .text-xs');
+    const skuElement = document.querySelector('#detailedItemModal .text-xs');
     if (skuElement) skuElement.textContent = `${item.category || 'Product'} • SKU: ${item.sku}`;
     
     const priceElement = document.getElementById('detailedCurrentPrice');
@@ -152,7 +152,7 @@ function updateDetailedModalContent(item, images) {
     }
     
     // Update stock status
-    const stockBadge = document.querySelector('#detailedProductModal .bg-green-100, #detailedProductModal .bg-red-100');
+    const stockBadge = document.querySelector('#detailedItemModal .bg-green-100, #detailedItemModal .bg-red-100');
     if (stockBadge && stockBadge.querySelector('svg')) {
         const stockLevel = parseInt(item.stockLevel || 0);
         if (stockLevel > 0) {
@@ -184,7 +184,7 @@ function updateDetailedModalContent(item, images) {
 
 // Modal close functions (matching the detailed modal component)
 function closeDetailedModal() {
-    const modal = document.getElementById('detailedProductModal');
+    const modal = document.getElementById('detailedItemModal');
     if (modal) {
         modal.classList.add('hidden');
         document.body.style.overflow = ''; // Restore scrolling
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Apply coordinates to each product icon
         baseAreas.forEach((areaData, index) => {
-            const areaElement = document.querySelector(`.product-icon[data-index="${index}"]`);
+            const areaElement = document.querySelector(`.item-icon[data-index="${index}"]`);
             if (areaElement) {
                 areaElement.style.position = 'absolute';
                 areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Setting up popup events after positioning...');
         
         // Get all product icons
-        const productIcons = document.querySelectorAll('.product-icon');
+        const productIcons = document.querySelectorAll('.item-icon');
         console.log(`Found ${productIcons.length} product icons to setup`);
         
         productIcons.forEach((icon, index) => {

@@ -29,11 +29,11 @@ try {
     $item = $input['item'];
     $images = $input['images'];
     
-    // Include the detailed product modal component
-    require_once __DIR__ . '/../components/detailed_product_modal.php';
+    // Include the detailed item modal component
+    require_once __DIR__ . '/../components/detailed_item_modal.php';
     
     // Render the modal and return the HTML
-    echo renderDetailedProductModal($item, $images);
+    echo renderDetailedItemModal($item, $images);
     
 } catch (Exception $e) {
     http_response_code(500);

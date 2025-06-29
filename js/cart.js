@@ -49,7 +49,7 @@ class ShoppingCart {
     refreshModalSizeDropdown() {
         // Check if any modal is open and has size options
         const quantityModal = document.getElementById('quantityModal');
-        const detailedModal = document.getElementById('detailedProductModal');
+        const detailedModal = document.getElementById('detailedItemModal');
         const sizeSelect = document.getElementById('sizeSelect');
         
         // Check for quantity modal (room pages)
@@ -158,14 +158,17 @@ class ShoppingCart {
         const quantity = item.quantity || 1; // Use provided quantity or default to 1
         const color = item.color || null; // Color selection support
         const size = item.size || null; // Size selection support
+        const gender = item.gender || null; // Gender selection support
         
-        // Create unique identifier for item+color+size combination
+        // Create unique identifier for item+gender+color+size combination
         const existingItem = this.items.find(cartItem => {
             const cartColor = cartItem.color || null;
             const cartSize = cartItem.size || null;
+            const cartGender = cartItem.gender || null;
             return cartItem.sku === item.sku && 
                    cartColor === color && 
-                   cartSize === size;
+                   cartSize === size &&
+                   cartGender === gender;
         });
         
         if (existingItem) {
@@ -179,8 +182,14 @@ class ShoppingCart {
                 quantity: quantity
             };
             
-            // Build display name with color and size
+            // Build display name with gender, color, and size
             let displayParts = [item.name];
+            
+            // Add gender if specified (first in hierarchy)
+            if (gender) {
+                cartItem.gender = gender;
+                displayParts.push(gender);
+            }
             
             // Add color if specified
             if (color) {
@@ -214,15 +223,17 @@ class ShoppingCart {
         }
     }
 
-    removeItem(itemSku, color = null, size = null) {
+    removeItem(itemSku, color = null, size = null, gender = null) {
         // Normalize null values (handle 'null' strings from onclick handlers)
         const normalizedColor = (color === 'null' || color === '' || color === undefined) ? null : color;
         const normalizedSize = (size === 'null' || size === '' || size === undefined) ? null : size;
+        const normalizedGender = (gender === 'null' || gender === '' || gender === undefined) ? null : gender;
         
         this.items = this.items.filter(item => {
             const itemColor = item.color || null;
             const itemSize = item.size || null;
-            return !(item.sku === itemSku && itemColor === normalizedColor && itemSize === normalizedSize);
+            const itemGender = item.gender || null;
+            return !(item.sku === itemSku && itemColor === normalizedColor && itemSize === normalizedSize && itemGender === normalizedGender);
         });
         this.saveCart();
         this.updateCartCount();
@@ -239,20 +250,22 @@ class ShoppingCart {
         }
     }
 
-    updateQuantity(itemSku, quantity, color = null, size = null) {
+    updateQuantity(itemSku, quantity, color = null, size = null, gender = null) {
         // Normalize null values (handle 'null' strings from onclick handlers)
         const normalizedColor = (color === 'null' || color === '' || color === undefined) ? null : color;
         const normalizedSize = (size === 'null' || size === '' || size === undefined) ? null : size;
+        const normalizedGender = (gender === 'null' || gender === '' || gender === undefined) ? null : gender;
         
         const item = this.items.find(cartItem => {
             const itemColor = cartItem.color || null;
             const itemSize = cartItem.size || null;
-            return cartItem.sku === itemSku && itemColor === normalizedColor && itemSize === normalizedSize;
+            const itemGender = cartItem.gender || null;
+            return cartItem.sku === itemSku && itemColor === normalizedColor && itemSize === normalizedSize && itemGender === normalizedGender;
         });
         if (item) {
             item.quantity = Math.max(0, quantity);
             if (item.quantity === 0) {
-                this.removeItem(itemSku, normalizedColor, normalizedSize);
+                this.removeItem(itemSku, normalizedColor, normalizedSize, normalizedGender);
             } else {
                 this.saveCart();
                 this.updateCartCount();
@@ -459,6 +472,9 @@ class ShoppingCart {
                         <h3 class="font-medium text-gray-900">${item.displayName}</h3>
                         <p class="text-sm text-gray-500">$${item.price.toFixed(2)}</p>
                         <div class="flex items-center mt-1 space-x-3">
+                            ${item.gender ? `<div class="flex items-center">
+                                <span class="text-xs text-gray-500">👤 ${item.gender}</span>
+                            </div>` : ''}
                             ${item.color ? `<div class="flex items-center">
                                 <div class="w-3 h-3 rounded-full border border-gray-300 mr-2" style="background-color: ${item.colorCode || '#ccc'}"></div>
                                 <span class="text-xs text-gray-500">${item.color}</span>
@@ -472,10 +488,10 @@ class ShoppingCart {
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button onclick="updateQuantity('${item.sku}', ${item.quantity - 1}, ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">-</button>
+                    <button onclick="updateQuantity('${item.sku}', ${item.quantity - 1}, ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'}, ${item.gender ? `'${item.gender}'` : 'null'})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">-</button>
                     <span class="px-3 py-1 bg-gray-100 rounded">${item.quantity}</span>
-                    <button onclick="updateQuantity('${item.sku}', ${item.quantity + 1}, ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">+</button>
-                    <button onclick="removeFromCart('${item.sku}', ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'})" class="px-2 py-1 rounded ml-2" style="background-color: #dc2626; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Remove</button>
+                    <button onclick="updateQuantity('${item.sku}', ${item.quantity + 1}, ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'}, ${item.gender ? `'${item.gender}'` : 'null'})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">+</button>
+                    <button onclick="removeFromCart('${item.sku}', ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'}, ${item.gender ? `'${item.gender}'` : 'null'})" class="px-2 py-1 rounded ml-2" style="background-color: #dc2626; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Remove</button>
                 </div>
             </div>
             `;
@@ -862,15 +878,15 @@ function emergencyCartCleanup() {
     }
 }
 
-function removeFromCart(sku, color = null, size = null) {
+function removeFromCart(sku, color = null, size = null, gender = null) {
     if (cart) {
-        cart.removeItem(sku, color, size);
+        cart.removeItem(sku, color, size, gender);
     }
 }
 
-function updateQuantity(sku, newQuantity, color = null, size = null) {
+function updateQuantity(sku, newQuantity, color = null, size = null, gender = null) {
     if (cart) {
-        cart.updateQuantity(sku, newQuantity, color, size);
+        cart.updateQuantity(sku, newQuantity, color, size, gender);
     }
 }
 
@@ -1601,7 +1617,7 @@ window.initializePopupEventListeners = function() {
     // Close popup when clicking outside
     if (!document.hasGlobalPopupClickListener) {
         document.addEventListener('click', function(e) {
-            if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
+            if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.item-icon')) {
                 window.hidePopupImmediate();
             }
         });

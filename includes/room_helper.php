@@ -289,7 +289,7 @@ class RoomHelper {
             $itemWithImage['primaryImageUrl'] = $imagePath;
             
             $html .= "
-            <div class=\"product-icon{$outOfStockClass}\" 
+            <div class=\"item-icon{$outOfStockClass}\" 
                  data-product-id=\"" . htmlspecialchars($item['sku']) . "\"
                  data-stock=\"{$stockLevel}\"
                  data-index=\"{$index}\"

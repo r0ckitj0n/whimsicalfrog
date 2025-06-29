@@ -3,6 +3,7 @@
 // Handles comprehensive business configuration for website customization
 
 require_once 'config.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');

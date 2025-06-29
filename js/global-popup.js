@@ -5,12 +5,28 @@
 
 console.log('Loading global-popup.js...');
 
-// Immediately define placeholder functions to prevent timing issues
-window.showGlobalPopup = window.showGlobalPopup || function() { console.log('showGlobalPopup placeholder called'); };
-window.hideGlobalPopup = window.hideGlobalPopup || function() { console.log('hideGlobalPopup placeholder called'); };
+// IMMEDIATELY define working functions to prevent timing issues
+window.showGlobalPopup = function(element, product) {
+    console.log('Early showGlobalPopup called with:', element, product);
+    // Store the call for later processing
+    window.pendingPopupCall = { element, product };
+    
+    // If the main function is ready, call it
+    if (window.showGlobalPopupMain) {
+        return window.showGlobalPopupMain(element, product);
+    }
+};
+
+window.hideGlobalPopup = function() {
+    console.log('Early hideGlobalPopup called');
+    // If the main function is ready, call it
+    if (window.hideGlobalPopupMain) {
+        return window.hideGlobalPopupMain();
+    }
+};
 
 // Ensure functions are immediately available
-console.log('IMMEDIATE CHECK - Placeholder functions defined:');
+console.log('IMMEDIATE CHECK - Working functions defined:');
 console.log('- showGlobalPopup type:', typeof window.showGlobalPopup);
 console.log('- hideGlobalPopup type:', typeof window.hideGlobalPopup);
 
@@ -30,11 +46,11 @@ window.globalPopupState = {
 };
 
 /**
- * Show product popup - REAL FUNCTION (replaces placeholder)
+ * Show product popup - MAIN IMPLEMENTATION
  * @param {HTMLElement} element - The element that triggered the popup
  * @param {Object} product - Product data object
  */
-window.showGlobalPopup = function(element, product) {
+window.showGlobalPopupMain = function(element, product) {
     console.log('showGlobalPopup called with:', element, product);
     
     // Clear any existing timeout
@@ -236,9 +252,9 @@ window.positionPopup = function(element, popup) {
 };
 
 /**
- * Hide popup with delay for mouse movement - REAL FUNCTION (replaces placeholder)
+ * Hide popup with delay for mouse movement - MAIN IMPLEMENTATION
  */
-window.hideGlobalPopup = function() {
+window.hideGlobalPopupMain = function() {
     console.log('hideGlobalPopup called');
     clearTimeout(window.globalPopupTimeout);
     
@@ -587,10 +603,28 @@ window.showPopup = window.showGlobalPopup;
 window.hidePopup = window.hideGlobalPopup;
 window.hidePopupImmediate = window.hideGlobalPopupImmediate;
 
-console.log('Global popup functions attached to window:');
+// Now update the wrapper functions to use the main implementations
+window.showGlobalPopup = function(element, product) {
+    return window.showGlobalPopupMain(element, product);
+};
+
+window.hideGlobalPopup = function() {
+    return window.hideGlobalPopupMain();
+};
+
+console.log('Global popup functions updated to use main implementations:');
 console.log('- showGlobalPopup:', typeof window.showGlobalPopup);
 console.log('- hideGlobalPopup:', typeof window.hideGlobalPopup);
+console.log('- showGlobalPopupMain:', typeof window.showGlobalPopupMain);
+console.log('- hideGlobalPopupMain:', typeof window.hideGlobalPopupMain);
 console.log('- initializeGlobalPopup executed');
+
+// Process any pending call that came in early
+if (window.pendingPopupCall) {
+    console.log('Processing pending popup call:', window.pendingPopupCall);
+    window.showGlobalPopup(window.pendingPopupCall.element, window.pendingPopupCall.product);
+    window.pendingPopupCall = null;
+}
 
 // Force immediate availability check
 setTimeout(() => {

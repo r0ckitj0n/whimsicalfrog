@@ -335,10 +335,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         newIcon.addEventListener('click', function(e) {
                             console.log('Click on product:', productData.sku);
-                            if (typeof window.showGlobalPopup === 'function') {
-                                window.showGlobalPopup(this, productData);
+                            console.log('showItemDetailsModal available:', typeof window.showItemDetailsModal);
+                            if (typeof window.showItemDetailsModal === 'function') {
+                                console.log('Calling showItemDetailsModal on click...');
+                                window.showItemDetailsModal(productData.sku);
                             } else {
-                                console.error('showGlobalPopup function not available');
+                                console.error('showItemDetailsModal function not available on click');
                             }
                         });
                         

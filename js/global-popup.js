@@ -156,6 +156,25 @@ window.showGlobalPopupMain = function(element, product) {
         };
     }
     
+    // Set up popup content click handler to open detailed modal
+    popup.onclick = function(e) {
+        // Don't interfere with button clicks
+        if (e.target === popupAddBtn || popupAddBtn.contains(e.target)) {
+            return;
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+        popup.classList.remove('show');
+        
+        if (typeof window.showItemDetailsModal === 'function') {
+            console.log('Opening detailed modal from popup click for:', product.sku);
+            window.showItemDetailsModal(product.sku);
+        } else {
+            console.error('showItemDetailsModal function not available from popup click');
+        }
+    };
+    
     console.log('Popup should now be visible with show class:', popup.classList.contains('show'));
 };
 

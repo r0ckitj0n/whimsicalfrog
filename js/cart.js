@@ -416,12 +416,27 @@ class ShoppingCart {
         let salesVerbiage = {};
         try {
             const verbiageResponse = await fetch('/api/business_settings.php?action=get_sales_verbiage');
-            const verbiageData = await verbiageResponse.json();
-            if (verbiageData.success) {
-                salesVerbiage = verbiageData.verbiage;
+            
+            // Check if response is OK
+            if (!verbiageResponse.ok) {
+                console.warn('Sales verbiage API returned error:', verbiageResponse.status);
+            } else {
+                const responseText = await verbiageResponse.text();
+                
+                // Check if response is JSON
+                if (responseText.trim().startsWith('{')) {
+                    const verbiageData = JSON.parse(responseText);
+                    if (verbiageData.success) {
+                        salesVerbiage = verbiageData.verbiage;
+                        console.log('Sales verbiage loaded successfully');
+                    }
+                } else {
+                    console.warn('Sales verbiage API returned HTML instead of JSON:', responseText.substring(0, 200));
+                }
             }
         } catch (error) {
             console.log('Could not load sales verbiage:', error);
+            // Continue with empty sales verbiage - cart should still work
         }
 
         if (this.items.length === 0) {

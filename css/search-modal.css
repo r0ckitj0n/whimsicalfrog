@@ -397,20 +397,8 @@
     }
 }
 
-/* Search Input Styling - Ensure text is visible */
-#headerSearchInput {
-    color: white !important;
-    background-color: transparent !important;
-}
-
-#headerSearchInput::placeholder {
-    color: rgba(255, 255, 255, 0.7) !important;
-}
-
-#headerSearchInput:focus {
-    color: white !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
-}
+/* Search Input Styling - Now uses Global CSS Rules from header-styles.css */
+/* Removed conflicting styles to allow Global CSS Rules to take effect */
 
 /* Ensure text selection is visible */
 #headerSearchInput::selection {

@@ -4,21 +4,21 @@
 
 /* Button CSS Variables - managed by Global CSS Rules */
 :root {
-    --btn-primary-bg: #87ac3a;
-    --btn-primary-color: #ffffff;
-    --btn-primary-hover-bg: #6b8e23;
+    --btn-primary-bg: var(--brand_primary, #87ac3a);
+    --btn-primary-color: var(--color_white, #ffffff);
+    --btn-primary-hover-bg: var(--brand_primary_hover, #6b8e23);
     --btn-secondary-bg: transparent;
-    --btn-secondary-color: #87ac3a;
-    --btn-secondary-border: 2px solid #87ac3a;
-    --btn-secondary-hover-bg: #87ac3a;
-    --btn-secondary-hover-color: #ffffff;
-    --btn-danger-bg: #dc2626;
-    --btn-danger-color: #ffffff;
+    --btn-secondary-color: var(--brand_primary, #87ac3a);
+    --btn-secondary-border: var(--border_primary, 2px solid #87ac3a);
+    --btn-secondary-hover-bg: var(--brand_primary, #87ac3a);
+    --btn-secondary-hover-color: var(--color_white, #ffffff);
+    --btn-danger-bg: var(--color_error, #dc2626);
+    --btn-danger-color: var(--color_white, #ffffff);
     --btn-danger-hover-bg: #b91c1c;
-    --btn-padding: 0.5rem 1rem;
-    --btn-border-radius: 0.375rem;
+    --btn-padding: var(--spacing_base, 1rem) var(--spacing_base, 1rem);
+    --btn-border-radius: var(--radius_md, 0.375rem);
     --btn-font-weight: 600;
-    --btn-transition: all 0.2s ease;
+    --btn-transition: var(--transition_normal, all 0.2s ease);
 }
 
 /* Base Button Styles */
@@ -29,7 +29,7 @@
     padding: var(--btn-padding) !important;
     border-radius: var(--btn-border-radius) !important;
     font-weight: var(--btn-font-weight) !important;
-    font-size: 0.875rem !important;
+    font-size: var(--font_xs, 12px) !important;
     line-height: 1.25 !important;
     text-decoration: none !important;
     text-align: center !important;
@@ -122,15 +122,15 @@
 
 /* Success Button */
 .btn-success {
-    background-color: #87ac3a !important;
-    color: #ffffff !important;
-    border-color: #87ac3a !important;
+    background-color: var(--brand_primary, #87ac3a) !important;
+    color: var(--color_white, #ffffff) !important;
+    border-color: var(--brand_primary, #87ac3a) !important;
 }
 
 .btn-success:hover:not(:disabled) {
     background-color: #059669 !important;
     border-color: #059669 !important;
-    color: #ffffff !important;
+    color: var(--color_white, #ffffff) !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3) !important;
 }
@@ -143,14 +143,14 @@
 /* Warning Button */
 .btn-warning {
     background-color: #f59e0b !important;
-    color: #ffffff !important;
+    color: var(--color_white, #ffffff) !important;
     border-color: #f59e0b !important;
 }
 
 .btn-warning:hover:not(:disabled) {
     background-color: #d97706 !important;
     border-color: #d97706 !important;
-    color: #ffffff !important;
+    color: var(--color_white, #ffffff) !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3) !important;
 }
@@ -163,14 +163,14 @@
 /* Info Button */
 .btn-info {
     background-color: #3b82f6 !important;
-    color: #ffffff !important;
+    color: var(--color_white, #ffffff) !important;
     border-color: #3b82f6 !important;
 }
 
 .btn-info:hover:not(:disabled) {
     background-color: #2563eb !important;
     border-color: #2563eb !important;
-    color: #ffffff !important;
+    color: var(--color_white, #ffffff) !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3) !important;
 }
@@ -182,35 +182,35 @@
 
 /* Light Button */
 .btn-light {
-    background-color: #f8fafc !important;
-    color: #374151 !important;
-    border-color: #e5e7eb !important;
+    background-color: var(--color_gray_50, #f8fafc) !important;
+    color: var(--color_gray_700, #374151) !important;
+    border-color: var(--color_gray_200, #e5e7eb) !important;
 }
 
 .btn-light:hover:not(:disabled) {
-    background-color: #f1f5f9 !important;
-    border-color: #d1d5db !important;
-    color: #374151 !important;
+    background-color: var(--color_gray_100, #f1f5f9) !important;
+    border-color: var(--color_gray_300, #d1d5db) !important;
+    color: var(--color_gray_700, #374151) !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: var(--shadow_md, 0 4px 6px rgba(0, 0, 0, 0.1)) !important;
 }
 
 .btn-light:active {
-    background-color: #e2e8f0 !important;
+    background-color: var(--color_gray_200, #e2e8f0) !important;
     transform: translateY(0) !important;
 }
 
 /* Dark Button */
 .btn-dark {
-    background-color: #1f2937 !important;
-    color: #ffffff !important;
-    border-color: #1f2937 !important;
+    background-color: var(--color_gray_800, #1f2937) !important;
+    color: var(--color_white, #ffffff) !important;
+    border-color: var(--color_gray_800, #1f2937) !important;
 }
 
 .btn-dark:hover:not(:disabled) {
-    background-color: #111827 !important;
-    border-color: #111827 !important;
-    color: #ffffff !important;
+    background-color: var(--color_gray_900, #111827) !important;
+    border-color: var(--color_gray_900, #111827) !important;
+    color: var(--color_white, #ffffff) !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 8px rgba(31, 41, 55, 0.3) !important;
 }

@@ -4,18 +4,18 @@
 
 /* Form CSS Variables - managed by Global CSS Rules */
 :root {
-    --form-input-bg: #ffffff;
-    --form-input-border: 1px solid #d1d5db;
-    --form-input-border-focus: 2px solid #87ac3a;
-    --form-input-color: #374151;
-    --form-input-placeholder: #9ca3af;
+    --form-input-bg: var(--color_white, #ffffff);
+    --form-input-border: 1px solid var(--color_gray_300, #d1d5db);
+    --form-input-border-focus: var(--border_primary, 2px solid #87ac3a);
+    --form-input-color: var(--color_gray_700, #374151);
+    --form-input-placeholder: var(--color_gray_400, #9ca3af);
     --form-input-padding: 0.5rem 0.75rem;
     --form-input-border-radius: 0.375rem;
-    --form-label-color: #374151;
-    --form-label-font-weight: 500;
-    --form-error-color: #dc2626;
+    --form-label-color: var(--color_gray_700, #374151);
+    --form-label-font-weight: var(--font_weight_medium, 500);
+    --form-error-color: var(--color_error, #dc2626);
     --form-success-color: #059669;
-    --form-select-bg: #ffffff;
+    --form-select-bg: var(--color_white, #ffffff);
     --form-select-arrow: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzZCNzI4MCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==');
 }
 

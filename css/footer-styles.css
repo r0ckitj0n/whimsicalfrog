@@ -9,14 +9,14 @@
 :root {
     /* Footer Colors */
     --footer-bg-color: #2d3748;
-    --footer-text-color: #ffffff;
-    --footer-link-color: #87ac3a;
-    --footer-link-hover-color: #a3cc4a;
+    --footer-text-color: var(--color_white, #ffffff);
+    --footer-link-color: var(--brand_primary, #87ac3a);
+    --footer-link-hover-color: var(--brand_primary_light, #a3cc4a);
     --footer-border-color: #4a5568;
-    --footer-heading-color: #87ac3a;
+    --footer-heading-color: var(--brand_primary, #87ac3a);
     --footer-copyright-color: #a0aec0;
-    --footer-social-icon-color: #87ac3a;
-    --footer-social-icon-hover: #a3cc4a;
+    --footer-social-icon-color: var(--brand_primary, #87ac3a);
+    --footer-social-icon-hover: var(--brand_primary_light, #a3cc4a);
     
     /* Footer Spacing */
     --footer-padding-top: 40px;
@@ -25,7 +25,7 @@
     /* Footer Typography */
     --footer-font-size: 14px;
     --footer-heading-size: 18px;
-    --footer-copyright-size: 12px;
+    --footer-copyright-size: var(--font_xs, 12px);
     
     /* Footer Borders */
     --footer-divider-style: 1px solid #4a5568;

@@ -6,7 +6,7 @@
     background-position: center;
     background-repeat: no-repeat;
     position: relative;
-    border-radius: 15px;
+    border-radius: var(--radius_lg, 15px);
     overflow: hidden;
 }
 
@@ -74,9 +74,9 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: var(--color_white, #fff);
+    border-radius: var(--spacing_sm, 8px);
+    box-shadow: var(--shadow_md, 0 4px 6px rgba(0, 0, 0, 0.1));
     z-index: 10;
     pointer-events: auto;
 }
@@ -99,9 +99,9 @@
     position: absolute;
     top: -5px;
     right: -5px;
-    background: #dc2626;
-    color: white;
-    font-size: 12px;
+    background: var(--color_error, #dc2626);
+    color: var(--color_white, white);
+    font-size: var(--font_xs, 12px);
     font-weight: bold;
     padding: 4px 8px;
     border-radius: 12px;

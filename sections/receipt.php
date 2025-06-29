@@ -39,9 +39,28 @@ try {
     // Get receipt message based on context
     $receiptMessage = getReceiptMessage($pdo, $order, $orderItems);
     
+    // Get sales verbiage
+    $salesVerbiage = getSalesVerbiage($pdo);
+    
 } catch (Exception $e) {
     echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Error loading order</h1><p>'.htmlspecialchars($e->getMessage()).'</p></div>';
     return;
+}
+
+function getSalesVerbiage($pdo) {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT setting_key, setting_value 
+            FROM business_settings 
+            WHERE category = 'sales' AND setting_key LIKE 'receipt_%'
+            ORDER BY display_order
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    } catch (Exception $e) {
+        error_log("Error getting sales verbiage: " . $e->getMessage());
+        return [];
+    }
 }
 
 function getReceiptMessage($pdo, $order, $orderItems) {
@@ -364,7 +383,36 @@ $pending = ($order['paymentStatus'] === 'Pending');
         </div>
     <?php endif; ?>
 
-    <div class="text-center">
+    <!-- Sales Verbiage Section -->
+    <?php if (!empty($salesVerbiage)): ?>
+        <div class="border-t pt-4 mt-4 space-y-3">
+            <?php if (!empty($salesVerbiage['receipt_thank_you_message'])): ?>
+                <div class="bg-green-50 border border-green-200 text-green-800 p-3 rounded-lg text-center">
+                    <p class="font-semibold">💚 <?= htmlspecialchars($salesVerbiage['receipt_thank_you_message']) ?></p>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($salesVerbiage['receipt_next_steps'])): ?>
+                <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg">
+                    <p class="text-sm">📋 <?= htmlspecialchars($salesVerbiage['receipt_next_steps']) ?></p>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($salesVerbiage['receipt_social_sharing'])): ?>
+                <div class="bg-purple-50 border border-purple-200 text-purple-800 p-3 rounded-lg text-center">
+                    <p class="text-sm font-medium">📱 <?= htmlspecialchars($salesVerbiage['receipt_social_sharing']) ?></p>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($salesVerbiage['receipt_return_customer'])): ?>
+                <div class="bg-orange-50 border border-orange-200 text-orange-800 p-3 rounded-lg text-center">
+                    <p class="text-sm">🎨 <?= htmlspecialchars($salesVerbiage['receipt_return_customer']) ?></p>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="text-center mt-4">
         <button id="printBtn" onclick="window.print();" class="px-4 py-2 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white rounded">Print Receipt</button>
     </div>
 </div> 

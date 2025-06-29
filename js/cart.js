@@ -412,6 +412,18 @@ class ShoppingCart {
             return;
         }
 
+        // Load sales verbiage
+        let salesVerbiage = {};
+        try {
+            const verbiageResponse = await fetch('/api/business_settings.php?action=get_sales_verbiage');
+            const verbiageData = await verbiageResponse.json();
+            if (verbiageData.success) {
+                salesVerbiage = verbiageData.verbiage;
+            }
+        } catch (error) {
+            console.log('Could not load sales verbiage:', error);
+        }
+
         if (this.items.length === 0) {
             cartContainer.innerHTML = '<div class="text-center py-8 text-gray-500">Your cart is empty</div>';
             return;
@@ -460,6 +472,30 @@ class ShoppingCart {
             return { ...item, finalImageUrl };
         }));
 
+        // Build sales messaging sections
+        const headerMessage = salesVerbiage.cart_header_message ? 
+            `<div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4">
+                <div class="flex items-center">
+                    <span class="text-lg mr-2">🛒</span>
+                    <span class="font-semibold">${salesVerbiage.cart_header_message}</span>
+                </div>
+            </div>` : '';
+
+        const urgencyMessage = salesVerbiage.cart_urgency_message ? 
+            `<div class="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-2 rounded-lg mb-4 text-center">
+                <span class="font-medium">${salesVerbiage.cart_urgency_message}</span>
+            </div>` : '';
+
+        const socialProofMessage = salesVerbiage.cart_social_proof ? 
+            `<div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg mb-4 text-center">
+                <span>${salesVerbiage.cart_social_proof}</span>
+            </div>` : '';
+
+        const guaranteeMessage = salesVerbiage.cart_guarantee_message ? 
+            `<div class="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-lg mb-4 text-center">
+                <span class="font-medium">${salesVerbiage.cart_guarantee_message}</span>
+            </div>` : '';
+
         const cartHTML = processedItems.map(item => {
             return `
             <div class="flex items-center justify-between p-4 border-b border-gray-200">
@@ -470,6 +506,7 @@ class ShoppingCart {
                     </div>
                     <div>
                         <h3 class="font-medium text-gray-900">${item.displayName}</h3>
+                        <p class="text-xs text-gray-400 font-mono">${item.sku}</p>
                         <p class="text-sm text-gray-500">$${item.price.toFixed(2)}</p>
                         <div class="flex items-center mt-1 space-x-3">
                             ${item.gender ? `<div class="flex items-center">
@@ -497,12 +534,18 @@ class ShoppingCart {
             `;
         }).join('');
 
-        cartContainer.innerHTML = cartHTML + `
+        const footerMessage = salesVerbiage.cart_footer_message ? 
+            `<div class="bg-purple-50 border border-purple-200 text-purple-800 px-4 py-3 rounded-lg mb-4 text-center">
+                <span class="font-semibold">💎 ${salesVerbiage.cart_footer_message}</span>
+            </div>` : '';
+
+        cartContainer.innerHTML = headerMessage + urgencyMessage + socialProofMessage + cartHTML + guaranteeMessage + `
             <div class="p-4 border-t border-gray-200 bg-gray-50">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-lg font-semibold">Total: $${this.getTotal().toFixed(2)}</span>
                     <button onclick="cart.clearCart()" class="px-4 py-2 rounded text-white" style="background-color: #6b7280; color: white !important; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
                 </div>
+                ${footerMessage}
                 <button onclick="cart.checkout()" class="brand-button w-full py-3 px-6 rounded-lg font-semibold">Proceed to Checkout</button>
             </div>
         `;

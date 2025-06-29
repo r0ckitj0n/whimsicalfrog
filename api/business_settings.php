@@ -43,6 +43,29 @@ try {
             getByCategory($pdo);
             break;
             
+        case 'get_sales_verbiage':
+            try {
+                $stmt = $pdo->prepare("
+                    SELECT setting_key, setting_value 
+                    FROM business_settings 
+                    WHERE category = 'sales' 
+                    ORDER BY display_order
+                ");
+                $stmt->execute();
+                $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+                
+                Response::json([
+                    'success' => true,
+                    'verbiage' => $settings
+                ]);
+            } catch (Exception $e) {
+                Response::json([
+                    'success' => false,
+                    'error' => 'Failed to load sales verbiage: ' . $e->getMessage()
+                ], 500);
+            }
+            break;
+            
         default:
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
             break;

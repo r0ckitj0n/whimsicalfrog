@@ -44,6 +44,7 @@
    STANDARD POPUP SYSTEM (Rooms 3, 4, 5, 6)
    ============================================== */
 
+.popup,
 .product-popup {
     position: absolute;
     background: var(--popup-bg-color);
@@ -61,6 +62,7 @@
     transform: translateY(10px);
 }
 
+.popup.show,
 .product-popup.show {
     opacity: 1;
     visibility: visible;
@@ -89,6 +91,13 @@
     border-radius: 10px;
     margin-bottom: 10px;
     background: #f8f9fa;
+}
+
+/* Popup Details Container */
+.popup-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* Popup Text Elements */
@@ -123,7 +132,8 @@
 }
 
 /* Popup Add Button */
-.popup-add-btn {
+.popup-add-btn,
+.popup-add-to-cart {
     width: 100%;
     background: var(--button-bg-primary) !important;
     color: var(--button-text-primary) !important;
@@ -136,7 +146,8 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
 }
 
-.popup-add-btn:hover {
+.popup-add-btn:hover,
+.popup-add-to-cart:hover {
     background: var(--button-bg-primary-hover) !important;
     color: var(--button-text-primary) !important;
     box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;

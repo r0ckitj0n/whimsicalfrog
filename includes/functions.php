@@ -25,18 +25,38 @@ require_once __DIR__ . '/stock_manager.php';
  * @param string $style Optional inline styles for the image tag.
  * @return string The HTML <img> tag.
  */
-function getImageTag($originalPath, $altText, $class = '', $style = '') {
-    if (empty($originalPath)) {
-        $originalPath = 'images/items/placeholder.webp'; // Default placeholder if path is empty
+function getImageTag($imagePath, $altText = '', $class = '', $style = '') {
+    if (empty($imagePath)) {
+        $imagePath = 'images/items/placeholder.webp'; // Default placeholder if path is empty
     }
-    // Corrected WebP path generation - assumes WebP is in the same directory as original but with .webp extension
-    $pathInfo = pathinfo($originalPath);
-    $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
     
-    $classAttr = !empty($class) ? " class='" . htmlspecialchars($class) . "'" : '';
-    $styleAttr = !empty($style) ? " style='" . htmlspecialchars($style) . "'" : '';
+    $pathInfo = pathinfo($imagePath);
+    $extension = strtolower($pathInfo['extension'] ?? '');
+    $basePath = ($pathInfo['dirname'] && $pathInfo['dirname'] !== '.')
+        ? $pathInfo['dirname'] . '/' . $pathInfo['filename']
+        : $pathInfo['filename'];
 
-    return "<img src='" . htmlspecialchars($webpPath) . "' alt='" . htmlspecialchars($altText) . "'" . $classAttr . $styleAttr . " onerror=\"this.onerror=null; this.src='" . htmlspecialchars($originalPath) . "';\">"; 
+    $classAttr = !empty($class) ? ' class="' . htmlspecialchars($class) . '"' : '';
+    $styleAttr = !empty($style) ? ' style="' . htmlspecialchars($style) . '"' : '';
+
+    // If already WebP, just return img tag
+    if ($extension === 'webp') {
+        return '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr . '>';
+    }
+
+    // Check if WebP version exists and use picture element for better browser support
+    $webpPath = $basePath . '.webp';
+    if (file_exists(__DIR__ . '/../' . $webpPath)) {
+        return '<picture>'
+              . '<source srcset="' . htmlspecialchars($webpPath) . '" type="image/webp">'
+              . '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr . '>'
+              . '</picture>';
+    }
+    
+    // Fallback with onerror handling
+    $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+    return '<img src="' . htmlspecialchars($webpPath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr 
+          . ' onerror="this.onerror=null; this.src=\'' . htmlspecialchars($imagePath) . '\';">'; 
 }
 
 /**

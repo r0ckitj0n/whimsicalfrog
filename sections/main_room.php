@@ -1,71 +1,20 @@
 <?php
-// Main room page with clickable doors for each category
+/**
+ * Main room page with clickable doors for each category
+ * Cleaned up version with centralized CSS and improved structure
+ */
+
+// Include centralized functions
+require_once __DIR__ . '/../includes/functions.php';
 ?>
-<style>
-    .door-area {
-        position: absolute;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        /* overflow: hidden; */
-        pointer-events: auto;
-    }
-    
-    .door-area:hover {
-        transform: scale(1.05);
-    }
-    
-    .door-label {
-        display: none;
-    }
-    
-    .door-sign {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        transition: transform 0.3s ease;
-        background: transparent;
-        mix-blend-mode: normal;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
-    }
-    
-    .door-area:hover .door-sign {
-        transform: scale(1.1);
-    }
-    
-    /* Welcome sign specific styles */
-    .flex-grow picture {
-        background: transparent;
-        display: block;
-        line-height: 0;
-    }
 
-    .flex-grow img {
-        background: transparent;
-        mix-blend-mode: normal;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
-        display: block;
-        line-height: 0;
-    }
+<!-- CSS link for main room styles -->
+<link href="css/main-room.css?v=<?php echo time(); ?>" rel="stylesheet">
 
-    /* Remove special overflow and debug borders for Sublimation */
-    #mainRoomPage { overflow: visible !important; }
-    .door-area.area-5, .door-area.area-5 .door-sign { border: none !important; overflow: unset !important; }
-</style>
-
-<section id="mainRoomPage" class="p-2">
+<section id="mainRoomPage" class="main-room-section">
     <!-- T-Shirts Door -->
-    <div class="door-area area-1" onclick="enterRoom(2)">
-        <picture class="block">
+    <div class="door-area area-1" onclick="enterRoom(2)" data-room="2" data-category="T-Shirts & Apparel">
+        <picture class="door-picture">
             <source srcset="images/sign_door_room2.webp" type="image/webp">
             <img src="images/sign_door_room2.png" alt="T-Shirts & Apparel" class="door-sign">
         </picture>
@@ -73,8 +22,8 @@
     </div>
     
     <!-- Tumblers Door -->
-    <div class="door-area area-2" onclick="enterRoom(3)">
-        <picture class="block">
+    <div class="door-area area-2" onclick="enterRoom(3)" data-room="3" data-category="Tumblers & Drinkware">
+        <picture class="door-picture">
             <source srcset="images/sign_door_room3.webp" type="image/webp">
             <img src="images/sign_door_room3.png" alt="Tumblers & Drinkware" class="door-sign">
         </picture>
@@ -82,8 +31,8 @@
     </div>
     
     <!-- Artwork Door -->
-    <div class="door-area area-3" onclick="enterRoom(4)">
-        <picture class="block">
+    <div class="door-area area-3" onclick="enterRoom(4)" data-room="4" data-category="Custom Artwork">
+        <picture class="door-picture">
             <source srcset="images/sign_door_room4.webp" type="image/webp">
             <img src="images/sign_door_room4.png" alt="Custom Artwork" class="door-sign">
         </picture>
@@ -91,8 +40,8 @@
     </div>
     
     <!-- Window Wraps Door -->
-    <div class="door-area area-4" onclick="enterRoom(6)">
-        <picture class="block">
+    <div class="door-area area-4" onclick="enterRoom(6)" data-room="6" data-category="Window Wraps">
+        <picture class="door-picture">
             <source srcset="images/sign_door_room6.webp" type="image/webp">
             <img src="images/sign_door_room6.png" alt="Window Wraps" class="door-sign">
         </picture>
@@ -100,8 +49,8 @@
     </div>
     
     <!-- Sublimation Door -->
-    <div class="door-area area-5" onclick="enterRoom(5)">
-        <picture class="block">
+    <div class="door-area area-5" onclick="enterRoom(5)" data-room="5" data-category="Sublimation Items">
+        <picture class="door-picture">
             <source srcset="images/sign_door_room5.webp" type="image/webp">
             <img src="images/sign_door_room5.png" alt="Sublimation Items" class="door-sign">
         </picture>
@@ -109,69 +58,5 @@
     </div>
 </section>
 
-<script>
-function enterRoom(roomNumber) {
-    console.log('Entering room:', roomNumber);
-    window.location.href = `/?page=room${roomNumber}&from=main`;
-}
-
-// Direct positioning script for main room doors
-document.addEventListener('DOMContentLoaded', function() {
-    // Original image dimensions
-    const originalImageWidth = 1280;
-    const originalImageHeight = 896;
-    
-    // Door coordinates from user
-    const doorCoordinates = [
-        { selector: '.area-1', top: 243, left: 30, width: 234, height: 233 }, // Area 1 (T-Shirts)
-        { selector: '.area-2', top: 403, left: 390, width: 202, height: 241 }, // Area 2 (Tumblers)
-        { selector: '.area-3', top: 271, left: 753, width: 170, height: 235 }, // Area 3 (Artwork)
-        { selector: '.area-4', top: 291, left: 1001, width: 197, height: 255 }, // Area 4 (Window Wraps)
-        { selector: '.area-5', top: 157, left: 486, width: 190, height: 230 } // Area 5 (Sublimation)
-    ];
-
-    // Get viewport dimensions - use full viewport
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    // Calculate the scale factor for the full-screen background
-    const viewportRatio = viewportWidth / viewportHeight;
-    const imageRatio = originalImageWidth / originalImageHeight;
-
-    let scale, offsetX, offsetY;
-    
-    // Calculate how the background image is displayed (cover)
-    if (viewportRatio > imageRatio) {
-        // Viewport is wider than image ratio, image width matches viewport width
-        scale = viewportWidth / originalImageWidth;
-        offsetY = (viewportHeight - (originalImageHeight * scale)) / 2;
-        offsetX = 0;
-    } else {
-        // Viewport is taller than image ratio, image height matches viewport height
-        scale = viewportHeight / originalImageHeight;
-        offsetX = (viewportWidth - (originalImageWidth * scale)) / 2;
-        offsetY = 0;
-    }
-    
-    console.log('Viewport dimensions:', viewportWidth, 'x', viewportHeight);
-    console.log('Scale:', scale, 'Offsets:', offsetX, offsetY);
-    
-    // Position each door
-    doorCoordinates.forEach(door => {
-        const element = document.querySelector(door.selector);
-        if (element) {
-            // Apply scaled coordinates
-            element.style.top = `${(door.top * scale) + offsetY}px`;
-            element.style.left = `${(door.left * scale) + offsetX}px`;
-            element.style.width = `${door.width * scale}px`;
-            element.style.height = `${door.height * scale}px`;
-            console.log(`Positioned ${door.selector}:`, element.style.top, element.style.left);
-        }
-    });
-    
-    // Handle window resize
-    window.addEventListener('resize', function() {
-        location.reload(); // Simple approach - reload page on resize
-    });
-});
-</script> 
+<!-- JavaScript for main room functionality -->
+<script src="js/main-room.js?v=<?php echo time(); ?>"></script> 

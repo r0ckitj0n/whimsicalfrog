@@ -2,17 +2,17 @@
    HEADER & NAVIGATION SYSTEM CSS
    ============================================== */
 
-/* Header CSS Variables - managed by Global CSS Rules */
+/* Header CSS Variables - restored to original WhimsicalFrog design */
 :root {
-    --header-bg-color: #ffffff;
-    --header-text-color: #374151;
+    --header-bg-color: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent);
+    --header-text-color: #87ac3a;
     --header-logo-height: 60px;
-    --header-padding-y: 1rem;
-    --header-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    --nav-link-color: #374151;
-    --nav-link-hover-color: #87ac3a;
+    --header-padding-y: 0.5rem;
+    --header-shadow: none;
+    --nav-link-color: #87ac3a;
+    --nav-link-hover-color: #a3cc4a;
     --nav-link-active-color: #87ac3a;
-    --search-bar-bg: #87ac3a;
+    --search-bar-bg: transparent;
     --search-bar-border: 2px solid #87ac3a;
     
     /* SEARCH BAR CUSTOMIZATION - Admin can modify these values */
@@ -22,7 +22,7 @@
 
 /* Main Header Container */
 .site-header {
-    background-color: var(--header-bg-color) !important;
+    background: var(--header-bg-color) !important;
     color: var(--header-text-color) !important;
     padding: var(--header-padding-y) 0 !important;
     box-shadow: var(--header-shadow) !important;
@@ -71,6 +71,7 @@
     height: var(--header-logo-height) !important;
     width: auto !important;
     transition: opacity 0.3s ease !important;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.7)) !important;
 }
 
 .header-logo:hover {
@@ -89,14 +90,17 @@
     font-size: 1.5rem !important;
     font-weight: 700 !important;
     margin-left: 0.5rem !important;
+    color: var(--header-text-color) !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
 }
 
 .logo-tagline {
     font-family: 'Merienda', cursive !important;
-    font-size: 0.875rem !important;
-    color: var(--nav-link-hover-color) !important;
+    font-size: 1.3rem !important;
+    color: var(--header-text-color) !important;
     margin-left: 0.5rem !important;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1) !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
+    line-height: 1.2 !important;
 }
 
 /* Navigation Links */
@@ -115,9 +119,10 @@
     padding: 0.5rem 0.75rem !important;
     border-radius: 0.375rem !important;
     font-weight: 500 !important;
-    font-size: 0.875rem !important;
+    font-size: 1.1rem !important;
     transition: all 0.2s ease !important;
     position: relative !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
 }
 
 .nav-link:hover {
@@ -269,6 +274,8 @@ html body .site-header .header-container .header-content .header-center .search-
     border-radius: 0.375rem !important;
     transition: all 0.2s ease !important;
     position: relative !important;
+    font-size: 1.1rem !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
 }
 
 .cart-link:hover {
@@ -277,24 +284,11 @@ html body .site-header .header-container .header-content .header-center .search-
 }
 
 .cart-count {
-    background-color: #87ac3a !important;
-    color: white !important;
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    padding: 0.125rem 0.375rem !important;
-    border-radius: 0.75rem !important;
-    min-width: 1.25rem !important;
-    height: 1.25rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    color: var(--nav-link-color) !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
     white-space: nowrap !important;
-    position: absolute !important;
-    top: -0.5rem !important;
-    right: -0.5rem !important;
-    transform: scale(0.8) !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
-    z-index: 10 !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
 }
 
 .cart-icon {
@@ -302,25 +296,31 @@ html body .site-header .header-container .header-content .header-center .search-
     height: 1.25rem !important;
     flex-shrink: 0 !important;
     position: relative !important;
+    stroke: var(--nav-link-color) !important;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.7)) !important;
 }
 
 .cart-total {
+    color: var(--nav-link-color) !important;
     font-size: 0.875rem !important;
     font-weight: 500 !important;
     white-space: nowrap !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
 }
 
 /* Welcome Message */
 .welcome-message {
-    font-size: 0.75rem !important;
+    font-size: 0.875rem !important;
     margin-left: 0.5rem !important;
-    color: var(--nav-link-hover-color) !important;
+    color: var(--header-text-color) !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
 }
 
 .welcome-message a {
-    color: var(--nav-link-hover-color) !important;
+    color: var(--header-text-color) !important;
     text-decoration: none !important;
     transition: opacity 0.2s ease !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7) !important;
 }
 
 .welcome-message a:hover {

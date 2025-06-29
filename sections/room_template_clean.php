@@ -1,11 +1,11 @@
 <?php
 /**
- * Room 4 (Artwork) - Clean implementation using RoomHelper
- * Eliminates code duplication and uses centralized functionality
+ * Clean Room Template - Uses centralized RoomHelper for all room functionality
+ * Replaces the massive room_template.php with a clean, maintainable solution
  */
 
 // Extract room number from URL
-$roomNumber = '4';
+$roomNumber = isset($_GET['page']) ? str_replace('room', '', $_GET['page']) : '2';
 
 // Include required helpers
 require_once __DIR__ . '/../includes/functions.php';
@@ -54,12 +54,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Global Product Popup -->
-<?php 
-require_once __DIR__ . '/../components/global_popup.php';
-echo renderGlobalPopup();
-echo renderGlobalPopupCSS();
-?>
+<!-- Popup for product details -->
+<div id="productPopup" class="popup" style="display: none;">
+    <div class="popup-content">
+        <img class="popup-image" src="" alt="Product">
+        <div class="popup-details">
+            <h3 class="popup-title"></h3>
+            <p class="popup-price"></p>
+            <p class="popup-description"></p>
+            <div class="popup-stock"></div>
+            <button class="popup-add-to-cart" onclick="addToCartWithModal(window.currentPopupProduct)">Add to Cart</button>
+        </div>
+    </div>
+</div>
 
 <!-- Room container -->
 <?php echo $roomHelper->renderRoomContainer(
@@ -70,17 +77,17 @@ echo renderGlobalPopupCSS();
 <!-- JavaScript -->
 <?php echo $roomHelper->renderJavaScript(); ?>
 
-<!-- Load centralized room functions and cart functionality -->
-<script src="js/room-functions.js?v=<?php echo time(); ?>"></script>
-<script src="js/cart.js?v=<?php echo time(); ?>"></script>
-<script src="js/sales.js?v=<?php echo time(); ?>"></script>
-<script src="js/global-popup.js?v=<?php echo time(); ?>"></script>
-<script src="js/dynamic_backgrounds.js?v=<?php echo time(); ?>"></script>
-
 <script>
-// Universal room functionality
-const ROOM_NUMBER = <?php echo json_encode($roomNumber); ?>;
-const ROOM_TYPE = <?php echo json_encode($roomHelper->getRoomType()); ?>;
-
-console.log('Room 4 (Artwork) loaded with <?php echo count($roomHelper->getRoomItems()); ?> items');
+// Additional room-specific initialization
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Room <?php echo $roomNumber; ?> loaded with <?php echo count($roomHelper->getRoomItems()); ?> items');
+    
+    // Initialize global popup and modal systems
+    if (typeof initializePopupEventListeners === 'function') {
+        initializePopupEventListeners();
+    }
+    if (typeof initializeModalEventListeners === 'function') {
+        initializeModalEventListeners();
+    }
+});
 </script> 

@@ -8,6 +8,7 @@ error_reporting(E_ALL);
 // Load centralized systems
 require_once __DIR__ . '/api/config.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/api/marketing_helper.php';
 
 // Get page parameter
@@ -40,28 +41,7 @@ if (strpos($page, 'admin') === 0 && !$isAdmin) {
 
 define('INCLUDED_FROM_INDEX', true);
 
-// Enhanced image function with WebP support and database integration
-function getImageTag($imagePath, $altText = '', $class = '') {
-    $pathInfo = pathinfo($imagePath);
-    $extension = $pathInfo['extension'] ?? '';
-    $basePath = ($pathInfo['dirname'] && $pathInfo['dirname'] !== '.')
-        ? $pathInfo['dirname'] . '/' . $pathInfo['filename']
-        : $pathInfo['filename'];
-
-    $classAttr = $class ? ' class="' . htmlspecialchars($class) . '"' : '';
-
-    if (strtolower($extension) === 'webp') {
-        return '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . '>';
-    }
-
-    $webpPath = $basePath . '.webp';
-    if (file_exists(__DIR__ . '/' . $webpPath)) {
-        return '<picture><source srcset="' . htmlspecialchars($webpPath) . '" type="image/webp">'
-              . '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . '></picture>';
-    }
-    
-    return '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . '>';
-}
+// Note: getImageTag() function is now centralized in includes/functions.php
 
 // Database-driven content initialization
 $categories = [];
@@ -183,7 +163,7 @@ $seoData = generatePageSEO($page, $currentSku);
     
     <!-- Core Styles -->
     <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/header-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
+
     <link href="css/button-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/search-modal.css?v=<?php echo time(); ?>" rel="stylesheet">
@@ -262,11 +242,15 @@ $seoData = generatePageSEO($page, $currentSku);
             background-image: url('images/room_main.webp?v=cb2');
         }
         
-        /* Navigation Styles */
+        /* Navigation Styles - Restored Original WhimsicalFrog Design */
         nav.main-nav {
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent);
-            padding-top: 5px;
-            padding-bottom: 5px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent) !important;
+            padding-top: 5px !important;
+            padding-bottom: 5px !important;
+            display: block !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 50 !important;
         }
         
         nav.main-nav a,
@@ -280,12 +264,20 @@ $seoData = generatePageSEO($page, $currentSku);
         
         .nav-link {
             color: #87ac3a !important;
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
+            padding: 8px 12px !important;
+            border-radius: 6px !important;
+            text-decoration: none !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+        
+        .nav-links {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
         }
         
         .nav-link:hover {
@@ -441,7 +433,7 @@ $seoData = generatePageSEO($page, $currentSku);
             <div class="flex-none">
                 <div class="flex items-center">
                     <a href="/?page=landing" class="flex items-center text-2xl font-bold font-merienda">
-                        <?= getImageTag('images/sign_whimsicalfrog.webp', 'Whimsical Frog', 'h-15 mr-2') ?>
+                        <?= getImageTag('images/sign_whimsicalfrog.webp', 'Whimsical Frog', 'h-12 mr-2') ?>
                     </a>
                     <div>
                         <p class="text-sm font-merienda ml-2 hidden md:block tagline">Discover unique custom crafts, made with love.</p>
@@ -459,9 +451,9 @@ $seoData = generatePageSEO($page, $currentSku);
             <div class="flex-grow flex justify-center">
                 <div class="relative max-w-md w-full mx-4">
                     <input type="text" id="headerSearchInput" placeholder="Search products..." 
-                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 rounded-full focus:outline-none focus:ring-2 transition-all duration-200">
+                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 border-[#87ac3a] rounded-full text-[#87ac3a] placeholder-white focus:outline-none focus:ring-2 focus:ring-[#87ac3a] transition-all duration-200">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-4 w-4 text-[#87ac3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>

@@ -61,9 +61,7 @@
             margin-top: 0;
         }
 
-        nav.main-nav {
-            display: none !important;
-        }
+
 
         /* Welcome sign placement */
         .area-1 {

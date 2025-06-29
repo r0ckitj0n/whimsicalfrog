@@ -3,79 +3,88 @@
 ob_start();
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
-// The authentication check is now handled by index.php before including this file
+// Authentication check handled by index.php before including this file
 
-// Include database configuration
-require_once __DIR__ . '/../api/config.php';
+// Include required files
+require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/../includes/logger.php';
 
-// Database connection
-$pdo = new PDO($dsn, $user, $pass, $options);
+// Get database instance
+$db = Database::getInstance();
+$pdo = $db->getConnection();
 
-// Get items
-$stmt = $pdo->query("SELECT * FROM items ORDER BY sku");
-$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Initialize modal state
-$modalMode = ''; // Default to no modal unless 'add', 'edit', or 'view' is in URL
+// Initialize data processing
 $editItem = null;
 $editCostBreakdown = null;
-$field_errors = $_SESSION['field_errors'] ?? []; // For highlighting fields with errors
+$field_errors = $_SESSION['field_errors'] ?? [];
 unset($_SESSION['field_errors']);
 
+// Streamlined modal mode detection
+$modalMode = match(true) {
+    isset($_GET['view']) && !empty($_GET['view']) => 'view',
+    isset($_GET['edit']) && !empty($_GET['edit']) => 'edit', 
+    isset($_GET['add']) && $_GET['add'] == 1 => 'add',
+    default => ''
+};
 
-// Check if we're in view mode
-if (isset($_GET['view']) && !empty($_GET['view'])) {
-    $itemIdToView = $_GET['view'];
-    $stmt = $pdo->prepare("SELECT * FROM items WHERE sku = ?");
-    $stmt->execute([$itemIdToView]);
-    $fetchedViewItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($fetchedViewItem) {
-        $modalMode = 'view';
-        $editItem = $fetchedViewItem; // Reuse editItem for view mode
+// Process modal data based on mode
+$editItem = match($modalMode) {
+    'view', 'edit' => $db->query("SELECT * FROM items WHERE sku = ?", [$_GET[$modalMode]])->fetch() ?: null,
+    'add' => function() use ($db) {
+        $lastSku = $db->query("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1")->fetch();
+        $lastNum = $lastSku ? (int)substr($lastSku['sku'], -3) : 0;
+        return ['sku' => 'WF-GEN-' . str_pad($lastNum + 1, 3, '0', STR_PAD_LEFT)];
+    },
+    default => null
+};
 
-        // Get cost breakdown data (temporarily disabled during SKU migration)
-        $editCostBreakdown = null;
-    }
-}
-// Check if we're in edit mode
-elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
-    $itemIdToEdit = $_GET['edit'];
-    $stmt = $pdo->prepare("SELECT * FROM items WHERE sku = ?");
-    $stmt->execute([$itemIdToEdit]);
-    $fetchedEditItem = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($fetchedEditItem) {
-        $modalMode = 'edit';
-        $editItem = $fetchedEditItem; 
-
-        // Get cost breakdown data (temporarily disabled during SKU migration)
-        $editCostBreakdown = null;
-    }
-} elseif (isset($_GET['add']) && $_GET['add'] == 1) {
-    $modalMode = 'add';
-    // Generate next SKU for new item
-    $stmtSku = $pdo->query("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
-    $lastSkuRow = $stmtSku->fetch(PDO::FETCH_ASSOC);
-    $lastSkuNum = $lastSkuRow ? (int)substr($lastSkuRow['sku'], -3) : 0;
-    $nextSku = 'WF-GEN-' . str_pad($lastSkuNum + 1, 3, '0', STR_PAD_LEFT);
-    
-    $editItem = ['sku' => $nextSku];
+// Execute function for add mode
+if ($modalMode === 'add' && is_callable($editItem)) {
+    $editItem = $editItem();
 }
 
-// Get categories for dropdown from items table
-$stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
-$categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
-if (!is_array($categories)) {
-    $categories = [];
+// Cost breakdown temporarily disabled during SKU migration
+$editCostBreakdown = null;
+
+// Get categories for dropdown
+$categories = $db->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category")->fetchAll(PDO::FETCH_COLUMN) ?? [];
+
+// Process search and filters using modern PHP
+$filters = [
+    'search' => $_GET['search'] ?? '',
+    'category' => $_GET['category'] ?? '',
+    'stock' => $_GET['stock'] ?? ''
+];
+
+// Build dynamic query with streamlined approach
+$whereConditions = ['1=1'];
+$queryParams = [];
+
+// Search filter
+if (!empty($filters['search'])) {
+    $whereConditions[] = "(i.name LIKE :search OR i.sku LIKE :search OR i.description LIKE :search)";
+    $queryParams[':search'] = '%' . $filters['search'] . '%';
 }
 
-// Search and filter logic
-$search = $_GET['search'] ?? '';
-$categoryFilter = $_GET['category'] ?? '';
-$stockFilter = $_GET['stock'] ?? '';
+// Category filter
+if (!empty($filters['category'])) {
+    $whereConditions[] = "i.category = :category";
+    $queryParams[':category'] = $filters['category'];
+}
 
-// Modified query to include image count
+// Stock filter with match expression
+if (!empty($filters['stock'])) {
+    $stockCondition = match($filters['stock']) {
+        'low' => "i.stockLevel <= i.reorderPoint AND i.stockLevel > 0",
+        'out' => "i.stockLevel = 0", 
+        'in' => "i.stockLevel > 0",
+        default => "1=1"
+    };
+    $whereConditions[] = $stockCondition;
+}
+
+// Execute optimized query
 $sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count 
         FROM items i 
         LEFT JOIN (
@@ -83,589 +92,34 @@ $sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count
             FROM item_images 
             GROUP BY sku
         ) img_count ON i.sku = img_count.sku 
-        WHERE 1=1";
-$params = [];
+        WHERE " . implode(' AND ', $whereConditions) . " 
+        ORDER BY i.sku ASC";
 
-if (!empty($search)) {
-    $sql .= " AND (i.name LIKE :search OR i.sku LIKE :search OR i.description LIKE :search)";
-    $params[':search'] = '%' . $search . '%';
-}
-if (!empty($categoryFilter)) {
-    $sql .= " AND i.category = :category";
-    $params[':category'] = $categoryFilter;
-}
-if (!empty($stockFilter)) {
-    if ($stockFilter === 'low') {
-        $sql .= " AND i.stockLevel <= i.reorderPoint AND i.stockLevel > 0";
-    } elseif ($stockFilter === 'out') {
-        $sql .= " AND i.stockLevel = 0";
-    } elseif ($stockFilter === 'in') {
-        $sql .= " AND i.stockLevel > 0";
-    }
-}
-$sql .= " ORDER BY i.sku ASC";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$items = $db->query($sql, $queryParams)->fetchAll();
 
+// Message handling for user feedback
 $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 
 ?>
+<!-- Load CSS utilities for comprehensive styling -->
+<link rel="stylesheet" href="css/button-styles.css">
 <style>
-    /* Force the inventory title to be green with highest specificity */
-    h1.inventory-title.text-2xl.font-bold {
-        color: #87ac3a !important;
-    }
-    
-    /* Brand button styling - Enhanced with better hover effects */
-    .brand-button {
-        background-color: #87ac3a !important;
-        color: white !important;
-        transition: all 0.2s ease !important;
-        border: none !important;
-        cursor: pointer !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-decoration: none !important;
-        font-weight: 500 !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-    }
-    
-    .brand-button:hover {
-        background-color: #6b8e23 !important; /* Darker shade for hover */
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
-    }
-    
-    .brand-button:active {
-        transform: translateY(0) !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-    }
-    
-    .toast-notification {
-        position: fixed; 
-        top: 20px; 
-        right: 20px; 
-        padding: 16px 20px;
-        border-radius: 12px; 
-        color: white; 
-        font-weight: 500; 
-        z-index: 9999;
-        opacity: 0; 
-        transform: translateY(-20px) translateX(100px); 
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        max-width: 400px;
-        min-width: 300px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-family: system-ui, -apple-system, sans-serif;
-    }
-    
-    .toast-notification.show { 
-        opacity: 1; 
-        transform: translateY(0) translateX(0); 
-    }
-    
-    .toast-notification.success { 
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border-color: rgba(16, 185, 129, 0.3);
-    }
-    
-    .toast-notification.error { 
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        border-color: rgba(239, 68, 68, 0.3);
-    }
-    
-    .toast-notification.info { 
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        border-color: rgba(59, 130, 246, 0.3);
-    }
-    
-    .toast-icon {
-        font-size: 20px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-    }
-    
-    .toast-content {
-        flex: 1;
-        font-size: 14px;
-        line-height: 1.4;
-    }
-    
-    .toast-close {
-        background: none;
-        border: none;
-        color: rgba(255,255,255,0.8);
-        cursor: pointer;
-        font-size: 18px;
-        padding: 0;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: all 0.2s;
-        flex-shrink: 0;
-    }
-    
-    .toast-close:hover {
-        background: rgba(255,255,255,0.2);
-        color: white;
-    }
+    /* Toast notifications handled by global utility classes */
 
-    .inventory-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px; table-layout: fixed; }
-    .inventory-table th { background-color: #87ac3a; color: white; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 0.8rem; position: sticky; top: 0; z-index: 10; }
-    .inventory-table td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; }
-    .inventory-table tr:hover { background-color: #f7fafc; }
-    .inventory-table th:first-child { border-top-left-radius: 6px; }
-    .inventory-table th:last-child { border-top-right-radius: 6px; }
-    
-    /* Fixed column widths to prevent resizing during inline editing */
-    .inventory-table th:nth-child(1), .inventory-table td:nth-child(1) { width: 60px; } /* Image */
-    .inventory-table th:nth-child(2), .inventory-table td:nth-child(2) { width: 70px; } /* Images */
-    .inventory-table th:nth-child(3), .inventory-table td:nth-child(3) { width: 180px; } /* Name */
-    .inventory-table th:nth-child(4), .inventory-table td:nth-child(4) { width: 120px; } /* Category */
-    .inventory-table th:nth-child(5), .inventory-table td:nth-child(5) { width: 100px; } /* SKU */
-    .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { width: 80px; } /* Stock */
-    .inventory-table th:nth-child(7), .inventory-table td:nth-child(7) { width: 90px; } /* Reorder Point */
-    .inventory-table th:nth-child(8), .inventory-table td:nth-child(8) { width: 90px; } /* Cost Price */
-    .inventory-table th:nth-child(9), .inventory-table td:nth-child(9) { width: 90px; } /* Retail Price */
-    .inventory-table th:nth-child(10), .inventory-table td:nth-child(10) { width: 120px; } /* Actions */
-    
-    /* Responsive adjustments for smaller screens */
-    @media (max-width: 1200px) {
-        .inventory-table { table-layout: auto; }
-        .inventory-table th, .inventory-table td { width: auto !important; min-width: 60px; }
-        .inventory-table th:nth-child(3), .inventory-table td:nth-child(3) { min-width: 120px; } /* Name */
-        .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { min-width: 60px; } /* Stock */
-        .inventory-table th:nth-child(7), .inventory-table td:nth-child(7) { min-width: 70px; } /* Reorder Point */
-    }
+    /* Inventory table styles handled by global utility classes */
 
-    .action-btn { padding: 5px 8px; border-radius: 4px; cursor: pointer; margin-right: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; border: none; }
-    .view-btn { background-color: #4299e1; color: white; } .view-btn:hover { background-color: #3182ce; }
-    .edit-btn { background-color: #f59e0b; color: white; } .edit-btn:hover { background-color: #d97706; }
-    .marketing-btn { background-color: #8b5cf6; color: white; } .marketing-btn:hover { background-color: #7c3aed; }
-    .delete-btn { background-color: #f56565; color: white; } .delete-btn:hover { background-color: #e53e3e; }
+    /* Action buttons handled by global utility classes */
 
-    .cost-breakdown { background-color: #f9fafb; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0; height: 100%; display: flex; flex-direction: column;}
-    .cost-breakdown h3 { color: #374151; font-size: 1rem; font-weight: 600; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #d1d5db; }
-    .cost-breakdown-section h4 { color: #4b5563; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .cost-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #e5e7eb; font-size: 0.8rem; }
-    .cost-item:last-child { border-bottom: none; }
-    .cost-item-name { font-weight: 500; color: #374151; flex-grow: 1; margin-right: 6px; word-break: break-word; }
-    .cost-item-value { font-weight: 600; color: #1f2937; white-space: nowrap; }
-    .cost-item-actions { display: flex; align-items: center; margin-left: 6px; gap: 4px; }
-.delete-cost-btn { 
-    background: #f56565; 
-    color: white; 
-    border: none; 
-    border-radius: 3px; 
-    width: 18px; 
-    height: 18px; 
-    font-size: 12px; 
-    cursor: pointer; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    transition: background-color 0.2s;
-}
-.delete-cost-btn:hover { background: #e53e3e; }
+    /* Cost breakdown styles handled by global utility classes */
 
-/* Friendly Delete Cost Dialog */
-    /* Navigation Arrow Styling */
-    .nav-arrow {
-        position: fixed;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 60; /* Higher than modal z-index */
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(4px);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    .nav-arrow:hover {
-        background: rgba(0, 0, 0, 0.5);
-        transform: translateY(-50%) scale(1.1);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-    }
-    
-    /* Inline Stock Editor Styles */
-    .inline-stock-editor {
-        cursor: pointer;
-        padding: 2px 6px;
-        border-radius: 4px;
-        border: 1px solid transparent;
-        transition: all 0.2s ease;
-        background-color: #f8f9fa;
-        min-width: 30px;
-        display: inline-block;
-        text-align: center;
-        font-weight: 500;
-    }
-    
-    .inline-stock-editor:hover {
-        background-color: #e9ecef;
-        border-color: #87ac3a;
-        box-shadow: 0 0 0 1px rgba(135, 172, 58, 0.2);
-    }
-    
-    .inline-stock-editor.editing {
-        background-color: white;
-        border-color: #87ac3a;
-        box-shadow: 0 0 0 2px rgba(135, 172, 58, 0.2);
-    }
-    
-    .inline-stock-input {
-        width: 60px;
-        padding: 2px 6px;
-        border: 1px solid #87ac3a;
-        border-radius: 4px;
-        text-align: center;
-        font-size: 14px;
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(135, 172, 58, 0.2);
-        background-color: white;
-    }
-    
-    .inline-stock-input:focus {
-        border-color: #6b8e23;
-        box-shadow: 0 0 0 2px rgba(107, 142, 35, 0.3);
-    }
-    
-    .nav-arrow:active {
-        transform: translateY(-50%) scale(0.95);
-    }
-    
-    .nav-arrow svg {
-        width: 24px;
-        height: 24px;
-        stroke-width: 2.5;
-    }
-    
-    .nav-arrow.left {
-        left: 20px;
-    }
-    
-    .nav-arrow.right {
-        right: 20px;
-    }
-    
-    /* Hide arrows on smaller screens to avoid overlap */
-    @media (max-width: 768px) {
-        .nav-arrow {
-            display: none;
-        }
-    }
+    /* Navigation and inline editing styles handled by global utility classes */
 
-    .delete-cost-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    animation: fadeIn 0.2s ease-out;
-}
-
-.delete-cost-modal {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    max-width: 400px;
-    width: 90%;
-    animation: slideIn 0.3s ease-out;
-}
-
-.delete-cost-header {
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.delete-cost-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #374151;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.delete-cost-body {
-    padding: 20px 24px;
-}
-
-.delete-cost-body p {
-    margin: 0 0 12px 0;
-    color: #374151;
-    line-height: 1.5;
-}
-
-.delete-cost-note {
-    font-size: 0.9rem;
-    color: #6b7280;
-    font-style: italic;
-}
-
-.delete-cost-actions {
-    padding: 16px 24px 20px;
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-}
-
-.delete-cost-cancel {
-    padding: 8px 16px;
-    border: 1px solid #d1d5db;
-    background: white;
-    color: #374151;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-}
-
-.delete-cost-cancel:hover {
-    background: #f9fafb;
-    border-color: #9ca3af;
-}
-
-.delete-cost-confirm {
-    padding: 8px 16px;
-    border: none;
-    background: #ef4444;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.delete-cost-confirm:hover {
-    background: #dc2626;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideIn {
-    from { 
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-    .cost-edit-btn, .cost-delete-btn { padding: 1px; margin-left: 3px; border: none; background: none; border-radius: 3px; cursor: pointer; font-size: 10px; opacity: 0.7; transition: opacity 0.2s; }
-    .cost-edit-btn svg, .cost-delete-btn svg { width: 12px; height: 12px; }
-    .cost-edit-btn { color: #4299e1; } .cost-delete-btn { color: #f56565; }
-    .cost-edit-btn:hover, .cost-delete-btn:hover { opacity: 1; }
-
-    .add-cost-btn { display: inline-flex; align-items: center; padding: 3px 6px; background-color: #edf2f7; border: 1px dashed #cbd5e0; border-radius: 4px; color: #4a5568; font-size: 0.75rem; cursor: pointer; margin-top: 5px; transition: all 0.2s; }
-    .add-cost-btn:hover { background-color: #e2e8f0; border-color: #a0aec0; }
-    .add-cost-btn svg { width: 10px; height: 10px; margin-right: 3px; }
-
-    .cost-totals { background-color: #f3f4f6; padding: 8px; border-radius: 6px; margin-top: auto; font-size: 0.8rem; } /* margin-top: auto to push to bottom */
-    .cost-total-row { display: flex; justify-content: space-between; padding: 2px 0; }
-    .cost-label { font-size: 0.8rem; color: #6b7280; }
-    
-    .modal-outer { position: fixed; inset: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
-    .modal-content-wrapper { background-color: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); padding: 1.25rem; width: 100%; max-width: calc(80rem + 10px); /* Increased max-width for wider modal */ max-height: calc(90vh); display: flex; flex-direction: column; overflow: hidden; }
-    .modal-form-container { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; padding-right: 0.5rem; /* For scrollbar */ scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc; }
-    .modal-form-container::-webkit-scrollbar { width: 8px; }
-    .modal-form-container::-webkit-scrollbar-track { background: #f7fafc; border-radius: 4px; }
-    .modal-form-container::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
-    .modal-form-container::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
-    @media (min-width: 768px) { .modal-form-container { flex-direction: row; } }
-    .modal-form-main-column { flex: 1; padding-right: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; /* Reduced gap */ }
-    @media (max-width: 767px) { .modal-form-main-column { padding-right: 0; } }
-    .modal-form-suggestions-column { width: 100%; padding-left: 0; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
-    @media (min-width: 768px) { .modal-form-suggestions-column { flex: 0 0 50%; padding-left: 0.75rem; margin-top: 0; } }
-    
-    /* Two-column layout for cost and price suggestions */
-    .suggestions-container { display: flex; flex-direction: column; gap: 0.75rem; }
-    @media (min-width: 1024px) { .suggestions-container { flex-direction: row; gap: 0.75rem; } }
-    .cost-breakdown-wrapper, .price-suggestion-wrapper { flex: 1; }
-    
-    /* Legacy support for single cost column */
-    .modal-form-cost-column { width: 100%; padding-left: 0; margin-top: 1rem; }
-    @media (min-width: 768px) { .modal-form-cost-column { flex: 0 0 40%; padding-left: 0.75rem; margin-top: 0; } }\
-    
-    .modal-form-main-column label { font-size: 0.8rem; margin-bottom: 0.1rem; }
-    .modal-form-main-column input[type="text"],
-    .modal-form-main-column input[type="number"],
-    .modal-form-main-column input[type="file"],
-    .modal-form-main-column textarea,
-    .modal-form-main-column select {
-        font-size: 0.85rem; padding: 0.4rem 0.6rem; /* Reduced padding */
-        border: 1px solid #d1d5db; border-radius: 0.25rem; width: 100%;
-    }
-    .modal-form-main-column textarea { min-height: 60px; }
-    .image-preview { position: relative; width: 100%; max-width: 150px; margin-top: 5px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .image-preview img { width: 100%; height: auto; display: block; }
-
-    .editable { position: relative; padding: 6px 8px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
-    .editable:hover { background-color: #edf2f7; }
-    .editable:hover::after { content: "✏️"; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: 0.5; }
-    .editing { padding: 2px !important; background-color: #ebf8ff !important; }
-    .editing input, .editing select { 
-        width: 100%; 
-        padding: 4px 6px; 
-        border: 1px solid #4299e1; 
-        border-radius: 4px; 
-        font-size: inherit; 
-        font-family: inherit; 
-        background-color: white;
-        box-sizing: border-box;
-        margin: 0;
-        min-width: 0; /* Prevents input from expanding beyond container */
-    }
-    
-    .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
-    .loading-spinner.dark { border: 2px solid rgba(0,0,0,0.1); border-top-color: #333; }
-    .loading-spinner.hidden { display:none !important; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .field-error-highlight { border-color: #f56565 !important; box-shadow: 0 0 0 1px #f56565 !important; }
-
-    .cost-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-    .cost-modal.show { opacity: 1; pointer-events: auto; }
-    .cost-modal-content { background-color: white; border-radius: 8px; padding: 1rem; width: 100%; max-width: 380px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.3s; }
-    .cost-modal.show .cost-modal-content { transform: scale(1); }
-    .cost-modal-content label { font-size: 0.8rem; }
-    .cost-modal-content input { font-size: 0.85rem; padding: 0.4rem 0.6rem; }
-    .cost-modal-content button { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
-    
-    /* Enhanced image layout styles */
-    .images-section-container.full-width-images {
-        width: 100%;
-        max-width: none;
-    }
-    
-    .image-grid-container {
-        width: 100%;
-    }
-    
-    .image-item {
-        position: relative;
-        transition: transform 0.2s ease-in-out;
-    }
-    
-    .image-item:hover {
-        transform: translateY(-2px);
-        z-index: 5;
-    }
-    
-    /* Responsive image grid improvements */
-    @media (max-width: 768px) {
-        .image-grid-container .grid-cols-4 {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-        .image-grid-container .grid-cols-3 {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .image-grid-container .grid-cols-2,
-        .image-grid-container .grid-cols-3,
-        .image-grid-container .grid-cols-4 {
-            grid-template-columns: 1fr !important;
-        }
-    }
-
-/* Marketing Manager Modal Visibility Fix */
-#marketingManagerModal {
-    display: none !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
-    z-index: 2147483647 !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 1rem !important;
-}
-
-#marketingManagerModal.show {
-    display: flex !important;
-}
-
-#marketingManagerModal .modal-content {
-    background: white !important;
-    border-radius: 8px !important;
-    max-width: 90vw !important;
-    max-height: 90vh !important;
-    overflow-y: auto !important;
-    z-index: 2147483648 !important;
-    position: relative !important;
-}
-
-/* Custom scrollbar styles for cost suggestion modal */
-.custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e0 #f7fafc;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-    width: 12px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #f7fafc;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 6px;
-    border: 2px solid #f7fafc;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-}
-
-.custom-scrollbar::-webkit-scrollbar-corner {
-    background: #f7fafc;
-}
+    /* All inventory management styles handled by comprehensive global utility classes */
 </style>
 
-<div class="container mx-auto px-4 py-2">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-5 gap-4">
+<div class="admin-container">
+    <div class="admin-header">
         
         <form method="GET" action="" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <input type="hidden" name="page" value="admin">

@@ -1,182 +1,7 @@
 <?php
 // Admin settings page - Authentication is now handled by index.php
+// All CSS moved to button-styles.css for centralized management
 ?>
-
-<style>
-  .admin-data-label {
-    color: #222 !important;
-  }
-  .admin-data-value {
-    color: #c00 !important;
-    font-weight: bold;
-  }
-  
-  /* Modern Settings Page Styling */
-  .settings-page {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    min-height: 100vh;
-    padding: 2rem 1rem;
-    border-radius: 16px;
-    margin: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  }
-  
-  .settings-header {
-    text-align: center;
-    margin-bottom: 3rem;
-  }
-  
-  .settings-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #1e293b, #475569);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.5rem;
-  }
-  
-  .settings-subtitle {
-    color: #64748b;
-    font-size: 1.1rem;
-    font-weight: 400;
-  }
-  
-  .settings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-  
-  .settings-section {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-    transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
-  }
-  
-  .settings-section:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  }
-  
-  .section-header {
-    background: linear-gradient(135deg, #1e293b, #334155);
-    color: white;
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .section-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-    pointer-events: none;
-  }
-  
-  .section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    position: relative;
-    z-index: 1;
-  }
-  
-  .section-description {
-    font-size: 0.875rem;
-    opacity: 0.9;
-    position: relative;
-    z-index: 1;
-  }
-  
-  .section-content {
-    padding: 1.5rem;
-    border-radius: 0 0 16px 16px;
-  }
-  
-  /* Global button styling using CSS variables - buttons now use .btn-primary class */
-  .admin-settings-button {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.75rem;
-    text-align: left;
-  }
-  
-  .admin-settings-button:last-child {
-    margin-bottom: 0;
-  }
-  
-  .button-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-    margin-right: 0.75rem;
-    flex-shrink: 0;
-    color: currentColor;
-  }
-  
-  .button-text {
-    flex: 1;
-    text-align: left;
-  }
-  
-  .button-badge {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-  
-  /* Section-specific color themes */
-  .content-section .section-header {
-    background: linear-gradient(135deg, #059669, #10b981);
-  }
-  
-  .visual-section .section-header {
-    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-  }
-  
-  .business-section .section-header {
-    background: linear-gradient(135deg, #dc2626, #ef4444);
-  }
-  
-  .communication-section .section-header {
-    background: linear-gradient(135deg, #ea580c, #f97316);
-  }
-  
-  .technical-section .section-header {
-    background: linear-gradient(135deg, #0369a1, #0284c7);
-  }
-  
-  .integration-section .section-header {
-    background: linear-gradient(135deg, #7c2d12, #9a3412);
-  }
-  
-  .coming-soon-notice {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    border: 1px solid #f59e0b;
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    color: #92400e;
-    font-size: 0.875rem;
-  }
-  
-  .coming-soon-notice strong {
-    color: #78350f;
-  }
-</style>
 
 <div class="settings-page">
 
@@ -429,7 +254,7 @@
 
 
 <!-- Room Mapper Modal -->
-<div id="roomMapperModal" class="admin-modal-overlay" style="display: none;" onclick="closeRoomMapperModal()">
+<div id="roomMapperModal" class="admin-modal-overlay hidden" onclick="closeRoomMapperModal()">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
@@ -511,8 +336,8 @@
             </div>
             
             <div class="room-mapper-container relative mb-4" id="roomMapperContainer">
-                <div class="room-mapper-wrapper relative w-full bg-gray-800 rounded-lg overflow-hidden" id="roomMapperDisplay" style="height: 85vh; background-size: contain; background-position: center; background-repeat: no-repeat;">
-                    <div class="grid-overlay absolute top-0 left-0 w-full h-full pointer-events-none hidden" id="mapperGridOverlay" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px;"></div>
+                <div class="room-mapper-wrapper relative w-full bg-gray-800 rounded-lg overflow-hidden height-85vh bg-contain bg-center bg-no-repeat" id="roomMapperDisplay">
+                    <div class="grid-overlay absolute top-0 left-0 w-full h-full pointer-events-none hidden grid-overlay-pattern" id="mapperGridOverlay"></div>
                     <!-- Clickable areas will be added here -->
                 </div>
             </div>
@@ -528,140 +353,7 @@
     </div>
 </div>
 
-<style>
-.room-mapper-clickable-area {
-    position: absolute;
-    border: 2px solid red;
-    background: rgba(255, 0, 0, 0.2);
-    cursor: pointer;
-    z-index: 100;
-    transition: all 0.2s ease;
-}
-.room-mapper-clickable-area:hover {
-    background: rgba(255, 0, 0, 0.4);
-    transform: scale(1.02);
-}
-.room-mapper-container.grid-active .grid-overlay {
-    display: block !important;
-}
-
-/* Map type specific styling */
-.room-mapper-clickable-area.original-map {
-    border: 2px solid #10b981 !important;
-    background: rgba(16, 185, 129, 0.2) !important;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
-}
-.room-mapper-clickable-area.original-map:hover {
-    background: rgba(16, 185, 129, 0.4) !important;
-}
-
-.room-mapper-clickable-area.active-map {
-    border: 2px solid #3b82f6 !important;
-    background: rgba(59, 130, 246, 0.2) !important;
-    box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
-}
-.room-mapper-clickable-area.active-map:hover {
-    background: rgba(59, 130, 246, 0.4) !important;
-}
-
-.room-mapper-clickable-area.inactive-map {
-    border: 2px solid #6b7280 !important;
-    background: rgba(107, 114, 128, 0.2) !important;
-}
-.room-mapper-clickable-area.inactive-map:hover {
-    background: rgba(107, 114, 128, 0.4) !important;
-}
-
-/* Global CSS Modal Scrollbar Styling */
-#globalCSSScrollContainer {
-    scrollbar-width: thin;
-    scrollbar-color: #9ca3af #f3f4f6;
-}
-
-#globalCSSScrollContainer::-webkit-scrollbar {
-    width: 12px;
-}
-
-#globalCSSScrollContainer::-webkit-scrollbar-track {
-    background: #f3f4f6;
-    border-radius: 6px;
-}
-
-#globalCSSScrollContainer::-webkit-scrollbar-thumb {
-    background: #9ca3af;
-    border-radius: 6px;
-    border: 2px solid #f3f4f6;
-}
-
-#globalCSSScrollContainer::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
-}
-
-/* Force scrollbar to always be visible */
-#globalCSSScrollContainer {
-    overflow-y: scroll !important;
-    height: calc(90vh - 160px) !important;
-}
-
-/* Make sure content has enough height to scroll */
-#globalCSSContent {
-    min-height: calc(90vh - 100px);
-    padding-bottom: 100px;
-}
-
-/* System cleanup action button styles */
-.cleanup-action-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    background: white;
-    border: 2px solid #e5e7eb;
-    border-radius: 0.5rem;
-    text-align: center;
-    font-weight: 500;
-    color: #374151;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    min-height: 100px;
-    font-size: 0.875rem;
-}
-
-.cleanup-action-btn:hover {
-    border-color: #87ac3a;
-    background: #f0fdf4;
-    color: #15803d;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.cleanup-action-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.cleanup-action-btn.cleanup-warning:hover {
-    border-color: #dc2626;
-    background: #fef2f2;
-    color: #dc2626;
-}
-
-.cleanup-action-btn .action-desc {
-    font-size: 0.75rem;
-    font-weight: 400;
-    color: #6b7280;
-    margin-top: 0.5rem;
-    line-height: 1.2;
-    display: block;
-}
-
-.cleanup-action-btn:hover .action-desc {
-    color: inherit;
-    opacity: 0.8;
-}
-</style>
+<!-- Second CSS block removed - styles moved to button-styles.css -->
 
 <script>
 let mapperIsDrawing = false;
@@ -2874,7 +2566,7 @@ async function removeAreaMapping(mappingId) {
 </script>
 
 <!-- Room-Category Manager Modal -->
-<div id="roomCategoryManagerModal" class="admin-modal-overlay" style="display: none;" onclick="closeRoomCategoryManagerModal()">
+<div id="roomCategoryManagerModal" class="admin-modal-overlay hidden" onclick="closeRoomCategoryManagerModal()">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠📦 Room-Category Assignments</h2>
@@ -2954,7 +2646,7 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- Background Manager Modal -->
-<div id="backgroundManagerModal" class="admin-modal-overlay" style="display: none;" onclick="closeBackgroundManagerModal()">
+<div id="backgroundManagerModal" class="admin-modal-overlay hidden" onclick="closeBackgroundManagerModal()">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center p-4 border-b">
             <h2 class="text-xl font-bold text-gray-800">🖼️ Background Manager</h2>
@@ -3015,7 +2707,7 @@ async function removeAreaMapping(mappingId) {
                         <div id="currentBackgroundInfo" class="text-sm text-gray-600 mb-4">
                             Loading...
                         </div>
-                        <div id="currentBackgroundPreview" class="border rounded-lg overflow-hidden bg-white flex items-center justify-center" style="min-height: 400px; max-height: 80vh;">
+                        <div id="currentBackgroundPreview" class="border rounded-lg overflow-hidden bg-white flex items-center justify-center min-height-400 max-height-80vh">
                             <div class="text-gray-400 text-center">
                                 <svg class="w-16 h-16 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
@@ -3041,7 +2733,7 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- AI Settings Modal -->
-<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4" style="display: none;" onclick="closeAISettingsModal()">
+<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 hidden" onclick="closeAISettingsModal()">
     <div class="bg-white shadow-xl rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col" onclick="event.stopPropagation()">
         <!-- Fixed Header -->
         <div class="flex justify-between items-center p-4 border-b bg-white rounded-t-lg flex-shrink-0">
@@ -12131,155 +11823,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<style>
-/* Enhanced Admin Modal Consistency */
-.admin-modal-overlay .admin-modal-content {
-    /* Ensure all admin modals have proper scrolling */
-    max-height: calc(100vh - 2rem);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.admin-modal-overlay .admin-modal-header {
-    /* Fixed header that doesn't scroll */
-    flex-shrink: 0;
-    position: relative;
-    z-index: 10;
-}
-
-.admin-modal-overlay .modal-body {
-    /* Scrollable content area */
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0; /* Important for flex children */
-}
-
-/* Enhanced scrollbar for modal bodies */
-.admin-modal-overlay .modal-body {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e0 #f7fafc;
-}
-
-.admin-modal-overlay .modal-body::-webkit-scrollbar {
-    width: 8px;
-}
-
-.admin-modal-overlay .modal-body::-webkit-scrollbar-track {
-    background: #f7fafc;
-    border-radius: 4px;
-}
-
-.admin-modal-overlay .modal-body::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-}
-
-.admin-modal-overlay .modal-body::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-}
-
-/* Ensure modal close button is always visible */
-.admin-modal-overlay .modal-close {
-    position: absolute;
-    top: 16px;
-    right: 20px;
-    z-index: 20;
-}
-
-/* Enhanced Tab Styling - Using Global CSS Variables */
-.admin-modal-overlay .analytics-tab,
-.admin-modal-overlay .css-category-tab,
-.admin-modal-overlay .db-tab,
-.admin-modal-overlay .receipt-tab,
-.admin-modal-overlay .tab-button,
-.admin-modal-overlay button[data-tab],
-.admin-modal-overlay button[onclick*="Tab"] {
-    position: relative;
-    margin-right: var(--tab-margin-right, 2px) !important;
-    border-radius: var(--tab-border-radius-top, 8px 8px 0 0) !important;
-    border: 1px solid var(--tab-border-color, #d1d5db) !important;
-    border-bottom: none !important;
-    padding: var(--tab-padding, 8px 16px) !important;
-    background: var(--tab-inactive-bg, #f9fafb) !important;
-    color: var(--tab-inactive-text, #6b7280) !important;
-    font-weight: var(--tab-font-weight, 500) !important;
-    font-size: var(--tab-font-size, 14px) !important;
-    transition: var(--tab-transition, all 0.2s ease) !important;
-    cursor: pointer !important;
-    min-width: auto !important;
-}
-
-/* Active tab styling */
-.admin-modal-overlay .analytics-tab.border-blue-500,
-.admin-modal-overlay .analytics-tab.border-b-2.border-blue-500,
-.admin-modal-overlay .css-category-tab.active,
-.admin-modal-overlay .db-tab.bg-white,
-.admin-modal-overlay .receipt-tab.active,
-.admin-modal-overlay .tab-button.active,
-.admin-modal-overlay button[data-tab].active,
-.admin-modal-overlay button[onclick*="Tab"].active {
-    background: var(--tab-active-bg, #dcfce7) !important;
-    color: var(--tab-active-text, #166534) !important;
-    border-color: var(--tab-active-border, #87ac3a) !important;
-    border-bottom: 1px solid var(--tab-active-bg, #dcfce7) !important;
-    z-index: var(--tab-active-z-index, 2) !important;
-    margin-bottom: -1px !important;
-    font-weight: var(--tab-active-font-weight, 600) !important;
-}
-
-/* Hover effects for inactive tabs */
-.admin-modal-overlay .analytics-tab:not(.border-blue-500):hover,
-.admin-modal-overlay .css-category-tab:not(.active):hover,
-.admin-modal-overlay .db-tab:not(.bg-white):hover,
-.admin-modal-overlay .receipt-tab:not(.active):hover,
-.admin-modal-overlay .tab-button:not(.active):hover,
-.admin-modal-overlay button[data-tab]:not(.active):hover,
-.admin-modal-overlay button[onclick*="Tab"]:not(.active):hover {
-    background: var(--tab-hover-bg, #f3f4f6) !important;
-    color: var(--tab-hover-text, #374151) !important;
-    border-color: var(--tab-hover-border, #9ca3af) !important;
-}
-
-/* Tab container styling */
-.admin-modal-overlay .admin-tab-bar,
-.admin-modal-overlay .tab-buttons,
-.admin-modal-overlay .receipt-settings-tabs {
-    border-bottom: var(--tab-container-border, 1px solid #d1d5db) !important;
-    margin-bottom: var(--tab-container-margin-bottom, 20px) !important;
-    padding-bottom: 0 !important;
-    background: var(--tab-container-bg, #f9fafb) !important;
-    padding-top: var(--tab-container-padding-top, 8px) !important;
-}
-
-/* Remove extra spacing between tabs */
-.admin-modal-overlay .admin-tab-bar nav,
-.admin-modal-overlay .tab-buttons {
-    gap: 0 !important;
-    margin-left: 0 !important;
-    padding-left: var(--tab-container-padding-left, 16px) !important;
-    display: flex !important;
-}
-
-/* Special handling for analytics tabs */
-.admin-modal-overlay .analytics-tab {
-    border-bottom: 2px solid transparent !important;
-}
-
-.admin-modal-overlay .analytics-tab.border-b-2.border-blue-500 {
-    border-bottom: 2px solid #3b82f6 !important;
-    color: #3b82f6 !important;
-}
-
-/* Fix tab content area */
-.admin-modal-overlay .analytics-tab-content,
-.admin-modal-overlay .receipt-tab-content,
-.admin-modal-overlay .db-tab-content {
-    padding: var(--tab-content-padding, 20px) !important;
-    background: var(--tab-content-bg, #ffffff) !important;
-}
-</style>
+<!-- Third CSS block removed - styles moved to button-styles.css -->
 
 <script>
 // Categories Modal Functions
@@ -13950,189 +13494,7 @@ async function saveCartButtonTexts(texts) {
 </div>
 
 <!-- Database Tables Modal -->
-<style>
-/* Force scrollbars to be visible in database tables modal */
-#databaseTablesModal .db-scrollable {
-    overflow: auto !important;
-    scrollbar-width: thin;
-    scrollbar-color: #9ca3af #f3f4f6;
-    /* Force scrollbars to always be visible */
-    overflow-x: auto !important;
-    overflow-y: scroll !important;
-}
-
-#databaseTablesModal .db-scrollable::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
-}
-
-#databaseTablesModal .db-scrollable::-webkit-scrollbar-track {
-    background: #f3f4f6;
-    border-radius: 6px;
-}
-
-#databaseTablesModal .db-scrollable::-webkit-scrollbar-thumb {
-    background: #9ca3af;
-    border-radius: 6px;
-    border: 2px solid #f3f4f6;
-}
-
-#databaseTablesModal .db-scrollable::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
-}
-
-#databaseTablesModal .db-scrollable::-webkit-scrollbar-corner {
-    background: #f3f4f6;
-}
-
-/* Ensure tables have proper styling */
-#databaseTablesModal table {
-    border-collapse: collapse;
-}
-
-#databaseTablesModal table th,
-#databaseTablesModal table td {
-    border: 1px solid #e5e7eb;
-    white-space: nowrap;
-}
-
-#databaseTablesModal table th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-/* Improve table item selection visual feedback */
-#databaseTablesModal .table-item {
-    transition: all 0.2s ease;
-    border: 2px solid transparent;
-}
-
-#databaseTablesModal .table-item:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-#databaseTablesModal .table-item.selected {
-    border-color: #3b82f6 !important;
-    background-color: #eff6ff !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-}
-
-/* Specific styling for table data container to ensure scrollbars */
-#databaseTablesModal #tableData {
-    display: block;
-    min-height: 300px;
-}
-
-#databaseTablesModal #tableData thead,
-#databaseTablesModal #tableData tbody {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-}
-
-/* Ensure the table data container always shows scrollbars when content overflows */
-#databaseTablesModal .db-scrollable:has(#tableData) {
-    overflow-y: scroll !important;
-    overflow-x: auto !important;
-}
-
-/* Inline editing styles */
-#databaseTablesModal .editable-cell {
-    cursor: pointer;
-    position: relative;
-    padding: 8px 12px;
-    transition: background-color 0.2s ease;
-}
-
-#databaseTablesModal .editable-cell:hover {
-    background-color: #f0f9ff !important;
-    outline: 2px solid #3b82f6;
-    outline-offset: -2px;
-}
-
-#databaseTablesModal .editable-cell.editing {
-    background-color: #ffffff !important;
-    outline: 2px solid #10b981;
-    outline-offset: -2px;
-}
-
-#databaseTablesModal .cell-input {
-    width: 100%;
-    min-width: 80px;
-    border: none;
-    background: transparent;
-    padding: 4px 8px;
-    font-size: inherit;
-    font-family: inherit;
-    outline: none;
-    resize: none;
-}
-
-#databaseTablesModal .cell-actions {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    display: none;
-    background: white;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 20;
-}
-
-#databaseTablesModal .editable-cell.editing .cell-actions {
-    display: flex;
-}
-
-#databaseTablesModal .cell-actions button {
-    padding: 4px 8px;
-    font-size: 12px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-#databaseTablesModal .cell-actions .save-btn {
-    color: #10b981;
-}
-
-#databaseTablesModal .cell-actions .save-btn:hover {
-    background-color: #f0fdf4;
-}
-
-#databaseTablesModal .cell-actions .cancel-btn {
-    color: #ef4444;
-}
-
-#databaseTablesModal .cell-actions .cancel-btn:hover {
-    background-color: #fef2f2;
-}
-
-/* Edit mode indicator */
-#databaseTablesModal .edit-mode-indicator {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #10b981;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    display: none;
-}
-
-#databaseTablesModal .edit-mode-indicator.show {
-    display: block;
-}
-</style>
+<!-- Fourth CSS block removed - styles moved to button-styles.css -->
 
 <div id="databaseTablesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
     <div class="bg-white shadow-xl w-full h-full overflow-hidden">
@@ -16289,94 +15651,7 @@ function updateConnectionStatus(isConnected, lastSync) {
     </div>
 </div>
 
-<style>
-.receipt-settings-tabs {
-    display: flex;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.receipt-tab {
-    padding: 12px 24px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-weight: 500;
-    color: #6b7280;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-}
-
-.receipt-tab.active {
-    color: #3b82f6;
-    border-bottom-color: #3b82f6;
-}
-
-.receipt-tab:hover {
-    color: #3b82f6;
-    background-color: #f9fafb;
-}
-
-.receipt-tab-content {
-    display: none;
-    padding: 20px 0;
-}
-
-.receipt-tab-content.active {
-    display: block;
-}
-
-.receipt-message-item {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 16px;
-    background: #f9fafb;
-}
-
-.receipt-message-item.ai-generated {
-    border-color: #3b82f6;
-    background: #eff6ff;
-}
-
-.receipt-message-controls {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.receipt-message-controls button {
-    padding: 6px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    background: white;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s;
-}
-
-.receipt-message-controls button:hover {
-    background: #f3f4f6;
-}
-
-.receipt-message-controls .btn-ai {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
-}
-
-.receipt-message-controls .btn-ai:hover {
-    background: #2563eb;
-}
-
-.receipt-message-controls .btn-delete {
-    background: #ef4444;
-    color: white;
-    border-color: #ef4444;
-}
-
-.receipt-message-controls .btn-delete:hover {
-    background: #dc2626;
-}
-</style>
+<!-- Final CSS block removed - styles moved to button-styles.css -->
 
 <script>
 // Receipt Settings Modal Functions

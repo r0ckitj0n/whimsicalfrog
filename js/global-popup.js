@@ -9,6 +9,11 @@ console.log('Loading global-popup.js...');
 window.showGlobalPopup = window.showGlobalPopup || function() { console.log('showGlobalPopup placeholder called'); };
 window.hideGlobalPopup = window.hideGlobalPopup || function() { console.log('hideGlobalPopup placeholder called'); };
 
+// Ensure functions are immediately available
+console.log('IMMEDIATE CHECK - Placeholder functions defined:');
+console.log('- showGlobalPopup type:', typeof window.showGlobalPopup);
+console.log('- hideGlobalPopup type:', typeof window.hideGlobalPopup);
+
 // Initialize global variables like original cart.js
 window.globalPopupTimeout = null;
 window.isShowingPopup = false;
@@ -586,6 +591,19 @@ console.log('Global popup functions attached to window:');
 console.log('- showGlobalPopup:', typeof window.showGlobalPopup);
 console.log('- hideGlobalPopup:', typeof window.hideGlobalPopup);
 console.log('- initializeGlobalPopup executed');
+
+// Force immediate availability check
+setTimeout(() => {
+    console.log('POST-LOAD CHECK - Functions available:');
+    console.log('- window.showGlobalPopup:', typeof window.showGlobalPopup);
+    console.log('- window.hideGlobalPopup:', typeof window.hideGlobalPopup);
+    if (typeof window.showGlobalPopup !== 'function') {
+        console.error('CRITICAL: showGlobalPopup function not available after load!');
+    }
+    if (typeof window.hideGlobalPopup !== 'function') {
+        console.error('CRITICAL: hideGlobalPopup function not available after load!');
+    }
+}, 100);
 
 // Add a test function to manually verify popup works
 window.testPopup = function() {

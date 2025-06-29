@@ -163,6 +163,7 @@ $seoData = generatePageSEO($page, $currentSku);
     
     <!-- Core Styles -->
     <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
+    <link href="css/header-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/admin-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/button-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">

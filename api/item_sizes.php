@@ -112,7 +112,15 @@ function reduceStockForSale($pdo, $itemSku, $colorId, $sizeCode, $quantity) {
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
     
+    // Parse action from GET, POST, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
+    
+    // If no action found in GET/POST, try parsing from JSON body
+    if (empty($action)) {
+        $jsonInput = json_decode(file_get_contents('php://input'), true);
+        $action = $jsonInput['action'] ?? '';
+    }
+    
     $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     
     switch ($action) {
@@ -219,6 +227,77 @@ try {
                 'success' => true, 
                 'message' => 'Size added successfully',
                 'size_id' => $sizeId,
+                'new_total_stock' => $newTotalStock
+            ]);
+            break;
+            
+        case 'add_size_from_global':
+            if (!$isAdmin) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Admin access required']);
+                exit;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            $itemSku = $data['item_sku'] ?? '';
+            $globalSizeId = (int)($data['global_size_id'] ?? 0);
+            $colorId = !empty($data['color_id']) ? (int)$data['color_id'] : null;
+            $stockLevel = (int)($data['stock_level'] ?? 0);
+            $priceAdjustment = (float)($data['price_adjustment'] ?? 0.00);
+            $displayOrder = (int)($data['display_order'] ?? 0);
+            
+            if (empty($itemSku) || $globalSizeId <= 0) {
+                throw new Exception('Item SKU and global size ID are required');
+            }
+            
+            // Get global size data
+            $globalStmt = $pdo->prepare("SELECT size_name, size_code FROM global_sizes WHERE id = ? AND is_active = 1");
+            $globalStmt->execute([$globalSizeId]);
+            $globalSize = $globalStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$globalSize) {
+                throw new Exception('Global size not found or inactive');
+            }
+            
+            // Check if this size already exists for this item (and color if specified)
+            $checkWhere = "item_sku = ? AND size_name = ? AND size_code = ?";
+            $checkParams = [$itemSku, $globalSize['size_name'], $globalSize['size_code']];
+            
+            if ($colorId) {
+                $checkWhere .= " AND color_id = ?";
+                $checkParams[] = $colorId;
+            } else {
+                $checkWhere .= " AND color_id IS NULL";
+            }
+            
+            $checkStmt = $pdo->prepare("SELECT id FROM item_sizes WHERE $checkWhere");
+            $checkStmt->execute($checkParams);
+            
+            if ($checkStmt->fetch()) {
+                throw new Exception('This size already exists for this item/color combination');
+            }
+            
+            // Add the size from global data
+            $stmt = $pdo->prepare("
+                INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            ");
+            $stmt->execute([$itemSku, $colorId, $globalSize['size_name'], $globalSize['size_code'], $stockLevel, $priceAdjustment, $displayOrder]);
+            
+            $sizeId = $pdo->lastInsertId();
+            
+            // Sync stock levels
+            if ($colorId) {
+                syncColorStockWithSizes($pdo, $colorId);
+            }
+            $newTotalStock = syncTotalStockWithSizes($pdo, $itemSku);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Size added from global successfully',
+                'size_id' => $sizeId,
+                'size_name' => $globalSize['size_name'],
+                'size_code' => $globalSize['size_code'],
                 'new_total_stock' => $newTotalStock
             ]);
             break;

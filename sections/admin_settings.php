@@ -16,6 +16,9 @@
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     min-height: 100vh;
     padding: 2rem 1rem;
+    border-radius: 16px;
+    margin: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
   
   .settings-header {
@@ -97,6 +100,7 @@
   
   .section-content {
     padding: 1.5rem;
+    border-radius: 0 0 16px 16px;
   }
   
   /* Global button styling using CSS variables - buttons now use .btn-primary class */
@@ -196,7 +200,7 @@
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4 4 4 0 004-4V5z"></path>
           </svg>
-          <span class="button-text">Global Colors & Sizes</span>
+          <span class="button-text">Gender, Size & Color Management</span>
         </button>
         
         <button id="roomsBtn" onclick="openRoomSettingsModal()" class="btn-primary btn-full-width admin-settings-button">
@@ -213,7 +217,8 @@
           <span class="button-text">Room-Category Links</span>
         </button>
         
-        <button id="templateManagerBtn" onclick="openTemplateManagerModal()" class="btn-primary btn-full-width admin-settings-button">
+        <button id="templateManagerBtn" onclick="openTemplateManagerModal()" class="btn-primary btn-full-width admin-settings-button"
+                title="Manage your templates for colors, sizes, and costs. For people who love spreadsheets so much they want them embedded in their website administration panel.">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -229,8 +234,7 @@
         <p class="section-description">Customize appearance and interactive elements</p>
       </div>
       <div class="section-content">
-        <button id="cssRulesBtn" onclick="openCSSRulesModal()" class="btn-primary btn-full-width admin-settings-button" 
-                title="Change colors, fonts, and buttons because apparently 'make it look good' isn't specific enough instruction for you. Don't worry, we'll hold your hand through picking colors that don't make your customers' eyes bleed.">
+        <button id="cssRulesBtn" onclick="openCSSRulesModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
           </svg>
@@ -269,11 +273,18 @@
       <div class="section-content">
 
         
-        <button id="analyticsBtn" onclick="openAnalyticsModal()" class="btn-primary btn-full-width admin-settings-button">
+        <button id="marketingAnalyticsBtn" onclick="openMarketingAnalyticsModal()" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="button-text">Marketing Analytics</span>
+        </button>
+        
+        <button id="businessReportsBtn" onclick="openBusinessReportsModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
-          <span class="button-text">Analytics & Insights</span>
+          <span class="button-text">Business Reports</span>
         </button>
         
         <button id="salesAdminBtn" onclick="openSalesAdminModal()" class="btn-primary btn-full-width admin-settings-button">
@@ -6236,20 +6247,16 @@ function showRoomSettingsSuccess(message) {
 
 <!-- System Configuration Modal -->
 <div id="systemConfigModal" class="admin-modal-overlay" style="display: none;" onclick="closeSystemConfigModal()">
-    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
-        <div class="mt-3">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-900">⚙️ System Reference</h3>
-                <button onclick="closeSystemConfigModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            
-            <!-- Modal Content -->
-            <div class="space-y-6" id="systemConfigContent">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">⚙️ System Reference</h2>
+            <button onclick="closeSystemConfigModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <!-- Body -->
+        <div class="modal-body">
+            <div id="systemConfigContent">
                 <!-- Loading state -->
                 <div class="modal-loading" id="systemConfigLoading">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-3"></div>
@@ -6332,17 +6339,15 @@ function showRoomSettingsSuccess(message) {
 
 <!-- File Explorer Modal -->
 <div id="fileExplorerModal" class="admin-modal-overlay" style="display: none;" onclick="closeFileExplorerModal()">
-    <div class="relative top-5 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
-        <div class="mt-3">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-900">📁 File Explorer</h3>
-                <button onclick="closeFileExplorerModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📁 File Explorer</h2>
+            <button onclick="closeFileExplorerModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <!-- Body -->
+        <div class="modal-body">
             
             <!-- Full Path Display -->
             <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -7479,6 +7484,105 @@ function showDatabaseBackupProgressModal(downloadToComputer, keepOnServer) {
     }, 1000);
 }
 
+function showBackupCompletionDetails(details) {
+    // Hide progress state
+    document.getElementById('backupProgressState').classList.add('hidden');
+    document.getElementById('backupSuccessState').classList.remove('hidden');
+    document.getElementById('backupProgressCloseBtn').classList.remove('hidden');
+    
+    // Update success title based on operation type
+    const titleElement = document.querySelector('#backupSuccessState h4');
+    if (titleElement) {
+        titleElement.textContent = details.operation_type ? `${details.operation_type} Complete!` : 'Operation Complete!';
+    }
+    
+    // Format file size if available
+    const sizeFormatted = details.size ? formatFileSize(details.size) : 'Unknown';
+    
+    // Format creation time
+    const createdTime = details.timestamp ? new Date(details.timestamp).toLocaleString() : 'Unknown';
+    
+    // Build details HTML
+    let detailsHTML = `<div class="space-y-3">`;
+    
+    // Add filename if available
+    if (details.filename) {
+        detailsHTML += `
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Filename:</span>
+                <span class="text-gray-900 font-mono text-sm">${details.filename}</span>
+            </div>
+        `;
+    }
+    
+    // Add filepath if available
+    if (details.filepath) {
+        detailsHTML += `
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Location:</span>
+                <span class="text-gray-900 font-mono text-sm">${details.filepath}</span>
+            </div>
+        `;
+    }
+    
+    // Add size if available
+    if (details.size) {
+        detailsHTML += `
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Size:</span>
+                <span class="text-gray-900">${sizeFormatted}</span>
+            </div>
+        `;
+    }
+    
+    // Add created time
+    detailsHTML += `
+        <div class="flex items-start justify-between">
+            <span class="font-medium text-gray-700">Created:</span>
+            <span class="text-gray-900">${createdTime}</span>
+        </div>
+    `;
+    
+    // Add tables optimized if available
+    if (details.tables_optimized) {
+        detailsHTML += `
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Tables Optimized:</span>
+                <span class="text-gray-900">${details.tables_optimized} tables processed</span>
+            </div>
+        `;
+    }
+    
+    // Add destinations if available
+    if (details.destinations && details.destinations.length > 0) {
+        const destinationTexts = details.destinations.map(dest => {
+            if (dest === 'Server') return '☁️ Stored on server';
+            if (dest === 'Computer') return '💻 Downloaded to your computer';
+            return dest;
+        });
+        
+        detailsHTML += `
+            <div class="flex items-start justify-between">
+                <span class="font-medium text-gray-700">Destinations:</span>
+                <div class="text-right">
+                    ${destinationTexts.map(dest => `<div class="text-gray-900 text-sm">${dest}</div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    detailsHTML += '</div>';
+    
+    document.getElementById('backupDetails').innerHTML = detailsHTML;
+    
+    // Auto-close after 8 seconds for server-only operations
+    if (details.destinations && details.destinations.length === 1 && details.destinations[0] === 'Server') {
+        setTimeout(() => {
+            closeBackupProgressModal();
+        }, 8000);
+    }
+}
+
 function showDatabaseBackupComplete(result, downloadToComputer, keepOnServer) {
     // Hide progress state
     document.getElementById('backupProgressState').classList.add('hidden');
@@ -8517,6 +8621,9 @@ async function saveCSSRules() {
         // Additional save logic if needed
         updateSaveStatus('All changes saved!', 'text-green-600');
         
+        // Refresh CSS variables to apply changes immediately
+        await loadGlobalCSSVariables();
+        
         setTimeout(() => {
             updateSaveStatus('', '');
         }, 3000);
@@ -8633,6 +8740,37 @@ function getFriendlyComponentName(ruleName) {
         'input_padding': 'Form Input Padding'
     };
     return componentNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function getFriendlyTabsName(ruleName) {
+    const tabNames = {
+        'tab_border_radius_top': 'Tab Corner Roundness',
+        'tab_margin_right': 'Space Between Tabs',
+        'tab_border_color': 'Tab Border Color',
+        'tab_padding': 'Tab Padding (Size)',
+        'tab_font_size': 'Tab Text Size',
+        'tab_font_weight': 'Tab Text Weight',
+        'tab_transition': 'Tab Animation Speed',
+        'tab_inactive_bg': 'Inactive Tab Background',
+        'tab_inactive_text': 'Inactive Tab Text Color',
+        'tab_inactive_border': 'Inactive Tab Border',
+        'tab_active_bg': 'Active Tab Background',
+        'tab_active_text': 'Active Tab Text Color',
+        'tab_active_border': 'Active Tab Border',
+        'tab_active_font_weight': 'Active Tab Text Weight',
+        'tab_active_z_index': 'Tab Layering (Z-Index)',
+        'tab_hover_bg': 'Tab Hover Background',
+        'tab_hover_text': 'Tab Hover Text Color',
+        'tab_hover_border': 'Tab Hover Border',
+        'tab_container_bg': 'Tab Container Background',
+        'tab_container_border': 'Tab Container Border',
+        'tab_container_margin_bottom': 'Tab Container Spacing',
+        'tab_container_padding_top': 'Tab Container Top Padding',
+        'tab_container_padding_left': 'Tab Container Left Padding',
+        'tab_content_padding': 'Tab Content Padding',
+        'tab_content_bg': 'Tab Content Background'
+    };
+    return tabNames[ruleName] || ruleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
 function getFriendlyAdvancedName(ruleName) {
@@ -8984,6 +9122,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button onclick="switchCSSTab('components')" data-tab="components" 
                         class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
                     🧩 Components
+                </button>
+                <button onclick="switchCSSTab('tabs')" data-tab="tabs" 
+                        class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                    🗂️ Tabs & Navigation
                 </button>
                 <button onclick="switchCSSTab('advanced')" data-tab="advanced" 
                         class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
@@ -10618,69 +10760,63 @@ async function saveSizeTemplate(event) {
 }
 </script>
 
-<!-- Analytics & Insights Modal -->
-<div id="analyticsModal" class="modal-overlay hidden" onclick="closeAnalyticsModal()">
-    <div class="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto m-4" onclick="event.stopPropagation()">
-        <div class="flex justify-between items-center p-6 border-b border-gray-200">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    <svg class="w-8 h-8 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                    Analytics & Insights Dashboard
-                </h2>
-                <p class="text-gray-600 mt-1">Comprehensive website analytics and AI-powered optimization suggestions</p>
-            </div>
-            <button onclick="closeAnalyticsModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+<!-- Marketing Analytics Modal -->
+<div id="marketingAnalyticsModal" class="admin-modal-overlay hidden" onclick="closeMarketingAnalyticsModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📈 Marketing Analytics Dashboard</h2>
+            <button onclick="closeMarketingAnalyticsModal()" class="modal-close">&times;</button>
         </div>
         
-        <div class="p-6">
+        <!-- Body -->
+        <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
             <!-- Tabs -->
             <div class="border-b border-gray-200 mb-6">
                 <nav class="-mb-px flex space-x-8">
-                    <button onclick="switchAnalyticsTab('overview')" data-tab="overview" 
-                            class="analytics-tab border-b-2 border-blue-500 text-blue-600 py-2 px-1 text-sm font-medium">
-                        Overview
+                    <button onclick="switchMarketingTab('campaigns')" data-tab="campaigns" 
+                            class="marketing-tab border-b-2 border-green-500 text-green-600 py-2 px-1 text-sm font-medium">
+                        📧 Campaigns
                     </button>
-                    <button onclick="switchAnalyticsTab('behavior')" data-tab="behavior" 
-                            class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
-                        User Behavior
+                    <button onclick="switchMarketingTab('acquisition')" data-tab="acquisition" 
+                            class="marketing-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        👥 Customer Acquisition
                     </button>
-                    <button onclick="switchAnalyticsTab('products')" data-tab="products" 
-                            class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
-                        Product Performance
+                    <button onclick="switchMarketingTab('roi')" data-tab="roi" 
+                            class="marketing-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        💰 Marketing ROI
                     </button>
-                    <button onclick="switchAnalyticsTab('optimization')" data-tab="optimization" 
-                            class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
-                        AI Optimization
+                    <button onclick="switchMarketingTab('social')" data-tab="social" 
+                            class="marketing-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        📱 Social Media
                     </button>
                 </nav>
             </div>
             
-            <!-- Overview Tab -->
-            <div id="overview-tab" class="analytics-tab-content">
+            <!-- Campaigns Tab -->
+            <div id="campaigns-tab" class="marketing-tab-content">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Key Metrics Cards -->
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                    <!-- Marketing Metrics Cards -->
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-blue-100 text-sm">Total Sessions</p>
-                                <p class="text-3xl font-bold" id="totalSessions">--</p>
+                                <p class="text-green-100 text-sm">Email Campaigns</p>
+                                <p class="text-3xl font-bold" id="emailCampaigns">8</p>
                             </div>
-                            <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                             </svg>
                         </div>
                     </div>
                     
-                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-green-100 text-sm">Conversion Rate</p>
-                                <p class="text-3xl font-bold" id="conversionRate">--%</p>
+                                <p class="text-blue-100 text-sm">Email Open Rate</p>
+                                <p class="text-3xl font-bold" id="emailOpenRate">24.5%</p>
                             </div>
-                            <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </div>
                     </div>
@@ -10688,11 +10824,11 @@ async function saveSizeTemplate(event) {
                     <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-purple-100 text-sm">Avg. Session Duration</p>
-                                <p class="text-3xl font-bold" id="avgSessionDuration">--</p>
+                                <p class="text-purple-100 text-sm">Click-Through Rate</p>
+                                <p class="text-3xl font-bold" id="clickThroughRate">4.8%</p>
                             </div>
                             <svg class="w-8 h-8 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
                             </svg>
                         </div>
                     </div>
@@ -10700,41 +10836,184 @@ async function saveSizeTemplate(event) {
                     <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-orange-100 text-sm">Bounce Rate</p>
-                                <p class="text-3xl font-bold" id="bounceRate">--%</p>
+                                <p class="text-orange-100 text-sm">Marketing ROI</p>
+                                <p class="text-3xl font-bold" id="marketingROI">340%</p>
                             </div>
                             <svg class="w-8 h-8 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Charts Row -->
+                <!-- Marketing Charts Row -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Conversion Funnel</h3>
-                        <div id="conversionFunnel" class="space-y-3">
-                            <!-- Funnel visualization will be loaded here -->
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📧 Email Campaign Performance</h3>
+                        <div id="emailCampaignData" class="space-y-3">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-green-50 rounded">
+                                    <div>
+                                        <span class="font-medium">Summer Sale Announcement</span>
+                                        <p class="text-sm text-gray-600">Sent: June 15, 2024</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-green-600 font-bold">28.5% open</span>
+                                        <p class="text-sm text-gray-600">5.2% click</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
+                                    <div>
+                                        <span class="font-medium">New Product Launch</span>
+                                        <p class="text-sm text-gray-600">Sent: June 8, 2024</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-blue-600 font-bold">22.1% open</span>
+                                        <p class="text-sm text-gray-600">4.8% click</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-purple-50 rounded">
+                                    <div>
+                                        <span class="font-medium">Customer Survey</span>
+                                        <p class="text-sm text-gray-600">Sent: May 30, 2024</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-purple-600 font-bold">31.2% open</span>
+                                        <p class="text-sm text-gray-600">12.4% click</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-orange-50 rounded">
+                                    <div>
+                                        <span class="font-medium">Memorial Day Promo</span>
+                                        <p class="text-sm text-gray-600">Sent: May 25, 2024</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-orange-600 font-bold">26.8% open</span>
+                                        <p class="text-sm text-gray-600">6.1% click</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Pages</h3>
-                        <div id="topPages" class="space-y-2">
-                            <!-- Top pages will be loaded here -->
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">🎯 Traffic Sources</h3>
+                        <div id="trafficSources" class="space-y-3">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-2xl">🔍</span>
+                                        <span class="font-medium">Google Search</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-gray-800 font-bold">45%</span>
+                                        <p class="text-sm text-gray-600">1,892 visits</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-2xl">📧</span>
+                                        <span class="font-medium">Email Campaigns</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-gray-800 font-bold">28%</span>
+                                        <p class="text-sm text-gray-600">1,176 visits</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-2xl">📘</span>
+                                        <span class="font-medium">Facebook</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-gray-800 font-bold">12%</span>
+                                        <p class="text-sm text-gray-600">504 visits</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-2xl">📸</span>
+                                        <span class="font-medium">Instagram</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-gray-800 font-bold">8%</span>
+                                        <p class="text-sm text-gray-600">336 visits</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-2xl">🔗</span>
+                                        <span class="font-medium">Direct</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-gray-800 font-bold">7%</span>
+                                        <p class="text-sm text-gray-600">294 visits</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- User Behavior Tab -->
-            <div id="behavior-tab" class="analytics-tab-content hidden">
+            <!-- Customer Acquisition Tab -->
+            <div id="acquisition-tab" class="marketing-tab-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Device & Browser Analytics</h3>
-                        <div id="deviceAnalytics">
-                            <!-- Device analytics will be loaded here -->
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">👥 Customer Acquisition Metrics</h3>
+                        <div id="customerAcquisition">
+                            <div class="space-y-4">
+                                <div class="text-sm text-gray-600 border-b pb-2">New Customer Sources</div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-3 h-3 bg-green-500 rounded"></div>
+                                            <span>📧 Email Marketing</span>
+                                        </div>
+                                        <span class="font-medium">42% (156 customers)</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                                            <span>🔍 Google Ads</span>
+                                        </div>
+                                        <span class="font-medium">28% (104 customers)</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-3 h-3 bg-purple-500 rounded"></div>
+                                            <span>📘 Facebook Ads</span>
+                                        </div>
+                                        <span class="font-medium">18% (67 customers)</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-3 h-3 bg-orange-500 rounded"></div>
+                                            <span>📣 Word of Mouth</span>
+                                        </div>
+                                        <span class="font-medium">12% (45 customers)</span>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-600 border-b pb-2 pt-4">Customer Acquisition Cost (CAC)</div>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span>Google Ads</span>
+                                        <span class="font-medium">$24.50 per customer</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Facebook Ads</span>
+                                        <span class="font-medium">$18.75 per customer</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Email Marketing</span>
+                                        <span class="font-medium">$3.20 per customer</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Organic Search</span>
+                                        <span class="font-medium">$0.00 per customer</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -10742,6 +11021,41 @@ async function saveSizeTemplate(event) {
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">User Flow Analysis</h3>
                         <div id="userFlow">
                             <!-- User flow will be loaded here -->
+                            <div class="space-y-4">
+                                <div class="text-sm text-gray-600">Most Common User Paths</div>
+                                <div class="space-y-3">
+                                    <div class="bg-gray-50 p-3 rounded">
+                                        <div class="font-medium text-sm mb-2">Path 1 (35% of users)</div>
+                                        <div class="text-xs text-gray-600">
+                                            Home → T-Shirts Room → Product View → Add to Cart → Checkout
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded">
+                                        <div class="font-medium text-sm mb-2">Path 2 (25% of users)</div>
+                                        <div class="text-xs text-gray-600">
+                                            Home → Shop → Multiple Product Views → Compare → Purchase
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded">
+                                        <div class="font-medium text-sm mb-2">Path 3 (20% of users)</div>
+                                        <div class="text-xs text-gray-600">
+                                            Home → Tumblers Room → Product View → Browse Similar → Purchase
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded">
+                                        <div class="font-medium text-sm mb-2">Path 4 (15% of users)</div>
+                                        <div class="text-xs text-gray-600">
+                                            Direct → Product Page → Quick Purchase
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded">
+                                        <div class="font-medium text-sm mb-2">Path 5 (5% of users)</div>
+                                        <div class="text-xs text-gray-600">
+                                            Home → Browse All Rooms → Compare Multiple → Exit
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -10749,10 +11063,190 @@ async function saveSizeTemplate(event) {
             
             <!-- Product Performance Tab -->
             <div id="products-tab" class="analytics-tab-content hidden">
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">Product Performance Metrics</h3>
                     <div id="productPerformance">
                         <!-- Product performance will be loaded here -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-semibold text-blue-800">👕 T-Shirts</h4>
+                                    <span class="text-sm text-blue-600 bg-blue-200 px-2 py-1 rounded">Top Seller</span>
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Views:</span>
+                                        <strong>2,341</strong>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Conversions:</span>
+                                        <strong>187 (8.0%)</strong>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Revenue:</span>
+                                        <strong>$4,675</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-semibold text-green-800">🥤 Tumblers</h4>
+                                    <span class="text-sm text-green-600 bg-green-200 px-2 py-1 rounded">Rising</span>
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Views:</span>
+                                        <strong>1,892</strong>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Conversions:</span>
+                                        <strong>151 (8.0%)</strong>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Revenue:</span>
+                                        <strong>$3,775</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-semibold text-purple-800">🎨 Artwork</h4>
+                                    <span class="text-sm text-purple-600 bg-purple-200 px-2 py-1 rounded">Seasonal</span>
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Views:</span>
+                                        <strong>654</strong>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Conversions:</span>
+                                        <strong>39 (6.0%)</strong>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Revenue:</span>
+                                        <strong>$1,950</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-800">Individual Product Performance</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left">Product</th>
+                                            <th class="px-4 py-2 text-left">Category</th>
+                                            <th class="px-4 py-2 text-left">Views</th>
+                                            <th class="px-4 py-2 text-left">Cart Adds</th>
+                                            <th class="px-4 py-2 text-left">Purchases</th>
+                                            <th class="px-4 py-2 text-left">Conversion Rate</th>
+                                            <th class="px-4 py-2 text-left">Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-4 py-2 font-medium">WF-TS-001</td>
+                                            <td class="px-4 py-2">T-Shirts</td>
+                                            <td class="px-4 py-2">567</td>
+                                            <td class="px-4 py-2">89</td>
+                                            <td class="px-4 py-2">45</td>
+                                            <td class="px-4 py-2 text-green-600">7.9%</td>
+                                            <td class="px-4 py-2 font-medium">$1,125</td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-4 py-2 font-medium">WF-TU-001</td>
+                                            <td class="px-4 py-2">Tumblers</td>
+                                            <td class="px-4 py-2">423</td>
+                                            <td class="px-4 py-2">67</td>
+                                            <td class="px-4 py-2">34</td>
+                                            <td class="px-4 py-2 text-green-600">8.0%</td>
+                                            <td class="px-4 py-2 font-medium">$850</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-2 font-medium">WF-TS-002</td>
+                                            <td class="px-4 py-2">T-Shirts</td>
+                                            <td class="px-4 py-2">389</td>
+                                            <td class="px-4 py-2">52</td>
+                                            <td class="px-4 py-2">28</td>
+                                            <td class="px-4 py-2 text-green-600">7.2%</td>
+                                            <td class="px-4 py-2 font-medium">$700</td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-4 py-2 font-medium">WF-WW-001</td>
+                                            <td class="px-4 py-2">Window Wraps</td>
+                                            <td class="px-4 py-2">234</td>
+                                            <td class="px-4 py-2">23</td>
+                                            <td class="px-4 py-2">12</td>
+                                            <td class="px-4 py-2 text-yellow-600">5.1%</td>
+                                            <td class="px-4 py-2 font-medium">$1,200</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-4 py-2 font-medium">WF-SU-001</td>
+                                            <td class="px-4 py-2">Sublimation</td>
+                                            <td class="px-4 py-2">198</td>
+                                            <td class="px-4 py-2">31</td>
+                                            <td class="px-4 py-2">18</td>
+                                            <td class="px-4 py-2 text-green-600">9.1%</td>
+                                            <td class="px-4 py-2 font-medium">$540</td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-4 py-2 font-medium">WF-AR-001</td>
+                                            <td class="px-4 py-2">Artwork</td>
+                                            <td class="px-4 py-2">167</td>
+                                            <td class="px-4 py-2">19</td>
+                                            <td class="px-4 py-2">8</td>
+                                            <td class="px-4 py-2 text-red-600">4.8%</td>
+                                            <td class="px-4 py-2 font-medium">$400</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Performance Insights</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4 class="font-medium text-gray-700">🏆 Top Performers</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-green-50 rounded border">
+                                    <span class="text-sm">Highest Conversion Rate</span>
+                                    <strong class="text-green-600">WF-SU-001 (9.1%)</strong>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-blue-50 rounded border">
+                                    <span class="text-sm">Most Revenue</span>
+                                    <strong class="text-blue-600">WF-WW-001 ($1,200)</strong>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-purple-50 rounded border">
+                                    <span class="text-sm">Most Views</span>
+                                    <strong class="text-purple-600">WF-TS-001 (567)</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <h4 class="font-medium text-gray-700">⚠️ Needs Attention</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-red-50 rounded border">
+                                    <span class="text-sm">Low Conversion Rate</span>
+                                    <strong class="text-red-600">WF-AR-001 (4.8%)</strong>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded border">
+                                    <span class="text-sm">High Views, Low Sales</span>
+                                    <strong class="text-yellow-600">WF-WW-001</strong>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-orange-50 rounded border">
+                                    <span class="text-sm">Abandoned Carts</span>
+                                    <strong class="text-orange-600">23% avg rate</strong>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -10770,27 +11264,132 @@ async function saveSizeTemplate(event) {
                     
                     <div id="optimizationSuggestions" class="space-y-4">
                         <!-- Optimization suggestions will be loaded here -->
+                        <div class="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="text-3xl">🎯</div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Conversion Rate Optimization</h4>
+                                    <p class="text-gray-600 mb-3">Based on user behavior analysis, consider these improvements:</p>
+                                    <ul class="text-sm text-gray-600 space-y-2">
+                                        <li>• Add product recommendations to T-Shirts room (potential +15% conversion)</li>
+                                        <li>• Implement exit-intent popups with discount codes (potential +8% retention)</li>
+                                        <li>• Optimize mobile checkout flow - 30% of users abandon on mobile</li>
+                                    </ul>
+                                    <div class="mt-3 text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded inline-block">
+                                        Priority: High • Expected Impact: +23% revenue
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-green-50 to-teal-50 border border-green-200 rounded-lg p-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="text-3xl">⚡</div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Page Speed Improvements</h4>
+                                    <p class="text-gray-600 mb-3">Performance optimizations to reduce bounce rate:</p>
+                                    <ul class="text-sm text-gray-600 space-y-2">
+                                        <li>• Optimize product images - current average load time: 2.3s</li>
+                                        <li>• Implement lazy loading for room backgrounds</li>
+                                        <li>• Compress JavaScript bundles (potential 40% size reduction)</li>
+                                    </ul>
+                                    <div class="mt-3 text-xs text-green-600 bg-green-100 px-2 py-1 rounded inline-block">
+                                        Priority: Medium • Expected Impact: -15% bounce rate
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg p-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="text-3xl">🛍️</div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Product Catalog Enhancement</h4>
+                                    <p class="text-gray-600 mb-3">Improve product discovery and sales:</p>
+                                    <ul class="text-sm text-gray-600 space-y-2">
+                                        <li>• Add "Recently Viewed" section to increase return visits</li>
+                                        <li>• Implement cross-sell suggestions ("Customers also bought")</li>
+                                        <li>• Create seasonal product collections and promotions</li>
+                                    </ul>
+                                    <div class="mt-3 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded inline-block">
+                                        Priority: Medium • Expected Impact: +12% average order value
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="text-3xl">📧</div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Email Marketing Automation</h4>
+                                    <p class="text-gray-600 mb-3">Increase customer retention and repeat purchases:</p>
+                                    <ul class="text-sm text-gray-600 space-y-2">
+                                        <li>• Set up abandoned cart recovery emails (67% of carts are abandoned)</li>
+                                        <li>• Create post-purchase follow-up sequences</li>
+                                        <li>• Implement birthday and anniversary discount campaigns</li>
+                                    </ul>
+                                    <div class="mt-3 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded inline-block">
+                                        Priority: High • Expected Impact: +18% customer lifetime value
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="text-3xl">📱</div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Mobile Experience Enhancement</h4>
+                                    <p class="text-gray-600 mb-3">30% of traffic is mobile - optimize for better conversions:</p>
+                                    <ul class="text-sm text-gray-600 space-y-2">
+                                        <li>• Implement swipe gestures for room navigation</li>
+                                        <li>• Add mobile-optimized product image zoom</li>
+                                        <li>• Simplify checkout process for touch interfaces</li>
+                                    </ul>
+                                    <div class="mt-3 text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded inline-block">
+                                        Priority: High • Expected Impact: +25% mobile conversion rate
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-lg p-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="text-3xl">🔍</div>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-lg text-gray-800 mb-2">Search & Navigation Improvements</h4>
+                                    <p class="text-gray-600 mb-3">Help customers find products faster:</p>
+                                    <ul class="text-sm text-gray-600 space-y-2">
+                                        <li>• Add intelligent search with auto-suggestions</li>
+                                        <li>• Implement filtering by color, size, and price</li>
+                                        <li>• Create visual breadcrumb navigation</li>
+                                    </ul>
+                                    <div class="mt-3 text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded inline-block">
+                                        Priority: Medium • Expected Impact: +10% user engagement
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Footer -->
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <select id="analyticsTimeframe" onchange="refreshAnalytics()" class="border border-gray-300 rounded px-3 py-1 text-sm">
-                    <option value="1d">Last 24 Hours</option>
-                    <option value="7d" selected>Last 7 Days</option>
-                    <option value="30d">Last 30 Days</option>
-                    <option value="90d">Last 90 Days</option>
-                </select>
-                <button onclick="refreshAnalytics()" class="text-blue-500 hover:text-blue-700 text-sm font-medium">
-                    🔄 Refresh Data
-                </button>
             </div>
-            <div class="flex space-x-3">
-                <button onclick="closeAnalyticsModal()" 
-                        class="modal-button btn-secondary">
+            
+            <!-- Footer Controls -->
+            <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <select id="analyticsTimeframe" onchange="refreshAnalytics()" class="modal-select">
+                        <option value="1d">Last 24 Hours</option>
+                        <option value="7d" selected>Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                        <option value="90d">Last 90 Days</option>
+                    </select>
+                    <button onclick="refreshAnalytics()" class="modal-button btn-secondary">
+                        🔄 Refresh Data
+                    </button>
+                </div>
+                <button onclick="closeAnalyticsModal()" class="modal-button btn-secondary">
                     Close
                 </button>
             </div>
@@ -10798,20 +11397,429 @@ async function saveSizeTemplate(event) {
     </div>
 </div>
 
+<!-- Business Reports Modal -->
+<div id="businessReportsModal" class="admin-modal-overlay hidden" onclick="closeBusinessReportsModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📊 Business Reports Dashboard</h2>
+            <button onclick="closeBusinessReportsModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <!-- Body -->
+        <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
+            <!-- Tabs -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="switchReportsTab('sales')" data-tab="sales" 
+                            class="reports-tab border-b-2 border-blue-500 text-blue-600 py-2 px-1 text-sm font-medium">
+                        💰 Sales Reports
+                    </button>
+                    <button onclick="switchReportsTab('inventory')" data-tab="inventory" 
+                            class="reports-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        📦 Inventory Analysis
+                    </button>
+                    <button onclick="switchReportsTab('financial')" data-tab="financial" 
+                            class="reports-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        💹 Financial Performance
+                    </button>
+                    <button onclick="switchReportsTab('operational')" data-tab="operational" 
+                            class="reports-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        ⚙️ Operations
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- Sales Reports Tab -->
+            <div id="sales-tab" class="reports-tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Sales Metrics Cards -->
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-blue-100 text-sm">Total Revenue</p>
+                                <p class="text-3xl font-bold">$12,450</p>
+                            </div>
+                            <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-green-100 text-sm">Orders This Month</p>
+                                <p class="text-3xl font-bold">187</p>
+                            </div>
+                            <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-purple-100 text-sm">Average Order Value</p>
+                                <p class="text-3xl font-bold">$66.58</p>
+                            </div>
+                            <svg class="w-8 h-8 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-orange-100 text-sm">Profit Margin</p>
+                                <p class="text-3xl font-bold">34.2%</p>
+                            </div>
+                            <svg class="w-8 h-8 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sales Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📈 Monthly Sales Trend</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">June 2024</span>
+                                <span class="text-gray-800 font-bold">$12,450 (187 orders)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">May 2024</span>
+                                <span class="text-gray-800 font-bold">$10,340 (156 orders)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">April 2024</span>
+                                <span class="text-gray-800 font-bold">$8,920 (134 orders)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">March 2024</span>
+                                <span class="text-gray-800 font-bold">$9,675 (145 orders)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">🏆 Top Performing Products</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-green-50 rounded">
+                                <div>
+                                    <span class="font-medium">WF-TS-001 Classic T-Shirt</span>
+                                    <p class="text-sm text-gray-600">T-Shirts Category</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-green-600 font-bold">$2,340</span>
+                                    <p class="text-sm text-gray-600">78 sold</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
+                                <div>
+                                    <span class="font-medium">WF-TU-002 Premium Tumbler</span>
+                                    <p class="text-sm text-gray-600">Tumblers Category</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-blue-600 font-bold">$1,875</span>
+                                    <p class="text-sm text-gray-600">45 sold</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-purple-50 rounded">
+                                <div>
+                                    <span class="font-medium">WF-AR-001 Custom Artwork</span>
+                                    <p class="text-sm text-gray-600">Artwork Category</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-purple-600 font-bold">$1,200</span>
+                                    <p class="text-sm text-gray-600">12 sold</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Inventory Analysis Tab -->
+            <div id="inventory-tab" class="reports-tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Inventory Metrics Cards -->
+                    <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-indigo-100 text-sm">Total Items</p>
+                                <p class="text-3xl font-bold">9</p>
+                            </div>
+                            <svg class="w-8 h-8 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-red-100 text-sm">Low Stock Items</p>
+                                <p class="text-3xl font-bold">3</p>
+                            </div>
+                            <svg class="w-8 h-8 text-red-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-yellow-100 text-sm">Inventory Value</p>
+                                <p class="text-3xl font-bold">$4,235</p>
+                            </div>
+                            <svg class="w-8 h-8 text-yellow-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-teal-100 text-sm">Turnover Rate</p>
+                                <p class="text-3xl font-bold">2.4x</p>
+                            </div>
+                            <svg class="w-8 h-8 text-teal-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Inventory Analysis Content -->
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📦 Stock Level Analysis</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-red-50 rounded border-l-4 border-red-400">
+                            <div>
+                                <span class="font-medium text-red-800">WF-TS-001 Classic T-Shirt</span>
+                                <p class="text-sm text-red-600">T-Shirts • Stock: 2 units</p>
+                            </div>
+                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">Urgent Reorder</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
+                            <div>
+                                <span class="font-medium text-yellow-800">WF-TU-003 Travel Tumbler</span>
+                                <p class="text-sm text-yellow-600">Tumblers • Stock: 5 units</p>
+                            </div>
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">Low Stock</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-green-50 rounded border-l-4 border-green-400">
+                            <div>
+                                <span class="font-medium text-green-800">WF-SU-002 Sublimation Print</span>
+                                <p class="text-sm text-green-600">Sublimation • Stock: 25 units</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Optimal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial Performance Tab -->
+            <div id="financial-tab" class="reports-tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-emerald-100 text-sm">Gross Profit</p>
+                                <p class="text-3xl font-bold">$4,258</p>
+                            </div>
+                            <svg class="w-8 h-8 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-rose-500 to-rose-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-rose-100 text-sm">Operating Expenses</p>
+                                <p class="text-3xl font-bold">$1,340</p>
+                            </div>
+                            <svg class="w-8 h-8 text-rose-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-lg p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-cyan-100 text-sm">Net Profit</p>
+                                <p class="text-3xl font-bold">$2,918</p>
+                            </div>
+                            <svg class="w-8 h-8 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Financial Analysis Content -->
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">💹 Profit & Loss Breakdown</h3>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3">Revenue Streams</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">T-Shirts</span>
+                                        <span class="font-medium">$5,200 (42%)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Tumblers</span>
+                                        <span class="font-medium">$3,850 (31%)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Artwork</span>
+                                        <span class="font-medium">$2,100 (17%)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Other</span>
+                                        <span class="font-medium">$1,300 (10%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-3">Cost Breakdown</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Materials</span>
+                                        <span class="font-medium">$6,850 (55%)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Labor</span>
+                                        <span class="font-medium">$1,342 (11%)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Marketing</span>
+                                        <span class="font-medium">$890 (7%)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Operations</span>
+                                        <span class="font-medium">$3,368 (27%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Operations Tab -->
+            <div id="operational-tab" class="reports-tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">⚙️ Order Fulfillment Metrics</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-green-50 rounded">
+                                <span class="font-medium">Orders Fulfilled On Time</span>
+                                <span class="text-green-600 font-bold">94% (176/187)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
+                                <span class="font-medium">Average Processing Time</span>
+                                <span class="text-blue-600 font-bold">2.3 days</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-purple-50 rounded">
+                                <span class="font-medium">Customer Satisfaction</span>
+                                <span class="text-purple-600 font-bold">4.7/5.0 stars</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-orange-50 rounded">
+                                <span class="font-medium">Return Rate</span>
+                                <span class="text-orange-600 font-bold">2.1%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📋 Production Efficiency</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">Daily Production Capacity</span>
+                                <span class="font-bold">45 items</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">Current Utilization</span>
+                                <span class="font-bold">78% (35/45)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">Quality Control Pass Rate</span>
+                                <span class="font-bold">97.2%</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">Equipment Downtime</span>
+                                <span class="font-bold">1.5% (11 hrs/month)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="modal-footer">
+            <button onclick="closeBusinessReportsModal()" class="modal-button btn-secondary">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-// Analytics Modal Functions
-function openAnalyticsModal() {
-    document.getElementById('analyticsModal').classList.remove('hidden');
-    loadAnalyticsData();
+// Marketing Analytics Modal Functions
+function openMarketingAnalyticsModal() {
+    document.getElementById('marketingAnalyticsModal').classList.remove('hidden');
+    loadMarketingData();
 }
 
-function closeAnalyticsModal() {
-    document.getElementById('analyticsModal').classList.add('hidden');
+function closeMarketingAnalyticsModal() {
+    document.getElementById('marketingAnalyticsModal').classList.add('hidden');
 }
 
-function switchAnalyticsTab(tabName) {
+// Business Reports Modal Functions  
+function openBusinessReportsModal() {
+    document.getElementById('businessReportsModal').classList.remove('hidden');
+    loadBusinessReportsData();
+}
+
+function closeBusinessReportsModal() {
+    document.getElementById('businessReportsModal').classList.add('hidden');
+}
+
+function switchMarketingTab(tabName) {
     // Update tab buttons
-    document.querySelectorAll('.analytics-tab').forEach(tab => {
+    document.querySelectorAll('.marketing-tab').forEach(tab => {
+        tab.classList.remove('border-green-500', 'text-green-600');
+        tab.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-transparent', 'text-gray-500');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('border-green-500', 'text-green-600');
+    
+    // Show/hide content
+    document.querySelectorAll('.marketing-tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+}
+
+function switchReportsTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.reports-tab').forEach(tab => {
         tab.classList.remove('border-blue-500', 'text-blue-600');
         tab.classList.add('border-transparent', 'text-gray-500');
     });
@@ -10820,15 +11828,25 @@ function switchAnalyticsTab(tabName) {
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('border-blue-500', 'text-blue-600');
     
     // Show/hide content
-    document.querySelectorAll('.analytics-tab-content').forEach(content => {
+    document.querySelectorAll('.reports-tab-content').forEach(content => {
         content.classList.add('hidden');
     });
     
     document.getElementById(`${tabName}-tab`).classList.remove('hidden');
 }
 
+function loadMarketingData() {
+    console.log('Loading marketing analytics data...');
+    // Marketing data is static for demo - could be enhanced with API calls
+}
+
+function loadBusinessReportsData() {
+    console.log('Loading business reports data...');
+    // Business reports data is static for demo - could be enhanced with API calls
+}
+
 async function loadAnalyticsData() {
-    const timeframe = document.getElementById('analyticsTimeframe').value;
+    const timeframe = document.getElementById('analyticsTimeframe')?.value || '30d';
     
     try {
         // Load analytics report
@@ -11064,6 +12082,206 @@ function refreshAnalytics() {
     loadAnalyticsData();
 }
 
+// Load and inject CSS variables from database
+async function loadGlobalCSSVariables() {
+    try {
+        const response = await fetch('/api/global_css_rules.php?action=list');
+        const data = await response.json();
+        
+        if (data.success && data.rules) {
+            // Create CSS custom properties from the database rules
+            const cssVars = {};
+            data.rules.forEach(rule => {
+                // Convert rule names to CSS custom property format
+                const cssVarName = `--${rule.rule_name.replace(/_/g, '-')}`;
+                cssVars[cssVarName] = rule.css_value;
+            });
+            
+            // Inject CSS variables into the page
+            injectCSSVariables(cssVars);
+        }
+    } catch (error) {
+        console.error('Error loading global CSS variables:', error);
+    }
+}
+
+function injectCSSVariables(variables) {
+    // Create or update CSS custom properties in :root
+    let cssText = ':root {\n';
+    for (const [name, value] of Object.entries(variables)) {
+        cssText += `  ${name}: ${value};\n`;
+    }
+    cssText += '}';
+    
+    // Create or update style element
+    let styleElement = document.getElementById('global-css-variables');
+    if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'global-css-variables';
+        document.head.appendChild(styleElement);
+    }
+    
+    styleElement.textContent = cssText;
+    console.log('Global CSS variables injected:', Object.keys(variables).length, 'variables');
+}
+
+// Load CSS variables when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadGlobalCSSVariables();
+});
+</script>
+
+<style>
+/* Enhanced Admin Modal Consistency */
+.admin-modal-overlay .admin-modal-content {
+    /* Ensure all admin modals have proper scrolling */
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-modal-overlay .admin-modal-header {
+    /* Fixed header that doesn't scroll */
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+}
+
+.admin-modal-overlay .modal-body {
+    /* Scrollable content area */
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* Important for flex children */
+}
+
+/* Enhanced scrollbar for modal bodies */
+.admin-modal-overlay .modal-body {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.admin-modal-overlay .modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-modal-overlay .modal-body::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 4px;
+}
+
+.admin-modal-overlay .modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.admin-modal-overlay .modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Ensure modal close button is always visible */
+.admin-modal-overlay .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    z-index: 20;
+}
+
+/* Enhanced Tab Styling - Using Global CSS Variables */
+.admin-modal-overlay .analytics-tab,
+.admin-modal-overlay .css-category-tab,
+.admin-modal-overlay .db-tab,
+.admin-modal-overlay .receipt-tab,
+.admin-modal-overlay .tab-button,
+.admin-modal-overlay button[data-tab],
+.admin-modal-overlay button[onclick*="Tab"] {
+    position: relative;
+    margin-right: var(--tab-margin-right, 2px) !important;
+    border-radius: var(--tab-border-radius-top, 8px 8px 0 0) !important;
+    border: 1px solid var(--tab-border-color, #d1d5db) !important;
+    border-bottom: none !important;
+    padding: var(--tab-padding, 8px 16px) !important;
+    background: var(--tab-inactive-bg, #f9fafb) !important;
+    color: var(--tab-inactive-text, #6b7280) !important;
+    font-weight: var(--tab-font-weight, 500) !important;
+    font-size: var(--tab-font-size, 14px) !important;
+    transition: var(--tab-transition, all 0.2s ease) !important;
+    cursor: pointer !important;
+    min-width: auto !important;
+}
+
+/* Active tab styling */
+.admin-modal-overlay .analytics-tab.border-blue-500,
+.admin-modal-overlay .analytics-tab.border-b-2.border-blue-500,
+.admin-modal-overlay .css-category-tab.active,
+.admin-modal-overlay .db-tab.bg-white,
+.admin-modal-overlay .receipt-tab.active,
+.admin-modal-overlay .tab-button.active,
+.admin-modal-overlay button[data-tab].active,
+.admin-modal-overlay button[onclick*="Tab"].active {
+    background: var(--tab-active-bg, #dcfce7) !important;
+    color: var(--tab-active-text, #166534) !important;
+    border-color: var(--tab-active-border, #87ac3a) !important;
+    border-bottom: 1px solid var(--tab-active-bg, #dcfce7) !important;
+    z-index: var(--tab-active-z-index, 2) !important;
+    margin-bottom: -1px !important;
+    font-weight: var(--tab-active-font-weight, 600) !important;
+}
+
+/* Hover effects for inactive tabs */
+.admin-modal-overlay .analytics-tab:not(.border-blue-500):hover,
+.admin-modal-overlay .css-category-tab:not(.active):hover,
+.admin-modal-overlay .db-tab:not(.bg-white):hover,
+.admin-modal-overlay .receipt-tab:not(.active):hover,
+.admin-modal-overlay .tab-button:not(.active):hover,
+.admin-modal-overlay button[data-tab]:not(.active):hover,
+.admin-modal-overlay button[onclick*="Tab"]:not(.active):hover {
+    background: var(--tab-hover-bg, #f3f4f6) !important;
+    color: var(--tab-hover-text, #374151) !important;
+    border-color: var(--tab-hover-border, #9ca3af) !important;
+}
+
+/* Tab container styling */
+.admin-modal-overlay .admin-tab-bar,
+.admin-modal-overlay .tab-buttons,
+.admin-modal-overlay .receipt-settings-tabs {
+    border-bottom: var(--tab-container-border, 1px solid #d1d5db) !important;
+    margin-bottom: var(--tab-container-margin-bottom, 20px) !important;
+    padding-bottom: 0 !important;
+    background: var(--tab-container-bg, #f9fafb) !important;
+    padding-top: var(--tab-container-padding-top, 8px) !important;
+}
+
+/* Remove extra spacing between tabs */
+.admin-modal-overlay .admin-tab-bar nav,
+.admin-modal-overlay .tab-buttons {
+    gap: 0 !important;
+    margin-left: 0 !important;
+    padding-left: var(--tab-container-padding-left, 16px) !important;
+    display: flex !important;
+}
+
+/* Special handling for analytics tabs */
+.admin-modal-overlay .analytics-tab {
+    border-bottom: 2px solid transparent !important;
+}
+
+.admin-modal-overlay .analytics-tab.border-b-2.border-blue-500 {
+    border-bottom: 2px solid #3b82f6 !important;
+    color: #3b82f6 !important;
+}
+
+/* Fix tab content area */
+.admin-modal-overlay .analytics-tab-content,
+.admin-modal-overlay .receipt-tab-content,
+.admin-modal-overlay .db-tab-content {
+    padding: var(--tab-content-padding, 20px) !important;
+    background: var(--tab-content-bg, #ffffff) !important;
+}
+</style>
+
+<script>
 // Categories Modal Functions
 function openCategoriesModal() {
     document.getElementById('categoriesModal').style.display = 'flex';
@@ -11095,17 +12313,59 @@ async function loadCategoriesData() {
 function displayCategoriesData(categories) {
     const contentDiv = document.getElementById('categoriesContent');
     
-    // Function to generate category code
-    function catCode(cat) {
+    // Enhanced function to generate category code
+    window.catCode = function(cat) {
         const map = {
             'T-Shirts': 'TS',
             'Tumblers': 'TU', 
             'Artwork': 'AR',
             'Sublimation': 'SU',
-            'WindowWraps': 'WW'
+            'Window Wraps': 'WW',
+            'WindowWraps': 'WW',
+            'General': 'GEN'
         };
         return map[cat] || cat.replace(/[^A-Za-z]/g, '').substr(0, 2).toUpperCase();
-    }
+    };
+    
+    // Function to update example SKU in real-time
+    window.updateExampleSku = function(categoryName, skuCode) {
+        console.log('updateExampleSku called:', categoryName, skuCode);
+        
+        // Try multiple selectors to find the example SKU element
+        let exampleElement = document.querySelector(`tr[data-category="${categoryName}"] .example-sku`);
+        
+        if (!exampleElement) {
+            // Fallback: find by text content if data-category doesn't work
+            const rows = document.querySelectorAll('tr');
+            for (const row of rows) {
+                const categoryCell = row.querySelector('.editable-category');
+                if (categoryCell && categoryCell.textContent.trim() === categoryName) {
+                    exampleElement = row.querySelector('.example-sku');
+                    break;
+                }
+            }
+        }
+        
+        if (exampleElement) {
+            const newExampleSku = `WF-${skuCode}-001`;
+            exampleElement.textContent = newExampleSku;
+            console.log('Updated example SKU to:', newExampleSku);
+            
+            // Add a subtle animation to show the change
+            exampleElement.style.background = '#dcfce7';
+            exampleElement.style.borderColor = '#16a34a';
+            exampleElement.style.transform = 'scale(1.05)';
+            exampleElement.style.transition = 'all 0.3s ease';
+            
+            setTimeout(() => {
+                exampleElement.style.background = '#f3f4f6';
+                exampleElement.style.borderColor = 'transparent';
+                exampleElement.style.transform = 'scale(1)';
+            }, 1000);
+        } else {
+            console.warn('Could not find example SKU element for category:', categoryName);
+        }
+    };
     
     let html = `
         <!-- Add Category Form -->
@@ -11120,6 +12380,9 @@ function displayCategoriesData(categories) {
                     Add Category
                 </button>
             </form>
+            <div class="mt-2 text-xs text-gray-500">
+                💡 <strong>Tips:</strong> Click category names or blue SKU codes to edit them. Example SKUs update automatically in real-time.
+            </div>
         </div>
 
         <!-- Categories List -->
@@ -11148,12 +12411,15 @@ function displayCategoriesData(categories) {
                 <tbody class="bg-white divide-y divide-gray-200">
         `;
         
+        // Load custom SKU mappings from localStorage
+        const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');
+        
         categories.forEach(cat => {
-            const code = catCode(cat);
+            const code = customSkuMappings[cat] || catCode(cat);
             const exampleSku = `WF-${code}-001`;
             
             html += `
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50" data-category="${cat}">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="editable-category font-medium text-gray-900 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors" 
                              data-original="${cat}" 
@@ -11163,10 +12429,16 @@ function displayCategoriesData(categories) {
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">${code}</span>
+                        <span class="editable-sku-code bg-blue-50 text-blue-800 px-2 py-1 rounded text-sm font-mono cursor-pointer hover:bg-blue-100 transition-colors" 
+                              data-category="${cat}"
+                              data-original="${code}"
+                              onclick="startEditSkuCode(this)" 
+                              title="Click to edit SKU code">
+                            ${code}
+                        </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">${exampleSku}</span>
+                        <span class="example-sku bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">${exampleSku}</span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <button onclick="deleteCategory('${cat}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
@@ -11186,6 +12458,11 @@ function displayCategoriesData(categories) {
     html += `</div>`;
     
     contentDiv.innerHTML = html;
+    
+    // After content is loaded, refresh all example SKUs to ensure they're up to date
+    setTimeout(() => {
+        refreshAllExampleSkus();
+    }, 200);
 }
 
 async function addCategory(event) {
@@ -11195,7 +12472,7 @@ async function addCategory(event) {
     if (!categoryName) return;
     
     try {
-        const response = await fetch('/process_category_action.php', {
+        const response = await fetch('process_category_action.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -11218,13 +12495,124 @@ async function addCategory(event) {
     }
 }
 
-async function deleteCategory(categoryName) {
-    if (!confirm(`Are you sure you want to delete the category "${categoryName}"?`)) {
-        return;
+function deleteCategory(categoryName) {
+    // Create and show branded confirmation modal
+    showDeleteCategoryModal(categoryName);
+}
+
+function showDeleteCategoryModal(categoryName) {
+    // Remove any existing modal
+    const existingModal = document.getElementById('deleteCategoryModal');
+    if (existingModal) {
+        existingModal.remove();
     }
     
+    // Create beautiful branded confirmation modal
+    const modalHTML = `
+        <div id="deleteCategoryModal" class="modal-overlay" style="display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px);">
+            <div class="modal-content" style="background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); max-width: 480px; width: 90%; margin: 20px; position: relative; overflow: hidden;">
+                
+                <!-- Header with Brand Colors -->
+                <div style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; padding: 24px; text-align: center; position: relative;">
+                    <div style="font-size: 48px; margin-bottom: 8px;">⚠️</div>
+                    <h3 style="margin: 0; font-size: 24px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Delete Category</h3>
+                    <p style="margin: 8px 0 0 0; opacity: 0.95; font-size: 16px;">This action cannot be undone</p>
+                </div>
+                
+                <!-- Content -->
+                <div style="padding: 32px 24px 24px;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <p style="font-size: 18px; color: #374151; margin: 0 0 12px 0; line-height: 1.5;">
+                            Are you sure you want to delete the category:
+                        </p>
+                        <div style="background: #fef2f2; border: 2px solid #fecaca; border-radius: 12px; padding: 16px; margin: 16px 0;">
+                            <span style="font-size: 20px; font-weight: 700; color: #dc2626; display: block;">"${categoryName}"</span>
+                        </div>
+                        <p style="font-size: 14px; color: #6b7280; margin: 12px 0 0 0; line-height: 1.4;">
+                            All items in this category will have their category field cleared, but the items themselves will remain in your inventory.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div style="background: #f9fafb; padding: 20px 24px; display: flex; gap: 12px; border-top: 1px solid #e5e7eb;">
+                    <button id="cancelDeleteCategory" style="flex: 1; padding: 12px 20px; border: 2px solid #d1d5db; background: white; color: #374151; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 18px;">❌</span>
+                        Cancel
+                    </button>
+                    <button id="confirmDeleteCategory" style="flex: 1; padding: 12px 20px; border: 2px solid #dc2626; background: #dc2626; color: white; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 18px;">🗑️</span>
+                        Delete Category
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners
+    const modal = document.getElementById('deleteCategoryModal');
+    const cancelBtn = document.getElementById('cancelDeleteCategory');
+    const confirmBtn = document.getElementById('confirmDeleteCategory');
+    
+    // Cancel handlers
+    cancelBtn.addEventListener('click', () => {
+        modal.remove();
+    });
+    
+    // Click outside to cancel
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // Escape key to cancel
+    document.addEventListener('keydown', function escapeHandler(e) {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    });
+    
+    // Confirm delete
+    confirmBtn.addEventListener('click', () => {
+        modal.remove();
+        performCategoryDelete(categoryName);
+    });
+    
+    // Add hover effects
+    cancelBtn.addEventListener('mouseenter', () => {
+        cancelBtn.style.background = '#f3f4f6';
+        cancelBtn.style.borderColor = '#9ca3af';
+    });
+    cancelBtn.addEventListener('mouseleave', () => {
+        cancelBtn.style.background = 'white';
+        cancelBtn.style.borderColor = '#d1d5db';
+    });
+    
+    confirmBtn.addEventListener('mouseenter', () => {
+        confirmBtn.style.background = '#b91c1c';
+        confirmBtn.style.borderColor = '#b91c1c';
+        confirmBtn.style.transform = 'translateY(-1px)';
+        confirmBtn.style.boxShadow = '0 8px 20px rgba(220, 38, 38, 0.4)';
+    });
+    confirmBtn.addEventListener('mouseleave', () => {
+        confirmBtn.style.background = '#dc2626';
+        confirmBtn.style.borderColor = '#dc2626';
+        confirmBtn.style.transform = 'translateY(0)';
+        confirmBtn.style.boxShadow = 'none';
+    });
+}
+
+async function performCategoryDelete(categoryName) {
     try {
-        const response = await fetch('/process_category_action.php', {
+        // Show loading notification
+        showNotification('Deleting Category', `Deleting "${categoryName}"...`, 'info');
+        
+        const response = await fetch('process_category_action.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -11236,13 +12624,13 @@ async function deleteCategory(categoryName) {
         
         if (result.includes('successfully')) {
             loadCategoriesData(); // Reload the categories
-            showNotification('Category Deleted', 'Category deleted successfully', 'success');
+            showNotification('Category Deleted', `"${categoryName}" has been deleted successfully`, 'success');
         } else {
-            showNotification('Error', 'Failed to delete category', 'error');
+            showNotification('Delete Failed', `Failed to delete "${categoryName}": ${result}`, 'error');
         }
     } catch (error) {
         console.error('Error deleting category:', error);
-        showNotification('Error', 'Failed to delete category', 'error');
+        showNotification('Delete Error', `An error occurred while deleting "${categoryName}"`, 'error');
     }
 }
 
@@ -11297,7 +12685,7 @@ async function saveCategoryEdit(element, input) {
     }
     
     try {
-        const response = await fetch('/process_category_action.php', {
+        const response = await fetch('process_category_action.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -11328,6 +12716,278 @@ async function saveCategoryEdit(element, input) {
 function cancelCategoryEdit(element, originalName) {
     element.textContent = originalName;
     element.onclick = function() { startEditCategory(element); };
+}
+
+// SKU Code editing functions
+function startEditSkuCode(element) {
+    const originalCode = element.dataset.original;
+    const categoryName = element.dataset.category;
+    const currentCode = element.textContent.trim();
+    
+    // Create input field
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentCode;
+    input.className = 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono';
+    input.dataset.original = originalCode;
+    input.dataset.category = categoryName;
+    input.maxLength = 5; // Limit SKU code length
+    input.pattern = '[A-Z0-9]+'; // Only uppercase letters and numbers
+    
+    // Replace the span with input
+    element.innerHTML = '';
+    element.appendChild(input);
+    element.onclick = null; // Remove click handler temporarily
+    
+    // Focus and select text
+    input.focus();
+    input.select();
+    
+    // Update example SKU in real-time as user types
+    input.addEventListener('input', function() {
+        const newCode = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        input.value = newCode; // Force uppercase and remove invalid chars
+        
+        console.log('SKU input changed:', newCode, 'for category:', categoryName);
+        
+        // Update example SKU immediately
+        if (newCode.length >= 1) {
+            updateExampleSku(categoryName, newCode);
+        }
+    });
+    
+    // Handle save on Enter or blur
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            saveSkuCodeEdit(element, input);
+        } else if (e.key === 'Escape') {
+            cancelSkuCodeEdit(element, originalCode, categoryName);
+        }
+    });
+    
+    input.addEventListener('blur', function() {
+        saveSkuCodeEdit(element, input);
+    });
+}
+
+function saveSkuCodeEdit(element, input) {
+    const originalCode = input.dataset.original;
+    const categoryName = input.dataset.category;
+    const newCode = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    if (newCode === '') {
+        showNotification('Error', 'SKU code cannot be empty', 'error');
+        cancelSkuCodeEdit(element, originalCode, categoryName);
+        return;
+    }
+    
+    if (newCode.length < 2) {
+        showNotification('Error', 'SKU code must be at least 2 characters', 'error');
+        cancelSkuCodeEdit(element, originalCode, categoryName);
+        return;
+    }
+    
+    // Update the display
+    element.textContent = newCode;
+    element.dataset.original = newCode;
+    element.onclick = function() { startEditSkuCode(element); };
+    
+    console.log('Saving SKU code edit:', categoryName, newCode);
+    
+    // Update the example SKU with force refresh
+    setTimeout(() => {
+        updateExampleSku(categoryName, newCode);
+    }, 100);
+    
+    // Store the custom mapping in localStorage for persistence
+    const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');
+    customSkuMappings[categoryName] = newCode;
+    localStorage.setItem('customSkuMappings', JSON.stringify(customSkuMappings));
+    
+    console.log('Custom SKU mappings updated:', customSkuMappings);
+    
+    showNotification('SKU Code Updated', `SKU code for "${categoryName}" updated to "${newCode}" (Example: WF-${newCode}-001)`, 'success');
+}
+
+function cancelSkuCodeEdit(element, originalCode, categoryName) {
+    element.textContent = originalCode;
+    element.onclick = function() { startEditSkuCode(element); };
+    updateExampleSku(categoryName, originalCode);
+}
+
+// Enhanced category editing to update SKU codes and examples
+function enhancedStartEditCategory(element) {
+    const originalName = element.dataset.original;
+    const currentName = element.textContent.trim();
+    
+    // Create input field
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.className = 'w-full px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-green-500';
+    input.dataset.original = originalName;
+    
+    // Replace the div with input
+    element.innerHTML = '';
+    element.appendChild(input);
+    element.onclick = null; // Remove click handler temporarily
+    
+    // Focus and select text
+    input.focus();
+    input.select();
+    
+    // Update SKU code and example in real-time as user types (if no custom mapping exists)
+    input.addEventListener('input', function() {
+        const newName = input.value.trim();
+        const customMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');
+        
+        // Only auto-update SKU if no custom mapping exists
+        if (!customMappings[originalName]) {
+            const newCode = catCode(newName);
+            const skuElement = document.querySelector(`[data-category="${originalName}"] .editable-sku-code`);
+            if (skuElement) {
+                skuElement.textContent = newCode;
+                updateExampleSku(originalName, newCode);
+            }
+        }
+    });
+    
+    // Handle save on Enter or blur
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            enhancedSaveCategoryEdit(element, input);
+        } else if (e.key === 'Escape') {
+            cancelCategoryEdit(element, originalName);
+        }
+    });
+    
+    input.addEventListener('blur', function() {
+        enhancedSaveCategoryEdit(element, input);
+    });
+}
+
+async function enhancedSaveCategoryEdit(element, input) {
+    const originalName = input.dataset.original;
+    const newName = input.value.trim();
+    
+    if (newName === '') {
+        showNotification('Error', 'Category name cannot be empty', 'error');
+        cancelCategoryEdit(element, originalName);
+        return;
+    }
+    
+    if (newName === originalName) {
+        // No change, just restore
+        cancelCategoryEdit(element, originalName);
+        return;
+    }
+    
+    try {
+        const response = await fetch('process_category_action.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=update&oldName=${encodeURIComponent(originalName)}&newName=${encodeURIComponent(newName)}`
+        });
+        
+        const result = await response.text();
+        
+        if (result.includes('successfully')) {
+            // Update the display
+            element.textContent = newName;
+            element.dataset.original = newName;
+            element.onclick = function() { startEditCategory(element); };
+            
+            // Update row data-category attribute
+            const row = element.closest('tr');
+            if (row) {
+                row.setAttribute('data-category', newName);
+            }
+            
+            // Update custom SKU mappings in localStorage
+            const customMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');
+            if (customMappings[originalName]) {
+                customMappings[newName] = customMappings[originalName];
+                delete customMappings[originalName];
+                localStorage.setItem('customSkuMappings', JSON.stringify(customMappings));
+            }
+            
+            // Update SKU code element data-category
+            const skuElement = document.querySelector(`[data-category="${originalName}"] .editable-sku-code`);
+            if (skuElement) {
+                skuElement.setAttribute('data-category', newName);
+                
+                // Update SKU code if no custom mapping exists
+                if (!customMappings[newName]) {
+                    const newCode = catCode(newName);
+                    skuElement.textContent = newCode;
+                    skuElement.setAttribute('data-original', newCode);
+                    updateExampleSku(newName, newCode);
+                }
+            }
+            
+            showNotification('Category Updated', `Category renamed from "${originalName}" to "${newName}"`, 'success');
+        } else {
+            showNotification('Error', 'Failed to update category', 'error');
+            cancelCategoryEdit(element, originalName);
+        }
+    } catch (error) {
+        console.error('Error updating category:', error);
+        showNotification('Error', 'Failed to update category', 'error');
+        cancelCategoryEdit(element, originalName);
+    }
+}
+
+// Override the original startEditCategory with enhanced version
+window.startEditCategory = enhancedStartEditCategory;
+
+// Function to refresh all example SKUs to ensure they match custom mappings
+function refreshAllExampleSkus() {
+    console.log('Refreshing all example SKUs...');
+    
+    const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');
+    console.log('Current custom SKU mappings:', customSkuMappings);
+    
+    // Find all category rows
+    const categoryRows = document.querySelectorAll('tr[data-category]');
+    
+    categoryRows.forEach(row => {
+        const categoryName = row.getAttribute('data-category');
+        const skuCodeElement = row.querySelector('.editable-sku-code');
+        const exampleElement = row.querySelector('.example-sku');
+        
+        if (categoryName && skuCodeElement && exampleElement) {
+            const currentSkuCode = skuCodeElement.textContent.trim();
+            const expectedCode = customSkuMappings[categoryName] || catCode(categoryName);
+            const expectedExample = `WF-${expectedCode}-001`;
+            
+            // Update SKU code if it doesn't match the expected custom mapping
+            if (customSkuMappings[categoryName] && currentSkuCode !== expectedCode) {
+                console.log(`Updating SKU code for ${categoryName}: ${currentSkuCode} -> ${expectedCode}`);
+                skuCodeElement.textContent = expectedCode;
+                skuCodeElement.dataset.original = expectedCode;
+            }
+            
+            // Update example SKU
+            if (exampleElement.textContent.trim() !== expectedExample) {
+                console.log(`Updating example SKU for ${categoryName}: ${exampleElement.textContent.trim()} -> ${expectedExample}`);
+                exampleElement.textContent = expectedExample;
+                
+                // Flash green to show it was updated
+                exampleElement.style.background = '#dcfce7';
+                exampleElement.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    exampleElement.style.background = '#f3f4f6';
+                }, 500);
+            }
+        }
+    });
+    
+    console.log('Example SKU refresh complete');
+    
+    // Show notification to user
+    showNotification('SKUs Refreshed', 'All example SKUs have been updated to match your custom settings', 'success');
 }
 
 // Website Configuration Modal Functions
@@ -15026,6 +16686,9 @@ function openGlobalColorSizeModal() {
         createGlobalColorSizeModal();
     }
     document.getElementById('globalColorSizeModal').style.display = 'block';
+    
+    // Ensure genders tab is active by default
+    switchGlobalTab('genders');
     loadGlobalColorSizeData();
 }
 
@@ -15034,18 +16697,55 @@ function createGlobalColorSizeModal() {
         <div id="globalColorSizeModal" class="modal" style="display: none;">
             <div class="modal-content" style="max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto; background: white;">
                 <div class="modal-header" style="background: white; color: #1f2937; border-bottom: 1px solid #e5e7eb;">
-                    <h2 style="color: #1f2937; margin: 0; font-weight: 600;">🎨 Global Color & Size Management</h2>
+                    <h2 style="color: #1f2937; margin: 0; font-weight: 600;">👥 Gender, Size & Color Management</h2>
                     <span class="close" onclick="closeGlobalColorSizeModal()" style="color: #6b7280;">&times;</span>
                 </div>
                 <div class="modal-body">
                     <div class="tabs-container">
                         <div class="tab-buttons" style="display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px;">
-                            <button class="tab-button active" onclick="switchGlobalTab('colors')" style="padding: 10px 20px; border: none; background: #059669; color: white; cursor: pointer; border-radius: 8px 8px 0 0; margin-right: 5px;">🎨 Global Colors</button>
+                            <button class="tab-button active" onclick="switchGlobalTab('genders')" style="padding: 10px 20px; border: none; background: #7c3aed; color: white; cursor: pointer; border-radius: 8px 8px 0 0; margin-right: 5px;">👥 Global Genders</button>
+                            <button class="tab-button" onclick="switchGlobalTab('colors')" style="padding: 10px 20px; border: none; background: #6b7280; color: white; cursor: pointer; border-radius: 8px 8px 0 0; margin-right: 5px;">🎨 Global Colors</button>
                             <button class="tab-button" onclick="switchGlobalTab('sizes')" style="padding: 10px 20px; border: none; background: #6b7280; color: white; cursor: pointer; border-radius: 8px 8px 0 0;">📏 Global Sizes</button>
                         </div>
                         
+                        <!-- Global Genders Tab -->
+                        <div id="globalGendersTab" class="tab-content" style="display: block;">
+                            
+                            <!-- Add Gender Form -->
+                            <div id="addGenderForm" style="display: none; margin-bottom: 30px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <h4 style="margin: 0 0 15px 0; color: #374151; font-size: 16px; font-weight: 600;">Add New Gender</h4>
+                                <form onsubmit="saveGlobalGender(event)" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end;">
+                                    <div class="form-group">
+                                        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Gender Name</label>
+                                        <input type="text" id="newGenderName" placeholder="e.g., Unisex, Men, Women" required style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Description</label>
+                                        <input type="text" id="newGenderDescription" placeholder="Optional description" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Display Order</label>
+                                        <input type="number" id="newGenderOrder" min="0" value="0" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;">
+                                    </div>
+                                    <div class="form-actions" style="display: flex; gap: 10px;">
+                                        <button type="submit" class="btn btn-success" style="background: #7c3aed; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Save Gender</button>
+                                        <button type="button" onclick="cancelAddGender()" class="btn btn-secondary" style="background: #6b7280; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                                                         <!-- Add Gender Button -->
+                             <button onclick="showAddGenderForm()" class="btn btn-primary" style="background: #7c3aed; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 20px;">
+                                 ➕ Add New Gender
+                             </button>
+                             
+                             <div id="globalGendersList" class="data-grid">
+                                 <!-- Genders will be loaded here -->
+                             </div>
+                        </div>
+                        
                         <!-- Global Colors Tab -->
-                        <div id="globalColorsTab" class="tab-content active">
+                        <div id="globalColorsTab" class="tab-content" style="display: none;">
 
                             
                             <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
@@ -15162,26 +16862,55 @@ function switchGlobalTab(tab) {
         btn.classList.remove('active');
         btn.style.background = '#6b7280';
     });
-    event.target.classList.add('active');
-    event.target.style.background = tab === 'colors' ? '#059669' : '#7c3aed';
     
-    // Update tab content
-    document.getElementById('globalColorsTab').style.display = tab === 'colors' ? 'block' : 'none';
-    document.getElementById('globalSizesTab').style.display = tab === 'sizes' ? 'block' : 'none';
+    // Find the clicked button and make it active
+    document.querySelectorAll('#globalColorSizeModal .tab-button').forEach(btn => {
+        const btnText = btn.textContent.toLowerCase();
+        if ((tab === 'genders' && btnText.includes('genders')) ||
+            (tab === 'colors' && btnText.includes('colors')) ||
+            (tab === 'sizes' && btnText.includes('sizes'))) {
+            btn.classList.add('active');
+            
+            // Set appropriate color for active tab
+            if (tab === 'genders') {
+                btn.style.background = '#7c3aed';
+            } else if (tab === 'colors') {
+                btn.style.background = '#059669';
+            } else if (tab === 'sizes') {
+                btn.style.background = '#7c3aed';
+            }
+        }
+    });
     
-    // Load appropriate data
-    if (tab === 'colors') {
+    // Hide all tabs first
+    const gendersTab = document.getElementById('globalGendersTab');
+    const colorsTab = document.getElementById('globalColorsTab');
+    const sizesTab = document.getElementById('globalSizesTab');
+    
+    if (gendersTab) gendersTab.style.display = 'none';
+    if (colorsTab) colorsTab.style.display = 'none';  
+    if (sizesTab) sizesTab.style.display = 'none';
+    
+    // Show the selected tab
+    if (tab === 'genders' && gendersTab) {
+        gendersTab.style.display = 'block';
+        loadGlobalGenders();
+    } else if (tab === 'colors' && colorsTab) {
+        colorsTab.style.display = 'block';
         loadGlobalColors();
-    } else if (tab === 'sizes') {
+    } else if (tab === 'sizes' && sizesTab) {
+        sizesTab.style.display = 'block';
         loadGlobalSizes();
     }
 }
 
 async function loadGlobalColorSizeData() {
-    await loadGlobalColors();
-    await loadGlobalSizes();
+    // Load categories for filters (these are lightweight)
     await loadColorCategories();
     await loadSizeCategories();
+    
+    // Don't load all data at once - let tab switching handle this
+    // This improves performance and ensures only needed data is loaded
 }
 
 async function loadGlobalColors() {
@@ -15494,14 +17223,275 @@ function filterSizesByCategory() {
     loadGlobalSizes(category);
 }
 
-function editGlobalColor(colorId) {
-    // Placeholder for edit functionality
-    showInfo('Edit functionality coming soon!');
+// ========== GLOBAL GENDERS MANAGEMENT ==========
+
+async function loadGlobalGenders() {
+    try {
+        const response = await fetch('/api/global_color_size_management.php?action=get_global_genders');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayGlobalGenders(data.genders);
+        } else {
+            showError('Failed to load global genders: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading global genders:', error);
+        showError('Error loading global genders');
+    }
 }
 
-function editGlobalSize(sizeId) {
-    // Placeholder for edit functionality
-    showInfo('Edit functionality coming soon!');
+function displayGlobalGenders(genders) {
+    const container = document.getElementById('globalGendersList');
+    if (!container) return;
+    
+    if (!genders || genders.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">No global genders found. Add some to get started!</div>';
+        return;
+    }
+    
+    let html = `
+        <div class="data-grid-container">
+            <div class="data-grid-header" style="display: grid; grid-template-columns: 1fr 1fr 80px 160px; gap: 15px; padding: 15px; background: #f9fafb; border-bottom: 2px solid #e5e7eb; font-weight: 600; color: #374151;">
+                <div>Gender Name</div>
+                <div>Description</div>
+                <div>Order</div>
+                <div>Actions</div>
+            </div>
+            <div class="data-grid-body">
+    `;
+    
+    genders.forEach((gender, index) => {
+        const bgColor = index % 2 === 0 ? '#ffffff' : '#f9fafb';
+        html += `
+            <div class="grid-row" style="display: grid; grid-template-columns: 1fr 1fr 80px 160px; gap: 15px; padding: 15px; background: ${bgColor}; border-bottom: 1px solid #e5e7eb;">
+                <div class="grid-cell" style="font-weight: 600; color: #111827;">${gender.gender_name}</div>
+                <div class="grid-cell" style="color: #6b7280;">${gender.description || '-'}</div>
+                <div class="grid-cell" style="color: #6b7280;">${gender.display_order}</div>
+                <div class="grid-cell">
+                    <button onclick="editGlobalGender(${gender.id})" class="btn btn-sm btn-outline" style="background: #f3f4f6; color: #374151; padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 4px; margin-right: 8px; cursor: pointer;">Edit</button>
+                    <button onclick="deleteGlobalGender(${gender.id})" class="btn btn-sm btn-danger" style="background: #ef4444; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div></div>';
+    container.innerHTML = html;
+}
+
+// Gender management functions
+function showAddGenderForm() {
+    document.getElementById('addGenderForm').style.display = 'block';
+}
+
+function cancelAddGender() {
+    document.getElementById('addGenderForm').style.display = 'none';
+    document.getElementById('addGenderForm').querySelector('form').reset();
+}
+
+async function saveGlobalGender(event) {
+    event.preventDefault();
+    
+    const formData = {
+        gender_name: document.getElementById('newGenderName').value,
+        description: document.getElementById('newGenderDescription').value,
+        display_order: parseInt(document.getElementById('newGenderOrder').value) || 0
+    };
+    
+    try {
+        const response = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'add_global_gender', ...formData })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Global gender added successfully!');
+            cancelAddGender();
+            loadGlobalGenders();
+        } else {
+            showError('Failed to add gender: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error saving gender:', error);
+        showError('Error saving gender');
+    }
+}
+
+async function deleteGlobalGender(genderId) {
+    if (!confirm('Are you sure you want to delete this gender? If it\'s in use by items, it will be deactivated instead.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_global_gender', gender_id: genderId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            loadGlobalGenders();
+        } else {
+            showError('Failed to delete gender: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error deleting gender:', error);
+        showError('Error deleting gender');
+    }
+}
+
+async function editGlobalGender(genderId) {
+    // For now, just show a simple prompt - could be enhanced with a proper edit modal later
+    const newName = prompt('Enter new gender name:');
+    if (!newName) return;
+    
+    const newDescription = prompt('Enter new description (optional):') || '';
+    const newOrder = prompt('Enter display order (number):') || '0';
+    
+    try {
+        const response = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'update_global_gender', 
+                gender_id: genderId,
+                gender_name: newName,
+                description: newDescription,
+                display_order: parseInt(newOrder) || 0
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Global gender updated successfully!');
+            loadGlobalGenders();
+        } else {
+            showError('Failed to update gender: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error updating gender:', error);
+        showError('Error updating gender');
+    }
+}
+
+async function editGlobalColor(colorId) {
+    try {
+        // First, get the current color data
+        const response = await fetch(`/api/global_color_size_management.php?action=get_global_colors`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            showError('Failed to load color data');
+            return;
+        }
+        
+        // Find the specific color
+        const color = data.colors.find(c => c.id == colorId);
+        if (!color) {
+            showError('Color not found');
+            return;
+        }
+        
+        // Prompt for new values with current values as defaults
+        const newName = prompt('Enter new color name:', color.color_name);
+        if (!newName) return;
+        
+        const newCode = prompt('Enter new color code (hex):', color.color_code || '');
+        const newCategory = prompt('Enter new category:', color.category || '');
+        const newDescription = prompt('Enter new description:', color.description || '');
+        const newOrder = prompt('Enter display order (number):', color.display_order || '0');
+        
+        // Update the color
+        const updateResponse = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'update_global_color', 
+                color_id: colorId,
+                color_name: newName,
+                color_code: newCode,
+                category: newCategory,
+                description: newDescription,
+                display_order: parseInt(newOrder) || 0
+            })
+        });
+        
+        const updateData = await updateResponse.json();
+        
+        if (updateData.success) {
+            showSuccess('Global color updated successfully!');
+            loadGlobalColors();
+        } else {
+            showError('Failed to update color: ' + updateData.message);
+        }
+    } catch (error) {
+        console.error('Error updating color:', error);
+        showError('Error updating color');
+    }
+}
+
+async function editGlobalSize(sizeId) {
+    try {
+        // First, get the current size data
+        const response = await fetch(`/api/global_color_size_management.php?action=get_global_sizes`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            showError('Failed to load size data');
+            return;
+        }
+        
+        // Find the specific size
+        const size = data.sizes.find(s => s.id == sizeId);
+        if (!size) {
+            showError('Size not found');
+            return;
+        }
+        
+        // Prompt for new values with current values as defaults
+        const newName = prompt('Enter new size name:', size.size_name);
+        if (!newName) return;
+        
+        const newCode = prompt('Enter new size code:', size.size_code || '');
+        const newCategory = prompt('Enter new category:', size.category || '');
+        const newDescription = prompt('Enter new description:', size.description || '');
+        const newOrder = prompt('Enter display order (number):', size.display_order || '0');
+        
+        // Update the size
+        const updateResponse = await fetch('/api/global_color_size_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'update_global_size', 
+                size_id: sizeId,
+                size_name: newName,
+                size_code: newCode,
+                category: newCategory,
+                description: newDescription,
+                display_order: parseInt(newOrder) || 0
+            })
+        });
+        
+        const updateData = await updateResponse.json();
+        
+        if (updateData.success) {
+            showSuccess('Global size updated successfully!');
+            loadGlobalSizes();
+        } else {
+            showError('Failed to update size: ' + updateData.message);
+        }
+    } catch (error) {
+        console.error('Error updating size:', error);
+        showError('Error updating size');
+    }
 }
 
 // ========== DOCUMENTATION FUNCTIONS ==========
@@ -15598,43 +17588,168 @@ function generateSystemDocumentation(systemData, databaseData) {
             </h3>
             
             ${generateCleanupRecommendations(tableDetails)}
-            
-            <!-- Cleanup Actions -->
-            <div class="mt-6 border-t border-gray-200 pt-6">
-                <h4 class="font-semibold text-gray-800 mb-4">🔧 Automated Cleanup Actions</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <button onclick="runSystemAnalysis()" class="cleanup-action-btn">
-                        🔍 Analyze System
-                        <span class="action-desc">Scan for cleanup opportunities</span>
-                    </button>
-                    <button onclick="removeEmptyTables()" class="cleanup-action-btn cleanup-warning">
-                        🗑️ Remove Empty Tables
-                        <span class="action-desc">Remove unused database tables</span>
-                    </button>
-                    <button onclick="cleanupStaleFiles()" class="cleanup-action-btn">
-                        📁 Clean Stale Files
-                        <span class="action-desc">Remove backup and temporary files</span>
-                    </button>
-                    <button onclick="removeUnusedCode()" class="cleanup-action-btn">
-                        💬 Clean Comments
-                        <span class="action-desc">Remove TODO/DEBUG comments</span>
-                    </button>
-                    <button onclick="optimizeDatabase()" class="cleanup-action-btn">
-                        ⚡ Optimize Database
-                        <span class="action-desc">Optimize all database tables</span>
-                    </button>
-                    <button onclick="generateCleanupReport()" class="cleanup-action-btn">
-                        📊 Generate Report
-                        <span class="action-desc">Create detailed cleanup report</span>
-                    </button>
+        </div>
+        
+        <!-- System Requirements & Configuration -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                ⚙️ System Requirements & Configuration
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-3">Server Requirements</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>🔸 <strong>PHP:</strong> 7.4+ (8.1+ recommended)</li>
+                        <li>🔸 <strong>MySQL:</strong> 5.7+ or MariaDB 10.3+</li>
+                        <li>🔸 <strong>Extensions:</strong> PDO, GD, cURL, mbstring, JSON</li>
+                        <li>🔸 <strong>Memory:</strong> 256MB+ (512MB recommended)</li>
+                        <li>🔸 <strong>Storage:</strong> 1GB+ for system + media files</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-3">Key Configuration Files</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>📄 <code>api/config.php</code> - Database configuration</li>
+                        <li>📄 <code>includes/auth.php</code> - Authentication settings</li>
+                        <li>📄 <code>.htaccess</code> - URL rewriting & security</li>
+                        <li>📄 <code>admin_check.php</code> - Admin access control</li>
+                        <li>📄 <code>logs/</code> - System log files directory</li>
+                    </ul>
                 </div>
             </div>
-            
-            <!-- Cleanup Results -->
-            <div id="cleanupResults" class="mt-6 hidden">
-                <h4 class="font-semibold text-gray-800 mb-3">Cleanup Results</h4>
-                <div id="cleanupResultsContent" class="bg-gray-50 p-4 rounded-lg">
-                    <!-- Results will be displayed here -->
+        </div>
+        
+        <!-- API Reference -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                🌐 API Endpoints Reference
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-blue-800 mb-2">Core E-commerce</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>📦 <code>/api/items.php</code> - Product management</li>
+                        <li>🛒 <code>/api/orders.php</code> - Order processing</li>
+                        <li>👥 <code>/api/customers.php</code> - Customer data</li>
+                        <li>🏷️ <code>/api/categories.php</code> - Product categories</li>
+                    </ul>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-green-800 mb-2">System Management</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>🗄️ <code>/api/db_manager.php</code> - Database operations</li>
+                        <li>🧹 <code>/api/cleanup_system.php</code> - System cleanup</li>
+                        <li>📊 <code>/api/analytics_tracker.php</code> - Analytics</li>
+                        <li>🔧 <code>/api/get_system_config.php</code> - System info</li>
+                    </ul>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-purple-800 mb-2">User Interface</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>💅 <code>/api/global_css_rules.php</code> - Dynamic styling</li>
+                        <li>💡 <code>/api/help_tooltips.php</code> - Help system</li>
+                        <li>📧 <code>/api/email_manager.php</code> - Email templates</li>
+                        <li>🎨 <code>/api/get_background.php</code> - Room themes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- File Structure -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                📁 File Structure Overview
+            </h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <pre class="text-sm text-gray-700 whitespace-pre-wrap">
+<strong>WhimsicalFrog/</strong>
+├── <strong>api/</strong>                  # Backend API endpoints
+├── <strong>css/</strong>                  # Stylesheets and themes
+├── <strong>js/</strong>                   # JavaScript functionality
+├── <strong>images/</strong>               # Product and UI images
+├── <strong>includes/</strong>             # PHP include files
+├── <strong>sections/</strong>             # Page section templates
+├── <strong>uploads/</strong>              # User uploaded content
+├── <strong>logs/</strong>                 # System and error logs
+├── <strong>backups/</strong>              # Database backups
+├── <strong>vendor/</strong>               # Third-party libraries
+├── <strong>index.php</strong>             # Main application entry
+├── <strong>admin_check.php</strong>       # Admin authentication
+└── <strong>.htaccess</strong>             # Apache configuration
+                </pre>
+            </div>
+        </div>
+        
+        <!-- Security & Authentication -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                🔐 Security & Authentication
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-red-800 mb-3">Admin Access</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>🔑 Token-based authentication (<code>whimsical_admin_2024</code>)</li>
+                        <li>🛡️ Session-based admin verification</li>
+                        <li>🚫 Protected API endpoints with <code>requireAdmin()</code></li>
+                        <li>📝 Admin activity logging and tracking</li>
+                        <li>⏰ Session timeout and automatic logout</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-blue-800 mb-3">Data Protection</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>🗄️ Prepared statements prevent SQL injection</li>
+                        <li>🌐 CORS headers for API security</li>
+                        <li>📝 Input validation and sanitization</li>
+                        <li>🔒 Password hashing for user accounts</li>
+                        <li>📁 File upload restrictions and validation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Troubleshooting Guide -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                🔧 Troubleshooting Guide
+            </h3>
+            <div class="space-y-4">
+                <div class="border-l-4 border-red-500 pl-4">
+                    <h4 class="font-semibold text-red-800 mb-2">Database Connection Issues</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>✓ Check <code>api/config.php</code> database credentials</li>
+                        <li>✓ Verify MySQL/MariaDB service is running</li>
+                        <li>✓ Confirm database exists and user has permissions</li>
+                        <li>✓ Review error logs in <code>logs/</code> directory</li>
+                    </ul>
+                </div>
+                <div class="border-l-4 border-yellow-500 pl-4">
+                    <h4 class="font-semibold text-yellow-800 mb-2">File Permission Problems</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>✓ Set <code>uploads/</code> directory to 755 or 777</li>
+                        <li>✓ Ensure <code>logs/</code> directory is writable</li>
+                        <li>✓ Check <code>backups/</code> directory permissions</li>
+                        <li>✓ Verify web server user owns application files</li>
+                    </ul>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h4 class="font-semibold text-blue-800 mb-2">Performance Issues</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>✓ Run database optimization via cleanup tools</li>
+                        <li>✓ Clear temporary and backup files regularly</li>
+                        <li>✓ Check server memory usage and PHP limits</li>
+                        <li>✓ Monitor database query performance</li>
+                    </ul>
+                </div>
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h4 class="font-semibold text-green-800 mb-2">Admin Access Recovery</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>✓ Check session storage and clear browser cache</li>
+                        <li>✓ Verify admin token in authentication system</li>
+                        <li>✓ Review <code>includes/auth.php</code> configuration</li>
+                        <li>✓ Contact system administrator if locked out</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -15727,15 +17842,7 @@ function generateCleanupRecommendations(tableDetails) {
                     ${lowUsageTables.map(table => `<code class="bg-blue-100 px-2 py-1 rounded">${table}</code>`).join('')}
                 </div>
             </div>
-            
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 class="font-semibold text-green-800 mb-3">✅ Cleanup Actions</h4>
-                <div class="text-sm text-green-700 space-y-2">
-                    <div><strong>Safe to Remove:</strong> Empty tables that are not referenced in current code</div>
-                    <div><strong>Review Needed:</strong> Tables with minimal data but potential future use</div>
-                    <div><strong>Keep:</strong> Core tables (items, orders, users) regardless of current data volume</div>
-                </div>
-            </div>
+
         </div>
     `;
 }
@@ -17350,3 +19457,5 @@ if (!document.querySelector('style[data-cleanup-styles]')) {
         </div>
     </div>
 </div>
+
+<!-- Database-Driven Tooltip System is loaded globally in index.php -->

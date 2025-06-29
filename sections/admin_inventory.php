@@ -946,7 +946,7 @@ $messageType = $_GET['type'] ?? '';
             <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
-        <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col flex-grow overflow-y-auto">
+        <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col flex-grow overflow-y-auto" onsubmit="return validateGenderSizeColorRequirements(event)">
             <input type="hidden" name="action" value="<?= $modalMode === 'add' ? 'add' : 'update'; ?>">
             <?php if ($modalMode === 'edit' && isset($editItem['sku'])): ?>
                 <input type="hidden" name="itemSku" value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
@@ -975,7 +975,7 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label for="categoryEdit" class="block text-gray-700">Category *</label>
                                 <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'style="display:none;"' : '' ?>
@@ -991,12 +991,34 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                                 <?php endif; ?>
                             </div>
-                            <div class="flex items-end">
-                                <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm"
-                                        data-tooltip="Let AI write your marketing copy because apparently describing your own products is too hard. Don't worry, the robots are better at it anyway.">
-                                     🎯 Marketing Manager
-                                </button>
+                            <div>
+                                <label for="genderEdit" class="block text-gray-700">Gender *</label>
+                                <select id="genderEdit" name="gender" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('gender', $field_errors) ? 'field-error-highlight' : '' ?>" required
+                                        data-tooltip="Who is this for? Choose wisely - your customers judge you for everything, including assumptions about their gender.">
+                                    <option value="">Select Gender</option>
+                                    <option value="Unisex" <?= (isset($editItem['gender']) && $editItem['gender'] === 'Unisex') ? 'selected' : ''; ?>>Unisex</option>
+                                    <option value="Men" <?= (isset($editItem['gender']) && $editItem['gender'] === 'Men') ? 'selected' : ''; ?>>Men</option>
+                                    <option value="Women" <?= (isset($editItem['gender']) && $editItem['gender'] === 'Women') ? 'selected' : ''; ?>>Women</option>
+                                    <option value="Boys" <?= (isset($editItem['gender']) && $editItem['gender'] === 'Boys') ? 'selected' : ''; ?>>Boys</option>
+                                    <option value="Girls" <?= (isset($editItem['gender']) && $editItem['gender'] === 'Girls') ? 'selected' : ''; ?>>Girls</option>
+                                    <option value="Baby" <?= (isset($editItem['gender']) && $editItem['gender'] === 'Baby') ? 'selected' : ''; ?>>Baby</option>
+                                </select>
                             </div>
+                            <div>
+                                <label for="statusEdit" class="block text-gray-700">Status *</label>
+                                <select id="statusEdit" name="status" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('status', $field_errors) ? 'field-error-highlight' : '' ?>" required
+                                        data-tooltip="Draft items are hidden from customers. Live items are public. Don't put garbage live and wonder why nobody buys it.">
+                                    <option value="draft" <?= (isset($editItem['status']) && $editItem['status'] === 'draft') ? 'selected' : ''; ?>>Draft (Hidden)</option>
+                                    <option value="live" <?= (isset($editItem['status']) && $editItem['status'] === 'live') ? 'selected' : ''; ?>>Live (Public)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm"
+                                    data-tooltip="Let AI write your marketing copy because apparently describing your own products is too hard. Don't worry, the robots are better at it anyway.">
+                                 🎯 Marketing Manager
+                            </button>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1281,81 +1303,83 @@ $messageType = $_GET['type'] ?? '';
                 </div>
             </div>
 
-            <!-- Bottom Box: Size & Color Combinations (Full Width) -->
+            <!-- Bottom Box: Gender, Size & Color Management (Full Width) -->
             <div class="bg-white border border-gray-200 rounded-lg p-4" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
-                <div class="size-color-management-section">
+                <div class="gender-size-color-management-section">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                            <span class="mr-2">📦</span> Size & Color Combinations
+                            <span class="mr-2">📦</span> Gender, Size & Color Management
                         </h3>
-                        <div class="flex space-x-2">
-                            <button type="button" onclick="showLegacyManagement()" class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-colors" title="Show individual color/size management">
-                                🔧 Legacy Mode
-                            </button>
-                            <button type="button" onclick="syncAllStock()" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" title="Sync all stock levels">
-                                🔄 Sync Stock
-                            </button>
-                            <button type="button" onclick="addNewCombination()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
-                                + Add Combination
-                            </button>
+                        <div class="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded">
+                            Hierarchy: Gender → Size → Color
                         </div>
+                    </div>
+                    
+                    <!-- Requirement Notice -->
+                    <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="text-sm text-yellow-800">
+                            <strong>⚠️ Publication Requirements:</strong> Items must have at least one gender, size, and color assigned before they can be set to "Live" status.
+                        </div>
+                    </div>
+                    
+                    <!-- Management Sections -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Gender Management -->
+                        <div class="gender-section">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-md font-semibold text-gray-700 flex items-center">
+                                    <span class="mr-2">👥</span> Gender Options
+                                </h4>
+                                <button type="button" onclick="addItemGender()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                    + Add Gender
+                                </button>
+                            </div>
+                            <div id="gendersList" class="space-y-2">
+                                <div class="text-center text-gray-500 text-sm" id="gendersLoading">Loading genders...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Size Management -->
+                        <div class="size-section">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-md font-semibold text-gray-700 flex items-center">
+                                    <span class="mr-2">📏</span> Size Options
+                                </h4>
+                                <button type="button" onclick="addItemSize()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                    + Add Size
+                                </button>
+                            </div>
+                            <div id="sizesList" class="space-y-2">
+                                <div class="text-center text-gray-500 text-sm" id="sizesLoading">Loading sizes...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Color Management -->
+                        <div class="color-section">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-md font-semibold text-gray-700 flex items-center">
+                                    <span class="mr-2">🎨</span> Color Options
+                                </h4>
+                                <div class="flex space-x-2">
+                                    <button type="button" onclick="matchImageToColor()" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
+                                        🖼️ Match Image
+                                    </button>
+                                    <button type="button" onclick="addItemColor()" class="px-2 py-1 text-white rounded text-xs" style="background-color: #87ac3a;">
+                                        + Add Color
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="colorsList" class="space-y-2">
+                                <div class="text-center text-gray-500 text-sm" id="colorsLoading">Loading colors...</div>
+                            </div>
+                        </div>
+                        
                     </div>
                     
                     <!-- Stock Summary -->
-                    <div id="stockSummary" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                        <div class="text-sm text-gray-600" id="stockSummaryText">Loading stock summary...</div>
-                    </div>
-                    
-                    <!-- Size-Color Combinations Display -->
-                    <div id="sizeColorCombinations" class="space-y-3">
-                        <!-- Combinations will be loaded here -->
-                        <div class="text-center text-gray-500 text-sm" id="combinationsLoading">Loading combinations...</div>
-                    </div>
-                    
-                    <!-- Legacy Color Management (hidden by default) -->
-                    <div id="legacyColorSection" class="mt-6 hidden">
-                        <div class="flex justify-between items-center mb-3">
-                            <h4 class="text-md font-semibold text-gray-700 flex items-center">
-                                <span class="mr-2">🎨</span> Individual Colors (Legacy)
-                            </h4>
-                            <div class="flex space-x-2">
-                                <button type="button" onclick="openColorTemplateModal()" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
-                                    📋 Templates
-                                </button>
-                                <button type="button" onclick="addNewColor()" class="px-2 py-1 text-white rounded text-xs" style="background-color: #87ac3a;">
-                                    + Add Color
-                                </button>
-                                <button type="button" onclick="toggleLegacyColors()" class="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600">
-                                    Hide
-                                </button>
-                            </div>
-                        </div>
-                        <div id="colorsList" class="space-y-2">
-                            <div class="text-center text-gray-500 text-sm" id="colorsLoading">Loading colors...</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Legacy Size Management (hidden by default) -->
-                    <div id="legacySizeSection" class="mt-4 hidden">
-                        <div class="flex justify-between items-center mb-3">
-                            <h4 class="text-md font-semibold text-gray-700 flex items-center">
-                                <span class="mr-2">📏</span> Individual Sizes (Legacy)
-                            </h4>
-                            <div class="flex space-x-2">
-                                <button type="button" onclick="openSizeTemplateModal()" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
-                                    📋 Templates
-                                </button>
-                                <button type="button" onclick="addNewSize()" class="px-2 py-1 text-white rounded text-xs" style="background-color: #87ac3a;">
-                                    + Add Size
-                                </button>
-                                <button type="button" onclick="toggleLegacySizes()" class="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600">
-                                    Hide
-                                </button>
-                            </div>
-                        </div>
-                        <div id="sizesList" class="space-y-2">
-                            <div class="text-center text-gray-500 text-sm" id="sizesLoading">Loading sizes...</div>
-                        </div>
+                    <div id="stockSummary" class="mt-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div class="text-sm text-gray-600" id="stockSummaryText">Stock summary will update as you add gender, size, and color options.</div>
                     </div>
                 </div>
             </div>
@@ -9963,24 +9987,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load colors when in edit mode and we have a valid SKU
     if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {
         console.log('Loading colors for SKU:', currentItemSku);
-        console.log('Initializing Size & Color Combinations interface...');
-        setTimeout(loadSizeColorCombinations, 400); // Load new interface first
-        setTimeout(loadItemColors, 500);
-        setTimeout(initializeSizeManagement, 600); // Initialize sizes after colors
-        // Also try immediate initialization
-        setTimeout(function() {
-            console.log('Attempting immediate Size & Color Combinations load...');
-            initializeSizeColorInterface();
-        }, 100);
+        console.log('Initializing Gender, Size & Color interface...');
+        setTimeout(initializeGenderSizeColorInterface, 200);
     } else if (document.getElementById('sku') || document.getElementById('skuDisplay')) {
         // Fallback: try to get SKU from form fields
         const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
         if (skuField && skuField.value) {
             currentItemSku = skuField.value;
             console.log('Found SKU from field:', currentItemSku);
-            setTimeout(loadSizeColorCombinations, 400); // Load new interface first
-            setTimeout(loadItemColors, 500);
-            setTimeout(initializeSizeManagement, 600);
+            setTimeout(initializeGenderSizeColorInterface, 200);
         }
     }
 });
@@ -11470,124 +11485,578 @@ function toggleLegacySizes() {
     }
 }
 
-// Add new combination
-function addNewCombination() {
-    // Show a modal to add new size-color combination
-    showCombinationModal();
-}
-
-// Add color to specific size
-function addColorToSize(sizeId) {
-    // Show color modal with pre-selected size
-    showCombinationModal(null, sizeId);
-}
-
-// Edit combination
-function editCombination(sizeId, colorId) {
-    // Show modal to edit specific combination
-    showCombinationModal(colorId, sizeId);
-}
-
-// Delete combination
-async function deleteCombination(colorId) {
-    const confirmResult = await showStyledConfirm(
-        'Delete Combination',
-        'Are you sure you want to delete this size-color combination? This action cannot be undone.',
-        'Delete',
-        'Cancel'
-    );
+// Simple Gender Management
+async function addItemGender() {
+    const genderOptions = ['Unisex', 'Men', 'Women', 'Boys', 'Girls', 'Baby'];
+    const selectedGender = prompt('Select gender:\n' + genderOptions.map((g, i) => `${i+1}. ${g}`).join('\n') + '\n\nEnter number (1-6):');
     
-    if (!confirmResult) return;
-    
-    try {
-        const response = await fetch('/api/item_colors.php?action=delete_color', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ color_id: colorId })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess('Combination deleted successfully');
-            loadSizeColorCombinations(); // Reload combinations
-        } else {
-            showError('Error deleting combination: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error deleting combination:', error);
-        showError('Error deleting combination');
+    if (!selectedGender || selectedGender < 1 || selectedGender > 6) {
+        return;
     }
-}
-
-// Delete size (all color combinations for this size)
-async function deleteSize(sizeId, sizeName) {
-    const confirmResult = await showStyledConfirm(
-        'Delete Size',
-        `Are you sure you want to delete the "${sizeName}" size and ALL its color combinations? This action cannot be undone.`,
-        'Delete Size',
-        'Cancel'
-    );
     
-    if (!confirmResult) return;
+    const genderName = genderOptions[selectedGender - 1];
     
     try {
-        const response = await fetch('/api/item_sizes.php?action=delete_size_by_name', {
+        const response = await fetch('/api/item_genders.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                action: 'add',
                 item_sku: currentItemSku,
-                size_name: sizeName 
+                gender: genderName
             })
         });
         
         const data = await response.json();
-        
         if (data.success) {
-            showSuccess(`Size "${sizeName}" and all its combinations deleted successfully`);
-            loadSizeColorCombinations(); // Reload combinations
+            showSuccess('Gender added successfully!');
+            loadItemGenders();
         } else {
-            showError('Error deleting size: ' + data.message);
+            showError('Failed to add gender: ' + data.message);
         }
     } catch (error) {
-        console.error('Error deleting size:', error);
-        showError('Error deleting size');
+        console.error('Error adding gender:', error);
+        showError('Failed to add gender: ' + error.message);
     }
 }
 
-// Show combination modal (for adding/editing combinations)
-function showCombinationModal(colorId, sizeId) {
-    // For now, fall back to the existing color modal
-    // This can be enhanced later with a dedicated combination modal
-    if (colorId) {
-        editColor(colorId);
+// Simple Size Management
+async function addItemSize() {
+    // Get category to show relevant sizes
+    const category = document.getElementById('categoryEdit')?.value || '';
+    let sizeOptions = [];
+    
+    if (category === 'T-Shirts') {
+        sizeOptions = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+    } else if (category === 'Tumblers') {
+        sizeOptions = ['12oz', '16oz', '20oz', '30oz'];
     } else {
-        showColorModal();
+        sizeOptions = ['Small', 'Medium', 'Large', 'Extra Large'];
     }
-}
-
-// Sync all stock levels
-async function syncAllStock() {
+    
+    const selectedSize = prompt('Select size:\n' + sizeOptions.map((s, i) => `${i+1}. ${s}`).join('\n') + '\n\nEnter number:');
+    
+    if (!selectedSize || selectedSize < 1 || selectedSize > sizeOptions.length) {
+        return;
+    }
+    
+    const sizeName = sizeOptions[selectedSize - 1];
+    const stockLevel = prompt('Enter stock level for this size:', '10');
+    
+    if (!stockLevel || isNaN(stockLevel)) {
+        return;
+    }
+    
     try {
-        // This would call an API to sync all stock levels
-        // For now, just reload the combinations
-        loadSizeColorCombinations();
-        showSuccess('Stock levels synchronized');
+        const response = await fetch('/api/item_sizes.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                action: 'add',
+                item_sku: currentItemSku,
+                size_name: sizeName,
+                stock_level: parseInt(stockLevel),
+                display_order: 1
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Size added successfully!');
+            loadItemSizes();
+        } else {
+            showError('Failed to add size: ' + data.message);
+        }
     } catch (error) {
-        console.error('Error syncing stock:', error);
-        showError('Error syncing stock levels');
+        console.error('Error adding size:', error);
+        showError('Failed to add size: ' + error.message);
     }
 }
 
-// Initialize the new interface when the modal loads
-function initializeSizeColorInterface() {
-    // Load combinations when the modal opens
+// Simple Color Management
+async function addItemColor() {
+    const colorName = prompt('Enter color name:', '');
+    if (!colorName) return;
+    
+    const hexCode = prompt('Enter hex color code (optional):', '');
+    const stockLevel = prompt('Enter stock level for this color:', '10');
+    
+    if (!stockLevel || isNaN(stockLevel)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/item_colors.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                action: 'add',
+                item_sku: currentItemSku,
+                color_name: colorName,
+                hex_code: hexCode || '',
+                stock_level: parseInt(stockLevel),
+                display_order: 1
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Color added successfully!');
+            loadItemColors();
+        } else {
+            showError('Failed to add color: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error adding color:', error);
+        showError('Failed to add color: ' + error.message);
+    }
+}
+
+// Image to Color Matching Modal (restored from original)
+function matchImageToColor() {
+    showImageColorModal();
+}
+
+function showImageColorModal() {
+    const modalHTML = `
+        <div id="imageColorModal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h2>Match Images to Colors</h2>
+                    <button type="button" class="modal-close" onclick="closeImageColorModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left: Images -->
+                        <div>
+                            <h3 class="font-semibold mb-3">Item Images</h3>
+                            <div id="imageColorImageGrid" class="space-y-2">
+                                <div class="text-center text-gray-500">Loading images...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right: Color Selection -->
+                        <div>
+                            <h3 class="font-semibold mb-3">Select Color</h3>
+                            <div id="imageColorColorSelection" class="space-y-2">
+                                <div class="text-center text-gray-500">Loading colors...</div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <label for="newColorName" class="block text-sm font-medium text-gray-700 mb-2">Or add new color:</label>
+                                <input type="text" id="newColorName" placeholder="Color name" class="w-full px-3 py-2 border border-gray-300 rounded-md mb-2">
+                                <input type="color" id="newColorHex" class="w-full px-3 py-2 border border-gray-300 rounded-md mb-2">
+                                <button type="button" onclick="addNewColorFromModal()" class="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                    Add New Color
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeImageColorModal()" class="modal-button btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    loadImageColorModalData();
+}
+
+function closeImageColorModal() {
+    const modal = document.getElementById('imageColorModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function loadImageColorModalData() {
+    // Load images
+    try {
+        const response = await fetch(`/api/get_item_images.php?sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        const imageGrid = document.getElementById('imageColorImageGrid');
+        if (data.success && data.images.length > 0) {
+            imageGrid.innerHTML = data.images.map(img => `
+                <div class="image-color-item p-2 border rounded cursor-pointer hover:bg-gray-50" onclick="selectImageForColor('${img.image_path}')">
+                    <img src="/images/items/${img.image_path}" alt="Image" class="w-full h-20 object-cover rounded mb-2">
+                    <div class="text-sm text-gray-600">${img.image_path}</div>
+                </div>
+            `).join('');
+        } else {
+            imageGrid.innerHTML = '<div class="text-center text-gray-500">No images found</div>';
+        }
+    } catch (error) {
+        console.error('Error loading images:', error);
+    }
+    
+    // Load existing colors
+    loadColorsForImageModal();
+}
+
+async function loadColorsForImageModal() {
+    try {
+        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
+        const data = await response.json();
+        
+        const colorSelection = document.getElementById('imageColorColorSelection');
+        if (data.success && data.colors.length > 0) {
+            colorSelection.innerHTML = data.colors.map(color => `
+                <div class="color-option p-2 border rounded cursor-pointer hover:bg-gray-50" onclick="assignImageToColor('${color.id}')">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded border" style="background-color: ${color.hex_code || '#000000'}"></div>
+                        <div>
+                            <div class="font-medium">${color.color_name}</div>
+                            <div class="text-sm text-gray-500">${color.hex_code || 'No hex code'}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            colorSelection.innerHTML = '<div class="text-center text-gray-500">No colors found. Add colors first.</div>';
+        }
+    } catch (error) {
+        console.error('Error loading colors:', error);
+    }
+}
+
+let selectedImagePath = null;
+
+function selectImageForColor(imagePath) {
+    selectedImagePath = imagePath;
+    // Highlight selected image
+    document.querySelectorAll('.image-color-item').forEach(item => {
+        item.classList.remove('bg-blue-100', 'border-blue-500');
+    });
+    event.currentTarget.classList.add('bg-blue-100', 'border-blue-500');
+}
+
+async function assignImageToColor(colorId) {
+    if (!selectedImagePath) {
+        showError('Please select an image first');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/item_colors.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                action: 'update_color',
+                color_id: colorId,
+                image_path: selectedImagePath
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Image assigned to color successfully!');
+            loadItemColors();
+        } else {
+            showError('Failed to assign image: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error assigning image to color:', error);
+        showError('Failed to assign image: ' + error.message);
+    }
+}
+
+async function addNewColorFromModal() {
+    const colorName = document.getElementById('newColorName').value;
+    const colorHex = document.getElementById('newColorHex').value;
+    
+    if (!colorName) {
+        showError('Please enter a color name');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/item_colors.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                action: 'add',
+                item_sku: currentItemSku,
+                color_name: colorName,
+                hex_code: colorHex,
+                stock_level: 10,
+                display_order: 1,
+                image_path: selectedImagePath
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Color added successfully!');
+            document.getElementById('newColorName').value = '';
+            document.getElementById('newColorHex').value = '#000000';
+            loadColorsForImageModal();
+            loadItemColors();
+        } else {
+            showError('Failed to add color: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error adding color:', error);
+        showError('Failed to add color: ' + error.message);
+    }
+}
+
+// Load functions for the new simple interface
+async function loadItemGenders() {
+    const gendersList = document.getElementById('gendersList');
+    if (!gendersList) return;
+    
+    gendersList.innerHTML = '<div class="text-center text-gray-500 text-sm">Loading genders...</div>';
+    
+    try {
+        const response = await fetch(`/api/item_genders.php?action=get_all&item_sku=${currentItemSku}`, {
+            credentials: 'same-origin'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.genders.length > 0) {
+            gendersList.innerHTML = data.genders.map(gender => `
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span class="font-medium">👥 ${gender.gender}</span>
+                    <button onclick="deleteItemGender('${gender.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
+                </div>
+            `).join('');
+        } else {
+            gendersList.innerHTML = '<div class="text-center text-gray-500 text-sm">No genders assigned</div>';
+        }
+    } catch (error) {
+        console.error('Error loading genders:', error);
+        gendersList.innerHTML = '<div class="text-center text-red-500 text-sm">Error loading genders</div>';
+    }
+}
+
+async function loadItemSizes() {
+    const sizesList = document.getElementById('sizesList');
+    if (!sizesList) return;
+    
+    sizesList.innerHTML = '<div class="text-center text-gray-500 text-sm">Loading sizes...</div>';
+    
+    try {
+        const response = await fetch(`/api/item_sizes.php?action=get_all&item_sku=${currentItemSku}`, {
+            credentials: 'same-origin'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.sizes.length > 0) {
+            sizesList.innerHTML = data.sizes.map(size => `
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div>
+                        <span class="font-medium">📏 ${size.size_name}</span>
+                        <span class="text-sm text-gray-600">- Stock: ${size.stock_level}</span>
+                    </div>
+                    <button onclick="deleteItemSize('${size.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
+                </div>
+            `).join('');
+        } else {
+            sizesList.innerHTML = '<div class="text-center text-gray-500 text-sm">No sizes assigned</div>';
+        }
+    } catch (error) {
+        console.error('Error loading sizes:', error);
+        sizesList.innerHTML = '<div class="text-center text-red-500 text-sm">Error loading sizes</div>';
+    }
+}
+
+async function loadItemColors() {
+    const colorsList = document.getElementById('colorsList');
+    if (!colorsList) return;
+    
+    colorsList.innerHTML = '<div class="text-center text-gray-500 text-sm">Loading colors...</div>';
+    
+    try {
+        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`, {
+            credentials: 'same-origin'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.colors.length > 0) {
+            colorsList.innerHTML = data.colors.map(color => `
+                <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-6 h-6 rounded border" style="background-color: ${color.hex_code || '#000000'}"></div>
+                        <div>
+                            <span class="font-medium">🎨 ${color.color_name}</span>
+                            <span class="text-sm text-gray-600">- Stock: ${color.stock_level}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteItemColor('${color.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
+                </div>
+            `).join('');
+        } else {
+            colorsList.innerHTML = '<div class="text-center text-gray-500 text-sm">No colors assigned</div>';
+        }
+    } catch (error) {
+        console.error('Error loading colors:', error);
+        colorsList.innerHTML = '<div class="text-center text-red-500 text-sm">Error loading colors</div>';
+    }
+}
+
+// Delete functions
+async function deleteItemGender(genderId) {
+    if (!confirm('Are you sure you want to remove this gender option?')) return;
+    
+    try {
+        const response = await fetch('/api/item_genders.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: 'delete', gender_id: genderId })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Gender removed successfully!');
+            loadItemGenders();
+        } else {
+            showError('Failed to remove gender: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error removing gender:', error);
+        showError('Failed to remove gender: ' + error.message);
+    }
+}
+
+async function deleteItemSize(sizeId) {
+    if (!confirm('Are you sure you want to remove this size option?')) return;
+    
+    try {
+        const response = await fetch('/api/item_sizes.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: 'delete', size_id: sizeId })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Size removed successfully!');
+            loadItemSizes();
+        } else {
+            showError('Failed to remove size: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error removing size:', error);
+        showError('Failed to remove size: ' + error.message);
+    }
+}
+
+async function deleteItemColor(colorId) {
+    if (!confirm('Are you sure you want to remove this color option?')) return;
+    
+    try {
+        const response = await fetch('/api/item_colors.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: 'delete_color', color_id: colorId })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showSuccess('Color removed successfully!');
+            loadItemColors();
+        } else {
+            showError('Failed to remove color: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error removing color:', error);
+        showError('Failed to remove color: ' + error.message);
+    }
+}
+
+// Initialize the new simple interface
+function initializeGenderSizeColorInterface() {
     if (currentItemSku) {
-        loadSizeColorCombinations();
+        loadItemGenders();
+        loadItemSizes();
+        loadItemColors();
+    }
+}
+
+// Validation function for gender, size, color requirements
+async function validateGenderSizeColorRequirements(event) {
+    const statusField = document.getElementById('statusEdit');
+    if (!statusField || statusField.value !== 'live') {
+        return true; // No validation needed for draft items
+    }
+    
+    if (!currentItemSku) {
+        return true; // New items don't need validation yet
+    }
+    
+    try {
+        // Check if item has required gender, size, and color assignments
+        const [genderResponse, sizeResponse, colorResponse] = await Promise.all([
+            fetch(`/api/item_genders.php?action=get_all&item_sku=${currentItemSku}`, { credentials: 'same-origin' }),
+            fetch(`/api/item_sizes.php?action=get_all&item_sku=${currentItemSku}`, { credentials: 'same-origin' }),
+            fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`, { credentials: 'same-origin' })
+        ]);
+        
+        const [genderData, sizeData, colorData] = await Promise.all([
+            genderResponse.json(),
+            sizeResponse.json(),
+            colorResponse.json()
+        ]);
+        
+        const missingRequirements = [];
+        
+        if (!genderData.success || !genderData.genders || genderData.genders.length === 0) {
+            missingRequirements.push('Gender');
+        }
+        
+        if (!sizeData.success || !sizeData.sizes || sizeData.sizes.length === 0) {
+            missingRequirements.push('Size');
+        }
+        
+        if (!colorData.success || !colorData.colors || colorData.colors.length === 0) {
+            missingRequirements.push('Color');
+        }
+        
+        if (missingRequirements.length > 0) {
+            event.preventDefault();
+            
+            const requirements = missingRequirements.join(', ');
+            const message = `⚠️ Cannot set item to "Live" status!\n\nMissing requirements: ${requirements}\n\nPlease add at least one ${requirements.toLowerCase()} option before publishing this item.`;
+            
+            showError(message);
+            
+            // Auto-change status back to draft
+            statusField.value = 'draft';
+            
+            return false;
+        }
+        
+        return true; // All requirements met
+        
+    } catch (error) {
+        console.error('Error validating requirements:', error);
+        showError('Error checking publication requirements. Please try again.');
+        event.preventDefault();
+        return false;
     }
 }
 

@@ -456,8 +456,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="product-icon <?php echo $area_class . $outOfStockClass; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($item['sku']); ?>"
                                  data-stock="<?php echo $stockLevel; ?>"
-                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
-                                 onmouseleave="hidePopup()"
+                                 onmouseenter="showGlobalPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
+                                 onmouseleave="hideGlobalPopup()"
                                  onclick="showProductDetails('<?php echo htmlspecialchars($item['sku']); ?>')"
                                  style="cursor: pointer;">
                                 <img src="<?php echo htmlspecialchars($primaryImageUrl); ?>" 
@@ -477,7 +477,11 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </main>
 
-<?php include 'components/global_popup.php'; ?>
+<?php 
+require_once __DIR__ . '/../components/global_popup.php';
+echo renderGlobalPopup();
+echo renderGlobalPopupCSS();
+?>
 
 <!-- Quantity Modal -->
 <div id="quantityModal" class="modal-overlay hidden">

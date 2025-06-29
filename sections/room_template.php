@@ -455,8 +455,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="product-icon <?php echo $area_class . $outOfStockClass; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($item['sku']); ?>"
                                  data-stock="<?php echo $stockLevel; ?>"
-                                 onmouseenter="showPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
-                                 onmouseleave="hidePopup()"
+                                 onmouseenter="showGlobalPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
+                                 onmouseleave="hideGlobalPopup()"
                                  onclick="openQuantityModal(<?php echo htmlspecialchars(json_encode($item)); ?>)"
                                  style="cursor: pointer;">
                                 <img src="<?php echo htmlspecialchars($primaryImageUrl); ?>" 
@@ -476,25 +476,11 @@ document.addEventListener('DOMContentLoaded', function() {
     </section>
 </main>
 
-<!-- Enhanced Product Popup -->
-<div id="productPopup" class="product-popup-enhanced">
-    <div class="popup-content-enhanced">
-        <img class="popup-image-enhanced" src="" alt="">
-        <div class="popup-details-enhanced">
-            <div class="popup-title-enhanced"></div>
-            <div class="popup-category-enhanced"></div>
-            <div class="popup-sku" style="font-size: 12px; color: #888; margin-bottom: 4px; font-family: monospace;"></div>
-            <div class="popup-stock" style="font-size: 12px; margin-bottom: 8px;"></div>
-            <div class="popup-description-enhanced"></div>
-            <div class="popup-price-enhanced"></div>
-            <div class="popup-actions-enhanced">
-                <button class="popup-add-btn-enhanced">Add to Cart</button>
-                <button class="popup-details-btn-enhanced">View Details</button>
-                <div class="popup-hint" style="font-size: 11px; color: #888; text-align: center; margin-top: 5px;">Click anywhere to view details</div>
-            </div>
-        </div>
-    </div>
-</div>
+<?php 
+require_once __DIR__ . '/../components/global_popup.php';
+echo renderGlobalPopup();
+echo renderGlobalPopupCSS();
+?>
 
 <!-- Quantity Modal - Compact with Large Image -->
 <div id="quantityModal" class="modal-overlay hidden">
@@ -557,193 +543,31 @@ let popupOpen = false;
 let isShowingPopup = false;
 let lastShowTime = 0;
 
+// Popup functions now use the global system
 function showPopup(element, product) {
-    const now = Date.now();
-    
-    // Debounce rapid calls (prevent multiple calls within 100ms)
-    if (now - lastShowTime < 100) {
-        return;
+    if (typeof window.showGlobalPopup === 'function') {
+        window.showGlobalPopup(element, product);
+    } else {
+        console.error('Global popup system not available');
     }
-    lastShowTime = now;
-    
-    // Prevent rapid re-triggering of same popup (anti-flashing protection)
-    if (currentProduct && currentProduct.sku === product.sku && isShowingPopup) {
-        clearTimeout(popupTimeout);
-        return;
-    }
-    
-    clearTimeout(popupTimeout);
-    currentProduct = product;
-    isShowingPopup = true;
-    popupOpen = true;
-
-    const popup = document.getElementById('productPopup');
-    const popupImage = popup.querySelector('.popup-image-enhanced');
-    const popupCategory = popup.querySelector('.popup-category-enhanced');
-    const popupTitle = popup.querySelector('.popup-title-enhanced');
-    const popupSku = popup.querySelector('.popup-sku');
-    const popupStock = popup.querySelector('.popup-stock');
-    const popupDescription = popup.querySelector('.popup-description-enhanced');
-    const popupPrice = popup.querySelector('.popup-price-enhanced');
-    const popupAddBtn = popup.querySelector('.popup-add-btn-enhanced');
-    const popupDetailsBtn = popup.querySelector('.popup-details-btn-enhanced');
-
-    // Get the image URL - use SKU-based system
-    const imageUrl = `images/items/${product.sku}A.png`;
-
-    // Populate popup content
-    popupImage.src = imageUrl;
-    popupImage.onerror = function() {
-        this.src = 'images/items/placeholder.webp';
-        this.onerror = null;
-    };
-    
-    popupCategory.textContent = product.category ?? 'Category';
-    popupTitle.textContent = product.name ?? product.productName ?? 'Item Name';
-    popupSku.textContent = `SKU: ${product.sku}`;
-    
-    // Display stock information with color coding
-    const stockLevel = product.stockLevel || product.stock || 0;
-    const stockText = stockLevel > 0 ? `${stockLevel} in stock` : 'Out of stock';
-    const stockColor = stockLevel > 10 ? '#22c55e' : stockLevel > 0 ? '#f59e0b' : '#ef4444';
-    popupStock.textContent = stockText;
-    popupStock.style.color = stockColor;
-    popupStock.style.fontWeight = '600';
-    
-    popupDescription.textContent = product.description ?? 'No description available';
-    
-    // Check for sales and update price display
-    checkAndDisplaySalePrice(product, popupPrice, null, 'popup');
-
-    // Better positioning relative to the element
-    const rect = element.getBoundingClientRect();
-    const roomContainer = element.closest('.room-container');
-    const containerRect = roomContainer.getBoundingClientRect();
-
-    let left = rect.left - containerRect.left + rect.width + 10;
-    let top = rect.top - containerRect.top - 50;
-
-    // Show popup temporarily to get actual dimensions
-    popup.style.display = 'block';
-    popup.style.opacity = '';
-    popup.classList.add('show');
-
-    const popupRect = popup.getBoundingClientRect();
-    const popupWidth = popupRect.width;
-    const popupHeight = popupRect.height;
-
-    // Reset for measurement
-    popup.style.display = '';
-
-    // Adjust if popup would go off screen horizontally
-    if (left + popupWidth > containerRect.width) {
-        left = rect.left - containerRect.left - popupWidth - 10;
-    }
-    
-    // Adjust if popup would go off screen vertically (top)
-    if (top < 0) {
-        top = rect.top - containerRect.top + rect.height + 10;
-    }
-    
-    // Adjust if popup would go off screen vertically (bottom) - PREVENT DOUBLE SCROLLBAR
-    if (top + popupHeight > containerRect.height) {
-        // Try positioning above the element first
-        const topAbove = rect.top - containerRect.top - popupHeight - 10;
-        if (topAbove >= 0) {
-            top = topAbove;
-        } else {
-            // If still doesn't fit, position at bottom of container with padding
-            top = containerRect.height - popupHeight - 20;
-            // Ensure it doesn't go above the top
-            if (top < 0) {
-                top = 10;
-            }
-        }
-    }
-
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-
-    // Clear any inline styles that might interfere and show the popup
-    popup.style.opacity = '';
-    popup.classList.add('show');
-
-    // Add to cart functionality using global function
-    popupAddBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        popup.classList.remove('show');
-        const sku = product.sku;
-        const name = product.name;
-        const price = parseFloat(product.retailPrice);
-        const image = `images/items/${product.sku}A.png`;
-        
-        if (typeof window.addToCartWithModal === 'function') {
-            window.addToCartWithModal(sku, name, price, image);
-        } else {
-            console.error('Global addToCartWithModal function not available');
-        }
-    };
-    
-    // View details functionality
-    popupDetailsBtn.onclick = function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        popup.classList.remove('show');
-        if (typeof showProductDetails === 'function') {
-            showProductDetails(product.sku);
-        } else {
-            console.log('Product details for:', product.sku);
-        }
-    };
 }
 
 function hidePopup() {
-    // Clear any existing timeout
-    clearTimeout(popupTimeout);
-    
-    // Add a small delay before hiding to allow moving mouse to popup
-    popupTimeout = setTimeout(() => {
-        hidePopupImmediate();
-    }, 200); // Increased delay for stability
+    if (typeof window.hideGlobalPopup === 'function') {
+        window.hideGlobalPopup();
+    }
 }
 
 function hidePopupImmediate() {
-    const popup = document.getElementById('productPopup');
-    if (popup && popup.classList.contains('show')) {
-        popup.classList.remove('show');
-        currentProduct = null;
-        popupOpen = false;
-        isShowingPopup = false;
+    if (typeof window.hideGlobalPopupImmediate === 'function') {
+        window.hideGlobalPopupImmediate();
     }
 }
 
-// Make functions globally available
+// Make functions globally available for backward compatibility
 window.showPopup = showPopup;
 window.hidePopup = hidePopup;
 window.hidePopupImmediate = hidePopupImmediate;
-
-// Keep popup visible when hovering over it
-document.getElementById('productPopup').addEventListener('mouseenter', () => {
-    clearTimeout(popupTimeout);
-    // Ensure popup stays visible while hovering
-    isShowingPopup = true;
-    popupOpen = true;
-});
-
-document.getElementById('productPopup').addEventListener('mouseleave', () => {
-    hidePopup();
-});
-
-// Simple document click listener for popup closing
-document.addEventListener('click', function(e) {
-    const popup = document.getElementById('productPopup');
-    
-    // Close popup if it's open and click is outside it
-    if (popup && popup.classList.contains('show') && !popup.contains(e.target) && !e.target.closest('.product-icon')) {
-        hidePopupImmediate();
-    }
-});
 
 // Quantity modal functionality - now handled by global functions in cart.js
 // Local event listeners removed to prevent conflicts with global handlers
@@ -998,6 +822,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+</script>
+
+<!-- Load global popup system -->
+<script src="js/global-popup.js"></script>
+
+<script>
 // Show product details in large modal (like shop page)
 async function showProductDetails(sku) {
     try {
@@ -1154,5 +984,20 @@ async function generateDetailedModal(item, images) {
                                             <span class="font-medium text-gray-600">Dimensions:</span>
                                             <span class="text-gray-700">${item.dimensions}</span>
                                         </div>
-                                        `
-                                        `
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+// Additional modal functionality functions would go here...
+
+</script>

@@ -170,6 +170,64 @@ try {
             ]);
             break;
             
+        case 'add_color_from_global':
+            if (!$isAdmin) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Admin access required']);
+                exit;
+            }
+            
+            $data = json_decode(file_get_contents('php://input'), true);
+            $itemSku = $data['item_sku'] ?? '';
+            $globalColorId = (int)($data['global_color_id'] ?? 0);
+            $stockLevel = (int)($data['stock_level'] ?? 0);
+            $displayOrder = (int)($data['display_order'] ?? 0);
+            $isActive = isset($data['is_active']) ? (int)$data['is_active'] : 1;
+            $imagePath = trim($data['image_path'] ?? '');
+            
+            if (empty($itemSku) || $globalColorId <= 0) {
+                throw new Exception('Item SKU and global color ID are required');
+            }
+            
+            // Get global color data
+            $globalStmt = $pdo->prepare("SELECT color_name, color_code FROM global_colors WHERE id = ? AND is_active = 1");
+            $globalStmt->execute([$globalColorId]);
+            $globalColor = $globalStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$globalColor) {
+                throw new Exception('Global color not found or inactive');
+            }
+            
+            // Check if this color already exists for this item
+            $checkStmt = $pdo->prepare("SELECT id FROM item_colors WHERE item_sku = ? AND color_name = ? AND color_code = ?");
+            $checkStmt->execute([$itemSku, $globalColor['color_name'], $globalColor['color_code']]);
+            
+            if ($checkStmt->fetch()) {
+                throw new Exception('This color already exists for this item');
+            }
+            
+            // Add the color from global data
+            $stmt = $pdo->prepare("
+                INSERT INTO item_colors (item_sku, color_name, color_code, image_path, stock_level, display_order, is_active) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([$itemSku, $globalColor['color_name'], $globalColor['color_code'], $imagePath, $stockLevel, $displayOrder, $isActive]);
+            
+            $colorId = $pdo->lastInsertId();
+            
+            // Sync total stock with color quantities
+            $newTotalStock = syncTotalStockWithColors($pdo, $itemSku);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Color added from global successfully',
+                'color_id' => $colorId,
+                'color_name' => $globalColor['color_name'],
+                'color_code' => $globalColor['color_code'],
+                'new_total_stock' => $newTotalStock
+            ]);
+            break;
+            
         case 'update_color':
             if (!$isAdmin) {
                 http_response_code(403);

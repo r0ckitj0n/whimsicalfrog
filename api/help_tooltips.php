@@ -502,6 +502,8 @@ function initializeComprehensiveTooltips($pdo) {
             
             // System & Technical
             ['systemConfigBtn', 'settings', 'System Reference', 'See technical info about your website and database. Useful for troubleshooting problems.', 'bottom'],
+            ['systemDocumentationBtn', 'settings', 'System Documentation', 'A comprehensive manual for your website that you\'ll probably never read but feel good about having. It\'s like an expensive car manual that sits in your glove compartment gathering dust while you call tech support anyway.', 'bottom'],
+            ['systemCleanupBtn', 'settings', 'System Cleanup', 'Clean up digital clutter that accumulates faster than dishes in a college dorm. Your website collects junk files like a hoarder collects newspapers - this button is basically Marie Kondo for your database.', 'bottom'],
             ['fileExplorerBtn', 'settings', 'File Explorer', 'Browse and manage your website files and images. Upload, organize, and maintain your digital files.', 'bottom'],
             ['databaseTablesBtn', 'settings', 'Database Tables', 'View and manage your website\'s database. See table contents and maintain your data.', 'bottom'],
             ['help-hints-btn', 'settings', 'Help Hints Management', 'Create and manage the helpful popup tips you see throughout the admin area.', 'bottom'],

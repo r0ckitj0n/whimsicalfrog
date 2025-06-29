@@ -3,9 +3,26 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 
-// Use centralized authentication
-requireAdmin();
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Check authentication with fallback token support like cleanup_system.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Check if user is admin or has valid admin token
+if (!isAdminWithToken()) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Admin access required']);
+    exit;
+}
 
 try {
     // Create database connection using config variables

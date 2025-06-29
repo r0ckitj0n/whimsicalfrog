@@ -83,4 +83,92 @@ const ROOM_NUMBER = <?php echo json_encode($roomNumber); ?>;
 const ROOM_TYPE = <?php echo json_encode($roomHelper->getRoomType()); ?>;
 
 console.log('Room 4 (Artwork) loaded with <?php echo count($roomHelper->getRoomItems()); ?> items');
+
+// Room positioning system - loads coordinates from database
+document.addEventListener('DOMContentLoaded', function() {
+    const originalImageWidth = 1280;
+    const originalImageHeight = 896;
+    const roomOverlayWrapper = document.querySelector('.room-overlay-wrapper');
+
+    // Room coordinates loaded from database (database-only system)
+    let baseAreas = []; // Will be loaded from database
+
+    function updateAreaCoordinates() {
+        if (!roomOverlayWrapper) {
+            console.error('Room overlay wrapper not found for scaling.');
+            return;
+        }
+
+        const wrapperWidth = roomOverlayWrapper.offsetWidth;
+        const wrapperHeight = roomOverlayWrapper.offsetHeight;
+
+        const wrapperAspectRatio = wrapperWidth / wrapperHeight;
+        const imageAspectRatio = originalImageWidth / originalImageHeight;
+
+        let renderedImageWidth, renderedImageHeight;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (wrapperAspectRatio > imageAspectRatio) {
+            renderedImageHeight = wrapperHeight;
+            renderedImageWidth = renderedImageHeight * imageAspectRatio;
+            offsetX = (wrapperWidth - renderedImageWidth) / 2;
+        } else {
+            renderedImageWidth = wrapperWidth;
+            renderedImageHeight = renderedImageWidth / imageAspectRatio;
+            offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        }
+
+        const scaleX = renderedImageWidth / originalImageWidth;
+        const scaleY = renderedImageHeight / originalImageHeight;
+
+        // Apply coordinates to each product icon
+        baseAreas.forEach((areaData, index) => {
+            const areaElement = document.querySelector(`.product-icon[data-index="${index}"]`);
+            if (areaElement) {
+                areaElement.style.position = 'absolute';
+                areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
+                areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
+                areaElement.style.width = (areaData.width * scaleX) + 'px';
+                areaElement.style.height = (areaData.height * scaleY) + 'px';
+            }
+        });
+    }
+
+    // Load coordinates from database first, then initialize
+    loadRoomCoordinatesFromDatabase();
+    
+    async function loadRoomCoordinatesFromDatabase() {
+        try {
+            const response = await fetch(`api/get_room_coordinates.php?room_type=${ROOM_TYPE}`);
+            
+            // Check if the response is ok (not 500 error)
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Database not available`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.coordinates && data.coordinates.length > 0) {
+                baseAreas = data.coordinates;
+                console.log(`Loaded ${ROOM_TYPE} coordinates from database:`, data.map_name);
+                
+                // Initialize coordinates after loading
+                updateAreaCoordinates();
+            } else {
+                console.error(`No active room map found in database for ${ROOM_TYPE}`);
+                return; // Don't initialize if no coordinates available
+            }
+        } catch (error) {
+            console.error(`Error loading ${ROOM_TYPE} coordinates from database:`, error);
+            return; // Don't initialize if database error
+        }
+    }
+
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateAreaCoordinates, 100);
+    });
+});
 </script> 

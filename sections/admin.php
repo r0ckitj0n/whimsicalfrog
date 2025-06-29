@@ -1,70 +1,43 @@
 <?php
-// Admin Dashboard
-// This page provides comprehensive management tools for administrators
+// Admin Dashboard - Main administrative interface
+require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
 
-// Include database configuration
-require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
-
-// Initialize arrays to prevent null values
+// Initialize data arrays
 $inventoryData = [];
 $ordersData = [];
 $customersData = [];
 
 try {
-    // Create a PDO connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    $db = Database::getInstance();
     
-    // Fetch items data directly from database
-    $stmt = $pdo->query('SELECT * FROM items');
-    $inventoryData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Fetch core data with optimized queries
+    $inventoryData = $db->query('SELECT * FROM items ORDER BY sku')->fetchAll();
+    $ordersData = $db->query('SELECT * FROM orders ORDER BY created_at DESC')->fetchAll();
     
-    // Fetch orders data directly from database
-    $ordersStmt = $pdo->query('SELECT * FROM orders');
-    $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // For each order, get its items
+    // Enhanced orders with items and formatted shipping
     foreach ($ordersData as &$order) {
-        $itemsStmt = $pdo->prepare('SELECT * FROM order_items WHERE orderId = ?');
-        $itemsStmt->execute([$order['id']]);
-        $order['items'] = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+        $order['items'] = $db->query('SELECT * FROM order_items WHERE orderId = ?', [$order['id']])->fetchAll();
         
-        // Convert shippingAddress from JSON string to array if it exists
         if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
             $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
         }
     }
     
-    // Fetch customers/users data directly from database
-    $usersStmt = $pdo->query('SELECT * FROM users');
-    $customersData = $usersStmt->fetchAll(PDO::FETCH_ASSOC);
+    $customersData = $db->query('SELECT * FROM users ORDER BY firstName, lastName')->fetchAll();
     
-    // Close the connection
-    $pdo = null;
-} catch (PDOException $e) {
-    error_log('Database Error: ' . $e->getMessage());
 } catch (Exception $e) {
-    error_log('General Error: ' . $e->getMessage());
+    Logger::error('Admin dashboard data loading failed', ['error' => $e->getMessage()]);
 }
 
-// Calculate metrics
+// Calculate dashboard metrics
 $totalProducts = count($inventoryData);
 $totalOrders = count($ordersData);
 $totalCustomers = count($customersData);
-
-// Calculate total revenue
-$totalRevenue = 0;
-foreach ($ordersData as $order) {
-    if (isset($order['total'])) {
-        $totalRevenue += floatval($order['total']);
-    }
-}
-
-// Format revenue for display
+$totalRevenue = array_sum(array_column($ordersData, 'total'));
 $formattedRevenue = '$' . number_format($totalRevenue, 2);
 
-// Get current admin user info
+// Admin user info
 $adminName = trim(($userData['firstName'] ?? '') . ' ' . ($userData['lastName'] ?? ''));
-// If no first/last name, fall back to username
 if (empty($adminName)) {
     $adminName = $userData['username'] ?? 'Admin';
 }
@@ -73,45 +46,42 @@ $adminRole = $userData['role'] ?? 'Administrator';
 
 <div class="admin-dashboard">
     <!-- Admin Header -->
-    <div class="bg-white shadow rounded-lg p-4 mb-4">
+    <div class="admin-header-card mb-4">
         <div class="flex flex-col md:flex-row justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold text-gray-800">Admin Dashboard</h1>
-                <p class="text-gray-600">Welcome back, <?php echo htmlspecialchars($adminName); ?> (<?php echo htmlspecialchars($adminRole); ?>)</p>
+                <h1 class="admin-title">Admin Dashboard</h1>
+                <p class="admin-subtitle">Welcome back, <?= htmlspecialchars($adminName) ?> (<?= htmlspecialchars($adminRole) ?>)</p>
             </div>
             <div class="mt-2 md:mt-0">
-                <p class="text-xs text-gray-500">Last login: <?php echo date('F j, Y, g:i a'); ?></p>
+                <p class="admin-meta">Last login: <?= date('F j, Y, g:i a') ?></p>
             </div>
         </div>
     </div>
 
-    <!-- Compact Tab Bar for Management Areas -->
+    <!-- Navigation Tabs -->
     <?php
-    $section = isset($_GET['section']) ? $_GET['section'] : '';
+    $section = $_GET['section'] ?? '';
     $tabs = [
-        '' => ['Dashboard', 'bg-gray-200', 'text-gray-800', 'adminDashboardTab'],
-        'customers' => ['Customers', 'bg-purple-100', 'text-purple-800', 'adminCustomersTab'],
-        'inventory' => ['Inventory', 'bg-green-100', 'text-green-800', 'adminInventoryTab'],
-        'orders' => ['Orders', 'bg-blue-100', 'text-blue-800', 'adminOrdersTab'],
-        'reports' => ['Reports', 'bg-indigo-100', 'text-indigo-800', 'adminReportsTab'],
-        'marketing' => ['Marketing', 'bg-red-100', 'text-red-800', 'adminMarketingTab'],
-        'settings' => ['Settings', 'bg-gray-100', 'text-gray-800', 'adminSettingsTab'],
+        '' => ['Dashboard', 'admin-tab-dashboard'],
+        'customers' => ['Customers', 'admin-tab-customers'],
+        'inventory' => ['Inventory', 'admin-tab-inventory'],
+        'orders' => ['Orders', 'admin-tab-orders'],
+        'reports' => ['Reports', 'admin-tab-reports'],
+        'marketing' => ['Marketing', 'admin-tab-marketing'],
+        'settings' => ['Settings', 'admin-tab-settings'],
     ];
     ?>
-    <div class="flex justify-between items-center mb-1 admin-tab-bar p-2 rounded-lg">
-        <!-- Left side: Navigation tabs -->
+    <div class="admin-tab-navigation mb-1">
         <div class="flex flex-wrap gap-2">
-            <?php foreach ($tabs as $key => [$label, $bg, $text, $id]): ?>
-                <a href="/?page=admin<?php echo $key ? '&section=' . $key : ''; ?>"
-                   id="<?php echo $id; ?>"
-                   class="px-4 py-2 rounded-lg text-sm font-semibold shadow-sm border border-gray-200 min-w-[100px] text-center <?php echo $bg . ' ' . $text; ?> <?php echo ($section === $key || ($key === '' && !$section)) ? 'ring-2 ring-green-400' : 'hover:bg-green-200'; ?>">
-                    <?php echo $label; ?>
+            <?php foreach ($tabs as $key => [$label, $cssClass]): ?>
+                <a href="/?page=admin<?= $key ? '&section=' . $key : '' ?>"
+                   class="admin-nav-tab <?= $cssClass ?> <?= ($section === $key || ($key === '' && !$section)) ? 'active' : '' ?>">
+                    <?= $label ?>
                 </a>
             <?php endforeach; ?>
         </div>
         
-        <!-- Right side: Page title -->
-        <div class="text-lg font-semibold bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200" style="color: #87ac3a !important;">
+        <div class="admin-page-title">
             <?php 
             $pageTitles = [
                 '' => 'Dashboard',
@@ -129,7 +99,7 @@ $adminRole = $userData['role'] ?? 'Administrator';
         </div>
     </div>
 
-    <!-- Section Content: Show only the selected section below the tabs -->
+    <!-- Dynamic Section Content -->
     <div id="admin-section-content">
         <?php
         switch($section) {
@@ -159,7 +129,6 @@ $adminRole = $userData['role'] ?? 'Administrator';
                 include 'sections/order_fulfillment.php';
                 break;
             default:
-                // Show dashboard summary without statistics cards
                 include 'sections/order_fulfillment.php';
                 break;
         }

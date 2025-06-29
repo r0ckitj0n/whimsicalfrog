@@ -265,6 +265,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Initialize coordinates after loading
                 updateAreaCoordinates();
+                
+                // Re-setup popup events after positioning (fix for hover issues)
+                setupPopupEventsAfterPositioning();
             } else {
                 console.error(`No active room map found in database for ${ROOM_TYPE}`);
                 return; // Don't initialize if no coordinates available
@@ -280,5 +283,71 @@ document.addEventListener('DOMContentLoaded', function() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(updateAreaCoordinates, 100);
     });
+    
+    // Function to setup popup events after positioning
+    function setupPopupEventsAfterPositioning() {
+        console.log('Setting up popup events after positioning...');
+        
+        // Get all product icons
+        const productIcons = document.querySelectorAll('.product-icon');
+        console.log(`Found ${productIcons.length} product icons to setup`);
+        
+        productIcons.forEach((icon, index) => {
+            // Make sure the element is interactive
+            icon.style.pointerEvents = 'auto';
+            icon.style.cursor = 'pointer';
+            
+            // Get the product data from the inline event attribute
+            const onMouseEnterAttr = icon.getAttribute('onmouseenter');
+            if (onMouseEnterAttr) {
+                // Extract the product data from the onmouseenter attribute
+                const match = onMouseEnterAttr.match(/showGlobalPopup\(this,\s*(.+)\)/);
+                if (match) {
+                    try {
+                        // Decode HTML entities and parse JSON
+                        const jsonString = match[1].replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+                        const productData = JSON.parse(jsonString);
+                        
+                        console.log(`Setting up popup for product ${index + 1}:`, productData.sku);
+                        
+                        // Remove existing event listeners by cloning the element
+                        const newIcon = icon.cloneNode(true);
+                        icon.parentNode.replaceChild(newIcon, icon);
+                        
+                        // Add fresh event listeners
+                        newIcon.addEventListener('mouseenter', function(e) {
+                            console.log('Mouse enter on product:', productData.sku);
+                            if (typeof window.showGlobalPopup === 'function') {
+                                window.showGlobalPopup(this, productData);
+                            } else {
+                                console.error('showGlobalPopup function not available');
+                            }
+                        });
+                        
+                        newIcon.addEventListener('mouseleave', function(e) {
+                            console.log('Mouse leave on product:', productData.sku);
+                            if (typeof window.hideGlobalPopup === 'function') {
+                                window.hideGlobalPopup();
+                            } else {
+                                console.error('hideGlobalPopup function not available');
+                            }
+                        });
+                        
+                        newIcon.addEventListener('click', function(e) {
+                            console.log('Click on product:', productData.sku);
+                            if (typeof window.showGlobalPopup === 'function') {
+                                window.showGlobalPopup(this, productData);
+                            } else {
+                                console.error('showGlobalPopup function not available');
+                            }
+                        });
+                        
+                    } catch (error) {
+                        console.error(`Error parsing product data for icon ${index}:`, error);
+                    }
+                }
+            }
+        });
+    }
 });
 </script> 

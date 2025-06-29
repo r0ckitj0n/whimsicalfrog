@@ -1,357 +1,395 @@
 <?php
-// Include database configuration
-require_once 'api/config.php'; // Changed from '../api/config.php' to match other section files
-
-// ---Date range---
-$marketingStartInput = $_GET['start_date'] ?? '';
-$marketingEndInput   = $_GET['end_date']   ?? '';
-
-$startParam = $marketingStartInput === '' ? '1900-01-01' : $marketingStartInput;
-$endParam   = $marketingEndInput   === '' ? '2100-12-31' : $marketingEndInput;
-
-// Initialize all variables to prevent undefined variable errors
-$customerCount = 0;
-$orderCount = 0;
-$totalSales = 0;
-$productCount = 0;
-$recentOrders = [];
-$monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]; // Default labels
-$salesData = [0, 0, 0, 0, 0, 0]; // Default data
-$topProducts = [];
-$paymentsReceived = 0;
-$paymentsPending = 0;
-$paymentMethodLabels = [];
-$paymentMethodCounts = [];
-
-$emailCampaignsExist = false;
-$discountCodesExist = false;
-$socialAccountsExist = false; // Used for social_accounts and social_posts tables
-
-$emailCampaigns = [];
-$emailSubscribers = [];
-$discountCodes = [];
-$socialAccounts = [];
-$socialPosts = [];
-
-$allMarketingTablesExist = false; // Flag to hide setup button
-
-// Connect to database
-try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-    
-    // Get customer count
-    $customerStmt = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'Customer' OR roleType = 'Customer'");
-    $customerCount = $customerStmt->fetchColumn() ?: 0;
-    
-    // Check if orders table exists
-    $orderTableExists = false;
-    $stmtOrderCheck = $pdo->query("SHOW TABLES LIKE 'orders'");
-    if ($stmtOrderCheck->rowCount() > 0) {
-        $orderTableExists = true;
-        
-        // Get orders count within selected date range
-        $orderRangeStmt = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE DATE(date) BETWEEN :start AND :end");
-        $orderRangeStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
-        $orderCount = $orderRangeStmt->fetchColumn() ?: 0;
-        
-        // Get total sales within selected date range (column is `total` in orders table)
-        $salesRangeStmt = $pdo->prepare("SELECT SUM(total) FROM orders WHERE DATE(date) BETWEEN :start AND :end");
-        $salesRangeStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
-        $totalSales = $salesRangeStmt->fetchColumn() ?: 0;
-        
-        // Get recent orders within selected range
-        $recentOrdersStmt = $pdo->prepare("SELECT o.*, u.username, u.email 
-                                        FROM orders o 
-                                        LEFT JOIN users u ON o.userId = u.id 
-                                        WHERE DATE(o.date) BETWEEN :start AND :end 
-                                        ORDER BY o.date DESC 
-                                        LIMIT 5");
-        $recentOrdersStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
-        $recentOrders = $recentOrdersStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        
-        // Get monthly sales data within selected range
-        $monthlySalesStmt = $pdo->prepare("SELECT DATE_FORMAT(date, '%Y-%m-01') as month_start, SUM(total) as total 
-                                        FROM orders 
-                                        WHERE DATE(date) BETWEEN :start AND :end 
-                                        GROUP BY month_start 
-                                        ORDER BY month_start");
-        $monthlySalesStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
-        $monthlySalesData = $monthlySalesStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Format monthly data for chart
-        if (!empty($monthlySalesData)) {
-            $monthLabels = []; // Reset default
-            $salesData = [];   // Reset default
-            foreach ($monthlySalesData as $data) {
-                $monthName = date("M", strtotime($data['month_start']));
-                $monthLabels[] = $monthName;
-                $salesData[] = $data['total'];
-            }
-        }
-        
-        // Get top items
-        $topProductsStmt = $pdo->prepare("SELECT i.name, SUM(oi.quantity) as units 
-                                        FROM order_items oi
-                                        JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci
-                                        JOIN items i ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci
-                                        WHERE DATE(o.date) BETWEEN :start AND :end
-                                        GROUP BY oi.sku, i.name
-                                        ORDER BY units DESC
-                                        LIMIT 5");
-        $topProductsStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
-        $topProducts = $topProductsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-    }
-    
-    // Total units sold in selected range
-    $unitsStmt = $pdo->prepare("SELECT COALESCE(SUM(oi.quantity), COUNT(*)) \n                                FROM order_items oi \n                                JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci \n                                WHERE DATE(o.date) BETWEEN :start AND :end");
-    $unitsStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
-    $productCount = $unitsStmt->fetchColumn() ?: 0;
-    
-    // Check for email_campaigns table
-    $stmtEmailCheck = $pdo->query("SHOW TABLES LIKE 'email_campaigns'");
-    if ($stmtEmailCheck->rowCount() > 0) {
-        $emailCampaignsExist = true;
-        $campaignsStmt = $pdo->query("SELECT * FROM email_campaigns ORDER BY created_date DESC");
-        $emailCampaigns = $campaignsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        
-        $stmtSubscribersCheck = $pdo->query("SHOW TABLES LIKE 'email_subscribers'");
-        if($stmtSubscribersCheck->rowCount() > 0) {
-            $subscribersStmt = $pdo->query("SELECT * FROM email_subscribers WHERE status = 'active'");
-            $emailSubscribers = $subscribersStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        }
-    }
-    
-    // Check for discount_codes table
-    $stmtDiscountCheck = $pdo->query("SHOW TABLES LIKE 'discount_codes'");
-    if ($stmtDiscountCheck->rowCount() > 0) {
-        $discountCodesExist = true;
-        $codesStmt = $pdo->query("SELECT * FROM discount_codes ORDER BY start_date DESC");
-        $discountCodes = $codesStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-    }
-    
-    // Check for social_accounts and social_posts tables
-    $stmtSocialAccountsCheck = $pdo->query("SHOW TABLES LIKE 'social_accounts'");
-    $stmtSocialPostsCheck = $pdo->query("SHOW TABLES LIKE 'social_posts'");
-    if ($stmtSocialAccountsCheck->rowCount() > 0 && $stmtSocialPostsCheck->rowCount() > 0) {
-        $socialAccountsExist = true; // This flag controls display of social media section
-        
-        $accountsStmt = $pdo->query("SELECT * FROM social_accounts");
-        $socialAccounts = $accountsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        
-        $postsStmt = $pdo->query("SELECT * FROM social_posts ORDER BY scheduled_date DESC");
-        $socialPosts = $postsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-    }
-
-    // Check if all marketing tables exist to hide the setup button
-    if ($emailCampaignsExist && $discountCodesExist && $socialAccountsExist) {
-        $allMarketingTablesExist = true;
-    }
-    
-    // Get payment status counts within selected range
-    $paymentStatusStmt = $pdo->prepare("SELECT paymentStatus, COUNT(*) as cnt \n                                            FROM orders \n                                            WHERE DATE(date) BETWEEN :start AND :end \n                                            GROUP BY paymentStatus");
-    $paymentStatusStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
-    $paymentStatusCounts = $paymentStatusStmt->fetchAll(PDO::FETCH_KEY_PAIR) ?: [];
-
-    $paymentsReceived = $paymentStatusCounts['Received'] ?? 0;
-    $paymentsPending  = $paymentStatusCounts['Pending']  ?? 0;
-
-    // Get payment method distribution within selected range
-    $paymentMethodStmt = $pdo->prepare("SELECT paymentMethod, COUNT(*) as cnt \n                                            FROM orders \n                                            WHERE DATE(date) BETWEEN :start AND :end \n                                            GROUP BY paymentMethod");
-    $paymentMethodStmt->execute([':start'=>$startParam, ':end'=>$endParam]);
-    $paymentMethodData = $paymentMethodStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-    $paymentMethodLabels = array_column($paymentMethodData, 'paymentMethod');
-    $paymentMethodCounts = array_map('intval', array_column($paymentMethodData, 'cnt'));
-
-    // Default empty arrays if no payment methods
-    if(empty($paymentMethodLabels)) { $paymentMethodLabels = ['None']; $paymentMethodCounts = [0]; }
-    
-} catch (PDOException $e) {
-    // Log error, don't display to user directly for security
-    error_log("Marketing Page Database Error: " . $e->getMessage());
-    // Variables will retain their initialized default values (0, empty arrays, false)
+// Admin Marketing Dashboard
+if (!defined('INCLUDED_FROM_INDEX')) {
+    define('INCLUDED_FROM_INDEX', true);
 }
 
-// Function to generate unique IDs for new items
+require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
+
+// Date range parameters
+$startInput = $_GET['start_date'] ?? '';
+$endInput = $_GET['end_date'] ?? '';
+$startParam = $startInput ?: '1900-01-01';
+$endParam = $endInput ?: '2100-12-31';
+
+// Initialize data arrays
+$metrics = [
+    'customerCount' => 0,
+    'orderCount' => 0,
+    'totalSales' => 0,
+    'itemsSold' => 0,
+    'paymentsReceived' => 0,
+    'paymentsPending' => 0
+];
+
+$chartData = [
+    'monthLabels' => ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    'salesData' => [0, 0, 0, 0, 0, 0],
+    'paymentMethodLabels' => ['None'],
+    'paymentMethodCounts' => [0]
+];
+
+$marketingData = [
+    'recentOrders' => [],
+    'topProducts' => [],
+    'emailCampaigns' => [],
+    'emailSubscribers' => [],
+    'discountCodes' => [],
+    'socialAccounts' => [],
+    'socialPosts' => []
+];
+
+$tableStatus = [
+    'emailCampaigns' => false,
+    'discountCodes' => false,
+    'socialAccounts' => false,
+    'allTablesExist' => false
+];
+
+try {
+    $db = Database::getInstance();
+    
+    // Get customer metrics
+    $metrics['customerCount'] = $db->query("SELECT COUNT(*) FROM users WHERE role = 'Customer' OR roleType = 'Customer'")->fetchColumn() ?: 0;
+    
+    // Check if orders table exists and get order-related metrics
+    $tablesResult = $db->query("SHOW TABLES LIKE 'orders'")->fetchAll();
+    if (!empty($tablesResult)) {
+        // Order metrics with date filtering
+        $orderParams = [':start' => $startParam, ':end' => $endParam];
+        
+        $metrics['orderCount'] = $db->query(
+            "SELECT COUNT(*) FROM orders WHERE DATE(date) BETWEEN :start AND :end",
+            $orderParams
+        )->fetchColumn() ?: 0;
+        
+        $metrics['totalSales'] = $db->query(
+            "SELECT SUM(total) FROM orders WHERE DATE(date) BETWEEN :start AND :end",
+            $orderParams
+        )->fetchColumn() ?: 0;
+        
+        // Items sold calculation
+        $metrics['itemsSold'] = $db->query(
+            "SELECT COALESCE(SUM(oi.quantity), 0) 
+             FROM order_items oi 
+             JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci 
+             WHERE DATE(o.date) BETWEEN :start AND :end",
+            $orderParams
+        )->fetchColumn() ?: 0;
+        
+        // Payment status metrics
+        $paymentStatusData = $db->query(
+            "SELECT paymentStatus, COUNT(*) as cnt 
+             FROM orders 
+             WHERE DATE(date) BETWEEN :start AND :end 
+             GROUP BY paymentStatus",
+            $orderParams
+        )->fetchAll(PDO::FETCH_KEY_PAIR);
+        
+        $metrics['paymentsReceived'] = $paymentStatusData['Received'] ?? 0;
+        $metrics['paymentsPending'] = $paymentStatusData['Pending'] ?? 0;
+        
+        // Recent orders
+        $marketingData['recentOrders'] = $db->query(
+            "SELECT o.*, u.username, u.email 
+             FROM orders o 
+             LEFT JOIN users u ON o.userId = u.id 
+             WHERE DATE(o.date) BETWEEN :start AND :end 
+             ORDER BY o.date DESC 
+             LIMIT 5",
+            $orderParams
+        )->fetchAll();
+        
+        // Monthly sales data for chart
+        $monthlySalesData = $db->query(
+            "SELECT DATE_FORMAT(date, '%Y-%m-01') as month_start, SUM(total) as total 
+             FROM orders 
+             WHERE DATE(date) BETWEEN :start AND :end 
+             GROUP BY month_start 
+             ORDER BY month_start",
+            $orderParams
+        )->fetchAll();
+        
+        if (!empty($monthlySalesData)) {
+            $chartData['monthLabels'] = array_map(fn($data) => date("M", strtotime($data['month_start'])), $monthlySalesData);
+            $chartData['salesData'] = array_map(fn($data) => (float)$data['total'], $monthlySalesData);
+        }
+        
+        // Top products
+        $marketingData['topProducts'] = $db->query(
+            "SELECT i.name, SUM(oi.quantity) as units 
+             FROM order_items oi
+             JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci
+             JOIN items i ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci
+             WHERE DATE(o.date) BETWEEN :start AND :end
+             GROUP BY oi.sku, i.name
+             ORDER BY units DESC
+             LIMIT 5",
+            $orderParams
+        )->fetchAll();
+        
+        // Payment method distribution
+        $paymentMethodData = $db->query(
+            "SELECT paymentMethod, COUNT(*) as cnt 
+             FROM orders 
+             WHERE DATE(date) BETWEEN :start AND :end 
+             GROUP BY paymentMethod",
+            $orderParams
+        )->fetchAll();
+        
+        if (!empty($paymentMethodData)) {
+            $chartData['paymentMethodLabels'] = array_column($paymentMethodData, 'paymentMethod');
+            $chartData['paymentMethodCounts'] = array_map('intval', array_column($paymentMethodData, 'cnt'));
+        }
+    }
+    
+    // Check marketing tables
+    $tables = ['email_campaigns', 'discount_codes', 'social_accounts', 'social_posts'];
+    foreach ($tables as $table) {
+        $result = $db->query("SHOW TABLES LIKE '$table'")->fetchAll();
+        $tableStatus[str_replace('_', '', $table)] = !empty($result);
+    }
+    
+    // Load marketing data if tables exist
+    if ($tableStatus['emailcampaigns']) {
+        $marketingData['emailCampaigns'] = $db->query("SELECT * FROM email_campaigns ORDER BY created_date DESC")->fetchAll();
+        
+        $subscribersTable = $db->query("SHOW TABLES LIKE 'email_subscribers'")->fetchAll();
+        if (!empty($subscribersTable)) {
+            $marketingData['emailSubscribers'] = $db->query("SELECT * FROM email_subscribers WHERE status = 'active'")->fetchAll();
+        }
+    }
+    
+    if ($tableStatus['discountcodes']) {
+        $marketingData['discountCodes'] = $db->query("SELECT * FROM discount_codes ORDER BY start_date DESC")->fetchAll();
+    }
+    
+    if ($tableStatus['socialaccounts']) {
+        $marketingData['socialAccounts'] = $db->query("SELECT * FROM social_accounts")->fetchAll();
+        $marketingData['socialPosts'] = $db->query("SELECT * FROM social_posts ORDER BY scheduled_date DESC")->fetchAll();
+    }
+    
+    $tableStatus['allTablesExist'] = $tableStatus['emailcampaigns'] && $tableStatus['discountcodes'] && $tableStatus['socialaccounts'];
+    
+} catch (Exception $e) {
+    Logger::error('Marketing Dashboard Error: ' . $e->getMessage());
+}
+
+// Helper function for generating IDs
 function generateId($prefix, $length = 3) {
-    $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $id = $prefix;
     for ($i = 0; $i < $length; $i++) {
-        $id .= $characters[rand(0, strlen($characters) - 1)];
+        $id .= $chars[rand(0, strlen($chars) - 1)];
     }
     return $id;
 }
 ?>
 
-<div class="admin-section-header flex justify-start gap-4 mb-4">
-    <form class="flex items-center gap-2" method="get" action="">
-        <input type="hidden" name="page" value="admin">
-        <input type="hidden" name="section" value="marketing">
-        <label class="filter-label" for="mFrom">From:</label>
-        <input type="date" id="mFrom" name="start_date" value="<?php echo htmlspecialchars($marketingStartInput); ?>" class="border rounded p-1">
-        <label class="filter-label" for="mTo">To:</label>
-        <input type="date" id="mTo" name="end_date" value="<?php echo htmlspecialchars($marketingEndInput); ?>" class="border rounded p-1">
-        <button type="submit" class="px-3 py-1 rounded bg-[#87ac3a] text-white hover:bg-[#a3cc4a] transition">Apply</button>
-    </form>
-</div>
+<div class="container mx-auto px-4 py-6">
+    <!-- Page Header -->
+    <div class="admin-header-section mb-6">
+        <h1 class="admin-title">Marketing Dashboard</h1>
+        <div class="admin-subtitle">Analytics, campaigns, and promotional tools</div>
+    </div>
 
-<div class="admin-content">
-    <div class="dashboard-stats">
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-users"></i>
+    <!-- Date Range Filter -->
+    <div class="admin-card mb-6">
+        <form class="marketing-filter-form" method="get" action="">
+            <input type="hidden" name="page" value="admin">
+            <input type="hidden" name="section" value="marketing">
+            
+            <div class="filter-group">
+                <div class="filter-field">
+                    <label for="mFrom" class="form-label">From:</label>
+                    <input type="date" id="mFrom" name="start_date" class="form-input" 
+                           value="<?= htmlspecialchars($startInput) ?>">
+                </div>
+                
+                <div class="filter-field">
+                    <label for="mTo" class="form-label">To:</label>
+                    <input type="date" id="mTo" name="end_date" class="form-input" 
+                           value="<?= htmlspecialchars($endInput) ?>">
+                </div>
+                
+                <button type="submit" class="btn-primary">Apply Filter</button>
             </div>
-            <div class="stat-info">
-                <h3>Total Customers</h3>
-                <p class="stat-value"><?php echo $customerCount; ?></p>
+        </form>
+    </div>
+
+    <!-- Dashboard Stats -->
+    <div class="dashboard-stats-grid mb-8">
+        <div class="stat-card">
+            <div class="stat-icon customers">👥</div>
+            <div class="stat-content">
+                <h3 class="stat-label">Total Customers</h3>
+                <p class="stat-value"><?= number_format($metrics['customerCount']) ?></p>
             </div>
         </div>
         
         <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-shopping-cart"></i>
-            </div>
-            <div class="stat-info">
-                <h3>Total Orders</h3>
-                <p class="stat-value"><?php echo $orderCount; ?></p>
+            <div class="stat-icon orders">🛒</div>
+            <div class="stat-content">
+                <h3 class="stat-label">Total Orders</h3>
+                <p class="stat-value"><?= number_format($metrics['orderCount']) ?></p>
             </div>
         </div>
         
         <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-dollar-sign"></i>
-            </div>
-            <div class="stat-info">
-                <h3>Total Sales</h3>
-                <p class="stat-value">$<?php echo number_format($totalSales, 2); ?></p>
+            <div class="stat-icon sales">💰</div>
+            <div class="stat-content">
+                <h3 class="stat-label">Total Sales</h3>
+                <p class="stat-value">$<?= number_format($metrics['totalSales'], 2) ?></p>
             </div>
         </div>
         
         <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-box"></i>
-            </div>
-            <div class="stat-info">
-                <h3>Items Sold</h3>
-                <p class="stat-value"><?php echo $productCount; ?></p>
+            <div class="stat-icon items">📦</div>
+            <div class="stat-content">
+                <h3 class="stat-label">Items Sold</h3>
+                <p class="stat-value"><?= number_format($metrics['itemsSold']) ?></p>
             </div>
         </div>
 
-        <!-- Payments Received -->
         <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-money-check-alt"></i>
-            </div>
-            <div class="stat-info">
-                <h3>Payments Received</h3>
-                <p class="stat-value"><?php echo $paymentsReceived; ?></p>
+            <div class="stat-icon payments">✅</div>
+            <div class="stat-content">
+                <h3 class="stat-label">Payments Received</h3>
+                <p class="stat-value"><?= number_format($metrics['paymentsReceived']) ?></p>
             </div>
         </div>
 
-        <!-- Pending Payments -->
         <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-info">
-                <h3>Pending Payments</h3>
-                <p class="stat-value"><?php echo $paymentsPending; ?></p>
+            <div class="stat-icon pending">⏳</div>
+            <div class="stat-content">
+                <h3 class="stat-label">Pending Payments</h3>
+                <p class="stat-value"><?= number_format($metrics['paymentsPending']) ?></p>
             </div>
         </div>
     </div>
     
-    <div class="dashboard-row">
+    <!-- Dashboard Content Grid -->
+    <div class="dashboard-grid">
+        <!-- Left Column -->
         <div class="dashboard-column">
-            <div class="dashboard-card">
-                <h3>Sales Overview</h3>
+            <!-- Sales Overview Chart -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3 class="card-title">Sales Overview</h3>
+                </div>
                 <div class="chart-container">
                     <canvas id="salesChart"></canvas>
                 </div>
             </div>
             
-            <div class="dashboard-card">
-                <h3>Payment Methods</h3>
-                <div class="chart-container" style="height:300px;">
+            <!-- Payment Methods Chart -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3 class="card-title">Payment Methods</h3>
+                </div>
+                <div class="chart-container chart-payment-methods">
                     <canvas id="paymentMethodChart"></canvas>
                 </div>
             </div>
             
-            <div class="dashboard-card">
-                <h3>Top Items</h3>
-                <ul class="top-products-list">
-                    <?php if (!empty($topProducts)): ?>
-                        <?php foreach ($topProducts as $product): ?>
-                            <li>
-                                <span class="product-name"><?php echo htmlspecialchars($product['name'] ?? ''); ?></span>
-                                <span class="product-orders"><?php echo $product['units']; ?> units</span>
-                            </li>
+            <!-- Top Products -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3 class="card-title">Top Items</h3>
+                </div>
+                <div class="top-products-list">
+                    <?php if (!empty($marketingData['topProducts'])): ?>
+                        <?php foreach ($marketingData['topProducts'] as $product): ?>
+                        <div class="product-item">
+                            <span class="product-name"><?= htmlspecialchars($product['name'] ?? '') ?></span>
+                            <span class="product-units"><?= number_format($product['units']) ?> units</span>
+                        </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <li class="no-data">No item data available</li>
+                        <div class="admin-empty-state">
+                            <div class="empty-icon">📊</div>
+                            <div class="empty-subtitle">No item data available</div>
+                        </div>
                     <?php endif; ?>
-                </ul>
+                </div>
             </div>
         </div>
         
+        <!-- Right Column -->
         <div class="dashboard-column">
-            <div class="dashboard-card">
-                <h3>Recent Orders</h3>
-                <div class="recent-orders">
-                    <?php if (!empty($recentOrders)): ?>
-                        <table class="mini-table">
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Customer</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($recentOrders as $order): ?>
+            <!-- Recent Orders -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Orders</h3>
+                </div>
+                <div class="recent-orders-container">
+                    <?php if (!empty($marketingData['recentOrders'])): ?>
+                        <div class="table-container">
+                            <table class="admin-table compact">
+                                <thead>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($order['id'] ?? ''); ?></td>
-                                        <td><?php echo htmlspecialchars($order['username'] ?? $order['email'] ?? 'Unknown'); ?></td>
-                                        <td>$<?php echo number_format($order['total'] ?? 0, 2); ?></td>
-                                        <td><?php echo date('M d, Y', strtotime($order['date'] ?? 'now')); ?></td>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($marketingData['recentOrders'] as $order): ?>
+                                    <tr>
+                                        <td class="order-id"><?= htmlspecialchars($order['id'] ?? '') ?></td>
+                                        <td class="customer-name"><?= htmlspecialchars($order['username'] ?? $order['email'] ?? 'Unknown') ?></td>
+                                        <td class="order-amount">$<?= number_format($order['total'] ?? 0, 2) ?></td>
+                                        <td class="order-date"><?= date('M d, Y', strtotime($order['date'] ?? 'now')) ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php else: ?>
-                        <p class="no-data">No recent orders</p>
+                        <div class="admin-empty-state">
+                            <div class="empty-icon">📋</div>
+                            <div class="empty-subtitle">No recent orders</div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
             
-            <div class="dashboard-card">
-                <h3>Marketing Tools</h3>
-                <div class="marketing-tools">
-                    <a href="javascript:void(0)" onclick="showMarketingTool('email-campaigns')" class="tool-card">
-                        <div class="tool-icon"><i class="fas fa-envelope"></i></div>
-                        <div class="tool-info">
-                            <h4>Email Campaigns</h4>
-                            <p>Create and manage email marketing campaigns</p>
+            <!-- Marketing Tools -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3 class="card-title">Marketing Tools</h3>
+                </div>
+                <div class="marketing-tools-grid">
+                    <button onclick="showMarketingTool('email-campaigns')" class="tool-card">
+                        <div class="tool-icon email">📧</div>
+                        <div class="tool-content">
+                            <h4 class="tool-title">Email Campaigns</h4>
+                            <p class="tool-description">Create and manage email marketing campaigns</p>
                         </div>
-                    </a>
-                    <a href="javascript:void(0)" onclick="showMarketingTool('discount-codes')" class="tool-card">
-                        <div class="tool-icon"><i class="fas fa-tag"></i></div>
-                        <div class="tool-info">
-                            <h4>Discount Codes</h4>
-                            <p>Generate promotional codes for customers</p>
+                    </button>
+                    
+                    <button onclick="showMarketingTool('discount-codes')" class="tool-card">
+                        <div class="tool-icon discount">🏷️</div>
+                        <div class="tool-content">
+                            <h4 class="tool-title">Discount Codes</h4>
+                            <p class="tool-description">Generate promotional codes for customers</p>
                         </div>
-                    </a>
-                    <a href="javascript:void(0)" onclick="showMarketingTool('social-media')" class="tool-card">
-                        <div class="tool-icon"><i class="fas fa-share-alt"></i></div>
-                        <div class="tool-info">
-                            <h4>Social Media</h4>
-                            <p>Manage social media integrations</p>
+                    </button>
+                    
+                    <button onclick="showMarketingTool('social-media')" class="tool-card">
+                        <div class="tool-icon social">📱</div>
+                        <div class="tool-content">
+                            <h4 class="tool-title">Social Media</h4>
+                            <p class="tool-description">Manage social media integrations</p>
                         </div>
-                    </a>
+                    </button>
+                    
                     <a href="/?page=admin&section=reports" class="tool-card">
-                        <div class="tool-icon"><i class="fas fa-chart-line"></i></div>
-                        <div class="tool-info">
-                            <h4>Analytics</h4>
-                            <p>View detailed sales and customer analytics</p>
+                        <div class="tool-icon analytics">📈</div>
+                        <div class="tool-content">
+                            <h4 class="tool-title">Analytics</h4>
+                            <p class="tool-description">View detailed sales and customer analytics</p>
                         </div>
                     </a>
                 </div>
@@ -359,610 +397,479 @@ function generateId($prefix, $length = 3) {
         </div>
     </div>
     
-    <!-- Marketing Tool Content Sections -->
+    <!-- Marketing Tool Sections -->
     <div id="marketing-tool-sections">
         <!-- Email Campaigns Section -->
-        <div id="email-campaigns-section" class="marketing-tool-section">
-            <div class="section-header">
-                <h2>Email Campaigns</h2>
-                <button class="button primary" onclick="toggleNewCampaignForm()">
-                    <i class="fas fa-plus"></i> New Campaign
-                </button>
-            </div>
-            
-            <!-- New Campaign Form -->
-            <div id="new-campaign-form" class="form-container" style="display: none;">
-                <h3>Create New Campaign</h3>
-                <form id="campaign-form" action="process_email_campaign.php" method="post">
-                    <input type="hidden" name="action" value="create">
-                    <input type="hidden" name="id" value="<?php echo generateId('EC'); ?>">
-                    
-                    <div class="form-group">
-                        <label for="campaign-name">Campaign Name</label>
-                        <input type="text" id="campaign-name" name="name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="campaign-subject">Email Subject</label>
-                        <input type="text" id="campaign-subject" name="subject" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="campaign-content">Email Content</label>
-                        <textarea id="campaign-content" name="content" rows="10" required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="campaign-audience">Target Audience</label>
-                        <select id="campaign-audience" name="target_audience">
-                            <option value="all">All Subscribers</option>
-                            <option value="customers">Customers Only</option>
-                            <option value="non-customers">Non-Customers</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="campaign-status">Status</label>
-                        <select id="campaign-status" name="status">
-                            <option value="draft">Draft</option>
-                            <option value="scheduled">Scheduled</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" id="scheduled-date-group" style="display: none;">
-                        <label for="campaign-date">Scheduled Date</label>
-                        <input type="datetime-local" id="campaign-date" name="sent_date">
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="button secondary" onclick="toggleNewCampaignForm()">Cancel</button>
-                        <button type="submit" class="button primary">Save Campaign</button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- Email Campaigns List -->
-            <div class="data-table-container">
-                <?php if ($emailCampaignsExist): ?>
-                    <?php if (empty($emailCampaigns)): ?>
-                        <p class="no-data">No email campaigns found. Create your first campaign!</p>
-                    <?php else: ?>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Subject</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Sent/Scheduled</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($emailCampaigns as $campaign): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($campaign['name']); ?></td>
-                                        <td><?php echo htmlspecialchars($campaign['subject']); ?></td>
-                                        <td>
-                                            <span class="status-badge status-<?php echo htmlspecialchars($campaign['status']); ?>">
-                                                <?php echo ucfirst(htmlspecialchars($campaign['status'])); ?>
-                                            </span>
-                                        </td>
-                                        <td><?php echo date('M d, Y', strtotime($campaign['created_date'])); ?></td>
-                                        <td>
-                                            <?php 
-                                            if ($campaign['sent_date']) {
-                                                echo date('M d, Y', strtotime($campaign['sent_date']));
-                                            } else {
-                                                echo '-';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td class="actions">
-                                            <button class="icon-button" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <?php if ($campaign['status'] == 'draft'): ?>
-                                                <button class="icon-button" title="Send">
-                                                    <i class="fas fa-paper-plane"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                            <button class="icon-button delete" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
-                <?php elseif (!$allMarketingTablesExist): // Show setup button only if not all tables exist ?>
-                    <div class="setup-notice">
-                        <p>Email campaign features require database setup.</p>
-                        <a href="setup_marketing_tables.php" class="button primary">Setup Marketing Tables</a>
-                    </div>
-                <?php else: // Tables for this specific feature might be missing, but others exist ?>
-                     <p class="no-data">Email campaigns table not found. Please ensure marketing tables are fully set up.</p>
-                <?php endif; ?>
-            </div>
-            
-            <!-- Email Subscribers -->
-            <?php if ($emailCampaignsExist && !empty($emailSubscribers)): ?>
-                <div class="subscribers-section">
-                    <h3>Active Subscribers</h3>
-                    <p>You have <strong><?php echo count($emailSubscribers); ?></strong> active subscribers.</p>
-                    <button class="button secondary">
-                        <i class="fas fa-download"></i> Export Subscribers
+        <div id="email-campaigns-section" class="marketing-tool-section" style="display: none;">
+            <div class="admin-card">
+                <div class="section-header">
+                    <h2 class="section-title">Email Campaigns</h2>
+                    <button class="btn-primary" onclick="toggleNewCampaignForm()">
+                        ➕ New Campaign
                     </button>
                 </div>
-            <?php endif; ?>
-        </div>
-        
-        <!-- Discount Codes Section -->
-        <div id="discount-codes-section" class="marketing-tool-section">
-            <div class="section-header">
-                <h2>Discount Codes</h2>
-                <button class="button primary" onclick="toggleNewDiscountForm()">
-                    <i class="fas fa-plus"></i> New Discount
-                </button>
-            </div>
-            
-            <!-- New Discount Form -->
-            <div id="new-discount-form" class="form-container" style="display: none;">
-                <h3>Create New Discount Code</h3>
-                <form id="discount-form" action="process_discount_code.php" method="post">
-                    <input type="hidden" name="action" value="create">
-                    <input type="hidden" name="id" value="<?php echo generateId('DC'); ?>">
-                    
-                    <div class="form-group">
-                        <label for="discount-code">Discount Code</label>
-                        <input type="text" id="discount-code" name="code" required>
-                        <button type="button" class="button secondary small" onclick="generateRandomCode()">Generate Random</button>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="discount-type">Discount Type</label>
-                            <select id="discount-type" name="type">
-                                <option value="percentage">Percentage (%)</option>
-                                <option value="fixed">Fixed Amount ($)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="discount-value">Value</label>
-                            <input type="number" id="discount-value" name="value" min="0" step="0.01" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="min-order">Minimum Order Amount ($)</label>
-                        <input type="number" id="min-order" name="min_order_amount" min="0" step="0.01" value="0">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="max-uses">Maximum Uses (0 for unlimited)</label>
-                        <input type="number" id="max-uses" name="max_uses" min="0" value="0">
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="start-date">Start Date</label>
-                            <input type="date" id="start-date" name="start_date" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="end-date">End Date</label>
-                            <input type="date" id="end-date" name="end_date" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="discount-status">Status</label>
-                        <select id="discount-status" name="status">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="button secondary" onclick="toggleNewDiscountForm()">Cancel</button>
-                        <button type="submit" class="button primary">Save Discount</button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- Discount Codes List -->
-            <div class="data-table-container">
-                <?php if ($discountCodesExist): ?>
-                    <?php if (empty($discountCodes)): ?>
-                        <p class="no-data">No discount codes found. Create your first discount code!</p>
-                    <?php else: ?>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Type</th>
-                                    <th>Value</th>
-                                    <th>Uses</th>
-                                    <th>Valid Period</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($discountCodes as $code): ?>
-                                    <tr>
-                                        <td><strong><?php echo htmlspecialchars($code['code']); ?></strong></td>
-                                        <td>
-                                            <?php echo $code['type'] === 'percentage' ? 'Percentage' : 'Fixed'; ?>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            if ($code['type'] === 'percentage') {
-                                                echo htmlspecialchars($code['value']) . '%';
-                                            } else {
-                                                echo '$' . number_format($code['value'] ?? 0, 2);
-                                            }
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            if ($code['max_uses'] > 0) {
-                                                echo htmlspecialchars($code['current_uses']) . '/' . htmlspecialchars($code['max_uses']);
-                                            } else {
-                                                echo htmlspecialchars($code['current_uses']) . '/∞';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            echo date('M d', strtotime($code['start_date'])) . ' - ' . 
-                                                 date('M d, Y', strtotime($code['end_date']));
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <span class="status-badge status-<?php echo htmlspecialchars($code['status']); ?>">
-                                                <?php echo ucfirst(htmlspecialchars($code['status'])); ?>
-                                            </span>
-                                        </td>
-                                        <td class="actions">
-                                            <button class="icon-button" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="icon-button delete" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
-                <?php elseif (!$allMarketingTablesExist): ?>
-                    <div class="setup-notice">
-                        <p>Discount code features require database setup.</p>
-                        <a href="setup_marketing_tables.php" class="button primary">Setup Marketing Tables</a>
-                    </div>
-                <?php else: ?>
-                    <p class="no-data">Discount codes table not found. Please ensure marketing tables are fully set up.</p>
-                <?php endif; ?>
-            </div>
-        </div>
-        
-        <!-- Social Media Section -->
-        <div id="social-media-section" class="marketing-tool-section">
-            <div class="section-header">
-                <h2>Social Media</h2>
-                <button class="button primary" onclick="toggleNewPostForm()">
-                    <i class="fas fa-plus"></i> New Post
-                </button>
-            </div>
-            
-            <!-- Social Accounts -->
-            <div class="social-accounts">
-                <h3>Connected Accounts</h3>
                 
-                <?php if ($socialAccountsExist): ?>
-                    <div class="accounts-list">
-                        <?php if (empty($socialAccounts)): ?>
-                            <p class="no-data">No social accounts connected.</p>
-                        <?php else: ?>
-                            <?php foreach ($socialAccounts as $account): ?>
-                                <div class="social-account-card <?php echo $account['connected'] ? 'connected' : 'disconnected'; ?>">
-                                    <div class="platform-icon">
-                                        <i class="fab fa-<?php echo strtolower(htmlspecialchars($account['platform'])); ?>"></i>
-                                    </div>
-                                    <div class="account-info">
-                                        <h4><?php echo htmlspecialchars($account['account_name']); ?></h4>
-                                        <p><?php echo ucfirst(htmlspecialchars($account['platform'])); ?></p>
-                                        <span class="connection-status">
-                                            <?php echo $account['connected'] ? 'Connected' : 'Disconnected'; ?>
-                                        </span>
-                                    </div>
-                                    <div class="account-actions">
-                                        <?php if ($account['connected']): ?>
-                                            <button class="button small secondary">Disconnect</button>
-                                        <?php else: ?>
-                                            <button class="button small primary">Connect</button>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                        
-                        <button class="button secondary add-account-button">
-                            <i class="fas fa-plus"></i> Add Account
-                        </button>
-                    </div>
-                <?php elseif (!$allMarketingTablesExist): ?>
-                    <div class="setup-notice">
-                        <p>Social media features require database setup.</p>
-                        <a href="setup_marketing_tables.php" class="button primary">Setup Marketing Tables</a>
-                    </div>
-                <?php else: ?>
-                     <p class="no-data">Social media tables not found. Please ensure marketing tables are fully set up.</p>
-                <?php endif; ?>
-            </div>
-            
-            <!-- New Post Form -->
-            <?php if ($socialAccountsExist): ?>
-                <div id="new-post-form" class="form-container" style="display: none;">
-                    <h3>Create New Social Post</h3>
-                    <form id="social-post-form" action="process_social_post.php" method="post">
+                <!-- New Campaign Form -->
+                <div id="new-campaign-form" class="form-container" style="display: none;">
+                    <h3 class="form-title">Create New Campaign</h3>
+                    <form id="campaign-form" action="process_email_campaign.php" method="post" class="marketing-form">
                         <input type="hidden" name="action" value="create">
-                        <input type="hidden" name="id" value="<?php echo generateId('SP'); ?>">
+                        <input type="hidden" name="id" value="<?= generateId('EC') ?>">
                         
-                        <div class="form-group">
-                            <label for="post-platform">Platform</label>
-                            <select id="post-platform" name="platform" required>
-                                <?php foreach ($socialAccounts as $account): ?>
-                                    <?php if ($account['connected']): ?>
-                                        <option value="<?php echo htmlspecialchars($account['platform']); ?>">
-                                            <?php echo ucfirst(htmlspecialchars($account['platform'])) . ' - ' . htmlspecialchars($account['account_name']); ?>
-                                        </option>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="post-content">Post Content</label>
-                            <textarea id="post-content" name="content" rows="4" required></textarea>
-                            <div class="character-counter">
-                                <span id="char-count">0</span>/280 characters
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="campaign-name" class="form-label">Campaign Name</label>
+                                <input type="text" id="campaign-name" name="name" class="form-input" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="campaign-subject" class="form-label">Email Subject</label>
+                                <input type="text" id="campaign-subject" name="subject" class="form-input" required>
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label for="post-image">Image URL (optional)</label>
-                            <input type="text" id="post-image" name="image_url">
+                            <label for="campaign-content" class="form-label">Email Content</label>
+                            <textarea id="campaign-content" name="content" rows="8" class="form-textarea" required></textarea>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="post-date">Schedule Date</label>
-                            <input type="datetime-local" id="post-date" name="scheduled_date" required>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="campaign-audience" class="form-label">Target Audience</label>
+                                <select id="campaign-audience" name="target_audience" class="form-select">
+                                    <option value="all">All Subscribers</option>
+                                    <option value="customers">Customers Only</option>
+                                    <option value="non-customers">Non-Customers</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="campaign-schedule" class="form-label">Schedule</label>
+                                <select id="campaign-schedule" name="schedule_type" class="form-select">
+                                    <option value="draft">Save as Draft</option>
+                                    <option value="send_now">Send Immediately</option>
+                                    <option value="schedule">Schedule for Later</option>
+                                </select>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="post-status">Status</label>
-                            <select id="post-status" name="status">
-                                <option value="draft">Draft</option>
-                                <option value="scheduled">Scheduled</option>
-                            </select>
+                        <div id="schedule-date-container" class="form-group" style="display: none;">
+                            <label for="campaign-date" class="form-label">Schedule Date</label>
+                            <input type="datetime-local" id="campaign-date" name="scheduled_date" class="form-input">
                         </div>
                         
                         <div class="form-actions">
-                            <button type="button" class="button secondary" onclick="toggleNewPostForm()">Cancel</button>
-                            <button type="submit" class="button primary">Save Post</button>
+                            <button type="button" class="btn-secondary" onclick="toggleNewCampaignForm()">Cancel</button>
+                            <button type="submit" class="btn-primary">Create Campaign</button>
                         </div>
                     </form>
                 </div>
                 
-                <!-- Social Posts List -->
-                <div class="social-posts">
-                    <h3>Scheduled Posts</h3>
-                    
-                    <?php if (empty($socialPosts)): ?>
-                        <p class="no-data">No social posts scheduled. Create your first post!</p>
+                <!-- Campaigns List -->
+                <div class="campaigns-list">
+                    <?php if (!empty($marketingData['emailCampaigns'])): ?>
+                        <div class="table-container">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Campaign Name</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($marketingData['emailCampaigns'] as $campaign): ?>
+                                    <tr>
+                                        <td class="campaign-name"><?= htmlspecialchars($campaign['name'] ?? '') ?></td>
+                                        <td class="campaign-subject"><?= htmlspecialchars($campaign['subject'] ?? '') ?></td>
+                                        <td>
+                                            <span class="status-badge status-<?= strtolower($campaign['status'] ?? 'draft') ?>">
+                                                <?= ucfirst($campaign['status'] ?? 'Draft') ?>
+                                            </span>
+                                        </td>
+                                        <td class="campaign-date"><?= date('M d, Y', strtotime($campaign['created_date'] ?? 'now')) ?></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn edit-btn" title="Edit Campaign">✏️</button>
+                                                <button class="action-btn delete-btn" title="Delete Campaign">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php else: ?>
-                        <div class="posts-list">
-                            <?php foreach ($socialPosts as $post): ?>
-                                <div class="social-post-card">
-                                    <div class="post-header">
-                                        <div class="platform-icon">
-                                            <i class="fab fa-<?php echo strtolower(htmlspecialchars($post['platform'])); ?>"></i>
-                                        </div>
-                                        <div class="post-meta">
-                                            <span class="post-platform"><?php echo ucfirst(htmlspecialchars($post['platform'])); ?></span>
-                                            <span class="post-date">
-                                                <?php 
-                                                if ($post['status'] === 'posted') {
-                                                    echo 'Posted: ' . date('M d, Y', strtotime($post['posted_date']));
-                                                } else {
-                                                    echo 'Scheduled: ' . date('M d, Y', strtotime($post['scheduled_date']));
-                                                }
-                                                ?>
-                                            </span>
-                                        </div>
-                                        <div class="post-status">
-                                            <span class="status-badge status-<?php echo htmlspecialchars($post['status']); ?>">
-                                                <?php echo ucfirst(htmlspecialchars($post['status'])); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="post-content">
-                                        <?php echo htmlspecialchars($post['content']); ?>
-                                    </div>
-                                    <?php if ($post['image_url']): ?>
-                                        <div class="post-image">
-                                            <img src="<?php echo htmlspecialchars($post['image_url']); ?>" alt="Post image">
-                                        </div>
-                                    <?php endif; ?>
-                                    <div class="post-actions">
-                                        <?php if ($post['status'] !== 'posted'): ?>
-                                            <button class="button small secondary">Edit</button>
-                                            <button class="button small primary">Post Now</button>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
+                        <div class="admin-empty-state">
+                            <div class="empty-icon">📧</div>
+                            <div class="empty-title">No Email Campaigns</div>
+                            <div class="empty-subtitle">Create your first email campaign to get started</div>
                         </div>
                     <?php endif; ?>
                 </div>
-            <?php endif; ?>
+                
+                <!-- Subscribers Section -->
+                <?php if (!empty($marketingData['emailSubscribers'])): ?>
+                <div class="subscribers-section">
+                    <div class="subscribers-info">
+                        <h4 class="subscribers-title">Active Subscribers</h4>
+                        <p class="subscribers-count"><?= count($marketingData['emailSubscribers']) ?> subscribers</p>
+                    </div>
+                    <button class="btn-secondary btn-sm">Manage Subscribers</button>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Discount Codes Section -->
+        <div id="discount-codes-section" class="marketing-tool-section" style="display: none;">
+            <div class="admin-card">
+                <div class="section-header">
+                    <h2 class="section-title">Discount Codes</h2>
+                    <button class="btn-primary" onclick="toggleNewDiscountForm()">
+                        ➕ New Discount Code
+                    </button>
+                </div>
+                
+                <!-- New Discount Form -->
+                <div id="new-discount-form" class="form-container" style="display: none;">
+                    <h3 class="form-title">Create New Discount Code</h3>
+                    <form id="discount-form" action="process_discount_code.php" method="post" class="marketing-form">
+                        <input type="hidden" name="action" value="create">
+                        <input type="hidden" name="id" value="<?= generateId('DC') ?>">
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="discount-code" class="form-label">Discount Code</label>
+                                <div class="input-group">
+                                    <input type="text" id="discount-code" name="code" class="form-input" required>
+                                    <button type="button" class="btn-secondary" onclick="generateDiscountCode()">Generate</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="discount-type" class="form-label">Discount Type</label>
+                                <select id="discount-type" name="discount_type" class="form-select" required>
+                                    <option value="">Select Type</option>
+                                    <option value="percentage">Percentage</option>
+                                    <option value="fixed">Fixed Amount</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="discount-value" class="form-label">Discount Value</label>
+                                <input type="number" id="discount-value" name="discount_value" class="form-input" 
+                                       step="0.01" min="0" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="discount-usage-limit" class="form-label">Usage Limit</label>
+                                <input type="number" id="discount-usage-limit" name="usage_limit" class="form-input" 
+                                       min="1" placeholder="Unlimited if blank">
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="discount-start-date" class="form-label">Start Date</label>
+                                <input type="date" id="discount-start-date" name="start_date" class="form-input" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="discount-end-date" class="form-label">End Date</label>
+                                <input type="date" id="discount-end-date" name="end_date" class="form-input">
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="toggleNewDiscountForm()">Cancel</button>
+                            <button type="submit" class="btn-primary">Create Discount Code</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Discount Codes List -->
+                <div class="discount-codes-list">
+                    <?php if (!empty($marketingData['discountCodes'])): ?>
+                        <div class="table-container">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Type</th>
+                                        <th>Value</th>
+                                        <th>Usage</th>
+                                        <th>Status</th>
+                                        <th>Expires</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($marketingData['discountCodes'] as $code): ?>
+                                    <tr>
+                                        <td class="discount-code"><?= htmlspecialchars($code['code'] ?? '') ?></td>
+                                        <td class="discount-type"><?= ucfirst($code['discount_type'] ?? '') ?></td>
+                                        <td class="discount-value">
+                                            <?php if (($code['discount_type'] ?? '') === 'percentage'): ?>
+                                                <?= number_format($code['discount_value'] ?? 0, 1) ?>%
+                                            <?php else: ?>
+                                                $<?= number_format($code['discount_value'] ?? 0, 2) ?>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="discount-usage">
+                                            <?= ($code['used_count'] ?? 0) ?> / <?= ($code['usage_limit'] ?? '∞') ?>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-<?= strtolower($code['status'] ?? 'active') ?>">
+                                                <?= ucfirst($code['status'] ?? 'Active') ?>
+                                            </span>
+                                        </td>
+                                        <td class="discount-expires">
+                                            <?= $code['end_date'] ? date('M d, Y', strtotime($code['end_date'])) : 'Never' ?>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn edit-btn" title="Edit Code">✏️</button>
+                                                <button class="action-btn delete-btn" title="Delete Code">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="admin-empty-state">
+                            <div class="empty-icon">🏷️</div>
+                            <div class="empty-title">No Discount Codes</div>
+                            <div class="empty-subtitle">Create your first discount code to boost sales</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Media Section -->
+        <div id="social-media-section" class="marketing-tool-section" style="display: none;">
+            <div class="admin-card">
+                <div class="section-header">
+                    <h2 class="section-title">Social Media Management</h2>
+                    <button class="btn-primary" onclick="toggleNewPostForm()">
+                        ➕ New Post
+                    </button>
+                </div>
+                
+                <!-- Social Accounts -->
+                <?php if (!empty($marketingData['socialAccounts'])): ?>
+                <div class="social-accounts-section">
+                    <h3 class="subsection-title">Connected Accounts</h3>
+                    <div class="social-accounts-grid">
+                        <?php foreach ($marketingData['socialAccounts'] as $account): ?>
+                        <div class="social-account-card <?= ($account['status'] ?? '') === 'connected' ? 'connected' : 'disconnected' ?>">
+                            <div class="platform-icon platform-<?= strtolower($account['platform'] ?? '') ?>">
+                                <?php
+                                $platformIcons = [
+                                    'facebook' => '📘',
+                                    'instagram' => '📷',
+                                    'twitter' => '🐦',
+                                    'linkedin' => '💼'
+                                ];
+                                echo $platformIcons[strtolower($account['platform'] ?? '')] ?? '📱';
+                                ?>
+                            </div>
+                            <div class="account-info">
+                                <h4 class="platform-name"><?= ucfirst($account['platform'] ?? '') ?></h4>
+                                <p class="account-handle">@<?= htmlspecialchars($account['username'] ?? 'Not connected') ?></p>
+                                <span class="connection-status">
+                                    <?= ucfirst($account['status'] ?? 'Disconnected') ?>
+                                </span>
+                            </div>
+                            <div class="account-actions">
+                                <button class="btn-secondary btn-sm">
+                                    <?= ($account['status'] ?? '') === 'connected' ? 'Disconnect' : 'Connect' ?>
+                                </button>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <!-- Social Posts -->
+                <div class="social-posts-section">
+                    <h3 class="subsection-title">Recent Posts</h3>
+                    <?php if (!empty($marketingData['socialPosts'])): ?>
+                        <div class="social-posts-grid">
+                            <?php foreach (array_slice($marketingData['socialPosts'], 0, 6) as $post): ?>
+                            <div class="social-post-card">
+                                <div class="post-header">
+                                    <div class="platform-icon platform-<?= strtolower($post['platform'] ?? '') ?>">
+                                        <?php
+                                        $platformIcons = [
+                                            'facebook' => '📘',
+                                            'instagram' => '📷',
+                                            'twitter' => '🐦'
+                                        ];
+                                        echo $platformIcons[strtolower($post['platform'] ?? '')] ?? '📱';
+                                        ?>
+                                    </div>
+                                    <div class="post-meta">
+                                        <span class="post-platform"><?= ucfirst($post['platform'] ?? '') ?></span>
+                                        <span class="post-date"><?= date('M d, Y', strtotime($post['scheduled_date'] ?? 'now')) ?></span>
+                                    </div>
+                                    <span class="status-badge status-<?= strtolower($post['status'] ?? 'draft') ?>">
+                                        <?= ucfirst($post['status'] ?? 'Draft') ?>
+                                    </span>
+                                </div>
+                                <div class="post-content">
+                                    <?= nl2br(htmlspecialchars(substr($post['content'] ?? '', 0, 150))) ?>
+                                    <?= strlen($post['content'] ?? '') > 150 ? '...' : '' ?>
+                                </div>
+                                <div class="post-actions">
+                                    <button class="action-btn edit-btn" title="Edit Post">✏️</button>
+                                    <button class="action-btn delete-btn" title="Delete Post">🗑️</button>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="admin-empty-state">
+                            <div class="empty-icon">📱</div>
+                            <div class="empty-title">No Social Posts</div>
+                            <div class="empty-subtitle">Create your first social media post</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <!-- Setup Notice for Missing Tables -->
+    <?php if (!$tableStatus['allTablesExist']): ?>
+    <div class="admin-card mt-8">
+        <div class="setup-notice">
+            <h3 class="setup-title">Marketing Setup Required</h3>
+            <p class="setup-description">Some marketing features require database setup. Click below to initialize missing tables.</p>
+            <button class="btn-primary" onclick="initializeMarketingTables()">
+                🚀 Setup Marketing Tables
+            </button>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
+<!-- JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// Chart Data
+const chartData = <?= json_encode($chartData) ?>;
+
+// Initialize Charts
 document.addEventListener('DOMContentLoaded', function() {
     // Sales Chart
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    
-    const salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: <?php echo json_encode($monthLabels); ?>,
-            datasets: [{
-                label: 'Monthly Sales',
-                data: <?php echo json_encode($salesData); ?>,
-                backgroundColor: 'rgba(135, 172, 58, 0.2)',
-                borderColor: '#87ac3a',
-                borderWidth: 2,
-                tension: 0.3,
-                pointBackgroundColor: '#87ac3a'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value;
+    const salesCtx = document.getElementById('salesChart');
+    if (salesCtx) {
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.monthLabels,
+                datasets: [{
+                    label: 'Sales ($)',
+                    data: chartData.salesData,
+                    borderColor: 'var(--primary-color, #87ac3a)',
+                    backgroundColor: 'rgba(135, 172, 58, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
                         }
                     }
                 }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-    
-    // Payment Method Doughnut Chart
-    const pCtx = document.getElementById('paymentMethodChart').getContext('2d');
-    const paymentMethodChart = new Chart(pCtx, {
-        type: 'doughnut',
-        data: {
-            labels: <?php echo json_encode($paymentMethodLabels); ?>,
-            datasets: [{
-                data: <?php echo json_encode($paymentMethodCounts); ?>,
-                backgroundColor: [
-                    '#87ac3a', '#4B5563', '#10B981', '#F59E0B', '#EF4444', '#6366F1'
-                ],
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-    
-    // Hide all marketing tool sections initially
-    document.querySelectorAll('.marketing-tool-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Set current date as default for date inputs
-    const today = new Date().toISOString().split('T')[0];
-    if (document.getElementById('start-date')) { // For discount codes
-        document.getElementById('start-date').value = today;
-    }
-    if (document.getElementById('end-date')) { // For discount codes
-        const nextMonth = new Date();
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        document.getElementById('end-date').value = nextMonth.toISOString().split('T')[0];
-    }
-    
-    // Campaign status change handler
-    const campaignStatus = document.getElementById('campaign-status');
-    if (campaignStatus) {
-        campaignStatus.addEventListener('change', function() {
-            const scheduledDateGroup = document.getElementById('scheduled-date-group');
-            if (this.value === 'scheduled') {
-                scheduledDateGroup.style.display = 'block';
-            } else {
-                scheduledDateGroup.style.display = 'none';
             }
         });
     }
-    
-    // Character counter for social posts
-    const postContent = document.getElementById('post-content');
-    const charCount = document.getElementById('char-count');
-    if (postContent && charCount) {
-        postContent.addEventListener('input', function() {
-            const count = this.value.length;
-            charCount.textContent = count;
-            if (count > 280) {
-                charCount.style.color = 'red';
-            } else {
-                charCount.style.color = '';
+
+    // Payment Methods Chart
+    const paymentCtx = document.getElementById('paymentMethodChart');
+    if (paymentCtx) {
+        new Chart(paymentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.paymentMethodLabels,
+                datasets: [{
+                    data: chartData.paymentMethodCounts,
+                    backgroundColor: [
+                        '#87ac3a',
+                        '#a3cc4a',
+                        '#6b8e23',
+                        '#9bb83a',
+                        '#7ea32d'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
             }
         });
     }
 });
 
-// Show marketing tool section
-function showMarketingTool(toolType) {
-    // Hide all sections first
+// Marketing Tool Functions
+function showMarketingTool(tool) {
+    // Hide all sections
     document.querySelectorAll('.marketing-tool-section').forEach(section => {
         section.style.display = 'none';
     });
     
-    // Show the selected section
-    const sectionId = toolType + '-section';
-    const section = document.getElementById(sectionId);
+    // Show selected section
+    const section = document.getElementById(tool + '-section');
     if (section) {
         section.style.display = 'block';
-        
-        // Scroll to the section
         section.scrollIntoView({ behavior: 'smooth' });
     }
 }
 
-// Toggle new campaign form
 function toggleNewCampaignForm() {
     const form = document.getElementById('new-campaign-form');
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
-// Toggle new discount form
 function toggleNewDiscountForm() {
     const form = document.getElementById('new-discount-form');
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
-// Toggle new post form
 function toggleNewPostForm() {
-    const form = document.getElementById('new-post-form');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    // This would show a social post form if implemented
+    alert('Social post creation coming soon!');
 }
 
-// Generate random discount code
-function generateRandomCode() {
+function generateDiscountCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
     for (let i = 0; i < 8; i++) {
@@ -970,532 +877,19 @@ function generateRandomCode() {
     }
     document.getElementById('discount-code').value = code;
 }
+
+function initializeMarketingTables() {
+    if (confirm('This will create the necessary database tables for marketing features. Continue?')) {
+        // This would trigger table creation
+        alert('Marketing table initialization coming soon!');
+    }
+}
+
+// Schedule type change handler
+document.addEventListener('change', function(e) {
+    if (e.target.id === 'campaign-schedule') {
+        const dateContainer = document.getElementById('schedule-date-container');
+        dateContainer.style.display = e.target.value === 'schedule' ? 'block' : 'none';
+    }
+});
 </script>
-
-<style>
-.dashboard-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.stat-card {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-}
-
-.stat-icon {
-    font-size: 2rem;
-    color: #87ac3a;
-    margin-right: 15px;
-}
-
-.stat-info h3 {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.stat-value {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin: 5px 0 0;
-    color: #333;
-}
-
-.dashboard-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.dashboard-column {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.dashboard-card {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.dashboard-card h3 {
-    margin-top: 0;
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-
-.chart-container {
-    height: 250px;
-    position: relative;
-}
-
-.top-products-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.top-products-list li {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.top-products-list li:last-child {
-    border-bottom: none;
-}
-
-.product-name {
-    font-weight: 500;
-}
-
-.product-orders {
-    color: #87ac3a;
-    font-weight: 500;
-}
-
-.mini-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.mini-table th, .mini-table td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.mini-table th {
-    font-weight: 500;
-    color: #666;
-}
-
-.marketing-tools {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-.tool-card {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    color: inherit;
-}
-
-.tool-card:hover {
-    background-color: #f0f0f0;
-    transform: translateY(-2px);
-}
-
-.tool-icon {
-    width: 40px;
-    height: 40px;
-    background-color: #87ac3a;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-}
-
-.tool-info h4 {
-    margin: 0;
-    font-size: 1rem;
-}
-
-.tool-info p {
-    margin: 5px 0 0;
-    font-size: 0.8rem;
-    color: #666;
-}
-
-.no-data {
-    color: #999;
-    font-style: italic;
-    text-align: center;
-    padding: 20px 0;
-}
-
-/* Marketing Tool Sections */
-.marketing-tool-section {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-top: 20px;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.section-header h2 {
-    margin: 0;
-    color: #333;
-}
-
-.button {
-    display: inline-block;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: background-color 0.3s;
-}
-
-.button.primary {
-    background-color: #87ac3a;
-    color: white;
-}
-
-.button.primary:hover {
-    background-color: #a3cc4a;
-}
-
-.button.secondary {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-.button.secondary:hover {
-    background-color: #e0e0e0;
-}
-
-.button.small {
-    padding: 4px 8px;
-    font-size: 12px;
-}
-
-/* Form Styles */
-.form-container {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.form-container h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #333;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #555;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.form-group textarea {
-    resize: vertical;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-/* Data Table */
-.data-table-container {
-    margin-bottom: 20px;
-    overflow-x: auto;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.data-table th,
-.data-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.data-table th {
-    background-color: #f9f9f9;
-    font-weight: 500;
-    color: #555;
-}
-
-.data-table tr:hover {
-    background-color: #f9f9f9;
-}
-
-.actions {
-    white-space: nowrap;
-}
-
-.icon-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    color: #666;
-    transition: color 0.3s;
-}
-
-.icon-button:hover {
-    color: #333;
-}
-
-.icon-button.delete:hover {
-    color: #f44336;
-}
-
-/* Status Badges */
-.status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.status-draft {
-    background-color: #e0e0e0;
-    color: #555;
-}
-
-.status-scheduled {
-    background-color: #bbdefb;
-    color: #1976d2;
-}
-
-.status-sent, .status-posted {
-    background-color: #c8e6c9;
-    color: #388e3c;
-}
-
-.status-active {
-    background-color: #c8e6c9;
-    color: #388e3c;
-}
-
-.status-inactive {
-    background-color: #ffcdd2;
-    color: #d32f2f;
-}
-
-/* Setup Notice */
-.setup-notice {
-    text-align: center;
-    padding: 30px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-}
-
-.setup-notice p {
-    margin-bottom: 15px;
-    color: #666;
-}
-
-/* Social Media Styles */
-.social-accounts {
-    margin-bottom: 20px;
-}
-
-.accounts-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
-}
-
-.social-account-card {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    position: relative;
-}
-
-.social-account-card.connected {
-    border-left: 4px solid #4caf50;
-}
-
-.social-account-card.disconnected {
-    border-left: 4px solid #f44336;
-}
-
-.platform-icon {
-    font-size: 24px;
-    margin-right: 15px;
-}
-
-.platform-icon .fa-facebook {
-    color: #1877f2;
-}
-
-.platform-icon .fa-instagram {
-    color: #c13584;
-}
-
-.platform-icon .fa-twitter {
-    color: #1da1f2;
-}
-
-.account-info h4 {
-    margin: 0;
-    font-size: 16px;
-}
-
-.account-info p {
-    margin: 5px 0 0;
-    color: #666;
-    font-size: 14px;
-}
-
-.connection-status {
-    font-size: 12px;
-    color: #666;
-}
-
-.account-actions {
-    margin-left: auto;
-}
-
-.add-account-button {
-    width: 100%;
-    text-align: center;
-    padding: 15px;
-    margin-top: 10px;
-}
-
-/* Social Posts */
-.posts-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.social-post-card {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.post-header {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    background-color: #f0f0f0;
-}
-
-.post-meta {
-    flex: 1;
-    margin-left: 10px;
-}
-
-.post-platform {
-    font-weight: 500;
-    display: block;
-}
-
-.post-date {
-    font-size: 12px;
-    color: #666;
-}
-
-.post-content {
-    padding: 15px;
-    white-space: pre-wrap;
-}
-
-.post-image img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-
-.post-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 15px;
-    background-color: #f0f0f0;
-}
-
-/* Character Counter */
-.character-counter {
-    text-align: right;
-    font-size: 12px;
-    color: #666;
-    margin-top: 5px;
-}
-
-/* Subscribers Section */
-.subscribers-section {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.subscribers-section p {
-    margin: 0;
-}
-
-@media (max-width: 992px) {
-    .dashboard-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .marketing-tools {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-}
-</style>

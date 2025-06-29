@@ -171,9 +171,14 @@ class ShoppingCart {
                    cartGender === gender;
         });
         
+        let isNewItem = false;
+        let finalQuantity = quantity;
+        
         if (existingItem) {
             existingItem.quantity += quantity;
+            finalQuantity = existingItem.quantity;
         } else {
+            isNewItem = true;
             const cartItem = {
                 sku: item.sku,
                 name: item.name,
@@ -216,6 +221,9 @@ class ShoppingCart {
         this.saveCart();
         this.updateCartCount();
         this.dispatchCartUpdate();
+        
+        // Show notifications
+        this.showAddToCartNotifications(item, quantity, finalQuantity, isNewItem);
         
         // Track cart action for analytics
         if (window.analyticsTracker) {
@@ -333,6 +341,99 @@ class ShoppingCart {
 
     showValidationError(message) {
         return window.showValidation(message);
+    }
+
+    showAddToCartNotifications(item, addedQuantity, totalQuantity, isNewItem) {
+        // Build display name for notifications
+        let displayName = item.name;
+        let detailParts = [];
+        
+        if (item.gender) detailParts.push(item.gender);
+        if (item.color) detailParts.push(item.color);
+        if (item.size) detailParts.push(item.size);
+        
+        if (detailParts.length > 0) {
+            displayName += ` (${detailParts.join(', ')})`;
+        }
+        
+        // 1. Show toast notification in top right corner (next to cart icon)
+        const formattedPrice = '$' + (parseFloat(item.price) || 0).toFixed(2);
+        const toastMessage = `${displayName} - ${formattedPrice}`;
+        
+        this.showNotification(toastMessage);
+        
+        // 2. Show small popup notification near the item (if possible)
+        this.showItemPopupNotification(item, addedQuantity, totalQuantity, isNewItem);
+    }
+    
+    showItemPopupNotification(item, addedQuantity, totalQuantity, isNewItem) {
+        // Find the item element that was clicked (search for elements with the SKU)
+        const itemElements = document.querySelectorAll(`[data-sku="${item.sku}"], .item-icon[data-sku="${item.sku}"], .product-icon[data-sku="${item.sku}"]`);
+        
+        if (itemElements.length === 0) {
+            console.log('No item element found for popup notification');
+            return;
+        }
+        
+        // Use the first found element
+        const itemElement = itemElements[0];
+        
+        // Create notification popup
+        const popup = document.createElement('div');
+        popup.className = 'cart-popup-notification';
+        popup.style.cssText = `
+            position: absolute;
+            background: #87ac3a;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(135, 172, 58, 0.4);
+            border: 2px solid #6b8e23;
+            white-space: nowrap;
+            pointer-events: none;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        `;
+        
+        // Create notification text
+        const statusText = isNewItem ? 
+            `${addedQuantity} added to cart` : 
+            `+${addedQuantity} added (${totalQuantity} total)`;
+        
+        popup.textContent = statusText;
+        
+        // Position the popup relative to the item element
+        const rect = itemElement.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+        
+        popup.style.left = (rect.left + scrollLeft + rect.width / 2 - 75) + 'px'; // Approximate center
+        popup.style.top = (rect.top + scrollTop - 40) + 'px'; // Above the item
+        
+        // Add to document body
+        document.body.appendChild(popup);
+        
+        // Animate in
+        requestAnimationFrame(() => {
+            popup.style.transform = 'scale(1) translateY(-5px)';
+            popup.style.opacity = '1';
+        });
+        
+        // Animate out and remove after 2.5 seconds
+        setTimeout(() => {
+            popup.style.transform = 'scale(0.8) translateY(-10px)';
+            popup.style.opacity = '0';
+            
+            setTimeout(() => {
+                if (popup.parentElement) {
+                    popup.remove();
+                }
+            }, 300);
+        }, 2500);
     }
 
     async loadProfileAddress() {

@@ -4,7 +4,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
-require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 // Date range parameters
 $startInput = $_GET['start_date'] ?? '';
@@ -58,57 +58,51 @@ try {
         // Order metrics with date filtering
         $orderParams = [':start' => $startParam, ':end' => $endParam];
         
-        $metrics['orderCount'] = $db->query(
-            "SELECT COUNT(*) FROM orders WHERE DATE(date) BETWEEN :start AND :end",
-            $orderParams
-        )->fetchColumn() ?: 0;
+        $stmt = $db->prepare("SELECT COUNT(*) FROM orders WHERE DATE(date) BETWEEN :start AND :end");
+        $stmt->execute($orderParams);
+        $metrics['orderCount'] = $stmt->fetchColumn() ?: 0;
         
-        $metrics['totalSales'] = $db->query(
-            "SELECT SUM(total) FROM orders WHERE DATE(date) BETWEEN :start AND :end",
-            $orderParams
-        )->fetchColumn() ?: 0;
+        $stmt = $db->prepare("SELECT SUM(total) FROM orders WHERE DATE(date) BETWEEN :start AND :end");
+        $stmt->execute($orderParams);
+        $metrics['totalSales'] = $stmt->fetchColumn() ?: 0;
         
         // Items sold calculation
-        $metrics['itemsSold'] = $db->query(
-            "SELECT COALESCE(SUM(oi.quantity), 0) 
-             FROM order_items oi 
-             JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci 
-             WHERE DATE(o.date) BETWEEN :start AND :end",
-            $orderParams
-        )->fetchColumn() ?: 0;
+        $stmt = $db->prepare("SELECT COALESCE(SUM(oi.quantity), 0) 
+                              FROM order_items oi 
+                              JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci 
+                              WHERE DATE(o.date) BETWEEN :start AND :end");
+        $stmt->execute($orderParams);
+        $metrics['itemsSold'] = $stmt->fetchColumn() ?: 0;
         
         // Payment status metrics
-        $paymentStatusData = $db->query(
-            "SELECT paymentStatus, COUNT(*) as cnt 
-             FROM orders 
-             WHERE DATE(date) BETWEEN :start AND :end 
-             GROUP BY paymentStatus",
-            $orderParams
-        )->fetchAll(PDO::FETCH_KEY_PAIR);
+        $stmt = $db->prepare("SELECT paymentStatus, COUNT(*) as cnt 
+                              FROM orders 
+                              WHERE DATE(date) BETWEEN :start AND :end 
+                              GROUP BY paymentStatus");
+        $stmt->execute($orderParams);
+        $paymentStatusData = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         
         $metrics['paymentsReceived'] = $paymentStatusData['Received'] ?? 0;
         $metrics['paymentsPending'] = $paymentStatusData['Pending'] ?? 0;
         
         // Recent orders
-        $marketingData['recentOrders'] = $db->query(
-            "SELECT o.*, u.username, u.email 
-             FROM orders o 
-             LEFT JOIN users u ON o.userId = u.id 
-             WHERE DATE(o.date) BETWEEN :start AND :end 
-             ORDER BY o.date DESC 
-             LIMIT 5",
-            $orderParams
-        )->fetchAll();
+        $stmt = $db->prepare("SELECT o.*, u.username, u.email 
+                              FROM orders o 
+                              LEFT JOIN users u ON o.userId = u.id 
+                              WHERE DATE(o.date) BETWEEN :start AND :end 
+                              ORDER BY o.date DESC 
+                              LIMIT 5");
+        $stmt->execute($orderParams);
+        $marketingData['recentOrders'] = $stmt->fetchAll();
         
         // Monthly sales data for chart
-        $monthlySalesData = $db->query(
-            "SELECT DATE_FORMAT(date, '%Y-%m-01') as month_start, SUM(total) as total 
-             FROM orders 
-             WHERE DATE(date) BETWEEN :start AND :end 
-             GROUP BY month_start 
-             ORDER BY month_start",
-            $orderParams
-        )->fetchAll();
+        $stmt = $db->prepare("SELECT DATE_FORMAT(date, '%Y-%m-01') as month_start, SUM(total) as total 
+                              FROM orders 
+                              WHERE DATE(date) BETWEEN :start AND :end 
+                              GROUP BY month_start 
+                              ORDER BY month_start");
+        $stmt->execute($orderParams);
+        $monthlySalesData = $stmt->fetchAll();
         
         if (!empty($monthlySalesData)) {
             $chartData['monthLabels'] = array_map(fn($data) => date("M", strtotime($data['month_start'])), $monthlySalesData);
@@ -116,26 +110,24 @@ try {
         }
         
         // Top products
-        $marketingData['topProducts'] = $db->query(
-            "SELECT i.name, SUM(oi.quantity) as units 
-             FROM order_items oi
-             JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci
-             JOIN items i ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci
-             WHERE DATE(o.date) BETWEEN :start AND :end
-             GROUP BY oi.sku, i.name
-             ORDER BY units DESC
-             LIMIT 5",
-            $orderParams
-        )->fetchAll();
+        $stmt = $db->prepare("SELECT i.name, SUM(oi.quantity) as units 
+                              FROM order_items oi
+                              JOIN orders o ON oi.orderId COLLATE utf8mb4_unicode_ci = o.id COLLATE utf8mb4_unicode_ci
+                              JOIN items i ON oi.sku COLLATE utf8mb4_unicode_ci = i.sku COLLATE utf8mb4_unicode_ci
+                              WHERE DATE(o.date) BETWEEN :start AND :end
+                              GROUP BY oi.sku, i.name
+                              ORDER BY units DESC
+                              LIMIT 5");
+        $stmt->execute($orderParams);
+        $marketingData['topProducts'] = $stmt->fetchAll();
         
         // Payment method distribution
-        $paymentMethodData = $db->query(
-            "SELECT paymentMethod, COUNT(*) as cnt 
-             FROM orders 
-             WHERE DATE(date) BETWEEN :start AND :end 
-             GROUP BY paymentMethod",
-            $orderParams
-        )->fetchAll();
+        $stmt = $db->prepare("SELECT paymentMethod, COUNT(*) as cnt 
+                              FROM orders 
+                              WHERE DATE(date) BETWEEN :start AND :end 
+                              GROUP BY paymentMethod");
+        $stmt->execute($orderParams);
+        $paymentMethodData = $stmt->fetchAll();
         
         if (!empty($paymentMethodData)) {
             $chartData['paymentMethodLabels'] = array_column($paymentMethodData, 'paymentMethod');

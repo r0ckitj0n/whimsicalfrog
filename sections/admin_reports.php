@@ -4,7 +4,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
-require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 // Initialize data arrays
 $ordersData = [];

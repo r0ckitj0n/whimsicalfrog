@@ -2,22 +2,22 @@
    HEADER & NAVIGATION SYSTEM CSS
    ============================================== */
 
-/* Header CSS Variables - restored to original WhimsicalFrog design */
+/* Header CSS Variables - Uses Global CSS Rules */
 :root {
     --header-bg-color: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent);
-    --header-text-color: #87ac3a;
-    --header-logo-height: 60px;
-    --header-padding-y: 0.5rem;
-    --header-shadow: none;
-    --nav-link-color: #87ac3a;
+    --header-text-color: var(--brand_primary, #87ac3a);
+    --header-logo-height: var(--header-logo-height, 60px);
+    --header-padding-y: var(--header-padding-y, 0.5rem);
+    --header-shadow: var(--header-shadow, none);
+    --nav-link-color: var(--brand_primary, #87ac3a);
     --nav-link-hover-color: #a3cc4a;
-    --nav-link-active-color: #87ac3a;
-    --search-bar-bg: transparent;
-    --search-bar-border: 2px solid #87ac3a;
+    --nav-link-active-color: var(--brand_primary, #87ac3a);
+    --search-bar-bg: var(--search-bar-bg, transparent);
+    --search-bar-border: var(--search-bar-border, 2px solid #87ac3a);
     
-    /* SEARCH BAR CUSTOMIZATION - Admin can modify these values */
-    --search-bar-text-color: #87ac3a;        /* Text color inside search bar */
-    --search-placeholder-color: rgba(135, 172, 58, 0.7); /* Placeholder text color */
+    /* SEARCH BAR CUSTOMIZATION - Uses Global CSS Rules */
+    --search-bar-text-color: var(--search-bar-text-color, #87ac3a);
+    --search-placeholder-color: var(--search-placeholder-color, rgba(135, 172, 58, 0.7));
 }
 
 /* Main Header Container */
@@ -162,11 +162,11 @@
 .search-bar {
     width: 100% !important;
     padding: 0.5rem 1rem 0.5rem 2.5rem !important;
-    background: var(--search-bar-bg) !important;
-    border: var(--search-bar-border) !important;
+    background: transparent !important;
+    border: 2px solid #87ac3a !important;
     border-radius: 2rem !important;
     font-size: 0.875rem !important;
-    color: white !important;
+    color: #87ac3a !important;
     transition: all 0.2s ease !important;
 }
 
@@ -175,26 +175,26 @@
 .header-center .search-container .search-input-container input[type="search"],
 input.search-bar,
 input[type="search"].search-bar {
-    background: #87ac3a !important;
+    background: transparent !important;
     border: 2px solid #87ac3a !important;
-    color: white !important;
-    background-color: #87ac3a !important;
+    color: #87ac3a !important;
+    background-color: transparent !important;
 }
 
 .header-center .search-container .search-input-container .search-bar::placeholder,
 .header-center .search-container .search-input-container input[type="search"]::placeholder,
 input.search-bar::placeholder,
 input[type="search"].search-bar::placeholder {
-    color: white !important;
+    color: rgba(135, 172, 58, 0.8) !important;
 }
 
 /* Override any Tailwind or other framework styles */
 .search-bar {
-    background: #87ac3a !important;
-    background-color: #87ac3a !important;
+    background: transparent !important;
+    background-color: transparent !important;
     border: 2px solid #87ac3a !important;
     border-color: #87ac3a !important;
-    color: white !important;
+    color: #87ac3a !important;
 }
 
 /* Ultra-specific overrides to beat any framework */
@@ -202,21 +202,21 @@ html body .site-header .header-container .header-content .header-center .search-
 html body .site-header .header-container .header-content .header-center .search-container .search-input-container input[type="search"] {
     background: transparent !important;
     background-color: transparent !important;
-    border: 2px solid var(--search-bar-text-color) !important;
-    border-color: var(--search-bar-text-color) !important;
-    color: var(--search-bar-text-color) !important;
+    border: 2px solid #87ac3a !important;
+    border-color: #87ac3a !important;
+    color: #87ac3a !important;
 }
 
-/* Header Search Input - Global Rule for Admin Management */
+/* Header Search Input - Green styling with transparent background */
 #headerSearchInput,
 input#headerSearchInput,
 .main-nav input#headerSearchInput,
 nav input#headerSearchInput {
     background: transparent !important;
     background-color: transparent !important;
-    border: 2px solid var(--search-bar-text-color) !important;
-    border-color: var(--search-bar-text-color) !important;
-    color: var(--search-bar-text-color) !important;
+    border: 2px solid #87ac3a !important;
+    border-color: #87ac3a !important;
+    color: #87ac3a !important;
     border-radius: 9999px !important;
     transition: all 0.2s ease !important;
 }
@@ -225,7 +225,7 @@ nav input#headerSearchInput {
 input#headerSearchInput::placeholder,
 .main-nav input#headerSearchInput::placeholder,
 nav input#headerSearchInput::placeholder {
-    color: var(--search-placeholder-color) !important;
+    color: rgba(135, 172, 58, 0.8) !important;
     opacity: 1 !important;
 }
 
@@ -233,24 +233,27 @@ nav input#headerSearchInput::placeholder {
 input#headerSearchInput:focus,
 .main-nav input#headerSearchInput:focus,
 nav input#headerSearchInput:focus {
-    border-color: var(--search-bar-text-color) !important;
+    border-color: #6b8e23 !important;
     outline: none !important;
     box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.1) !important;
+    color: #87ac3a !important;
+    background-color: rgba(135, 172, 58, 0.05) !important;
 }
 
 html body .site-header .header-container .header-content .header-center .search-container .search-input-container .search-bar::placeholder,
 html body .site-header .header-container .header-content .header-center .search-container .search-input-container input[type="search"]::placeholder {
-    color: white !important;
+    color: rgba(135, 172, 58, 0.8) !important;
 }
 
 .search-bar:focus {
     outline: none !important;
-    border-color: var(--nav-link-hover-color) !important;
+    border-color: #6b8e23 !important;
     box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.1) !important;
+    background-color: rgba(135, 172, 58, 0.05) !important;
 }
 
 .search-bar::placeholder {
-    color: var(--search-placeholder-color) !important;
+    color: rgba(135, 172, 58, 0.8) !important;
 }
 
 .search-icon {
@@ -260,7 +263,9 @@ html body .site-header .header-container .header-content .header-center .search-
     transform: translateY(-50%) !important;
     width: 1rem !important;
     height: 1rem !important;
-    color: white !important;
+    color: #87ac3a !important;
+    fill: #87ac3a !important;
+    stroke: #87ac3a !important;
 }
 
 /* Cart Link */

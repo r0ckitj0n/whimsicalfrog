@@ -119,39 +119,43 @@ $messageType = $_GET['type'] ?? '';
     /* All inventory management styles handled by comprehensive global utility classes */
 </style>
 
-<div class="admin-container">
-    <div class="admin-header">
-        
-        <form method="GET" action="" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+<div class="admin-content-container">
+    <div class="admin-content-header">
+        <h2 class="admin-content-title">Inventory Management</h2>
+        <p class="admin-content-subtitle">Manage your product inventory, stock levels, and item details</p>
+    </div>
+    
+    <div class="admin-filter-section">
+        <form method="GET" action="" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="inventory">
-            <input type="text" name="search" placeholder="Search..." class="p-2 border border-gray-300 rounded text-sm flex-grow" value="<?= htmlspecialchars($search); ?>">
-            <select name="category" class="p-2 border border-gray-300 rounded text-sm flex-grow">
+            <input type="text" name="search" placeholder="Search..." class="admin-form-input" value="<?= htmlspecialchars($filters['search'] ?? ''); ?>">
+            <select name="category" class="admin-form-select">
                 <option value="">All Categories</option>
                 <?php foreach ($categories as $cat): ?>
-                    <option value="<?= htmlspecialchars($cat); ?>" <?= ($categoryFilter === $cat) ? 'selected' : ''; ?>><?= htmlspecialchars($cat); ?></option>
+                    <option value="<?= htmlspecialchars($cat); ?>" <?= ($filters['category'] === $cat) ? 'selected' : ''; ?>><?= htmlspecialchars($cat); ?></option>
                 <?php endforeach; ?>
             </select>
-            <select name="stock" class="p-2 border border-gray-300 rounded text-sm flex-grow">
+            <select name="stock" class="admin-form-select">
                 <option value="">All Stock Levels</option>
-                <option value="low" <?= ($stockFilter === 'low') ? 'selected' : ''; ?>>Low Stock</option>
-                <option value="out" <?= ($stockFilter === 'out') ? 'selected' : ''; ?>>Out of Stock</option>
-                <option value="in" <?= ($stockFilter === 'in') ? 'selected' : ''; ?>>In Stock</option>
+                <option value="low" <?= ($filters['stock'] === 'low') ? 'selected' : ''; ?>>Low Stock</option>
+                <option value="out" <?= ($filters['stock'] === 'out') ? 'selected' : ''; ?>>Out of Stock</option>
+                <option value="in" <?= ($filters['stock'] === 'in') ? 'selected' : ''; ?>>In Stock</option>
             </select>
-            <button type="submit" class="brand-button p-2 rounded text-sm">Filter</button>
-            <button type="button" onclick="refreshCategoryDropdown().then(() => showSuccess( 'Categories refreshed!'))" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded text-sm" title="Refresh Categories">🔄</button>
-            <a href="?page=admin&section=inventory&add=1" class="brand-button p-2 rounded text-sm text-center">Add New Item</a>
+            <button type="submit" class="btn-primary admin-filter-button">Filter</button>
+            <button type="button" onclick="refreshCategoryDropdown().then(() => showSuccess( 'Categories refreshed!'))" class="btn-secondary admin-filter-button" title="Refresh Categories">🔄</button>
+            <a href="?page=admin&section=inventory&add=1" class="btn-primary admin-filter-button">Add New Item</a>
         </form>
     </div>
     
     <?php if ($message): ?>
-        <div class="mb-4 p-3 rounded text-white <?= $messageType === 'success' ? 'bg-green-500' : 'bg-red-500'; ?>">
+        <div class="admin-message <?= $messageType === 'success' ? 'admin-message-success' : 'admin-message-error'; ?>">
             <?= htmlspecialchars($message); ?>
         </div>
     <?php endif; ?>
 
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table id="inventoryTable" class="inventory-table">
+    <div class="admin-table-section">
+        <table id="inventoryTable" class="admin-data-table">
             <thead>
                 <tr>
                     <th>Image</th><th>Images</th><th>Name</th><th>Category</th><th>SKU</th><th>Stock</th>

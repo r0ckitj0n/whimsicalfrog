@@ -7,6 +7,9 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
+// Load CSS utilities for consistent admin styling
+echo '<link rel="stylesheet" href="css/admin-styles.css">';
+
 // Include database configuration
 require_once 'api/config.php';
 
@@ -210,49 +213,38 @@ $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 ?>
 
-<div class="container mx-auto px-4 py-6">
-    <!-- Page Header -->
-    <div class="admin-header-section mb-6">
-        <h1 class="admin-title">Customer Management</h1>
-        <div class="admin-subtitle">Manage customer accounts and view customer data</div>
+<div class="admin-content-container">
+    <div class="admin-content-header">
+        <h2 class="admin-content-title">Customer Management</h2>
+        <p class="admin-content-subtitle">Manage customer accounts and view customer data</p>
     </div>
 
-    <!-- Search and Filter Controls -->
-    <div class="admin-card mb-6">
-        <form method="GET" action="" class="customer-filter-form">
+    <div class="admin-filter-section">
+        <form method="GET" action="" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="customers">
             
-            <div class="filter-group">
-                <div class="filter-field">
-                    <input type="text" name="search" placeholder="Search customers..." 
-                           class="form-input" value="<?= htmlspecialchars($searchTerm) ?>">
-                </div>
-                
-                <div class="filter-field">
-                    <select name="role" class="form-select">
-                        <option value="all">All Roles</option>
-                        <option value="customer" <?= $filterRole === 'customer' ? 'selected' : '' ?>>Customer</option>
-                        <option value="admin" <?= $filterRole === 'admin' ? 'selected' : '' ?>>Admin</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="btn-primary">Filter</button>
-            </div>
+            <input type="text" name="search" placeholder="Search customers..." 
+                   class="admin-form-input" value="<?= htmlspecialchars($searchTerm) ?>">
+            
+            <select name="role" class="admin-form-select">
+                <option value="all">All Roles</option>
+                <option value="customer" <?= $filterRole === 'customer' ? 'selected' : '' ?>>Customer</option>
+                <option value="admin" <?= $filterRole === 'admin' ? 'selected' : '' ?>>Admin</option>
+            </select>
+            
+            <button type="submit" class="btn-primary admin-filter-button">Filter</button>
         </form>
     </div>
     
-    <!-- Status Messages -->
     <?php if ($message): ?>
-        <div class="admin-alert alert-<?= $messageType === 'success' ? 'success' : 'error' ?> mb-6">
+        <div class="admin-message <?= $messageType === 'success' ? 'admin-message-success' : 'admin-message-error'; ?>">
             <?= htmlspecialchars($message) ?>
         </div>
     <?php endif; ?>
 
-    <!-- Customers Table -->
-    <div class="admin-card">
-        <div class="table-container">
-            <table class="admin-table">
+    <div class="admin-table-section">
+        <table class="admin-data-table">
                 <thead>
                     <tr>
                         <th>
@@ -343,7 +335,6 @@ $messageType = $_GET['type'] ?? '';
                     <?php endif; ?>
                 </tbody>
             </table>
-        </div>
     </div>
 </div>
 

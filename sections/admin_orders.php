@@ -142,87 +142,71 @@ function getPaymentStatusBadgeClass($status) {
 }
 ?>
 
-<div class="admin-container">
-    <!-- Orders Filter Section -->
-    <div class="admin-section-header">
-        <h1 class="admin-page-title">Orders Management</h1>
-        
-        <form method="GET" class="filter-form-orders">
+<div class="admin-content-container">
+    <div class="admin-content-header">
+        <h2 class="admin-content-title">Orders Management</h2>
+        <p class="admin-content-subtitle">View and manage customer orders, track fulfillment status</p>
+    </div>
+    
+    <div class="admin-filter-section">
+        <form method="GET" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="orders">
             
-            <div class="filter-group">
-                <label for="filter_date" class="filter-label">Date:</label>
-                <input type="date" name="filter_date" id="filter_date" 
-                       value="<?= htmlspecialchars($filters['date']) ?>" class="filter-input">
-            </div>
+            <input type="date" name="filter_date" 
+                   value="<?= htmlspecialchars($filters['date']) ?>" class="admin-form-input">
             
-            <div class="filter-group">
-                <label for="filter_items" class="filter-label">Items:</label>
-                <input type="text" name="filter_items" id="filter_items" 
-                       value="<?= htmlspecialchars($filters['items']) ?>" 
-                       placeholder="Search..." class="filter-input">
-            </div>
+            <input type="text" name="filter_items" 
+                   value="<?= htmlspecialchars($filters['items']) ?>" 
+                   placeholder="Search items..." class="admin-form-input">
             
-            <div class="filter-group">
-                <label for="filter_status" class="filter-label">Status:</label>
-                <select name="filter_status" id="filter_status" class="filter-select">
-                    <option value="">All</option>
-                    <?php foreach ($dropdownOptions['status'] as $status): ?>
-                    <option value="<?= htmlspecialchars($status) ?>" 
-                            <?= $filters['status'] === $status ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($status) ?>
+            <select name="filter_status" class="admin-form-select">
+                <option value="">All Status</option>
+                <?php foreach ($dropdownOptions['status'] as $status): ?>
+                <option value="<?= htmlspecialchars($status) ?>" 
+                        <?= $filters['status'] === $status ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($status) ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+            
+            <select name="filter_payment_method" class="admin-form-select">
+                <option value="">All Payment</option>
+                <?php foreach ($dropdownOptions['payment_method'] as $method): ?>
+                <option value="<?= htmlspecialchars($method) ?>" 
+                        <?= $filters['payment_method'] === $method ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($method) ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+            
+            <select name="filter_shipping_method" class="admin-form-select">
+                <option value="">All Shipping</option>
+                <?php foreach ($dropdownOptions['shipping_method'] as $method): ?>
+                <option value="<?= htmlspecialchars($method) ?>" 
+                        <?= $filters['shipping_method'] === $method ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($method) ?>
                     </option>
                     <?php endforeach; ?>
                 </select>
-            </div>
+                
+            <select name="filter_payment_status" class="admin-form-select">
+                <option value="">All Pay Status</option>
+                <?php foreach ($dropdownOptions['payment_status'] as $status): ?>
+                <option value="<?= htmlspecialchars($status) ?>" 
+                        <?= $filters['payment_status'] === $status ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($status) ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
             
-            <div class="filter-group">
-                <label for="filter_payment_method" class="filter-label">Payment:</label>
-                <select name="filter_payment_method" id="filter_payment_method" class="filter-select">
-                    <option value="">All</option>
-                    <?php foreach ($dropdownOptions['payment_method'] as $method): ?>
-                    <option value="<?= htmlspecialchars($method) ?>" 
-                            <?= $filters['payment_method'] === $method ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($method) ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="filter_shipping_method" class="filter-label">Shipping:</label>
-                <select name="filter_shipping_method" id="filter_shipping_method" class="filter-select">
-                    <option value="">All</option>
-                    <?php foreach ($dropdownOptions['shipping_method'] as $method): ?>
-                    <option value="<?= htmlspecialchars($method) ?>" 
-                            <?= $filters['shipping_method'] === $method ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($method) ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="filter_payment_status" class="filter-label">Pay Status:</label>
-                <select name="filter_payment_status" id="filter_payment_status" class="filter-select">
-                    <option value="">All</option>
-                    <?php foreach ($dropdownOptions['payment_status'] as $status): ?>
-                    <option value="<?= htmlspecialchars($status) ?>" 
-                            <?= $filters['payment_status'] === $status ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($status) ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <a href="/?page=admin&section=orders" class="filter-clear-link">Clear All</a>
+            <button type="submit" class="btn-primary admin-filter-button">Filter</button>
+            <a href="/?page=admin&section=orders" class="btn-secondary admin-filter-button">Clear</a>
         </form>
     </div>
 
-    <!-- Orders Table -->
-    <div class="admin-table-container">
-        <table class="admin-table orders-table">
+    <div class="admin-table-section">
+        <table class="admin-data-table">
             <thead>
                 <tr>
                     <th>Order ID</th>

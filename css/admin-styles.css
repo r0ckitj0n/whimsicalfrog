@@ -1,7 +1,7 @@
 /* Admin Styles - Centralized CSS for admin interface components */
 
 /* ==============================================
-   ADMIN NAVBAR TABS
+   ADMIN NAVBAR TABS (RESTORED STYLING)
    ============================================== */
 
 /* Admin Dashboard Layout */
@@ -18,6 +18,7 @@
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     border: 1px solid #e5e7eb;
+    margin-bottom: 1.5rem;
 }
 
 .admin-title {
@@ -39,48 +40,53 @@
     margin: 0;
 }
 
-/* Admin Navigation Tabs */
+/* Admin Navigation Tabs - RESTORED TO LAST NIGHT'S STYLING */
 .admin-tab-navigation {
     background: white;
     border-radius: 12px;
     padding: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     border: 1px solid #e5e7eb;
+    margin-bottom: 1.5rem;
 }
 
 .admin-nav-tab {
     display: inline-flex;
     align-items: center;
-    padding: 0.75rem 1.25rem;
+    padding: 0.875rem 1.5rem;
     background: #f8fafc;
     color: #6b7280;
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 500;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
     border: 1px solid #e2e8f0;
     position: relative;
+    margin-right: 0.5rem;
 }
 
 .admin-nav-tab:hover {
     background: #f0f9ff;
     color: #0369a1;
     border-color: #bae6fd;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .admin-nav-tab.active {
     background: linear-gradient(135deg, #87ac3a 0%, #6b8e23 100%);
     color: white;
     border-color: #87ac3a;
-    box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
+    box-shadow: 0 6px 20px rgba(135, 172, 58, 0.4);
     font-weight: 600;
+    transform: translateY(-1px);
 }
 
 .admin-nav-tab.active:hover {
     background: linear-gradient(135deg, #6b8e23 0%, #556b2f 100%);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(135, 172, 58, 0.5);
 }
 
 /* Admin Page Title */
@@ -91,6 +97,211 @@
     font-size: 1.25rem;
     font-weight: 600;
     color: #1f2937;
+}
+
+/* ==============================================
+   ADMIN CONTENT STRUCTURE
+   ============================================== */
+
+/* Main Content Container */
+.admin-content-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* Content Header */
+.admin-content-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-content-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.5rem 0;
+}
+
+.admin-content-subtitle {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Filter Section */
+.admin-filter-section {
+    background: #f9fafb;
+    padding: 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.admin-form-input,
+.admin-form-select {
+    flex: 1;
+    min-width: 150px;
+    padding: 0.625rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.admin-form-input:focus,
+.admin-form-select:focus {
+    outline: none;
+    border-color: #87ac3a;
+    box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.1);
+}
+
+.admin-filter-button {
+    flex-shrink: 0;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Table Section */
+.admin-table-section {
+    padding: 1.5rem;
+    overflow-x: auto;
+}
+
+.admin-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.admin-data-table th {
+    background: #f9fafb;
+    padding: 0.875rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 0.875rem;
+}
+
+.admin-data-table td {
+    padding: 0.875rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.admin-data-table tr:hover {
+    background-color: #f9fafb;
+}
+
+.admin-data-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Messages */
+.admin-message {
+    margin: 1.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-message-success {
+    background-color: #d1fae5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+}
+
+.admin-message-success::before {
+    content: "✓";
+    font-weight: bold;
+}
+
+.admin-message-error {
+    background-color: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+}
+
+.admin-message-error::before {
+    content: "⚠";
+    font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-dashboard {
+        padding: 0.5rem;
+    }
+    
+    .admin-header-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .admin-tab-navigation {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .admin-nav-tab {
+        padding: 0.75rem 1rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .admin-content-header {
+        padding: 1rem;
+    }
+    
+    .admin-content-title {
+        font-size: 1.25rem;
+    }
+    
+    .admin-filter-section {
+        padding: 1rem;
+    }
+    
+    .admin-filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .admin-form-input,
+    .admin-form-select {
+        min-width: auto;
+    }
+    
+    .admin-table-section {
+        padding: 0.75rem;
+    }
+    
+    .admin-data-table th,
+    .admin-data-table td {
+        padding: 0.625rem;
+    }
 }
 
 /* ==============================================

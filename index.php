@@ -34,7 +34,7 @@ $userData = getCurrentUser() ?? [];
 $welcomeMessage = getWelcomeMessage();
 
 // Admin page access control
-if (strpos($page, 'admin') === 0 && !$isAdmin) {
+if (strpos($page, 'admin') === 0 && !$isAdmin && !isAdminWithToken()) {
     header('Location: /?page=login');
     exit;
 }
@@ -163,7 +163,7 @@ $seoData = generatePageSEO($page, $currentSku);
     
     <!-- Core Styles -->
     <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
-
+    <link href="css/admin-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/button-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
     <link href="css/search-modal.css?v=<?php echo time(); ?>" rel="stylesheet">

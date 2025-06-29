@@ -218,15 +218,15 @@ window.positionPopup = function(element, popup) {
     });
     
     // Double-check that the popup is visible in the DOM
-    const popupRect = popup.getBoundingClientRect();
-    console.log('Popup getBoundingClientRect:', popupRect);
+    const finalRect = popup.getBoundingClientRect();
+    console.log('Popup getBoundingClientRect:', finalRect);
     
-    if (popupRect.width === 0 || popupRect.height === 0) {
+    if (finalRect.width === 0 || finalRect.height === 0) {
         console.error('Popup has zero dimensions!');
     }
     
-    if (popupRect.left < -window.innerWidth || popupRect.top < -window.innerHeight || popupRect.left > window.innerWidth || popupRect.top > window.innerHeight) {
-        console.warn('Popup might be positioned off-screen:', popupRect);
+    if (finalRect.left < -window.innerWidth || finalRect.top < -window.innerHeight || finalRect.left > window.innerWidth || finalRect.top > window.innerHeight) {
+        console.warn('Popup might be positioned off-screen:', finalRect);
     }
 };
 

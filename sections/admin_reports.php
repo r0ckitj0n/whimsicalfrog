@@ -127,40 +127,31 @@ $chartData = [
 ];
 ?>
 
-<div class="container mx-auto px-4 py-6">
-    <!-- Page Header -->
-    <div class="admin-header-section mb-6">
-        <h1 class="admin-title">Business Reports & Analytics</h1>
-        <div class="admin-subtitle">Performance insights and key metrics</div>
+<div class="admin-content-container">
+    <div class="admin-content-header">
+        <h2 class="admin-content-title">Business Reports & Analytics</h2>
+        <p class="admin-content-subtitle">Performance insights and key metrics</p>
     </div>
 
-    <!-- Date Range Filter -->
-    <div class="admin-card mb-6">
-        <form action="" method="GET" class="report-filter-form">
+    <div class="admin-filter-section">
+        <form action="" method="GET" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="reports">
             
-            <div class="filter-group">
-                <div class="filter-field">
-                    <label for="start_date" class="form-label">From:</label>
-                    <input type="date" name="start_date" id="start_date" 
-                           value="<?= htmlspecialchars($startDate) ?>" class="form-input">
-                </div>
-                
-                <div class="filter-field">
-                    <label for="end_date" class="form-label">To:</label>
-                    <input type="date" name="end_date" id="end_date" 
-                           value="<?= htmlspecialchars($endDate) ?>" class="form-input">
-                </div>
-                
-                <button type="submit" class="btn-primary">Apply Filter</button>
-                <a href="?page=admin&section=reports" class="btn-secondary">Clear</a>
-            </div>
+            <input type="date" name="start_date" id="start_date" 
+                   value="<?= htmlspecialchars($startDate) ?>" class="admin-form-input">
+            
+            <input type="date" name="end_date" id="end_date" 
+                   value="<?= htmlspecialchars($endDate) ?>" class="admin-form-input">
+            
+            <button type="submit" class="btn-primary admin-filter-button">Apply Filter</button>
+            <a href="?page=admin&section=reports" class="btn-secondary admin-filter-button">Clear</a>
         </form>
     </div>
 
-    <!-- Key Metrics Dashboard -->
-    <div class="metrics-grid">
+    <div class="admin-table-section">
+        <!-- Key Metrics Dashboard -->
+        <div class="metrics-grid">
         <div class="metric-card success">
             <div class="metric-label">Total Revenue</div>
             <div class="metric-value">$<?= number_format($metrics['filteredRevenue'], 2) ?></div>
@@ -300,6 +291,7 @@ $chartData = [
             </svg>
             Print Report
         </button>
+    </div>
     </div>
 </div>
 

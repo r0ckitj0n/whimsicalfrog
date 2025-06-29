@@ -186,38 +186,29 @@ function generateId($prefix, $length = 3) {
 }
 ?>
 
-<div class="container mx-auto px-4 py-6">
-    <!-- Page Header -->
-    <div class="admin-header-section mb-6">
-        <h1 class="admin-title">Marketing Dashboard</h1>
-        <div class="admin-subtitle">Analytics, campaigns, and promotional tools</div>
+<div class="admin-content-container">
+    <div class="admin-content-header">
+        <h2 class="admin-content-title">Marketing Dashboard</h2>
+        <p class="admin-content-subtitle">Analytics, campaigns, and promotional tools</p>
     </div>
 
-    <!-- Date Range Filter -->
-    <div class="admin-card mb-6">
-        <form class="marketing-filter-form" method="get" action="">
+    <div class="admin-filter-section">
+        <form class="admin-filter-form" method="get" action="">
             <input type="hidden" name="page" value="admin">
             <input type="hidden" name="section" value="marketing">
             
-            <div class="filter-group">
-                <div class="filter-field">
-                    <label for="mFrom" class="form-label">From:</label>
-                    <input type="date" id="mFrom" name="start_date" class="form-input" 
-                           value="<?= htmlspecialchars($startInput) ?>">
-                </div>
-                
-                <div class="filter-field">
-                    <label for="mTo" class="form-label">To:</label>
-                    <input type="date" id="mTo" name="end_date" class="form-input" 
-                           value="<?= htmlspecialchars($endInput) ?>">
-                </div>
-                
-                <button type="submit" class="btn-primary">Apply Filter</button>
-            </div>
+            <input type="date" id="mFrom" name="start_date" class="admin-form-input" 
+                   value="<?= htmlspecialchars($startInput) ?>">
+            
+            <input type="date" id="mTo" name="end_date" class="admin-form-input" 
+                   value="<?= htmlspecialchars($endInput) ?>">
+            
+            <button type="submit" class="btn-primary admin-filter-button">Apply Filter</button>
         </form>
     </div>
 
-    <!-- Dashboard Stats -->
+    <div class="admin-table-section">
+        <!-- Dashboard Stats -->
     <div class="dashboard-stats-grid mb-8">
         <div class="stat-card">
             <div class="stat-icon customers">👥</div>
@@ -760,6 +751,7 @@ function generateId($prefix, $length = 3) {
         </div>
     </div>
     <?php endif; ?>
+    </div>
 </div>
 
 <!-- JavaScript -->

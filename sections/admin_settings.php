@@ -3,9 +3,14 @@
 // All CSS moved to button-styles.css for centralized management
 ?>
 
-<div class="settings-page">
+<div class="admin-content-container">
+    <div class="admin-content-header">
+        <h2 class="admin-content-title">Admin Settings</h2>
+        <p class="admin-content-subtitle">Configure system settings, content management, and administrative tools</p>
+    </div>
 
-  <div class="settings-grid">
+    <div class="admin-table-section">
+        <div class="settings-grid">
     
     <!-- Content Management Section -->
     <div class="settings-section content-section">
@@ -248,7 +253,8 @@
       </div>
     </div>
 
-  </div>
+        </div>
+    </div>
 </div>
 
 

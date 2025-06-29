@@ -56,14 +56,20 @@ array_walk($filters, function($value, $key) use (&$conditions, &$params) {
 $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
 // Main orders query with optimized JOIN
-$orders = $db->query(
-    "SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
-     FROM orders o 
-     JOIN users u ON o.userId = u.id 
-     {$whereClause} 
-     ORDER BY o.date DESC",
-    $params
-);
+if (!empty($params)) {
+    $stmt = $db->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
+                          FROM orders o 
+                          JOIN users u ON o.userId = u.id 
+                          {$whereClause} 
+                          ORDER BY o.date DESC");
+    $stmt->execute($params);
+    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $orders = $db->query("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
+                          FROM orders o 
+                          JOIN users u ON o.userId = u.id 
+                          ORDER BY o.date DESC")->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Get filter dropdown options with single queries
 $dropdownOptions = [
@@ -234,13 +240,12 @@ function getPaymentStatusBadgeClass($status) {
                 <?php foreach ($orders as $order): ?>
                 <?php
                 // Get order items
-                $items = $db->query(
-                    "SELECT oi.*, COALESCE(i.name, oi.sku) as item_name 
-                     FROM order_items oi 
-                     LEFT JOIN items i ON oi.sku = i.sku 
-                     WHERE oi.orderId = ?",
-                    [$order['id']]
-                );
+                $stmt = $db->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) as item_name 
+                                      FROM order_items oi 
+                                      LEFT JOIN items i ON oi.sku = i.sku 
+                                      WHERE oi.orderId = ?");
+                $stmt->execute([$order['id']]);
+                $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $itemsList = implode(', ', array_map(fn($item) => $item['item_name'] . ' (x' . $item['quantity'] . ')', $items));
                 ?>
                 <tr>
@@ -317,16 +322,17 @@ function getPaymentStatusBadgeClass($status) {
 <?php if ($modalState['mode']): ?>
 <?php
 $orderId = $modalState['view_id'] ?: $modalState['edit_id'];
-$orderData = $db->query("SELECT o.*, u.username, u.email, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id WHERE o.id = ?", [$orderId])->fetch(PDO::FETCH_ASSOC);
+$stmt = $db->prepare("SELECT o.*, u.username, u.email, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id WHERE o.id = ?");
+$stmt->execute([$orderId]);
+$orderData = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($orderData):
-    $orderItems = $db->query(
-        "SELECT oi.*, COALESCE(i.name, oi.sku) as item_name, i.retailPrice 
-         FROM order_items oi 
-         LEFT JOIN items i ON oi.sku = i.sku 
-         WHERE oi.orderId = ?",
-        [$orderId]
-    );
+    $stmt = $db->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) as item_name, i.retailPrice 
+                          FROM order_items oi 
+                          LEFT JOIN items i ON oi.sku = i.sku 
+                          WHERE oi.orderId = ?");
+    $stmt->execute([$orderId]);
+    $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Get all orders for navigation
     $allOrderIds = $db->query("SELECT id FROM orders ORDER BY date DESC")->fetchAll(PDO::FETCH_COLUMN);

@@ -10,8 +10,7 @@ require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/logger.php';
 
 // Get database instance
-$db = Database::getInstance();
-$pdo = $db->getConnection();
+$pdo = Database::getInstance();
 
 // Initialize data processing
 $editItem = null;
@@ -29,26 +28,26 @@ $modalMode = match(true) {
 
 
 // Process modal data based on mode
-$editItem = match($modalMode) {
-    'view', 'edit' => $db->query("SELECT * FROM items WHERE sku = ?", [$_GET[$modalMode]])->fetch() ?: null,
-    'add' => function() use ($db) {
-        $lastSku = $db->query("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1")->fetch();
-        $lastNum = $lastSku ? (int)substr($lastSku['sku'], -3) : 0;
-        return ['sku' => 'WF-GEN-' . str_pad($lastNum + 1, 3, '0', STR_PAD_LEFT)];
-    },
-    default => null
-};
-
-// Execute function for add mode
-if ($modalMode === 'add' && is_callable($editItem)) {
-    $editItem = $editItem();
+$editItem = null;
+if ($modalMode === 'view' || $modalMode === 'edit') {
+    $stmt = $pdo->prepare("SELECT * FROM items WHERE sku = ?");
+    $stmt->execute([$_GET[$modalMode]]);
+    $editItem = $stmt->fetch() ?: null;
+} elseif ($modalMode === 'add') {
+    $stmt = $pdo->prepare("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
+    $stmt->execute();
+    $lastSku = $stmt->fetch();
+    $lastNum = $lastSku ? (int)substr($lastSku['sku'], -3) : 0;
+    $editItem = ['sku' => 'WF-GEN-' . str_pad($lastNum + 1, 3, '0', STR_PAD_LEFT)];
 }
 
 // Cost breakdown temporarily disabled during SKU migration
 $editCostBreakdown = null;
 
 // Get categories for dropdown
-$categories = $db->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category")->fetchAll(PDO::FETCH_COLUMN) ?? [];
+$stmt = $pdo->prepare("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
+$stmt->execute();
+$categories = $stmt->fetchAll(PDO::FETCH_COLUMN) ?? [];
 
 // Process search and filters using modern PHP
 $filters = [
@@ -95,7 +94,9 @@ $sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count
         WHERE " . implode(' AND ', $whereConditions) . " 
         ORDER BY i.sku ASC";
 
-$items = $db->query($sql, $queryParams)->fetchAll();
+$stmt = $pdo->prepare($sql);
+$stmt->execute($queryParams);
+$items = $stmt->fetchAll();
 
 // Message handling for user feedback
 $message = $_GET['message'] ?? '';

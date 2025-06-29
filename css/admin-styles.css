@@ -1,5 +1,102 @@
 /* Admin Styles - Centralized CSS for admin interface components */
 
+/* ==============================================
+   ADMIN NAVBAR TABS
+   ============================================== */
+
+/* Admin Dashboard Layout */
+.admin-dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* Admin Header Card */
+.admin-header-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+}
+
+.admin-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.admin-subtitle {
+    color: #6b7280;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.admin-meta {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Admin Navigation Tabs */
+.admin-tab-navigation {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+}
+
+.admin-nav-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    background: #f8fafc;
+    color: #6b7280;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    position: relative;
+}
+
+.admin-nav-tab:hover {
+    background: #f0f9ff;
+    color: #0369a1;
+    border-color: #bae6fd;
+    transform: translateY(-1px);
+}
+
+.admin-nav-tab.active {
+    background: linear-gradient(135deg, #87ac3a 0%, #6b8e23 100%);
+    color: white;
+    border-color: #87ac3a;
+    box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
+    font-weight: 600;
+}
+
+.admin-nav-tab.active:hover {
+    background: linear-gradient(135deg, #6b8e23 0%, #556b2f 100%);
+    transform: translateY(-1px);
+}
+
+/* Admin Page Title */
+.admin-page-title {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f3f4f6;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* ==============================================
+   EXISTING ADMIN STYLES
+   ============================================== */
+
 /* Configuration Sections */
 .config-section {
     border: 1px solid #e5e7eb;

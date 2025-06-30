@@ -14098,7 +14098,7 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Dashboard Configuration Modal -->
 <div id="dashboardConfigModal" class="admin-modal-overlay dashboard-modal" style="display: none;" onclick="closeDashboardConfigModal()">
-    <div class="admin-modal-content" onclick="event.stopPropagation()" style="max-width: 1000px; max-height: 90vh;">
+    <div class="admin-modal-content" onclick="event.stopPropagation()" style="max-width: 1400px; max-height: 95vh; width: 90vw;">
         <!-- Header -->
         <div class="admin-modal-header">
             <h2 class="modal-title">📊 Dashboard Configuration</h2>
@@ -14107,7 +14107,7 @@ async function saveCartButtonTexts(texts) {
         </div>
         
         <!-- Body -->
-        <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
+        <div class="modal-body" style="overflow-y: auto; max-height: calc(95vh - 180px);">
             <!-- Current Dashboard Sections -->
             <div class="mb-8">
                 <div class="flex justify-between items-center mb-4">
@@ -14127,7 +14127,7 @@ async function saveCartButtonTexts(texts) {
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Available Sections</h3>
                 <p class="text-gray-600 mb-4">Add these sections to your dashboard by clicking the + button</p>
                 
-                <div id="availableSectionsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="availableSectionsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     <!-- Available sections will be loaded here -->
                 </div>
             </div>

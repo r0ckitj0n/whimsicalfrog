@@ -463,18 +463,49 @@ document.addEventListener('DOMContentLoaded', function() {
     text-decoration: underline;
 }
 
-/* Ensure dashboard modals have titles and descriptions */
+/* Enhanced dashboard modal styling */
+.modal-overlay.dashboard-modal .admin-modal-content {
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
 .modal-overlay.dashboard-modal .admin-modal-content .admin-modal-header {
+    padding: 1.5rem;
     padding-bottom: 1rem;
 }
 
 .modal-overlay.dashboard-modal .admin-modal-header .modal-title {
     margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
 .modal-overlay.dashboard-modal .admin-modal-header .modal-description {
     font-size: 0.875rem;
     color: rgba(255, 255, 255, 0.9);
     font-weight: normal;
+    line-height: 1.5;
+}
+
+.modal-overlay.dashboard-modal .modal-body {
+    padding: 0 1.5rem 1.5rem;
+}
+
+/* Improve section cards in dashboard modal */
+.modal-overlay.dashboard-modal .grid > div {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-overlay.dashboard-modal .grid > div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Better spacing for current sections */
+.modal-overlay.dashboard-modal #currentSectionsList > div {
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: #f9fafb;
 }
 </style> 

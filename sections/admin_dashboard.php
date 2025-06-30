@@ -15,7 +15,7 @@ try {
     $totalRevenue = $db->query('SELECT SUM(total) as revenue FROM orders')->fetch()['revenue'] ?? 0;
     
     // Get recent activity
-    $recentOrders = $db->query('SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.userId = u.id ORDER BY o.created_at DESC LIMIT 5')->fetchAll();
+    $recentOrders = $db->query('SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.userId = u.id ORDER BY o.date DESC LIMIT 5')->fetchAll();
     $lowStockItems = $db->query('SELECT * FROM items WHERE stockLevel <= reorderPoint AND stockLevel > 0 ORDER BY stockLevel ASC LIMIT 5')->fetchAll();
     
 } catch (Exception $e) {

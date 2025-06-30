@@ -6,11 +6,8 @@ ob_start();
 ob_clean();
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
-// Authentication is handled by requireAdmin() above
-$userData = getCurrentUser();
-
-// Include database configuration
-require_once __DIR__ . '/../includes/auth.php';
+// Include database configuration first
+require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json');
@@ -19,13 +16,17 @@ header('Content-Type: application/json');
 // Admin authentication with token fallback for API access
     $isAdmin = false;
     
+    // Parse JSON input
+    $input = json_decode(file_get_contents('php://input'), true) ?? [];
+    
     // Check session authentication first
     if (isset($_SESSION['user_id']) && isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'admin') {
         $isAdmin = true;
     }
     
-    // Admin token fallback for API access
-    if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
+    // Admin token fallback for API access (check both GET and POST/JSON)
+    $adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
+    if (!$isAdmin && $adminToken === 'whimsical_admin_2024') {
         $isAdmin = true;
     }
     
@@ -38,7 +39,7 @@ header('Content-Type: application/json');
 try {
     try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
-    $action = $_POST['action'] ?? $_GET['action'] ?? 'status';
+    $action = $_POST['action'] ?? $_GET['action'] ?? $input['action'] ?? 'status';
     $result = ['success' => false, 'message' => '', 'data' => null];
     
     switch ($action) {
@@ -60,7 +61,7 @@ try {
             
         case 'query':
             // Execute a custom SQL query
-            $sql = $_POST['sql'] ?? '';
+            $sql = $_POST['sql'] ?? $input['sql'] ?? '';
             if (empty($sql)) {
                 $result = ['success' => false, 'error' => 'No SQL query provided'];
                 break;

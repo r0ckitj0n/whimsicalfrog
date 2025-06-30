@@ -15,6 +15,7 @@ require_once __DIR__ . '/http_client.php';
 require_once __DIR__ . '/file_helper.php';
 require_once __DIR__ . '/email_helper.php';
 require_once __DIR__ . '/stock_manager.php';
+require_once __DIR__ . '/auth_helper.php';
 
 /**
  * Generates an HTML <img> tag with WebP support and fallback to the original image format.

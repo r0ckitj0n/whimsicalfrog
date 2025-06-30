@@ -18,31 +18,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit(0);
 }
 
-// Check admin authentication
-$isAdmin = false;
-
-// Parse JSON input for admin token
-$input = json_decode(file_get_contents('php://input'), true) ?? [];
-$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
-
-if ($adminToken === 'whimsical_admin_2024') {
-    $isAdmin = true;
-} else {
-    try {
-        SessionManager::start();
-        $userData = SessionManager::get('user');
-        $isAdmin = $userData && strtolower($userData['role'] ?? '') === 'admin';
-    } catch (Exception $e) {
-        Logger::error('Dashboard sections session check failed', ['error' => $e->getMessage()]);
-    }
-}
-
-if (!$isAdmin) {
-    Response::error('Admin access required', 403);
-}
+// Check admin authentication using centralized helper
+AuthHelper::requireAdmin();
 
 try {
     $db = Database::getInstance();
+    
+    // Parse JSON input for action and data
+    $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $action = $_GET['action'] ?? $_POST['action'] ?? $input['action'] ?? 'get_sections';
     
     switch ($action) {

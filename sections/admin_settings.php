@@ -6382,7 +6382,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- System Configuration Modal -->
 <div id="systemConfigModal" class="admin-modal-overlay" style="display: none;" onclick="closeSystemConfigModal()">
-    <div class="admin-modal-content" onclick="event.stopPropagation()">
+    <div class="admin-modal-content system-config-modal" onclick="event.stopPropagation()">
         <!-- Header -->
         <div class="admin-modal-header">
             <h2 class="modal-title">⚙️ System Reference</h2>
@@ -14125,13 +14125,13 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Dashboard Configuration Modal -->
 <div id="dashboardConfigModal" class="admin-modal-overlay dashboard-modal" style="display: none;" onclick="closeDashboardConfigModal()">
-    <div class="admin-modal-content" onclick="event.stopPropagation()" style="max-width: 1400px; max-height: 95vh; width: 90vw;">
+    <div class="admin-modal-content dashboard-config-modal" onclick="event.stopPropagation()">
         <!-- Header -->
         <div class="admin-modal-header">
             <div class="flex items-center justify-between w-full">
                 <div>
                     <h2 class="modal-title">📊 Dashboard Configuration</h2>
-                    <p class="modal-description">Customize your dashboard layout and choose which sections to display</p>
+                    <p class="modal-description">Drag sections between lists to configure your dashboard layout</p>
                 </div>
                 <div class="flex items-center space-x-3">
                     <!-- Auto-save indicator -->
@@ -14144,29 +14144,31 @@ async function saveCartButtonTexts(texts) {
         </div>
         
         <!-- Body -->
-        <div class="modal-body" style="overflow-y: auto; max-height: calc(95vh - 180px);">
+        <div class="modal-body dashboard-config-body">
             <!-- Main Content Layout - Side by Side -->
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div class="dashboard-config-layout">
                 <!-- Current Dashboard Sections -->
-                <div class="settings-current-section">
-                    <div class="settings-section-header">
-                        <h3 class="text-xl font-semibold text-gray-800">Current Dashboard Sections</h3>
-                        <p class="text-gray-600 text-sm mt-1">These sections are currently displayed on your dashboard</p>
+                <div class="dashboard-section-column current-sections">
+                    <div class="section-column-header">
+                        <h3 class="section-column-title">Current Dashboard Sections</h3>
+                        <p class="section-column-description">Drag to reorder • Drop here to add sections</p>
+                        <div class="section-count-badge" id="currentSectionsCount">0 sections</div>
                     </div>
                     
-                    <div id="currentSectionsList" class="settings-section-content">
+                    <div id="currentSectionsList" class="section-drop-zone current-drop-zone" data-zone="current">
                         <!-- Current sections will be loaded here -->
                     </div>
                 </div>
                 
                 <!-- Available Sections -->
-                <div class="settings-available-section">
-                    <div class="settings-section-header">
-                        <h3 class="text-xl font-semibold text-gray-800">Available Sections</h3>
-                        <p class="text-gray-600 text-sm mt-1">Add these sections to your dashboard by clicking the + button</p>
+                <div class="dashboard-section-column available-sections">
+                    <div class="section-column-header">
+                        <h3 class="section-column-title">Available Sections</h3>
+                        <p class="section-column-description">Drag to dashboard • Drop here to remove sections</p>
+                        <div class="section-count-badge" id="availableSectionsCount">0 sections</div>
                     </div>
                     
-                    <div id="availableSectionsList" class="settings-section-content">
+                    <div id="availableSectionsList" class="section-drop-zone available-drop-zone" data-zone="available">
                         <!-- Available sections will be loaded here -->
                     </div>
                 </div>
@@ -14183,7 +14185,7 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Categories Modal -->
 <div id="categoriesModal" class="admin-modal-overlay" style="display: none;" onclick="closeCategoriesModal()">
-    <div class="admin-modal-content" onclick="event.stopPropagation()">
+    <div class="admin-modal-content categories-modal" onclick="event.stopPropagation()">
         <div class="admin-modal-header">
             <h2 class="modal-title">📂 Category Management</h2>
             <button onclick="closeCategoriesModal()" class="modal-close">&times;</button>
@@ -19468,38 +19470,41 @@ async function loadDashboardConfiguration() {
     const currentSectionsDiv = document.getElementById('currentSectionsList');
     const availableSectionsDiv = document.getElementById('availableSectionsList');
     
-    // Reset loading state
-    loadingDiv.innerHTML = `
-        <div class="modal-loading-spinner"></div>
-        <p class="text-gray-600">Loading dashboard configuration...</p>
-    `;
-    
     // Show loading state
     loadingDiv.style.display = 'block';
     currentSectionsDiv.innerHTML = '';
     availableSectionsDiv.innerHTML = '';
     
     try {
-        const response = await fetch('/api/dashboard_sections.php?action=get_sections&admin_token=whimsical_admin_2024');
+        // Load both current sections and available sections
+        const [sectionsResponse, availableResponse] = await Promise.all([
+            fetch('/api/dashboard_sections.php?action=get_sections&admin_token=whimsical_admin_2024'),
+            fetch('/api/dashboard_sections.php?action=get_available_sections&admin_token=whimsical_admin_2024')
+        ]);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (!sectionsResponse.ok || !availableResponse.ok) {
+            throw new Error('Failed to load configuration data');
         }
         
-        const data = await response.json();
+        const sectionsData = await sectionsResponse.json();
+        const availableData = await availableResponse.json();
         
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to load dashboard configuration');
+        if (!sectionsData.success || !availableData.success) {
+            throw new Error('Invalid response from server');
         }
         
         // Hide loading state
         loadingDiv.style.display = 'none';
         
-        // Render current sections
-        renderCurrentSections(data.data.sections, currentSectionsDiv);
+        // Render sections
+        renderCurrentSections(sectionsData.data.sections, currentSectionsDiv);
+        renderAvailableSections(availableData.data.available_sections, availableSectionsDiv);
         
-        // Get and render available sections
-        await loadAvailableSections(availableSectionsDiv);
+        // Update count badges
+        updateSectionCounts();
+        
+        // Initialize drag and drop
+        initializeDragAndDrop();
         
     } catch (error) {
         console.error('Error loading dashboard configuration:', error);
@@ -19519,8 +19524,10 @@ async function loadDashboardConfiguration() {
 function renderCurrentSections(sections, container) {
     if (sections.length === 0) {
         container.innerHTML = `
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p class="text-gray-600">No sections configured yet. Add sections from the available list below.</p>
+            <div class="section-drop-zone-empty">
+                <div class="section-drop-zone-empty-icon">📊</div>
+                <div class="section-drop-zone-empty-text">No sections configured</div>
+                <div class="section-drop-zone-empty-hint">Drag sections from the available list to add them</div>
             </div>
         `;
         return;
@@ -19528,66 +19535,37 @@ function renderCurrentSections(sections, container) {
     
     let html = '';
     
-    sections.forEach((section, index) => {
-        const sectionInfo = section.section_info || {};
-        const category = sectionInfo.category || 'General';
-        const type = sectionInfo.type || 'built-in';
-        
-        html += `
-            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm dashboard-section-item" data-section-key="${section.section_key}">
-                <div class="flex justify-between items-start mb-3">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-2">
-                            <h4 class="font-semibold text-gray-800">${section.display_title}</h4>
-                            <span class="text-xs px-2 py-1 rounded-full ${getCategoryBadgeClass(category)}">${category}</span>
-                            ${type === 'external' ? '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">External</span>' : ''}
+    sections
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+        .forEach((section, index) => {
+            const sectionInfo = section.section_info || {};
+            const category = sectionInfo.category || 'General';
+            const type = sectionInfo.type || 'built-in';
+            
+            html += `
+                <div class="draggable-section-item" draggable="true" data-section-key="${section.section_key}" data-zone="current">
+                    <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+                    <div class="section-item-content">
+                        <div class="section-item-info">
+                            <div class="section-item-title">${section.display_title}</div>
+                            <div class="section-item-description">${section.display_description}</div>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-xs px-2 py-1 rounded-full ${getCategoryBadgeClass(category)}">${category}</span>
+                                ${type === 'external' ? '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">External</span>' : ''}
+                            </div>
                         </div>
-                        <p class="text-sm text-gray-600">${section.display_description}</p>
-                    </div>
-                    <div class="flex items-center gap-2 ml-4">
-                        <div class="flex gap-1">
-                            <button onclick="moveSectionUp('${section.section_key}')" class="p-1 text-gray-400 hover:text-gray-600" ${index === 0 ? 'disabled' : ''}>
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path>
-                                </svg>
-                            </button>
-                            <button onclick="moveSectionDown('${section.section_key}')" class="p-1 text-gray-400 hover:text-gray-600" ${index === sections.length - 1 ? 'disabled' : ''}>
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <button onclick="removeDashboardSection('${section.section_key}')" class="p-1 text-red-400 hover:text-red-600">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-                    <div class="flex items-center gap-4 text-sm">
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" ${section.show_title ? 'checked' : ''} onchange="toggleSectionSetting('${section.section_key}', 'show_title', this.checked)">
-                            <span class="text-gray-600">Show Title</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" ${section.show_description ? 'checked' : ''} onchange="toggleSectionSetting('${section.section_key}', 'show_description', this.checked)">
-                            <span class="text-gray-600">Show Description</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <span class="text-gray-600">Width:</span>
-                            <select onchange="updateSectionWidth('${section.section_key}', this.value)" class="text-xs border border-gray-300 rounded px-2 py-1 bg-white">
-                                <option value="full-width" ${(section.width_class || 'half-width') === 'full-width' ? 'selected' : ''}>Full Width</option>
-                                <option value="half-width" ${(section.width_class || 'half-width') === 'half-width' ? 'selected' : ''}>Half Width</option>
-                                <option value="third-width" ${(section.width_class || 'half-width') === 'third-width' ? 'selected' : ''}>1/3 Width</option>
+                        <div class="section-item-controls">
+                            <select onchange="updateSectionWidth('${section.section_key}', this.value)" 
+                                    class="width-selector" title="Section width">
+                                <option value="full-width" ${(section.width_class || 'half-width') === 'full-width' ? 'selected' : ''}>Full</option>
+                                <option value="half-width" ${(section.width_class || 'half-width') === 'half-width' ? 'selected' : ''}>Half</option>
+                                <option value="third-width" ${(section.width_class || 'half-width') === 'third-width' ? 'selected' : ''}>1/3</option>
                             </select>
-                        </label>
+                        </div>
                     </div>
-                    <div class="text-xs text-gray-400">Order: ${section.display_order}</div>
                 </div>
-            </div>
-        `;
-    });
+            `;
+        });
     
     container.innerHTML = html;
 }
@@ -19625,8 +19603,10 @@ async function loadAvailableSections(container) {
 function renderAvailableSections(sections, container) {
     if (Object.keys(sections).length === 0) {
         container.innerHTML = `
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 col-span-2">
-                <p class="text-gray-600">All available sections are already added to your dashboard!</p>
+            <div class="section-drop-zone-empty">
+                <div class="section-drop-zone-empty-icon">✨</div>
+                <div class="section-drop-zone-empty-text">All sections added!</div>
+                <div class="section-drop-zone-empty-hint">Drag sections here to remove them from dashboard</div>
             </div>
         `;
         return;
@@ -19639,21 +19619,17 @@ function renderAvailableSections(sections, container) {
         const type = section.type || 'built-in';
         
         html += `
-            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                <div class="flex justify-between items-start mb-3">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-2">
-                            <h4 class="font-semibold text-gray-700">${section.title}</h4>
+            <div class="draggable-section-item" draggable="true" data-section-key="${key}" data-zone="available">
+                <div class="drag-handle" title="Drag to dashboard">⋮⋮</div>
+                <div class="section-item-content">
+                    <div class="section-item-info">
+                        <div class="section-item-title">${section.title}</div>
+                        <div class="section-item-description">${section.description}</div>
+                        <div class="flex items-center gap-2 mt-2">
                             <span class="text-xs px-2 py-1 rounded-full ${getCategoryBadgeClass(category)}">${category}</span>
                             ${type === 'external' ? '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">External</span>' : ''}
                         </div>
-                        <p class="text-sm text-gray-600">${section.description}</p>
                     </div>
-                    <button onclick="addDashboardSection('${key}')" class="ml-3 p-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
-                        </svg>
-                    </button>
                 </div>
             </div>
         `;
@@ -19967,6 +19943,263 @@ async function reorderSection(sectionKey, direction) {
     }
 }
 
+// Update section count badges
+function updateSectionCounts() {
+    const currentCount = document.querySelectorAll('#currentSectionsList .draggable-section-item').length;
+    const availableCount = document.querySelectorAll('#availableSectionsList .draggable-section-item').length;
+    
+    document.getElementById('currentSectionsCount').textContent = `${currentCount} section${currentCount !== 1 ? 's' : ''}`;
+    document.getElementById('availableSectionsCount').textContent = `${availableCount} section${availableCount !== 1 ? 's' : ''}`;
+}
+
+// Initialize drag and drop functionality
+function initializeDragAndDrop() {
+    const dropZones = document.querySelectorAll('.section-drop-zone');
+    const draggableItems = document.querySelectorAll('.draggable-section-item');
+    
+    let draggedElement = null;
+    let draggedData = null;
+    
+    // Add drag event listeners to all draggable items
+    draggableItems.forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            draggedData = {
+                sectionKey: this.dataset.sectionKey,
+                sourceZone: this.dataset.zone
+            };
+            
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        });
+        
+        item.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            draggedElement = null;
+            draggedData = null;
+            
+            // Remove drag-over classes from all drop zones
+            dropZones.forEach(zone => zone.classList.remove('drag-over'));
+        });
+    });
+    
+    // Add drop zone event listeners
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+        });
+        
+        zone.addEventListener('dragleave', function(e) {
+            // Only remove drag-over if we're leaving the drop zone itself, not a child
+            if (!this.contains(e.relatedTarget)) {
+                this.classList.remove('drag-over');
+            }
+        });
+        
+        zone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (!draggedData) return;
+            
+            const targetZone = this.dataset.zone;
+            const sourceZone = draggedData.sourceZone;
+            const sectionKey = draggedData.sectionKey;
+            
+            // Handle the drop based on source and target zones
+            if (sourceZone === targetZone) {
+                // Same zone - handle reordering
+                if (targetZone === 'current') {
+                    handleReorder(sectionKey, this, draggedElement);
+                }
+            } else {
+                // Different zones - handle move
+                if (sourceZone === 'available' && targetZone === 'current') {
+                    // Add section to dashboard
+                    handleAddSection(sectionKey);
+                } else if (sourceZone === 'current' && targetZone === 'available') {
+                    // Remove section from dashboard
+                    handleRemoveSection(sectionKey);
+                }
+            }
+        });
+    });
+}
+
+// Handle reordering within current sections
+async function handleReorder(sectionKey, dropZone, draggedElement) {
+    const allItems = Array.from(dropZone.querySelectorAll('.draggable-section-item'));
+    const draggedIndex = allItems.indexOf(draggedElement);
+    
+    // Find the drop position based on mouse position
+    const afterElement = getDragAfterElement(dropZone, event.clientY);
+    let newIndex;
+    
+    if (afterElement == null) {
+        newIndex = allItems.length - 1;
+    } else {
+        newIndex = allItems.indexOf(afterElement);
+    }
+    
+    if (draggedIndex !== newIndex) {
+        // Update the order and save
+        await updateSectionOrder(sectionKey, newIndex + 1);
+    }
+}
+
+// Handle adding section to dashboard
+async function handleAddSection(sectionKey) {
+    try {
+        showAutoSaveIndicator();
+        
+        const response = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'add_section',
+                section_key: sectionKey,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to add section');
+        }
+        
+        // Reload the configuration
+        await loadDashboardConfiguration();
+        hideAutoSaveIndicator(true);
+        
+    } catch (error) {
+        console.error('Error adding section:', error);
+        hideAutoSaveIndicator(false);
+        alert('Failed to add section: ' + error.message);
+    }
+}
+
+// Handle removing section from dashboard
+async function handleRemoveSection(sectionKey) {
+    try {
+        showAutoSaveIndicator();
+        
+        const response = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'remove_section',
+                section_key: sectionKey,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to remove section');
+        }
+        
+        // Reload the configuration
+        await loadDashboardConfiguration();
+        hideAutoSaveIndicator(true);
+        
+    } catch (error) {
+        console.error('Error removing section:', error);
+        hideAutoSaveIndicator(false);
+        alert('Failed to remove section: ' + error.message);
+    }
+}
+
+// Update section order
+async function updateSectionOrder(sectionKey, newOrder) {
+    try {
+        const response = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'reorder_section',
+                section_key: sectionKey,
+                new_order: newOrder,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to reorder section');
+        }
+        
+        // Reload configuration to show new order
+        await loadDashboardConfiguration();
+        
+    } catch (error) {
+        console.error('Error reordering section:', error);
+        alert('Failed to reorder section: ' + error.message);
+    }
+}
+
+// Get the element after which to insert the dragged element
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable-section-item:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Enhanced auto-save indicator functions
+function showAutoSaveIndicator() {
+    const indicator = document.getElementById('dashboardAutoSaveIndicator');
+    indicator.textContent = '💾 Auto-saving...';
+    indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm';
+    indicator.style.display = 'block';
+}
+
+function hideAutoSaveIndicator(success = true) {
+    const indicator = document.getElementById('dashboardAutoSaveIndicator');
+    if (success) {
+        indicator.textContent = '✅ Saved';
+        indicator.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm';
+    } else {
+        indicator.textContent = '❌ Save Failed';
+        indicator.className = 'px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm';
+    }
+    
+    setTimeout(() => {
+        indicator.style.display = 'none';
+    }, 2000);
+}
+
 // Handle dashboard config modal opening from URL hash
 document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash;
@@ -20184,5 +20417,265 @@ document.addEventListener('DOMContentLoaded', function() {
     .settings-disabled-section {
         margin-bottom: 1rem;
     }
+}
+
+/* Dashboard Configuration Modal Specific Styling */
+.dashboard-config-modal {
+    max-width: 1200px !important;
+    width: 95vw !important;
+    max-height: 90vh !important;
+    min-height: 600px;
+}
+
+.dashboard-config-body {
+    overflow-y: auto;
+    max-height: calc(90vh - 120px);
+    padding: 1.5rem;
+}
+
+.dashboard-config-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    min-height: 500px;
+}
+
+.dashboard-section-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+}
+
+.section-column-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem 0.75rem 0 0;
+    padding: 1rem;
+    margin-bottom: 0;
+}
+
+.section-column-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+}
+
+.section-column-description {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0 0 0.5rem 0;
+}
+
+.section-count-badge {
+    background: #3b82f6;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    display: inline-block;
+    font-weight: 500;
+}
+
+.section-drop-zone {
+    flex: 1;
+    min-height: 400px;
+    border: 2px dashed #cbd5e1;
+    border-top: none;
+    border-radius: 0 0 0.75rem 0.75rem;
+    padding: 1rem;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.current-drop-zone {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+}
+
+.available-drop-zone {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #fefbf3 0%, #fef7ed 100%);
+}
+
+.section-drop-zone.drag-over {
+    border-style: solid;
+    border-width: 3px;
+    background: rgba(59, 130, 246, 0.1);
+    border-color: #3b82f6;
+}
+
+.current-drop-zone.drag-over {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+}
+
+.available-drop-zone.drag-over {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: #f59e0b;
+}
+
+/* Draggable Section Items */
+.draggable-section-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: grab;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.draggable-section-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-color: #3b82f6;
+}
+
+.draggable-section-item.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+    cursor: grabbing;
+    z-index: 1000;
+}
+
+.draggable-section-item .drag-handle {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    color: #9ca3af;
+    cursor: grab;
+    padding: 0.25rem;
+}
+
+.draggable-section-item .drag-handle:hover {
+    color: #3b82f6;
+}
+
+.section-item-content {
+    display: flex;
+    align-items: start;
+    gap: 0.75rem;
+}
+
+.section-item-info {
+    flex: 1;
+}
+
+.section-item-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.section-item-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.section-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.width-selector {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background: white;
+    cursor: pointer;
+}
+
+.width-selector:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* Empty state styling */
+.section-drop-zone-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.section-drop-zone-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.section-drop-zone-empty-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.section-drop-zone-empty-hint {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+/* Responsive adjustments for dashboard config */
+@media (max-width: 1023px) {
+    .dashboard-config-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .dashboard-config-modal {
+        width: 98vw !important;
+        max-width: none !important;
+    }
+    
+    .dashboard-section-column {
+        min-height: 400px;
+    }
+    
+    .section-drop-zone {
+        min-height: 300px;
+    }
+}
+
+/* Improved modal sizing for other settings modals */
+.admin-modal-content {
+    max-width: fit-content;
+    width: auto;
+    min-width: 600px;
+    max-width: 90vw;
+}
+
+/* Specific sizing for different modal types */
+.admin-modal-content.categories-modal {
+    max-width: 800px;
+}
+
+.admin-modal-content.room-settings-modal {
+    max-width: 900px;
+}
+
+.admin-modal-content.global-css-modal {
+    max-width: 1000px;
+}
+
+.admin-modal-content.website-config-modal {
+    max-width: 1100px;
+}
+
+.admin-modal-content.business-settings-modal {
+    max-width: 1000px;
+}
+
+.admin-modal-content.system-config-modal {
+    max-width: 1000px;
 }
 </style>

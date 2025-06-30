@@ -13,6 +13,13 @@
         <p class="section-description">Organize products, categories, and room content</p>
       </div>
       <div class="section-content">
+        <button id="dashboardConfigBtn" onclick="openDashboardConfigModal()" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+          </svg>
+          <span class="button-text">Dashboard Configuration</span>
+        </button>
+        
         <button id="categoriesBtn" onclick="openCategoriesModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
@@ -14089,6 +14096,51 @@ async function saveCartButtonTexts(texts) {
     </div>
 </div>
 
+<!-- Dashboard Configuration Modal -->
+<div id="dashboardConfigModal" class="admin-modal-overlay dashboard-modal" style="display: none;" onclick="closeDashboardConfigModal()">
+    <div class="admin-modal-content" onclick="event.stopPropagation()" style="max-width: 1000px; max-height: 90vh;">
+        <!-- Header -->
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📊 Dashboard Configuration</h2>
+            <p class="modal-description">Customize your dashboard layout and choose which sections to display</p>
+            <button onclick="closeDashboardConfigModal()" class="modal-close">&times;</button>
+        </div>
+        
+        <!-- Body -->
+        <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
+            <!-- Current Dashboard Sections -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Current Dashboard Sections</h3>
+                    <button onclick="saveDashboardConfig()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                        💾 Save Configuration
+                    </button>
+                </div>
+                
+                <div id="currentSectionsList" class="space-y-3">
+                    <!-- Current sections will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Available Sections -->
+            <div class="border-t pt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Available Sections</h3>
+                <p class="text-gray-600 mb-4">Add these sections to your dashboard by clicking the + button</p>
+                
+                <div id="availableSectionsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Available sections will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="dashboardConfigLoading" class="modal-loading">
+                <div class="modal-loading-spinner"></div>
+                <p class="text-gray-600">Loading dashboard configuration...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Categories Modal -->
 <div id="categoriesModal" class="admin-modal-overlay" style="display: none;" onclick="closeCategoriesModal()">
     <div class="admin-modal-content" onclick="event.stopPropagation()">
@@ -19311,6 +19363,426 @@ if (!document.querySelector('style[data-cleanup-styles]')) {
     `;
     document.head.appendChild(style);
 }
+
+// Dashboard Configuration Functions
+function openDashboardConfigModal() {
+    document.getElementById('dashboardConfigModal').style.display = 'block';
+    loadDashboardConfiguration();
+}
+
+function closeDashboardConfigModal() {
+    document.getElementById('dashboardConfigModal').style.display = 'none';
+}
+
+async function loadDashboardConfiguration() {
+    const loadingDiv = document.getElementById('dashboardConfigLoading');
+    const currentSectionsDiv = document.getElementById('currentSectionsList');
+    const availableSectionsDiv = document.getElementById('availableSectionsList');
+    
+    // Show loading state
+    loadingDiv.style.display = 'block';
+    currentSectionsDiv.innerHTML = '';
+    availableSectionsDiv.innerHTML = '';
+    
+    try {
+        const response = await fetch('/api/dashboard_sections.php?action=get_sections&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load dashboard configuration');
+        }
+        
+        // Hide loading state
+        loadingDiv.style.display = 'none';
+        
+        // Render current sections
+        renderCurrentSections(data.data.sections, currentSectionsDiv);
+        
+        // Get and render available sections
+        await loadAvailableSections(availableSectionsDiv);
+        
+    } catch (error) {
+        console.error('Error loading dashboard configuration:', error);
+        loadingDiv.innerHTML = `
+            <div class="modal-loading">
+                <div class="text-red-500 mb-3">⚠️</div>
+                <p class="text-red-600">Failed to load dashboard configuration</p>
+                <p class="text-sm text-gray-500">${error.message}</p>
+                <button onclick="loadDashboardConfiguration()" class="mt-3 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+function renderCurrentSections(sections, container) {
+    if (sections.length === 0) {
+        container.innerHTML = `
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p class="text-gray-600">No sections configured yet. Add sections from the available list below.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    sections.forEach((section, index) => {
+        const sectionInfo = section.section_info || {};
+        const category = sectionInfo.category || 'General';
+        const type = sectionInfo.type || 'built-in';
+        
+        html += `
+            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm dashboard-section-item" data-section-key="${section.section_key}">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h4 class="font-semibold text-gray-800">${section.display_title}</h4>
+                            <span class="text-xs px-2 py-1 rounded-full ${getCategoryBadgeClass(category)}">${category}</span>
+                            ${type === 'external' ? '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">External</span>' : ''}
+                        </div>
+                        <p class="text-sm text-gray-600">${section.display_description}</p>
+                    </div>
+                    <div class="flex items-center gap-2 ml-4">
+                        <div class="flex gap-1">
+                            <button onclick="moveSectionUp('${section.section_key}')" class="p-1 text-gray-400 hover:text-gray-600" ${index === 0 ? 'disabled' : ''}>
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <button onclick="moveSectionDown('${section.section_key}')" class="p-1 text-gray-400 hover:text-gray-600" ${index === sections.length - 1 ? 'disabled' : ''}>
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <button onclick="removeDashboardSection('${section.section_key}')" class="p-1 text-red-400 hover:text-red-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                    <div class="flex items-center gap-4 text-sm">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" ${section.show_title ? 'checked' : ''} onchange="toggleSectionSetting('${section.section_key}', 'show_title', this.checked)">
+                            <span class="text-gray-600">Show Title</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" ${section.show_description ? 'checked' : ''} onchange="toggleSectionSetting('${section.section_key}', 'show_description', this.checked)">
+                            <span class="text-gray-600">Show Description</span>
+                        </label>
+                    </div>
+                    <div class="text-xs text-gray-400">Order: ${section.display_order}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+async function loadAvailableSections(container) {
+    try {
+        const response = await fetch('/api/dashboard_sections.php?action=get_available_sections&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load available sections');
+        }
+        
+        renderAvailableSections(data.data.available_sections, container);
+        
+    } catch (error) {
+        console.error('Error loading available sections:', error);
+        container.innerHTML = `
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                <p class="text-red-600">Failed to load available sections</p>
+                <p class="text-sm text-gray-500">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function renderAvailableSections(sections, container) {
+    if (Object.keys(sections).length === 0) {
+        container.innerHTML = `
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 col-span-2">
+                <p class="text-gray-600">All available sections are already added to your dashboard!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    Object.entries(sections).forEach(([key, section]) => {
+        const category = section.category || 'General';
+        const type = section.type || 'built-in';
+        
+        html += `
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h4 class="font-semibold text-gray-700">${section.title}</h4>
+                            <span class="text-xs px-2 py-1 rounded-full ${getCategoryBadgeClass(category)}">${category}</span>
+                            ${type === 'external' ? '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">External</span>' : ''}
+                        </div>
+                        <p class="text-sm text-gray-600">${section.description}</p>
+                    </div>
+                    <button onclick="addDashboardSection('${key}')" class="ml-3 p-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function getCategoryBadgeClass(category) {
+    const categoryColors = {
+        'Analytics': 'bg-purple-100 text-purple-700',
+        'Orders': 'bg-blue-100 text-blue-700',
+        'Inventory': 'bg-green-100 text-green-700',
+        'Customers': 'bg-yellow-100 text-yellow-700',
+        'Marketing': 'bg-pink-100 text-pink-700',
+        'General': 'bg-gray-100 text-gray-700'
+    };
+    return categoryColors[category] || categoryColors['General'];
+}
+
+async function addDashboardSection(sectionKey) {
+    try {
+        const response = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'add_section',
+                section_key: sectionKey,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to add section');
+        }
+        
+        // Reload the configuration to show the updated state
+        await loadDashboardConfiguration();
+        
+        // Show success message
+        if (typeof window.showSuccess === 'function') {
+            window.showSuccess('Section added to dashboard successfully!');
+        }
+        
+    } catch (error) {
+        console.error('Error adding dashboard section:', error);
+        alert('Failed to add section: ' + error.message);
+    }
+}
+
+async function removeDashboardSection(sectionKey) {
+    if (!confirm('Are you sure you want to remove this section from your dashboard?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'remove_section',
+                section_key: sectionKey,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to remove section');
+        }
+        
+        // Reload the configuration to show the updated state  
+        await loadDashboardConfiguration();
+        
+        // Show success message
+        if (typeof window.showSuccess === 'function') {
+            window.showSuccess('Section removed from dashboard successfully!');
+        }
+        
+    } catch (error) {
+        console.error('Error removing dashboard section:', error);
+        alert('Failed to remove section: ' + error.message);
+    }
+}
+
+function toggleSectionSetting(sectionKey, setting, value) {
+    // Store the change for batch save
+    if (!window.dashboardChanges) {
+        window.dashboardChanges = {};
+    }
+    
+    if (!window.dashboardChanges[sectionKey]) {
+        window.dashboardChanges[sectionKey] = {};
+    }
+    
+    window.dashboardChanges[sectionKey][setting] = value;
+    
+    // Auto-save after a brief delay
+    clearTimeout(window.dashboardSaveTimeout);
+    window.dashboardSaveTimeout = setTimeout(() => {
+        saveDashboardConfig();
+    }, 1000);
+}
+
+async function saveDashboardConfig() {
+    // If there are no pending changes, just reload current config
+    if (!window.dashboardChanges || Object.keys(window.dashboardChanges).length === 0) {
+        await loadDashboardConfiguration();
+        return;
+    }
+    
+    try {
+        // Get current sections and apply changes
+        const response = await fetch('/api/dashboard_sections.php?action=get_sections&admin_token=whimsical_admin_2024');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error('Failed to get current configuration');
+        }
+        
+        // Apply pending changes
+        const updatedSections = data.data.sections.map(section => {
+            if (window.dashboardChanges[section.section_key]) {
+                return { ...section, ...window.dashboardChanges[section.section_key] };
+            }
+            return section;
+        });
+        
+        // Save updated configuration
+        const saveResponse = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'update_sections',
+                sections: updatedSections,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const saveData = await saveResponse.json();
+        
+        if (!saveData.success) {
+            throw new Error(saveData.message || 'Failed to save configuration');
+        }
+        
+        // Clear pending changes
+        window.dashboardChanges = {};
+        
+        // Reload configuration
+        await loadDashboardConfiguration();
+        
+        // Show success message
+        if (typeof window.showSuccess === 'function') {
+            window.showSuccess('Dashboard configuration saved successfully!');
+        }
+        
+    } catch (error) {
+        console.error('Error saving dashboard configuration:', error);
+        alert('Failed to save dashboard configuration: ' + error.message);
+    }
+}
+
+async function moveSectionUp(sectionKey) {
+    await reorderSection(sectionKey, -1);
+}
+
+async function moveSectionDown(sectionKey) {
+    await reorderSection(sectionKey, 1);
+}
+
+async function reorderSection(sectionKey, direction) {
+    try {
+        const response = await fetch('/api/dashboard_sections.php?action=get_sections&admin_token=whimsical_admin_2024');  
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error('Failed to get current configuration');
+        }
+        
+        const sections = [...data.data.sections];
+        const currentIndex = sections.findIndex(s => s.section_key === sectionKey);
+        
+        if (currentIndex === -1) return;
+        
+        const newIndex = currentIndex + direction;
+        if (newIndex < 0 || newIndex >= sections.length) return;
+        
+        // Swap sections
+        [sections[currentIndex], sections[newIndex]] = [sections[newIndex], sections[currentIndex]];
+        
+        // Update display orders
+        sections.forEach((section, index) => {
+            section.display_order = index + 1;
+        });
+        
+        // Save the new order
+        const saveResponse = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'update_sections',
+                sections: sections,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const saveData = await saveResponse.json();
+        
+        if (!saveData.success) {
+            throw new Error(saveData.message || 'Failed to reorder sections');
+        }
+        
+        // Reload configuration
+        await loadDashboardConfiguration();
+        
+    } catch (error) {
+        console.error('Error reordering section:', error);
+        alert('Failed to reorder section: ' + error.message);
+    }
+}
+
+// Handle dashboard config modal opening from URL hash
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash;
+    if (hash === '#dashboard_config') {
+        // Clear the hash
+        window.history.replaceState({}, '', window.location.pathname + window.location.search);
+        
+        // Open dashboard config modal
+        setTimeout(() => {
+            openDashboardConfigModal();
+        }, 100);
+    }
+});
 </script>
 
 <!-- System Cleanup Modal -->

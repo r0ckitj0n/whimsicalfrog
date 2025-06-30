@@ -129,7 +129,7 @@ $adminRole = $userData['role'] ?? 'Administrator';
                 include 'sections/order_fulfillment.php';
                 break;
             default:
-                include 'sections/order_fulfillment.php';
+                include 'sections/admin_dashboard.php';
                 break;
         }
         ?>

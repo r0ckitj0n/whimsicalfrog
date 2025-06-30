@@ -289,123 +289,51 @@ if (empty($dashboardConfig)) {
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'order_fulfillment'): ?>
-                        <!-- Order Fulfillment Section - Comprehensive Version -->
-                        <div class="space-y-4">
+                        <!-- Order Fulfillment Section - Links to Full Page -->
+                        <div class="space-y-3">
                             <?php 
-                            // Get comprehensive fulfillment data
-                            $fulfillmentOrders = $db->query('
-                                SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
-                                    (SELECT SUM(quantity) FROM order_items WHERE orderId = o.id) as item_count
-                                FROM orders o 
-                                JOIN users u ON o.userId = u.id 
-                                WHERE o.status = "Processing"
-                                ORDER BY o.date ASC 
-                                LIMIT 5
-                            ')->fetchAll();
-                            
                             $fulfillmentStats = $db->query('SELECT 
                                 COUNT(CASE WHEN status = "Processing" THEN 1 END) as processing,
                                 COUNT(CASE WHEN status = "Shipped" THEN 1 END) as shipped,
                                 COUNT(CASE WHEN status = "Delivered" THEN 1 END) as delivered,
-                                COUNT(CASE WHEN status = "Pending" THEN 1 END) as pending
+                                COUNT(CASE WHEN status = "Processing" AND DATE(date) <= CURDATE() - INTERVAL 2 DAY THEN 1 END) as urgent
                                 FROM orders WHERE DATE(date) >= CURDATE() - INTERVAL 30 DAY')->fetch();
-                            
-                            // Helper function for address formatting (same as order_fulfillment.php)
-                            function formatDashboardAddress($order) {
-                                if (!empty($order['shippingAddress'])) {
-                                    $decoded = json_decode($order['shippingAddress'], true);
-                                    if ($decoded) {
-                                        $parts = array_filter([
-                                            $decoded['addressLine1'] ?? '',
-                                            $decoded['city'] ?? '',
-                                            $decoded['state'] ?? '',
-                                            $decoded['zipCode'] ?? ''
-                                        ]);
-                                        return implode(', ', $parts);
-                                    }
-                                    return $order['shippingAddress'];
-                                }
-                                
-                                $parts = array_filter([
-                                    $order['addressLine1'] ?? '',
-                                    $order['city'] ?? '',
-                                    $order['state'] ?? '',
-                                    $order['zipCode'] ?? ''
-                                ]);
-                                return implode(', ', $parts) ?: 'N/A';
-                            }
+                            $urgentOrders = $db->query('SELECT id, total, date, status FROM orders WHERE status = "Processing" ORDER BY date ASC LIMIT 3')->fetchAll();
                             ?>
-                            
-                            <!-- Quick Stats -->
                             <div class="grid grid-cols-2 gap-2 mb-3">
-                                <div class="bg-yellow-50 p-2 rounded text-center">
-                                    <div class="text-lg font-bold text-yellow-600"><?= $fulfillmentStats['processing'] ?? 0 ?></div>
-                                    <div class="text-xs text-yellow-800">Processing</div>
+                                <div class="bg-yellow-50 border border-yellow-200 rounded p-2 text-center">
+                                    <div class="text-lg font-bold text-yellow-800"><?= $fulfillmentStats['processing'] ?></div>
+                                    <div class="text-xs text-yellow-600">Processing</div>
                                 </div>
-                                <div class="bg-blue-50 p-2 rounded text-center">
-                                    <div class="text-lg font-bold text-blue-600"><?= $fulfillmentStats['pending'] ?? 0 ?></div>
-                                    <div class="text-xs text-blue-800">Pending</div>
+                                <div class="bg-red-50 border border-red-200 rounded p-2 text-center">
+                                    <div class="text-lg font-bold text-red-800"><?= $fulfillmentStats['urgent'] ?></div>
+                                    <div class="text-xs text-red-600">Urgent Orders</div>
                                 </div>
                             </div>
                             
-                            <!-- Processing Orders Table -->
-                            <?php if (!empty($fulfillmentOrders)): ?>
-                                <div class="bg-white border rounded-lg overflow-hidden">
-                                    <div class="bg-gray-50 px-3 py-2 border-b">
-                                        <h4 class="text-sm font-medium text-gray-700">🚚 Orders Needing Fulfillment</h4>
+                            <div class="bg-white border rounded-lg p-3">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-2">🚚 Next Orders to Process</h4>
+                                <?php if (!empty($urgentOrders)): ?>
+                                    <div class="space-y-1">
+                                        <?php foreach ($urgentOrders as $order): ?>
+                                        <div class="flex justify-between items-center text-xs py-1 px-2 bg-gray-50 rounded">
+                                            <span class="font-mono">#<?= htmlspecialchars($order['id']) ?></span>
+                                            <span class="font-semibold">$<?= number_format($order['total'], 2) ?></span>
+                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
-                                    <div class="overflow-x-auto">
-                                        <table class="w-full text-xs">
-                                            <thead class="bg-gray-50">
-                                                <tr>
-                                                    <th class="px-2 py-1 text-left font-medium text-gray-600">Order</th>
-                                                    <th class="px-2 py-1 text-left font-medium text-gray-600">Customer</th>
-                                                    <th class="px-2 py-1 text-left font-medium text-gray-600">Items</th>
-                                                    <th class="px-2 py-1 text-left font-medium text-gray-600">Total</th>
-                                                    <th class="px-2 py-1 text-left font-medium text-gray-600">Status</th>
-                                                    <th class="px-2 py-1 text-left font-medium text-gray-600">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($fulfillmentOrders as $order): ?>
-                                                <tr class="border-t hover:bg-gray-50">
-                                                    <td class="px-2 py-2 font-mono text-xs">#<?= htmlspecialchars($order['id'] ?? '') ?></td>
-                                                    <td class="px-2 py-2"><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
-                                                    <td class="px-2 py-2 text-center"><?= $order['item_count'] ?? 0 ?></td>
-                                                    <td class="px-2 py-2 font-semibold">$<?= number_format($order['total'] ?? 0, 2) ?></td>
-                                                    <td class="px-2 py-2">
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                            <?= htmlspecialchars($order['status'] ?? 'Processing') ?>
-                                                        </span>
-                                                    </td>
-                                                    <td class="px-2 py-2">
-                                                        <a href="/?page=admin&section=order_fulfillment&view=<?= urlencode($order['id']) ?>" 
-                                                           class="text-blue-600 hover:text-blue-800 font-medium" title="Process Order">
-                                                            Process →
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
+                                <?php else: ?>
+                                    <div class="text-center text-gray-500 py-2">
+                                        <div class="text-2xl">✅</div>
+                                        <div class="text-xs">All caught up!</div>
                                     </div>
-                                </div>
-                            <?php else: ?>
-                                <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                                    <div class="text-green-600 text-sm">✅ All caught up!</div>
-                                    <div class="text-green-700 text-xs mt-1">No orders need immediate fulfillment</div>
-                                </div>
-                            <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
                             
-                            <!-- Quick Actions -->
-                            <div class="grid grid-cols-2 gap-2 pt-2">
+                            <div class="text-center">
                                 <a href="/?page=admin&section=order_fulfillment" 
-                                   class="inline-flex items-center justify-center px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg transition-colors">
-                                    🚚 View All Orders
-                                </a>
-                                <a href="/?page=admin&section=order_fulfillment&filter_status=Processing" 
-                                   class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
-                                    ⚡ Processing Only
+                                   class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors font-medium">
+                                    <span class="mr-2">🚚</span> Open Order Fulfillment
                                 </a>
                             </div>
                         </div>

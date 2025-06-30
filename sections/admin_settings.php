@@ -14072,17 +14072,44 @@ async function saveCartButtonTexts(texts) {
             
             <!-- Item Selection -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select Items for Sale</label>
-                <div class="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
-                    <div class="flex items-center mb-3">
-                        <input type="checkbox" id="selectAllItems" class="mr-2 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
-                        <label for="selectAllItems" class="text-sm font-medium text-gray-700">Select All Items</label>
+                <label class="block text-sm font-medium text-gray-700 mb-4">Select Items for Sale</label>
+                
+                <!-- Quick Selection Controls -->
+                <div class="mb-4 flex items-center space-x-4">
+                    <button type="button" onclick="selectAllItems()" class="px-3 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded border border-green-300">
+                        ✓ Select All
+                    </button>
+                    <button type="button" onclick="deselectAllItems()" class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 rounded border border-gray-300">
+                        ✗ Deselect All
+                    </button>
+                </div>
+                
+                <!-- Items Layout -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 max-h-80 overflow-y-auto">
+                    <!-- Selected Items -->
+                    <div class="settings-selected-items">
+                        <div class="settings-section-header">
+                            <h4 class="text-lg font-semibold text-gray-800">✅ Selected Items</h4>
+                            <p class="text-gray-600 text-sm mt-1">These items will be included in the sale</p>
+                        </div>
+                        <div id="selectedItemsList" class="settings-section-content" style="min-height: 200px;">
+                            <!-- Selected items will be shown here -->
+                        </div>
                     </div>
-                    <div id="itemsList" class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <!-- Items will be loaded here -->
+                    
+                    <!-- Available Items -->
+                    <div class="settings-unselected-items">
+                        <div class="settings-section-header">
+                            <h4 class="text-lg font-semibold text-gray-800">📦 Available Items</h4>
+                            <p class="text-gray-600 text-sm mt-1">Click to add items to the sale</p>
+                        </div>
+                        <div id="availableItemsList" class="settings-section-content" style="min-height: 200px;">
+                            <!-- Available items will be shown here -->
+                        </div>
                     </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-2">Select which items will be included in this sale. Only selected items will show the discounted price.</p>
+                
+                <p class="text-xs text-gray-500 mt-3 text-center">Only selected items will show the discounted price to customers</p>
             </div>
             
             <!-- Form Actions -->
@@ -14118,25 +14145,25 @@ async function saveCartButtonTexts(texts) {
             <!-- Main Content Layout - Side by Side -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 <!-- Current Dashboard Sections -->
-                <div class="space-y-4">
-                    <div class="border-b pb-3">
+                <div class="settings-current-section">
+                    <div class="settings-section-header">
                         <h3 class="text-xl font-semibold text-gray-800">Current Dashboard Sections</h3>
                         <p class="text-gray-600 text-sm mt-1">These sections are currently displayed on your dashboard</p>
                     </div>
                     
-                    <div id="currentSectionsList" class="space-y-3 min-h-[300px]">
+                    <div id="currentSectionsList" class="settings-section-content">
                         <!-- Current sections will be loaded here -->
                     </div>
                 </div>
                 
                 <!-- Available Sections -->
-                <div class="space-y-4">
-                    <div class="border-b pb-3">
+                <div class="settings-available-section">
+                    <div class="settings-section-header">
                         <h3 class="text-xl font-semibold text-gray-800">Available Sections</h3>
                         <p class="text-gray-600 text-sm mt-1">Add these sections to your dashboard by clicking the + button</p>
                     </div>
                     
-                    <div id="availableSectionsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="availableSectionsList" class="settings-section-content">
                         <!-- Available sections will be loaded here -->
                     </div>
                 </div>
@@ -14472,31 +14499,80 @@ async function loadAvailableItems() {
     }
 }
 
-// Display items list for selection
+// Display items list for selection in two sections
 function displayItemsList(items, selectedItems = []) {
-    const itemsList = document.getElementById('itemsList');
+    const selectedItemsList = document.getElementById('selectedItemsList');
+    const availableItemsList = document.getElementById('availableItemsList');
     
-    itemsList.innerHTML = items.map(item => {
-        const isSelected = selectedItems.includes(item.sku);
-        return `
-            <div class="flex items-center">
-                <input type="checkbox" id="item_${item.sku}" value="${item.sku}" 
-                       ${isSelected ? 'checked' : ''} 
-                       class="sale-item-checkbox mr-2 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
-                <label for="item_${item.sku}" class="text-sm text-gray-700 cursor-pointer flex-1">
-                    <span class="font-medium">${item.name}</span>
-                    <span class="text-gray-500 ml-2">($${parseFloat(item.retailPrice).toFixed(2)})</span>
-                </label>
+    const selectedItemsData = items.filter(item => selectedItems.includes(item.sku));
+    const availableItemsData = items.filter(item => !selectedItems.includes(item.sku));
+    
+    // Render selected items
+    selectedItemsList.innerHTML = selectedItemsData.length > 0 ? selectedItemsData.map(item => `
+        <div class="p-3 bg-white rounded border border-green-200 hover:border-green-300 transition-colors cursor-pointer" 
+             onclick="toggleItemSelection('${item.sku}', false)">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-gray-900">${item.name}</div>
+                    <div class="text-sm text-gray-600">$${parseFloat(item.retailPrice).toFixed(2)}</div>
+                </div>
+                <button type="button" class="text-red-600 hover:text-red-800 font-semibold text-lg" title="Remove from sale">
+                    ✗
+                </button>
             </div>
-        `;
-    }).join('');
+        </div>
+    `).join('') : '<div class="text-gray-500 text-center py-8">No items selected for this sale</div>';
     
-    // Add select all functionality
-    const selectAllCheckbox = document.getElementById('selectAllItems');
-    selectAllCheckbox.onchange = function() {
-        const checkboxes = document.querySelectorAll('.sale-item-checkbox');
-        checkboxes.forEach(cb => cb.checked = this.checked);
-    };
+    // Render available items
+    availableItemsList.innerHTML = availableItemsData.length > 0 ? availableItemsData.map(item => `
+        <div class="p-3 bg-white rounded border border-orange-200 hover:border-orange-300 transition-colors cursor-pointer" 
+             onclick="toggleItemSelection('${item.sku}', true)">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-gray-900">${item.name}</div>
+                    <div class="text-sm text-gray-600">$${parseFloat(item.retailPrice).toFixed(2)}</div>
+                </div>
+                <button type="button" class="text-green-600 hover:text-green-800 font-semibold text-lg" title="Add to sale">
+                    ✓
+                </button>
+            </div>
+        </div>
+    `).join('') : '<div class="text-gray-500 text-center py-8">All items are selected for this sale</div>';
+    
+    // Store current selection for form submission
+    window.currentSelectedItems = selectedItems;
+}
+
+// Toggle item selection
+function toggleItemSelection(itemSku, addToSelection) {
+    if (!window.currentSelectedItems) {
+        window.currentSelectedItems = [];
+    }
+    
+    if (addToSelection) {
+        if (!window.currentSelectedItems.includes(itemSku)) {
+            window.currentSelectedItems.push(itemSku);
+        }
+    } else {
+        window.currentSelectedItems = window.currentSelectedItems.filter(sku => sku !== itemSku);
+    }
+    
+    // Refresh the display
+    displayItemsList(allAvailableItems, window.currentSelectedItems);
+}
+
+// Select all items
+function selectAllItems() {
+    if (allAvailableItems) {
+        window.currentSelectedItems = allAvailableItems.map(item => item.sku);
+        displayItemsList(allAvailableItems, window.currentSelectedItems);
+    }
+}
+
+// Deselect all items
+function deselectAllItems() {
+    window.currentSelectedItems = [];
+    displayItemsList(allAvailableItems, window.currentSelectedItems);
 }
 
 // Load sale data for editing
@@ -14555,7 +14631,7 @@ document.getElementById('saleForm').addEventListener('submit', async function(e)
     e.preventDefault();
     
     const formData = new FormData(this);
-    const selectedItems = Array.from(document.querySelectorAll('.sale-item-checkbox:checked')).map(cb => cb.value);
+    const selectedItems = window.currentSelectedItems || [];
     
     const saleData = {
         name: formData.get('saleName') || document.getElementById('saleName').value,
@@ -19921,3 +19997,126 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Database-Driven Tooltip System is loaded globally in index.php -->
+
+<style>
+/* Settings Section Styling - Reusable across modals */
+.settings-current-section {
+    background: linear-gradient(135deg, #f0f9f4 0%, #ecfdf5 100%);
+    border: 1px solid #d1fae5;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.settings-available-section {
+    background: linear-gradient(135deg, #fef3e2 0%, #fef7ed 100%);
+    border: 1px solid #fed7aa;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.settings-current-section:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.settings-available-section:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.settings-section-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.settings-section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 300px;
+}
+
+.settings-section-content > div {
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
+}
+
+.settings-section-content > div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* Current section items - green accent */
+.settings-current-section .settings-section-content > div {
+    border-color: #d1fae5;
+}
+
+.settings-current-section .settings-section-content > div:hover {
+    border-color: #a7f3d0;
+}
+
+/* Available section items - orange accent */
+.settings-available-section .settings-section-content > div {
+    border-color: #fed7aa;
+}
+
+.settings-available-section .settings-section-content > div:hover {
+    border-color: #fdba74;
+}
+
+/* Selected/Active items styling for other modals */
+.settings-selected-items {
+    background: linear-gradient(135deg, #f0f9f4 0%, #ecfdf5 100%);
+    border: 1px solid #d1fae5;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-unselected-items {
+    background: linear-gradient(135deg, #fef3e2 0%, #fef7ed 100%);
+    border: 1px solid #fed7aa;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Alternative blue styling for enabled/disabled items */
+.settings-enabled-section {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-disabled-section {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1279px) {
+    .settings-current-section,
+    .settings-available-section,
+    .settings-selected-items,
+    .settings-unselected-items,
+    .settings-enabled-section,
+    .settings-disabled-section {
+        margin-bottom: 1rem;
+    }
+}
+</style>

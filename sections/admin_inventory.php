@@ -4567,16 +4567,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Auto fetch SKU when category changes (add mode only)
+    // Auto fetch SKU when category or attributes change (add mode only)
     const catSelect=document.getElementById('categoryEdit');
+    const genderSelect=document.getElementById('genderEdit');
     const skuInput=document.getElementById('skuEdit');
+    
     if(catSelect&&skuInput){
-        catSelect.addEventListener('change',()=>{
-            const cat=catSelect.value;
-            if(!cat){ skuInput.value=''; return; }
-            fetch('/api/next_sku.php?cat='+encodeURIComponent(cat))
-              .then(r=>r.json()).then(d=>{ if(d.success){ skuInput.value=d.sku; } });
-        });
+        // Function to generate enhanced SKU
+        function generateEnhancedSKU() {
+            const cat = catSelect.value;
+            if (!cat) { 
+                skuInput.value = ''; 
+                return; 
+            }
+            
+            const gender = genderSelect?.value || '';
+            
+            // Check if enhanced SKU generation is enabled (you can add UI toggle later)
+            const useEnhanced = localStorage.getItem('useEnhancedSKU') === 'true' || false;
+            
+            let url = `/api/next_sku.php?cat=${encodeURIComponent(cat)}`;
+            
+            if (useEnhanced && gender) {
+                url += `&enhanced=true&gender=${encodeURIComponent(gender)}`;
+            }
+            
+            fetch(url)
+                .then(r=>r.json())
+                .then(d=>{ 
+                    if(d.success){ 
+                        skuInput.value = d.sku;
+                        if (d.enhanced) {
+                            showInfo(`🎯 Enhanced SKU generated: ${d.sku} (includes ${Object.values(d.attributes).filter(v => v).join(', ')})`);
+                        }
+                    }
+                });
+        }
+        
+        // Listen for changes on category and gender
+        catSelect.addEventListener('change', generateEnhancedSKU);
+        if (genderSelect) {
+            genderSelect.addEventListener('change', generateEnhancedSKU);
+        }
     }
     
     // Handle SKU regeneration when category changes manually

@@ -14128,20 +14128,23 @@ async function saveCartButtonTexts(texts) {
     <div class="admin-modal-content" onclick="event.stopPropagation()" style="max-width: 1400px; max-height: 95vh; width: 90vw;">
         <!-- Header -->
         <div class="admin-modal-header">
-            <h2 class="modal-title">📊 Dashboard Configuration</h2>
-            <p class="modal-description">Customize your dashboard layout and choose which sections to display</p>
-            <button onclick="closeDashboardConfigModal()" class="modal-close">&times;</button>
+            <div class="flex items-center justify-between w-full">
+                <div>
+                    <h2 class="modal-title">📊 Dashboard Configuration</h2>
+                    <p class="modal-description">Customize your dashboard layout and choose which sections to display</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <!-- Auto-save indicator -->
+                    <div id="dashboardAutoSaveIndicator" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hidden">
+                        💾 Auto-saving...
+                    </div>
+                    <button onclick="closeDashboardConfigModal()" class="modal-close">&times;</button>
+                </div>
+            </div>
         </div>
         
         <!-- Body -->
         <div class="modal-body" style="overflow-y: auto; max-height: calc(95vh - 180px);">
-            <!-- Save Configuration Button - Top Right -->
-            <div class="mb-6 text-right">
-                <button onclick="saveDashboardConfig()" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
-                    💾 Save Configuration
-                </button>
-            </div>
-            
             <!-- Main Content Layout - Side by Side -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 <!-- Current Dashboard Sections -->
@@ -19755,11 +19758,45 @@ function toggleSectionSetting(sectionKey, setting, value) {
     
     window.dashboardChanges[sectionKey][setting] = value;
     
+    // Show auto-save indicator
+    showAutoSaveIndicator();
+    
     // Auto-save after a brief delay
     clearTimeout(window.dashboardSaveTimeout);
     window.dashboardSaveTimeout = setTimeout(() => {
         saveDashboardConfig();
     }, 1000);
+}
+
+// Auto-save indicator functions
+function showAutoSaveIndicator() {
+    const indicator = document.getElementById('dashboardAutoSaveIndicator');
+    if (indicator) {
+        indicator.classList.remove('hidden');
+        indicator.textContent = '💾 Auto-saving...';
+        indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm';
+    }
+}
+
+function hideAutoSaveIndicator(success = true) {
+    const indicator = document.getElementById('dashboardAutoSaveIndicator');
+    if (indicator) {
+        if (success) {
+            indicator.textContent = '✅ Saved';
+            indicator.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm';
+            setTimeout(() => {
+                indicator.classList.add('hidden');
+                indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hidden';
+            }, 2000);
+        } else {
+            indicator.textContent = '❌ Save Failed';
+            indicator.className = 'px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm';
+            setTimeout(() => {
+                indicator.classList.add('hidden');
+                indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hidden';
+            }, 3000);
+        }
+    }
 }
 
 async function saveDashboardConfig() {
@@ -19820,14 +19857,13 @@ async function saveDashboardConfig() {
         // Reload configuration
         await loadDashboardConfiguration();
         
-        // Show success message
-        if (typeof window.showSuccess === 'function') {
-            window.showSuccess('Dashboard configuration saved successfully!');
-        }
+        // Hide auto-save indicator with success
+        hideAutoSaveIndicator(true);
         
     } catch (error) {
         console.error('Error saving dashboard configuration:', error);
-        alert('Failed to save dashboard configuration: ' + error.message);
+        hideAutoSaveIndicator(false);
+        // Removed alert - let the indicator show the error status
     }
 }
 

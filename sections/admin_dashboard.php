@@ -74,22 +74,34 @@ if (empty($dashboardConfig)) {
 
 <div class="dashboard-container">
     <!-- Dashboard Sections -->
-    <div class="dashboard-grid space-y-6">
+    <div id="dashboardGrid" class="dashboard-grid space-y-6">
         <?php foreach ($dashboardConfig as $config): ?>
             <?php 
             $sectionInfo = $availableSections[$config['section_key']] ?? null;
             if (!$sectionInfo) continue;
+            $isFullWidth = ($config['section_key'] === 'order_fulfillment' || $config['section_key'] === 'inventory_summary');
             ?>
             
-            <div class="dashboard-section bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <div class="dashboard-section bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow draggable-section <?= $isFullWidth ? 'full-width' : 'half-width' ?>" 
+                 data-section-key="<?= htmlspecialchars($config['section_key']) ?>" 
+                 data-order="<?= $config['display_order'] ?>">
                 <!-- Always show title and description for dashboard sections -->
                 <div class="section-header p-4 border-b border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-1">
-                        <?= htmlspecialchars(($config['custom_title'] ?? '') ?: $sectionInfo['title']) ?>
-                    </h3>
-                    <p class="text-sm text-gray-600">
-                        <?= htmlspecialchars(($config['custom_description'] ?? '') ?: $sectionInfo['description']) ?>
-                    </p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-1">
+                                <?= htmlspecialchars(($config['custom_title'] ?? '') ?: $sectionInfo['title']) ?>
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                <?= htmlspecialchars(($config['custom_description'] ?? '') ?: $sectionInfo['description']) ?>
+                            </p>
+                        </div>
+                        <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 ml-3 p-2 rounded hover:bg-gray-100" title="Drag to reorder">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 6h2v2H8V6zm6 0h2v2h-2V6zM8 10h2v2H8v-2zm6 0h2v2h-2v-2zM8 14h2v2H8v-2zm6 0h2v2h-2v-2z"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="section-content p-4">
@@ -370,7 +382,163 @@ document.addEventListener('DOMContentLoaded', function() {
         // Navigate to settings and open dashboard config
         window.location.href = '/?page=admin&section=settings#dashboard_config';
     }
+    
+    // Initialize draggable functionality
+    initializeDraggableSections();
 });
+
+// Draggable sections functionality
+function initializeDraggableSections() {
+    const sections = document.querySelectorAll('.draggable-section');
+    const grid = document.getElementById('dashboardGrid');
+    
+    let draggedElement = null;
+    let placeholder = null;
+    
+    sections.forEach(section => {
+        const dragHandle = section.querySelector('.drag-handle');
+        
+        dragHandle.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            draggedElement = section;
+            
+            // Create placeholder
+            placeholder = document.createElement('div');
+            placeholder.className = 'dashboard-section bg-gray-100 border-2 border-dashed border-gray-300 opacity-50';
+            placeholder.style.height = section.offsetHeight + 'px';
+            placeholder.textContent = 'Drop here';
+            placeholder.style.display = 'flex';
+            placeholder.style.alignItems = 'center';
+            placeholder.style.justifyContent = 'center';
+            placeholder.style.color = '#9ca3af';
+            
+            section.classList.add('dragging');
+            section.style.position = 'fixed';
+            section.style.pointerEvents = 'none';
+            section.style.zIndex = '1000';
+            section.style.width = section.offsetWidth + 'px';
+            
+            // Insert placeholder
+            section.parentNode.insertBefore(placeholder, section.nextSibling);
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        });
+    });
+    
+    function handleMouseMove(e) {
+        if (!draggedElement) return;
+        
+        draggedElement.style.left = (e.clientX - draggedElement.offsetWidth / 2) + 'px';
+        draggedElement.style.top = (e.clientY - 20) + 'px';
+        
+        // Find drop target
+        const elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
+        const dropTarget = elementsBelow.find(el => 
+            el.classList.contains('draggable-section') && el !== draggedElement
+        );
+        
+        // Remove previous drag-over classes
+        sections.forEach(s => s.classList.remove('drag-over'));
+        
+        if (dropTarget) {
+            dropTarget.classList.add('drag-over');
+            
+            // Determine if we should insert before or after
+            const rect = dropTarget.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            
+            if (e.clientY < midY) {
+                dropTarget.parentNode.insertBefore(placeholder, dropTarget);
+            } else {
+                dropTarget.parentNode.insertBefore(placeholder, dropTarget.nextSibling);
+            }
+        }
+    }
+    
+    function handleMouseUp(e) {
+        if (!draggedElement) return;
+        
+        // Reset styles
+        draggedElement.classList.remove('dragging');
+        draggedElement.style.position = '';
+        draggedElement.style.pointerEvents = '';
+        draggedElement.style.zIndex = '';
+        draggedElement.style.width = '';
+        draggedElement.style.left = '';
+        draggedElement.style.top = '';
+        
+        // Remove drag-over classes
+        sections.forEach(s => s.classList.remove('drag-over'));
+        
+        // Replace placeholder with dragged element
+        if (placeholder && placeholder.parentNode) {
+            placeholder.parentNode.insertBefore(draggedElement, placeholder);
+            placeholder.remove();
+            
+            // Save new order
+            saveDashboardOrder();
+        }
+        
+        // Cleanup
+        draggedElement = null;
+        placeholder = null;
+        
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
+}
+
+async function saveDashboardOrder() {
+    try {
+        const sections = Array.from(document.querySelectorAll('.draggable-section'));
+        const newOrder = sections.map((section, index) => ({
+            section_key: section.dataset.sectionKey,
+            display_order: index + 1
+        }));
+        
+        const response = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'reorder_sections',
+                sections: newOrder,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to save order');
+        }
+        
+        // Show success indicator
+        showOrderSaveSuccess();
+        
+    } catch (error) {
+        console.error('Error saving dashboard order:', error);
+        // Reload page to reset order
+        location.reload();
+    }
+}
+
+function showOrderSaveSuccess() {
+    const indicator = document.createElement('div');
+    indicator.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    indicator.textContent = '✅ Dashboard order saved';
+    document.body.appendChild(indicator);
+    
+    setTimeout(() => {
+        indicator.remove();
+    }, 2000);
+}
 </script>
 
 <style>
@@ -384,6 +552,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .dashboard-grid {
     min-height: 200px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    grid-auto-rows: min-content;
 }
 
 .dashboard-section {
@@ -391,7 +563,7 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 0.5rem;
     border: 1px solid #e5e7eb;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
     overflow: hidden;
     min-height: 200px;
     display: flex;
@@ -400,6 +572,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .dashboard-section:hover {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-section.full-width {
+    grid-column: 1 / -1;
+}
+
+.dashboard-section.half-width {
+    grid-column: span 1;
+}
+
+.dashboard-section.dragging {
+    opacity: 0.7;
+    transform: rotate(3deg);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.dashboard-section.drag-over {
+    border: 2px dashed #3b82f6;
+    background: #eff6ff;
+}
+
+.drag-handle {
+    transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+    transform: scale(1.1);
 }
 
 .section-header {
@@ -428,8 +628,14 @@ document.addEventListener('DOMContentLoaded', function() {
         padding: 0.5rem;
     }
     
-    .dashboard-header {
-        padding: 1rem;
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .dashboard-section.full-width,
+    .dashboard-section.half-width {
+        grid-column: 1;
     }
     
     .section-content {
@@ -439,6 +645,11 @@ document.addEventListener('DOMContentLoaded', function() {
     /* Stack metrics vertically on mobile */
     .dashboard-section .grid.grid-cols-2.md\\:grid-cols-4 {
         grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Hide drag handles on mobile for better touch experience */
+    .drag-handle {
+        display: none;
     }
 }
 

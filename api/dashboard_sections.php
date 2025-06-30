@@ -208,19 +208,22 @@ try {
             
         case 'reorder_sections':
             // Reorder dashboard sections
-            $data = json_decode(file_get_contents('php://input'), true);
-            if (!$data || !isset($data['section_order'])) {
+            $data = $input; // Use already parsed JSON input
+            if (!$data || !isset($data['sections'])) {
                 Response::error('Section order data is required');
             }
             
             $stmt = $db->prepare('UPDATE dashboard_sections SET display_order = ? WHERE section_key = ?');
             
-            foreach ($data['section_order'] as $index => $sectionKey) {
-                $stmt->execute([$index + 1, $sectionKey]);
+            foreach ($data['sections'] as $section) {
+                $stmt->execute([
+                    $section['display_order'],
+                    $section['section_key']
+                ]);
             }
             
             // Logger::userAction('dashboard_sections_reordered', [
-            //     'new_order' => $data['section_order']
+            //     'new_order' => array_column($data['sections'], 'section_key')
             // ]);
             
             Response::success(['message' => 'Sections reordered successfully']);

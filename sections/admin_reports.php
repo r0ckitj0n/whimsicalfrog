@@ -6,116 +6,134 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 
 require_once __DIR__ . '/../includes/functions.php';
 
-// Initialize data arrays
-$ordersData = [];
-$customersData = [];
-$inventoryData = [];
-
-try {
-    $db = Database::getInstance();
-    
-    // Fetch all data with optimized queries
-    $ordersData = $db->query('SELECT * FROM orders ORDER BY created_at DESC')->fetchAll();
-    $customersData = $db->query('SELECT * FROM users WHERE role != "admin"')->fetchAll();
-    $inventoryData = $db->query('SELECT * FROM items')->fetchAll();
-    
-    // Enhance orders with items and shipping data
-    foreach ($ordersData as &$order) {
-        $order['items'] = $db->query('SELECT oi.*, i.name as item_name FROM order_items oi 
-                                    LEFT JOIN items i ON oi.sku = i.sku 
-                                    WHERE oi.orderId = ?', [$order['id']])->fetchAll();
-        
-        // Parse JSON shipping address
-        if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
-            $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
-        }
-    }
-    
-} catch (Exception $e) {
-    Logger::error('Admin Reports Database Error: ' . $e->getMessage());
-    $ordersData = $customersData = $inventoryData = [];
-}
-
 // Date filtering
 $startDate = $_GET['start_date'] ?? '';
 $endDate = $_GET['end_date'] ?? '';
 $startParam = $startDate ?: '1900-01-01';
 $endParam = $endDate ?: '2100-12-31';
 
-// Calculate YTD and filtered metrics
-$ordersYTD = array_filter($ordersData, function($order) {
-    $dt = $order['date'] ?? $order['orderDate'] ?? $order['created_at'] ?? null;
-    return $dt && date('Y', strtotime($dt)) == date('Y');
-});
-
-$filteredOrders = array_filter($ordersData, function($order) use ($startParam, $endParam) {
-    $orderDate = $order['orderDate'] ?? $order['date'] ?? $order['created_at'] ?? '';
-    $orderDate = $orderDate ? date('Y-m-d', strtotime($orderDate)) : '';
-    return $orderDate >= $startParam && $orderDate <= $endParam;
-});
-
-// Calculate comprehensive metrics
+// Initialize metrics
 $metrics = [
-    'totalRevenue' => array_sum(array_map(fn($o) => floatval($o['totalAmount'] ?? $o['total'] ?? 0), $ordersYTD)),
-    'filteredRevenue' => array_sum(array_map(fn($o) => floatval($o['totalAmount'] ?? $o['total'] ?? 0), $filteredOrders)),
-    'totalOrders' => count($ordersYTD),
-    'filteredOrderCount' => count($filteredOrders),
-    'totalCustomers' => count($customersData),
+    'totalRevenue' => 0,
+    'filteredRevenue' => 0,
+    'totalOrders' => 0,
+    'filteredOrderCount' => 0,
+    'totalCustomers' => 0,
     'averageOrderValue' => 0
 ];
 
-$metrics['averageOrderValue'] = $metrics['totalOrders'] > 0 ? $metrics['totalRevenue'] / $metrics['totalOrders'] : 0;
-
-// Payment analysis
 $paymentStats = ['status' => [], 'method' => []];
-foreach ($filteredOrders as $order) {
-    $status = $order['paymentStatus'] ?? 'Unknown';
-    $method = $order['paymentMethod'] ?? 'Unknown';
-    $paymentStats['status'][$status] = ($paymentStats['status'][$status] ?? 0) + 1;
-    $paymentStats['method'][$method] = ($paymentStats['method'][$method] ?? 0) + 1;
-}
-
-$paymentsReceived = $paymentStats['status']['Received'] ?? 0;
-$paymentsPending = $paymentStats['status']['Pending'] ?? 0;
-
-// Chart data preparation
 $ordersByDate = [];
-foreach ($filteredOrders as $order) {
-    $orderDate = $order['orderDate'] ?? $order['date'] ?? $order['created_at'] ?? '';
-    $orderDate = $orderDate ? date('Y-m-d', strtotime($orderDate)) : '';
-    if ($orderDate) {
-        if (!isset($ordersByDate[$orderDate])) {
-            $ordersByDate[$orderDate] = ['count' => 0, 'revenue' => 0];
-        }
-        $ordersByDate[$orderDate]['count']++;
-        $ordersByDate[$orderDate]['revenue'] += floatval($order['totalAmount'] ?? $order['total'] ?? 0);
+$topProducts = [];
+$lowStockProducts = [];
+$paymentsReceived = 0;
+$paymentsPending = 0;
+
+try {
+    $db = Database::getInstance();
+    
+    // Get total customers (non-admin users)
+    $metrics['totalCustomers'] = $db->query("SELECT COUNT(*) FROM users WHERE role != 'admin'")->fetchColumn() ?: 0;
+    
+    // Get total orders and revenue (YTD)
+    $currentYear = date('Y');
+    $stmt = $db->prepare("SELECT COUNT(*) as orderCount, COALESCE(SUM(total), 0) as totalRevenue 
+                          FROM orders 
+                          WHERE YEAR(date) = ?");
+    $stmt->execute([$currentYear]);
+    $ytdData = $stmt->fetch();
+    
+    $metrics['totalOrders'] = $ytdData['orderCount'] ?? 0;
+    $metrics['totalRevenue'] = $ytdData['totalRevenue'] ?? 0;
+    
+    // Get filtered orders and revenue
+    $stmt = $db->prepare("SELECT COUNT(*) as orderCount, COALESCE(SUM(total), 0) as totalRevenue 
+                          FROM orders 
+                          WHERE DATE(date) BETWEEN ? AND ?");
+    $stmt->execute([$startParam, $endParam]);
+    $filteredData = $stmt->fetch();
+    
+    $metrics['filteredOrderCount'] = $filteredData['orderCount'] ?? 0;
+    $metrics['filteredRevenue'] = $filteredData['totalRevenue'] ?? 0;
+    
+    // Calculate average order value
+    $metrics['averageOrderValue'] = $metrics['totalOrders'] > 0 ? $metrics['totalRevenue'] / $metrics['totalOrders'] : 0;
+    
+    // Get payment status stats for filtered period
+    $stmt = $db->prepare("SELECT paymentStatus, COUNT(*) as count 
+                          FROM orders 
+                          WHERE DATE(date) BETWEEN ? AND ? 
+                          GROUP BY paymentStatus");
+    $stmt->execute([$startParam, $endParam]);
+    $paymentStatusData = $stmt->fetchAll();
+    
+    foreach ($paymentStatusData as $row) {
+        $status = $row['paymentStatus'] ?? 'Unknown';
+        $paymentStats['status'][$status] = intval($row['count']);
     }
-}
-ksort($ordersByDate);
-
-// Product sales analysis
-$productSales = [];
-foreach ($ordersData as $order) {
-    foreach ($order['items'] ?? [] as $item) {
-        $sku = $item['sku'] ?? $item['productId'] ?? '';
-        if ($sku) {
-            if (!isset($productSales[$sku])) {
-                $productSales[$sku] = ['quantity' => 0, 'revenue' => 0, 'name' => $item['item_name'] ?? 'Unknown'];
-            }
-            $productSales[$sku]['quantity'] += intval($item['quantity'] ?? 0);
-            $productSales[$sku]['revenue'] += floatval($item['price'] ?? 0) * intval($item['quantity'] ?? 0);
-        }
+    
+    $paymentsReceived = $paymentStats['status']['Received'] ?? 0;
+    $paymentsPending = $paymentStats['status']['Pending'] ?? 0;
+    
+    // Get payment method stats for filtered period
+    $stmt = $db->prepare("SELECT paymentMethod, COUNT(*) as count 
+                          FROM orders 
+                          WHERE DATE(date) BETWEEN ? AND ? 
+                          GROUP BY paymentMethod");
+    $stmt->execute([$startParam, $endParam]);
+    $paymentMethodData = $stmt->fetchAll();
+    
+    foreach ($paymentMethodData as $row) {
+        $method = $row['paymentMethod'] ?? 'Unknown';
+        $paymentStats['method'][$method] = intval($row['count']);
     }
+    
+    // Get orders by date for chart
+    $stmt = $db->prepare("SELECT DATE(date) as order_date, COUNT(*) as order_count, COALESCE(SUM(total), 0) as revenue 
+                          FROM orders 
+                          WHERE DATE(date) BETWEEN ? AND ? 
+                          GROUP BY DATE(date) 
+                          ORDER BY order_date");
+    $stmt->execute([$startParam, $endParam]);
+    $dailyOrderData = $stmt->fetchAll();
+    
+    foreach ($dailyOrderData as $row) {
+        $ordersByDate[$row['order_date']] = [
+            'count' => intval($row['order_count']),
+            'revenue' => floatval($row['revenue'])
+        ];
+    }
+    
+    // Get top products for filtered period
+    $stmt = $db->prepare("SELECT i.name, SUM(oi.quantity) as quantity, SUM(oi.quantity * oi.price) as revenue 
+                          FROM order_items oi
+                          JOIN orders o ON oi.orderId = o.id
+                          LEFT JOIN items i ON oi.sku = i.sku
+                          WHERE DATE(o.date) BETWEEN ? AND ?
+                          GROUP BY oi.sku, i.name
+                          ORDER BY revenue DESC
+                          LIMIT 5");
+    $stmt->execute([$startParam, $endParam]);
+    $topProductsData = $stmt->fetchAll();
+    
+    foreach ($topProductsData as $row) {
+        $sku = $row['sku'] ?? 'unknown';
+        $topProducts[$sku] = [
+            'name' => $row['name'] ?? 'Unknown Product',
+            'quantity' => intval($row['quantity']),
+            'revenue' => floatval($row['revenue'])
+        ];
+    }
+    
+    // Get low stock products
+    $lowStockProducts = $db->query("SELECT name, stockLevel, reorderPoint 
+                                    FROM items 
+                                    WHERE stockLevel <= reorderPoint 
+                                    ORDER BY stockLevel ASC")->fetchAll();
+    
+} catch (Exception $e) {
+    Logger::error('Admin Reports Database Error: ' . $e->getMessage());
 }
-
-uasort($productSales, fn($a, $b) => $b['revenue'] <=> $a['revenue']);
-$topProducts = array_slice($productSales, 0, 5, true);
-
-// Low stock analysis
-$lowStockProducts = array_filter($inventoryData, fn($item) => 
-    isset($item['stockLevel'], $item['reorderPoint']) && 
-    intval($item['stockLevel']) <= intval($item['reorderPoint'])
-);
 
 // Prepare JSON data for charts
 $chartData = [

@@ -123,8 +123,8 @@ try {
                 // Insert new configuration
                 $stmt = $db->prepare('
                     INSERT INTO dashboard_sections 
-                    (section_key, display_order, is_active, show_title, show_description, custom_title, custom_description) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    (section_key, display_order, is_active, show_title, show_description, custom_title, custom_description, width_class) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ');
                 
                 foreach ($data['sections'] as $section) {
@@ -135,7 +135,8 @@ try {
                         $section['show_title'] ? 1 : 0,
                         $section['show_description'] ? 1 : 0,
                         $section['custom_title'] ?: null,
-                        $section['custom_description'] ?: null
+                        $section['custom_description'] ?: null,
+                        $section['width_class'] ?? 'half-width'
                     ]);
                 }
                 
@@ -165,11 +166,12 @@ try {
             
             $stmt = $db->prepare('
                 INSERT INTO dashboard_sections 
-                (section_key, display_order, is_active, show_title, show_description, custom_title, custom_description) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (section_key, display_order, is_active, show_title, show_description, custom_title, custom_description, width_class) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE
                 is_active = VALUES(is_active),
-                display_order = VALUES(display_order)
+                display_order = VALUES(display_order),
+                width_class = VALUES(width_class)
             ');
             
             $stmt->execute([
@@ -179,7 +181,8 @@ try {
                 $data['show_title'] ?? 1,
                 $data['show_description'] ?? 1,
                 $data['custom_title'] ?? null,
-                $data['custom_description'] ?? null
+                $data['custom_description'] ?? null,
+                $data['width_class'] ?? 'half-width'
             ]);
             
             // Logger::userAction('dashboard_section_added', [
@@ -227,6 +230,32 @@ try {
             // ]);
             
             Response::success(['message' => 'Sections reordered successfully']);
+            break;
+            
+        case 'update_section':
+            // Update individual section settings
+            $data = $input; // Use already parsed JSON input
+            if (!$data || !isset($data['section_key'])) {
+                Response::error('Section key is required');
+            }
+            
+            $stmt = $db->prepare('
+                UPDATE dashboard_sections 
+                SET width_class = ?, show_title = ?, show_description = ?, 
+                    custom_title = ?, custom_description = ?
+                WHERE section_key = ?
+            ');
+            
+            $stmt->execute([
+                $data['width_class'] ?? 'half-width',
+                $data['show_title'] ?? 1,
+                $data['show_description'] ?? 1,
+                $data['custom_title'] ?: null,
+                $data['custom_description'] ?: null,
+                $data['section_key']
+            ]);
+            
+            Response::success(['message' => 'Section updated successfully']);
             break;
             
         case 'get_available_sections':

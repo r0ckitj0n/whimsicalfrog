@@ -79,12 +79,13 @@ if (empty($dashboardConfig)) {
             <?php 
             $sectionInfo = $availableSections[$config['section_key']] ?? null;
             if (!$sectionInfo) continue;
-            $isFullWidth = ($config['section_key'] === 'order_fulfillment' || $config['section_key'] === 'inventory_summary');
+            $widthClass = $config['width_class'] ?? 'half-width';
             ?>
             
-            <div class="dashboard-section bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow draggable-section <?= $isFullWidth ? 'full-width' : 'half-width' ?>" 
+            <div class="dashboard-section bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow draggable-section <?= htmlspecialchars($widthClass) ?>" 
                  data-section-key="<?= htmlspecialchars($config['section_key']) ?>" 
-                 data-order="<?= $config['display_order'] ?>">
+                 data-order="<?= $config['display_order'] ?>"
+                 data-width="<?= htmlspecialchars($widthClass) ?>">
                 <!-- Always show title and description for dashboard sections -->
                 <div class="section-header p-4 border-b border-gray-100">
                     <div class="flex items-center justify-between">
@@ -553,7 +554,7 @@ function showOrderSaveSuccess() {
 .dashboard-grid {
     min-height: 200px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(12, 1fr);
     gap: 1.5rem;
     grid-auto-rows: min-content;
 }
@@ -575,11 +576,15 @@ function showOrderSaveSuccess() {
 }
 
 .dashboard-section.full-width {
-    grid-column: 1 / -1;
+    grid-column: span 12;
 }
 
 .dashboard-section.half-width {
-    grid-column: span 1;
+    grid-column: span 6;
+}
+
+.dashboard-section.third-width {
+    grid-column: span 4;
 }
 
 .dashboard-section.dragging {
@@ -634,8 +639,9 @@ function showOrderSaveSuccess() {
     }
     
     .dashboard-section.full-width,
-    .dashboard-section.half-width {
-        grid-column: 1;
+    .dashboard-section.half-width,
+    .dashboard-section.third-width {
+        grid-column: span 12;
     }
     
     .section-content {

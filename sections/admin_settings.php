@@ -19574,6 +19574,14 @@ function renderCurrentSections(sections, container) {
                             <input type="checkbox" ${section.show_description ? 'checked' : ''} onchange="toggleSectionSetting('${section.section_key}', 'show_description', this.checked)">
                             <span class="text-gray-600">Show Description</span>
                         </label>
+                        <label class="flex items-center gap-2">
+                            <span class="text-gray-600">Width:</span>
+                            <select onchange="updateSectionWidth('${section.section_key}', this.value)" class="text-xs border border-gray-300 rounded px-2 py-1 bg-white">
+                                <option value="full-width" ${(section.width_class || 'half-width') === 'full-width' ? 'selected' : ''}>Full Width</option>
+                                <option value="half-width" ${(section.width_class || 'half-width') === 'half-width' ? 'selected' : ''}>Half Width</option>
+                                <option value="third-width" ${(section.width_class || 'half-width') === 'third-width' ? 'selected' : ''}>1/3 Width</option>
+                            </select>
+                        </label>
                     </div>
                     <div class="text-xs text-gray-400">Order: ${section.display_order}</div>
                 </div>
@@ -19757,6 +19765,28 @@ function toggleSectionSetting(sectionKey, setting, value) {
     }
     
     window.dashboardChanges[sectionKey][setting] = value;
+    
+    // Show auto-save indicator
+    showAutoSaveIndicator();
+    
+    // Auto-save after a brief delay
+    clearTimeout(window.dashboardSaveTimeout);
+    window.dashboardSaveTimeout = setTimeout(() => {
+        saveDashboardConfig();
+    }, 1000);
+}
+
+function updateSectionWidth(sectionKey, widthClass) {
+    // Store the width change for batch save (same system as toggleSectionSetting)
+    if (!window.dashboardChanges) {
+        window.dashboardChanges = {};
+    }
+    
+    if (!window.dashboardChanges[sectionKey]) {
+        window.dashboardChanges[sectionKey] = {};
+    }
+    
+    window.dashboardChanges[sectionKey].width_class = widthClass;
     
     // Show auto-save indicator
     showAutoSaveIndicator();

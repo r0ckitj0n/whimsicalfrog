@@ -59,6 +59,18 @@ $availableSections = [
         'description' => 'Quick access to marketing features',
         'type' => 'external',
         'source' => 'marketing'
+    ],
+    'order_fulfillment' => [
+        'title' => '🚚 Order Fulfillment',
+        'description' => 'Process and manage order fulfillment',
+        'type' => 'external',
+        'source' => 'order_fulfillment'
+    ],
+    'reports_summary' => [
+        'title' => '📊 Reports Summary',
+        'description' => 'Key business reports and analytics',
+        'type' => 'external',
+        'source' => 'reports'
     ]
 ];
 

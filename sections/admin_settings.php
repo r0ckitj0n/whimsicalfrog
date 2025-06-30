@@ -14108,27 +14108,37 @@ async function saveCartButtonTexts(texts) {
         
         <!-- Body -->
         <div class="modal-body" style="overflow-y: auto; max-height: calc(95vh - 180px);">
-            <!-- Current Dashboard Sections -->
-            <div class="mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">Current Dashboard Sections</h3>
-                    <button onclick="saveDashboardConfig()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-                        💾 Save Configuration
-                    </button>
-                </div>
-                
-                <div id="currentSectionsList" class="space-y-3">
-                    <!-- Current sections will be loaded here -->
-                </div>
+            <!-- Save Configuration Button - Top Right -->
+            <div class="mb-6 text-right">
+                <button onclick="saveDashboardConfig()" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                    💾 Save Configuration
+                </button>
             </div>
             
-            <!-- Available Sections -->
-            <div class="border-t pt-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Available Sections</h3>
-                <p class="text-gray-600 mb-4">Add these sections to your dashboard by clicking the + button</p>
+            <!-- Main Content Layout - Side by Side -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <!-- Current Dashboard Sections -->
+                <div class="space-y-4">
+                    <div class="border-b pb-3">
+                        <h3 class="text-xl font-semibold text-gray-800">Current Dashboard Sections</h3>
+                        <p class="text-gray-600 text-sm mt-1">These sections are currently displayed on your dashboard</p>
+                    </div>
+                    
+                    <div id="currentSectionsList" class="space-y-3 min-h-[300px]">
+                        <!-- Current sections will be loaded here -->
+                    </div>
+                </div>
                 
-                <div id="availableSectionsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    <!-- Available sections will be loaded here -->
+                <!-- Available Sections -->
+                <div class="space-y-4">
+                    <div class="border-b pb-3">
+                        <h3 class="text-xl font-semibold text-gray-800">Available Sections</h3>
+                        <p class="text-gray-600 text-sm mt-1">Add these sections to your dashboard by clicking the + button</p>
+                    </div>
+                    
+                    <div id="availableSectionsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Available sections will be loaded here -->
+                    </div>
                 </div>
             </div>
             

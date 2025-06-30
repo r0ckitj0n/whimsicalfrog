@@ -194,19 +194,50 @@ try {
             
         case 'remove_section':
             // Remove a section from the dashboard
-            $sectionKey = $_POST['section_key'] ?? '';
-            if (!$sectionKey) {
+            $data = $input; // Use already parsed JSON input
+            if (!$data || !isset($data['section_key'])) {
                 Response::error('Section key is required');
             }
             
             $stmt = $db->prepare('DELETE FROM dashboard_sections WHERE section_key = ?');
-            $stmt->execute([$sectionKey]);
+            $stmt->execute([$data['section_key']]);
             
             // Logger::userAction('dashboard_section_removed', [
-            //     'section_key' => $sectionKey
+            //     'section_key' => $data['section_key']
             // ]);
             
             Response::success(['message' => 'Section removed successfully']);
+            break;
+            
+        case 'reorder_section':
+            // Reorder a single section
+            $data = $input; // Use already parsed JSON input
+            if (!$data || !isset($data['section_key']) || !isset($data['new_order'])) {
+                Response::error('Section key and new order are required');
+            }
+            
+            // Update the specific section's order
+            $stmt = $db->prepare('UPDATE dashboard_sections SET display_order = ? WHERE section_key = ?');
+            $result = $stmt->execute([$data['new_order'], $data['section_key']]);
+            
+            if (!$result) {
+                Response::error('Failed to update section order');
+            }
+            
+            // Normalize all orders to prevent gaps
+            $sections = $db->query('SELECT section_key FROM dashboard_sections ORDER BY display_order ASC')->fetchAll();
+            $normalizeStmt = $db->prepare('UPDATE dashboard_sections SET display_order = ? WHERE section_key = ?');
+            
+            foreach ($sections as $index => $section) {
+                $normalizeStmt->execute([$index + 1, $section['section_key']]);
+            }
+            
+            // Logger::userAction('dashboard_section_reordered', [
+            //     'section_key' => $data['section_key'],
+            //     'new_order' => $data['new_order']
+            // ]);
+            
+            Response::success(['message' => 'Section reordered successfully']);
             break;
             
         case 'reorder_sections':

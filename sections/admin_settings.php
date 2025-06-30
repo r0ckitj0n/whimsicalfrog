@@ -20013,7 +20013,7 @@ function initializeDragAndDrop() {
             if (sourceZone === targetZone) {
                 // Same zone - handle reordering
                 if (targetZone === 'current') {
-                    handleReorder(sectionKey, this, draggedElement);
+                    handleReorder(sectionKey, this, draggedElement, e);
                 }
             } else {
                 // Different zones - handle move
@@ -20030,24 +20030,21 @@ function initializeDragAndDrop() {
 }
 
 // Handle reordering within current sections
-async function handleReorder(sectionKey, dropZone, draggedElement) {
-    const allItems = Array.from(dropZone.querySelectorAll('.draggable-section-item'));
-    const draggedIndex = allItems.indexOf(draggedElement);
+async function handleReorder(sectionKey, dropZone, draggedElement, event) {
+    const allItems = Array.from(dropZone.querySelectorAll('.draggable-section-item:not(.dragging)'));
     
     // Find the drop position based on mouse position
     const afterElement = getDragAfterElement(dropZone, event.clientY);
     let newIndex;
     
     if (afterElement == null) {
-        newIndex = allItems.length - 1;
+        newIndex = allItems.length;
     } else {
         newIndex = allItems.indexOf(afterElement);
     }
     
-    if (draggedIndex !== newIndex) {
-        // Update the order and save
-        await updateSectionOrder(sectionKey, newIndex + 1);
-    }
+    // Update the order and save (1-indexed for database)
+    await updateSectionOrder(sectionKey, newIndex + 1);
 }
 
 // Handle adding section to dashboard
@@ -20165,16 +20162,20 @@ async function updateSectionOrder(sectionKey, newOrder) {
 function getDragAfterElement(container, y) {
     const draggableElements = [...container.querySelectorAll('.draggable-section-item:not(.dragging)')];
     
-    return draggableElements.reduce((closest, child) => {
+    let closestElement = null;
+    let closestOffset = Number.NEGATIVE_INFINITY;
+    
+    draggableElements.forEach(child => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
         
-        if (offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
+        if (offset < 0 && offset > closestOffset) {
+            closestOffset = offset;
+            closestElement = child;
         }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
+    });
+    
+    return closestElement;
 }
 
 // Enhanced auto-save indicator functions
@@ -20480,12 +20481,15 @@ document.addEventListener('DOMContentLoaded', function() {
 .section-drop-zone {
     flex: 1;
     min-height: 400px;
+    height: 100%;
     border: 2px dashed #cbd5e1;
     border-top: none;
     border-radius: 0 0 0.75rem 0.75rem;
     padding: 1rem;
     background: #f8fafc;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .current-drop-zone {
@@ -20603,6 +20607,7 @@ document.addEventListener('DOMContentLoaded', function() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    flex: 1;
     min-height: 300px;
     color: #9ca3af;
     text-align: center;

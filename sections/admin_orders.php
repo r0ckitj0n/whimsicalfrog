@@ -149,11 +149,6 @@ function getPaymentStatusBadgeClass($status) {
 ?>
 
 <div class="admin-content-container">
-    <div class="admin-content-header">
-        <h2 class="admin-content-title">Orders Management</h2>
-        <p class="admin-content-subtitle">View and manage customer orders, track fulfillment status</p>
-    </div>
-    
     <div class="admin-filter-section">
         <form method="GET" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">

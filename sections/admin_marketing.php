@@ -179,11 +179,6 @@ function generateId($prefix, $length = 3) {
 ?>
 
 <div class="admin-content-container">
-    <div class="admin-content-header">
-        <h2 class="admin-content-title">Marketing Dashboard</h2>
-        <p class="admin-content-subtitle">Analytics, campaigns, and promotional tools</p>
-    </div>
-
     <div class="admin-filter-section">
         <form class="admin-filter-form" method="get" action="">
             <input type="hidden" name="page" value="admin">

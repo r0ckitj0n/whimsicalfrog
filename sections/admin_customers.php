@@ -213,11 +213,6 @@ $messageType = $_GET['type'] ?? '';
 ?>
 
 <div class="admin-content-container">
-    <div class="admin-content-header">
-        <h2 class="admin-content-title">Customer Management</h2>
-        <p class="admin-content-subtitle">Manage customer accounts and view customer data</p>
-    </div>
-
     <div class="admin-filter-section">
         <form method="GET" action="" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">

@@ -128,11 +128,6 @@ $chartData = [
 ?>
 
 <div class="admin-content-container">
-    <div class="admin-content-header">
-        <h2 class="admin-content-title">Business Reports & Analytics</h2>
-        <p class="admin-content-subtitle">Performance insights and key metrics</p>
-    </div>
-
     <div class="admin-filter-section">
         <form action="" method="GET" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">

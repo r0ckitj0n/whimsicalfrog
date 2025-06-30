@@ -120,11 +120,6 @@ $messageType = $_GET['type'] ?? '';
 </style>
 
 <div class="admin-content-container">
-    <div class="admin-content-header">
-        <h2 class="admin-content-title">Inventory Management</h2>
-        <p class="admin-content-subtitle">Manage your product inventory, stock levels, and item details</p>
-    </div>
-    
     <div class="admin-filter-section">
         <form method="GET" action="" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">

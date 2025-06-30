@@ -125,11 +125,6 @@ function formatAddress($order) {
 ?>
 
 <div class="admin-content-container">
-    <div class="admin-content-header">
-        <h2 class="admin-content-title">Order Fulfillment</h2>
-        <p class="admin-content-subtitle">Process orders and manage fulfillment status</p>
-    </div>
-
     <div class="admin-filter-section">
         <form method="GET" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">

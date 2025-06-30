@@ -1,4 +1,7 @@
 <?php
+// Include centralized database class
+require_once __DIR__ . '/../includes/database.php';
+
 // Set error reporting for development
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);

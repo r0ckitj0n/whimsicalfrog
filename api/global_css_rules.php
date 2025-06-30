@@ -18,7 +18,9 @@ if (!$isPublicAction) {
     }
     
     // Admin token fallback for API access
-    if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
+    $input = json_decode(file_get_contents('php://input'), true) ?? [];
+    $adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
+    if (!$isAdmin && $adminToken === 'whimsical_admin_2024') {
         $isAdmin = true;
     }
     

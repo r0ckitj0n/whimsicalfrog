@@ -20,7 +20,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
 
 // Check admin authentication
 $isAdmin = false;
-$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? null;
+
+// Parse JSON input for admin token
+$input = json_decode(file_get_contents('php://input'), true) ?? [];
+$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
 
 if ($adminToken === 'whimsical_admin_2024') {
     $isAdmin = true;
@@ -40,7 +43,7 @@ if (!$isAdmin) {
 
 try {
     $db = Database::getInstance();
-    $action = $_GET['action'] ?? $_POST['action'] ?? 'get_sections';
+    $action = $_GET['action'] ?? $_POST['action'] ?? $input['action'] ?? 'get_sections';
     
     switch ($action) {
         case 'get_sections':
@@ -122,7 +125,7 @@ try {
             
         case 'update_sections':
             // Update dashboard sections configuration
-            $data = json_decode(file_get_contents('php://input'), true);
+            $data = $input; // Use already parsed JSON input
             if (!$data || !isset($data['sections'])) {
                 Response::error('Invalid request data');
             }
@@ -155,9 +158,9 @@ try {
                 
                 $db->commit();
                 
-                Logger::userAction('dashboard_sections_updated', [
-                    'sections_count' => count($data['sections'])
-                ]);
+                // Logger::userAction('dashboard_sections_updated', [
+                //     'sections_count' => count($data['sections'])
+                // ]);
                 
                 Response::success(['message' => 'Dashboard configuration updated successfully']);
                 
@@ -169,7 +172,7 @@ try {
             
         case 'add_section':
             // Add a new section to the dashboard
-            $data = json_decode(file_get_contents('php://input'), true);
+            $data = $input; // Use already parsed JSON input
             if (!$data || !isset($data['section_key'])) {
                 Response::error('Section key is required');
             }
@@ -196,9 +199,9 @@ try {
                 $data['custom_description'] ?? null
             ]);
             
-            Logger::userAction('dashboard_section_added', [
-                'section_key' => $data['section_key']
-            ]);
+            // Logger::userAction('dashboard_section_added', [
+            //     'section_key' => $data['section_key']
+            // ]);
             
             Response::success(['message' => 'Section added successfully']);
             break;
@@ -213,9 +216,9 @@ try {
             $stmt = $db->prepare('DELETE FROM dashboard_sections WHERE section_key = ?');
             $stmt->execute([$sectionKey]);
             
-            Logger::userAction('dashboard_section_removed', [
-                'section_key' => $sectionKey
-            ]);
+            // Logger::userAction('dashboard_section_removed', [
+            //     'section_key' => $sectionKey
+            // ]);
             
             Response::success(['message' => 'Section removed successfully']);
             break;
@@ -233,9 +236,9 @@ try {
                 $stmt->execute([$index + 1, $sectionKey]);
             }
             
-            Logger::userAction('dashboard_sections_reordered', [
-                'new_order' => $data['section_order']
-            ]);
+            // Logger::userAction('dashboard_sections_reordered', [
+            //     'new_order' => $data['section_order']
+            // ]);
             
             Response::success(['message' => 'Sections reordered successfully']);
             break;

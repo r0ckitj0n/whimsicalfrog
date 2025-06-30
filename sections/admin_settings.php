@@ -576,6 +576,12 @@ function closeSystemConfigModal() {
 function openDatabaseMaintenanceModal() {
     document.getElementById('databaseMaintenanceModal').style.display = 'block';
     loadDatabaseInformation();
+    // Hide loading and show connection tab by default
+    setTimeout(() => {
+        document.getElementById('databaseMaintenanceLoading').style.display = 'none';
+        switchDatabaseTab(document.querySelector('[data-tab="connection"]'), 'connection');
+        loadCurrentDatabaseConfig();
+    }, 500);
 }
 
 async function loadDatabaseInformation() {
@@ -684,6 +690,439 @@ function generateDatabaseMaintenanceHTML(data) {
 
 function closeDatabaseMaintenanceModal() {
     document.getElementById('databaseMaintenanceModal').style.display = 'none';
+}
+
+// Database Maintenance Tab Functions
+function switchDatabaseTab(tabElement, tabName) {
+    // Remove active class from all tabs
+    document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.remove('active'));
+    
+    // Add active class to clicked tab
+    tabElement.classList.add('active');
+    
+    // Hide all tab contents
+    document.querySelectorAll('.db-tab-content').forEach(content => content.classList.add('hidden'));
+    
+    // Show selected tab content
+    const selectedTab = document.getElementById(tabName + 'Tab');
+    if (selectedTab) {
+        selectedTab.classList.remove('hidden');
+    }
+    
+    // Load specific tab data
+    switch(tabName) {
+        case 'connection':
+            loadCurrentDatabaseConfig();
+            break;
+        case 'stats':
+            loadDatabaseStats();
+            break;
+        case 'ssl':
+            setupSSLHandlers();
+            break;
+    }
+}
+
+async function loadCurrentDatabaseConfig() {
+    try {
+        const response = await fetch('/api/database_maintenance.php?action=get_config');
+        const result = await response.json();
+        
+        if (result.success) {
+            const config = result.config;
+            const configDiv = document.getElementById('currentConfig');
+            
+            configDiv.innerHTML = `
+                <div class="space-y-2">
+                    <div><strong>Environment:</strong> <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">${config.environment.toUpperCase()}</span></div>
+                    <div><strong>Host:</strong> <code class="bg-gray-100 px-2 py-1 rounded">${config.host}</code></div>
+                    <div><strong>Database:</strong> <code class="bg-gray-100 px-2 py-1 rounded">${config.database}</code></div>
+                    <div><strong>Username:</strong> <code class="bg-gray-100 px-2 py-1 rounded">${config.username}</code></div>
+                    <div><strong>Password:</strong> <code class="bg-gray-100 px-2 py-1 rounded">${config.password_masked}</code></div>
+                    <div><strong>DSN:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-xs">${config.dsn}</code></div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading database config:', error);
+        document.getElementById('currentConfig').innerHTML = '<div class="text-red-600">Error loading configuration</div>';
+    }
+}
+
+async function testDatabaseConnection() {
+    const resultDiv = document.getElementById('connectionTestResult');
+    const button = event.target;
+    
+    // Get test values
+    const testData = {
+        host: document.getElementById('testHost').value,
+        database: document.getElementById('testDatabase').value,
+        username: document.getElementById('testUsername').value,
+        password: document.getElementById('testPassword').value,
+        ssl_enabled: document.getElementById('sslEnabled')?.checked || false,
+        ssl_cert: document.getElementById('sslCertPath')?.value || ''
+    };
+    
+    // Validate required fields
+    if (!testData.host || !testData.database || !testData.username) {
+        showResult(resultDiv, false, 'Please fill in all required fields (Host, Database, Username)');
+        return;
+    }
+    
+    // Show loading state
+    button.disabled = true;
+    button.textContent = '🔄 Testing...';
+    resultDiv.className = 'px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm';
+    resultDiv.innerHTML = '⏳ Testing connection...';
+    resultDiv.classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php?action=test_connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(testData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showResult(resultDiv, true, `
+                <div class="font-medium text-green-800 mb-2">✅ Connection Successful!</div>
+                <div class="text-xs space-y-1 text-green-700">
+                    <div>MySQL Version: ${result.info.mysql_version}</div>
+                    <div>Database: ${result.info.current_database}</div>
+                    <div>Tables: ${result.info.table_count}</div>
+                    <div>SSL: ${result.info.ssl_enabled ? 'Enabled' : 'Disabled'}</div>
+                    <div>Connected at: ${result.info.connection_time}</div>
+                </div>
+            `);
+        } else {
+            showResult(resultDiv, false, `Connection failed: ${result.message}`);
+        }
+    } catch (error) {
+        showResult(resultDiv, false, `Network error: ${error.message}`);
+    } finally {
+        button.disabled = false;
+        button.textContent = '🧪 Test Connection';
+    }
+}
+
+async function updateDatabaseConfig() {
+    const resultDiv = document.getElementById('credentialsUpdateResult');
+    const button = event.target;
+    
+    // Get update values
+    const updateData = {
+        host: document.getElementById('newHost').value,
+        database: document.getElementById('newDatabase').value,
+        username: document.getElementById('newUsername').value,
+        password: document.getElementById('newPassword').value,
+        environment: document.getElementById('environmentSelect').value,
+        ssl_enabled: document.getElementById('sslEnabled')?.checked || false,
+        ssl_cert: document.getElementById('sslCertPath')?.value || ''
+    };
+    
+    // Validate required fields
+    if (!updateData.host || !updateData.database || !updateData.username) {
+        showResult(resultDiv, false, 'Please fill in all required fields');
+        return;
+    }
+    
+    // Confirm action
+    if (!confirm(`Are you sure you want to update database credentials for ${updateData.environment} environment(s)? A backup will be created automatically.`)) {
+        return;
+    }
+    
+    // Show loading state
+    button.disabled = true;
+    button.textContent = '💾 Updating...';
+    resultDiv.className = 'px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm';
+    resultDiv.innerHTML = '⏳ Updating configuration...';
+    resultDiv.classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php?action=update_config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showResult(resultDiv, true, `
+                <div class="font-medium text-green-800 mb-1">✅ Configuration Updated!</div>
+                <div class="text-xs text-green-700">Backup created: ${result.backup_created}</div>
+                <div class="text-xs text-yellow-700 mt-2">⚠️ Please refresh the page to use new settings</div>
+            `);
+            
+            // Refresh current config display
+            setTimeout(() => {
+                loadCurrentDatabaseConfig();
+            }, 2000);
+        } else {
+            showResult(resultDiv, false, `Update failed: ${result.message}`);
+        }
+    } catch (error) {
+        showResult(resultDiv, false, `Network error: ${error.message}`);
+    } finally {
+        button.disabled = false;
+        button.textContent = '💾 Update Credentials';
+    }
+}
+
+function setupSSLHandlers() {
+    const sslCheckbox = document.getElementById('sslEnabled');
+    const sslOptions = document.getElementById('sslOptions');
+    
+    if (sslCheckbox && sslOptions) {
+        sslCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                sslOptions.classList.remove('hidden');
+            } else {
+                sslOptions.classList.add('hidden');
+            }
+        });
+    }
+}
+
+async function testSSLConnection() {
+    const resultDiv = document.getElementById('sslTestResult');
+    const button = event.target;
+    
+    const sslData = {
+        host: document.getElementById('testHost')?.value || document.getElementById('newHost')?.value,
+        database: document.getElementById('testDatabase')?.value || document.getElementById('newDatabase')?.value,
+        username: document.getElementById('testUsername')?.value || document.getElementById('newUsername')?.value,
+        password: document.getElementById('testPassword')?.value || document.getElementById('newPassword')?.value,
+        ssl_enabled: true,
+        ssl_cert: document.getElementById('sslCertPath').value
+    };
+    
+    if (!sslData.ssl_cert) {
+        showResult(resultDiv, false, 'Please specify SSL certificate path');
+        return;
+    }
+    
+    // Show loading state
+    button.disabled = true;
+    button.textContent = '🔄 Testing SSL...';
+    resultDiv.className = 'px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm';
+    resultDiv.innerHTML = '⏳ Testing SSL connection...';
+    resultDiv.classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php?action=test_connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sslData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showResult(resultDiv, true, `
+                <div class="font-medium text-green-800 mb-2">🔒 SSL Connection Successful!</div>
+                <div class="text-xs space-y-1 text-green-700">
+                    <div>SSL Certificate: Valid</div>
+                    <div>Encryption: Active</div>
+                    <div>MySQL Version: ${result.info.mysql_version}</div>
+                </div>
+            `);
+        } else {
+            showResult(resultDiv, false, `SSL connection failed: ${result.message}`);
+        }
+    } catch (error) {
+        showResult(resultDiv, false, `SSL test error: ${error.message}`);
+    } finally {
+        button.disabled = false;
+        button.textContent = '🔒 Test SSL Connection';
+    }
+}
+
+async function loadDatabaseStats() {
+    const statsDiv = document.getElementById('databaseStats');
+    
+    statsDiv.innerHTML = '<div class="col-span-full text-center py-4">Loading statistics...</div>';
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php?action=get_connection_stats');
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.stats;
+            
+            statsDiv.innerHTML = `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h5 class="font-semibold text-blue-800 mb-2">🔗 Connections</h5>
+                    <div class="text-2xl font-bold text-blue-900">${stats.current_connections}</div>
+                    <div class="text-xs text-blue-700">of ${stats.max_connections} max</div>
+                </div>
+                
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h5 class="font-semibold text-green-800 mb-2">💾 Database Size</h5>
+                    <div class="text-2xl font-bold text-green-900">${stats.database_size_mb} MB</div>
+                    <div class="text-xs text-green-700">Total storage used</div>
+                </div>
+                
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h5 class="font-semibold text-purple-800 mb-2">🗂️ Tables</h5>
+                    <div class="text-2xl font-bold text-purple-900">${stats.table_count}</div>
+                    <div class="text-xs text-purple-700">Active tables</div>
+                </div>
+                
+                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                    <h5 class="font-semibold text-indigo-800 mb-2">🕒 Last Updated</h5>
+                    <div class="text-sm font-medium text-indigo-900">${new Date(stats.last_updated).toLocaleString()}</div>
+                    <div class="text-xs text-indigo-700">Statistics timestamp</div>
+                </div>
+            `;
+        } else {
+            statsDiv.innerHTML = '<div class="col-span-full text-red-600">Error loading statistics</div>';
+        }
+    } catch (error) {
+        console.error('Error loading database stats:', error);
+        statsDiv.innerHTML = '<div class="col-span-full text-red-600">Failed to load statistics</div>';
+    }
+}
+
+async function refreshDatabaseStats() {
+    const button = event.target;
+    const originalText = button.textContent;
+    
+    button.disabled = true;
+    button.textContent = '🔄 Refreshing...';
+    
+    await loadDatabaseStats();
+    
+    setTimeout(() => {
+        button.disabled = false;
+        button.textContent = originalText;
+    }, 1000);
+}
+
+function showResult(element, success, message) {
+    element.className = success 
+        ? 'px-3 py-2 bg-green-50 border border-green-200 rounded text-sm'
+        : 'px-3 py-2 bg-red-50 border border-red-200 rounded text-sm';
+    
+    element.innerHTML = message;
+    element.classList.remove('hidden');
+}
+
+// Database Conversion Functions
+async function scanDatabaseConnections() {
+    const button = event.target;
+    const resultsDiv = document.getElementById('conversionResults');
+    
+    button.disabled = true;
+    button.textContent = '🔄 Scanning...';
+    
+    resultsDiv.className = 'mt-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm';
+    resultsDiv.innerHTML = '⏳ Scanning PHP files for database connections...';
+    resultsDiv.classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/api/convert_to_centralized_db.php?action=scan&format=json&admin_token=whimsical_admin_2024');
+        const result = await response.json();
+        
+        if (result.success) {
+            if (result.needs_conversion > 0) {
+                resultsDiv.className = 'mt-3 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded text-sm';
+                resultsDiv.innerHTML = `
+                    <div class="font-medium text-yellow-800 mb-2">⚠️ Files Need Conversion</div>
+                    <div class="text-xs space-y-1 text-yellow-700">
+                        <div>Total PHP files: ${result.total_files}</div>
+                        <div>Files needing conversion: ${result.needs_conversion}</div>
+                        <div class="mt-2">Files with direct PDO connections:</div>
+                        <ul class="list-disc list-inside ml-2">
+                            ${result.files.slice(0, 10).map(f => `<li>${f}</li>`).join('')}
+                            ${result.files.length > 10 ? `<li>... and ${result.files.length - 10} more</li>` : ''}
+                        </ul>
+                    </div>
+                `;
+            } else {
+                resultsDiv.className = 'mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded text-sm';
+                resultsDiv.innerHTML = `
+                    <div class="font-medium text-green-800 mb-1">✅ All Files Use Centralized Database!</div>
+                    <div class="text-xs text-green-700">Scanned ${result.total_files} PHP files - no conversion needed</div>
+                `;
+            }
+        } else {
+            throw new Error(result.message || 'Scan failed');
+        }
+    } catch (error) {
+        resultsDiv.className = 'mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded text-sm';
+        resultsDiv.innerHTML = `<div class="text-red-800">❌ Scan failed: ${error.message}</div>`;
+    } finally {
+        button.disabled = false;
+        button.textContent = '📊 Scan Files';
+    }
+}
+
+async function convertDatabaseConnections() {
+    const button = event.target;
+    const resultsDiv = document.getElementById('conversionResults');
+    
+    if (!confirm('This will modify files with direct PDO connections and create backups. Continue?')) {
+        return;
+    }
+    
+    button.disabled = true;
+    button.textContent = '🔄 Converting...';
+    
+    resultsDiv.className = 'mt-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm';
+    resultsDiv.innerHTML = '⏳ Converting files to use centralized database connections...';
+    resultsDiv.classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/api/convert_to_centralized_db.php?action=convert&format=json&admin_token=whimsical_admin_2024');
+        const result = await response.json();
+        
+        if (result.success) {
+            if (result.converted > 0) {
+                resultsDiv.className = 'mt-3 px-3 py-2 bg-green-50 border border-green-200 rounded text-sm';
+                resultsDiv.innerHTML = `
+                    <div class="font-medium text-green-800 mb-2">🎉 Conversion Completed!</div>
+                    <div class="text-xs space-y-1 text-green-700">
+                        <div>Files converted: ${result.converted}</div>
+                        <div>Conversion failures: ${result.failed}</div>
+                        <div class="mt-2">💾 Backups were created for all modified files</div>
+                        <div class="text-yellow-700">⚠️ Please test your application to ensure everything works correctly</div>
+                    </div>
+                    ${result.results.filter(r => r.status === 'converted').length > 0 ? `
+                        <details class="mt-2">
+                            <summary class="cursor-pointer text-green-700 hover:text-green-900">View converted files</summary>
+                            <ul class="list-disc list-inside ml-2 mt-1 text-xs">
+                                ${result.results.filter(r => r.status === 'converted').map(r => 
+                                    `<li>${r.file} (${r.changes} changes)</li>`
+                                ).join('')}
+                            </ul>
+                        </details>
+                    ` : ''}
+                `;
+            } else {
+                resultsDiv.className = 'mt-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm';
+                resultsDiv.innerHTML = `
+                    <div class="font-medium text-blue-800 mb-1">ℹ️ No Files Needed Conversion</div>
+                    <div class="text-xs text-blue-700">All files are already using centralized database connections</div>
+                `;
+            }
+        } else {
+            throw new Error(result.message || 'Conversion failed');
+        }
+    } catch (error) {
+        resultsDiv.className = 'mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded text-sm';
+        resultsDiv.innerHTML = `<div class="text-red-800">❌ Conversion failed: ${error.message}</div>`;
+    } finally {
+        button.disabled = false;
+        button.textContent = '🔄 Convert All';
+    }
+}
+
+function openConversionTool() {
+    // Open the conversion tool in a new tab
+    window.open('/api/convert_to_centralized_db.php?admin_token=whimsical_admin_2024', '_blank');
 }
 
 function toggleDatabaseBackupTables() {
@@ -5992,12 +6431,204 @@ function showRoomSettingsSuccess(message) {
                 </div>
             </div>
             
+            <!-- Database Maintenance Tabs -->
+            <div class="admin-tab-bar mb-4">
+                <button class="admin-tab active" onclick="switchDatabaseTab(this, 'connection')" data-tab="connection">🔗 Connection Settings</button>
+                <button class="admin-tab" onclick="switchDatabaseTab(this, 'credentials')" data-tab="credentials">🔑 Credentials</button>
+                <button class="admin-tab" onclick="switchDatabaseTab(this, 'ssl')" data-tab="ssl">🔒 SSL/Security</button>
+                <button class="admin-tab" onclick="switchDatabaseTab(this, 'stats')" data-tab="stats">📊 Statistics</button>
+                <button class="admin-tab" onclick="switchDatabaseTab(this, 'backup')" data-tab="backup">💾 Backup</button>
+            </div>
+
             <!-- Modal Content -->
             <div class="space-y-6" id="databaseMaintenanceContent">
                 <!-- Loading state -->
                 <div class="modal-loading" id="databaseMaintenanceLoading">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-3"></div>
                     <p class="text-gray-600">Loading database information...</p>
+                </div>
+                
+                <!-- Connection Settings Tab -->
+                <div id="connectionTab" class="db-tab-content">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-blue-800 mb-2">🔗 Current Database Connection</h4>
+                        <div id="currentConfig" class="space-y-2 text-sm">
+                            <!-- Current config will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-800 mb-3">✅ Test New Connection</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Database Host</label>
+                                <input type="text" id="testHost" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="localhost or db.example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Database Name</label>
+                                <input type="text" id="testDatabase" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="whimsicalfrog">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                <input type="text" id="testUsername" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="root">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input type="password" id="testPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-3">
+                            <button onclick="testDatabaseConnection()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium">
+                                🧪 Test Connection
+                            </button>
+                            <div id="connectionTestResult" class="hidden"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Credentials Tab -->
+                <div id="credentialsTab" class="db-tab-content hidden">
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-yellow-800 mb-2">⚠️ Database Credentials Management</h4>
+                        <p class="text-sm text-yellow-700">Update database credentials for local and/or production environments. A backup will be created automatically.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Environment</label>
+                            <select id="environmentSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                                <option value="local">Local Environment Only</option>
+                                <option value="production">Production Environment Only</option>
+                                <option value="both">Both Environments</option>
+                            </select>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">New Host</label>
+                                <input type="text" id="newHost" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">New Database</label>
+                                <input type="text" id="newDatabase" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">New Username</label>
+                                <input type="text" id="newUsername" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                <input type="password" id="newPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex space-x-3">
+                            <button onclick="updateDatabaseConfig()" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md font-medium">
+                                💾 Update Credentials
+                            </button>
+                            <div id="credentialsUpdateResult" class="hidden"></div>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                            <h5 class="font-semibold text-indigo-800 mb-2">🔄 Database Centralization</h5>
+                            <p class="text-sm text-indigo-700 mb-3">Convert all files to use centralized database connections for improved security and maintainability.</p>
+                            <div class="flex space-x-3">
+                                <button onclick="scanDatabaseConnections()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">
+                                    📊 Scan Files
+                                </button>
+                                <button onclick="convertDatabaseConnections()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium">
+                                    🔄 Convert All
+                                </button>
+                                <button onclick="openConversionTool()" class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm font-medium">
+                                    🛠️ Conversion Tool
+                                </button>
+                            </div>
+                            <div id="conversionResults" class="hidden mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SSL/Security Tab -->
+                <div id="sslTab" class="db-tab-content hidden">
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-purple-800 mb-2">🔒 SSL & Security Configuration</h4>
+                        <p class="text-sm text-purple-700">Configure SSL certificates and enhanced security options for database connections.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" id="sslEnabled" class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2">
+                            <label for="sslEnabled" class="text-sm font-medium text-gray-700">Enable SSL Connection</label>
+                        </div>
+                        
+                        <div id="sslOptions" class="hidden space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">SSL Certificate Path</label>
+                                <input type="text" id="sslCertPath" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="/path/to/certificate.pem">
+                                <p class="text-xs text-gray-500 mt-1">Full path to SSL certificate file</p>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3">
+                                <input type="checkbox" id="verifyCert" class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2">
+                                <label for="verifyCert" class="text-sm font-medium text-gray-700">Verify Server Certificate</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <button onclick="testSSLConnection()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium">
+                                🔒 Test SSL Connection
+                            </button>
+                            <div id="sslTestResult" class="hidden mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics Tab -->
+                <div id="statsTab" class="db-tab-content hidden">
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-indigo-800 mb-2">📊 Database Statistics & Health</h4>
+                        <p class="text-sm text-indigo-700">Monitor database performance and connection statistics.</p>
+                    </div>
+                    
+                    <div id="databaseStats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Stats will be loaded here -->
+                    </div>
+                    
+                    <div class="mt-6">
+                        <button onclick="refreshDatabaseStats()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium">
+                            🔄 Refresh Statistics
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Backup Tab -->
+                <div id="backupTab" class="db-tab-content hidden">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-green-800 mb-2">💾 Database Backup & Maintenance</h4>
+                        <p class="text-sm text-green-700">Create backups and perform database maintenance operations.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button onclick="showDatabaseBackupModal()" class="p-4 bg-green-100 hover:bg-green-200 border-2 border-green-300 rounded-lg text-green-800 font-medium transition-colors">
+                            <div class="flex items-center justify-center mb-2">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                </svg>
+                            </div>
+                            <div>Backup Database</div>
+                            <div class="text-xs text-green-600 mt-1">Export complete database</div>
+                        </button>
+                        
+                        <button onclick="compactRepairDatabase()" class="p-4 bg-blue-100 hover:bg-blue-200 border-2 border-blue-300 rounded-lg text-blue-800 font-medium transition-colors">
+                            <div class="flex items-center justify-center mb-2">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                </svg>
+                            </div>
+                            <div>Repair & Optimize</div>
+                            <div class="text-xs text-blue-600 mt-1">Fix and optimize tables</div>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Content will be loaded dynamically here -->

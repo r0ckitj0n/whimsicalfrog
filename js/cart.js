@@ -232,86 +232,62 @@ class ShoppingCart {
     }
 
     removeItem(itemSku, color = null, size = null, gender = null) {
-        // Normalize null values (handle 'null' strings from onclick handlers)
-        const normalizedColor = (color === 'null' || color === '' || color === undefined) ? null : color;
-        const normalizedSize = (size === 'null' || size === '' || size === undefined) ? null : size;
-        const normalizedGender = (gender === 'null' || gender === '' || gender === undefined) ? null : gender;
-        
-        this.items = this.items.filter(item => {
-            const itemColor = item.color || null;
-            const itemSize = item.size || null;
-            const itemGender = item.gender || null;
-            return !(item.sku === itemSku && itemColor === normalizedColor && itemSize === normalizedSize && itemGender === normalizedGender);
-        });
+        const key = this.getUniqueKey(itemSku, color, size, gender);
+        delete this.items[key];
         this.saveCart();
         this.updateCartCount();
         this.dispatchCartUpdate();
         
-        // Force re-render if we're on the cart page
-        if (document.getElementById('cartItems') || document.getElementById('cartContainer')) {
-            this.renderCart();
-        }
+        // Clean up any hidden notifications
+        this.cleanupHiddenNotifications();
         
-        // Track cart action for analytics
-        if (window.analyticsTracker) {
-            window.analyticsTracker.trackCartAction('remove', itemSku);
-        }
+        console.log(`Removed item: ${itemSku}, color: ${color}, size: ${size}, gender: ${gender}`);
     }
 
     updateQuantity(itemSku, quantity, color = null, size = null, gender = null) {
-        // Normalize null values (handle 'null' strings from onclick handlers)
-        const normalizedColor = (color === 'null' || color === '' || color === undefined) ? null : color;
-        const normalizedSize = (size === 'null' || size === '' || size === undefined) ? null : size;
-        const normalizedGender = (gender === 'null' || gender === '' || gender === undefined) ? null : gender;
-        
-        const item = this.items.find(cartItem => {
-            const itemColor = cartItem.color || null;
-            const itemSize = cartItem.size || null;
-            const itemGender = cartItem.gender || null;
-            return cartItem.sku === itemSku && itemColor === normalizedColor && itemSize === normalizedSize && itemGender === normalizedGender;
-        });
-        if (item) {
-            item.quantity = Math.max(0, quantity);
-            if (item.quantity === 0) {
-                this.removeItem(itemSku, normalizedColor, normalizedSize, normalizedGender);
+        const key = this.getUniqueKey(itemSku, color, size, gender);
+        if (this.items[key]) {
+            if (quantity <= 0) {
+                this.removeItem(itemSku, color, size, gender);
             } else {
+                this.items[key].quantity = quantity;
                 this.saveCart();
                 this.updateCartCount();
                 this.dispatchCartUpdate();
-                
-                // Force re-render if we're on the cart page
-                if (document.getElementById('cartItems') || document.getElementById('cartContainer')) {
-                    this.renderCart();
-                }
             }
         }
     }
 
     getTotal() {
-        return this.items.reduce((total, item) => {
-            const price = parseFloat(item.price) || 0;
-            const quantity = parseInt(item.quantity) || 0;
-            return total + (price * quantity);
+        return Object.values(this.items).reduce((total, item) => {
+            return total + (parseFloat(item.price) * item.quantity);
         }, 0);
     }
 
     getItemCount() {
-        return this.items.reduce((count, item) => count + item.quantity, 0);
+        return Object.values(this.items).reduce((count, item) => count + item.quantity, 0);
     }
 
     clearCart() {
-        this.items = [];
+        this.items = {};
         this.saveCart();
         this.updateCartCount();
         this.dispatchCartUpdate();
         
-        // Re-render the cart view to show empty state
-        this.renderCart();
+        // Clean up any hidden notifications
+        this.cleanupHiddenNotifications();
+        
+        // Show cart status (empty cart)
+        setTimeout(() => {
+            window.showInfo('🛒 Cart is now empty', {
+                duration: 3000,
+                title: 'Cart Cleared'
+            });
+        }, 500);
     }
 
     saveCart() {
         localStorage.setItem('cart', JSON.stringify(this.items));
-        this.updateCartCount();
     }
 
     updateCartCount() {
@@ -343,7 +319,58 @@ class ShoppingCart {
         return window.showValidation(message);
     }
 
+    // Add method to clean up any hidden notification elements
+    cleanupHiddenNotifications() {
+        // Remove any orphaned notification elements that might be consuming resources
+        const hiddenNotifications = document.querySelectorAll('[id*="toast"], [class*="toast"], [class*="notification"]:not([class*="wf-notification"])');
+        hiddenNotifications.forEach(element => {
+            // Only remove if it's actually hidden or has opacity 0
+            const styles = window.getComputedStyle(element);
+            if (styles.display === 'none' || styles.opacity === '0' || styles.visibility === 'hidden') {
+                console.log('Removing hidden notification element:', element);
+                element.remove();
+            }
+        });
+        
+        // Also check for any lingering cart popup notifications
+        const oldPopups = document.querySelectorAll('.cart-popup-notification');
+        oldPopups.forEach(popup => {
+            const styles = window.getComputedStyle(popup);
+            if (styles.opacity === '0' || parseFloat(styles.opacity) < 0.1) {
+                console.log('Removing hidden cart popup:', popup);
+                popup.remove();
+            }
+        });
+    }
+
+    // Add cart status toast notification
+    showCartStatusToast() {
+        const itemCount = this.getItemCount();
+        const total = this.getTotal();
+        const formattedTotal = '$' + total.toFixed(2);
+        
+        let statusMessage;
+        if (itemCount === 0) {
+            statusMessage = 'Cart is empty';
+        } else if (itemCount === 1) {
+            statusMessage = `🛒 1 item • ${formattedTotal}`;
+        } else {
+            statusMessage = `🛒 ${itemCount} items • ${formattedTotal}`;
+        }
+        
+        // Show cart status toast with a delay after the main notification
+        setTimeout(() => {
+            window.showInfo(statusMessage, {
+                duration: 4000, // Show for 4 seconds
+                title: 'Cart Status'
+            });
+        }, 1500); // Delay by 1.5 seconds so it appears after the main "item added" toast
+    }
+
     showAddToCartNotifications(item, addedQuantity, totalQuantity, isNewItem) {
+        // Clean up any hidden notifications first
+        this.cleanupHiddenNotifications();
+        
         // Build display name for notifications
         let displayName = item.name;
         let detailParts = [];
@@ -364,6 +391,9 @@ class ShoppingCart {
         
         // 2. Show small popup notification near the item (if possible)
         this.showItemPopupNotification(item, addedQuantity, totalQuantity, isNewItem);
+        
+        // 3. Show cart status toast after a brief delay
+        this.showCartStatusToast();
     }
     
     showItemPopupNotification(item, addedQuantity, totalQuantity, isNewItem) {
@@ -963,6 +993,53 @@ class ShoppingCart {
             console.error('Checkout error:', error);
             this.showErrorNotification('An error occurred during checkout. Please try again.');
         }
+    }
+
+    // Method to show current cart status (can be called manually)
+    showCurrentCartStatus() {
+        // Clean up any hidden notifications first
+        this.cleanupHiddenNotifications();
+        
+        const itemCount = this.getItemCount();
+        const total = this.getTotal();
+        const formattedTotal = '$' + total.toFixed(2);
+        
+        let statusMessage;
+        let statusTitle;
+        
+        if (itemCount === 0) {
+            statusMessage = 'Your cart is empty';
+            statusTitle = 'Cart Status';
+        } else if (itemCount === 1) {
+            statusMessage = `🛒 1 item • ${formattedTotal}`;
+            statusTitle = 'Cart Status'; 
+        } else {
+            statusMessage = `🛒 ${itemCount} items • ${formattedTotal}`;
+            statusTitle = 'Cart Status';
+        }
+        
+        window.showInfo(statusMessage, {
+            duration: 5000, // Show for 5 seconds when manually called
+            title: statusTitle
+        });
+    }
+
+    // Method to manually clean up hidden notifications (can be called from console)
+    manualCleanup() {
+        console.log('Starting manual cleanup of hidden notifications...');
+        this.cleanupHiddenNotifications();
+        
+        // Also clean up any duplicate notification containers
+        const containers = document.querySelectorAll('#wf-notification-container');
+        if (containers.length > 1) {
+            console.log(`Found ${containers.length} notification containers, removing duplicates...`);
+            // Keep the first one, remove the rest
+            for (let i = 1; i < containers.length; i++) {
+                containers[i].remove();
+            }
+        }
+        
+        console.log('Manual cleanup completed');
     }
 }
 
@@ -2019,4 +2096,37 @@ window.refreshModalOptions = function() {
             );
         }
     }
-}; 
+};
+
+// Initialize the global cart instance
+if (typeof window !== 'undefined') {
+    window.cart = new ShoppingCart();
+    console.log('✅ WhimsicalFrog Shopping Cart initialized');
+}
+
+// Global convenience functions for cart status and cleanup
+window.showCartStatus = function() {
+    if (window.cart) {
+        window.cart.showCurrentCartStatus();
+    } else {
+        console.warn('Cart not initialized');
+    }
+};
+
+window.cleanupNotifications = function() {
+    if (window.cart) {
+        window.cart.manualCleanup();
+    } else {
+        console.warn('Cart not initialized');
+    }
+};
+
+// Also expose the cart methods globally for easy debugging
+window.cartDebug = {
+    showStatus: () => window.cart && window.cart.showCurrentCartStatus(),
+    cleanup: () => window.cart && window.cart.manualCleanup(),
+    getItems: () => window.cart && window.cart.items,
+    getTotal: () => window.cart && window.cart.getTotal(),
+    getCount: () => window.cart && window.cart.getItemCount(),
+    clear: () => window.cart && window.cart.clearCart()
+};

@@ -73,24 +73,6 @@ if (empty($dashboardConfig)) {
 ?>
 
 <div class="dashboard-container">
-    <!-- Dashboard Header -->
-    <div class="dashboard-header mb-6">
-        <div class="flex justify-between items-start">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-2">📊 Dashboard Overview</h1>
-                <p class="text-gray-600">Your business at a glance - key metrics and recent activity</p>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="refreshDashboard()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-                    🔄 Refresh
-                </button>
-                <button onclick="openDashboardConfig()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                    ⚙️ Configure Dashboard
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Dashboard Sections -->
     <div class="dashboard-grid space-y-6">
         <?php foreach ($dashboardConfig as $config): ?>
@@ -249,14 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 1rem;
 }
 
-.dashboard-header {
-    margin-bottom: 1.5rem;
-    padding: 1.5rem;
-    background: white;
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
+
 
 .dashboard-grid {
     min-height: 200px;

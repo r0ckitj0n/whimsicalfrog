@@ -361,7 +361,7 @@ class ShoppingCart {
         // Show cart status toast with a delay after the main notification
         setTimeout(() => {
             window.showInfo(statusMessage, {
-                duration: 4000, // Show for 4 seconds
+                duration: 5000, // Show for 5 seconds
                 title: 'Cart Status'
             });
         }, 1500); // Delay by 1.5 seconds so it appears after the main "item added" toast

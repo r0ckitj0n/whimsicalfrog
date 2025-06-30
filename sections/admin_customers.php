@@ -7,8 +7,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
-// Load CSS utilities for consistent admin styling
-echo '<link rel="stylesheet" href="css/admin-styles.css">';
+// CSS is now loaded globally in index.php
 
 // Include database configuration
 require_once 'api/config.php';
@@ -301,33 +300,33 @@ $messageType = $_GET['type'] ?? '';
                             }
                             $initials = strtoupper($initials);
                         ?>
-                        <tr class="customer-row" data-customer-id="<?= htmlspecialchars($customerId) ?>">
+                        <tr data-customer-id="<?= htmlspecialchars($customerId) ?>">
                             <td>
-                                <div class="customer-info">
-                                    <div class="customer-avatar">
-                                        <span class="avatar-initials"><?= $initials ?></span>
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-semibold mr-3">
+                                        <?= $initials ?>
                                     </div>
-                                    <div class="customer-details">
-                                        <div class="customer-name"><?= htmlspecialchars($firstName . ' ' . $lastName) ?></div>
-                                        <div class="customer-username">@<?= htmlspecialchars($customer['username'] ?? '') ?></div>
+                                    <div>
+                                        <div class="font-medium"><?= htmlspecialchars($firstName . ' ' . $lastName) ?></div>
+                                        <div class="text-sm text-gray-500">@<?= htmlspecialchars($customer['username'] ?? '') ?></div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="customer-email"><?= htmlspecialchars($email) ?></td>
+                            <td><?= htmlspecialchars($email) ?></td>
                             <td>
-                                <span class="role-badge role-<?= strtolower($role) ?>">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= strtolower($role) === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' ?>">
                                     <?= htmlspecialchars($role) ?>
                                 </span>
                             </td>
-                            <td class="order-count"><?= $orderCount ?> orders</td>
+                            <td><?= $orderCount ?> orders</td>
                             <td>
-                                <div class="action-buttons">
+                                <div class="flex space-x-2">
                                     <a href="?page=admin&section=customers&view=<?= htmlspecialchars($customerId) ?>" 
-                                       class="action-btn view-btn" title="View Customer">👁️</a>
+                                       class="text-blue-600 hover:text-blue-800" title="View Customer">👁️</a>
                                     <a href="?page=admin&section=customers&edit=<?= htmlspecialchars($customerId) ?>" 
-                                       class="action-btn edit-btn" title="Edit Customer">✏️</a>
+                                       class="text-green-600 hover:text-green-800" title="Edit Customer">✏️</a>
                                     <button onclick="confirmDelete('<?= $customerId ?>', '<?= htmlspecialchars(addslashes($firstName . ' ' . $lastName)) ?>')" 
-                                            class="action-btn delete-btn" title="Delete Customer">🗑️</button>
+                                            class="text-red-600 hover:text-red-800" title="Delete Customer">🗑️</button>
                                 </div>
                             </td>
                         </tr>
@@ -347,7 +346,7 @@ $messageType = $_GET['type'] ?? '';
         </p>
         <div class="delete-modal-actions">
             <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-            <form action="" method="POST" style="display: inline;">
+                            <form action="" method="POST" class="inline-block">
                 <input type="hidden" name="customer_id" id="delete_customer_id">
                 <button type="submit" name="delete_customer" class="btn-danger">Delete</button>
             </form>
@@ -359,15 +358,11 @@ $messageType = $_GET['type'] ?? '';
 <!-- Customer View/Edit Modal -->
 <div class="customer-modal" id="customerModalOuter">
     <!-- Navigation Arrows -->
-    <button id="prevCustomerBtn" onclick="navigateToCustomer('prev')" class="nav-arrow left" title="Previous customer">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
-        </svg>
+    <button id="prevCustomerBtn" onclick="navigateToCustomer('prev')" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 text-gray-600" title="Previous customer">
+        <span class="text-xl">‹</span>
     </button>
-    <button id="nextCustomerBtn" onclick="navigateToCustomer('next')" class="nav-arrow right" title="Next customer">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
-        </svg>
+    <button id="nextCustomerBtn" onclick="navigateToCustomer('next')" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 text-gray-600" title="Next customer">
+        <span class="text-xl">›</span>
     </button>
     
     <div class="modal-content">

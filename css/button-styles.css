@@ -5088,29 +5088,83 @@
 }
 
 /* Section-specific styling */
-.content-section {
-    border-left: 4px solid #3b82f6;
+.content-section .section-header {
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 1.5rem;
+    border-bottom: none;
 }
 
-.visual-section {
-    border-left: 4px solid #8b5cf6;
+.content-section .section-header::before {
+    display: none;
 }
 
-.business-section {
-    border-left: 4px solid #10b981;
+.visual-section .section-header {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 1.5rem;
+    border-bottom: none;
 }
 
-.communication-section {
-    border-left: 4px solid #f59e0b;
+.visual-section .section-header::before {
+    display: none;
 }
 
-.technical-section {
-    border-left: 4px solid #ef4444;
+.business-section .section-header {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 1.5rem;
+    border-bottom: none;
+}
+
+.business-section .section-header::before {
+    display: none;
+}
+
+.communication-section .section-header {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 1.5rem;
+    border-bottom: none;
+}
+
+.communication-section .section-header::before {
+    display: none;
+}
+
+.technical-section .section-header {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 1.5rem;
+    border-bottom: none;
+}
+
+.technical-section .section-header::before {
+    display: none;
 }
 
 /* AI & Automation Section */
-.ai-automation-section {
-    border-left: 4px solid #06b6d4;
+.ai-automation-section .section-header {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 1.5rem;
+    border-bottom: none;
+}
+
+.ai-automation-section .section-header::before {
+    display: none;
 }
 
 /* Responsive Design */

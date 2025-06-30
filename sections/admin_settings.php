@@ -19379,6 +19379,12 @@ async function loadDashboardConfiguration() {
     const currentSectionsDiv = document.getElementById('currentSectionsList');
     const availableSectionsDiv = document.getElementById('availableSectionsList');
     
+    // Reset loading state
+    loadingDiv.innerHTML = `
+        <div class="modal-loading-spinner"></div>
+        <p class="text-gray-600">Loading dashboard configuration...</p>
+    `;
+    
     // Show loading state
     loadingDiv.style.display = 'block';
     currentSectionsDiv.innerHTML = '';
@@ -19386,6 +19392,11 @@ async function loadDashboardConfiguration() {
     
     try {
         const response = await fetch('/api/dashboard_sections.php?action=get_sections&admin_token=whimsical_admin_2024');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (!data.success) {
@@ -19487,6 +19498,11 @@ function renderCurrentSections(sections, container) {
 async function loadAvailableSections(container) {
     try {
         const response = await fetch('/api/dashboard_sections.php?action=get_available_sections&admin_token=whimsical_admin_2024');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (!data.success) {
@@ -19501,6 +19517,9 @@ async function loadAvailableSections(container) {
             <div class="bg-red-50 p-4 rounded-lg border border-red-200">
                 <p class="text-red-600">Failed to load available sections</p>
                 <p class="text-sm text-gray-500">${error.message}</p>
+                <button onclick="loadAvailableSections(document.getElementById('availableSectionsList'))" class="mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600">
+                    Retry
+                </button>
             </div>
         `;
     }
@@ -19572,6 +19591,10 @@ async function addDashboardSection(sectionKey) {
             })
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (!data.success) {
@@ -19609,6 +19632,10 @@ async function removeDashboardSection(sectionKey) {
                 admin_token: 'whimsical_admin_2024'
             })
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const data = await response.json();
         
@@ -19659,6 +19686,11 @@ async function saveDashboardConfig() {
     try {
         // Get current sections and apply changes
         const response = await fetch('/api/dashboard_sections.php?action=get_sections&admin_token=whimsical_admin_2024');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (!data.success) {
@@ -19685,6 +19717,10 @@ async function saveDashboardConfig() {
                 admin_token: 'whimsical_admin_2024'
             })
         });
+        
+        if (!saveResponse.ok) {
+            throw new Error(`HTTP error! status: ${saveResponse.status}`);
+        }
         
         const saveData = await saveResponse.json();
         
@@ -19720,6 +19756,11 @@ async function moveSectionDown(sectionKey) {
 async function reorderSection(sectionKey, direction) {
     try {
         const response = await fetch('/api/dashboard_sections.php?action=get_sections&admin_token=whimsical_admin_2024');  
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (!data.success) {
@@ -19754,6 +19795,10 @@ async function reorderSection(sectionKey, direction) {
                 admin_token: 'whimsical_admin_2024'
             })
         });
+        
+        if (!saveResponse.ok) {
+            throw new Error(`HTTP error! status: ${saveResponse.status}`);
+        }
         
         const saveData = await saveResponse.json();
         

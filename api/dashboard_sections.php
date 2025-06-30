@@ -1,14 +1,20 @@
 <?php
 // Dashboard Sections Management API
+ob_start(); // Start output buffering to prevent header issues
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+
+// Clear any previous output that might interfere with headers
+ob_clean();
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    ob_end_clean();
     exit(0);
 }
 
@@ -309,6 +315,10 @@ try {
     
 } catch (Exception $e) {
     Logger::exception($e, 'Dashboard sections API error');
+    ob_clean(); // Clear any output before sending error response
     Response::serverError('Failed to process dashboard sections request: ' . $e->getMessage());
 }
+
+ob_end_flush(); // Send the buffered output
+exit();
 ?> 

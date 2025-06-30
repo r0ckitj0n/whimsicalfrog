@@ -575,13 +575,11 @@ function closeSystemConfigModal() {
 
 function openDatabaseMaintenanceModal() {
     document.getElementById('databaseMaintenanceModal').style.display = 'block';
-    loadDatabaseInformation();
     // Hide loading and show connection tab by default
-    setTimeout(() => {
-        document.getElementById('databaseMaintenanceLoading').style.display = 'none';
-        switchDatabaseTab(document.querySelector('[data-tab="connection"]'), 'connection');
-        loadCurrentDatabaseConfig();
-    }, 500);
+    document.getElementById('databaseMaintenanceLoading').style.display = 'none';
+    switchDatabaseTab(document.querySelector('[data-tab="connection"]'), 'connection');
+    // Also load the current configuration immediately
+    loadCurrentDatabaseConfig();
 }
 
 async function loadDatabaseInformation() {
@@ -725,7 +723,7 @@ function switchDatabaseTab(tabElement, tabName) {
 
 async function loadCurrentDatabaseConfig() {
     try {
-        const response = await fetch('/api/database_maintenance.php?action=get_config');
+        const response = await fetch('/api/database_maintenance.php?action=get_config&admin_token=whimsical_admin_2024');
         const result = await response.json();
         
         if (result.success) {
@@ -777,7 +775,7 @@ async function testDatabaseConnection() {
     resultDiv.classList.remove('hidden');
     
     try {
-        const response = await fetch('/api/database_maintenance.php?action=test_connection', {
+        const response = await fetch('/api/database_maintenance.php?action=test_connection&admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(testData)
@@ -841,7 +839,7 @@ async function updateDatabaseConfig() {
     resultDiv.classList.remove('hidden');
     
     try {
-        const response = await fetch('/api/database_maintenance.php?action=update_config', {
+        const response = await fetch('/api/database_maintenance.php?action=update_config&admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updateData)
@@ -912,7 +910,7 @@ async function testSSLConnection() {
     resultDiv.classList.remove('hidden');
     
     try {
-        const response = await fetch('/api/database_maintenance.php?action=test_connection', {
+        const response = await fetch('/api/database_maintenance.php?action=test_connection&admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(sslData)
@@ -946,7 +944,7 @@ async function loadDatabaseStats() {
     statsDiv.innerHTML = '<div class="col-span-full text-center py-4">Loading statistics...</div>';
     
     try {
-        const response = await fetch('/api/database_maintenance.php?action=get_connection_stats');
+        const response = await fetch('/api/database_maintenance.php?action=get_connection_stats&admin_token=whimsical_admin_2024');
         const result = await response.json();
         
         if (result.success) {
@@ -6413,23 +6411,7 @@ function showRoomSettingsSuccess(message) {
                 </button>
             </div>
             
-            <!-- Database Action Buttons -->
-            <div class="mb-4 p-3 bg-transparent rounded-lg">
-                <div class="flex items-center justify-center space-x-4">
-                    <button onclick="showDatabaseBackupModal()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center text-left">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                        </svg>
-                        Backup Website Database
-                    </button>
-                    <button onclick="compactRepairDatabase()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center text-left">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        </svg>
-                        Compact & Repair Database
-                    </button>
-                </div>
-            </div>
+
             
             <!-- Database Maintenance Tabs -->
             <div class="admin-tab-bar mb-4">
@@ -15249,36 +15231,7 @@ async function loadDocumentation() {
     }
 }
 
-// Switch database tabs
-function switchDatabaseTab(tab) {
-    // Update tab buttons - remove active styling from all tabs
-    document.querySelectorAll('.db-tab').forEach(btn => {
-        btn.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
-        btn.classList.add('bg-gray-50', 'text-gray-600');
-    });
-    
-    // Add active styling to selected tab
-    const activeTab = document.querySelector(`[onclick="switchDatabaseTab('${tab}')"]`);
-    activeTab.classList.remove('bg-gray-50', 'text-gray-600');
-    activeTab.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
-    
-    // Show/hide content
-    document.querySelectorAll('.db-tab-content').forEach(content => {
-        content.style.display = 'none';
-    });
-    
-    const targetContent = document.getElementById(`db-${tab}-tab`);
-    if (tab === 'docs') {
-        targetContent.style.display = 'flex'; // Use flex for documentation tab
-    } else {
-        targetContent.style.display = 'block';
-    }
-    
-    // Load documentation if switching to docs tab
-    if (tab === 'docs') {
-        loadDocumentation();
-    }
-}
+// Removed duplicate switchDatabaseTab function - using the comprehensive one above
 
 // ===== END DATABASE TABLES FUNCTIONALITY =====
 
@@ -16220,63 +16173,147 @@ function updateConnectionStatus(isConnected, lastSync) {
 
 <!-- Receipt Settings Modal -->
 <div id="receiptSettingsModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Receipt Message Settings</h2>
-            <button onclick="closeReceiptSettingsModal()" class="close-button">×</button>
+    <div class="admin-modal-content" style="max-width: 1000px; max-height: 90vh;">
+        <div class="admin-modal-header">
+            <h2 class="modal-title">📧 Receipt Message Settings</h2>
+            <button onclick="closeReceiptSettingsModal()" class="modal-close">×</button>
         </div>
         
-        <div class="modal-body">
-            <p class="text-gray-600 mb-6">Customize receipt messages based on shipping method, item count, and categories. Messages will use your selected AI style and tone.</p>
-            
-            <!-- Settings Tabs -->
-            <div class="receipt-settings-tabs mb-6">
-                <button class="receipt-tab active" data-tab="shipping">Shipping Methods</button>
-                <button class="receipt-tab" data-tab="items">Item Count</button>
-                <button class="receipt-tab" data-tab="categories">Categories</button>
-                <button class="receipt-tab" data-tab="default">Default</button>
+        <!-- Tab Navigation at Top -->
+        <div class="admin-tab-bar" style="margin: 0; border-bottom: 1px solid #e5e7eb; padding: 0 24px; background: #f9fafb;">
+            <button class="admin-tab active" data-tab="shipping" onclick="switchReceiptTab('shipping')">
+                🚚 Shipping Methods
+            </button>
+            <button class="admin-tab" data-tab="items" onclick="switchReceiptTab('items')">
+                📦 Item Count
+            </button>
+            <button class="admin-tab" data-tab="categories" onclick="switchReceiptTab('categories')">
+                🏷️ Categories
+            </button>
+            <button class="admin-tab" data-tab="default" onclick="switchReceiptTab('default')">
+                📄 Default
+            </button>
+        </div>
+        
+        <!-- Description directly below tabs - full width -->
+        <div style="padding: 16px 24px; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-sm text-blue-700 mb-0">
+                    📝 Customize receipt messages based on shipping method, item count, and categories. 
+                    Messages will use your selected AI style and tone.
+                </p>
             </div>
-            
-            <!-- Shipping Method Settings -->
+        </div>
+        
+        <div class="modal-body" style="padding: 0;">
+            <style>
+                /* Force full width for receipt modal content */
+                #receiptSettingsModal .receipt-tab-content {
+                    width: 100% !important;
+                    box-sizing: border-box;
+                    padding: 24px;
+                }
+                #receiptSettingsModal .receipt-tab-content > div {
+                    width: 100% !important;
+                }
+                #receiptSettingsModal .space-y-4 {
+                    width: 100% !important;
+                }
+                #receiptSettingsModal .receipt-message-item {
+                    width: 100% !important;
+                    max-width: none !important;
+                    box-sizing: border-box;
+                }
+                #receiptSettingsModal .grid {
+                    width: 100% !important;
+                }
+                /* Set max height on the modal content container instead */
+                #receiptSettingsModal .admin-modal-content {
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    display: flex;
+                    flex-direction: column;
+                }
+                #receiptSettingsModal .modal-body {
+                    flex: 1;
+                    overflow: visible;
+                }
+            </style>
+            <!-- Main Content Area -->
+            <!-- Shipping Method Settings (Main Focus) -->
             <div id="shippingTab" class="receipt-tab-content active">
-                <h3 class="text-lg font-semibold mb-4">Shipping Method Messages</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">🚚 Shipping Method Messages</h3>
+                    <button onclick="addShippingMessage()" class="btn-primary btn-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Method
+                    </button>
+                </div>
                 <div id="shippingMessages" class="space-y-4">
                     <!-- Dynamic content will be loaded here -->
                 </div>
-                <button onclick="addShippingMessage()" class="btn-secondary mt-4">Add Shipping Method</button>
             </div>
             
             <!-- Item Count Settings -->
             <div id="itemsTab" class="receipt-tab-content">
-                <h3 class="text-lg font-semibold mb-4">Item Count Messages</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">📦 Item Count Messages</h3>
+                    <button onclick="addItemCountMessage()" class="btn-primary btn-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Rule
+                    </button>
+                </div>
                 <div id="itemCountMessages" class="space-y-4">
                     <!-- Dynamic content will be loaded here -->
                 </div>
-                <button onclick="addItemCountMessage()" class="btn-secondary mt-4">Add Item Count Rule</button>
             </div>
             
             <!-- Category Settings -->
             <div id="categoriesTab" class="receipt-tab-content">
-                <h3 class="text-lg font-semibold mb-4">Category-Specific Messages</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">🏷️ Category-Specific Messages</h3>
+                    <button onclick="addCategoryMessage()" class="btn-primary btn-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Add Category
+                    </button>
+                </div>
                 <div id="categoryMessages" class="space-y-4">
                     <!-- Dynamic content will be loaded here -->
                 </div>
-                <button onclick="addCategoryMessage()" class="btn-secondary mt-4">Add Category Message</button>
             </div>
             
             <!-- Default Settings -->
             <div id="defaultTab" class="receipt-tab-content">
-                <h3 class="text-lg font-semibold mb-4">Default Message</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">📄 Default Message</h3>
+                    <span class="text-sm text-gray-500 bg-gray-200 px-3 py-1 rounded-full">
+                        Fallback when no specific rules match
+                    </span>
+                </div>
                 <div id="defaultMessages" class="space-y-4">
                     <!-- Dynamic content will be loaded here -->
                 </div>
             </div>
+            
+
         </div>
         
         <div class="modal-footer">
-            <button onclick="saveReceiptSettings()" class="btn-primary">Save Settings</button>
-            <button onclick="initializeReceiptDefaults()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md mr-3">Initialize Defaults</button>
-            <button onclick="closeReceiptSettingsModal()" class="btn-secondary">Cancel</button>
+            <button onclick="saveReceiptSettings()" class="btn-primary">
+                💾 Save Settings
+            </button>
+            <button onclick="initializeReceiptDefaults()" class="btn-info">
+                🔄 Initialize Defaults
+            </button>
+            <button onclick="closeReceiptSettingsModal()" class="btn-secondary">
+                Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -16296,20 +16333,9 @@ function closeReceiptSettingsModal() {
     document.getElementById('receiptSettingsModal').style.display = 'none';
 }
 
-// Tab switching
-document.addEventListener('DOMContentLoaded', function() {
-    const receiptTabs = document.querySelectorAll('.receipt-tab');
-    receiptTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tabName = this.dataset.tab;
-            switchReceiptTab(tabName);
-        });
-    });
-});
-
 function switchReceiptTab(tabName) {
-    // Update tab buttons
-    document.querySelectorAll('.receipt-tab').forEach(tab => {
+    // Update tab buttons - use admin-tab class instead of receipt-tab
+    document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.classList.remove('active');
     });
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
@@ -16375,36 +16401,40 @@ function renderDefaultMessages() {
 
 function createMessageHTML(message, type) {
     const aiClass = message.ai_generated ? 'ai-generated' : '';
-    const aiLabel = message.ai_generated ? '<span class="text-xs text-blue-600 font-medium">🤖 AI Generated</span>' : '';
+    const aiLabel = message.ai_generated ? '<span class="text-xs text-blue-600 font-medium bg-blue-100 px-2 py-1 rounded">🤖 AI Generated</span>' : '';
     
     return `
-        <div class="receipt-message-item ${aiClass}" data-id="${message.id}">
-            <div class="flex justify-between items-start mb-2">
-                <div>
-                    <strong>${message.condition_value}</strong>
+        <div class="receipt-message-item ${aiClass} bg-white border border-gray-200 rounded-lg p-3" data-id="${message.id}">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center space-x-2">
+                    <span class="font-medium text-gray-800">${message.condition_value}</span>
                     ${aiLabel}
+                </div>
+                <button onclick="deleteReceiptMessage(${message.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete Message">
+                    🗑️
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3 mb-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Title:</label>
+                    <input type="text" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500" 
+                           value="${message.message_title}" 
+                           onchange="updateMessageField(${message.id}, 'message_title', this.value)"
+                           placeholder="Enter title...">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Message:</label>
+                    <textarea class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500" 
+                              rows="3"
+                              onchange="updateMessageField(${message.id}, 'message_content', this.value)"
+                              placeholder="Enter message content...">${message.message_content}</textarea>
                 </div>
             </div>
             
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Title:</label>
-                <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md" 
-                       value="${message.message_title}" 
-                       onchange="updateMessageField(${message.id}, 'message_title', this.value)">
-            </div>
-            
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Message:</label>
-                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="3"
-                          onchange="updateMessageField(${message.id}, 'message_content', this.value)">${message.message_content}</textarea>
-            </div>
-            
-            <div class="receipt-message-controls">
-                <button onclick="generateAIMessage(${message.id}, '${type}')" class="btn-ai">
+            <div class="flex justify-end">
+                <button onclick="generateAIMessage(${message.id}, '${type}')" class="btn-secondary btn-sm">
                     🤖 Generate with AI
-                </button>
-                <button onclick="deleteReceiptMessage(${message.id})" class="text-red-600 hover:text-red-800" title="Delete Message">
-                    🗑️ Delete
                 </button>
             </div>
         </div>

@@ -10,7 +10,7 @@ echo "Starting image migration from products to items directory...\n";
 
 try {
     // Create database connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     $oldDir = __DIR__ . '/../images/products/';
     $newDir = __DIR__ . '/../images/items/';

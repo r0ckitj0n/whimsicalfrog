@@ -18,7 +18,7 @@ $ordersData = [];
 
 try {
     // Create a PDO connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Fetch customers/users data directly from database
     $stmt = $pdo->query('SELECT * FROM users');
@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_customer'])) {
     
     try {
         // Create a PDO connection
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         
         // Delete customer from database
         $stmt = $pdo->prepare('DELETE FROM users WHERE id = ?');

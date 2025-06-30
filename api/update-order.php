@@ -17,7 +17,7 @@ if (empty($input['orderId'])) { http_response_code(400); echo json_encode(['erro
 $orderId = $input['orderId'];
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     // Ensure order exists
     $chk = $pdo->prepare('SELECT id FROM orders WHERE id = ?');
     $chk->execute([$orderId]);

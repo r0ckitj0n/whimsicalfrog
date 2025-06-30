@@ -5,7 +5,7 @@ header('Content-Type: application/json');
 
 try {
     // Create PDO connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     // Create pricing_explanations table
     $createTable = "
     CREATE TABLE IF NOT EXISTS pricing_explanations (

@@ -24,7 +24,7 @@ if (empty($sku)) {
 }
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Get the most recent price suggestion for this SKU
     $stmt = $pdo->prepare("

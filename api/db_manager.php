@@ -19,7 +19,7 @@ header('Content-Type: application/json');
 requireAdmin();
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     $action = $_POST['action'] ?? $_GET['action'] ?? 'status';
     $result = ['success' => false, 'message' => '', 'data' => null];

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -25,11 +25,8 @@ if (!isAdminWithToken()) {
 }
 
 try {
-    // Create database connection using config variables
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-    ]);
+    // Create database connection using centralized Database class
+    $pdo = Database::getInstance();
     
     // Get list of all tables
     $stmt = $pdo->query("SHOW TABLES");

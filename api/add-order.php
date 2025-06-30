@@ -57,7 +57,7 @@ if (!$input) {
 // Debug the parsed input
 error_log("add-order.php: Parsed input: " . print_r($input, true));
 
-$pdo = new PDO($dsn, $user, $pass, $options);
+try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
 // Ensure order_items table has size column (migration)
 try {

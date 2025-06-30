@@ -10,7 +10,7 @@ function initializeEmailLogsTable() {
     global $dsn, $user, $pass, $options;
     
     try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         
         $createTableSQL = "
             CREATE TABLE IF NOT EXISTS email_logs (
@@ -47,7 +47,7 @@ function logEmail($toEmail, $fromEmail, $subject, $content, $emailType, $status 
         // Initialize table if needed
         initializeEmailLogsTable();
         
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         
         $sql = "INSERT INTO email_logs (to_email, from_email, subject, content, email_type, status, error_message, order_id, created_by) 
                 VALUES (:to_email, :from_email, :subject, :content, :email_type, :status, :error_message, :order_id, :created_by)";

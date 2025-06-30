@@ -9,7 +9,7 @@ require_once 'config.php';
 header('Content-Type: application/xml; charset=utf-8');
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Start XML sitemap
     echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

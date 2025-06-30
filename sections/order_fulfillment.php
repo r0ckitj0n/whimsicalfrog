@@ -1,6 +1,6 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/api/config.php';
-$pdo = new PDO($dsn, $user, $pass, $options);
+try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
 // Get filter parameters
 $filterDate = $_GET['filter_date'] ?? '';

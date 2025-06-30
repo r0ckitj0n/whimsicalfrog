@@ -8,7 +8,7 @@ function handleReceiptSettings() {
     global $dsn, $user, $pass, $options;
     
     try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         
         $action = $_GET['action'] ?? $_POST['action'] ?? 'get_settings';

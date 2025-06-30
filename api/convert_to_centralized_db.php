@@ -34,11 +34,20 @@ $projectRoot = dirname(__DIR__);
 
 // Define patterns to search for and their replacements
 $patterns = [
-    // Direct PDO instantiation
+    // Direct PDO instantiation with variables
     '/\$pdo = new PDO\(\$dsn, \$user, \$pass, \$options\);/' => 'try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
     
-    // Other PDO instantiation patterns
+    // PDO with different variable names
+    '/\$tempPdo = new PDO\(\$dsn, \$user, \$pass, \$options\);/' => 'try { $tempPdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
+    
+    // PDO with direct connection string (common pattern)
+    '/\$pdo = new PDO\("mysql:host=\$host;dbname=\$dbname;charset=utf8mb4", \$username, \$password\);/' => 'try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
+    
+    // Other PDO instantiation patterns with arrays
     '/\$pdo = new PDO\(\$dsn, \$user, \$pass, \[[\s\S]*?\]\);/' => 'try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
+    
+    // Generic PDO pattern (more flexible)
+    '/\$\w+ = new PDO\([^;]+\);/' => 'try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
     
     // Self PDO assignment in classes
     '/self::\$pdo = new PDO\(\$dsn, \$user, \$pass, \$options\);/' => 'try { self::$pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
@@ -173,7 +182,7 @@ function convertFile($filePath, $patterns) {
 
 // Main execution
 if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
-    $action = $_GET['action'] ?? 'scan';
+    $action = PHP_SAPI === 'cli' ? ($argv[1] ?? 'scan') : ($_GET['action'] ?? 'scan');
     
     switch ($action) {
         case 'scan':

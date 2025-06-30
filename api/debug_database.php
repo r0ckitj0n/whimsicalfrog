@@ -66,7 +66,7 @@ if (extension_loaded('pdo')) {
 echo "<h3>4. Database Connection Test</h3>";
 if (isset($dsn) && isset($user) && isset($pass) && isset($options)) {
     try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         echo "✅ Database connection successful!<br>";
         
         // Test basic query

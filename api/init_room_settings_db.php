@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Create room_settings table
     $createTable = "

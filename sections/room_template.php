@@ -12,7 +12,7 @@ $seoData = [];
 try {
     // Get the primary category for this room directly from database (avoid HTTP request loop)
     require_once __DIR__ . '/../api/config.php';
-    $tempPdo = new PDO($dsn, $user, $pass, $options);
+    try { $tempPdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     $stmt = $tempPdo->prepare("
         SELECT rca.*, c.name, c.description, c.id as category_id

@@ -21,7 +21,7 @@ require_once __DIR__ . '/api/config.php';
 
 try {
     // Create database connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Build query based on filters
     $query = "SELECT * FROM items";

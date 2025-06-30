@@ -36,7 +36,7 @@ try {
     $password = $data['password'];
     
     // Create database connection using config
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Query for user
     $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ? AND password = ?');

@@ -7,7 +7,7 @@ require_once 'config.php';
 header('Content-Type: text/html; charset=UTF-8');
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     echo "<h2>Business Settings Database Initialization</h2>";
     

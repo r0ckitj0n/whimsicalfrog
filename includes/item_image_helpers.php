@@ -209,7 +209,7 @@ function getDbConnection() {
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ];
             
-            $pdo = new PDO($dsn, $user, $pass, $options);
+            try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         } catch (PDOException $e) {
             error_log("Database connection error in getDbConnection: " . $e->getMessage());
             return null;

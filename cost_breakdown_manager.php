@@ -13,7 +13,7 @@ $messageType = '';
 
 // Connect to database
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Get all inventory items
     $stmt = $pdo->query("SELECT id, name, category, costPrice FROM inventory ORDER BY name");

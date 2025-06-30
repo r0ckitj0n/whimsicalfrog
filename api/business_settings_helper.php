@@ -17,7 +17,7 @@ class BusinessSettings {
                 throw new Exception('Database configuration not available');
             }
             
-            self::$pdo = new PDO($dsn, $user, $pass, $options);
+            self::try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         }
         return self::$pdo;
     }

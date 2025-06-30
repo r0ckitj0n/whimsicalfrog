@@ -143,7 +143,7 @@ function handleUploadedImageProcessing($input) {
     
     // Get image information from database
     global $dsn, $user, $pass, $options;
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     if (!empty($imageId)) {
         // Process specific image
@@ -232,7 +232,7 @@ function handleProcessingStatus($input) {
     }
     
     global $dsn, $user, $pass, $options;
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     $stmt = $pdo->prepare("
         SELECT id, image_path, processed_with_ai, processing_date, ai_trim_data 
@@ -281,7 +281,7 @@ function handleProcessingStatus($input) {
  */
 function updateImageDatabase($sku, $originalPath, $processedPath, $processingData) {
     global $dsn, $user, $pass, $options;
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Convert paths to relative
     $relativeOriginal = str_replace(__DIR__ . '/../', '', $originalPath);
@@ -324,7 +324,7 @@ function updateImageDatabase($sku, $originalPath, $processedPath, $processingDat
  */
 function updateImageDatabaseRecord($imageId, $sku, $originalPath, $processedPath, $processingData) {
     global $dsn, $user, $pass, $options;
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Convert paths to relative
     $relativeOriginal = str_replace(__DIR__ . '/../', '', $originalPath);

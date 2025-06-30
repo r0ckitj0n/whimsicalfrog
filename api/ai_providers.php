@@ -21,7 +21,7 @@ class AIProviders {
     private function getPDO() {
         if ($this->pdo === null) {
             global $dsn, $user, $pass, $options;
-            $this->pdo = new PDO($dsn, $user, $pass, $options);
+            try { $this->pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         }
         return $this->pdo;
     }

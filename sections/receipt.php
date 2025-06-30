@@ -12,7 +12,7 @@ if ($orderId === '') {
 }
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     $pdo->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
     
     // Get order details

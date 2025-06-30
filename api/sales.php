@@ -35,7 +35,7 @@ function checkAuth() {
 }
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Get action from query params, form data, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';

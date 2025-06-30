@@ -36,7 +36,7 @@ if (!$isLoggedIn || !$isAdmin) {
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     switch ($action) {
         case 'get_settings':
@@ -88,7 +88,7 @@ try {
  */
 function getAISettings() {
     global $dsn, $user, $pass, $options;
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     $defaults = [
         'ai_provider' => 'jons_ai',

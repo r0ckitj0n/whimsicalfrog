@@ -30,7 +30,7 @@ if (in_array($action, $adminOnlyActions)) {
 }
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     switch ($action) {
         case 'get':

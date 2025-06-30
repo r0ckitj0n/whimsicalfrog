@@ -1,4 +1,6 @@
 <?php
+
+require_once __DIR__ . '/../includes/functions.php';
 // Background management API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -16,7 +18,7 @@ $username = 'root';
 $password = 'Palz2516';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     http_response_code(500);

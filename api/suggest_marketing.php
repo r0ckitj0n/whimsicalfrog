@@ -66,7 +66,7 @@ if (empty($name)) {
 }
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Create marketing_suggestions table if it doesn't exist
     $createTableSql = "CREATE TABLE IF NOT EXISTS marketing_suggestions (

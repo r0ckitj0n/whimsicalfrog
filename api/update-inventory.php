@@ -26,7 +26,7 @@ try {
     $data = json_decode(file_get_contents('php://input'), true);
     
     // Create database connection using config
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Handle field updates
     if (isset($data['sku']) && isset($data['field']) && isset($data['value'])) {

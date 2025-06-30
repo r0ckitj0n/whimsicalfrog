@@ -12,7 +12,7 @@ require_once __DIR__ . '/config.php';
 
 // Create PDO connection
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 } catch (PDOException $e) {
     echo "❌ Database connection failed: " . $e->getMessage() . "\n";
     exit(1);

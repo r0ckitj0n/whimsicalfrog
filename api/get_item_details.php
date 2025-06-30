@@ -8,7 +8,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 require_once 'config.php';
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     if (!isset($_GET['sku'])) {
         http_response_code(400);

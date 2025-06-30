@@ -14,7 +14,7 @@ $response = ['success' => false, 'message' => 'An unknown error occurred.'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     try {
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         $action = $_POST['action'];
 
         if ($action === 'create') {

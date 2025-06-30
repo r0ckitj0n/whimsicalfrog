@@ -38,7 +38,7 @@ if (!isAdminWithToken()) {
 }
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Get JSON input
     $jsonInput = json_decode(file_get_contents('php://input'), true);

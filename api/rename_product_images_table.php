@@ -14,7 +14,7 @@ try {
     echo "=== WhimsicalFrog: Rename product_images to item_images ===\n";
     echo "Starting migration...\n\n";
     
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Check if product_images table exists
     $stmt = $pdo->query("SHOW TABLES LIKE 'product_images'");

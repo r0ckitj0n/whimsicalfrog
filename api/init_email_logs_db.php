@@ -11,7 +11,7 @@ require_once 'config.php';
 
 try {
     // Create PDO connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     echo "<h2>Email Logs Database Initialization</h2>";
     echo "<p>Starting database setup...</p>";

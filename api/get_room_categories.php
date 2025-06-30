@@ -9,7 +9,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 require_once __DIR__ . '/config.php';
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 } catch (PDOException $e) {
     // Fallback response if database connection fails
     echo json_encode([

@@ -17,7 +17,7 @@ if (!isset($_GET['sku']) || empty($_GET['sku'])) {
 $sku = trim($_GET['sku']);
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Get existing marketing suggestion for this SKU
     $stmt = $pdo->prepare("

@@ -40,7 +40,7 @@ try {
 
 try {
     // Database connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Strategy 1: Update existing basic sample email
     $updateSql = "UPDATE email_logs SET 

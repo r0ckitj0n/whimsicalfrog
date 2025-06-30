@@ -36,7 +36,7 @@ try {
     $sku = $data['sku'];
     
     // Create database connection using config
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Check if item exists
     $checkStmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE sku = ?');

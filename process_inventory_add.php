@@ -55,7 +55,7 @@ try {
             $imageUrl = 'images/items/placeholder.webp';
     
     // Create database connection using config
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Insert new inventory item using the correct column names
     $stmt = $pdo->prepare('INSERT INTO inventory (id, productId, name, description, sku, stockLevel, reorderPoint, imageUrl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');

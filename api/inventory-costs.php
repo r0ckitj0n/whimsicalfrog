@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     try {
         // Connect to database
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
         
         // Fetch materials costs
         $materialStmt = $pdo->prepare("SELECT * FROM inventory_materials WHERE inventoryId = ?");

@@ -122,7 +122,7 @@ function validateCostData($data, $type) {
 
 try {
     // Create database connection
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Handle different HTTP methods
     switch ($method) {

@@ -87,7 +87,7 @@ function updateNamingScheme($pdo) {
 }
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
     if ($action === 'delete') {
         // Set category fields to NULL/empty for items

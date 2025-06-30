@@ -39,7 +39,7 @@ try {
     }
     
     // Create database connection using config
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // First check if the customer exists
     $checkStmt = $pdo->prepare('SELECT id FROM users WHERE id = ?');

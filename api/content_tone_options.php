@@ -16,7 +16,7 @@ header('Content-Type: application/json');
 requireAdmin();
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Create content_tone_options table if it doesn't exist
     $createTableSQL = "

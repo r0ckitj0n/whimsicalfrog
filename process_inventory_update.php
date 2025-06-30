@@ -49,7 +49,7 @@ $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
 
 try {
     // Connect to database
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Handle inline editing (specific field update)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sku']) && isset($_POST['field']) && isset($_POST['value'])) {

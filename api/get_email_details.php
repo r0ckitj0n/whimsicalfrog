@@ -18,7 +18,7 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role']) ||
 }
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Get email ID from query parameter
     $emailId = intval($_GET['id'] ?? 0);

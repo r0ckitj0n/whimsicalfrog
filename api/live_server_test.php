@@ -39,7 +39,7 @@ try {
 
 echo "<h3>Database Connection Test</h3>";
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     echo "✅ Database connection successful!<br>";
     
     // Test a simple query

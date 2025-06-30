@@ -55,7 +55,7 @@ if (file_exists('email_config.php')) {
 echo "<h3>3. Database Connection</h3>";
 try {
     require_once 'config.php';
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     echo "<p>✅ Database connection successful</p>";
     
     // Check if email_logs table exists

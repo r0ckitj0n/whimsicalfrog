@@ -65,9 +65,9 @@ $availableSections = [
 // Default sections if no configuration exists
 if (empty($dashboardConfig)) {
     $dashboardConfig = [
-        ['section_key' => 'metrics', 'display_order' => 1, 'show_title' => 1, 'show_description' => 1],
-        ['section_key' => 'recent_orders', 'display_order' => 2, 'show_title' => 1, 'show_description' => 1],
-        ['section_key' => 'low_stock', 'display_order' => 3, 'show_title' => 1, 'show_description' => 1]
+        ['section_key' => 'metrics', 'display_order' => 1, 'show_title' => 1, 'show_description' => 1, 'custom_title' => null, 'custom_description' => null],
+        ['section_key' => 'recent_orders', 'display_order' => 2, 'show_title' => 1, 'show_description' => 1, 'custom_title' => null, 'custom_description' => null],
+        ['section_key' => 'low_stock', 'display_order' => 3, 'show_title' => 1, 'show_description' => 1, 'custom_title' => null, 'custom_description' => null]
     ];
 }
 ?>
@@ -103,10 +103,10 @@ if (empty($dashboardConfig)) {
                 <!-- Always show title and description for dashboard sections -->
                 <div class="section-header p-4 border-b border-gray-100">
                     <h3 class="text-lg font-semibold text-gray-800 mb-1">
-                        <?= htmlspecialchars($config['custom_title'] ?: $sectionInfo['title']) ?>
+                        <?= htmlspecialchars(($config['custom_title'] ?? '') ?: $sectionInfo['title']) ?>
                     </h3>
                     <p class="text-sm text-gray-600">
-                        <?= htmlspecialchars($config['custom_description'] ?: $sectionInfo['description']) ?>
+                        <?= htmlspecialchars(($config['custom_description'] ?? '') ?: $sectionInfo['description']) ?>
                     </p>
                 </div>
                 

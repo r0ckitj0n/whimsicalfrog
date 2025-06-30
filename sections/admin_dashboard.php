@@ -170,6 +170,155 @@ if (empty($dashboardConfig)) {
                             <?php endif; ?>
                         </div>
                         
+                    <?php elseif ($config['section_key'] === 'inventory_summary'): ?>
+                        <!-- Inventory Summary Section -->
+                        <div class="space-y-3">
+                            <?php 
+                                                         $inventoryStats = $db->query('SELECT 
+                                 COUNT(*) as total_items,
+                                 COUNT(CASE WHEN stockLevel <= reorderPoint AND stockLevel > 0 THEN 1 END) as low_stock,
+                                 COUNT(CASE WHEN stockLevel = 0 THEN 1 END) as out_of_stock,
+                                 SUM(stockLevel * COALESCE(costPrice, 0)) as inventory_value
+                                 FROM items')->fetch();
+                            $topItems = $db->query('SELECT name, sku, stockLevel, reorderPoint FROM items ORDER BY stockLevel DESC LIMIT 3')->fetchAll();
+                            ?>
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="bg-blue-50 p-3 rounded text-center">
+                                    <div class="text-lg font-bold text-blue-600"><?= $inventoryStats['total_items'] ?? 0 ?></div>
+                                    <div class="text-xs text-blue-800">Total Items</div>
+                                </div>
+                                <div class="bg-red-50 p-3 rounded text-center">
+                                    <div class="text-lg font-bold text-red-600"><?= $inventoryStats['low_stock'] ?? 0 ?></div>
+                                    <div class="text-xs text-red-800">Low Stock</div>
+                                </div>
+                            </div>
+                            <?php if (!empty($topItems)): ?>
+                                <div class="text-xs font-medium text-gray-600 mb-2">Top Stock Items:</div>
+                                <?php foreach ($topItems as $item): ?>
+                                <div class="flex justify-between items-center text-xs p-2 bg-gray-50 rounded">
+                                    <span><?= htmlspecialchars($item['name'] ?? $item['sku']) ?></span>
+                                    <span class="font-medium"><?= $item['stockLevel'] ?? 0 ?></span>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                            <div class="text-center pt-2">
+                                <a href="/?page=admin&section=inventory" class="text-blue-600 hover:text-blue-800 text-sm">Manage Inventory →</a>
+                            </div>
+                        </div>
+                        
+                    <?php elseif ($config['section_key'] === 'customer_summary'): ?>
+                        <!-- Customer Summary Section -->
+                        <div class="space-y-3">
+                            <?php 
+                                                         $customerStats = $db->query('SELECT 
+                                 COUNT(*) as total_customers
+                                 FROM users WHERE role != \'admin\'')->fetch();
+                             $recentCustomers = $db->query('SELECT username, email FROM users WHERE role != \'admin\' ORDER BY id DESC LIMIT 3')->fetchAll();
+                            ?>
+                                                         <div class="grid grid-cols-1 gap-3 mb-4">
+                                 <div class="bg-green-50 p-3 rounded text-center">
+                                     <div class="text-lg font-bold text-green-600"><?= $customerStats['total_customers'] ?? 0 ?></div>
+                                     <div class="text-xs text-green-800">Total Customers</div>
+                                 </div>
+                             </div>
+                            <?php if (!empty($recentCustomers)): ?>
+                                <div class="text-xs font-medium text-gray-600 mb-2">Recent Customers:</div>
+                                <?php foreach ($recentCustomers as $customer): ?>
+                                <div class="text-xs p-2 bg-gray-50 rounded">
+                                    <div class="font-medium"><?= htmlspecialchars($customer['username'] ?? 'Unknown') ?></div>
+                                    <div class="text-gray-500"><?= htmlspecialchars($customer['email'] ?? '') ?></div>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                            <div class="text-center pt-2">
+                                <a href="/?page=admin&section=customers" class="text-green-600 hover:text-green-800 text-sm">Manage Customers →</a>
+                            </div>
+                        </div>
+                        
+                    <?php elseif ($config['section_key'] === 'marketing_tools'): ?>
+                        <!-- Marketing Tools Section -->
+                        <div class="space-y-3">
+                            <?php 
+                            $marketingStats = $db->query('SELECT 
+                                (SELECT COUNT(*) FROM email_campaigns) as email_campaigns,
+                                (SELECT COUNT(*) FROM discount_codes WHERE (end_date IS NULL OR end_date >= CURDATE())) as active_discounts,
+                                (SELECT COUNT(*) FROM social_posts WHERE scheduled_date >= CURDATE()) as scheduled_posts
+                            ')->fetch();
+                            ?>
+                            <div class="grid grid-cols-1 gap-2 mb-4">
+                                <div class="bg-orange-50 p-3 rounded text-center">
+                                    <div class="text-lg font-bold text-orange-600"><?= $marketingStats['email_campaigns'] ?? 0 ?></div>
+                                    <div class="text-xs text-orange-800">Email Campaigns</div>
+                                </div>
+                                <div class="bg-indigo-50 p-3 rounded text-center">
+                                    <div class="text-lg font-bold text-indigo-600"><?= $marketingStats['active_discounts'] ?? 0 ?></div>
+                                    <div class="text-xs text-indigo-800">Active Discounts</div>
+                                </div>
+                            </div>
+                            <div class="text-center space-y-2">
+                                <div class="flex gap-2 justify-center">
+                                    <a href="/?page=admin&section=marketing" class="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-xs rounded">📧 Email</a>
+                                    <a href="/?page=admin&section=marketing" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded">🏷️ Discounts</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    <?php elseif ($config['section_key'] === 'order_fulfillment'): ?>
+                        <!-- Order Fulfillment Section -->
+                        <div class="space-y-3">
+                            <?php 
+                            $fulfillmentStats = $db->query('SELECT 
+                                COUNT(CASE WHEN status = \'Processing\' THEN 1 END) as processing,
+                                COUNT(CASE WHEN status = \'Shipped\' THEN 1 END) as shipped,
+                                COUNT(CASE WHEN status = \'Delivered\' THEN 1 END) as delivered
+                                FROM orders WHERE DATE(date) >= CURDATE() - INTERVAL 30 DAY')->fetch();
+                            $urgentOrders = $db->query('SELECT id, total, date, status FROM orders WHERE status = \'Processing\' ORDER BY date ASC LIMIT 3')->fetchAll();
+                            ?>
+                            <div class="grid grid-cols-1 gap-2 mb-4">
+                                <div class="bg-yellow-50 p-3 rounded text-center">
+                                    <div class="text-lg font-bold text-yellow-600"><?= $fulfillmentStats['processing'] ?? 0 ?></div>
+                                    <div class="text-xs text-yellow-800">Processing Orders</div>
+                                </div>
+                            </div>
+                            <?php if (!empty($urgentOrders)): ?>
+                                <div class="text-xs font-medium text-gray-600 mb-2">Urgent Orders:</div>
+                                <?php foreach ($urgentOrders as $order): ?>
+                                <div class="flex justify-between items-center text-xs p-2 bg-yellow-50 rounded">
+                                    <span>#<?= htmlspecialchars($order['id'] ?? '') ?></span>
+                                    <span class="font-medium">$<?= number_format($order['total'] ?? 0, 2) ?></span>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                            <div class="text-center pt-2">
+                                <a href="/?page=admin&section=order_fulfillment" class="text-yellow-600 hover:text-yellow-800 text-sm">Process Orders →</a>
+                            </div>
+                        </div>
+                        
+                    <?php elseif ($config['section_key'] === 'reports_summary'): ?>
+                        <!-- Reports Summary Section -->
+                        <div class="space-y-3">
+                            <?php 
+                            $reportsStats = $db->query('SELECT 
+                                COUNT(*) as total_orders,
+                                SUM(total) as total_revenue,
+                                AVG(total) as avg_order_value
+                                FROM orders WHERE DATE(date) >= CURDATE() - INTERVAL 30 DAY')->fetch();
+                            ?>
+                            <div class="grid grid-cols-1 gap-2 mb-4">
+                                <div class="bg-teal-50 p-3 rounded text-center">
+                                    <div class="text-lg font-bold text-teal-600">$<?= number_format($reportsStats['total_revenue'] ?? 0, 0) ?></div>
+                                    <div class="text-xs text-teal-800">30-Day Revenue</div>
+                                </div>
+                                <div class="bg-cyan-50 p-3 rounded text-center">
+                                    <div class="text-lg font-bold text-cyan-600">$<?= number_format($reportsStats['avg_order_value'] ?? 0, 0) ?></div>
+                                    <div class="text-xs text-cyan-800">Avg Order Value</div>
+                                </div>
+                            </div>
+                            <div class="text-center pt-2">
+                                <a href="/?page=admin&section=reports" class="text-teal-600 hover:text-teal-800 text-sm">View Reports →</a>
+                            </div>
+                        </div>
+                        
                     <?php elseif ($sectionInfo['type'] === 'external'): ?>
                         <!-- External Section Placeholder -->
                         <div class="text-center text-gray-500 py-8">

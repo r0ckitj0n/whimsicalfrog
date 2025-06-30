@@ -20031,26 +20031,85 @@ function initializeDragAndDrop() {
 
 // Handle reordering within current sections
 async function handleReorder(sectionKey, dropZone, draggedElement, event) {
-    // Get all items in current order (excluding the dragged one)
-    const allItems = Array.from(dropZone.querySelectorAll('.draggable-section-item:not(.dragging)'));
-    
-    // Find the drop position based on mouse position
-    const afterElement = getDragAfterElement(dropZone, event.clientY);
-    let newDisplayOrder;
-    
-    if (afterElement == null) {
-        // Dropped at the end
-        newDisplayOrder = allItems.length + 1;
-    } else {
-        // Find the display order of the element we're dropping before
-        const afterElementOrder = parseInt(afterElement.dataset.displayOrder) || (allItems.indexOf(afterElement) + 1);
-        newDisplayOrder = afterElementOrder;
+    try {
+        showAutoSaveIndicator();
+        
+        // Get all current section items in order
+        const allItems = Array.from(dropZone.querySelectorAll('.draggable-section-item'));
+        
+        // Find the drop position based on mouse position
+        const afterElement = getDragAfterElement(dropZone, event.clientY);
+        let newIndex;
+        
+        if (afterElement == null) {
+            // Dropped at the end
+            newIndex = allItems.length - 1; // -1 because we're removing the dragged element
+        } else {
+            // Find the index of the element we're dropping before
+            newIndex = allItems.indexOf(afterElement);
+            // If we're dragging from a position before the drop target, adjust index
+            const draggedIndex = allItems.indexOf(draggedElement);
+            if (draggedIndex < newIndex) {
+                newIndex--;
+            }
+        }
+        
+        console.log('Reordering section:', sectionKey, 'from index', allItems.indexOf(draggedElement), 'to index', newIndex);
+        
+        // Create new order array
+        const newOrder = [];
+        allItems.forEach((item, index) => {
+            if (item === draggedElement) return; // Skip the dragged element
+            newOrder.push({
+                section_key: item.dataset.sectionKey,
+                display_order: newOrder.length + 1
+            });
+        });
+        
+        // Insert the dragged element at the new position
+        newOrder.splice(newIndex, 0, {
+            section_key: sectionKey,
+            display_order: newIndex + 1
+        });
+        
+        // Adjust display_order for all items after the insertion point
+        for (let i = newIndex + 1; i < newOrder.length; i++) {
+            newOrder[i].display_order = i + 1;
+        }
+        
+        console.log('New order:', newOrder);
+        
+        // Send the reorder request
+        const response = await fetch('/api/dashboard_sections.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'reorder_sections',
+                sections: newOrder,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to reorder sections');
+        }
+        
+        // Reload configuration to show new order
+        await loadDashboardConfiguration();
+        hideAutoSaveIndicator(true);
+        
+    } catch (error) {
+        console.error('Error reordering sections:', error);
+        hideAutoSaveIndicator(false);
     }
-    
-    console.log('Reordering section:', sectionKey, 'to position:', newDisplayOrder);
-    
-    // Update the order and save
-    await updateSectionOrder(sectionKey, newDisplayOrder);
 }
 
 // Handle adding section to dashboard
@@ -20451,14 +20510,26 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     flex-direction: column;
     min-height: 500px;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.dashboard-section-column.current-sections {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 2px solid #10b981;
+}
+
+.dashboard-section-column.available-sections {
+    background: linear-gradient(135deg, #fefbf3 0%, #fef7ed 100%);
+    border: 2px solid #f59e0b;
 }
 
 .section-column-header {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: 1px solid #cbd5e1;
-    border-radius: 0.75rem 0.75rem 0 0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
     padding: 1rem;
     margin-bottom: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .section-column-title {
@@ -20488,24 +20559,19 @@ document.addEventListener('DOMContentLoaded', function() {
     flex: 1;
     min-height: 400px;
     height: 100%;
-    border: 2px dashed #cbd5e1;
-    border-top: none;
-    border-radius: 0 0 0.75rem 0.75rem;
     padding: 1rem;
-    background: #f8fafc;
+    background: transparent;
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
 }
 
 .current-drop-zone {
-    border-color: #10b981;
-    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    background: transparent;
 }
 
 .available-drop-zone {
-    border-color: #f59e0b;
-    background: linear-gradient(135deg, #fefbf3 0%, #fef7ed 100%);
+    background: transparent;
 }
 
 .section-drop-zone.drag-over {

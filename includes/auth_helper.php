@@ -132,14 +132,18 @@ class AuthHelper {
  * Compatibility function for existing code that calls getCurrentUser()
  * @deprecated Use AuthHelper::getCurrentUser() instead
  */
-function getCurrentUser(): ?array {
-    return AuthHelper::getCurrentUser();
+if (!function_exists('getCurrentUser')) {
+    function getCurrentUser(): ?array {
+        return AuthHelper::getCurrentUser();
+    }
 }
 
 /**
  * Compatibility function for checking if user is admin  
  * @deprecated Use AuthHelper::isAdmin() instead
  */
-function isAdminWithToken(): bool {
-    return AuthHelper::isAdmin();
+if (!function_exists('isAdminWithToken')) {
+    function isAdminWithToken(): bool {
+        return AuthHelper::isAdmin();
+    }
 } 

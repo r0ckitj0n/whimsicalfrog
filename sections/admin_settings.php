@@ -19543,7 +19543,7 @@ function renderCurrentSections(sections, container) {
             const type = sectionInfo.type || 'built-in';
             
             html += `
-                <div class="draggable-section-item" draggable="true" data-section-key="${section.section_key}" data-zone="current">
+                <div class="draggable-section-item" draggable="true" data-section-key="${section.section_key}" data-zone="current" data-display-order="${section.display_order || index + 1}">
                     <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
                     <div class="section-item-content">
                         <div class="section-item-info">
@@ -20031,20 +20031,26 @@ function initializeDragAndDrop() {
 
 // Handle reordering within current sections
 async function handleReorder(sectionKey, dropZone, draggedElement, event) {
+    // Get all items in current order (excluding the dragged one)
     const allItems = Array.from(dropZone.querySelectorAll('.draggable-section-item:not(.dragging)'));
     
     // Find the drop position based on mouse position
     const afterElement = getDragAfterElement(dropZone, event.clientY);
-    let newIndex;
+    let newDisplayOrder;
     
     if (afterElement == null) {
-        newIndex = allItems.length;
+        // Dropped at the end
+        newDisplayOrder = allItems.length + 1;
     } else {
-        newIndex = allItems.indexOf(afterElement);
+        // Find the display order of the element we're dropping before
+        const afterElementOrder = parseInt(afterElement.dataset.displayOrder) || (allItems.indexOf(afterElement) + 1);
+        newDisplayOrder = afterElementOrder;
     }
     
-    // Update the order and save (1-indexed for database)
-    await updateSectionOrder(sectionKey, newIndex + 1);
+    console.log('Reordering section:', sectionKey, 'to position:', newDisplayOrder);
+    
+    // Update the order and save
+    await updateSectionOrder(sectionKey, newDisplayOrder);
 }
 
 // Handle adding section to dashboard

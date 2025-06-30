@@ -20558,12 +20558,67 @@ document.addEventListener('DOMContentLoaded', function() {
 .section-drop-zone {
     flex: 1;
     min-height: 400px;
+    max-height: 500px;
     height: 100%;
     padding: 1rem;
     background: transparent;
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom scrollbar styling for dashboard sections */
+.section-drop-zone::-webkit-scrollbar {
+    width: 8px;
+}
+
+.section-drop-zone::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.section-drop-zone::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.section-drop-zone::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Current sections - green themed scrollbar */
+.current-drop-zone::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.4);
+}
+
+.current-drop-zone::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.6);
+}
+
+/* Available sections - orange themed scrollbar */
+.available-drop-zone::-webkit-scrollbar-thumb {
+    background: rgba(245, 158, 11, 0.4);
+}
+
+.available-drop-zone::-webkit-scrollbar-thumb:hover {
+    background: rgba(245, 158, 11, 0.6);
+}
+
+/* Firefox scrollbar styling */
+.section-drop-zone {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+}
+
+.current-drop-zone {
+    scrollbar-color: rgba(16, 185, 129, 0.4) rgba(16, 185, 129, 0.1);
+}
+
+.available-drop-zone {
+    scrollbar-color: rgba(245, 158, 11, 0.4) rgba(245, 158, 11, 0.1);
 }
 
 .current-drop-zone {
@@ -20720,6 +20775,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .section-drop-zone {
         min-height: 300px;
+        max-height: 350px;
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard-section-column {
+        min-height: 300px;
+    }
+    
+    .section-drop-zone {
+        min-height: 250px;
+        max-height: 300px;
+    }
+    
+    /* Make scrollbar thinner on mobile */
+    .section-drop-zone::-webkit-scrollbar {
+        width: 6px;
     }
 }
 

@@ -237,8 +237,8 @@ function renderCostList(type, items) {
                 <div class="flex items-center">
                     <span class="cost-item-value">$${parseFloat(item.cost).toFixed(2)}</span>
                     <div class="cost-item-actions">
-                        <button type="button" class="cost-edit-btn" onclick="editCostItem('${type}', ${item.id})">✏️</button>
-                        <button type="button" class="cost-delete-btn" onclick="deleteCostItem('${type}', ${item.id}, '${escapeHtml(itemName)}')">🗑️</button>
+                        <button type="button" class="text-green-600 hover:text-green-800 mr-2" onclick="editCostItem('${type}', ${item.id})" title="Edit Cost">✏️</button>
+                        <button type="button" class="text-red-600 hover:text-red-800" onclick="deleteCostItem('${type}', ${item.id}, '${escapeHtml(itemName)}')" title="Delete Cost">🗑️</button>
                     </div>
                 </div>
             `;

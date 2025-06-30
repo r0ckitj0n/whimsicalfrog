@@ -15772,8 +15772,8 @@ function createMessageHTML(message, type) {
                 <button onclick="generateAIMessage(${message.id}, '${type}')" class="btn-ai">
                     🤖 Generate with AI
                 </button>
-                <button onclick="deleteReceiptMessage(${message.id})" class="btn-delete">
-                    Delete
+                <button onclick="deleteReceiptMessage(${message.id})" class="text-red-600 hover:text-red-800" title="Delete Message">
+                    🗑️ Delete
                 </button>
             </div>
         </div>

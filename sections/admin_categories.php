@@ -92,7 +92,7 @@ $messageType = $_GET['type'] ?? '';
                             <td><span class="code-badge"><?= htmlspecialchars($code) ?></span></td>
                             <td><span class="code-badge"><?= htmlspecialchars($exampleSku) ?></span></td>
                             <td>
-                                <button class="btn-danger btn-sm delete-category-btn" 
+                                <button class="text-red-600 hover:text-red-800 delete-category-btn" 
                                         data-category="<?= htmlspecialchars($cat) ?>" title="Delete Category">
                                     🗑️
                                 </button>
@@ -159,7 +159,7 @@ document.getElementById('addCategoryForm').addEventListener('submit', async (e) 
                 <td><span class="code-badge">${code}</span></td>
                 <td><span class="code-badge">${exampleSku}</span></td>
                 <td>
-                    <button class="btn-danger btn-sm delete-category-btn" data-category="${category}" title="Delete Category">🗑️</button>
+                    <button class="text-red-600 hover:text-red-800 delete-category-btn" data-category="${category}" title="Delete Category">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);

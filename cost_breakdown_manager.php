@@ -131,32 +131,7 @@ if (!empty($selectedItemId)) {
             transform: translateY(0);
         }
         
-        /* Action Buttons */
-        .action-btn {
-            padding: 6px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 4px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            font-size: 14px;
-        }
-        .edit-btn {
-            background-color: #4299e1;
-            color: white;
-        }
-        .edit-btn:hover {
-            background-color: #3182ce;
-        }
-        .delete-btn {
-            background-color: #f56565;
-            color: white;
-        }
-        .delete-btn:hover {
-            background-color: #e53e3e;
-        }
+        /* Action buttons now use standardized utility classes */
         
         /* Loading Spinner */
         .loading-spinner {
@@ -679,8 +654,8 @@ if (!empty($selectedItemId)) {
                         </div>
                         <div class="flex items-center">
                             <span class="mr-4 font-semibold">$${parseFloat(material.cost).toFixed(2)}</span>
-                            <button class="action-btn edit-btn mr-1" onclick="openEditModal('material', ${material.id})">✏️</button>
-                            <button class="action-btn delete-btn" onclick="openDeleteModal('material', ${material.id}, '${escapeHtml(material.name)}')">🗑️</button>
+                                                            <button class="text-green-600 hover:text-green-800 mr-2" onclick="openEditModal('material', ${material.id})" title="Edit Material">✏️</button>
+                                <button class="text-red-600 hover:text-red-800" onclick="openDeleteModal('material', ${material.id}, '${escapeHtml(material.name)}')" title="Delete Material">🗑️</button>
                         </div>
                     `;
                     materialsList.appendChild(materialItem);
@@ -704,8 +679,8 @@ if (!empty($selectedItemId)) {
                         </div>
                         <div class="flex items-center">
                             <span class="mr-4 font-semibold">$${parseFloat(labor.cost).toFixed(2)}</span>
-                            <button class="action-btn edit-btn mr-1" onclick="openEditModal('labor', ${labor.id})">✏️</button>
-                            <button class="action-btn delete-btn" onclick="openDeleteModal('labor', ${labor.id}, '${escapeHtml(labor.description)}')">🗑️</button>
+                                                            <button class="text-green-600 hover:text-green-800 mr-2" onclick="openEditModal('labor', ${labor.id})" title="Edit Labor">✏️</button>
+                                <button class="text-red-600 hover:text-red-800" onclick="openDeleteModal('labor', ${labor.id}, '${escapeHtml(labor.description)}')" title="Delete Labor">🗑️</button>
                         </div>
                     `;
                     laborList.appendChild(laborItem);
@@ -729,8 +704,8 @@ if (!empty($selectedItemId)) {
                         </div>
                         <div class="flex items-center">
                             <span class="mr-4 font-semibold">$${parseFloat(energy.cost).toFixed(2)}</span>
-                            <button class="action-btn edit-btn mr-1" onclick="openEditModal('energy', ${energy.id})">✏️</button>
-                            <button class="action-btn delete-btn" onclick="openDeleteModal('energy', ${energy.id}, '${escapeHtml(energy.description)}')">🗑️</button>
+                                                            <button class="text-green-600 hover:text-green-800 mr-2" onclick="openEditModal('energy', ${energy.id})" title="Edit Energy">✏️</button>
+                                <button class="text-red-600 hover:text-red-800" onclick="openDeleteModal('energy', ${energy.id}, '${escapeHtml(energy.description)}')" title="Delete Energy">🗑️</button>
                         </div>
                     `;
                     energyList.appendChild(energyItem);

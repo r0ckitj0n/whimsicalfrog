@@ -186,9 +186,11 @@ $messageType = $_GET['type'] ?? '';
                         <td class="editable" data-field="costPrice">$<?= number_format(floatval($item['costPrice'] ?? 0), 2) ?></td>
                         <td class="editable" data-field="retailPrice">$<?= number_format(floatval($item['retailPrice'] ?? 0), 2) ?></td>
                         <td>
-                                                    <a href="?page=admin&section=inventory&view=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="action-btn view-btn" title="View Item">👁️</a>
-                        <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="action-btn edit-btn" title="Edit Item">✏️</a>
-                        <button class="action-btn delete-btn delete-item" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" title="Delete Item">🗑️</button>
+                            <div class="flex space-x-2">
+                                <a href="?page=admin&section=inventory&view=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="text-blue-600 hover:text-blue-800" title="View Item">👁️</a>
+                                <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="text-green-600 hover:text-green-800" title="Edit Item">✏️</a>
+                                <button class="text-red-600 hover:text-red-800 delete-item" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" title="Delete Item">🗑️</button>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

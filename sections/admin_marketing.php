@@ -474,9 +474,9 @@ function generateId($prefix, $length = 3) {
                                         </td>
                                         <td class="campaign-date"><?= date('M d, Y', strtotime($campaign['created_date'] ?? 'now')) ?></td>
                                         <td>
-                                            <div class="action-buttons">
-                                                <button class="action-btn edit-btn" title="Edit Campaign">✏️</button>
-                                                <button class="action-btn delete-btn" title="Delete Campaign">🗑️</button>
+                                            <div class="flex space-x-2">
+                                                <button class="text-green-600 hover:text-green-800" title="Edit Campaign">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800" title="Delete Campaign">🗑️</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -615,9 +615,9 @@ function generateId($prefix, $length = 3) {
                                             <?= $code['end_date'] ? date('M d, Y', strtotime($code['end_date'])) : 'Never' ?>
                                         </td>
                                         <td>
-                                            <div class="action-buttons">
-                                                <button class="action-btn edit-btn" title="Edit Code">✏️</button>
-                                                <button class="action-btn delete-btn" title="Delete Code">🗑️</button>
+                                            <div class="flex space-x-2">
+                                                <button class="text-green-600 hover:text-green-800" title="Edit Code">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800" title="Delete Code">🗑️</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -712,9 +712,9 @@ function generateId($prefix, $length = 3) {
                                     <?= nl2br(htmlspecialchars(substr($post['content'] ?? '', 0, 150))) ?>
                                     <?= strlen($post['content'] ?? '') > 150 ? '...' : '' ?>
                                 </div>
-                                <div class="post-actions">
-                                    <button class="action-btn edit-btn" title="Edit Post">✏️</button>
-                                    <button class="action-btn delete-btn" title="Delete Post">🗑️</button>
+                                <div class="flex space-x-2">
+                                    <button class="text-green-600 hover:text-green-800" title="Edit Post">✏️</button>
+                                    <button class="text-red-600 hover:text-red-800" title="Delete Post">🗑️</button>
                                 </div>
                             </div>
                             <?php endforeach; ?>

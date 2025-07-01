@@ -39,11 +39,11 @@ try {
     try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     
     // Query for user
-    $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ? AND password = ?');
-    $stmt->execute([$username, $password]);
+    $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ?');
+    $stmt->execute([$username]);
     $user = $stmt->fetch();
     
-    if ($user) {
+    if ($user && password_verify($password, $user['password'])) {
         // User authenticated successfully
         echo json_encode([
             'userId' => $user['id'],

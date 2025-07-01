@@ -1,0 +1,1415 @@
+     <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whimsical Frog - Custom Crafts &amp; Personalized Items</title>
+    <meta name="description" content="Discover unique custom crafts, personalized t-shirts, tumblers, artwork, and more at Whimsical Frog. Quality handmade items for every occasion.">
+    <meta name="keywords" content="custom crafts, personalized items, t-shirts, tumblers, artwork, sublimation, window wraps, handmade, gifts">
+    <meta property="og:title" content="Whimsical Frog - Custom Crafts &amp; Personalized Items">
+    <meta property="og:description" content="Discover unique custom crafts, personalized t-shirts, tumblers, artwork, and more at Whimsical Frog. Quality handmade items for every occasion.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Whimsical Frog - Custom Crafts &amp; Personalized Items">
+    <meta name="twitter:description" content="Discover unique custom crafts, personalized t-shirts, tumblers, artwork, and more at Whimsical Frog. Quality handmade items for every occasion.">
+    
+    <!-- External Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Core Styles -->
+    <link href="css/styles.css?v=1751313635" rel="stylesheet">
+    <link href="css/header-styles.css?v=1751313635" rel="stylesheet">
+    <link href="css/admin-styles.css?v=1751313635" rel="stylesheet">
+    <link href="css/button-styles.css?v=1751313635" rel="stylesheet">
+    <link href="css/global-modals.css?v=1751313635" rel="stylesheet">
+    <link href="css/search-modal.css?v=1751313635" rel="stylesheet">
+    <link href="css/help-tooltips.css?v=1751313635" rel="stylesheet">
+    <link href="css/room-popups.css?v=1751313635" rel="stylesheet">
+    <link href="css/room-headers.css?v=1751313635" rel="stylesheet">
+    <link href="css/notification-overrides.css?v=1751313635" rel="stylesheet">
+    
+    <!-- Database-driven Global CSS Variables -->
+    <style id="global-css-variables">
+        /* Global CSS variables will be loaded from database */
+    </style>
+    
+    <script>
+        // Load global CSS variables from database
+        async function loadGlobalCSS() {
+            try {
+                const response = await fetch('/api/global_css_rules.php?action=generate_css');
+                const data = await response.json();
+                if (data.success && data.css_content) {
+                    const styleElement = document.getElementById('global-css-variables');
+                    if (styleElement) {
+                        styleElement.textContent = data.css_content;
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to load global CSS:', error);
+            }
+        }
+        loadGlobalCSS();
+    </script>
+    
+    <!-- Core Layout Styles -->
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body, html {
+            color: #222 !important;
+            background: #333;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        body {
+            font-family: 'Merienda', cursive;
+            background-image: url('images/home_background.png?v=cb2');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100%;
+        }
+        
+        /* WebP Support */
+        .webp body {
+            background-image: url('images/home_background.webp?v=cb2');
+        }
+        
+        /* Dynamic backgrounds will be set by JavaScript */
+        body.dynamic-bg-loaded {
+            /* Background set dynamically */
+        }
+        
+        /* Non-landing pages */
+        body:not(.is-landing) {
+            background-image: url('images/room_main.png?v=cb2');
+        }
+        
+        .webp body:not(.is-landing) {
+            background-image: url('images/room_main.webp?v=cb2');
+        }
+        
+        /* Navigation Styles - Restored Original WhimsicalFrog Design */
+        nav.main-nav {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent) !important;
+            padding-top: 5px !important;
+            padding-bottom: 5px !important;
+            display: block !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 50 !important;
+        }
+        
+        nav.main-nav a,
+        nav.main-nav p,
+        nav.main-nav span {
+            color: #87ac3a !important;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            line-height: 1.2;
+        }
+        
+        .nav-link {
+            color: #87ac3a !important;
+            padding: 8px 12px !important;
+            border-radius: 6px !important;
+            text-decoration: none !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+        
+        .nav-links {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+        
+        .nav-link:hover {
+            color: #a3cc4a !important;
+            background-color: rgba(135, 172, 58, 0.1);
+        }
+        
+        .tagline {
+            color: #87ac3a !important;
+            font-size: 1.3rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            margin-top: 0.25rem;
+            line-height: 1.2;
+        }
+        
+        .welcome-message {
+            color: #87ac3a !important;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+        
+        #cartCount, #cartTotal {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+        
+        nav.main-nav svg {
+            stroke: #87ac3a !important;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.7));
+        }
+        
+        /* Custom Alert System */
+        .custom-alert {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #87ac3a;
+            color: #ffffff;
+            padding: 20px 30px;
+            border: 2px solid #6b8e23;
+            border-radius: 12px;
+            z-index: 99999;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+            min-width: 300px;
+            animation: slideInFromTop 0.3s ease-out;
+        }
+        
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1200px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .close-button {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            color: #556B2F;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-button:hover {
+            color: #6B8E23;
+        }
+        
+        /* Landing page specific */
+        body.is-landing a[href="/?page=shop"],
+        body.is-landing a[href="/?page=cart"],
+        body.is-landing a[href="/?page=login"] {
+            display: none !important;
+        }
+        
+        /* Fullscreen layout */
+        .body-fullscreen-layout {
+            overflow: hidden;
+        }
+        
+        .body-fullscreen-layout #mainContent {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: 100vh !important;
+        }
+        
+        .fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        /* Utility Classes */
+        .cottage-bg {
+            background: transparent;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen is-admin admin-page">
+
+<!-- Custom Alert System -->
+<div id="customAlertBox" class="custom-alert">
+    <p id="customAlertMessage"></p>
+    <button onclick="document.getElementById('customAlertBox').style.display = 'none';" 
+            class="mt-3 px-6 py-2 bg-[#87ac3a] text-white rounded-lg hover:bg-[#a3cc4a] font-semibold border-2 border-[#87ac3a] transition-all duration-200">OK</button>
+</div>
+
+<!-- Main Navigation -->
+<nav class="main-nav sticky top-0 z-50 transition-all duration-300 ease-in-out">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between w-full py-1">
+            <!-- Logo and Tagline -->
+            <div class="flex-none">
+                <div class="flex items-center">
+                    <a href="/?page=landing" class="flex items-center text-2xl font-bold font-merienda">
+                        <img src="images/sign_whimsicalfrog.webp" alt="Whimsical Frog" class="h-12 mr-2">                    </a>
+                    <div>
+                        <p class="text-sm font-merienda ml-2 hidden md:block tagline">Discover unique custom crafts, made with love.</p>
+                                            </div>
+                </div>
+            </div>
+            
+            <!-- Search Bar -->
+                        <div class="flex-grow flex justify-center">
+                <div class="relative max-w-md w-full mx-4">
+                    <input type="text" id="headerSearchInput" placeholder="Search products..." 
+                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 border-[#87ac3a] rounded-full text-[#87ac3a] placeholder-[#87ac3a] placeholder-opacity-80 focus:outline-none focus:ring-2 focus:ring-[#87ac3a] transition-all duration-200">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-[#87ac3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+                        
+            <!-- Navigation Links -->
+            <div class="flex-none">
+                <div class="flex items-center">
+                                        <a href="/?page=shop" class="nav-link">Shop</a>
+                    <a href="/?page=cart" class="nav-link relative inline-flex items-center">
+                        <div class="flex items-center space-x-1 md:space-x-2">
+                            <span id="cartCount" class="text-sm font-medium whitespace-nowrap">0 items</span>
+                            <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span id="cartTotal" class="text-sm font-medium whitespace-nowrap hidden md:inline">$0.00</span>
+                        </div>
+                    </a>
+                                            <a href="/?page=login" class="nav-link">Login</a>
+                                    </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content Area -->
+    <main class="flex-grow container mx-auto p-2 md:p-4 lg:p-6 cottage-bg" id="mainContent">
+        
+<div class="admin-dashboard">
+    <!-- Admin Header -->
+    <div class="admin-header-card mb-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="admin-title">Admin Dashboard</h1>
+                <p class="admin-subtitle">Welcome back, Admin (Administrator)</p>
+            </div>
+            <div class="mt-2 md:mt-0">
+                <p class="admin-meta">Last login: June 30, 2025, 8:00 pm</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+        <div class="admin-tab-navigation mb-1">
+        <div class="flex flex-wrap gap-2">
+                            <a href="/?page=admin"
+                   class="admin-nav-tab admin-tab-dashboard ">
+                    Dashboard                </a>
+                            <a href="/?page=admin&section=customers"
+                   class="admin-nav-tab admin-tab-customers ">
+                    Customers                </a>
+                            <a href="/?page=admin&section=inventory"
+                   class="admin-nav-tab admin-tab-inventory ">
+                    Inventory                </a>
+                            <a href="/?page=admin&section=orders"
+                   class="admin-nav-tab admin-tab-orders ">
+                    Orders                </a>
+                            <a href="/?page=admin&section=register"
+                   class="admin-nav-tab admin-tab-register active">
+                    Register                </a>
+                            <a href="/?page=admin&section=reports"
+                   class="admin-nav-tab admin-tab-reports ">
+                    Reports                </a>
+                            <a href="/?page=admin&section=marketing"
+                   class="admin-nav-tab admin-tab-marketing ">
+                    Marketing                </a>
+                            <a href="/?page=admin&section=settings"
+                   class="admin-nav-tab admin-tab-settings ">
+                    Settings                </a>
+                    </div>
+        
+        <div class="admin-page-title">
+            Point of Sale Register        </div>
+    </div>
+
+    <!-- Dynamic Section Content -->
+    <div id="admin-section-content">
+        
+<style>
+/* Full-screen register styling */
+.pos-register {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pos-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pos-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.pos-exit-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pos-exit-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.pos-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+    padding: 2rem;
+    overflow: hidden;
+}
+
+.pos-left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.pos-search-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pos-search-title {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.pos-search-methods {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.pos-search-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+    backdrop-filter: blur(5px);
+}
+
+.pos-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.pos-search-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.pos-browse-btn {
+    background: rgba(76, 175, 80, 0.8);
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.pos-browse-btn:hover {
+    background: rgba(76, 175, 80, 1);
+    transform: translateY(-2px);
+}
+
+.pos-items-grid {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.item-card {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.item-card:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin: 0 auto 0.5rem;
+    display: block;
+    background: rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+}
+
+.item-name {
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0.5rem 0;
+    line-height: 1.3;
+    pointer-events: none;
+}
+
+.item-sku {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    font-family: monospace;
+    margin: 0.25rem 0;
+    pointer-events: none;
+}
+
+.item-price {
+    color: #4CAF50;
+    font-size: 1rem;
+    pointer-events: none;
+    font-weight: 600;
+    margin: 0.5rem 0 0 0;
+}
+
+.pos-cart {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.cart-header {
+    background: #2196F3;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+.cart-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    max-height: 300px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-name {
+    font-weight: 500;
+    color: #333;
+    margin: 0 0 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.cart-item-sku {
+    color: #666;
+    font-size: 0.75rem;
+    font-family: monospace;
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qty-btn {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+.qty-btn:hover {
+    background: #e0e0e0;
+}
+
+.qty-display {
+    min-width: 40px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.cart-item-price {
+    color: #2196F3;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.cart-summary {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-top: 2px solid #2196F3;
+}
+
+.cart-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.checkout-btn {
+    width: 100%;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.checkout-btn:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+.checkout-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.empty-cart {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+    font-style: italic;
+}
+
+.cart-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.cart-item-sku {
+    font-size: 0.75rem;
+    color: #666;
+    font-family: monospace;
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qty-btn {
+    background: #2196F3;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.qty-btn:hover {
+    background: #1976D2;
+}
+
+.qty-display {
+    background: #f5f5f5;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    min-width: 30px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.cart-item-price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4CAF50;
+    margin-left: 0.5rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .pos-main {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .pos-search-methods {
+        grid-template-columns: 1fr;
+    }
+    
+    .items-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+</style>
+
+<div class="pos-register">
+    <!-- Header -->
+    <div class="pos-header">
+        <h1 class="pos-title">🛒 WhimsicalFrog Point of Sale</h1>
+        <button class="pos-exit-btn" onclick="window.location.href='/?page=admin'">
+            ✖ Exit Register
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="pos-main">
+        <!-- Left Panel - Search & Items -->
+        <div class="pos-left-panel">
+            <!-- Search Section -->
+            <div class="pos-search-section">
+                <h2 class="pos-search-title">📦 Add Items</h2>
+                <div class="pos-search-methods">
+                    <input type="text" 
+                           id="skuSearch" 
+                           class="pos-search-input" 
+                           placeholder="🔍 Scan or enter SKU..."
+                           autofocus>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <button class="pos-browse-btn" onclick="showAllItems()">
+                            🛍️ Browse Items
+                        </button>
+                        <button class="pos-browse-btn" onclick="debugCart()" style="background: #f44336;">
+                            🔧 Debug Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Grid -->
+            <div class="pos-items-grid">
+                <div class="items-grid" id="itemsGrid">
+                    <!-- Items will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Cart -->
+        <div class="pos-cart">
+            <div class="cart-header">
+                <h2 class="cart-title">🛒 Cart</h2>
+            </div>
+            
+            <div class="cart-items" id="cartItems">
+                <div class="empty-cart">
+                    Cart is empty<br>
+                    <small>Scan or search for items to add them</small>
+                </div>
+            </div>
+            
+            <div class="cart-summary">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cartTotal">$0.00</span>
+                </div>
+                <button class="checkout-btn" id="checkoutBtn" onclick="processCheckout()" disabled>
+                    💳 Complete Sale
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// POS System JavaScript
+let cart = [];
+let allItems = [{"sku":"WF-TS-002","name":"Be strong and courageous, pink women's t-shirt","retailPrice":"25.99","imageUrl":"images\/items\/WF-TS-002A.webp"},{"sku":"WF-AR-001","name":"Custom Artwork Print","retailPrice":"15.99","imageUrl":"images\/items\/WF-AR-001A.png"},{"sku":"WF-TU-001","name":"Custom Tumbler Design #1","retailPrice":"19.99","imageUrl":"images\/items\/WF-TU-001A.png"},{"sku":"WF-TU-002","name":"Custom Tumbler Design #2","retailPrice":"19.99","imageUrl":"images\/items\/WF-TU-002A.png"},{"sku":"WF-TU-003","name":"Custom Tumbler Design #3","retailPrice":"19.99","imageUrl":"images\/items\/WF-TU-003A.webp"},{"sku":"WF-TU-004","name":"Custom Tumbler Design #4","retailPrice":"19.99","imageUrl":"images\/items\/WF-TU-004A.webp"},{"sku":"WF-WW-001","name":"Custom Window Wrap","retailPrice":"89.99","imageUrl":"images\/items\/WF-WW-001A.png"},{"sku":"WF-GEN-001","name":"General Custom Item","retailPrice":"24.99","imageUrl":"images\/items\/WF-GEN-001A.png"},{"sku":"WF-TS-003","name":"Groove Into Gratitude: The Ultimate Feel-Good Tee That Speaks Your Soul","retailPrice":"25.99","imageUrl":"images\/items\/WF-TS-003A.webp"},{"sku":"WF-TS-004","name":"Rebel Threads: Your Personality, Perfectly Printed \ud83c\udfa8","retailPrice":"25.99","imageUrl":"images\/items\/WF-TS-004A.webp"},{"sku":"WF-SU-002","name":"Sublimation Print Design","retailPrice":"12.99","imageUrl":"images\/items\/WF-SU-002A.png"},{"sku":"WF-TS-005","name":"Totally Rad Vintage Vibes: Your Nostalgia Trip Starts Here!","retailPrice":"25.99","imageUrl":"images\/items\/WF-TS-005A.webp"}];
+
+// Initialize the POS system
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🛒 POS System initialized with', allItems.length, 'items ready for sale');
+    
+    showAllItems();
+    
+    // Setup SKU search
+    const skuSearch = document.getElementById('skuSearch');
+    skuSearch.addEventListener('input', function() {
+        const sku = this.value.trim().toUpperCase();
+        if (sku.length >= 3) {
+            searchItemsBySku(sku);
+        } else {
+            showAllItems();
+        }
+    });
+    
+    // Setup Enter key for SKU search
+    skuSearch.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const sku = this.value.trim().toUpperCase();
+            const item = allItems.find(item => item.sku.toUpperCase() === sku);
+            if (item) {
+                addToCart(item);
+                this.value = '';
+                showAllItems();
+            } else {
+                alert('Item not found: ' + sku);
+            }
+        }
+    });
+    
+    // Verify cards are clickable
+    setTimeout(() => {
+        const cardCount = document.querySelectorAll('.item-card').length;
+        console.log(`✅ ${cardCount} clickable item cards ready for POS use`);
+        
+        // Debug cart elements
+        const cartItems = document.getElementById('cartItems');
+        const cartTotal = document.getElementById('cartTotal');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        
+        console.log('🔍 Cart element check:');
+        console.log('  cartItems:', cartItems ? 'Found' : 'Missing');
+        console.log('  cartTotal:', cartTotal ? 'Found' : 'Missing');
+        console.log('  checkoutBtn:', checkoutBtn ? 'Found' : 'Missing');
+        
+        if (cartItems) {
+            console.log('  cartItems HTML:', cartItems.innerHTML);
+        }
+        
+        // Test cart display function
+        console.log('🧪 Testing updateCartDisplay() function...');
+        console.log('🧪 Adding test item for updateCartDisplay test');
+        cart.push({sku: 'TEST-001', name: 'Test Item', price: 9.99, quantity: 1});
+        updateCartDisplay();
+        cart.pop(); // Remove test item
+        console.log('🧪 Test updateCartDisplay() completed');
+    }, 500);
+});
+
+// Show all items in the grid
+function showAllItems() {
+    const grid = document.getElementById('itemsGrid');
+    
+    if (!grid) {
+        console.error('itemsGrid element not found');
+        return;
+    }
+    
+    grid.innerHTML = '';
+    
+    allItems.forEach((item) => {
+        const itemCard = createItemCard(item);
+        grid.appendChild(itemCard);
+    });
+    
+    console.log(`📦 Displaying ${allItems.length} items in POS grid`);
+}
+
+// Simple test cart display function
+function simpleCartDisplay() {
+    console.log('🧪 SIMPLE CART DISPLAY TEST');
+    const cartItems = document.getElementById('cartItems');
+    if (cartItems) {
+        cartItems.innerHTML = '<div style="color: blue; padding: 1rem;">🧪 SIMPLE TEST: Cart has ' + cart.length + ' items</div>';
+        console.log('🧪 Simple cart display successful');
+    } else {
+        console.error('🧪 cartItems element not found');
+    }
+}
+
+// Debug cart function
+function debugCart() {
+    console.log('🔧 DEBUG: Manual cart test started');
+    console.log('🔧 DEBUG: Cart length:', cart.length);
+    console.log('🔧 DEBUG: Cart contents:', cart);
+    
+    // Add a test item if cart is empty
+    if (cart.length === 0) {
+        console.log('🔧 DEBUG: Adding test item to cart');
+        cart.push({
+            sku: 'TEST-001',
+            name: 'Test Item',
+            price: 9.99,
+            quantity: 1
+        });
+    }
+    
+    console.log('🔧 DEBUG: Calling updateCartDisplay()');
+    updateCartDisplay();
+    console.log('🔧 DEBUG: Calling simpleCartDisplay()');
+    simpleCartDisplay();
+    console.log('🔧 DEBUG: Manual cart test completed');
+}
+
+// Search items by SKU
+function searchItemsBySku(searchTerm) {
+    const filtered = allItems.filter(item => 
+        item.sku.toUpperCase().includes(searchTerm) ||
+        item.name.toUpperCase().includes(searchTerm)
+    );
+    
+    const grid = document.getElementById('itemsGrid');
+    grid.innerHTML = '';
+    
+    filtered.forEach(item => {
+        const itemCard = createItemCard(item);
+        grid.appendChild(itemCard);
+    });
+}
+
+// Create item card element
+function createItemCard(item) {
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    
+    // Single event handler - no double firing
+    card.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        addToCart(item);
+    });
+    
+    const imageUrl = item.imageUrl || '/images/items/placeholder.webp';
+    
+    card.innerHTML = `
+        <img src="${imageUrl}" alt="${item.name}" class="item-image" onerror="this.src='/images/items/placeholder.webp'">
+        <div class="item-name">${item.name}</div>
+        <div class="item-sku">${item.sku}</div>
+        <div class="item-price">$${parseFloat(item.retailPrice || 0).toFixed(2)}</div>
+    `;
+    
+    return card;
+}
+
+// Add item to cart
+function addToCart(item) {
+    if (!item) {
+        console.error('addToCart: item is null or undefined');
+        return;
+    }
+    
+    const existing = cart.find(cartItem => cartItem.sku === item.sku);
+    
+    if (existing) {
+        existing.quantity += 1;
+        console.log(`➕ ${item.name} quantity increased to ${existing.quantity}`);
+    } else {
+        const newItem = {
+            sku: item.sku,
+            name: item.name,
+            price: parseFloat(item.retailPrice || 0),
+            quantity: 1
+        };
+        cart.push(newItem);
+        console.log(`🛒 Added ${item.name} to cart ($${newItem.price})`);
+    }
+    
+    console.log('🔍 Current cart contents:', JSON.stringify(cart, null, 2));
+    console.log('🔧 About to call updateCartDisplay, function type:', typeof updateCartDisplay);
+    if (typeof updateCartDisplay === 'function') {
+        console.log('✅ updateCartDisplay is a function, calling it now...');
+        updateCartDisplay();
+        console.log('✅ updateCartDisplay call completed');
+    } else {
+        console.error('❌ updateCartDisplay is not a function!', updateCartDisplay);
+        alert('ERROR: updateCartDisplay is not defined as a function');
+    }
+    
+    // Visual feedback
+    const skuSearch = document.getElementById('skuSearch');
+    if (skuSearch) {
+        skuSearch.style.borderColor = '#4CAF50';
+        setTimeout(() => {
+            skuSearch.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        }, 300);
+    }
+    
+    // Additional visual feedback - flash the cart
+    const cartElement = document.querySelector('.pos-cart');
+    if (cartElement) {
+        cartElement.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+        setTimeout(() => {
+            cartElement.style.backgroundColor = '';
+        }, 300);
+    }
+}
+
+// Update cart display
+function updateCartDisplay() {
+    console.log('🚀 ENTERING updateCartDisplay() function');
+    console.log('🔍 Cart length:', cart.length);
+    console.log('🔍 Cart data:', cart);
+    
+    const cartItems = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    
+    if (!cartItems || !cartTotal || !checkoutBtn) {
+        console.error('❌ Missing DOM elements for cart display');
+        return;
+    }
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="empty-cart">
+                Cart is empty<br>
+                <small>Scan or search for items to add them</small>
+            </div>
+        `;
+        cartTotal.textContent = '$0.00';
+        checkoutBtn.disabled = true;
+        console.log('📭 Cart cleared - empty state');
+        return;
+    }
+    
+    // Build cart HTML
+    let cartHTML = '';
+    let total = 0;
+    
+    cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        cartHTML += `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-sku">${item.sku}</div>
+                </div>
+                <div class="cart-item-controls">
+                    <button class="qty-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                    <span class="qty-display">${item.quantity}</span>
+                    <button class="qty-btn" onclick="updateQuantity(${index}, 1)">+</button>
+                    <span class="cart-item-price">$${itemTotal.toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    // Update display
+    cartItems.innerHTML = cartHTML;
+    cartTotal.textContent = '$' + total.toFixed(2);
+    checkoutBtn.disabled = false;
+    
+    console.log('✅ Cart display updated:', cart.length, 'items, total:', '$' + total.toFixed(2));
+}
+
+// Update item quantity in cart
+function updateQuantity(index, change) {
+    cart[index].quantity += change;
+    
+    if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+    }
+    
+    updateCartDisplay();
+}
+
+// Process checkout
+async function processCheckout() {
+    if (cart.length === 0) {
+        alert('Cart is empty!');
+        return;
+    }
+    
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    if (!confirm(`Complete sale for $${total.toFixed(2)}?`)) {
+        return;
+    }
+    
+    try {
+        // Create order for Register customer
+        const orderData = {
+            userId: 'REG001', // Register customer ID
+            items: cart,
+            total: total,
+            paymentMethod: 'Cash',
+            paymentStatus: 'Received',
+            shippingMethod: 'Customer Pickup',
+            order_status: 'Delivered',
+            note: 'Point of Sale Transaction'
+        };
+        
+        console.log('Processing checkout:', orderData);
+        
+        const response = await fetch('/api/add-order.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`✅ Sale completed!\nOrder ID: ${result.orderId}\nTotal: $${total.toFixed(2)}`);
+            
+            // Clear cart
+            cart = [];
+            updateCartDisplay();
+            
+            // Clear search
+            document.getElementById('skuSearch').value = '';
+            showAllItems();
+            
+        } else {
+            throw new Error(result.error || 'Checkout failed');
+        }
+        
+    } catch (error) {
+        console.error('Checkout error:', error);
+        alert('❌ Checkout failed: ' + error.message);
+    }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // F1 - Focus search
+    if (e.key === 'F1') {
+        e.preventDefault();
+        document.getElementById('skuSearch').focus();
+    }
+    
+    // F2 - Show all items
+    if (e.key === 'F2') {
+        e.preventDefault();
+        showAllItems();
+        document.getElementById('skuSearch').value = '';
+    }
+    
+    // F9 - Checkout
+    if (e.key === 'F9') {
+        e.preventDefault();
+        if (!document.getElementById('checkoutBtn').disabled) {
+            processCheckout();
+        }
+    }
+    
+    // Escape - Exit
+    if (e.key === 'Escape') {
+        if (confirm('Exit register?')) {
+            window.location.href = '/?page=admin';
+        }
+    }
+});
+
+console.log('POS Register loaded successfully');
+console.log('Keyboard shortcuts: F1=Search, F2=Show All, F9=Checkout, Escape=Exit');
+</script>     </div>
+</div>
+    </main>
+
+<!-- Product Modal -->
+<div id="productModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeProductModal()">&times;</span>
+        <div id="modalContent" class="p-4">
+            <!-- Content will be dynamically inserted here -->
+        </div>
+    </div>
+</div>
+
+<!-- Core JavaScript Libraries -->
+<script src="js/global-notifications.js?v=1751313635"></script>
+<script src="js/image-viewer.js?v=1751313635"></script>
+
+<!-- Page-specific Scripts -->
+
+<script src="js/global-item-modal.js?v=1751313635"></script>
+<script src="js/global-modals.js?v=1751313635"></script>
+<script src="js/sales-checker.js?v=1751313635"></script>
+<script src="js/search.js?v=1751313635"></script>
+<script src="js/analytics.js?v=1751313635"></script>
+
+<!-- Admin-specific Scripts -->
+<script src="js/help-tooltips.js?v=1751313635"></script>
+
+<!-- WebP Support Detection -->
+<script>
+    (function(){
+        var d=document.createElement('div');
+        d.innerHTML='<img src="data:image/webp;base64,UklGRjIAAABXRUJQVlA4ICYAAACyAgCdASoCAAEALmk0mk0iIiIiIgBoSygABc6zbAAA/v56QAAAAA==\" onerror=\"document.documentElement.className += \' no-webp\';\" onload=\"document.documentElement.className += \' webp\';\">';
+    })();
+</script>
+
+<!-- Dynamic Background Loading -->
+<script>
+    async function loadDynamicBackground() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPage = urlParams.get('page') || 'landing';
+            const fromMain = urlParams.get('from') === 'main';
+            
+            let roomType = 'landing';
+            
+            // Special handling for main room navigation
+            if (fromMain && ['room2', 'room3', 'room4', 'room5', 'room6'].includes(currentPage)) {
+                roomType = 'room_main';
+                const body = document.body;
+                const supportsWebP = document.documentElement.classList.contains('webp');
+                const imageUrl = supportsWebP ? 'images/room_main.webp' : 'images/room_main.png';
+                
+                body.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
+                body.classList.add('dynamic-bg-loaded');
+                return;
+            }
+            
+            // Map pages to room types
+            const pageRoomMap = {
+                'main_room': 'room_main', 'room2': 'room2', 'room3': 'room3', 
+                'room4': 'room4', 'room5': 'room5', 'room6': 'room6',
+                'shop': 'room_main', 'cart': 'room_main', 'login': 'room_main', 'admin': 'room_main'
+            };
+            
+            roomType = pageRoomMap[currentPage] || 'landing';
+            
+            // Fetch background from database
+            const response = await fetch(`api/get_background.php?room_type=${roomType}`);
+            const data = await response.json();
+            
+            if (data.success && data.background) {
+                const background = data.background;
+                const body = document.body;
+                const supportsWebP = document.documentElement.classList.contains('webp');
+                const imageUrl = supportsWebP && background.webp_filename ? 
+                    `images/${background.webp_filename}` : 
+                    `images/${background.image_filename}`;
+                
+                body.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
+                body.classList.add('dynamic-bg-loaded');
+            }
+        } catch (error) {
+            console.error('Error loading dynamic background:', error);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadDynamicBackground);
+</script>
+
+<!-- Main Application Script -->
+<script>
+    // Cart display updates
+    function updateCartDisplay() {
+        const cartCountEl = document.getElementById('cartCount');
+        if (typeof window.cart !== 'undefined' && cartCountEl) {
+            const count = window.cart.items.reduce((total, item) => total + item.quantity, 0);
+            cartCountEl.textContent = count + ' items';
+        }
+    }
+
+    window.addEventListener('cartUpdated', updateCartDisplay);
+
+    // Authentication handling
+    function logout() {
+        sessionStorage.removeItem('user');
+        window.location.href = '/logout.php'; 
+    }
+
+    // Login form handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const isAdminPage = window.location.search.includes('page=admin');
+        
+        if (!isAdminPage) {
+            if (typeof window.cart === 'undefined') {
+                console.error('Cart not initialized properly');
+            } else {
+                updateCartDisplay();
+            }
+        }
+        
+        // Login form
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const errorMessage = document.getElementById('errorMessage');
+                
+                try {
+                    const response = await fetch('/process_login.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Login failed');
+                    }
+                    
+                    sessionStorage.setItem('user', JSON.stringify(data.user || data));
+                    
+                    if (data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                        return;
+                    }
+                    
+                    const pendingCheckout = localStorage.getItem('pendingCheckout');
+                    if (pendingCheckout === 'true') {
+                        localStorage.removeItem('pendingCheckout');
+                        window.location.href = '/?page=cart';
+                        return;
+                    }
+                    
+                    window.location.href = data.role === 'Admin' ? '/?page=admin' : '/?page=main_room';
+                } catch (error) {
+                    errorMessage.textContent = error.message;
+                    errorMessage.classList.remove('hidden');
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

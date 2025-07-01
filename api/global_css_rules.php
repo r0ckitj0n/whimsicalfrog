@@ -263,6 +263,64 @@ function generateCSSContent($rules) {
         $css .= "}\n\n";
     }
     
+    // Default Global CSS Rules
+    $defaultRules = [
+        // Brand Colors
+        ['rule_name' => 'primary-color', 'css_value' => '#87ac3a', 'category' => 'brand', 'description' => 'Main brand color (WhimsicalFrog green)'],
+        ['rule_name' => 'primary-color-hover', 'css_value' => '#6b8e23', 'category' => 'brand', 'description' => 'Primary color hover state'],
+        ['rule_name' => 'secondary-color', 'css_value' => '#f3f4f6', 'category' => 'brand', 'description' => 'Secondary background color'],
+        ['rule_name' => 'accent-color', 'css_value' => '#3b82f6', 'category' => 'brand', 'description' => 'Accent color for highlights'],
+        
+        // Typography
+        ['rule_name' => 'body-font-family', 'css_value' => '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', 'category' => 'typography', 'description' => 'Main body font family'],
+        ['rule_name' => 'heading-font-family', 'css_value' => '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', 'category' => 'typography', 'description' => 'Heading font family'],
+        ['rule_name' => 'body-font-size', 'css_value' => '14px', 'category' => 'typography', 'description' => 'Base body font size'],
+        ['rule_name' => 'heading-font-size', 'css_value' => '1.5rem', 'category' => 'typography', 'description' => 'Main heading font size'],
+        
+        // Buttons
+        ['rule_name' => 'button-bg-primary', 'css_value' => '#87ac3a', 'category' => 'buttons', 'description' => 'Primary button background'],
+        ['rule_name' => 'button-bg-primary-hover', 'css_value' => '#6b8e23', 'category' => 'buttons', 'description' => 'Primary button hover background'],
+        ['rule_name' => 'button-bg-secondary', 'css_value' => '#f3f4f6', 'category' => 'buttons', 'description' => 'Secondary button background'],
+        ['rule_name' => 'button-text-primary', 'css_value' => '#ffffff', 'category' => 'buttons', 'description' => 'Primary button text color'],
+        ['rule_name' => 'button-text-secondary', 'css_value' => '#374151', 'category' => 'buttons', 'description' => 'Secondary button text color'],
+        ['rule_name' => 'button-border-radius', 'css_value' => '6px', 'category' => 'buttons', 'description' => 'Button border radius'],
+        
+        // Layout
+        ['rule_name' => 'content-max-width', 'css_value' => '1200px', 'category' => 'layout', 'description' => 'Maximum content width'],
+        ['rule_name' => 'section-spacing', 'css_value' => '2rem', 'category' => 'layout', 'description' => 'Section spacing'],
+        ['rule_name' => 'element-spacing', 'css_value' => '1rem', 'category' => 'layout', 'description' => 'Element spacing'],
+        ['rule_name' => 'border-radius', 'css_value' => '8px', 'category' => 'layout', 'description' => 'Standard border radius'],
+        
+        // Navigation
+        ['rule_name' => 'nav-bg-color', 'css_value' => '#ffffff', 'category' => 'navigation', 'description' => 'Navigation background color'],
+        ['rule_name' => 'nav-text-color', 'css_value' => '#374151', 'category' => 'navigation', 'description' => 'Navigation text color'],
+        ['rule_name' => 'nav-link-hover', 'css_value' => '#87ac3a', 'category' => 'navigation', 'description' => 'Navigation link hover color'],
+        
+        // Forms
+        ['rule_name' => 'form-input-border', 'css_value' => '#d1d5db', 'category' => 'forms', 'description' => 'Form input border color'],
+        ['rule_name' => 'form-input-focus', 'css_value' => '#87ac3a', 'category' => 'forms', 'description' => 'Form input focus color'],
+        ['rule_name' => 'form-input-bg', 'css_value' => '#ffffff', 'category' => 'forms', 'description' => 'Form input background'],
+        ['rule_name' => 'form-label-color', 'css_value' => '#374151', 'category' => 'forms', 'description' => 'Form label text color'],
+        
+        // Modals
+        ['rule_name' => 'modal-bg-color', 'css_value' => '#ffffff', 'category' => 'modals', 'description' => 'Modal background color'],
+        ['rule_name' => 'modal-border-radius', 'css_value' => '12px', 'category' => 'modals', 'description' => 'Modal border radius'],
+        ['rule_name' => 'modal-shadow', 'css_value' => '0 25px 50px -12px rgba(0, 0, 0, 0.25)', 'category' => 'modals', 'description' => 'Modal box shadow'],
+        ['rule_name' => 'modal-overlay-bg', 'css_value' => 'rgba(0, 0, 0, 0.6)', 'category' => 'modals', 'description' => 'Modal overlay background'],
+        
+        // Admin Interface
+        ['rule_name' => 'admin-header-bg', 'css_value' => '#f8fafc', 'category' => 'admin', 'description' => 'Admin header background'],
+        ['rule_name' => 'admin-sidebar-bg', 'css_value' => '#ffffff', 'category' => 'admin', 'description' => 'Admin sidebar background'],
+        ['rule_name' => 'admin-content-bg', 'css_value' => '#ffffff', 'category' => 'admin', 'description' => 'Admin content background'],
+        ['rule_name' => 'admin-border-color', 'css_value' => '#e5e7eb', 'category' => 'admin', 'description' => 'Admin border color'],
+        
+        // Order Forms
+        ['rule_name' => 'order-form-section-bg', 'css_value' => '#f9fafb', 'category' => 'admin', 'description' => 'Order form section background'],
+        ['rule_name' => 'order-item-row-bg', 'css_value' => '#ffffff', 'category' => 'admin', 'description' => 'Order item row background'],
+        ['rule_name' => 'order-item-border', 'css_value' => '#e5e7eb', 'category' => 'admin', 'description' => 'Order item border color'],
+        ['rule_name' => 'order-form-spacing', 'css_value' => '1.5rem', 'category' => 'admin', 'description' => 'Order form section spacing']
+    ];
+    
     return $css;
 }
 ?> 

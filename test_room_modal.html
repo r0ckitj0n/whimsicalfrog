@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Settings Modal Test</title>
+    <link rel="stylesheet" href="css/global-modals.css">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-button { 
+            background: #87ac3a; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        .test-button:hover { background: #6b8e23; }
+    </style>
+</head>
+<body>
+    <h1>Room Settings Modal Test</h1>
+    <button class="test-button" onclick="testRoomModal()">Test Room Settings Modal</button>
+    
+    <div id="test-output"></div>
+
+    <!-- Room Settings Modal -->
+    <div id="roomSettingsModal" class="admin-modal-overlay" style="display: none;" onclick="closeRoomSettingsModal()">
+        <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 class="text-xl font-bold text-gray-800">🏠 Room Settings Test</h2>
+                <button onclick="closeRoomSettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <div class="p-4">
+                <div class="bg-cyan-50 border border-cyan-200 rounded p-3 mb-6">
+                    <h3 class="font-semibold text-cyan-800 mb-2">🏠 Modal Test</h3>
+                    <p class="text-sm text-cyan-700">If you can see this, the modal is working correctly!</p>
+                </div>
+                
+                <div id="roomSettingsList">
+                    <div class="text-center text-gray-500 py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-2"></div>
+                        Testing modal functionality...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testRoomModal() {
+            console.log('Testing room modal...');
+            document.getElementById('test-output').innerHTML = 'Testing modal...';
+            
+            const modal = document.getElementById('roomSettingsModal');
+            if (modal) {
+                console.log('Modal element found');
+                modal.style.display = 'flex';
+                document.getElementById('test-output').innerHTML = 'Modal should be visible now!';
+            } else {
+                console.error('Modal element not found!');
+                document.getElementById('test-output').innerHTML = 'ERROR: Modal element not found!';
+            }
+        }
+
+        function closeRoomSettingsModal() {
+            console.log('Closing room modal...');
+            const modal = document.getElementById('roomSettingsModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.getElementById('test-output').innerHTML = 'Modal closed successfully!';
+            }
+        }
+        
+        // Test API call
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/room_settings.php?action=get_all');
+                const data = await response.json();
+                console.log('API Response:', data);
+                document.getElementById('test-output').innerHTML += '<br>API Response: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('API Error:', error);
+                document.getElementById('test-output').innerHTML += '<br>API Error: ' + error.message;
+            }
+        }
+        
+        // Test both modal and API on page load
+        window.onload = function() {
+            testAPI();
+        };
+    </script>
+</body>
+</html> 

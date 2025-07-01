@@ -139,7 +139,23 @@ try {
         
         // Section Headers - Admin Settings Page
         ['section_title_text_color', 'color', '#ffffff', 'admin_sections', 'Section title text color (white for visibility on gradient backgrounds)'],
-        ['section_description_text_color', 'color', '#ffffff', 'admin_sections', 'Section description text color (white for visibility on gradient backgrounds)']
+        ['section_description_text_color', 'color', '#ffffff', 'admin_sections', 'Section description text color (white for visibility on gradient backgrounds)'],
+        
+        // Step Badges - First Time User Guide System
+        ['step_badge_bg_color', 'background-color', '#ef4444', 'step_badges', 'Step badge background color'],
+        ['step_badge_text_color', 'color', '#ffffff', 'step_badges', 'Step badge text color'],
+        ['step_badge_size', 'width', '60px', 'step_badges', 'Step badge width and height'],
+        ['step_badge_font_size', 'font-size', '12px', 'step_badges', 'Step badge font size'],
+        ['step_badge_border_radius', 'border-radius', '50%', 'step_badges', 'Step badge border radius (circular)'],
+        ['step_badge_z_index', 'z-index', '1000', 'step_badges', 'Step badge z-index for layering'],
+        ['step_badge_position_top', 'top', '-10px', 'step_badges', 'Step badge position from top of button'],
+        ['step_badge_position_right', 'right', '-10px', 'step_badges', 'Step badge position from right of button'],
+        ['step_badge_shadow', 'box-shadow', '0 2px 8px rgba(0,0,0,0.3)', 'step_badges', 'Step badge shadow effect'],
+        ['step_badge_font_weight', 'font-weight', 'bold', 'step_badges', 'Step badge font weight'],
+        ['step_badge_animation_duration', 'animation-duration', '2s', 'step_badges', 'Step badge pulse animation duration'],
+        ['step_badge_text_step1', 'content', '"Step 1"', 'step_badges', 'Text for Step 1 badge'],
+        ['step_badge_text_step2', 'content', '"Step 2"', 'step_badges', 'Text for Step 2 badge'],
+        ['step_badge_text_step3', 'content', '"Step 3"', 'step_badges', 'Text for Step 3 badge']
     ];
 
     $stmt = $pdo->prepare("

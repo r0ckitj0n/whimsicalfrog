@@ -177,7 +177,7 @@ try {
                style="display: inline-block; background-color: #87ac3a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px;">
                 View in Admin Panel
             </a>
-            <a href="https://whimsicalfrog.us/?page=order_fulfillment" 
+            <a href="https://whimsicalfrog.us/?page=admin&section=orders" 
                style="display: inline-block; background-color: #d32f2f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                 Start Fulfillment
             </a>

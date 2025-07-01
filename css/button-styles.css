@@ -604,7 +604,7 @@
     background-color: var(--admin-card-bg, #ffffff);
     box-shadow: var(--admin-card-shadow, 0 1px 3px 0 rgba(0, 0, 0, 0.1));
     border-radius: var(--border-radius-default, 8px);
-    padding: 1rem;
+    padding: 0.5rem;
 }
 
 .admin-title {
@@ -2878,7 +2878,7 @@
     border: 1px solid #9ca3af;
 }
 
-/* Order Modal System */
+/* Order Modal System - Sunday Layout Restored */
 .order-modal {
     position: fixed;
     top: 0;
@@ -2986,6 +2986,18 @@
     line-height: 1.5;
     color: #374151;
     white-space: pre-line;
+}
+
+/* Responsive Design for Order Modal */
+@media (max-width: 768px) {
+    .order-modal-content {
+        width: 100%;
+        margin: 1rem auto;
+    }
+
+    .order-form-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Navigation Arrows */
@@ -5413,4 +5425,311 @@
     color: #1e40af;
     font-size: 14px;
     line-height: 1.5;
+}
+
+/* Order Modal System - Simplified Design */
+.admin-modal-overlay #orderModal {
+    padding: 1rem;
+}
+
+.admin-modal-overlay #orderModal .admin-modal-content {
+    background-color: var(--modal-bg-color, white);
+    border-radius: var(--modal-border-radius, 12px);
+    box-shadow: var(--modal-shadow, 0 25px 50px -12px rgba(0, 0, 0, 0.25));
+    width: 100%;
+    max-width: 900px;
+    max-height: calc(100vh - 2rem);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-modal-overlay #orderModal .admin-modal-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--admin-border-color, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.admin-modal-overlay #orderModal .modal-title {
+    font-size: var(--heading-font-size, 1.5rem);
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.admin-modal-overlay #orderModal .modal-close {
+    color: #6b7280;
+    transition: color 0.2s ease;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.admin-modal-overlay #orderModal .modal-close:hover {
+    color: #374151;
+    background-color: #f3f4f6;
+}
+
+.admin-modal-overlay #orderModal .modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.admin-modal-overlay #orderModal .order-edit-form {
+    padding: 1.5rem;
+}
+
+.admin-modal-overlay #orderModal .form-section {
+    background-color: var(--order-form-section-bg, #f9fafb);
+    border: 1px solid var(--admin-border-color, #e5e7eb);
+    border-radius: var(--border-radius, 8px);
+    padding: 1.5rem;
+    margin-bottom: var(--order-form-spacing, 1.5rem);
+}
+
+.admin-modal-overlay #orderModal .form-section:last-child {
+    margin-bottom: 0;
+}
+
+.admin-modal-overlay #orderModal .form-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--admin-border-color, #e5e7eb);
+}
+
+.admin-modal-overlay #orderModal .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.admin-modal-overlay #orderModal .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-modal-overlay #orderModal .form-label {
+    font-weight: 500;
+    color: var(--form-label-color, #374151);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.admin-modal-overlay #orderModal .form-input,
+.admin-modal-overlay #orderModal .form-select,
+.admin-modal-overlay #orderModal .form-textarea {
+    padding: 0.75rem;
+    border: 1px solid var(--form-input-border, #d1d5db);
+    border-radius: 6px;
+    background-color: var(--form-input-bg, white);
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-modal-overlay #orderModal .form-input:focus,
+.admin-modal-overlay #orderModal .form-select:focus,
+.admin-modal-overlay #orderModal .form-textarea:focus {
+    outline: none;
+    border-color: var(--form-input-focus, #87ac3a);
+    box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.1);
+}
+
+.admin-modal-overlay #orderModal .form-input[readonly] {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Order Items Container */
+.admin-modal-overlay #orderModal .order-items-container {
+    border: 1px solid var(--order-item-border, #e5e7eb);
+    border-radius: 6px;
+    background-color: white;
+    overflow: hidden;
+}
+
+.admin-modal-overlay #orderModal .order-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--order-item-border, #e5e7eb);
+    background-color: var(--order-item-row-bg, white);
+}
+
+.admin-modal-overlay #orderModal .order-item-row:last-child {
+    border-bottom: none;
+}
+
+.admin-modal-overlay #orderModal .order-item-info {
+    flex-grow: 1;
+}
+
+.admin-modal-overlay #orderModal .item-name {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.admin-modal-overlay #orderModal .item-sku {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-family: monospace;
+}
+
+.admin-modal-overlay #orderModal .order-item-pricing {
+    text-align: right;
+    margin-left: 1rem;
+}
+
+.admin-modal-overlay #orderModal .item-price {
+    font-size: 0.875rem;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.admin-modal-overlay #orderModal .item-total {
+    font-weight: 700;
+    color: #111827;
+    font-size: 1rem;
+}
+
+/* Address Display */
+.admin-modal-overlay #orderModal .address-display {
+    background-color: white;
+    border: 1px solid var(--admin-border-color, #e5e7eb);
+    border-radius: 6px;
+    padding: 1rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #374151;
+    white-space: pre-line;
+}
+
+/* Modal Footer */
+.admin-modal-overlay #orderModal .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--admin-border-color, #e5e7eb);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    background-color: #f8fafc;
+}
+
+.admin-modal-overlay #orderModal .modal-footer .btn-secondary {
+    background-color: var(--button-bg-secondary, #f3f4f6);
+    color: var(--button-text-secondary, #374151);
+    border: 1px solid #d1d5db;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--button-border-radius, 6px);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.admin-modal-overlay #orderModal .modal-footer .btn-secondary:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.admin-modal-overlay #orderModal .modal-footer .btn-primary {
+    background-color: var(--button-bg-primary, #87ac3a);
+    color: var(--button-text-primary, white);
+    border: 1px solid var(--button-bg-primary, #87ac3a);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--button-border-radius, 6px);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.admin-modal-overlay #orderModal .modal-footer .btn-primary:hover {
+    background-color: var(--button-bg-primary-hover, #6b8e23);
+    border-color: var(--button-bg-primary-hover, #6b8e23);
+}
+
+/* Navigation Arrows */
+.nav-arrow-left,
+.nav-arrow-right {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 3.5rem;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+}
+
+.nav-arrow-left:hover,
+.nav-arrow-right:hover {
+    background: rgba(0, 0, 0, 0.6);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.nav-arrow-left svg,
+.nav-arrow-right svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    stroke-width: 2.5;
+}
+
+.nav-arrow-left {
+    left: 1.5rem;
+}
+
+.nav-arrow-right {
+    right: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-modal-overlay #orderModal {
+        padding: 0.5rem;
+    }
+    
+    .admin-modal-overlay #orderModal .admin-modal-content {
+        max-height: calc(100vh - 1rem);
+    }
+    
+    .admin-modal-overlay #orderModal .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-modal-overlay #orderModal .order-item-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .admin-modal-overlay #orderModal .order-item-pricing {
+        margin-left: 0;
+        text-align: left;
+        width: 100%;
+    }
+    
+    .nav-arrow-left,
+    .nav-arrow-right {
+        display: none;
+    }
 }

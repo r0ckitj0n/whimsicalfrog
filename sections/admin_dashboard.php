@@ -289,58 +289,559 @@ if (empty($dashboardConfig)) {
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'order_fulfillment'): ?>
-                        <!-- Order Fulfillment Section - Links to Full Page -->
-                        <div class="space-y-3">
-                            <?php 
-                            $fulfillmentStats = $db->query('SELECT 
-                                COUNT(CASE WHEN status = "Processing" THEN 1 END) as processing,
-                                COUNT(CASE WHEN status = "Shipped" THEN 1 END) as shipped,
-                                COUNT(CASE WHEN status = "Delivered" THEN 1 END) as delivered,
-                                COUNT(CASE WHEN status = "Processing" AND DATE(date) <= CURDATE() - INTERVAL 2 DAY THEN 1 END) as urgent
-                                FROM orders WHERE DATE(date) >= CURDATE() - INTERVAL 30 DAY')->fetch();
-                            $urgentOrders = $db->query('SELECT id, total, date, status FROM orders WHERE status = "Processing" ORDER BY date ASC LIMIT 3')->fetchAll();
-                            ?>
-                            <div class="grid grid-cols-2 gap-2 mb-3">
-                                <div class="bg-yellow-50 border border-yellow-200 rounded p-2 text-center">
-                                    <div class="text-lg font-bold text-yellow-800"><?= $fulfillmentStats['processing'] ?></div>
-                                    <div class="text-xs text-yellow-600">Processing</div>
-                                </div>
-                                <div class="bg-red-50 border border-red-200 rounded p-2 text-center">
-                                    <div class="text-lg font-bold text-red-800"><?= $fulfillmentStats['urgent'] ?></div>
-                                    <div class="text-xs text-red-600">Urgent Orders</div>
-                                </div>
+                        <!-- Updated Order Fulfillment Interface Embedded -->
+                        <?php
+                        // Get filter parameters
+                        $filterDate = $_GET['filter_date'] ?? '';
+                        $filterItems = $_GET['filter_items'] ?? '';
+                        $filterStatus = $_GET['filter_status'] ?? '';
+                        $filterPaymentMethod = $_GET['filter_payment_method'] ?? '';
+                        $filterShippingMethod = $_GET['filter_shipping_method'] ?? '';
+                        $filterPaymentStatus = $_GET['filter_payment_status'] ?? '';
+
+                        // Build the WHERE clause based on filters
+                        $whereConditions = [];
+                        $params = [];
+
+                        // Default to Processing status if no status filter is provided, but allow "All" to show everything
+                        if (!isset($_GET['filter_status'])) {
+                            $defaultStatus = 'Processing';
+                        } else {
+                            $defaultStatus = $filterStatus;
+                        }
+
+                        if (!empty($filterDate)) {
+                            $whereConditions[] = "DATE(o.date) = ?";
+                            $params[] = $filterDate;
+                        }
+
+                        if (!empty($defaultStatus)) {
+                            $whereConditions[] = "o.order_status = ?";
+                            $params[] = $defaultStatus;
+                        }
+
+                        if (!empty($filterPaymentMethod)) {
+                            $whereConditions[] = "o.paymentMethod = ?";
+                            $params[] = $filterPaymentMethod;
+                        }
+
+                        if (!empty($filterShippingMethod)) {
+                            $whereConditions[] = "o.shippingMethod = ?";
+                            $params[] = $filterShippingMethod;
+                        }
+
+                        if (!empty($filterPaymentStatus)) {
+                            $whereConditions[] = "o.paymentStatus = ?";
+                            $params[] = $filterPaymentStatus;
+                        }
+
+                        if (!empty($filterItems)) {
+                            $whereConditions[] = "EXISTS (SELECT 1 FROM order_items oi LEFT JOIN items i ON oi.sku = i.sku WHERE oi.orderId = o.id AND (COALESCE(i.name, oi.sku) LIKE ? OR oi.sku LIKE ?))";
+                            $params[] = "%{$filterItems}%";
+                            $params[] = "%{$filterItems}%";
+                        }
+
+                        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+                        $stmt = $db->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id {$whereClause} ORDER BY o.date DESC");
+                        $stmt->execute($params);
+                        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        // Get unique values for filter dropdowns
+                        $statusOptions = $db->query("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status")->fetchAll(PDO::FETCH_COLUMN);
+                        $paymentMethodOptions = $db->query("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod")->fetchAll(PDO::FETCH_COLUMN);
+                        $shippingMethodOptions = $db->query("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod")->fetchAll(PDO::FETCH_COLUMN);
+                        $paymentStatusOptions = $db->query("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus")->fetchAll(PDO::FETCH_COLUMN);
+                        ?>
+                        
+                        <div class="space-y-4">
+                            <!-- Filter Section -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                <form method="GET" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                                    <input type="hidden" name="page" value="admin">
+                                    <input type="hidden" name="section" value="">
+                                    
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Date</label>
+                                        <input type="date" name="filter_date" value="<?= htmlspecialchars($filterDate) ?>" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Items</label>
+                                        <input type="text" name="filter_items" value="<?= htmlspecialchars($filterItems) ?>" placeholder="Search..." class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Order Status</label>
+                                        <select name="filter_status" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                                            <option value="">All Order Status</option>
+                                            <?php foreach ($statusOptions as $status): ?>
+                                            <option value="<?= htmlspecialchars($status) ?>" <?= $defaultStatus === $status ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($status) ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Payment</label>
+                                        <select name="filter_payment_method" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                                            <option value="">All Payment</option>
+                                            <?php foreach ($paymentMethodOptions as $method): ?>
+                                            <option value="<?= htmlspecialchars($method) ?>" <?= $filterPaymentMethod === $method ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($method) ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Shipping</label>
+                                        <select name="filter_shipping_method" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                                            <option value="">All Shipping</option>
+                                            <?php foreach ($shippingMethodOptions as $method): ?>
+                                            <option value="<?= htmlspecialchars($method) ?>" <?= $filterShippingMethod === $method ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($method) ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Pay Status</label>
+                                        <select name="filter_payment_status" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                                            <option value="">All Pay Status</option>
+                                            <?php foreach ($paymentStatusOptions as $status): ?>
+                                            <option value="<?= htmlspecialchars($status) ?>" <?= $filterPaymentStatus === $status ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($status) ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="flex items-end space-x-2">
+                                        <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors">Filter</button>
+                                        <a href="/?page=admin" class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded transition-colors">Clear</a>
+                                    </div>
+                                </form>
                             </div>
-                            
-                            <div class="bg-white border rounded-lg p-3">
-                                <h4 class="text-sm font-semibold text-gray-700 mb-2">🚚 Next Orders to Process</h4>
-                                <?php if (!empty($urgentOrders)): ?>
-                                    <div class="space-y-1">
-                                        <?php foreach ($urgentOrders as $order): ?>
-                                        <div class="flex justify-between items-center text-xs py-1 px-2 bg-gray-50 rounded">
-                                            <span class="font-mono">#<?= htmlspecialchars($order['id']) ?></span>
-                                            <span class="font-semibold">$<?= number_format($order['total'], 2) ?></span>
-                                        </div>
-                                        <?php endforeach; ?>
+
+                            <!-- Orders Table -->
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                <?php if (empty($orders)): ?>
+                                    <div class="text-center py-8 text-gray-500">
+                                        <div class="text-3xl mb-2">📋</div>
+                                        <div class="text-sm">No orders found</div>
+                                        <div class="text-xs">Try adjusting your filters</div>
                                     </div>
                                 <?php else: ?>
-                                    <div class="text-center text-gray-500 py-2">
-                                        <div class="text-2xl">✅</div>
-                                        <div class="text-xs">All caught up!</div>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-xs">
+                                            <thead class="bg-gray-50 border-b border-gray-200">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Order ID</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Customer</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Date</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Time</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Items</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Total</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Payment Status</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Payment Date</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Order Status</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Payment Method</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Shipping Method</th>
+                                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200">
+                                                <?php foreach ($orders as $order): ?>
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-3 py-2 font-mono font-medium text-gray-900">#<?= htmlspecialchars($order['id'] ?? '') ?></td>
+                                                    <td class="px-3 py-2"><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
+                                                    <td class="px-3 py-2 text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
+                                                    <td class="px-3 py-2 text-gray-600"><?= htmlspecialchars(date('g:i A', strtotime($order['date'] ?? 'now'))) ?></td>
+                                                    <td class="px-3 py-2 text-center">
+                                                        <button onclick="openOrderDetailsModal(<?= htmlspecialchars($order['id'] ?? '') ?>)"
+                                                                class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-none p-0"
+                                                                title="Click to view order details">
+                                                            <?php
+                                                            $items = $db->prepare("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?");
+                                                            $items->execute([$order['id']]);
+                                                            $totalItems = $items->fetchColumn();
+                                                            echo ($totalItems ?: '0') . ' item' . (($totalItems != 1) ? 's' : '');
+                                                            ?>
+                                                        </button>
+                                                    </td>
+                                                    <td class="px-3 py-2 font-semibold">$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
+                                                    <td class="px-3 py-2">
+                                                        <select class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" data-field="paymentStatus" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                                                            <option value="Pending" <?= strtolower($order['paymentStatus'] ?? 'Pending') === strtolower('Pending') ? 'selected' : '' ?>>Pending</option>
+                                                            <option value="Received" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Received') ? 'selected' : '' ?>>Received</option>
+                                                            <option value="Refunded" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Refunded') ? 'selected' : '' ?>>Refunded</option>
+                                                            <option value="Failed" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Failed') ? 'selected' : '' ?>>Failed</option>
+                                                        </select>
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        <input type="date" 
+                                                               class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" 
+                                                               data-field="paymentDate" 
+                                                               data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>"
+                                                               value="<?= !empty($order['paymentDate']) ? htmlspecialchars(date('Y-m-d', strtotime($order['paymentDate']))) : '' ?>"
+                                                               style="min-width: 100px;">
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        <select class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" data-field="order_status" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                                                            <option value="Pending" <?= strtolower($order['order_status'] ?? 'Pending') === strtolower('Pending') ? 'selected' : '' ?>>Pending</option>
+                                                            <option value="Processing" <?= strtolower($order['order_status'] ?? '') === strtolower('Processing') ? 'selected' : '' ?>>Processing</option>
+                                                            <option value="Shipped" <?= strtolower($order['order_status'] ?? '') === strtolower('Shipped') ? 'selected' : '' ?>>Shipped</option>
+                                                            <option value="Delivered" <?= strtolower($order['order_status'] ?? '') === strtolower('Delivered') ? 'selected' : '' ?>>Delivered</option>
+                                                            <option value="Cancelled" <?= strtolower($order['order_status'] ?? '') === strtolower('Cancelled') ? 'selected' : '' ?>>Cancelled</option>
+                                                        </select>
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        <select class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" data-field="paymentMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                                                            <option value="Credit Card" <?= strtolower($order['paymentMethod'] ?? 'Credit Card') === strtolower('Credit Card') ? 'selected' : '' ?>>Credit Card</option>
+                                                            <option value="Cash" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Cash') ? 'selected' : '' ?>>Cash</option>
+                                                            <option value="Check" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Check') ? 'selected' : '' ?>>Check</option>
+                                                            <option value="PayPal" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('PayPal') ? 'selected' : '' ?>>PayPal</option>
+                                                            <option value="Venmo" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Venmo') ? 'selected' : '' ?>>Venmo</option>
+                                                        </select>
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        <select class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" data-field="shippingMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                                                            <option value="Customer Pickup" <?= strtolower($order['shippingMethod'] ?? 'Customer Pickup') === strtolower('Customer Pickup') ? 'selected' : '' ?>>Customer Pickup</option>
+                                                            <option value="Local Delivery" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('Local Delivery') ? 'selected' : '' ?>>Local Delivery</option>
+                                                            <option value="USPS" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('USPS') ? 'selected' : '' ?>>USPS</option>
+                                                            <option value="FedEx" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('FedEx') ? 'selected' : '' ?>>FedEx</option>
+                                                            <option value="UPS" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('UPS') ? 'selected' : '' ?>>UPS</option>
+                                                        </select>
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        <div class="flex space-x-2">
+                                                            <a href="/?page=admin&section=orders&view=<?= urlencode($order['id']) ?>" 
+                                                               class="text-blue-600 hover:text-blue-800" title="View Order">👁️</a>
+                                                            <a href="/?page=admin&section=orders&edit=<?= urlencode($order['id']) ?>" 
+                                                               class="text-green-600 hover:text-green-800" title="Edit Order">✏️</a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 <?php endif; ?>
                             </div>
+                        </div>
+
+                        <style>
+                        /* Order fulfillment table styling */
+                        .admin-form-input-sm {
+                            padding: 0.25rem 0.5rem;
+                            border: 1px solid #d1d5db;
+                            border-radius: 0.375rem;
+                            font-size: 0.875rem;
+                            background: white;
+                            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                        }
+
+                        .admin-form-input-sm:focus {
+                            outline: none;
+                            border-color: #3b82f6;
+                            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                        }
+
+                        .admin-form-select-sm {
+                            padding: 0.25rem 0.5rem;
+                            border: 1px solid #d1d5db;
+                            border-radius: 0.375rem;
+                            font-size: 0.875rem;
+                            background: white;
+                            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                        }
+
+                        .admin-form-select-sm:focus {
+                            outline: none;
+                            border-color: #3b82f6;
+                            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                        }
+
+                        /* Ensure date inputs are properly sized */
+                        .admin-form-input-sm[type="date"] {
+                            min-width: 120px;
+                            font-family: inherit;
+                        }
+
+                        /* Hide auto-save indicator when hanging */
+                        .auto-save-indicator {
+                            display: none !important;
+                            visibility: hidden !important;
+                            opacity: 0 !important;
+                        }
+                        </style>
+
+                        <script>
+                        // Open order details modal function
+                        async function openOrderDetailsModal(orderId) {
+                            console.log('Opening order details modal for order:', orderId);
                             
-                            <div class="text-center">
-                                <a href="/?page=admin&section=order_fulfillment" 
-                                   class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors font-medium">
-                                    <span class="mr-2">🚚</span> Open Order Fulfillment
-                                </a>
+                            try {
+                                // Show the modal
+                                const modal = document.getElementById('orderDetailsModal');
+                                if (modal) {
+                                    // Fetch order details
+                                    const response = await fetch(`api/get_order.php?id=${orderId}`);
+                                    const result = await response.json();
+                                    
+                                    if (result.success && result.order) {
+                                        // Update modal content with order data
+                                        updateOrderModalContent(result.order, result.items || []);
+                                        modal.style.display = 'flex';
+                                        document.body.style.overflow = 'hidden';
+                                    } else {
+                                        console.error('Failed to load order details:', result.message);
+                                        alert('Failed to load order details');
+                                    }
+                                } else {
+                                    console.error('Order details modal not found');
+                                }
+                            } catch (error) {
+                                console.error('Error opening order details modal:', error);
+                                alert('Error loading order details');
+                            }
+                        }
+                        
+                        // Function to update order modal content
+                        function updateOrderModalContent(order, items) {
+                            // Update basic order information
+                            document.getElementById('modal-order-id').textContent = order.id;
+                            document.getElementById('modal-customer').textContent = order.username || 'N/A';
+                            document.getElementById('modal-date').textContent = new Date(order.date).toLocaleDateString();
+                            document.getElementById('modal-total').textContent = `$${parseFloat(order.total || 0).toFixed(2)}`;
+                            document.getElementById('modal-status').textContent = order.order_status || 'Pending';
+                            document.getElementById('modal-payment-method').textContent = order.paymentMethod || 'N/A';
+                            document.getElementById('modal-payment-status').textContent = order.paymentStatus || 'Pending';
+                            document.getElementById('modal-shipping-method').textContent = order.shippingMethod || 'N/A';
+                            
+                            // Update order items
+                            const itemsContainer = document.getElementById('modal-order-items');
+                            itemsContainer.innerHTML = '';
+                            
+                            if (items && items.length > 0) {
+                                items.forEach(item => {
+                                    const itemCard = document.createElement('div');
+                                    itemCard.className = 'order-item-card';
+                                    itemCard.innerHTML = `
+                                        <div class="order-item-details">
+                                            <div class="order-item-name">${item.item_name || item.sku}</div>
+                                            <div class="order-item-sku">SKU: ${item.sku}</div>
+                                            <div class="order-item-price">$${parseFloat(item.price || 0).toFixed(2)} × ${item.quantity}</div>
+                                        </div>
+                                        <div class="order-item-total">
+                                            $${(parseFloat(item.price || 0) * parseInt(item.quantity || 0)).toFixed(2)}
+                                        </div>
+                                    `;
+                                    itemsContainer.appendChild(itemCard);
+                                });
+                            } else {
+                                itemsContainer.innerHTML = '<div class="text-gray-500 text-center py-4">No items found</div>';
+                            }
+                            
+                            // Update address if available
+                            const addressElement = document.getElementById('modal-address');
+                            if (order.addressLine1 || order.city) {
+                                let address = '';
+                                if (order.addressLine1) address += order.addressLine1;
+                                if (order.addressLine2) address += '\n' + order.addressLine2;
+                                if (order.city) address += '\n' + order.city;
+                                if (order.state) address += ', ' + order.state;
+                                if (order.zipCode) address += ' ' + order.zipCode;
+                                addressElement.textContent = address;
+                            } else {
+                                addressElement.textContent = 'No address provided';
+                            }
+                            
+                            // Update notes
+                            document.getElementById('modal-notes').textContent = order.note || 'No notes';
+                            document.getElementById('modal-payment-notes').textContent = order.paynote || 'No payment notes';
+                        }
+                        
+                        // Close order details modal
+                        function closeOrderDetailsModal() {
+                            const modal = document.getElementById('orderDetailsModal');
+                            if (modal) {
+                                modal.style.display = 'none';
+                                document.body.style.overflow = '';
+                            }
+                        }
+                        
+                        // Initialize inline editing for order fulfillment
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Force hide any hanging progress indicators when section loads
+                            hideAutoSaveIndicator();
+                            
+                            // Function to force hide auto-save indicators
+                            function hideAutoSaveIndicator() {
+                                const indicators = document.querySelectorAll('.auto-save-indicator, .progress-bar, .loading-indicator');
+                                indicators.forEach(indicator => {
+                                    indicator.style.display = 'none';
+                                    indicator.style.visibility = 'hidden';
+                                    indicator.style.opacity = '0';
+                                    indicator.classList.add('hidden');
+                                });
+                                
+                                // Set timeout to double-check
+                                setTimeout(() => {
+                                    indicators.forEach(indicator => {
+                                        indicator.style.display = 'none';
+                                        indicator.style.visibility = 'hidden';
+                                        indicator.style.opacity = '0';
+                                    });
+                                }, 100);
+                            }
+                            const editableFields = document.querySelectorAll('.order-field-update');
+                            editableFields.forEach(field => {
+                                field.addEventListener('change', async function() {
+                                    const orderId = this.dataset.orderId;
+                                    const fieldName = this.dataset.field;
+                                    const newValue = this.value;
+                                    
+                                    const originalStyle = this.style.backgroundColor;
+                                    this.style.backgroundColor = '#fef3c7';
+                                    this.disabled = true;
+                                    
+                                    try {
+                                        const formData = new FormData();
+                                        formData.append('orderId', orderId);
+                                        formData.append('field', fieldName);
+                                        formData.append('value', newValue);
+                                        formData.append('action', 'updateField');
+                                        
+                                        const response = await fetch('/api/fulfill_order.php', {
+                                            method: 'POST',
+                                            body: formData
+                                        });
+                                        
+                                        const result = await response.json();
+                                        
+                                        if (result.success) {
+                                            this.style.backgroundColor = '#dcfce7';
+                                            setTimeout(() => {
+                                                this.style.backgroundColor = originalStyle;
+                                            }, 2000);
+                                        } else {
+                                            this.style.backgroundColor = '#fecaca';
+                                            setTimeout(() => {
+                                                this.style.backgroundColor = originalStyle;
+                                            }, 2000);
+                                        }
+                                    } catch (error) {
+                                        this.style.backgroundColor = '#fecaca';
+                                        setTimeout(() => {
+                                            this.style.backgroundColor = originalStyle;
+                                        }, 2000);
+                                    } finally {
+                                        this.disabled = false;
+                                    }
+                                });
+                            });
+                        });
+                        </script>
+
+                        <!-- Order Details Modal - Sunday Layout -->
+                        <div class="modal-overlay order-modal" id="orderDetailsModal" style="display: none;">
+                            <div class="modal-content order-modal-content">
+                                <!-- Modal Header -->
+                                <div class="modal-header">
+                                    <h2 class="modal-title">Order Details: <span id="modal-order-id">#0000</span></h2>
+                                    <button onclick="closeOrderDetailsModal()" class="modal-close">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Modal Body -->
+                                <div class="modal-body">
+                                    <div class="order-form-grid">
+                                        <!-- Order Details Column -->
+                                        <div class="order-details-column">
+                                            <div class="form-section">
+                                                <h3 class="form-section-title">Order Information</h3>
+                                                <div class="form-grid">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Customer</label>
+                                                        <div class="form-input" id="modal-customer">N/A</div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">Date</label>
+                                                        <div class="form-input" id="modal-date">N/A</div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">Order Status</label>
+                                                        <div class="form-input" id="modal-status">Pending</div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">Total</label>
+                                                        <div class="form-input font-bold" id="modal-total">$0.00</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-section">
+                                                <h3 class="form-section-title">Payment & Shipping</h3>
+                                                <div class="form-grid">
+                                                    <div class="form-group">
+                                                        <label class="form-label">Payment Method</label>
+                                                        <div class="form-input" id="modal-payment-method">N/A</div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">Payment Status</label>
+                                                        <div class="form-input" id="modal-payment-status">Pending</div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">Shipping Method</label>
+                                                        <div class="form-input" id="modal-shipping-method">N/A</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Order Items Column -->
+                                        <div class="order-items-column">
+                                            <div class="form-section">
+                                                <h3 class="form-section-title">Order Items</h3>
+                                                <div class="order-items-list" id="modal-order-items">
+                                                    <!-- Items will be populated dynamically -->
+                                                </div>
+                                            </div>
+
+                                            <div class="form-section">
+                                                <h3 class="form-section-title">Shipping Address</h3>
+                                                <div class="address-display">
+                                                    <pre id="modal-address">No address provided</pre>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-section">
+                                                <h3 class="form-section-title">Notes</h3>
+                                                <div class="form-group">
+                                                    <label class="form-label">Order Notes</label>
+                                                    <div class="form-input" id="modal-notes">No notes</div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="form-label">Payment Notes</label>
+                                                    <div class="form-input" id="modal-payment-notes">No payment notes</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'reports_summary'): ?>
                         <!-- Reports Summary Section -->
-                        <div class="space-y-3">
+                        <div class="space-y-2">
                             <?php 
                             $reportsStats = $db->query('SELECT 
                                 COUNT(*) as total_orders,
@@ -348,18 +849,18 @@ if (empty($dashboardConfig)) {
                                 AVG(total) as avg_order_value
                                 FROM orders WHERE DATE(date) >= CURDATE() - INTERVAL 30 DAY')->fetch();
                             ?>
-                            <div class="grid grid-cols-1 gap-2 mb-4">
-                                <div class="bg-teal-50 p-3 rounded text-center">
-                                    <div class="text-lg font-bold text-teal-600">$<?= number_format($reportsStats['total_revenue'] ?? 0, 0) ?></div>
+                            <div class="grid grid-cols-1 gap-1 mb-2">
+                                <div class="bg-teal-50 p-2 rounded text-center">
+                                    <div class="text-sm font-bold text-teal-600">$<?= number_format($reportsStats['total_revenue'] ?? 0, 0) ?></div>
                                     <div class="text-xs text-teal-800">30-Day Revenue</div>
                                 </div>
-                                <div class="bg-cyan-50 p-3 rounded text-center">
-                                    <div class="text-lg font-bold text-cyan-600">$<?= number_format($reportsStats['avg_order_value'] ?? 0, 0) ?></div>
+                                <div class="bg-cyan-50 p-2 rounded text-center">
+                                    <div class="text-sm font-bold text-cyan-600">$<?= number_format($reportsStats['avg_order_value'] ?? 0, 0) ?></div>
                                     <div class="text-xs text-cyan-800">Avg Order Value</div>
                                 </div>
                             </div>
-                            <div class="text-center pt-2">
-                                <a href="/?page=admin&section=reports" class="text-teal-600 hover:text-teal-800 text-sm">View Reports →</a>
+                            <div class="text-center pt-1">
+                                <a href="/?page=admin&section=reports" class="text-teal-600 hover:text-teal-800 text-xs">View Reports →</a>
                             </div>
                         </div>
                         
@@ -756,4 +1257,8 @@ function showOrderSaveSuccess() {
     border-radius: 0.5rem;
     background: #f9fafb;
 }
-</style> 
+</style>
+
+
+
+ 

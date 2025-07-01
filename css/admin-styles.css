@@ -1,6 +1,33 @@
 /* Admin Styles - Centralized CSS for admin interface components */
 
 /* ==============================================
+   ADMIN SETTINGS SECTION HEADERS
+   ============================================== */
+
+/* Settings Section Headers - Stacked Layout */
+.section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.section-description {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ==============================================
    ADMIN NAVBAR TABS (RESTORED STYLING)
    ============================================== */
 
@@ -15,10 +42,10 @@
 .admin-header-card {
     background: white;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 0.75rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     border: 1px solid #e5e7eb;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .admin-title {
@@ -859,4 +886,232 @@
         box-shadow: none;
         border: 1px solid #000;
     }
+}
+
+/* ==============================================
+   ENHANCED ORDER MANAGEMENT STYLES
+   ============================================== */
+
+/* POS Tab - Gold Theme (New) */
+.admin-tab-pos {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+    color: white;
+    border-color: #eab308;
+}
+
+.admin-tab-pos:hover {
+    background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(234, 179, 8, 0.5);
+}
+
+.admin-tab-pos.active {
+    background: linear-gradient(135deg, #a16207 0%, #854d0e 100%);
+    box-shadow: 0 6px 20px rgba(234, 179, 8, 0.6);
+    transform: translateY(-1px);
+}
+
+/* Form section headers with action buttons */
+.form-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.form-section-header .form-section-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Order item action controls */
+.order-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-input {
+    width: 60px;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.875rem;
+    background: white;
+}
+
+.quantity-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Small button styles */
+.btn-small {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.btn-small.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-small.btn-primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.btn-small.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-small.btn-secondary:hover {
+    background: #374151;
+    transform: translateY(-1px);
+}
+
+.btn-small.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-small.btn-danger:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+/* Address management controls */
+.address-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Order total display */
+.order-total {
+    padding: 1rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-top: 1rem;
+    text-align: right;
+    font-size: 1.125rem;
+}
+
+.order-total strong {
+    color: #1f2937;
+}
+
+/* Item search modal styles */
+.item-card-small {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.item-card-small:hover {
+    background-color: #f3f4f6;
+    border-color: #2563eb !important;
+    transform: translateY(-1px);
+}
+
+.item-card-small .item-name {
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.item-card-small .item-sku {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.item-card-small .item-price {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+/* Additional spacing utility */
+.mt-3 {
+    margin-top: 1rem;
+}
+
+/* Modal close button enhancement */
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* Enhanced order item card */
+.order-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.order-item-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.order-item-details {
+    flex: 1;
+}
+
+.order-item-name {
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.order-item-sku {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-family: 'Monaco', 'Menlo', monospace;
+    margin-bottom: 0.25rem;
+}
+
+.order-item-price {
+    color: #374151;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.order-item-total {
+    font-weight: 600;
+    color: #1f2937;
+    margin-right: 0.5rem;
 } 

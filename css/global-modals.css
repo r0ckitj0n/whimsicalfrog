@@ -200,13 +200,67 @@ body:has(#cartPage) {
    MODAL HEADER COMPONENTS
    ============================================== */
 
+/* 
+   MODAL HEADER STYLING NOTES:
+   - All modal headers use clean designs without bottom borders
+   - Admin modals use green gradient backgrounds for consistency
+   - Regular modals use simple white backgrounds
+   - No grey border lines at top corners
+*/
+
+/* FORCE HIDE ANY HANGING PROGRESS INDICATORS */
+.modal-overlay [id*="AutoSaveIndicator"],
+.admin-modal-overlay [id*="AutoSaveIndicator"],
+.modal-content [class*="auto-save"],
+.admin-modal-content [class*="auto-save"],
+.modal [class*="saving"],
+[class*="modal"] [class*="progress"]:not(.intentional-progress),
+[class*="modal"] [class*="loading"]:not(.intentional-loading),
+.modal-overlay .loading-spinner:not(.modal-loading-spinner),
+.admin-modal-overlay .loading-spinner:not(.modal-loading-spinner) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+}
+
+/* OVERRIDE ANY PROGRESS BAR ANIMATIONS IN MODALS */
+.modal-overlay [id*="progressBar"]:not(.intentional-progress),
+.admin-modal-overlay [id*="progressBar"]:not(.intentional-progress),
+.modal-content [class*="progress-bar"]:not(.intentional-progress),
+.admin-modal-content [class*="progress-bar"]:not(.intentional-progress) {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* REMOVE ANY GREY LINES OR PSEUDO-ELEMENTS THAT MIGHT BE HANGING */
+.modal-overlay::before,
+.admin-modal-overlay::before,
+.modal-content::before,
+.admin-modal-content::before {
+    display: none !important;
+    content: none !important;
+}
+
+/* CLEAN UP ANY POSITION ABSOLUTE ELEMENTS THAT MIGHT BE HANGING AT TOP-LEFT */
+.modal-overlay [style*="position: absolute"][style*="top: 0"]:not(.intentional-overlay),
+.admin-modal-overlay [style*="position: absolute"][style*="top: 0"]:not(.intentional-overlay),
+.modal-content [style*="position: fixed"][style*="top"]:not(.intentional-overlay),
+.admin-modal-content [style*="position: fixed"][style*="top"]:not(.intentional-overlay) {
+    display: none !important;
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-title {
@@ -282,7 +336,6 @@ body:has(#cartPage) {
 /* Admin Modal Header (with gradient backgrounds) */
 .admin-modal-header {
     padding: 24px 24px 16px 24px;
-    border-bottom: 1px solid #e5e7eb;
     background: linear-gradient(135deg, #87ac3a, #6b8e23);
     color: white;
     border-radius: 0.5rem 0.5rem 0 0;
@@ -366,7 +419,6 @@ body:has(#cartPage) {
 /* Modal Header */
 .confirmation-modal-header {
     padding: 24px 24px 16px 24px;
-    border-bottom: 1px solid #e5e7eb;
 }
 
 .confirmation-modal-icon {
@@ -1530,4 +1582,86 @@ input[type="checkbox"].color-checkbox:checked {
     border: 4px solid transparent;
     border-top-color: #1f2937;
     z-index: 1000;
+}
+
+/* NUCLEAR OPTION: Remove any small elements that could appear as grey lines */
+.modal-overlay > *:first-child:not(.modal-content):not(.admin-modal-content),
+.admin-modal-overlay > *:first-child:not(.modal-content):not(.admin-modal-content),
+.modal-content > *:first-child[style*="height: 1px"],
+.modal-content > *:first-child[style*="height: 2px"],
+.modal-content > *:first-child[style*="height: 3px"],
+.admin-modal-content > *:first-child[style*="height: 1px"],
+.admin-modal-content > *:first-child[style*="height: 2px"],
+.admin-modal-content > *:first-child[style*="height: 3px"],
+[class*="modal"] [style*="width: 100%"][style*="height: 1px"],
+[class*="modal"] [style*="width: 100%"][style*="height: 2px"],
+[class*="modal"] [style*="width: 100%"][style*="height: 3px"],
+[class*="modal"] div[style*="transform-origin: left"],
+[class*="modal"] div[style*="animation"][style*="progress"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* ==============================================
+   STEP BADGES SYSTEM - First Time User Guide
+   ============================================== */
+
+/* Step badge container - positions badges relative to buttons */
+.step-badge-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* Step badge overlay - appears over buttons */
+.step-badge {
+    position: absolute;
+    width: var(--step-badge-size, 60px);
+    height: var(--step-badge-size, 60px);
+    background-color: var(--step-badge-bg-color, #ef4444);
+    color: var(--step-badge-text-color, #ffffff);
+    border-radius: var(--step-badge-border-radius, 50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--step-badge-font-size, 12px);
+    font-weight: var(--step-badge-font-weight, bold);
+    z-index: var(--step-badge-z-index, 1000);
+    top: var(--step-badge-position-top, -10px);
+    right: var(--step-badge-position-right, -10px);
+    box-shadow: var(--step-badge-shadow, 0 2px 8px rgba(0,0,0,0.3));
+    pointer-events: none;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Pulse animation for step badges */
+.step-badge.pulse {
+    animation: stepBadgePulse var(--step-badge-animation-duration, 2s) infinite;
+}
+
+@keyframes stepBadgePulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Step badge specific styling */
+.step-badge-1::after { content: var(--step-badge-text-step1, "Step 1"); }
+.step-badge-2::after { content: var(--step-badge-text-step2, "Step 2"); }
+.step-badge-3::after { content: var(--step-badge-text-step3, "Step 3"); }
+
+/* Hidden state */
+.step-badge.hidden {
+    display: none;
+}
+
+/* Button wrapper to ensure proper positioning */
+.button-with-badge {
+    position: relative;
+    display: inline-block;
+}
+
+/* Ensure badge appears over modals and other elements */
+.step-badge {
+    z-index: 2147483647;
 } 

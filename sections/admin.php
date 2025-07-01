@@ -66,6 +66,7 @@ $adminRole = $userData['role'] ?? 'Administrator';
         'customers' => ['Customers', 'admin-tab-customers'],
         'inventory' => ['Inventory', 'admin-tab-inventory'],
         'orders' => ['Orders', 'admin-tab-orders'],
+        'pos' => ['POS', 'admin-tab-pos'],
         'reports' => ['Reports', 'admin-tab-reports'],
         'marketing' => ['Marketing', 'admin-tab-marketing'],
         'settings' => ['Settings', 'admin-tab-settings'],
@@ -74,7 +75,22 @@ $adminRole = $userData['role'] ?? 'Administrator';
     <div class="admin-tab-navigation mb-1">
         <div class="flex flex-wrap gap-2">
             <?php foreach ($tabs as $key => [$label, $cssClass]): ?>
+                <?php 
+                // Map tab keys to tooltip IDs
+                $tooltipIds = [
+                    '' => 'adminDashboardTab',
+                    'customers' => 'adminCustomersTab', 
+                    'inventory' => 'adminInventoryTab',
+                    'orders' => 'adminOrdersTab',
+                    'pos' => 'adminPosTab',
+                    'reports' => 'adminReportsTab',
+                    'marketing' => 'adminMarketingTab',
+                    'settings' => 'adminSettingsTab'
+                ];
+                $tooltipId = $tooltipIds[$key] ?? '';
+                ?>
                 <a href="/?page=admin<?= $key ? '&section=' . $key : '' ?>"
+                   id="<?= $tooltipId ?>"
                    class="admin-nav-tab <?= $cssClass ?> <?= ($section === $key || ($key === '' && !$section)) ? 'active' : '' ?>">
                     <?= $label ?>
                 </a>
@@ -88,11 +104,11 @@ $adminRole = $userData['role'] ?? 'Administrator';
                 'customers' => 'Customers',
                 'inventory' => 'Inventory',
                 'orders' => 'Orders',
+                'pos' => 'Point of Sale',
                 'reports' => 'Reports',
                 'marketing' => 'Marketing',
                 'settings' => 'Settings',
-                'categories' => 'Categories',
-                'order_fulfillment' => 'Order Fulfillment'
+                'categories' => 'Categories'
             ];
             echo htmlspecialchars($pageTitles[$section] ?? 'Admin Panel');
             ?>
@@ -113,6 +129,9 @@ $adminRole = $userData['role'] ?? 'Administrator';
             case 'orders':
                 include 'sections/admin_orders.php';
                 break;
+            case 'pos':
+                include 'sections/admin_pos.php';
+                break;
             case 'reports':
                 include 'sections/admin_reports.php';
                 break;
@@ -124,9 +143,6 @@ $adminRole = $userData['role'] ?? 'Administrator';
                 break;
             case 'categories':
                 include 'sections/admin_categories.php';
-                break;
-            case 'order_fulfillment':
-                include 'sections/order_fulfillment.php';
                 break;
             default:
                 include 'sections/admin_dashboard.php';

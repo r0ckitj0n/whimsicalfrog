@@ -614,8 +614,8 @@ $seoData = generatePageSEO($page, $currentSku);
 
 <!-- Main Application Script -->
 <script>
-    // Cart display updates
-    function updateCartDisplay() {
+    // Cart display updates for main site navigation
+    function updateMainCartCounter() {
         const cartCountEl = document.getElementById('cartCount');
         if (typeof window.cart !== 'undefined' && cartCountEl) {
             const count = window.cart.items.reduce((total, item) => total + item.quantity, 0);
@@ -623,7 +623,7 @@ $seoData = generatePageSEO($page, $currentSku);
         }
     }
 
-    window.addEventListener('cartUpdated', updateCartDisplay);
+    window.addEventListener('cartUpdated', updateMainCartCounter);
 
     // Authentication handling
     function logout() {
@@ -639,7 +639,7 @@ $seoData = generatePageSEO($page, $currentSku);
             if (typeof window.cart === 'undefined') {
                 console.error('Cart not initialized properly');
             } else {
-                updateCartDisplay();
+                updateMainCartCounter();
             }
         }
         

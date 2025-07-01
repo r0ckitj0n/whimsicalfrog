@@ -1,8 +1,17 @@
 # WhimsicalFrog Website Customization Guide
 
+**Version**: v2024.3.0 (Post-Cleanup)  
+**Last Updated**: June 30, 2025  
+**Features**: 150 CSS Rules, Website Logs, Enhanced Admin Panel  
+
 ## Overview
 
 The WhimsicalFrog website is designed to be a **completely reusable platform** that can be customized for any business. You can copy this codebase, modify the database and CSS settings, and have a completely different website with its own branding, content, and functionality.
+
+**Recent Major Updates**:
+- ✅ **CSS System Streamlined** - Reduced from 691 to 150 rules across 19 categories
+- ✅ **Website Logs System** - Comprehensive logging and monitoring interface
+- ✅ **Enhanced Admin Panel** - Improved organization and new management tools
 
 ## Quick Start for New Business
 
@@ -102,12 +111,17 @@ Customize these settings:
 
 **Location**: Admin → Global CSS Rules
 
-Customize:
-- **Color Scheme**: Primary, secondary, accent colors
-- **Typography**: Font families, sizes, line heights
-- **Layout**: Spacing, borders, shadows
-- **Interactive Elements**: Hover effects, transitions
-- **Popup Styling**: All popup appearance settings
+The CSS system has been streamlined to **150 essential rules** across **19 categories**:
+- **Brand Colors** (6) - Primary colors and brand theme
+- **Typography** (14) - Fonts, sizes, and text styling  
+- **Buttons** (10) - Button variants and interactions
+- **Forms** (8) - Input fields and form controls
+- **Layout** (12) - Spacing, containers, and grids
+- **Cards** (9) - Product cards and content layouts
+- **Navigation** (7) - Header and menu styling
+- **Modals** (8) - Popup styling and overlays
+- **Admin Interface** (12) - Admin panel specific styling
+- **Plus 10 more categories** for comprehensive customization
 
 ### 5. E-commerce Configuration
 
@@ -150,6 +164,17 @@ Customize email templates for:
 - Welcome emails
 - Shipping notifications
 - Admin notifications
+
+### Website Logs Management
+
+**Location**: Admin → Settings → Website Logs
+
+Monitor and troubleshoot your website with comprehensive logging:
+- **File-based logs** (6 types) - System monitoring, errors, server activity
+- **Database logs** (7 types) - User activity, orders, inventory, admin actions
+- **Search functionality** - Find specific events across all logs
+- **Download and clear** - Manage log files for maintenance
+- **Real-time monitoring** - Track system health and performance
 
 ### AI Features
 

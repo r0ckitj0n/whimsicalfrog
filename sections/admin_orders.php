@@ -73,7 +73,7 @@ if (!empty($params)) {
 
 // Get filter dropdown options with single queries
 $dropdownOptions = [
-    'status' => $db->query("SELECT DISTINCT status FROM orders WHERE status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY status")->fetchAll(PDO::FETCH_COLUMN),
+    'status' => $db->query("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status")->fetchAll(PDO::FETCH_COLUMN),
     'payment_method' => $db->query("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod")->fetchAll(PDO::FETCH_COLUMN),
     'shipping_method' => $db->query("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod")->fetchAll(PDO::FETCH_COLUMN),
     'payment_status' => $db->query("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus")->fetchAll(PDO::FETCH_COLUMN)
@@ -212,22 +212,21 @@ function getPaymentStatusBadgeClass($status) {
                 <tr>
                     <th>Order ID</th>
                     <th>Customer</th>
-                    <th>Date</th>
+                    <th style="white-space: nowrap;">Date</th>
+                    <th style="white-space: nowrap;">Time</th>
                     <th>Items</th>
-                    <th>Status</th>
+                    <th>Order Status</th>
                     <th>Payment</th>
                     <th>Shipping</th>
                     <th>Pay Status</th>
                     <th>Total</th>
-                    <th>Address</th>
-                    <th>Notes</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($orders)): ?>
                 <tr>
-                    <td colspan="12" class="text-center text-gray-500 py-8">
+                    <td colspan="11" class="text-center text-gray-500 py-8">
                         No orders found matching the current filters.
                     </td>
                 </tr>
@@ -242,19 +241,23 @@ function getPaymentStatusBadgeClass($status) {
                 $stmt->execute([$order['id']]);
                 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $itemsList = implode(', ', array_map(fn($item) => $item['item_name'] . ' (x' . $item['quantity'] . ')', $items));
+                $totalItems = array_sum(array_column($items, 'quantity'));
                 ?>
                 <tr>
                     <td class="font-mono"><?= htmlspecialchars($order['id']) ?></td>
                     <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
-                    <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="date" data-type="date">
-                        <?= htmlspecialchars($order['date'] ?? '') ?>
+                    <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="date" data-type="date" style="white-space: nowrap;">
+                        <?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?>
                     </td>
-                    <td class="items-cell" title="<?= htmlspecialchars($itemsList) ?>">
-                        <?= htmlspecialchars(strlen($itemsList) > 30 ? substr($itemsList, 0, 30) . '...' : $itemsList) ?>
+                    <td class="text-gray-600" style="white-space: nowrap;">
+                        <?= htmlspecialchars(date('g:i A', strtotime($order['date'] ?? 'now'))) ?>
                     </td>
-                    <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="status" data-type="select">
-                        <span class="status-badge <?= getStatusBadgeClass($order['status']) ?>">
-                            <?= htmlspecialchars($order['status'] ?? 'Pending') ?>
+                    <td class="items-cell text-center" title="<?= htmlspecialchars($itemsList) ?>">
+                        <?= $totalItems ?>
+                    </td>
+                    <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="order_status" data-type="select">
+                        <span class="status-badge <?= getStatusBadgeClass($order['order_status']) ?>">
+                            <?= htmlspecialchars($order['order_status'] ?? 'Pending') ?>
                         </span>
                     </td>
                     <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="paymentMethod" data-type="select">
@@ -269,19 +272,6 @@ function getPaymentStatusBadgeClass($status) {
                         </span>
                     </td>
                     <td class="font-bold">$<?= number_format($order['total'] ?? 0, 2) ?></td>
-                    <td class="address-cell" title="<?= htmlspecialchars(formatAddress($order)) ?>">
-                        <?= htmlspecialchars(formatAddress($order)) ?>
-                    </td>
-                    <td class="notes-cell">
-                        <div title="<?= htmlspecialchars($order['note'] ?? '') ?>">
-                            <?= htmlspecialchars(strlen($order['note'] ?? '') > 20 ? substr($order['note'], 0, 20) . '...' : ($order['note'] ?? '')) ?>
-                        </div>
-                        <?php if (!empty($order['paynote'])): ?>
-                        <div title="Pay: <?= htmlspecialchars($order['paynote']) ?>" class="text-xs text-blue-600">
-                            Pay: <?= htmlspecialchars(strlen($order['paynote']) > 15 ? substr($order['paynote'], 0, 15) . '...' : $order['paynote']) ?>
-                        </div>
-                        <?php endif; ?>
-                    </td>
                     <td>
                         <div class="flex space-x-2">
                             <a href="?page=admin&section=orders&view=<?= $order['id'] ?>" 
@@ -375,10 +365,10 @@ if ($orderData):
                                        class="form-input" <?= $modalState['mode'] === 'view' ? 'readonly' : '' ?>>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Status</label>
-                                <select name="status" class="form-select" <?= $modalState['mode'] === 'view' ? 'disabled' : '' ?>>
+                                <label class="form-label">Order Status</label>
+                                <select name="order_status" class="form-select" <?= $modalState['mode'] === 'view' ? 'disabled' : '' ?>>
                                     <?php foreach (['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] as $status): ?>
-                                    <option value="<?= $status ?>" <?= $orderData['status'] === $status ? 'selected' : '' ?>>
+                                    <option value="<?= $status ?>" <?= $orderData['order_status'] === $status ? 'selected' : '' ?>>
                                         <?= $status ?>
                                     </option>
                                     <?php endforeach; ?>
@@ -447,28 +437,80 @@ if ($orderData):
                 <!-- Order Items Column -->
                 <div class="order-items-column">
                     <div class="form-section">
-                        <h3 class="form-section-title">Order Items</h3>
-                        <div class="order-items-list">
+                        <div class="form-section-header">
+                            <h3 class="form-section-title">Order Items</h3>
+                            <?php if ($modalState['mode'] === 'edit'): ?>
+                            <button type="button" class="btn-small btn-primary" onclick="showAddItemModal()">
+                                ➕ Add Item
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                        <div class="order-items-list" id="orderItemsList">
                             <?php foreach ($orderItems as $item): ?>
-                            <div class="order-item-card">
+                            <div class="order-item-card" data-item-id="<?= $item['id'] ?>">
                                 <div class="order-item-details">
                                     <div class="order-item-name"><?= htmlspecialchars($item['item_name']) ?></div>
                                     <div class="order-item-sku">SKU: <?= htmlspecialchars($item['sku']) ?></div>
-                                    <div class="order-item-price">$<?= number_format($item['price'], 2) ?> × <?= $item['quantity'] ?></div>
+                                    <div class="order-item-price">$<?= number_format($item['price'], 2) ?> × 
+                                        <?php if ($modalState['mode'] === 'edit'): ?>
+                                        <input type="number" 
+                                               class="quantity-input" 
+                                               value="<?= $item['quantity'] ?>" 
+                                               min="1" 
+                                               onchange="updateItemQuantity(<?= $item['id'] ?>, this.value)">
+                                        <?php else: ?>
+                                        <?= $item['quantity'] ?>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <div class="order-item-total">
-                                    $<?= number_format($item['price'] * $item['quantity'], 2) ?>
+                                <div class="order-item-actions">
+                                    <div class="order-item-total">
+                                        $<?= number_format($item['price'] * $item['quantity'], 2) ?>
+                                    </div>
+                                    <?php if ($modalState['mode'] === 'edit'): ?>
+                                    <button type="button" 
+                                            class="btn-small btn-danger" 
+                                            onclick="removeItemFromOrder(<?= $item['id'] ?>)"
+                                            title="Remove item">
+                                        🗑️
+                                    </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <?php endforeach; ?>
                         </div>
+                        <div class="order-total">
+                            <strong>Total: $<span id="orderTotal"><?= number_format($orderData['total'], 2) ?></span></strong>
+                        </div>
                     </div>
 
                     <div class="form-section">
-                        <h3 class="form-section-title">Shipping Address</h3>
-                        <div class="address-display">
+                        <div class="form-section-header">
+                            <h3 class="form-section-title">Shipping Address</h3>
+                            <?php if ($modalState['mode'] === 'edit'): ?>
+                            <div class="address-actions">
+                                <button type="button" class="btn-small btn-secondary" onclick="showAddressSelector()">
+                                    📍 Select Address
+                                </button>
+                                <button type="button" class="btn-small btn-primary" onclick="showAddAddressModal()">
+                                    ➕ Add New
+                                </button>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="address-display" id="currentAddress">
                             <?= nl2br(htmlspecialchars(formatAddress($orderData))) ?>
                         </div>
+                        <?php if ($modalState['mode'] === 'edit'): ?>
+                        <div class="form-group mt-3">
+                            <button type="button" class="btn-small btn-secondary" onclick="editCurrentAddress()">
+                                ✏️ Edit Current Address
+                            </button>
+                            <button type="button" class="btn-small btn-primary" onclick="impersonateCustomer('<?= $orderData['userId'] ?>')">
+                                👤 Shop as Customer
+                            </button>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-section">
@@ -589,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const fieldType = this.dataset.type;
             
             let currentValue;
-            if (fieldName === 'status' || fieldName === 'paymentStatus') {
+            if (fieldName === 'order_status' || fieldName === 'paymentStatus') {
                 const badge = this.querySelector('span');
                 currentValue = badge ? badge.textContent.trim() : this.textContent.trim();
             } else {
@@ -605,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 let options = [];
                 switch (fieldName) {
-                    case 'status':
+                    case 'order_status':
                         options = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
                         break;
                     case 'paymentMethod':
@@ -650,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.success) {
                             this.classList.remove('editing');
                             
-                            if (fieldName === 'status') {
+                            if (fieldName === 'order_status') {
                                 this.innerHTML = `<span class="status-badge ${getStatusBadgeClass(newValue)}">${newValue}</span>`;
                             } else if (fieldName === 'paymentStatus') {
                                 this.innerHTML = `<span class="payment-status-badge ${getPaymentStatusBadgeClass(newValue)}">${newValue}</span>`;
@@ -811,6 +853,205 @@ function showNotification(message, type) {
         toast.classList.remove('show');
         setTimeout(() => document.body.removeChild(toast), 300);
     }, 4000);
+}
+
+// Enhanced Order Management Functions
+async function updateItemQuantity(itemId, quantity) {
+    try {
+        const response = await fetch('/api/order_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'update_item_quantity',
+                order_item_id: itemId,
+                quantity: parseInt(quantity)
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            document.getElementById('orderTotal').textContent = parseFloat(data.new_total).toFixed(2);
+            updateItemTotal(itemId);
+        } else {
+            showError(data.error || 'Failed to update quantity');
+        }
+    } catch (error) {
+        showError('Network error occurred');
+    }
+}
+
+async function removeItemFromOrder(itemId) {
+    if (!confirm('Remove this item from the order?')) return;
+    
+    try {
+        const response = await fetch('/api/order_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'remove_item_from_order',
+                order_item_id: itemId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            document.querySelector(`[data-item-id="${itemId}"]`).remove();
+            document.getElementById('orderTotal').textContent = parseFloat(data.new_total).toFixed(2);
+        } else {
+            showError(data.error || 'Failed to remove item');
+        }
+    } catch (error) {
+        showError('Network error occurred');
+    }
+}
+
+function updateItemTotal(itemId) {
+    const itemCard = document.querySelector(`[data-item-id="${itemId}"]`);
+    if (!itemCard) return;
+    
+    const quantityInput = itemCard.querySelector('.quantity-input');
+    const priceText = itemCard.querySelector('.order-item-price').textContent;
+    const price = parseFloat(priceText.match(/\$([0-9.]+)/)[1]);
+    const quantity = parseInt(quantityInput.value);
+    const total = price * quantity;
+    
+    itemCard.querySelector('.order-item-total').textContent = '$' + total.toFixed(2);
+}
+
+async function showAddItemModal() {
+    // Create modal for adding items
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Item to Order</h3>
+                <button type="button" onclick="this.closest('.modal-overlay').remove()" class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Search Items</label>
+                    <input type="text" id="itemSearch" class="form-input" placeholder="Search by SKU or name...">
+                </div>
+                <div class="items-list" id="itemsList" style="max-height: 300px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 20px; color: #666;">Loading items...</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Load items
+    const itemSearch = modal.querySelector('#itemSearch');
+    const itemsList = modal.querySelector('#itemsList');
+    
+    const loadItems = async (search = '') => {
+        try {
+            const response = await fetch(`/api/order_management.php?action=get_available_items&search=${encodeURIComponent(search)}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                if (data.items.length === 0) {
+                    itemsList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No items found</div>';
+                } else {
+                    itemsList.innerHTML = data.items.map(item => `
+                        <div class="item-card-small" onclick="addItemToOrder('${item.sku}', '${item.name.replace(/'/g, "\\'")}', ${item.retailPrice})" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; cursor: pointer; border-radius: 4px;">
+                            <div class="item-info">
+                                <div class="item-name" style="font-weight: 500;">${item.name}</div>
+                                <div class="item-sku" style="color: #666; font-size: 0.875rem;">${item.sku}</div>
+                            </div>
+                            <div class="item-price" style="font-weight: 600; color: #007bff;">$${parseFloat(item.retailPrice || 0).toFixed(2)}</div>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                itemsList.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to load items</div>';
+            }
+        } catch (error) {
+            itemsList.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Network error</div>';
+        }
+    };
+    
+    itemSearch.addEventListener('input', () => loadItems(itemSearch.value));
+    loadItems();
+}
+
+async function addItemToOrder(sku, name, price) {
+    const orderId = '<?= $orderId ?? '' ?>';
+    const quantity = prompt(`Add quantity for ${name}:`, '1');
+    
+    if (!quantity || quantity <= 0) return;
+    
+    try {
+        const response = await fetch('/api/order_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'add_item_to_order',
+                order_id: orderId,
+                sku: sku,
+                quantity: parseInt(quantity),
+                price: parseFloat(price)
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess(data.message);
+            document.querySelector('.modal-overlay').remove();
+            location.reload(); // Reload to show updated items
+        } else {
+            showError(data.error || 'Failed to add item');
+        }
+    } catch (error) {
+        showError('Network error occurred');
+    }
+}
+
+async function impersonateCustomer(customerId) {
+    if (!confirm('This will switch your session to impersonate this customer. You can shop as them and then return to admin. Continue?')) return;
+    
+    try {
+        const response = await fetch('/api/order_management.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'impersonate_customer',
+                customer_id: customerId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message + '\n\nYou will now be redirected to shop as this customer.');
+            window.location.href = data.redirect_url;
+        } else {
+            showError(data.error || 'Failed to impersonate customer');
+        }
+    } catch (error) {
+        showError('Network error occurred');
+    }
+}
+
+function showAddressSelector() {
+    // Implementation for showing customer's saved addresses
+    showError('Address selector coming soon - use Edit Current Address for now');
+}
+
+function showAddAddressModal() {
+    // Implementation for adding new address
+    showError('Add new address coming soon - use Edit Current Address for now');
+}
+
+function editCurrentAddress() {
+    showError('Address editing coming soon - this will allow inline editing of the current address');
 }
 </script>
 

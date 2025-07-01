@@ -199,6 +199,20 @@
           <span class="button-text">Help Hints Management</span>
         </button>
         
+        <button onclick="openWebsiteLogsModal()" id="website-logs-btn" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span class="button-text">Website Logs</span>
+        </button>
+        
+        <button onclick="cleanupOldLogs()" id="cleanup-logs-btn" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+          <span class="button-text">Clean Old Logs (30+ days)</span>
+        </button>
+        
         <button id="databaseMaintenanceBtn" onclick="openDatabaseMaintenanceModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
@@ -211,6 +225,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
           </svg>
           <span class="button-text">System Documentation</span>
+        </button>
+        
+        <button id="helpDocumentationBtn" onclick="openHelpDocumentationModal()" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span class="button-text">Help Documentation</span>
         </button>
       </div>
     </div>
@@ -16785,6 +16806,303 @@ async function toggleGlobalTooltips() {
 </div>
 
 
+<!-- Website Logs Modal -->
+<div id="websiteLogsModal" class="modal-overlay" style="display: none;">
+    <div class="admin-modal-content" style="max-width: 95vw; width: 1400px;">
+        <div class="admin-modal-header">
+            <h2>Website Logs Management</h2>
+            <button onclick="closeWebsiteLogsModal()" class="modal-close-btn">×</button>
+        </div>
+        
+        <!-- Global Search -->
+        <div class="p-6 bg-gray-50 border-b">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-96">
+                    <div class="relative">
+                        <input type="text" id="globalLogSearch" placeholder="Search across all logs..." 
+                               class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <select id="searchLogType" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <option value="all">All Log Types</option>
+                        <option value="database">Database Logs</option>
+                        <option value="files">File Logs</option>
+                    </select>
+                    <button onclick="searchAllLogs()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Log Retention Policy Information -->
+        <div class="p-4 bg-blue-50 border-b border-blue-200">
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-medium text-blue-800 mb-1">Log Retention Policy</h4>
+                    <p class="text-sm text-blue-700">
+                        Logs are automatically cleaned up to keep only the last 30 days of entries. 
+                        Cleanup runs automatically when logs are accessed. You can also manually clean old logs 
+                        using the "Clean Old Logs" button in the admin settings.
+                        <span class="font-medium">Database logs</span> and <span class="font-medium">file logs</span> 
+                        older than 30 days are permanently deleted during cleanup.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Logs List Sidebar -->
+            <div class="w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Available Logs</h3>
+                    <div id="logsListContainer">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                            <p class="text-sm text-gray-500">Loading logs...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Log Viewer -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Log Header -->
+                <div class="p-4 bg-white border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 id="currentLogTitle" class="text-lg font-semibold text-gray-800">Select a log to view</h3>
+                            <p id="currentLogDescription" class="text-sm text-gray-600 mt-1"></p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-2">
+                                <label for="logLimit" class="text-sm text-gray-600">Show:</label>
+                                <select id="logLimit" onchange="refreshCurrentLog()" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                    <option value="50">50 entries</option>
+                                    <option value="100" selected>100 entries</option>
+                                    <option value="250">250 entries</option>
+                                    <option value="500">500 entries</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="refreshCurrentLog()" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    Refresh
+                                </button>
+                                <button onclick="downloadCurrentLog()" id="downloadLogBtn" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm" style="display: none;">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    Download
+                                </button>
+                                <button onclick="clearCurrentLog()" id="clearLogBtn" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm" style="display: none;">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Log Search -->
+                    <div class="mt-3">
+                        <div class="relative">
+                            <input type="text" id="logSearch" placeholder="Search in current log..." 
+                                   class="w-full px-4 py-2 pl-10 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Log Content -->
+                <div class="flex-1 overflow-y-auto">
+                    <div id="logContent" class="p-4">
+                        <div class="text-center py-12">
+                            <div class="text-gray-400 text-6xl mb-4">📄</div>
+                            <h3 class="text-lg font-medium text-gray-700 mb-2">No Log Selected</h3>
+                            <p class="text-sm text-gray-500">Select a log from the sidebar to view its contents</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="p-4 bg-gray-50 border-t border-gray-200" id="logPagination" style="display: none;">
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600">
+                            <span id="logEntriesInfo">Showing 0 - 0 of 0 entries</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="previousLogPage()" id="prevPageBtn" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
+                                Previous
+                            </button>
+                            <button onclick="nextLogPage()" id="nextPageBtn" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search Results Modal -->
+        <div id="searchResultsModal" class="modal-overlay" style="display: none;">
+            <div class="admin-modal-content" style="max-width: 90vw; width: 1200px;">
+                <div class="admin-modal-header">
+                    <h2>Search Results</h2>
+                    <button onclick="closeSearchResults()" class="modal-close-btn">×</button>
+                </div>
+                <div class="p-6">
+                    <div id="searchResultsContent">
+                        <!-- Search results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Documentation Modal -->
+<div id="helpDocumentationModal" class="modal-overlay" style="display: none;">
+    <div class="admin-modal-content" style="max-width: 95vw; width: 1600px; height: 90vh;">
+        <div class="admin-modal-header">
+            <h2>📚 Help Documentation</h2>
+            <button onclick="closeHelpDocumentationModal()" class="modal-close-btn">×</button>
+        </div>
+        
+        <!-- Search and Navigation Bar -->
+        <div class="p-6 bg-gray-50 border-b">
+            <div class="flex flex-wrap items-center gap-4 mb-4">
+                <div class="flex-1 min-w-96">
+                    <div class="relative">
+                        <input type="text" id="docSearchInput" placeholder="Search documentation..." 
+                               class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <select id="categoryFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <option value="all">All Categories</option>
+                    </select>
+                    <button onclick="searchDocumentation()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
+                        Search
+                    </button>
+                    <button onclick="generateGlossary()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm">
+                        Generate Glossary
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Documentation Statistics -->
+            <div class="flex flex-wrap gap-4 text-sm text-gray-600" id="docStats">
+                <span id="totalDocs">📄 Loading documents...</span>
+                <span id="totalWords">📊 Analyzing content...</span>
+                <span id="totalSections">📋 Counting sections...</span>
+                <span id="lastUpdated">🕒 Checking updates...</span>
+            </div>
+        </div>
+        
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Document Sidebar -->
+            <div class="w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Available Documentation</h3>
+                    <div id="documentsList">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                            <p class="text-sm text-gray-500">Loading documentation...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Document Viewer -->
+                <div class="flex-1 overflow-y-auto">
+                    <div id="documentContent" class="p-6">
+                        <div class="text-center py-12">
+                            <div class="text-gray-400 text-6xl mb-4">📚</div>
+                            <h3 class="text-lg font-medium text-gray-700 mb-2">Welcome to Help Documentation</h3>
+                            <p class="text-sm text-gray-500 mb-4">Select a document from the sidebar to view its contents</p>
+                            <div class="text-sm text-gray-600 bg-blue-50 p-4 rounded-lg max-w-md mx-auto">
+                                <p class="font-medium mb-2">Features:</p>
+                                <ul class="text-left space-y-1">
+                                    <li>• Auto-generated descriptions and glossaries</li>
+                                    <li>• Full-text search across all documents</li>
+                                    <li>• Category filtering and organization</li>
+                                    <li>• Real-time content analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Document Navigation -->
+                <div class="p-4 bg-gray-50 border-t border-gray-200" id="documentNavigation" style="display: none;">
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600">
+                            <span id="documentInfo">Document information will appear here</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="previousDocument()" id="prevDocBtn" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
+                                ← Previous
+                            </button>
+                            <button onclick="nextDocument()" id="nextDocBtn" class="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search Results Modal -->
+        <div id="searchResultsModal" class="modal-overlay" style="display: none;">
+            <div class="admin-modal-content" style="max-width: 90vw; width: 1200px;">
+                <div class="admin-modal-header">
+                    <h2>🔍 Search Results</h2>
+                    <button onclick="closeSearchResults()" class="modal-close-btn">×</button>
+                </div>
+                <div class="p-6">
+                    <div id="searchResultsContent">
+                        <!-- Search results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Glossary Modal -->
+        <div id="glossaryModal" class="modal-overlay" style="display: none;">
+            <div class="admin-modal-content" style="max-width: 90vw; width: 1000px;">
+                <div class="admin-modal-header">
+                    <h2>📖 Documentation Glossary</h2>
+                    <button onclick="closeGlossaryModal()" class="modal-close-btn">×</button>
+                </div>
+                <div class="p-6">
+                    <div id="glossaryContent">
+                        <!-- Glossary will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Square Settings Modal -->
 <div id="squareSettingsModal" class="modal-overlay" style="display: none;">
     <div class="admin-modal-content" style="max-width: 800px;">
@@ -21038,7 +21356,1157 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
     }
 });
+
+// Website Logs Management System
+let currentLogData = null;
+let currentLogType = null;
+let currentLogPage = 1;
+let currentLogLimit = 100;
+let availableLogs = [];
+
+// Open Website Logs Modal
+function openWebsiteLogsModal() {
+    document.getElementById('websiteLogsModal').style.display = 'flex';
+    loadAvailableLogs();
+}
+
+// Close Website Logs Modal
+function closeWebsiteLogsModal() {
+    document.getElementById('websiteLogsModal').style.display = 'none';
+    currentLogData = null;
+    currentLogType = null;
+}
+
+// ===== Help Documentation System =====
+
+let allDocuments = [];
+let currentDocumentIndex = -1;
+let filteredDocuments = [];
+let masterGlossary = [];
+
+// Open Help Documentation Modal
+function openHelpDocumentationModal() {
+    document.getElementById('helpDocumentationModal').style.display = 'flex';
+    loadDocumentationList();
+}
+
+// Close Help Documentation Modal
+function closeHelpDocumentationModal() {
+    document.getElementById('helpDocumentationModal').style.display = 'none';
+    allDocuments = [];
+    currentDocumentIndex = -1;
+    filteredDocuments = [];
+}
+
+// Load all documentation files
+async function loadDocumentationList() {
+    try {
+        // Show loading state
+        document.getElementById('documentsList').innerHTML = `
+            <div class="text-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p class="text-sm text-gray-500">Loading documentation...</p>
+            </div>
+        `;
+        
+        const response = await fetch('/api/help_documentation.php?action=list_docs', {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            allDocuments = data.documents;
+            filteredDocuments = [...allDocuments];
+            renderDocumentsList();
+            updateCategoryFilter();
+            updateDocumentationStatistics();
+        } else {
+            throw new Error(data.error || 'Failed to load documentation');
+        }
+    } catch (error) {
+        console.error('Error loading documentation:', error);
+        document.getElementById('documentsList').innerHTML = `
+            <div class="text-center py-8 text-red-600">
+                <div class="text-4xl mb-2">⚠️</div>
+                <p class="text-sm font-medium">Error loading documentation</p>
+                <p class="text-xs mt-1">${error.message}</p>
+                <button onclick="loadDocumentationList()" class="mt-3 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Render documents list in sidebar
+function renderDocumentsList() {
+    const container = document.getElementById('documentsList');
+    
+    if (filteredDocuments.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <div class="text-4xl mb-2">📄</div>
+                <p class="text-sm">No documents found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Group documents by category
+    const categories = {};
+    filteredDocuments.forEach(doc => {
+        if (!categories[doc.category]) {
+            categories[doc.category] = [];
+        }
+        categories[doc.category].push(doc);
+    });
+    
+    let html = '';
+    Object.keys(categories).sort().forEach(category => {
+        html += `
+            <div class="mb-6">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">${category}</h4>
+                <div class="space-y-2">
+        `;
+        
+        categories[category].forEach((doc, index) => {
+            const globalIndex = allDocuments.findIndex(d => d.filename === doc.filename);
+            html += `
+                <div class="doc-item p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
+                     onclick="viewDocument(${globalIndex})" data-doc-index="${globalIndex}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 min-w-0">
+                            <h5 class="text-sm font-medium text-gray-900 truncate" title="${doc.title}">${doc.title}</h5>
+                            <p class="text-xs text-gray-600 mt-1 line-clamp-2">${doc.description}</p>
+                            <div class="flex items-center mt-2 text-xs text-gray-500 space-x-3">
+                                <span>📄 ${doc.word_count} words</span>
+                                <span>📋 ${doc.section_count} sections</span>
+                                ${doc.version ? `<span>🏷️ ${doc.version}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="ml-2 flex-shrink-0">
+                            <div class="w-2 h-2 rounded-full ${getComplexityColor(doc.complexity)}" title="Complexity: ${doc.complexity}"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Get color for complexity indicator
+function getComplexityColor(complexity) {
+    if (complexity < 5) return 'bg-green-400';
+    if (complexity < 10) return 'bg-yellow-400';
+    if (complexity < 20) return 'bg-orange-400';
+    return 'bg-red-400';
+}
+
+// Update category filter dropdown
+function updateCategoryFilter() {
+    const select = document.getElementById('categoryFilter');
+    const categories = [...new Set(allDocuments.map(doc => doc.category))].sort();
+    
+    select.innerHTML = '<option value="all">All Categories</option>';
+    categories.forEach(category => {
+        select.innerHTML += `<option value="${category}">${category}</option>`;
+    });
+    
+    // Add event listener for filter changes
+    select.onchange = () => filterDocuments();
+}
+
+// Filter documents by category
+function filterDocuments() {
+    const selectedCategory = document.getElementById('categoryFilter').value;
+    
+    if (selectedCategory === 'all') {
+        filteredDocuments = [...allDocuments];
+    } else {
+        filteredDocuments = allDocuments.filter(doc => doc.category === selectedCategory);
+    }
+    
+    renderDocumentsList();
+}
+
+// Update documentation statistics
+function updateDocumentationStatistics() {
+    const totalDocs = allDocuments.length;
+    const totalWords = allDocuments.reduce((sum, doc) => sum + doc.word_count, 0);
+    const totalSections = allDocuments.reduce((sum, doc) => sum + doc.section_count, 0);
+    const latestUpdate = allDocuments.reduce((latest, doc) => {
+        const docDate = new Date(doc.last_updated);
+        return docDate > latest ? docDate : latest;
+    }, new Date(0));
+    
+    document.getElementById('totalDocs').textContent = `📄 ${totalDocs} documents`;
+    document.getElementById('totalWords').textContent = `📊 ${totalWords.toLocaleString()} words`;
+    document.getElementById('totalSections').textContent = `📋 ${totalSections} sections`;
+    document.getElementById('lastUpdated').textContent = `🕒 Updated ${latestUpdate.toLocaleDateString()}`;
+}
+
+// View a specific document
+function viewDocument(index) {
+    if (index < 0 || index >= allDocuments.length) return;
+    
+    currentDocumentIndex = index;
+    const doc = allDocuments[index];
+    
+    // Update active state in sidebar
+    document.querySelectorAll('.doc-item').forEach(item => {
+        item.classList.remove('bg-blue-100', 'border-blue-400');
+    });
+    
+    const activeItem = document.querySelector(`[data-doc-index="${index}"]`);
+    if (activeItem) {
+        activeItem.classList.add('bg-blue-100', 'border-blue-400');
+    }
+    
+    // Render document content
+    renderDocumentContent(doc);
+    
+    // Show navigation
+    document.getElementById('documentNavigation').style.display = 'block';
+    updateDocumentNavigation();
+}
+
+// Render document content with markdown-like formatting
+function renderDocumentContent(doc) {
+    const content = document.getElementById('documentContent');
+    let html = `
+        <div class="max-w-4xl mx-auto">
+            <div class="border-b border-gray-200 pb-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">${doc.title}</h1>
+                        <p class="text-lg text-gray-600 mt-2">${doc.description}</p>
+                    </div>
+                    <div class="text-right text-sm text-gray-500">
+                        <div class="bg-${getCategoryColor(doc.category)}-100 text-${getCategoryColor(doc.category)}-800 px-2 py-1 rounded text-xs font-medium mb-2">
+                            ${doc.category}
+                        </div>
+                        ${doc.version ? `<div>Version: ${doc.version}</div>` : ''}
+                        <div>Updated: ${doc.last_updated}</div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        ${doc.word_count} words
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                        ${doc.section_count} sections
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Complexity: ${doc.complexity}
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                        ${doc.glossary.length} key terms
+                    </span>
+                </div>
+            </div>
+    `;
+    
+    // Table of Contents
+    if (doc.sections && doc.sections.length > 0) {
+        html += `
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">📋 Table of Contents</h3>
+                <div class="space-y-1">
+        `;
+        
+        doc.sections.forEach(section => {
+            const indent = (section.level - 1) * 20;
+            html += `
+                <div class="flex items-center text-sm hover:text-blue-600 cursor-pointer" style="padding-left: ${indent}px;" onclick="scrollToSection('${section.anchor}')">
+                    <span class="mr-2">${'#'.repeat(section.level)}</span>
+                    <span>${section.title}</span>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // Document content with basic markdown formatting
+    let formattedContent = doc.content;
+    
+    // Convert markdown headers to HTML
+    formattedContent = formattedContent.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
+        const level = hashes.length;
+        const anchor = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        return `<h${level} id="${anchor}" class="text-${7-level}xl font-bold text-gray-900 mt-8 mb-4 border-b border-gray-200 pb-2">${text}</h${level}>`;
+    });
+    
+    // Convert markdown bold
+    formattedContent = formattedContent.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
+    
+    // Convert markdown italic
+    formattedContent = formattedContent.replace(/\*(.+?)\*/g, '<em class="italic">$1</em>');
+    
+    // Convert markdown code
+    formattedContent = formattedContent.replace(/`(.+?)`/g, '<code class="bg-gray-100 text-red-600 px-2 py-1 rounded text-sm font-mono">$1</code>');
+    
+    // Convert markdown code blocks
+    formattedContent = formattedContent.replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono my-4"><code>$1</code></pre>');
+    
+    // Convert line breaks
+    formattedContent = formattedContent.replace(/\n/g, '<br>');
+    
+    html += `
+            <div class="prose prose-lg max-w-none">
+                ${formattedContent}
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = html;
+}
+
+// Get category color
+function getCategoryColor(category) {
+    const colors = {
+        'System': 'blue',
+        'Authentication': 'red',
+        'Customization': 'purple',
+        'Development': 'green',
+        'Documentation': 'yellow',
+        'Features': 'indigo',
+        'Maintenance': 'orange',
+        'Design': 'pink',
+        'API': 'teal',
+        'General': 'gray'
+    };
+    return colors[category] || 'gray';
+}
+
+// Update document navigation
+function updateDocumentNavigation() {
+    const doc = allDocuments[currentDocumentIndex];
+    document.getElementById('documentInfo').textContent = `${doc.filename} • ${doc.category} • ${doc.word_count} words`;
+    
+    // Update navigation buttons
+    const prevBtn = document.getElementById('prevDocBtn');
+    const nextBtn = document.getElementById('nextDocBtn');
+    
+    prevBtn.disabled = currentDocumentIndex <= 0;
+    nextBtn.disabled = currentDocumentIndex >= allDocuments.length - 1;
+    
+    prevBtn.classList.toggle('opacity-50', currentDocumentIndex <= 0);
+    nextBtn.classList.toggle('opacity-50', currentDocumentIndex >= allDocuments.length - 1);
+}
+
+// Navigate to previous document
+function previousDocument() {
+    if (currentDocumentIndex > 0) {
+        viewDocument(currentDocumentIndex - 1);
+    }
+}
+
+// Navigate to next document
+function nextDocument() {
+    if (currentDocumentIndex < allDocuments.length - 1) {
+        viewDocument(currentDocumentIndex + 1);
+    }
+}
+
+// Scroll to section in document
+function scrollToSection(anchor) {
+    const element = document.getElementById(anchor);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Search documentation
+async function searchDocumentation() {
+    const query = document.getElementById('docSearchInput').value.trim();
+    if (!query) {
+        alert('Please enter a search term');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/help_documentation.php?action=search_docs&query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displaySearchResults(data.results, query);
+        } else {
+            throw new Error(data.error || 'Search failed');
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+        alert('Search failed: ' + error.message);
+    }
+}
+
+// Display search results
+function displaySearchResults(results, query) {
+    const modal = document.getElementById('searchResultsModal');
+    const content = document.getElementById('searchResultsContent');
+    
+    if (results.length === 0) {
+        content.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-gray-400 text-4xl mb-4">🔍</div>
+                <h3 class="text-lg font-medium text-gray-700 mb-2">No results found</h3>
+                <p class="text-sm text-gray-500">Try different search terms or check the spelling</p>
+            </div>
+        `;
+    } else {
+        let html = `
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Found ${results.length} results for "${query}"</h3>
+            </div>
+            <div class="space-y-4">
+        `;
+        
+        results.forEach(result => {
+            html += `
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-medium text-gray-900">${result.filename}</h4>
+                        <span class="text-xs text-gray-500">Line ${result.line_number} • Relevance: ${result.relevance}</span>
+                    </div>
+                    <div class="text-sm text-gray-700 bg-gray-50 rounded p-3">
+                        <div class="font-mono text-xs space-y-1">
+            `;
+            
+            result.context.forEach(contextLine => {
+                if (contextLine.is_match) {
+                    html += `<div class="bg-yellow-200 px-2 py-1 rounded font-semibold">${contextLine.line_number}: ${escapeHtml(contextLine.content)}</div>`;
+                } else {
+                    html += `<div class="text-gray-600">${contextLine.line_number}: ${escapeHtml(contextLine.content)}</div>`;
+                }
+            });
+            
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        content.innerHTML = html;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// Close search results modal
+function closeSearchResults() {
+    document.getElementById('searchResultsModal').style.display = 'none';
+}
+
+// Generate and display glossary
+async function generateGlossary() {
+    try {
+        const response = await fetch('/api/help_documentation.php?action=analyze_docs');
+        const data = await response.json();
+        
+        if (data.success) {
+            masterGlossary = data.master_glossary;
+            displayGlossary(data.master_glossary, data.statistics);
+        } else {
+            throw new Error(data.error || 'Failed to generate glossary');
+        }
+    } catch (error) {
+        console.error('Glossary generation error:', error);
+        alert('Failed to generate glossary: ' + error.message);
+    }
+}
+
+// Display glossary modal
+function displayGlossary(glossary, stats) {
+    const modal = document.getElementById('glossaryModal');
+    const content = document.getElementById('glossaryContent');
+    
+    let html = `
+        <div class="mb-6">
+            <div class="grid grid-cols-4 gap-4 mb-4">
+                <div class="bg-blue-50 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-blue-600">${stats.total_documents}</div>
+                    <div class="text-sm text-blue-800">Documents</div>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-green-600">${stats.total_words.toLocaleString()}</div>
+                    <div class="text-sm text-green-800">Words</div>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-purple-600">${stats.total_sections}</div>
+                    <div class="text-sm text-purple-800">Sections</div>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-orange-600">${glossary.length}</div>
+                    <div class="text-sm text-orange-800">Terms</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    `;
+    
+    glossary.forEach(term => {
+        html += `
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-semibold text-gray-900">${term.term}</h4>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${term.frequency}x</span>
+                </div>
+                <p class="text-sm text-gray-700">${term.definition}</p>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+    modal.style.display = 'flex';
+}
+
+// Close glossary modal
+function closeGlossaryModal() {
+    document.getElementById('glossaryModal').style.display = 'none';
+}
+
+// Utility function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Add search on Enter key
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('docSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchDocumentation();
+            }
+        });
+    }
+});
+
+// Clean up old logs (30+ days)
+async function cleanupOldLogs() {
+    if (!confirm('This will permanently delete log entries older than 30 days. Are you sure you want to continue?')) {
+        return;
+    }
+    
+    try {
+        // Update button to show loading state
+        const btn = document.getElementById('cleanup-logs-btn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = `
+            <svg class="button-icon animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span class="button-text">Cleaning...</span>
+        `;
+        btn.disabled = true;
+
+        const response = await fetch('/api/website_logs.php?action=cleanup_old_logs', {
+            method: 'POST'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            const result = data.cleanup_result;
+            let message = 'Log cleanup completed!\n\n';
+            
+            // Database logs results
+            if (Object.keys(result.database_logs).length > 0) {
+                message += 'Database Logs Cleaned:\n';
+                Object.entries(result.database_logs).forEach(([table, info]) => {
+                    if (info.deleted_records) {
+                        message += `• ${table}: ${info.deleted_records} old records deleted\n`;
+                    } else if (info.error) {
+                        message += `• ${table}: Error - ${info.error}\n`;
+                    }
+                });
+                message += '\n';
+            }
+            
+            // File logs results
+            if (Object.keys(result.file_logs).length > 0) {
+                message += 'File Logs Cleaned:\n';
+                Object.entries(result.file_logs).forEach(([path, info]) => {
+                    if (info.space_freed && info.space_freed !== '0 B') {
+                        message += `• ${path.replace('./', '')}: ${info.space_freed} freed, ${info.lines_kept} lines kept\n`;
+                    } else if (info.error) {
+                        message += `• ${path.replace('./', '')}: Error - ${info.error}\n`;
+                    }
+                });
+            }
+            
+            message += `\nCutoff date: ${result.cutoff_date}`;
+            alert(message);
+            
+            // Refresh logs list if website logs modal is open
+            if (document.getElementById('websiteLogsModal').style.display === 'flex') {
+                loadAvailableLogs();
+            }
+        } else {
+            alert('Error during cleanup: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error cleaning logs:', error);
+        alert('Failed to cleanup logs. Please check the console for details.');
+    } finally {
+        // Restore button
+        const btn = document.getElementById('cleanup-logs-btn');
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
+}
+
+// Load available logs
+async function loadAvailableLogs() {
+    try {
+        document.getElementById('logsListContainer').innerHTML = `
+            <div class="text-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p class="text-sm text-gray-500">Loading logs...</p>
+            </div>
+        `;
+
+        const response = await fetch('/api/website_logs.php?action=list_logs');
+        const data = await response.json();
+
+        if (data.success) {
+            availableLogs = data.logs;
+            renderLogsList();
+        } else {
+            showError('Failed to load logs: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading logs:', error);
+        showError('Error loading logs');
+    }
+}
+
+// Render logs list in sidebar
+function renderLogsList() {
+    const container = document.getElementById('logsListContainer');
+    
+    if (availableLogs.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-gray-400 text-4xl mb-4">📄</div>
+                <p class="text-sm text-gray-500">No logs found</p>
+            </div>
+        `;
+        return;
+    }
+
+    const logsByCategory = {};
+    availableLogs.forEach(log => {
+        if (!logsByCategory[log.category]) {
+            logsByCategory[log.category] = [];
+        }
+        logsByCategory[log.category].push(log);
+    });
+
+    let html = '';
+    Object.keys(logsByCategory).forEach(category => {
+        html += `
+            <div class="mb-6">
+                <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">${category}</h4>
+                <div class="space-y-2">
+        `;
+        
+        logsByCategory[category].forEach(log => {
+            const isActive = currentLogType === log.type;
+            html += `
+                <div onclick="selectLog('${log.type}')" 
+                     class="cursor-pointer p-3 rounded-lg border transition-all ${isActive ? 
+                        'bg-blue-50 border-blue-200 shadow-sm' : 
+                        'bg-white border-gray-200 hover:bg-gray-50'
+                     }">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h5 class="font-medium text-gray-900 text-sm">${log.name}</h5>
+                            <p class="text-xs text-gray-500 mt-1">${log.description}</p>
+                            ${log.size ? `<p class="text-xs text-gray-400 mt-1">Size: ${log.size}</p>` : ''}
+                        </div>
+                        <div class="ml-2 flex-shrink-0">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                log.entries > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
+                            }">
+                                ${log.entries} entries
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// Select and load a log
+async function selectLog(logType) {
+    currentLogType = logType;
+    currentLogPage = 1;
+    currentLogLimit = parseInt(document.getElementById('logLimit').value);
+    
+    // Update UI to show selected log
+    renderLogsList();
+    
+    // Show loading state
+    document.getElementById('logContent').innerHTML = `
+        <div class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading log entries...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`/api/website_logs.php?action=get_log&type=${logType}&page=${currentLogPage}&limit=${currentLogLimit}`);
+        const data = await response.json();
+
+        if (data.success) {
+            currentLogData = data;
+            updateLogHeader(logType);
+            renderLogContent(data.entries);
+            updatePagination(data.pagination);
+            
+            // Show action buttons
+            document.getElementById('downloadLogBtn').style.display = 'inline-flex';
+            document.getElementById('clearLogBtn').style.display = data.log_info.can_clear ? 'inline-flex' : 'none';
+        } else {
+            showError('Failed to load log: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error loading log:', error);
+        showError('Error loading log');
+    }
+}
+
+// Update log header information
+function updateLogHeader(logType) {
+    const logInfo = availableLogs.find(log => log.type === logType);
+    if (logInfo) {
+        document.getElementById('currentLogTitle').textContent = logInfo.name;
+        document.getElementById('currentLogDescription').textContent = logInfo.description;
+    }
+}
+
+// Render log content
+function renderLogContent(entries) {
+    const container = document.getElementById('logContent');
+    
+    if (!entries || entries.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">📄</div>
+                <h3 class="text-lg font-medium text-gray-700 mb-2">No Entries Found</h3>
+                <p class="text-sm text-gray-500">This log appears to be empty</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <div class="space-y-3">
+    `;
+
+    entries.forEach((entry, index) => {
+        const isEven = index % 2 === 0;
+        const bgColor = isEven ? 'bg-gray-50' : 'bg-white';
+        
+        html += `
+            <div class="log-entry ${bgColor} p-4 rounded-lg border border-gray-200">
+                <div class="flex items-start justify-between mb-2">
+                    <div class="flex items-center space-x-3">
+                        ${entry.level ? `<span class="log-level-badge level-${entry.level.toLowerCase()}">${entry.level}</span>` : ''}
+                        ${entry.timestamp ? `<span class="text-sm text-gray-500">${formatLogTimestamp(entry.timestamp)}</span>` : ''}
+                    </div>
+                    ${entry.id ? `<span class="text-xs text-gray-400">#${entry.id}</span>` : ''}
+                </div>
+                <div class="log-message">
+                    ${formatLogMessage(entry.message)}
+                </div>
+                ${entry.context ? `
+                    <div class="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
+                        <strong>Context:</strong> ${JSON.stringify(entry.context)}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+// Format log timestamp
+function formatLogTimestamp(timestamp) {
+    try {
+        const date = new Date(timestamp);
+        return date.toLocaleString();
+    } catch (e) {
+        return timestamp;
+    }
+}
+
+// Format log message with syntax highlighting
+function formatLogMessage(message) {
+    if (!message) return '';
+    
+    // Escape HTML
+    let formatted = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    // Highlight keywords
+    formatted = formatted.replace(/\b(ERROR|FATAL|CRITICAL)\b/g, '<span class="text-red-600 font-semibold">$1</span>');
+    formatted = formatted.replace(/\b(WARNING|WARN)\b/g, '<span class="text-yellow-600 font-semibold">$1</span>');
+    formatted = formatted.replace(/\b(INFO|SUCCESS)\b/g, '<span class="text-green-600 font-semibold">$1</span>');
+    formatted = formatted.replace(/\b(DEBUG)\b/g, '<span class="text-blue-600 font-semibold">$1</span>');
+    
+    // Highlight file paths
+    formatted = formatted.replace(/\/[\w\/\-\.]+\.\w+/g, '<span class="text-purple-600">$&</span>');
+    
+    // Highlight numbers
+    formatted = formatted.replace(/\b\d+\b/g, '<span class="text-indigo-600">$&</span>');
+    
+    return formatted;
+}
+
+// Update pagination
+function updatePagination(pagination) {
+    const paginationDiv = document.getElementById('logPagination');
+    const entriesInfo = document.getElementById('logEntriesInfo');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+
+    if (pagination) {
+        paginationDiv.style.display = 'block';
+        entriesInfo.textContent = `Showing ${pagination.start} - ${pagination.end} of ${pagination.total} entries`;
+        
+        prevBtn.disabled = !pagination.has_previous;
+        nextBtn.disabled = !pagination.has_next;
+        
+        prevBtn.className = pagination.has_previous ? 
+            'px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50' :
+            'px-3 py-1 bg-gray-100 border border-gray-300 rounded text-sm text-gray-400 cursor-not-allowed';
+            
+        nextBtn.className = pagination.has_next ? 
+            'px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50' :
+            'px-3 py-1 bg-gray-100 border border-gray-300 rounded text-sm text-gray-400 cursor-not-allowed';
+    } else {
+        paginationDiv.style.display = 'none';
+    }
+}
+
+// Refresh current log
+function refreshCurrentLog() {
+    if (currentLogType) {
+        selectLog(currentLogType);
+    }
+}
+
+// Previous page
+function previousLogPage() {
+    if (currentLogData && currentLogData.pagination && currentLogData.pagination.has_previous) {
+        currentLogPage--;
+        selectLog(currentLogType);
+    }
+}
+
+// Next page
+function nextLogPage() {
+    if (currentLogData && currentLogData.pagination && currentLogData.pagination.has_next) {
+        currentLogPage++;
+        selectLog(currentLogType);
+    }
+}
+
+// Download current log
+async function downloadCurrentLog() {
+    if (!currentLogType) return;
+    
+    try {
+        const response = await fetch(`/api/website_logs.php?action=download_log&type=${currentLogType}`);
+        const blob = await response.blob();
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${currentLogType}_log_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showSuccess('Log downloaded successfully');
+    } catch (error) {
+        console.error('Error downloading log:', error);
+        showError('Error downloading log');
+    }
+}
+
+// Clear current log
+async function clearCurrentLog() {
+    if (!currentLogType) return;
+    
+    if (!confirm(`Are you sure you want to clear the ${currentLogType} log? This cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/website_logs.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'clear_log',
+                type: currentLogType
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('Log cleared successfully');
+            refreshCurrentLog();
+            loadAvailableLogs(); // Refresh the sidebar
+        } else {
+            showError('Failed to clear log: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error clearing log:', error);
+        showError('Error clearing log');
+    }
+}
+
+// Search across all logs
+async function searchAllLogs() {
+    const query = document.getElementById('globalLogSearch').value.trim();
+    const logType = document.getElementById('searchLogType').value;
+    
+    if (!query) {
+        showError('Please enter a search term');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/website_logs.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'search_logs',
+                query: query,
+                log_type: logType
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSearchResults(data.results, query);
+        } else {
+            showError('Search failed: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error searching logs:', error);
+        showError('Error searching logs');
+    }
+}
+
+// Show search results in modal
+function showSearchResults(results, query) {
+    const modal = document.getElementById('searchResultsModal');
+    const content = document.getElementById('searchResultsContent');
+    
+    if (!results || results.length === 0) {
+        content.innerHTML = `
+            <div class="text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">🔍</div>
+                <h3 class="text-lg font-medium text-gray-700 mb-2">No Results Found</h3>
+                <p class="text-sm text-gray-500">No matches found for "${query}"</p>
+            </div>
+        `;
+    } else {
+        let html = `
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Search Results for "${query}"</h3>
+                <p class="text-sm text-gray-600">Found ${results.length} matches</p>
+            </div>
+            <div class="space-y-4">
+        `;
+        
+        results.forEach(result => {
+            html += `
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            ${result.log_type}
+                        </span>
+                        <span class="text-sm text-gray-500">${formatLogTimestamp(result.timestamp)}</span>
+                    </div>
+                    <div class="log-message">
+                        ${highlightSearchTerm(formatLogMessage(result.message), query)}
+                    </div>
+                    <div class="mt-2">
+                        <button onclick="viewLogEntry('${result.log_type}', '${result.id}')" 
+                                class="text-sm text-blue-600 hover:text-blue-800">
+                            View in Log →
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `</div>`;
+        content.innerHTML = html;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// Highlight search term in results
+function highlightSearchTerm(text, term) {
+    if (!term) return text;
+    const regex = new RegExp(`(${term})`, 'gi');
+    return text.replace(regex, '<mark class="bg-yellow-200 px-1 rounded">$1</mark>');
+}
+
+// View specific log entry
+function viewLogEntry(logType, entryId) {
+    closeSearchResults();
+    selectLog(logType);
+    // TODO: Scroll to specific entry if needed
+}
+
+// Close search results modal
+function closeSearchResults() {
+    document.getElementById('searchResultsModal').style.display = 'none';
+}
+
+// Real-time search in current log
+document.addEventListener('DOMContentLoaded', function() {
+    const logSearch = document.getElementById('logSearch');
+    if (logSearch) {
+        let searchTimeout;
+        logSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterCurrentLogEntries(this.value);
+            }, 300);
+        });
+    }
+});
+
+// Filter current log entries
+function filterCurrentLogEntries(query) {
+    const entries = document.querySelectorAll('.log-entry');
+    
+    entries.forEach(entry => {
+        if (!query) {
+            entry.style.display = 'block';
+        } else {
+            const text = entry.textContent.toLowerCase();
+            entry.style.display = text.includes(query.toLowerCase()) ? 'block' : 'none';
+        }
+    });
+}
 </script>
+
+<style>
+/* Website Logs Modal Styling */
+.log-level-badge {
+    display: inline-flex;
+    align-items: center;
+    px-2 py-1;
+    rounded-full;
+    text-xs;
+    font-medium;
+}
+
+.level-error, .level-fatal, .level-critical {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.level-warning, .level-warn {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.level-info, .level-success {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.level-debug {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.log-entry {
+    transition: all 0.2s ease;
+}
+
+.log-entry:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.log-message {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Search results highlighting */
+mark {
+    background: #fef08a !important;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+}
+</style>
 
 <!-- System Cleanup Modal -->
 <div id="systemCleanupModal" class="admin-modal-overlay hidden" onclick="closeSystemCleanupModal()">

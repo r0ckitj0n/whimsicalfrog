@@ -572,53 +572,256 @@ class AIImageProcessor {
     }
     
     /**
-     * Convert image to WebP format
+     * Convert image to dual format (PNG + WebP) for maximum compatibility
      */
-    private function convertToWebP($imagePath, $quality = 90, $preserveTransparency = true) {
+    public function convertToDualFormat($imagePath, $options = []) {
+        $defaults = [
+            'webp_quality' => 90,
+            'png_compression' => 1, // 0-9, 1 is good quality/size balance
+            'preserve_transparency' => true,
+            'force_png' => false // Force PNG creation even if source is PNG
+        ];
+        
+        $opts = array_merge($defaults, $options);
+        
         $imageInfo = getimagesize($imagePath);
         if (!$imageInfo) {
-            throw new Exception("Cannot read image for WebP conversion");
+            throw new Exception("Cannot read image for dual format conversion");
         }
         
-        // Create source image
-        switch ($imageInfo[2]) {
-            case IMAGETYPE_JPEG:
-                $sourceImage = imagecreatefromjpeg($imagePath);
-                break;
-            case IMAGETYPE_PNG:
-                $sourceImage = imagecreatefrompng($imagePath);
-                break;
-            case IMAGETYPE_WEBP:
-                // Already WebP, just return original path
-                return $imagePath;
-            default:
-                throw new Exception("Unsupported image type for WebP conversion");
-        }
+        $result = [
+            'success' => false,
+            'png_path' => null,
+            'webp_path' => null,
+            'original_format' => null,
+            'has_transparency' => false
+        ];
         
+        // Determine original format
+        $result['original_format'] = image_type_to_extension($imageInfo[2], false);
+        
+        // Create source image and check for transparency
+        $sourceImage = $this->createImageResource($imagePath, $imageInfo[2]);
         if (!$sourceImage) {
-            throw new Exception("Failed to create image resource for WebP conversion");
+            throw new Exception("Failed to create image resource for dual format conversion");
         }
         
-        // Preserve transparency
-        if ($preserveTransparency) {
-            imagealphablending($sourceImage, true);
+        // Check for transparency
+        $result['has_transparency'] = $this->hasTransparency($sourceImage, $imageInfo[2]);
+        
+        $pathInfo = pathinfo($imagePath);
+        $basePath = $pathInfo['dirname'] . '/' . $pathInfo['filename'];
+        
+        try {
+            // Create PNG version (lossless, preserves transparency)
+            $pngPath = $basePath . '.png';
+            if ($opts['force_png'] || $imageInfo[2] !== IMAGETYPE_PNG) {
+                $result['png_path'] = $this->convertToPNG($sourceImage, $pngPath, $opts);
+            } else {
+                // Already PNG, just copy/use existing
+                $result['png_path'] = $imagePath;
+            }
+            
+            // Create WebP version (high quality, preserves transparency)
+            $webpPath = $basePath . '.webp';
+            $result['webp_path'] = $this->convertToWebP($sourceImage, $webpPath, $opts);
+            
+            $result['success'] = true;
+            
+        } finally {
+            imagedestroy($sourceImage);
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Convert image to PNG format (lossless) with enhanced transparency preservation
+     */
+    private function convertToPNG($sourceImage, $outputPath, $options = []) {
+        $width = imagesx($sourceImage);
+        $height = imagesy($sourceImage);
+        
+        // Create new PNG image with proper transparency support
+        $pngImage = imagecreatetruecolor($width, $height);
+        
+        // Enhanced transparency preservation for backgrounds and complex images
+        if ($options['preserve_transparency']) {
+            // Disable alpha blending and enable alpha saving
+            imagealphablending($pngImage, false);
+            imagesavealpha($pngImage, true);
+            
+            // Create fully transparent background
+            $transparent = imagecolorallocatealpha($pngImage, 0, 0, 0, 127);
+            imagefill($pngImage, 0, 0, $transparent);
+            
+            // Re-enable alpha blending for proper copying
+            imagealphablending($pngImage, true);
+            
+            // Ensure source image alpha is preserved
             imagesavealpha($sourceImage, true);
         }
         
-        // Generate WebP path
-        $pathInfo = pathinfo($imagePath);
-        $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+        // Copy image data with alpha channel preservation
+        imagecopy($pngImage, $sourceImage, 0, 0, 0, 0, $width, $height);
         
-        // Convert to WebP
-        if (!imagewebp($sourceImage, $webpPath, $quality)) {
-            imagedestroy($sourceImage);
-            throw new Exception("Failed to convert to WebP");
+        // Final alpha preservation before saving
+        if ($options['preserve_transparency']) {
+            imagealphablending($pngImage, false);
+            imagesavealpha($pngImage, true);
         }
         
-        imagedestroy($sourceImage);
-        chmod($webpPath, 0644);
+        // Save PNG with compression (0-9, where 0 = no compression, 9 = max compression)
+        $compression = $options['png_compression'] ?? 1; // Low compression for quality
+        if (!imagepng($pngImage, $outputPath, $compression)) {
+            imagedestroy($pngImage);
+            throw new Exception("Failed to create PNG with transparency");
+        }
         
-        return $webpPath;
+        imagedestroy($pngImage);
+        chmod($outputPath, 0644);
+        
+        return $outputPath;
+    }
+    
+    /**
+     * Convert image to WebP format (high quality) with enhanced transparency preservation
+     */
+    private function convertToWebP($sourceImage, $outputPath, $options = []) {
+        $quality = $options['webp_quality'] ?? 90;
+        
+        // Enhanced WebP transparency support for backgrounds
+        if ($options['preserve_transparency']) {
+            // Ensure alpha blending is properly configured for WebP
+            imagealphablending($sourceImage, false);
+            imagesavealpha($sourceImage, true);
+        }
+        
+        // Convert to WebP with transparency support
+        // Note: WebP supports both lossy and lossless compression with transparency
+        if (!imagewebp($sourceImage, $outputPath, $quality)) {
+            throw new Exception("Failed to convert to WebP with transparency support");
+        }
+        
+        chmod($outputPath, 0644);
+        
+        return $outputPath;
+    }
+    
+    /**
+     * Create image resource from file with enhanced transparency support
+     */
+    private function createImageResource($imagePath, $imageType) {
+        $image = null;
+        
+        switch ($imageType) {
+            case IMAGETYPE_JPEG:
+                $image = imagecreatefromjpeg($imagePath);
+                break;
+            case IMAGETYPE_PNG:
+                $image = imagecreatefrompng($imagePath);
+                if ($image) {
+                    // Essential for PNG transparency preservation
+                    imagealphablending($image, false);
+                    imagesavealpha($image, true);
+                }
+                break;
+            case IMAGETYPE_WEBP:
+                $image = imagecreatefromwebp($imagePath);
+                if ($image) {
+                    // Preserve WebP transparency
+                    imagealphablending($image, false);
+                    imagesavealpha($image, true);
+                }
+                break;
+            case IMAGETYPE_GIF:
+                $image = imagecreatefromgif($imagePath);
+                if ($image) {
+                    // Handle GIF transparency
+                    $transparentIndex = imagecolortransparent($image);
+                    if ($transparentIndex >= 0) {
+                        imagealphablending($image, false);
+                        imagesavealpha($image, true);
+                    }
+                }
+                break;
+            default:
+                throw new Exception("Unsupported image type: " . $imageType);
+        }
+        
+        if (!$image) {
+            throw new Exception("Failed to create image resource from: " . $imagePath);
+        }
+        
+        return $image;
+    }
+    
+    /**
+     * Check if image has transparency (enhanced detection for backgrounds)
+     */
+    private function hasTransparency($image, $imageType) {
+        if ($imageType === IMAGETYPE_JPEG) {
+            return false; // JPEG doesn't support transparency
+        }
+        
+        if ($imageType === IMAGETYPE_GIF) {
+            return imagecolortransparent($image) >= 0;
+        }
+        
+        if ($imageType === IMAGETYPE_PNG || $imageType === IMAGETYPE_WEBP) {
+            $width = imagesx($image);
+            $height = imagesy($image);
+            
+            // Enhanced transparency detection for background images
+            // Check corners first (common for backgrounds with transparent edges)
+            $cornerChecks = [
+                [0, 0], [0, $height-1], [$width-1, 0], [$width-1, $height-1]
+            ];
+            
+            foreach ($cornerChecks as $point) {
+                $color = imagecolorat($image, $point[0], $point[1]);
+                $alpha = ($color & 0x7F000000) >> 24;
+                if ($alpha > 0) {
+                    return true; // Found transparency in corners
+                }
+            }
+            
+            // Sample edge pixels (backgrounds often have transparent edges)
+            $edgeChecks = [
+                // Top edge
+                [$width/4, 0], [$width/2, 0], [3*$width/4, 0],
+                // Bottom edge
+                [$width/4, $height-1], [$width/2, $height-1], [3*$width/4, $height-1],
+                // Left edge
+                [0, $height/4], [0, $height/2], [0, 3*$height/4],
+                // Right edge
+                [$width-1, $height/4], [$width-1, $height/2], [$width-1, 3*$height/4]
+            ];
+            
+            foreach ($edgeChecks as $point) {
+                $x = (int)$point[0];
+                $y = (int)$point[1];
+                $color = imagecolorat($image, $x, $y);
+                $alpha = ($color & 0x7F000000) >> 24;
+                if ($alpha > 0) {
+                    return true; // Found transparency in edges
+                }
+            }
+            
+            // Sample random pixels throughout image for comprehensive check
+            $samplePoints = min(200, $width * $height / 100); // More samples for better detection
+            for ($i = 0; $i < $samplePoints; $i++) {
+                $x = rand(0, $width - 1);
+                $y = rand(0, $height - 1);
+                $color = imagecolorat($image, $x, $y);
+                $alpha = ($color & 0x7F000000) >> 24;
+                if ($alpha > 0) {
+                    return true; // Found transparency
+                }
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -668,6 +871,256 @@ class AIImageProcessor {
         return json_decode($response, true);
     }
     
+    /**
+     * Process background image with resizing and dual format optimization
+     */
+    public function processBackgroundImage($imagePath, $options = []) {
+        $defaults = [
+            'createDualFormat' => true, // Create both PNG and WebP
+            'webp_quality' => 90,
+            'png_compression' => 1,
+            'preserve_transparency' => true, // Backgrounds may have transparency
+            'useAI' => false, // Background images typically don't need AI edge detection
+            'resizeDimensions' => ['width' => 1920, 'height' => 1080],
+            'resizeMode' => 'fit' // 'fit', 'fill', 'stretch'
+        ];
+        
+        $opts = array_merge($defaults, $options);
+        
+        if (!file_exists($imagePath)) {
+            throw new Exception("Image file not found: " . $imagePath);
+        }
+        
+        $result = [
+            'success' => false,
+            'original_path' => $imagePath,
+            'png_path' => null,
+            'webp_path' => null,
+            'processed_path' => null, // Primary path (WebP if dual format)
+            'original_processed_path' => null,
+            'processing_steps' => [],
+            'original_dimensions' => null,
+            'final_dimensions' => $opts['resizeDimensions'],
+            'formats_created' => []
+        ];
+        
+        try {
+            // Get original image dimensions
+            $imageInfo = getimagesize($imagePath);
+            if (!$imageInfo) {
+                throw new Exception("Cannot read image information");
+            }
+            
+            $result['original_dimensions'] = [
+                'width' => $imageInfo[0],
+                'height' => $imageInfo[1]
+            ];
+            
+            $result['processing_steps'][] = 'Starting background image processing...';
+            
+            // Step 1: Resize image to target dimensions
+            $result['processing_steps'][] = 'Resizing image to target dimensions...';
+            $resizedPath = $this->resizeImage($imagePath, $opts['resizeDimensions'], $opts['resizeMode']);
+            $result['original_processed_path'] = $resizedPath;
+            
+            // Step 2: Create dual format (PNG + WebP) for browser compatibility
+            if ($opts['createDualFormat']) {
+                $result['processing_steps'][] = 'Creating dual format (PNG + WebP) for maximum compatibility...';
+                
+                $dualFormatOptions = [
+                    'webp_quality' => $opts['webp_quality'],
+                    'png_compression' => $opts['png_compression'],
+                    'preserve_transparency' => $opts['preserve_transparency'],
+                    'force_png' => true // Always create PNG for compliance
+                ];
+                
+                $formatResult = $this->convertToDualFormat($resizedPath, $dualFormatOptions);
+                
+                if ($formatResult['success']) {
+                    $result['png_path'] = $formatResult['png_path'];
+                    $result['webp_path'] = $formatResult['webp_path'];
+                    $result['processed_path'] = $formatResult['webp_path']; // Primary is WebP
+                    
+                    if ($formatResult['png_path']) {
+                        $result['formats_created'][] = 'PNG (lossless, browser compliance)';
+                    }
+                    if ($formatResult['webp_path']) {
+                        $result['formats_created'][] = 'WebP (optimized, modern browsers)';
+                    }
+                    
+                    if ($formatResult['has_transparency']) {
+                        $result['processing_steps'][] = 'Transparency preserved in both formats';
+                    }
+                } else {
+                    throw new Exception('Dual format conversion failed');
+                }
+            } else {
+                // Fallback to single format
+                $result['processed_path'] = $resizedPath;
+                $result['formats_created'][] = 'Original format only';
+            }
+            
+            $result['processing_steps'][] = 'Background processing completed successfully';
+            $result['success'] = true;
+            
+        } catch (Exception $e) {
+            $result['processing_steps'][] = 'Error: ' . $e->getMessage();
+            $result['error'] = $e->getMessage();
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Resize image to specific dimensions
+     */
+    private function resizeImage($imagePath, $targetDimensions, $mode = 'fit') {
+        $imageInfo = getimagesize($imagePath);
+        if (!$imageInfo) {
+            throw new Exception("Cannot read image for resizing");
+        }
+        
+        // Create source image with enhanced transparency support
+        $sourceImage = $this->createImageResource($imagePath, $imageInfo[2]);
+        
+        if (!$sourceImage) {
+            throw new Exception("Failed to create image resource for resizing");
+        }
+        
+        $sourceWidth = imagesx($sourceImage);
+        $sourceHeight = imagesy($sourceImage);
+        $targetWidth = $targetDimensions['width'];
+        $targetHeight = $targetDimensions['height'];
+        
+        // Calculate dimensions based on resize mode
+        switch ($mode) {
+            case 'stretch':
+                // Stretch to exact dimensions (may distort aspect ratio)
+                $newWidth = $targetWidth;
+                $newHeight = $targetHeight;
+                $srcX = $srcY = 0;
+                $srcWidth = $sourceWidth;
+                $srcHeight = $sourceHeight;
+                break;
+                
+            case 'fill':
+                // Fill entire target area (may crop image)
+                $sourceRatio = $sourceWidth / $sourceHeight;
+                $targetRatio = $targetWidth / $targetHeight;
+                
+                if ($sourceRatio > $targetRatio) {
+                    // Source is wider - crop width
+                    $srcHeight = $sourceHeight;
+                    $srcWidth = (int)($sourceHeight * $targetRatio);
+                    $srcX = (int)(($sourceWidth - $srcWidth) / 2);
+                    $srcY = 0;
+                } else {
+                    // Source is taller - crop height
+                    $srcWidth = $sourceWidth;
+                    $srcHeight = (int)($sourceWidth / $targetRatio);
+                    $srcX = 0;
+                    $srcY = (int)(($sourceHeight - $srcHeight) / 2);
+                }
+                
+                $newWidth = $targetWidth;
+                $newHeight = $targetHeight;
+                break;
+                
+            case 'fit':
+            default:
+                // Fit within dimensions (maintain aspect ratio, may have padding)
+                $sourceRatio = $sourceWidth / $sourceHeight;
+                $targetRatio = $targetWidth / $targetHeight;
+                
+                if ($sourceRatio > $targetRatio) {
+                    // Source is wider - fit to width
+                    $newWidth = $targetWidth;
+                    $newHeight = (int)($targetWidth / $sourceRatio);
+                } else {
+                    // Source is taller - fit to height
+                    $newHeight = $targetHeight;
+                    $newWidth = (int)($targetHeight * $sourceRatio);
+                }
+                
+                $srcX = $srcY = 0;
+                $srcWidth = $sourceWidth;
+                $srcHeight = $sourceHeight;
+                break;
+        }
+        
+        // Create new image with proper transparency handling
+        $newImage = imagecreatetruecolor($targetWidth, $targetHeight);
+        
+        // Enhanced transparency preservation for background images
+        $supportsTransparency = in_array($imageInfo[2], [IMAGETYPE_PNG, IMAGETYPE_WEBP, IMAGETYPE_GIF]);
+        
+        if ($supportsTransparency) {
+            // Preserve transparency for PNG/WebP/GIF backgrounds
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 0, 0, 0, 127);
+            imagefill($newImage, 0, 0, $transparent);
+            imagealphablending($newImage, true);
+        } else {
+            // Set white background for JPEG (no transparency support)
+            $backgroundColor = imagecolorallocate($newImage, 255, 255, 255);
+            imagefill($newImage, 0, 0, $backgroundColor);
+        }
+        
+        // Center image if using 'fit' mode
+        $destX = (int)(($targetWidth - $newWidth) / 2);
+        $destY = (int)(($targetHeight - $newHeight) / 2);
+        
+        // For fill and stretch modes, use full area
+        if ($mode === 'fill' || $mode === 'stretch') {
+            $destX = $destY = 0;
+        }
+        
+        // Perform the resize with proper alpha handling
+        imagecopyresampled(
+            $newImage, $sourceImage,
+            $destX, $destY, $srcX, $srcY,
+            $newWidth, $newHeight, $srcWidth, $srcHeight
+        );
+        
+        // Final transparency preservation step before saving
+        if ($supportsTransparency) {
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+        }
+        
+        // Generate output path
+        $pathInfo = pathinfo($imagePath);
+        $outputPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '_resized.' . $pathInfo['extension'];
+        
+        // Save resized image with transparency preservation
+        switch ($imageInfo[2]) {
+            case IMAGETYPE_JPEG:
+                imagejpeg($newImage, $outputPath, 90);
+                break;
+            case IMAGETYPE_PNG:
+                // Use low compression to preserve transparency quality
+                imagepng($newImage, $outputPath, 1);
+                break;
+            case IMAGETYPE_WEBP:
+                // High quality WebP with transparency support
+                imagewebp($newImage, $outputPath, 90);
+                break;
+            case IMAGETYPE_GIF:
+                imagegif($newImage, $outputPath);
+                break;
+        }
+        
+        // Clean up
+        imagedestroy($sourceImage);
+        imagedestroy($newImage);
+        
+        // Set permissions
+        chmod($outputPath, 0644);
+        
+        return $outputPath;
+    }
+
     /**
      * Update database with processing information
      */

@@ -480,6 +480,8 @@ function initializeComprehensiveTooltips($pdo) {
             ['categoriesBtn', 'settings', 'Categories Management', 'Manage your product types like T-Shirts, Tumblers, Artwork, etc. Add new categories, edit existing ones, and organize your products so customers can find them easily.', 'bottom'],
             ['roomsBtn', 'settings', 'Room Settings', 'Change room names and descriptions. Control what customers see when they visit different rooms in your virtual store.', 'bottom'],
             ['roomCategoryBtn', 'settings', 'Room-Category Links', 'Connect product types to specific rooms. Decide which products show up in each room of your store.', 'bottom'],
+            ['dashboardConfigBtn', 'settings', 'Dashboard Configuration', 'Customize what shows up on your main dashboard because apparently the default layout isn\'t good enough for your refined tastes. Rearrange widgets like you\'re playing digital Tetris with your business metrics.', 'bottom'],
+            ['globalColorSizeBtn', 'settings', 'Global Colors & Sizes', 'Manage your universal color and size options because consistency is apparently too difficult to maintain manually. Create your master list of colors and sizes so you don\'t have to type "Medium" 47 times.', 'bottom'],
             
             // Room & Visual Tools
             ['roomMapperBtn', 'settings', 'Room Mapper', 'Tool to create clickable areas on room pictures. Set up spots where customers can click to see products.', 'bottom'],
@@ -489,11 +491,16 @@ function initializeComprehensiveTooltips($pdo) {
             // Business & Design
             ['aiSettingsBtn', 'settings', 'AI Settings', 'Set up AI helpers that can write product descriptions, suggest prices, and create marketing content for you.', 'bottom'],
             ['globalCSSBtn', 'settings', 'Global CSS Rules', 'Change how your website looks including colors, fonts, and spacing. Your changes show up right away across your whole site.', 'bottom'],
+            ['cssRulesBtn', 'settings', 'CSS Rules', 'Another way to fiddle with your website\'s appearance because apparently one CSS interface wasn\'t enough. For when you absolutely must have two different places to change the same styling options.', 'bottom'],
             ['templateManagerBtn', 'settings', 'Template Manager', 'Manage email templates and page layouts. Control how your emails and pages look to customers.', 'bottom'],
             ['websiteConfigBtn', 'settings', 'Website Configuration', 'Set up basic website info like your business name, contact info, and how your store works.', 'bottom'],
             ['analyticsBtn', 'settings', 'Analytics & Insights', 'See detailed reports about your customers and sales. Learn what\'s working and what needs improvement.', 'bottom'],
+            ['marketingAnalyticsBtn', 'settings', 'Marketing Analytics', 'Dive deep into marketing performance because regular analytics apparently don\'t give you enough numbers to obsess over. Perfect for when you need 47 different ways to measure the same customer behavior.', 'bottom'],
+            ['businessReportsBtn', 'settings', 'Business Reports', 'Generate comprehensive business reports that will sit in your downloads folder forever. Create beautiful charts and graphs that make your business look more successful than it actually is.', 'bottom'],
             ['salesAdminBtn', 'settings', 'Sales Administration', 'Manage sales, discounts, and special offers. Create promotions to encourage customers to buy more.', 'bottom'],
             ['cartButtonTextBtn', 'settings', 'Cart Button Text', 'Change the words on your buy buttons. Use text that encourages customers to make purchases.', 'bottom'],
+            ['squareSettingsBtn', 'settings', 'Square Settings', 'Configure your Square payment integration because modern businesses need at least 12 different ways to accept money. Set up your fancy credit card processing so customers can pay with plastic instead of actual money.', 'bottom'],
+            ['receiptSettingsBtn', 'settings', 'Receipt Settings', 'Customize your digital receipts because apparently regular receipts aren\'t special enough. Choose fonts, colors, and layouts for those pieces of paper customers immediately throw away or lose.', 'bottom'],
             
             // Email & Communications
             ['emailConfigBtn', 'settings', 'Email Configuration', 'Set up your email system for sending order confirmations, newsletters, and customer messages.', 'bottom'],
@@ -516,6 +523,7 @@ function initializeComprehensiveTooltips($pdo) {
             ['adminCustomersTab', 'common', 'Customers', 'Manage customer accounts, see their order history, and communicate with them. Build good relationships with your customers.', 'bottom'],
             ['adminInventoryTab', 'common', 'Inventory', 'Manage your products including prices, stock amounts, and product details. Add new products and organize your store.', 'bottom'],
             ['adminOrdersTab', 'common', 'Orders', 'Handle customer orders from start to finish. Track orders, manage shipping, process refunds, and talk to customers about their purchases.', 'bottom'],
+            ['adminPosTab', 'common', 'Point of Sale', 'Your digital cash register for in-person sales. Because apparently we\'re living in the future where everything is computerized, including counting money. Perfect for when customers actually show up to buy things instead of just browsing endlessly.', 'bottom'],
             ['adminReportsTab', 'common', 'Reports', 'Create detailed business reports and charts. See sales trends, customer habits, and inventory performance to make better business decisions.', 'bottom'],
             ['adminMarketingTab', 'common', 'Marketing', 'Create marketing campaigns, send emails, make discount codes, and run promotions to attract more customers and increase sales.', 'bottom'],
             ['adminSettingsTab', 'common', 'Settings', 'Change website settings, appearance, and system options. Customize your admin experience and store setup.', 'bottom'],

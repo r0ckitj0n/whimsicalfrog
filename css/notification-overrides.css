@@ -16,14 +16,14 @@
     position: relative !important;
 }
 
-/* Add subtle hover effect to indicate clickability */
-.wf-notification:hover {
+/* Add subtle hover effect to indicate clickability - ONLY for notifications */
+#wf-notification-container .wf-notification:hover {
     transform: translateX(-2px) scale(1.02) !important;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Auto-dismiss progress bar animation (5 seconds) */
-.wf-notification::before {
+/* Auto-dismiss progress bar animation (5 seconds) - ONLY for notifications, NOT modals */
+#wf-notification-container .wf-notification::before {
     content: '';
     position: absolute;
     bottom: 0;
@@ -36,7 +36,7 @@
     border-radius: 0 0 12px 12px;
 }
 
-.wf-notification[data-type="success"]::before {
+#wf-notification-container .wf-notification[data-type="success"]::before {
     background: rgba(255, 255, 255, 0.4) !important;
 }
 
@@ -50,9 +50,20 @@
 }
 
 /* Click indication - subtle pulse on click */
-.wf-notification:active {
+#wf-notification-container .wf-notification:active {
     transform: translateX(0) scale(0.98) !important;
     transition: all 0.1s ease !important;
+}
+
+/* MODAL EXCLUSION: Ensure modals NEVER get notification progress bars */
+.modal-overlay .wf-notification::before,
+.admin-modal-overlay .wf-notification::before,
+.modal-content .wf-notification::before,
+.admin-modal-content .wf-notification::before,
+.modal::before,
+[class*="modal"]::before {
+    display: none !important;
+    content: none !important;
 }
 
 /* NUCLEAR OPTION: Override ALL notification styling with maximum specificity */

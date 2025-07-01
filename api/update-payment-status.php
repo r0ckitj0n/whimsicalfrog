@@ -62,7 +62,7 @@ try {
 
     // Order status
     if (isset($data['status']) && $data['status'] !== '') {
-        $updateMap[] = 'status = :orderStatus';
+        $updateMap[] = 'order_status = :orderStatus';
         $params[':orderStatus'] = $data['status'];
     }
 

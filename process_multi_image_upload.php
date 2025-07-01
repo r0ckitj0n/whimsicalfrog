@@ -123,35 +123,90 @@ try {
             $finalPath = $relPath;
             $aiProcessed = false;
             
-            // Apply AI processing if requested
+            // Apply AI processing and dual format conversion if requested
             if ($useAIProcessing) {
                 try {
                     require_once __DIR__ . '/api/ai_image_processor.php';
                     $processor = new AIImageProcessor();
                     
+                    // First apply AI processing with edge detection
                     $processingOptions = [
-                        'convertToWebP' => true,
+                        'convertToWebP' => false, // Don't convert yet, we'll do dual format next
                         'quality' => 90,
                         'preserveTransparency' => true,
                         'useAI' => true,
                         'fallbackTrimPercent' => 0.05
                     ];
                     
-                    $result = $processor->processImage($absPath, $processingOptions);
+                    $aiResult = $processor->processImage($absPath, $processingOptions);
+                    $processedImagePath = $aiResult['success'] ? $aiResult['processed_path'] : $absPath;
                     
-                    if ($result['success'] && !empty($result['processed_path'])) {
-                        // Use processed image path
-                        $finalPath = str_replace(__DIR__ . '/', '', $result['processed_path']);
+                    // Now create dual format (PNG + WebP) for browser compatibility
+                    $dualFormatOptions = [
+                        'webp_quality' => 90,
+                        'png_compression' => 1,
+                        'preserve_transparency' => true,
+                        'force_png' => true
+                    ];
+                    
+                    $formatResult = $processor->convertToDualFormat($processedImagePath, $dualFormatOptions);
+                    
+                    if ($formatResult['success']) {
+                        // Use WebP as primary, but ensure PNG exists for fallback
+                        $finalPath = str_replace(__DIR__ . '/', '', $formatResult['webp_path']);
                         $aiProcessed = true;
                         
-                        // Remove original file if different from processed
-                        if ($result['processed_path'] !== $absPath) {
-                            unlink($absPath);
+                        // Create PNG filename for fallback
+                        $pngFilename = $sku . $suffix . '.png';
+                        $pngPath = $itemsDir . $pngFilename;
+                        
+                        if ($formatResult['png_path'] && file_exists($formatResult['png_path'])) {
+                            copy($formatResult['png_path'], $pngPath);
+                            chmod($pngPath, 0644);
                         }
+                        
+                        // Clean up temporary files
+                        if ($processedImagePath !== $absPath && file_exists($processedImagePath)) {
+                            unlink($processedImagePath);
+                        }
+                    } else {
+                        error_log("Dual format conversion failed for {$filename}");
                     }
+                    
                 } catch (Exception $e) {
                     error_log("AI processing failed for {$filename}: " . $e->getMessage());
                     // Continue with original image if AI processing fails
+                }
+            } else {
+                // Even without AI processing, create dual format for browser compatibility
+                try {
+                    require_once __DIR__ . '/api/ai_image_processor.php';
+                    $processor = new AIImageProcessor();
+                    
+                    $dualFormatOptions = [
+                        'webp_quality' => 90,
+                        'png_compression' => 1,
+                        'preserve_transparency' => true,
+                        'force_png' => true
+                    ];
+                    
+                    $formatResult = $processor->convertToDualFormat($absPath, $dualFormatOptions);
+                    
+                    if ($formatResult['success']) {
+                        $finalPath = str_replace(__DIR__ . '/', '', $formatResult['webp_path']);
+                        
+                        // Create PNG filename for fallback
+                        $pngFilename = $sku . $suffix . '.png';
+                        $pngPath = $itemsDir . $pngFilename;
+                        
+                        if ($formatResult['png_path'] && file_exists($formatResult['png_path'])) {
+                            copy($formatResult['png_path'], $pngPath);
+                            chmod($pngPath, 0644);
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log("Dual format conversion failed for {$filename}: " . $e->getMessage());
+                    // Continue with original image
                 }
             }
             

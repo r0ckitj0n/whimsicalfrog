@@ -20,7 +20,7 @@ try {
     
     // Fetch customer orders
     $stmt = $pdo->prepare('
-        SELECT id, status, totalAmount, paymentMethod, shippingMethod, paymentStatus, 
+        SELECT id, order_status, totalAmount, paymentMethod, shippingMethod, paymentStatus, 
                createdAt, shippingAddress
         FROM orders 
         WHERE userId = ? 

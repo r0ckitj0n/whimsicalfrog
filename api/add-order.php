@@ -140,11 +140,26 @@ $shippingCodes = [
 ];
 $shippingCode = $shippingCodes[$shippingMethod] ?? 'P';
 
-// Generate random 2-digit number
-$randomNum = str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
+// Generate sequence-based number instead of random to prevent duplicates
+// Find the highest existing order ID with this prefix pattern to get next sequence
+$orderPrefix = $customerNum . $compactDate . $shippingCode;
+$maxOrderStmt = $pdo->prepare("SELECT id FROM orders WHERE id LIKE ? ORDER BY id DESC LIMIT 1");
+$maxOrderStmt->execute([$orderPrefix . '%']);
+$maxOrderId = $maxOrderStmt->fetchColumn();
 
-// Create compact order ID: 01A15P23
-$orderId = $customerNum . $compactDate . $shippingCode . $randomNum;
+$sequenceNum = '01'; // Default starting sequence
+if ($maxOrderId) {
+    // Extract the last 2 digits and increment
+    $currentSequence = (int)substr($maxOrderId, -2);
+    $nextSequence = $currentSequence + 1;
+    $sequenceNum = str_pad($nextSequence, 2, '0', STR_PAD_LEFT);
+    error_log("add-order.php: Found max existing order ID '$maxOrderId' with prefix '$orderPrefix', next sequence will be $nextSequence");
+} else {
+    error_log("add-order.php: No existing order IDs found with prefix '$orderPrefix', starting from sequence 01");
+}
+
+// Create compact order ID: 01A15P01 (sequence-based, not random)
+$orderId = $orderPrefix . $sequenceNum;
 
 $pdo->beginTransaction();
 try {
@@ -155,7 +170,7 @@ try {
     }
     
     // Add shippingMethod and shippingAddress to the insert statement
-    $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, shippingAddress, status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?,?)");
+    $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, shippingAddress, order_status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?,?)");
     $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $shippingAddressJson, $orderStatus, $date, $paymentStatus]);
     
     // Get the next order item ID sequence number by finding the highest existing ID

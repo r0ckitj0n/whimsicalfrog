@@ -28,7 +28,7 @@ try {
     // --- Update order scalar fields (reuse logic similar to update-payment-status) ---
     $updateMap=[]; $params=[':orderId'=>$orderId];
     $scalarFields = [
-        'status'=>'status',
+        'status'=>'order_status',
         'trackingNumber'=>'trackingNumber',
         'paymentMethod'=>'paymentMethod',
         'shippingMethod'=>'shippingMethod',

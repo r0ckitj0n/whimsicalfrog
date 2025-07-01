@@ -76,8 +76,8 @@ try {
                 ],
                 'order_fulfillment' => [
                     'title' => '🚚 Order Fulfillment',
-                    'description' => 'Process and manage order fulfillment',
-                    'type' => 'external',
+                    'description' => 'Opens full order fulfillment interface in modal',
+                    'type' => 'modal',
                     'source' => 'order_fulfillment',
                     'category' => 'Orders'
                 ],
@@ -333,8 +333,8 @@ try {
                 ],
                 'order_fulfillment' => [
                     'title' => '🚚 Order Fulfillment',
-                    'description' => 'Process and manage order fulfillment',
-                    'type' => 'external',
+                    'description' => 'Opens full order fulfillment interface in modal',
+                    'type' => 'modal',
                     'source' => 'order_fulfillment',
                     'category' => 'Orders'
                 ],

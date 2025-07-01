@@ -471,10 +471,13 @@ $messageType = $_GET['type'] ?? '';
                         </div>
                         
                         <div class="flex justify-end">
-                            <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm"
-                                    data-tooltip="Let AI write your marketing copy because apparently describing your own products is too hard. Don't worry, the robots are better at it anyway.">
-                                 🎯 Marketing Manager
-                            </button>
+                            <div class="button-with-badge">
+                                <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm"
+                                        data-tooltip="Let AI write your marketing copy because apparently describing your own products is too hard. Don't worry, the robots are better at it anyway.">
+                                     🎯 Marketing Manager
+                                </button>
+                                <div id="step-badge-1" class="step-badge step-badge-1 pulse hidden"></div>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -616,10 +619,13 @@ $messageType = $_GET['type'] ?? '';
                                     <span class="mr-2">💰</span> Cost Breakdown
                                 </h3>
                                 
-                                <button type="button" onclick="useSuggestedCost()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors mb-4" 
-                                        id="get-suggested-cost-btn" data-tooltip="Let AI analyze your item and suggest cost breakdown including materials, labor, energy, and equipment. Because apparently calculating costs is rocket science now.">
-                                    🧮 Get Suggested Cost
-                                </button>
+                                <div class="button-with-badge w-full">
+                                    <button type="button" onclick="useSuggestedCost()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors mb-4" 
+                                            id="get-suggested-cost-btn" data-tooltip="Let AI analyze your item and suggest cost breakdown including materials, labor, energy, and equipment. Because apparently calculating costs is rocket science now.">
+                                        🧮 Get Suggested Cost
+                                    </button>
+                                    <div id="step-badge-2" class="step-badge step-badge-2 pulse hidden"></div>
+                                </div>
                                 
                                 <!-- Suggested Cost Display - Moved to top with price styling -->
                                 <div class="mb-4 p-2 bg-green-50 rounded border border-green-200">
@@ -710,10 +716,13 @@ $messageType = $_GET['type'] ?? '';
                                     <span class="mr-2">🎯</span> Price Suggestion
                                 </h3>
                                 
-                                <button type="button" onclick="useSuggestedPrice()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4"
-                                        id="get-suggested-price-btn" data-tooltip="Let AI analyze your item and suggest optimal pricing based on cost analysis, market research, and competitive analysis. Because apparently setting prices is too complicated for humans now.">
-                                    🎯 Get Suggested Price
-                                </button>
+                                <div class="button-with-badge w-full">
+                                    <button type="button" onclick="useSuggestedPrice()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4"
+                                            id="get-suggested-price-btn" data-tooltip="Let AI analyze your item and suggest optimal pricing based on cost analysis, market research, and competitive analysis. Because apparently setting prices is too complicated for humans now.">
+                                        🎯 Get Suggested Price
+                                    </button>
+                                    <div id="step-badge-3" class="step-badge step-badge-3 pulse hidden"></div>
+                                </div>
                                 
                                 <!-- Price Suggestion Display -->
                                 <div id="priceSuggestionDisplay" class="mb-4 hidden">
@@ -4351,72 +4360,77 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .then(data => { // This block executes if response.json() was successful
-                if (data.success) {
-                    showSuccess( data.message);
-                    
-                    // Check if this is an add operation (modal mode is 'add')
-                    const isAddOperation = window.location.search.includes('add=1');
-                    
-                    if (isAddOperation) {
-                        // For add operations, keep modal open and reset form for next item
-                        if(saveBtn && btnText && spinner) {
-                            btnText.classList.remove('hidden');
-                            spinner.classList.add('hidden');
-                            saveBtn.disabled = false;
-                        }
+                                    if (data.success) {
+                        showSuccess( data.message);
                         
-                        // Clear form fields except category (keep for convenience)
-                        const form = document.getElementById('inventoryForm');
-                        const fieldsToKeep = ['category', 'categoryEdit'];
-                        const inputs = form.querySelectorAll('input, textarea, select');
-                        inputs.forEach(input => {
-                            if (!fieldsToKeep.includes(input.name) && !fieldsToKeep.includes(input.id)) {
-                                if (input.type === 'checkbox' || input.type === 'radio') {
-                                    input.checked = false;
-                                } else {
-                                    input.value = '';
+                        // Check if this is an add operation (modal mode is 'add')
+                        const isAddOperation = window.location.search.includes('add=1');
+                        
+                        if (isAddOperation) {
+                            // Mark item as just added for step badge display
+                            if (data.sku && typeof markItemAsJustAdded === 'function') {
+                                markItemAsJustAdded(data.sku);
+                            }
+                            
+                            // For add operations, keep modal open and reset form for next item
+                            if(saveBtn && btnText && spinner) {
+                                btnText.classList.remove('hidden');
+                                spinner.classList.add('hidden');
+                                saveBtn.disabled = false;
+                            }
+                            
+                            // Clear form fields except category (keep for convenience)
+                            const form = document.getElementById('inventoryForm');
+                            const fieldsToKeep = ['category', 'categoryEdit'];
+                            const inputs = form.querySelectorAll('input, textarea, select');
+                            inputs.forEach(input => {
+                                if (!fieldsToKeep.includes(input.name) && !fieldsToKeep.includes(input.id)) {
+                                    if (input.type === 'checkbox' || input.type === 'radio') {
+                                        input.checked = false;
+                                    } else {
+                                        input.value = '';
+                                    }
+                                }
+                            });
+                            
+                            // Generate new SKU for next item
+                            const skuField = document.getElementById('sku');
+                            if (skuField) {
+                                // Extract the number from the current SKU and increment
+                                const currentSku = data.sku || skuField.value;
+                                const match = currentSku.match(/WF-GEN-(\d+)/);
+                                if (match) {
+                                    const nextNum = parseInt(match[1]) + 1;
+                                    const nextSku = 'WF-GEN-' + String(nextNum).padStart(3, '0');
+                                    skuField.value = nextSku;
                                 }
                             }
-                        });
-                        
-                        // Generate new SKU for next item
-                        const skuField = document.getElementById('sku');
-                        if (skuField) {
-                            // Extract the number from the current SKU and increment
-                            const currentSku = data.sku || skuField.value;
-                            const match = currentSku.match(/WF-GEN-(\d+)/);
-                            if (match) {
-                                const nextNum = parseInt(match[1]) + 1;
-                                const nextSku = 'WF-GEN-' + String(nextNum).padStart(3, '0');
-                                skuField.value = nextSku;
+                            
+                            // Clear image preview
+                            const imagePreview = document.querySelector('.image-preview');
+                            if (imagePreview) {
+                                imagePreview.style.display = 'none';
                             }
-                        }
-                        
-                        // Clear image preview
-                        const imagePreview = document.querySelector('.image-preview');
-                        if (imagePreview) {
-                            imagePreview.style.display = 'none';
-                        }
-                        
-                        // Focus on name field for next item
-                        const nameField = document.getElementById('name');
-                        if (nameField) {
-                            nameField.focus();
-                        }
-                        
-                        return; // Stay in modal
-                    } else {
-                        // For edit operations, redirect as before
-                        let redirectUrl = '?page=admin&section=inventory';
-                        if (data.sku) { // sku is returned by add/update operations
-                            redirectUrl += '&highlight=' + data.sku;
-                        }
-                        // Use a short delay to allow toast to be seen before navigation
-                        setTimeout(() => {
-                            window.location.href = redirectUrl;
-                        }, 500);
-                        return;
-                    } 
+                            
+                            // Focus on name field for next item
+                            const nameField = document.getElementById('name');
+                            if (nameField) {
+                                nameField.focus();
+                            }
+                            
+                            return; // Stay in modal
+                        } else {
+                            // For edit operations, redirect as before
+                            let redirectUrl = '?page=admin&section=inventory';
+                            if (data.sku) { // sku is returned by add/update operations
+                                redirectUrl += '&highlight=' + data.sku;
+                            }
+                            // Use a short delay to allow toast to be seen before navigation
+                            setTimeout(() => {
+                                window.location.href = redirectUrl;
+                            }, 500);
+                            return;
+                        } 
 
                 } else { // data.success is false
                     showError( data.error || 'Failed to save item. Please check inputs.');
@@ -11545,6 +11559,176 @@ async function validateGenderSizeColorRequirements(event) {
         showError('Error checking publication requirements. Please try again.');
         event.preventDefault();
         return false;
+    }
+}
+
+// ==============================================
+// STEP BADGES SYSTEM - First Time User Guide
+// ==============================================
+
+// Track first-time edit state
+let isFirstTimeEdit = false;
+let stepBadgesShown = false;
+
+// Check if this is a new item edit (first time after creation)
+function checkFirstTimeEdit() {
+    // Check URL parameters for edit mode after add
+    const urlParams = new URLSearchParams(window.location.search);
+    const editParam = urlParams.get('edit');
+    const wasJustAdded = sessionStorage.getItem('justAddedItem');
+    
+    // If we're in edit mode and the item was just added, show badges
+    if (editParam && wasJustAdded === editParam && modalMode === 'edit') {
+        isFirstTimeEdit = true;
+        console.log('First time edit detected for item:', editParam);
+        return true;
+    }
+    
+    return false;
+}
+
+// Show step badges for first-time users
+function showStepBadges() {
+    if (stepBadgesShown || !isFirstTimeEdit) return;
+    
+    console.log('Showing step badges for first-time edit');
+    
+    // Show all three step badges
+    const badge1 = document.getElementById('step-badge-1');
+    const badge2 = document.getElementById('step-badge-2'); 
+    const badge3 = document.getElementById('step-badge-3');
+    
+    if (badge1) {
+        badge1.classList.remove('hidden');
+        setTimeout(() => badge1.classList.add('pulse'), 100);
+    }
+    
+    if (badge2) {
+        badge2.classList.remove('hidden');
+        setTimeout(() => badge2.classList.add('pulse'), 200);
+    }
+    
+    if (badge3) {
+        badge3.classList.remove('hidden');
+        setTimeout(() => badge3.classList.add('pulse'), 300);
+    }
+    
+    stepBadgesShown = true;
+    
+    // Auto-hide badges after 15 seconds
+    setTimeout(hideStepBadges, 15000);
+}
+
+// Hide step badges
+function hideStepBadges() {
+    console.log('Hiding step badges');
+    
+    const badges = [
+        document.getElementById('step-badge-1'),
+        document.getElementById('step-badge-2'),
+        document.getElementById('step-badge-3')
+    ];
+    
+    badges.forEach(badge => {
+        if (badge) {
+            badge.classList.remove('pulse');
+            badge.classList.add('hidden');
+        }
+    });
+    
+    // Clear first-time edit state
+    isFirstTimeEdit = false;
+    stepBadgesShown = false;
+    
+    // Clear session storage to prevent showing again
+    sessionStorage.removeItem('justAddedItem');
+}
+
+// Hide badges when any of the target buttons are clicked
+function addStepBadgeEventListeners() {
+    // Marketing Manager button
+    const marketingBtn = document.getElementById('open-marketing-manager-btn');
+    if (marketingBtn) {
+        marketingBtn.addEventListener('click', function() {
+            const badge1 = document.getElementById('step-badge-1');
+            if (badge1 && !badge1.classList.contains('hidden')) {
+                badge1.classList.remove('pulse');
+                badge1.classList.add('hidden');
+                console.log('Step 1 badge hidden after Marketing Manager click');
+            }
+        });
+    }
+    
+    // Get Suggested Cost button
+    const costBtn = document.getElementById('get-suggested-cost-btn');
+    if (costBtn) {
+        costBtn.addEventListener('click', function() {
+            const badge2 = document.getElementById('step-badge-2');
+            if (badge2 && !badge2.classList.contains('hidden')) {
+                badge2.classList.remove('pulse');
+                badge2.classList.add('hidden');
+                console.log('Step 2 badge hidden after Get Suggested Cost click');
+            }
+        });
+    }
+    
+    // Get Suggested Price button  
+    const priceBtn = document.getElementById('get-suggested-price-btn');
+    if (priceBtn) {
+        priceBtn.addEventListener('click', function() {
+            const badge3 = document.getElementById('step-badge-3');
+            if (badge3 && !badge3.classList.contains('hidden')) {
+                badge3.classList.remove('pulse');
+                badge3.classList.add('hidden');
+                console.log('Step 3 badge hidden after Get Suggested Price click');
+            }
+        });
+    }
+    
+    // Also hide all badges if user clicks anywhere else in the modal
+    const modal = document.querySelector('.admin-modal-content');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            // Don't hide if clicking on the step badge buttons themselves
+            if (!e.target.closest('.button-with-badge')) {
+                const anyBadgeVisible = document.querySelector('.step-badge:not(.hidden)');
+                if (anyBadgeVisible) {
+                    setTimeout(hideStepBadges, 5000); // Hide after 5 seconds of other interaction
+                }
+            }
+        });
+    }
+}
+
+// Initialize step badges system
+function initializeStepBadges() {
+    // Check if this is first-time edit
+    if (checkFirstTimeEdit()) {
+        console.log('First-time edit detected, preparing step badges');
+        
+        // Add event listeners
+        addStepBadgeEventListeners();
+        
+        // Show badges after modal is fully loaded
+        setTimeout(() => {
+            showStepBadges();
+        }, 1000);
+    }
+}
+
+// Set flag when new item is added (call this from the add item success handler)
+function markItemAsJustAdded(itemSku) {
+    sessionStorage.setItem('justAddedItem', itemSku);
+    console.log('Marked item as just added:', itemSku);
+}
+
+// Initialize step badges when modal loads
+if (modalMode === 'edit') {
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeStepBadges);
+    } else {
+        initializeStepBadges();
     }
 }
 

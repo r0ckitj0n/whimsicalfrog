@@ -60,7 +60,7 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
     $orderTotal = number_format((float)$orderData['total'], 2);
     $paymentMethod = htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified');
     $shippingMethod = htmlspecialchars($orderData['shippingMethod'] ?? 'Not specified');
-    $orderStatus = htmlspecialchars($orderData['status'] ?? 'Processing');
+    $orderStatus = htmlspecialchars($orderData['order_status'] ?? 'Processing');
     $paymentStatus = htmlspecialchars($orderData['paymentStatus'] ?? 'Pending');
     
     // Build items list
@@ -225,7 +225,7 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
     $orderTotal = number_format((float)$orderData['total'], 2);
     $paymentMethod = htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified');
     $shippingMethod = htmlspecialchars($orderData['shippingMethod'] ?? 'Not specified');
-    $orderStatus = htmlspecialchars($orderData['status'] ?? 'Processing');
+    $orderStatus = htmlspecialchars($orderData['order_status'] ?? 'Processing');
     $paymentStatus = htmlspecialchars($orderData['paymentStatus'] ?? 'Pending');
     
     // Build items list
@@ -385,88 +385,5 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
     return $html;
 }
 
-/**
- * Send order confirmation emails (both customer and admin notifications)
- */
-function sendOrderConfirmationEmails($orderId, $pdo) {
-    try {
-        // Get order data
-        $orderStmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
-        $orderStmt->execute([$orderId]);
-        $orderData = $orderStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$orderData) {
-            error_log("Order not found: " . $orderId);
-            return false;
-        }
-        
-        // Get customer data
-        $customerStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-        $customerStmt->execute([$orderData['userId']]);
-        $customerData = $customerStmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$customerData) {
-            error_log("Customer not found for order: " . $orderId);
-            return false;
-        }
-        
-        // Get order items with item names
-        $itemsStmt = $pdo->prepare("
-            SELECT oi.*, i.name as itemName 
-            FROM order_items oi 
-            LEFT JOIN items i ON oi.sku = i.sku 
-            WHERE oi.orderId = ?
-        ");
-        $itemsStmt->execute([$orderId]);
-        $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $results = ['customer' => false, 'admin' => false];
-        
-        // Include email logger
-        require_once 'email_logger.php';
-        
-        // Send customer confirmation email
-        if (!empty($customerData['email'])) {
-            $customerSubject = "Order Confirmation #{$orderId} - WhimsicalFrog";
-            $customerHtml = generateCustomerConfirmationEmail($orderData, $customerData, $orderItems);
-            
-            $results['customer'] = sendEmail($customerData['email'], $customerSubject, $customerHtml);
-            
-            // Log the customer email
-            $customerStatus = $results['customer'] ? 'sent' : 'failed';
-            $customerError = $results['customer'] ? null : 'Email sending failed';
-            logOrderConfirmationEmail($customerData['email'], FROM_EMAIL, $customerSubject, $customerHtml, $orderId, $customerStatus, $customerError);
-            
-            if ($results['customer']) {
-                error_log("Customer confirmation email sent successfully for order: " . $orderId);
-            } else {
-                error_log("Failed to send customer confirmation email for order: " . $orderId);
-            }
-        }
-        
-        // Send admin notification email
-        if (defined('ADMIN_EMAIL') && ADMIN_EMAIL) {
-            $adminSubject = "🎉 New Order #{$orderId} - Action Required";
-            $adminHtml = generateAdminNotificationEmail($orderData, $customerData, $orderItems);
-            
-            $results['admin'] = sendEmail(ADMIN_EMAIL, $adminSubject, $adminHtml);
-            
-            // Log the admin email
-            $adminStatus = $results['admin'] ? 'sent' : 'failed';
-            $adminError = $results['admin'] ? null : 'Email sending failed';
-            logAdminNotificationEmail(ADMIN_EMAIL, FROM_EMAIL, $adminSubject, $adminHtml, $orderId, $adminStatus, $adminError);
-            
-            if ($results['admin']) {
-                error_log("Admin notification email sent successfully for order: " . $orderId);
-            } else {
-                error_log("Failed to send admin notification email for order: " . $orderId);
-            }
-        }
-        
-        return $results;
-        
-    } catch (Exception $e) {
-        error_log("Error sending order confirmation emails: " . $e->getMessage());
-        return false;
-    }
-} 
+// Note: sendOrderConfirmationEmails function moved to email_notifications.php
+// to avoid function redeclaration conflicts 

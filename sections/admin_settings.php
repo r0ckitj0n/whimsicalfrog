@@ -19825,9 +19825,11 @@ function displaySystemAnalysis(analysis) {
     `;
 }
 
-async function cleanupStaleFiles() {// Wait for notifications to load if they're not available yet
+async function cleanupStaleFiles() {
+    // Wait for notifications to load if they're not available yet
     let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {await new Promise(resolve => setTimeout(resolve, 100));
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
+        await new Promise(resolve => setTimeout(resolve, 100));
         retryCount++;
     }
     
@@ -19861,13 +19863,19 @@ async function cleanupStaleFiles() {// Wait for notifications to load if they're
         }
     };
     
-    // Use branded confirmation if available, otherwise simple confirmconst userConfirmed = confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.');if (!userConfirmed) {return;
+    // Use branded confirmation if available, otherwise simple confirm
+    const userConfirmed = confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.');
+    if (!userConfirmed) {
+        return;
     }
     
-    try {showSuccessLocal('Scanning for stale files...');
+    try {
+        showSuccessLocal('Scanning for stale files...');
         
         const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files&admin_token=whimsical_admin_2024');
-        const data = await response.json();if (data.success) {
+        const data = await response.json();
+        
+        if (data.success) {
             showCleanupResults('🗑️ File Cleanup Results', data);
             runSystemAnalysis(); // Refresh analysis
         } else {
@@ -19879,9 +19887,11 @@ async function cleanupStaleFiles() {// Wait for notifications to load if they're
     }
 }
 
-async function removeUnusedCode() {// Wait for notifications to load if they're not available yet
+async function removeUnusedCode() {
+    // Wait for notifications to load if they're not available yet
     let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {await new Promise(resolve => setTimeout(resolve, 100));
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
+        await new Promise(resolve => setTimeout(resolve, 100));
         retryCount++;
     }
     
@@ -19915,13 +19925,18 @@ async function removeUnusedCode() {// Wait for notifications to load if they're 
         }
     };
     
-    // Use branded confirmation if available, otherwise simple confirmif (!confirm('💬 Remove Stale Comments\n\nRemove stale comments from code files?\n\nThis action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.')) {return;
+    // Use branded confirmation if available, otherwise simple confirm
+    if (!confirm('💬 Remove Stale Comments\n\nRemove stale comments from code files?\n\nThis action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.')) {
+        return;
     }
     
-    try {showSuccessLocal('Scanning code files for stale comments...');
+    try {
+        showSuccessLocal('Scanning code files for stale comments...');
         
         const response = await fetch('/api/cleanup_system.php?action=remove_unused_code&admin_token=whimsical_admin_2024');
-        const data = await response.json();if (data.success) {
+        const data = await response.json();
+        
+        if (data.success) {
             showCleanupResults('💬 Code Cleanup Results', data);
             runSystemAnalysis(); // Refresh analysis
         } else {
@@ -19933,9 +19948,11 @@ async function removeUnusedCode() {// Wait for notifications to load if they're 
     }
 }
 
-async function optimizeDatabase() {// Wait for notifications to load if they're not available yet
+async function optimizeDatabase() {
+    // Wait for notifications to load if they're not available yet
     let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {await new Promise(resolve => setTimeout(resolve, 100));
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
+        await new Promise(resolve => setTimeout(resolve, 100));
         retryCount++;
     }
     
@@ -19969,13 +19986,18 @@ async function optimizeDatabase() {// Wait for notifications to load if they're 
         }
     };
     
-    // Use branded confirmation if available, otherwise simple confirmif (!confirm('⚡ Optimize Database\n\nOptimize all database tables?\n\nThis action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.')) {return;
+    // Use branded confirmation if available, otherwise simple confirm
+    if (!confirm('⚡ Optimize Database\n\nOptimize all database tables?\n\nThis action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.')) {
+        return;
     }
     
-    try {showSuccessLocal('Starting database optimization... This may take a moment.');
+    try {
+        showSuccessLocal('Starting database optimization... This may take a moment.');
         
         const response = await fetch('/api/cleanup_system.php?action=optimize_database&admin_token=whimsical_admin_2024');
-        const data = await response.json();if (data.success) {
+        const data = await response.json();
+        
+        if (data.success) {
             showDatabaseOptimizationResults(data);
             runSystemAnalysis(); // Refresh analysis
         } else {

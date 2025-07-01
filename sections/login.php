@@ -15,10 +15,20 @@
             <input type="password" id="password" name="password" required 
                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#87ac3a] focus:border-[#87ac3a] sm:text-sm">
         </div>
-        <button type="submit" 
-                class="w-full bg-[#87ac3a] hover:bg-[#a3cc4a] text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-150">
-            Login
+        
+        <!-- Enhanced Login Button with Multiple Styling Approaches -->
+        <button type="submit" id="loginButton"
+                class="w-full text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-150 mb-4"
+                style="background-color: #87ac3a !important; border: 2px solid #556B2F !important; min-height: 48px !important; font-size: 16px !important; cursor: pointer !important; display: block !important; visibility: visible !important;"
+                onmouseover="this.style.backgroundColor='#a3cc4a'"
+                onmouseout="this.style.backgroundColor='#87ac3a'">
+            🔑 Login to WhimsicalFrog
         </button>
+        
+        <!-- Fallback button with different styling -->
+        <input type="submit" value="Login (Alternative)" 
+               class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md cursor-pointer mb-4"
+               style="background-color: #87ac3a !important; color: white !important; border: none !important; min-height: 48px !important; font-size: 16px !important;">
     </form>
     <p class="mt-4 text-center text-sm text-gray-600">
         Don't have an account? 
@@ -27,3 +37,40 @@
         </a>
     </p>
 </section>
+
+<style>
+/* Ensure login button visibility */
+#loginButton {
+    background: #87ac3a !important;
+    color: white !important;
+    border: 2px solid #556B2F !important;
+    padding: 12px 16px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    width: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 999 !important;
+    position: relative !important;
+}
+
+#loginButton:hover {
+    background: #a3cc4a !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+#loginButton:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Additional button styling for better visibility */
+.login-btn-container {
+    margin: 20px 0;
+    text-align: center;
+}
+</style>

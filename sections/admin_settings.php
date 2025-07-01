@@ -1693,18 +1693,23 @@ function clearMapperAreas() {
 }
 
 // New room map management functions
-async function loadSavedMapsForRoom(roomType) {try {
-        const response = await fetch(`api/room_maps.php?room_type=${roomType}`);const data = await response.json();const savedMapsSelect = document.getElementById('savedMapsSelect');
+async function loadSavedMapsForRoom(roomType) {
+    try {
+        const response = await fetch(`api/room_maps.php?room_type=${roomType}`);
+        const data = await response.json();
+        const savedMapsSelect = document.getElementById('savedMapsSelect');
         savedMapsSelect.innerHTML = '<option value="">Select saved map...</option>';
         
-        if (data.success && data.maps) {data.maps.forEach(map => {
+        if (data.success && data.maps) {
+            data.maps.forEach(map => {
                 const option = document.createElement('option');
                 option.value = map.id;
                 const protectedText = map.map_name === 'Original' ? ' 🔒 PROTECTED' : '';
                 const activeText = map.is_active ? ' (ACTIVE)' : '';
                 option.textContent = `${map.map_name}${activeText}${protectedText}`;
                 option.dataset.mapData = JSON.stringify(map);
-                savedMapsSelect.appendChild(option);});
+                savedMapsSelect.appendChild(option);
+            });
             
             // Add event listener to show bounding boxes when map is selected
             if (!savedMapsSelect.hasAttribute('data-listener-added')) {
@@ -7312,12 +7317,12 @@ function selectFile(path) {
     } catch (error) {
         console.error('Error reading file:', error);
         showNotification('Error', 'Failed to read file', 'error');
-    }
+        }
 }
 
- async function editFile(path) {
-     try {
-         const response = await fetch(`api/file_manager.php?action=read&path=${encodeURIComponent(path)}`);
+async function editFile(path) {
+    try {
+        const response = await fetch(`api/file_manager.php?action=read&path=${encodeURIComponent(path)}`);
         const result = await response.json();
         
         if (result.success) {
@@ -7403,7 +7408,7 @@ async function saveFile() {
     
     const content = document.getElementById('fileContent').value;
     
-         try {
+    try {
          const response = await fetch('api/file_manager.php?action=write', {
              method: 'POST',
              headers: {
@@ -7456,7 +7461,7 @@ async function deleteItem(path, type) {
     }
     
     try {
-                 const response = await fetch(`api/file_manager.php?action=delete&path=${encodeURIComponent(path)}`, {
+        const response = await fetch(`api/file_manager.php?action=delete&path=${encodeURIComponent(path)}`, {
             method: 'DELETE'
         });
         
@@ -7497,7 +7502,7 @@ async function createFolder(name) {
     const path = currentDirectory ? `${currentDirectory}/${name}` : name;
     
     try {
-                 const response = await fetch('api/file_manager.php?action=mkdir', {
+        const response = await fetch('api/file_manager.php?action=mkdir', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -7523,7 +7528,7 @@ async function createFile(name) {
     const path = currentDirectory ? `${currentDirectory}/${name}` : name;
     
     try {
-                 const response = await fetch('api/file_manager.php?action=write', {
+        const response = await fetch('api/file_manager.php?action=write', {
              method: 'POST',
              headers: {
                  'Content-Type': 'application/json'
@@ -12244,7 +12249,8 @@ function switchReportsTab(tabName) {
     document.getElementById(`${tabName}-tab`).classList.remove('hidden');
 }
 
-async function loadMarketingData() {try {
+async function loadMarketingData() {
+        try {
         // Load real analytics data
         const analyticsResponse = await fetch('/api/analytics_tracker.php?action=get_analytics_report&timeframe=30d');
         const analyticsData = await analyticsResponse.json();
@@ -13621,7 +13627,8 @@ function saveSkuCodeEdit(element, input) {
     // Store the custom mapping in localStorage for persistence
     const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');
     customSkuMappings[categoryName] = newCode;
-    localStorage.setItem('customSkuMappings', JSON.stringify(customSkuMappings));showNotification('SKU Code Updated', `SKU code for "${categoryName}" updated to "${newCode}" (Example: WF-${newCode}-001)`, 'success');
+    localStorage.setItem('customSkuMappings', JSON.stringify(customSkuMappings));
+    showNotification('SKU Code Updated', `SKU code for "${categoryName}" updated to "${newCode}" (Example: WF-${newCode}-001)`, 'success');
 }
 
 function cancelSkuCodeEdit(element, originalCode, categoryName) {
@@ -15403,7 +15410,9 @@ async function loadTablesList() {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        const data = await response.json();if (data.success) {
+        const data = await response.json();
+        
+        if (data.success) {
             const tablesList = document.getElementById('tablesList');
             tablesList.innerHTML = '';
             
@@ -15417,8 +15426,10 @@ async function loadTablesList() {
                     `;
                     tableItem.onclick = () => selectTable(table);
                     tablesList.appendChild(tableItem);
-                });} else {
-                tablesList.innerHTML = '<div class="text-center py-8 text-gray-500">No tables found</div>';}
+                });
+            } else {
+                tablesList.innerHTML = '<div class="text-center py-8 text-gray-500">No tables found</div>';
+            }
         } else {
             const tablesList = document.getElementById('tablesList');
             tablesList.innerHTML = `<div class="text-center py-8 text-red-500">Error: ${data.error}</div>`;
@@ -15434,7 +15445,8 @@ async function loadTablesList() {
 }
 
 // Select and view table
-async function selectTable(tableName) {// Update active state for all table items
+async function selectTable(tableName) {
+    // Update active state for all table items
     document.querySelectorAll('.table-item').forEach(item => {
         item.classList.remove('bg-blue-50', 'border-blue-300', 'ring-2', 'ring-blue-500');
         item.classList.add('hover:bg-gray-50');
@@ -15459,7 +15471,9 @@ async function selectTable(tableName) {// Update active state for all table item
         await Promise.all([
             loadTableInfo(tableName),
             loadTableData(tableName)
-        ]);// Switch to data tab to show the results
+        ]);
+        
+        // Switch to data tab to show the results
         switchDatabaseTab('data');
         
     } catch (error) {
@@ -15542,7 +15556,9 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
         if (orderBy) {
             params.append('order_by', orderBy);
             params.append('order_dir', orderDir);
-        }const response = await fetch(`/api/database_tables.php?${params}`);
+        }
+        
+        const response = await fetch(`/api/database_tables.php?${params}`);
         
         // Check response status
         if (!response.ok) {
@@ -15550,7 +15566,9 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        const data = await response.json();if (data.success) {
+        const data = await response.json();
+        
+        if (data.success) {
             const dataTable = document.getElementById('tableData');
             totalRows = data.total_count || 0;
             
@@ -15600,9 +15618,11 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
                 `;
                 
                 // Update pagination controls
-                updatePaginationControls();} else {
+                updatePaginationControls();
+            } else {
                 dataTable.innerHTML = '<tbody><tr><td colspan="100%" class="text-center py-8 text-gray-500">No data found in this table</td></tr></tbody>';
-                document.getElementById('paginationControls').style.display = 'none';}
+                document.getElementById('paginationControls').style.display = 'none';
+            }
         } else {
             const dataTable = document.getElementById('tableData');
             dataTable.innerHTML = `<tbody><tr><td colspan="100%" class="text-center py-8 text-red-500">Error: ${data.error || 'Unknown error'}</td></tr></tbody>`;
@@ -15690,7 +15710,8 @@ function sortTableData(tableName, column, direction) {
 let currentEditingCell = null;
 
 // Start editing a cell
-function startCellEdit(cell, tableName) {// If another cell is being edited, cancel it first
+function startCellEdit(cell, tableName) {
+    // If another cell is being edited, cancel it first
     if (currentEditingCell && currentEditingCell !== cell) {
         cancelCellEdit(currentEditingCell.querySelector('.cancel-btn'), new Event('click'));
     }
@@ -15802,7 +15823,8 @@ async function saveCellEdit(saveBtn, event) {
             cell.title = newValue || '';
             
             // Clean up editing state
-            finishCellEdit(cell);showSuccess( 'Cell updated successfully');
+            finishCellEdit(cell);
+            showSuccess( 'Cell updated successfully');
             
         } else {
             console.error('❌ Failed to update cell:', result.error);
@@ -15827,7 +15849,8 @@ async function saveCellEdit(saveBtn, event) {
 function cancelCellEdit(cancelBtn, event) {
     event.stopPropagation();
     
-    const cell = cancelBtn.closest('.editable-cell');finishCellEdit(cell);
+    const cell = cancelBtn.closest('.editable-cell');
+    finishCellEdit(cell);
 }
 
 // Finish cell editing (common cleanup)
@@ -15989,7 +16012,8 @@ async function initializeHelpHintsDB() {
         const initResponse = await fetch('/api/init_help_tooltips_db.php');
         const initData = await initResponse.json();
         
-        if (initData.success) {await loadHelpHintsData();
+        if (initData.success) {
+            await loadHelpHintsData();
             await loadHelpHintsStats();
         } else {
             console.error('Failed to initialize help hints database:', initData.message);
@@ -19839,9 +19863,12 @@ async function cleanupStaleFiles() {
     }
     
     // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {try {
-            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);return;
+    const showSuccessLocal = (msg) => {
+        try {
+            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);
+                return;
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);
+                return;
             } else {alert('✅ ' + msg);
             }
         } catch (error) {
@@ -19850,7 +19877,8 @@ async function cleanupStaleFiles() {
         }
     };
     
-    const showErrorLocal = (msg) => {try {
+    const showErrorLocal = (msg) => {
+        try {
             if (typeof window.showError === 'function') {window.showError(msg);
                 return;
             } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
@@ -19901,9 +19929,12 @@ async function removeUnusedCode() {
     }
     
     // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {try {
-            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);return;
+    const showSuccessLocal = (msg) => {
+        try {
+            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);
+                return;
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);
+                return;
             } else {alert('✅ ' + msg);
             }
         } catch (error) {
@@ -19912,7 +19943,8 @@ async function removeUnusedCode() {
         }
     };
     
-    const showErrorLocal = (msg) => {try {
+    const showErrorLocal = (msg) => {
+        try {
             if (typeof window.showError === 'function') {window.showError(msg);
                 return;
             } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
@@ -19962,9 +19994,12 @@ async function optimizeDatabase() {
     }
     
     // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {try {
-            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);return;
+    const showSuccessLocal = (msg) => {
+        try {
+            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);
+                return;
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);
+                return;
             } else {alert('✅ ' + msg);
             }
         } catch (error) {
@@ -19973,7 +20008,8 @@ async function optimizeDatabase() {
         }
     };
     
-    const showErrorLocal = (msg) => {try {
+    const showErrorLocal = (msg) => {
+        try {
             if (typeof window.showError === 'function') {window.showError(msg);
                 return;
             } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
@@ -20133,7 +20169,8 @@ function closeOptimizationResults() {
     }
 }
 
-function showCleanupResults(title, data) {try {
+function showCleanupResults(title, data) {
+        try {
         const removedFiles = data.removed_files || [];
         const processedFiles = data.processed_files || [];
         const errors = data.errors || [];

@@ -1,6 +1,7 @@
 <?php
 // Include the configuration file
 require_once 'api/config.php';
+require_once 'includes/database_logger.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');

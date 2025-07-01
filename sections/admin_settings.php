@@ -12829,7 +12829,8 @@ function refreshMarketingData() {
     loadMarketingData();
 }
 
-function loadBusinessReportsData() {// Business reports data is static for demo - could be enhanced with API calls
+function loadBusinessReportsData() {
+    // Business reports data is static for demo - could be enhanced with API calls
 }
 
 async function loadAnalyticsData() {
@@ -13167,7 +13168,8 @@ function displayCategoriesData(categories) {
     };
     
     // Function to update example SKU in real-time
-    window.updateExampleSku = function(categoryName, skuCode) {// Try multiple selectors to find the example SKU element
+    window.updateExampleSku = function(categoryName, skuCode) {
+        // Try multiple selectors to find the example SKU element
         let exampleElement = document.querySelector(`tr[data-category="${categoryName}"] .example-sku`);
         
         if (!exampleElement) {
@@ -13619,7 +13621,8 @@ function saveSkuCodeEdit(element, input) {
     // Update the display
     element.textContent = newCode;
     element.dataset.original = newCode;
-    element.onclick = function() { startEditSkuCode(element); };// Update the example SKU with force refresh
+    element.onclick = function() { startEditSkuCode(element); };
+    // Update the example SKU with force refresh
     setTimeout(() => {
         updateExampleSku(categoryName, newCode);
     }, 100);
@@ -13765,7 +13768,8 @@ async function enhancedSaveCategoryEdit(element, input) {
 window.startEditCategory = enhancedStartEditCategory;
 
 // Function to refresh all example SKUs to ensure they match custom mappings
-function refreshAllExampleSkus() {const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');// Find all category rows
+function refreshAllExampleSkus() {
+    const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');// Find all category rows
     const categoryRows = document.querySelectorAll('tr[data-category]');
     
     categoryRows.forEach(row => {
@@ -15388,7 +15392,9 @@ async function deleteSale(saleId) {
 // ===== DATABASE TABLES FUNCTIONALITY =====
 
 // Open Database Tables Modal
-function openDatabaseTablesModal() {// Check authentication statusconsole.log('Session storage user:', sessionStorage.getItem('user'));
+function openDatabaseTablesModal() {
+    // Check authentication status
+    console.log('Session storage user:', sessionStorage.getItem('user'));
     
     document.getElementById('databaseTablesModal').style.display = 'flex';
     loadTablesList();
@@ -19858,7 +19864,8 @@ async function cleanupStaleFiles() {
     }
     
     // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
+        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
         window.showError = window.wfNotifications.error.bind(window.wfNotifications);
     }
     
@@ -19924,7 +19931,8 @@ async function removeUnusedCode() {
     }
     
     // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
+        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
         window.showError = window.wfNotifications.error.bind(window.wfNotifications);
     }
     
@@ -19989,7 +19997,8 @@ async function optimizeDatabase() {
     }
     
     // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
+        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
         window.showError = window.wfNotifications.error.bind(window.wfNotifications);
     }
     

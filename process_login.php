@@ -6,9 +6,13 @@
  * with proper password hashing and session management.
  */
 
+// Start session first before any headers
+session_start();
+
 // Include the configuration and auth files
 require_once 'api/config.php';
 require_once 'includes/auth.php';
+require_once 'includes/database_logger.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');

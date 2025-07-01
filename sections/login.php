@@ -16,19 +16,14 @@
                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#87ac3a] focus:border-[#87ac3a] sm:text-sm">
         </div>
         
-        <!-- Enhanced Login Button with Multiple Styling Approaches -->
+        <!-- Single Login Button -->
         <button type="submit" id="loginButton"
-                class="w-full text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-150 mb-4"
+                class="w-full text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-150"
                 style="background-color: #87ac3a !important; border: 2px solid #556B2F !important; min-height: 48px !important; font-size: 16px !important; cursor: pointer !important; display: block !important; visibility: visible !important;"
                 onmouseover="this.style.backgroundColor='#a3cc4a'"
                 onmouseout="this.style.backgroundColor='#87ac3a'">
-            🔑 Login to WhimsicalFrog
+            Login
         </button>
-        
-        <!-- Fallback button with different styling -->
-        <input type="submit" value="Login (Alternative)" 
-               class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md cursor-pointer mb-4"
-               style="background-color: #87ac3a !important; color: white !important; border: none !important; min-height: 48px !important; font-size: 16px !important;">
     </form>
     <p class="mt-4 text-center text-sm text-gray-600">
         Don't have an account? 
@@ -66,11 +61,5 @@
 #loginButton:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* Additional button styling for better visibility */
-.login-btn-container {
-    margin: 20px 0;
-    text-align: center;
 }
 </style>

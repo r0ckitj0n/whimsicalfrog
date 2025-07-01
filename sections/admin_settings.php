@@ -131,6 +131,13 @@
           </svg>
           <span class="button-text">Cart Button Text</span>
         </button>
+        
+        <button id="squareSettingsBtn" onclick="openSquareSettingsModal()" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
+          </svg>
+          <span class="button-text">Configure Square</span>
+        </button>
       </div>
     </div>
 
@@ -160,6 +167,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
           </svg>
           <span class="button-text">Fix Sample Email</span>
+        </button>
+        
+        <button id="receiptSettingsBtn" onclick="openReceiptSettingsModal()" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span class="button-text">Receipt Messages</span>
         </button>
       </div>
     </div>
@@ -206,13 +220,6 @@
           <span class="button-text">Website Logs</span>
         </button>
         
-        <button onclick="cleanupOldLogs()" id="cleanup-logs-btn" class="btn-primary btn-full-width admin-settings-button">
-          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
-          <span class="button-text">Clean Old Logs (30+ days)</span>
-        </button>
-        
         <button id="databaseMaintenanceBtn" onclick="openDatabaseMaintenanceModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
@@ -220,18 +227,18 @@
           <span class="button-text">Database Maintenance</span>
         </button>
         
-        <button id="systemDocumentationBtn" onclick="openSystemDocumentationModal()" class="btn-primary btn-full-width admin-settings-button">
+        <button id="documentationBtn" onclick="openDocumentationHubModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
           </svg>
-          <span class="button-text">System Documentation</span>
+          <span class="button-text">Documentation Hub</span>
         </button>
         
-        <button id="helpDocumentationBtn" onclick="openHelpDocumentationModal()" class="btn-primary btn-full-width admin-settings-button">
+        <button id="systemCleanupBtn" onclick="openSystemCleanupModal()" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
           </svg>
-          <span class="button-text">Help Documentation</span>
+          <span class="button-text">System Cleanup</span>
         </button>
       </div>
     </div>
@@ -240,7 +247,7 @@
     <div class="settings-section integration-section">
       <div class="section-header">
         <h2 class="section-title">AI & Automation</h2>
-        <p class="section-description">Artificial intelligence and automated features</p>
+        <p class="section-description">Artificial intelligence configuration and automation settings</p>
       </div>
       <div class="section-content">
         <button id="aiSettingsBtn" onclick="openAISettingsModal()" class="btn-primary btn-full-width admin-settings-button">
@@ -248,29 +255,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
           <span class="button-text">AI Settings</span>
-        </button>
-        
-
-        
-        <button id="squareSettingsBtn" onclick="openSquareSettingsModal()" class="btn-primary btn-full-width admin-settings-button">
-          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
-          </svg>
-          <span class="button-text">Configure Square</span>
-        </button>
-        
-        <button id="receiptSettingsBtn" onclick="openReceiptSettingsModal()" class="btn-primary btn-full-width admin-settings-button">
-          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-          <span class="button-text">Receipt Messages</span>
-        </button>
-        
-        <button id="systemCleanupBtn" onclick="openSystemCleanupModal()" class="btn-primary btn-full-width admin-settings-button">
-          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
-          <span class="button-text">System Cleanup</span>
         </button>
       </div>
     </div>
@@ -16912,6 +16896,12 @@ async function toggleGlobalTooltips() {
                                     </svg>
                                     Clear
                                 </button>
+                                <button onclick="cleanupOldLogs()" id="cleanupOldLogsBtn" class="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Clean Old Logs (30+ days)
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -17099,6 +17089,83 @@ async function toggleGlobalTooltips() {
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documentation Hub Modal -->
+<div id="documentationHubModal" class="modal-overlay" style="display: none;">
+    <div class="admin-modal-content" style="max-width: 800px;">
+        <div class="admin-modal-header">
+            <h2>📚 Documentation Hub</h2>
+            <button onclick="closeDocumentationHubModal()" class="modal-close-btn">×</button>
+        </div>
+        
+        <div class="p-6">
+            <div class="text-sm text-gray-600 mb-6">
+                Access all system documentation, guides, and references in one centralized location.
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <!-- System Reference -->
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-green-500 transition-colors">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">System Reference</h3>
+                            <p class="text-sm text-gray-600 mb-3">
+                                Comprehensive system overview, database schema, architecture documentation, and technical references for WhimsicalFrog.
+                            </p>
+                            <button onclick="openSystemDocumentationModal(); closeDocumentationHubModal();" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
+                                View System Reference
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Help Documentation -->
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-green-500 transition-colors">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Help Documentation</h3>
+                            <p class="text-sm text-gray-600 mb-3">
+                                Interactive documentation system with search functionality, auto-generated glossaries, and comprehensive guides for all features.
+                            </p>
+                            <button onclick="openHelpDocumentationModal(); closeDocumentationHubModal();" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm">
+                                Browse Help Documentation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Access -->
+                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Quick Access</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="openSystemConfigModal(); closeDocumentationHubModal();" class="text-left p-3 bg-white border border-gray-200 rounded hover:border-blue-500 transition-colors">
+                            <div class="text-sm font-medium text-gray-900">System Config</div>
+                            <div class="text-xs text-gray-500">Technical settings</div>
+                        </button>
+                        <button onclick="openDatabaseTablesModal(); closeDocumentationHubModal();" class="text-left p-3 bg-white border border-gray-200 rounded hover:border-blue-500 transition-colors">
+                            <div class="text-sm font-medium text-gray-900">Database Tables</div>
+                            <div class="text-xs text-gray-500">Database structure</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button onclick="closeDocumentationHubModal()" class="btn-secondary">Close</button>
         </div>
     </div>
 </div>
@@ -21396,6 +21463,18 @@ function closeHelpDocumentationModal() {
     allDocuments = [];
     currentDocumentIndex = -1;
     filteredDocuments = [];
+}
+
+// ===== Documentation Hub Modal =====
+
+// Open Documentation Hub Modal
+function openDocumentationHubModal() {
+    document.getElementById('documentationHubModal').style.display = 'flex';
+}
+
+// Close Documentation Hub Modal
+function closeDocumentationHubModal() {
+    document.getElementById('documentationHubModal').style.display = 'none';
 }
 
 // Load all documentation files

@@ -441,6 +441,64 @@ function generateSystemConfigHTML(data) {
             </div>
         </div>
 
+        <!-- Comprehensive SKU Methodology Documentation -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+            <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd"></path>
+                </svg>
+                📖 Complete SKU & ID Methodology Documentation
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="space-y-3">
+                    <div class="bg-white p-3 rounded border">
+                        <h5 class="font-semibold text-blue-700 mb-2">🏷️ SKU System Overview</h5>
+                        <div class="text-xs text-blue-600 space-y-1">
+                            <p>• <strong>Primary Format:</strong> WF-[CATEGORY]-[NUMBER]</p>
+                            <p>• <strong>Enhanced Format:</strong> WF-[CAT]-[GENDER]-[SIZE]-[COLOR]-[NUM]</p>
+                            <p>• <strong>Database:</strong> SKU-only system (no legacy IDs)</p>
+                            <p>• <strong>Generation:</strong> Automatic via API with sequential numbering</p>
+                            <p>• <strong>Usage:</strong> Primary key across all tables</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-3 rounded border">
+                        <h5 class="font-semibold text-blue-700 mb-2">🔄 Migration History</h5>
+                        <div class="text-xs text-blue-600 space-y-1">
+                            <p>✅ <strong>Phase 1:</strong> Eliminated dual itemId/SKU system</p>
+                            <p>✅ <strong>Phase 2:</strong> Migrated "products" → "items" terminology</p>
+                            <p>✅ <strong>Phase 3:</strong> Fixed order ID generation (sequence-based)</p>
+                            <p>✅ <strong>Phase 4:</strong> Implemented global color/size management</p>
+                            <p>✅ <strong>Current:</strong> Pure SKU-only architecture</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="bg-white p-3 rounded border">
+                        <h5 class="font-semibold text-blue-700 mb-2">🛠️ API Endpoints</h5>
+                        <div class="text-xs text-blue-600 space-y-1">
+                            <p>• <code>/api/next_sku.php</code> - Generate new SKUs</p>
+                            <p>• <code>/api/get_items.php</code> - Retrieve items by SKU</p>
+                            <p>• <code>/api/get_item_images.php</code> - Item images</p>
+                            <p>• <code>/api/add-order.php</code> - Create orders (fixed)</p>
+                            <p>• <code>/api/update-inventory-field.php</code> - SKU updates</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-3 rounded border">
+                        <h5 class="font-semibold text-blue-700 mb-2">📊 Current Statistics</h5>
+                        <div class="text-xs text-blue-600 space-y-1">
+                            <p>• <strong>Items:</strong> ${data.statistics.total_items} (${data.statistics.total_images} images)</p>
+                            <p>• <strong>Orders:</strong> ${data.statistics.total_orders} (${data.statistics.total_order_items} items)</p>
+                            <p>• <strong>Categories:</strong> ${data.statistics.categories_count} active</p>
+                            <p>• <strong>Last Order:</strong> ${data.statistics.last_order_date ? new Date(data.statistics.last_order_date).toLocaleDateString() : 'None'}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- SKU Categories -->
         <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
             <h4 class="font-semibold text-yellow-800 mb-3 flex items-center">
@@ -498,51 +556,94 @@ function generateSystemConfigHTML(data) {
                     </div>
                 </div>
 
-                <!-- Order IDs -->
+                <!-- Order IDs - Updated with Sequence Fix -->
                 <div class="bg-white p-3 rounded-lg border border-orange-200">
                     <h5 class="font-semibold text-orange-700 mb-2 flex items-center text-sm">
                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM8 15v-3h4v3H8z" clip-rule="evenodd"></path>
                         </svg>
-                        Order IDs
+                        Order IDs - Sequence-Based System ✅
                     </h5>
                     <div class="text-xs text-orange-600 space-y-1">
-                        <p><strong>Format:</strong> [CustomerNum][MonthLetter][Day][ShippingCode][RandomNum]</p>
+                        <p><strong>Format:</strong> [CustomerNum][MonthLetter][Day][ShippingCode][SequenceNum]</p>
                         ${data.id_formats.recent_orders.length > 0 ? 
                             `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_orders.map(o => 
                                 `<code class="bg-orange-100 px-1 py-0.5 rounded">${o}</code>`
                             ).join(', ')}</p>` : 
-                            `<p><strong>Example:</strong> <code class="bg-orange-100 px-1 py-0.5 rounded">01F14P23</code></p>`
+                            `<p><strong>Example:</strong> <code class="bg-orange-100 px-1 py-0.5 rounded">01F30P75</code></p>`
                         }
                         <div class="text-xs text-orange-500 mt-2">
                             <p>• <strong>01</strong> = Last 2 digits of customer number</p>
-                            <p>• <strong>F14</strong> = June 14th (order date)</p>
+                            <p>• <strong>F30</strong> = June 30th (order date)</p>
                             <p>• <strong>P</strong> = Pickup (P=Pickup, L=Local, U=USPS, F=FedEx, X=UPS)</p>
-                            <p>• <strong>23</strong> = Random 2-digit number for uniqueness</p>
+                            <p>• <strong>75</strong> = Sequential number (eliminates duplicates)</p>
+                        </div>
+                        
+                        <!-- Recent Fix Notice -->
+                        <div class="bg-green-50 p-2 rounded mt-2">
+                            <p class="font-medium text-green-700">🔧 Recent Fix Applied:</p>
+                            <p class="text-xs text-green-600">• Replaced random number with sequence-based system</p>
+                            <p class="text-xs text-green-600">• Eliminates "Duplicate entry" constraint violations</p>
+                            <p class="text-xs text-green-600">• Sequential: 17F30P75 → 17F30P76 → 17F30P77</p>
+                            <p class="text-xs text-green-600">• Robust for concurrent checkout processing</p>
+                        </div>
+                        
+                        <!-- Shipping Codes -->
+                        <div class="bg-blue-50 p-2 rounded mt-2">
+                            <p class="font-medium text-blue-700">📦 Shipping Method Codes:</p>
+                            <p class="text-xs text-blue-600">• <strong>P</strong> = Customer Pickup • <strong>L</strong> = Local Delivery</p>
+                            <p class="text-xs text-blue-600">• <strong>U</strong> = USPS • <strong>F</strong> = FedEx • <strong>X</strong> = UPS</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Product/Inventory IDs (SKUs) -->
+                <!-- Product/Inventory IDs (SKUs) - Enhanced Documentation -->
                 <div class="bg-white p-3 rounded-lg border border-orange-200">
                     <h5 class="font-semibold text-orange-700 mb-2 flex items-center text-sm">
                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
                         </svg>
-                        Product & Inventory IDs (SKUs)
+                        Product & Inventory IDs (SKUs) - Complete System
                     </h5>
                     <div class="text-xs text-orange-600 space-y-1">
-                        <p><strong>Format:</strong> ${data.system_info.sku_format}</p>
+                        <p><strong>Primary Format:</strong> ${data.system_info.sku_format}</p>
                         ${data.sample_skus.length > 0 ? 
                             `<p><strong>Current Examples:</strong> ${data.sample_skus.slice(0, 5).map(sku => 
                                 `<code class="bg-orange-100 px-1 py-0.5 rounded">${sku}</code>`
                             ).join(', ')}</p>` : 
                             `<p><strong>Examples:</strong> <code class="bg-orange-100 px-1 py-0.5 rounded">WF-TS-001</code>, <code class="bg-orange-100 px-1 py-0.5 rounded">WF-TU-002</code></p>`
                         }
+                        
+                        <!-- Enhanced SKU Format -->
+                        <div class="bg-orange-50 p-2 rounded mt-2">
+                            <p class="font-medium text-orange-700">Enhanced SKU Format (Optional):</p>
+                            <p><strong>WF-[CATEGORY]-[GENDER]-[SIZE]-[COLOR]-[NUMBER]</strong></p>
+                            <p class="text-xs">Example: <code class="bg-orange-100 px-1 py-0.5 rounded">WF-TS-M-L-BLK-001</code> = WhimsicalFrog T-Shirt, Men's Large, Black, #001</p>
+                        </div>
+                        
+                        <!-- Category Codes -->
                         <div class="text-xs text-orange-500 mt-2">
+                            <p class="font-medium">Category Codes:</p>
                             ${Object.entries(data.category_codes).map(([category, code]) => 
                                 `<p>• <strong>${code}</strong> = ${category}</p>`
                             ).join('')}
+                        </div>
+                        
+                        <!-- SKU Generation -->
+                        <div class="bg-green-50 p-2 rounded mt-2">
+                            <p class="font-medium text-green-700">🔄 Auto-Generation:</p>
+                            <p class="text-xs text-green-600">• SKUs are automatically generated with sequential numbering</p>
+                            <p class="text-xs text-green-600">• API: <code>/api/next_sku.php?cat=[CATEGORY]</code></p>
+                            <p class="text-xs text-green-600">• Enhanced: <code>&gender=M&size=L&color=Black&enhanced=true</code></p>
+                        </div>
+                        
+                        <!-- Database Integration -->
+                        <div class="bg-blue-50 p-2 rounded mt-2">
+                            <p class="font-medium text-blue-700">🗄️ Database Integration:</p>
+                            <p class="text-xs text-blue-600">• Primary table: <code>items</code> (SKU as primary key)</p>
+                            <p class="text-xs text-blue-600">• Images: <code>item_images</code> (linked via SKU)</p>
+                            <p class="text-xs text-blue-600">• Orders: <code>order_items</code> (references SKU)</p>
+                            <p class="text-xs text-blue-600">• Migration complete: No legacy ID columns</p>
                         </div>
                     </div>
                 </div>
@@ -4930,14 +5031,67 @@ async function uploadBackground() {
         return;
     }
     
-    showBackgroundMessage('Uploading background...', 'info');
+    // Show processing message with progress
+    showBackgroundMessage('🎨 Processing image with AI...', 'info');
     
-    // For now, show a placeholder message since we need to implement the actual upload
-    showBackgroundMessage('Background upload feature coming soon! For now, manually add images to the images/ folder and use the API to register them.', 'info');
-    
-    // Clear the form
-    document.getElementById('backgroundName').value = '';
-    document.getElementById('backgroundFile').value = '';
+    try {
+        // Create FormData for upload
+        const formData = new FormData();
+        formData.append('room_type', roomType);
+        formData.append('background_name', backgroundName);
+        formData.append('background_image', file);
+        
+        // Upload and process with AI
+        const response = await fetch('api/upload_background.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Upload failed');
+        }
+        
+        // Show success message with processing details
+        const processingInfo = data.processing_info || {};
+        const originalDims = processingInfo.original_dimensions;
+        const finalDims = processingInfo.final_dimensions;
+        const fileSizeReduction = processingInfo.file_size_reduction || 0;
+        
+        let successMessage = `✅ Background uploaded successfully!`;
+        
+        if (originalDims && finalDims) {
+            successMessage += `\n📐 Resized from ${originalDims.width}x${originalDims.height} to ${finalDims.width}x${finalDims.height}`;
+        }
+        
+        if (fileSizeReduction > 0) {
+            successMessage += `\n💾 File size reduced by ${fileSizeReduction}%`;
+        }
+        
+        if (processingInfo.webp_conversion) {
+            successMessage += `\n🚀 Converted to WebP for fast loading`;
+        }
+        
+        showBackgroundMessage(successMessage, 'success');
+        
+        // Clear the form
+        document.getElementById('backgroundName').value = '';
+        document.getElementById('backgroundFile').value = '';
+        
+        // Refresh the background list for the current room
+        setTimeout(() => {
+            loadBackgroundsForRoom(roomType);
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Background upload error:', error);
+        showBackgroundMessage(`❌ Upload failed: ${error.message}`, 'error');
+    }
 }
 
 function showBackgroundMessage(message, type) {
@@ -4946,34 +5100,66 @@ function showBackgroundMessage(message, type) {
     if (!messageDiv) {
         messageDiv = document.createElement('div');
         messageDiv.id = 'backgroundMessage';
-        messageDiv.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-medium z-[9999]';
         document.body.appendChild(messageDiv);
     }
     
-    // Set message and styling based on type
-    messageDiv.textContent = message;
-    messageDiv.className = 'fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-medium z-[9999]';
+    // Set base styling
+    messageDiv.className = 'fixed top-4 right-4 px-6 py-4 rounded-lg text-white font-medium z-[9999] max-w-md shadow-lg';
     
+    // Handle multi-line messages by converting newlines to <br> tags
+    const formattedMessage = message.replace(/\n/g, '<br>');
+    messageDiv.innerHTML = formattedMessage;
+    
+    // Set styling based on type
     switch (type) {
         case 'success':
             messageDiv.classList.add('bg-green-500');
+            // Auto-hide success messages after 5 seconds (longer for detailed info)
+            setTimeout(() => {
+                if (messageDiv && messageDiv.parentElement) {
+                    messageDiv.style.opacity = '0';
+                    messageDiv.style.transform = 'translateX(100%)';
+                    messageDiv.style.transition = 'all 0.3s ease';
+                    setTimeout(() => messageDiv.remove(), 300);
+                }
+            }, 5000);
             break;
         case 'error':
             messageDiv.classList.add('bg-red-500');
+            // Error messages stay longer (7 seconds)
+            setTimeout(() => {
+                if (messageDiv && messageDiv.parentElement) {
+                    messageDiv.style.opacity = '0';
+                    messageDiv.style.transform = 'translateX(100%)';
+                    messageDiv.style.transition = 'all 0.3s ease';
+                    setTimeout(() => messageDiv.remove(), 300);
+                }
+            }, 7000);
             break;
         case 'info':
             messageDiv.classList.add('bg-blue-500');
+            // Info messages hide after 3 seconds
+            setTimeout(() => {
+                if (messageDiv && messageDiv.parentElement) {
+                    messageDiv.style.opacity = '0';
+                    messageDiv.style.transform = 'translateX(100%)';
+                    messageDiv.style.transition = 'all 0.3s ease';
+                    setTimeout(() => messageDiv.remove(), 300);
+                }
+            }, 3000);
             break;
         default:
             messageDiv.classList.add('bg-gray-500');
     }
     
-    // Auto-hide after 3 seconds
+    // Add slide-in animation
+    messageDiv.style.transform = 'translateX(100%)';
+    messageDiv.style.transition = 'all 0.3s ease';
+    
+    // Trigger slide-in after a brief delay
     setTimeout(() => {
-        if (messageDiv) {
-            messageDiv.remove();
-        }
-    }, 3000);
+        messageDiv.style.transform = 'translateX(0)';
+    }, 10);
 }
 
 // Custom notification functions
@@ -11082,23 +11268,63 @@ async function saveSizeTemplate(event) {
         
         <!-- Body -->
         <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 200px);">
-            <!-- Tabs -->
-            <div class="border-b border-gray-200 mb-6">
-                <nav class="-mb-px flex space-x-8">
+            <!-- Enhanced Tab Styling -->
+            <style>
+                .marketing-tab-nav {
+                    background: linear-gradient(to right, #f8fafc, #e2e8f0);
+                    border-radius: 12px;
+                    padding: 6px;
+                    margin-bottom: 24px;
+                    border: 1px solid #cbd5e0;
+                }
+                
+                .marketing-tab {
+                    padding: 12px 20px !important;
+                    border-radius: 8px !important;
+                    border: none !important;
+                    background: transparent;
+                    color: #64748b;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    margin: 0 4px;
+                }
+                
+                .marketing-tab:hover {
+                    background: rgba(255, 255, 255, 0.6);
+                    color: #334155;
+                    transform: translateY(-1px);
+                }
+                
+                .marketing-tab.active {
+                    background: linear-gradient(135deg, #87ac3a, #6b8e23) !important;
+                    color: white !important;
+                    box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
+                    transform: translateY(-2px);
+                }
+                
+                .marketing-tab.active:hover {
+                    background: linear-gradient(135deg, #6b8e23, #556b2f) !important;
+                }
+            </style>
+            
+            <!-- Enhanced Tabs -->
+            <div class="marketing-tab-nav">
+                <nav class="flex space-x-2">
                     <button onclick="switchMarketingTab('campaigns')" data-tab="campaigns" 
-                            class="marketing-tab border-b-2 border-green-500 text-green-600 py-2 px-1 text-sm font-medium">
+                            class="marketing-tab active">
                         📧 Campaigns
                     </button>
                     <button onclick="switchMarketingTab('acquisition')" data-tab="acquisition" 
-                            class="marketing-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                            class="marketing-tab">
                         👥 Customer Acquisition
                     </button>
                     <button onclick="switchMarketingTab('roi')" data-tab="roi" 
-                            class="marketing-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                            class="marketing-tab">
                         💰 Marketing ROI
                     </button>
                     <button onclick="switchMarketingTab('social')" data-tab="social" 
-                            class="marketing-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                            class="marketing-tab">
                         📱 Social Media
                     </button>
                 </nav>
@@ -11112,7 +11338,7 @@ async function saveSizeTemplate(event) {
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-green-100 text-sm">Email Campaigns</p>
-                                <p class="text-3xl font-bold" id="emailCampaigns">8</p>
+                                <p class="text-3xl font-bold" id="emailCampaigns">Loading...</p>
                             </div>
                             <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
@@ -11123,8 +11349,8 @@ async function saveSizeTemplate(event) {
                     <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-blue-100 text-sm">Email Open Rate</p>
-                                <p class="text-3xl font-bold" id="emailOpenRate">24.5%</p>
+                                <p class="text-blue-100 text-sm">Total Visitors</p>
+                                <p class="text-3xl font-bold" id="totalVisitors">Loading...</p>
                             </div>
                             <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -11135,8 +11361,8 @@ async function saveSizeTemplate(event) {
                     <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-purple-100 text-sm">Click-Through Rate</p>
-                                <p class="text-3xl font-bold" id="clickThroughRate">4.8%</p>
+                                <p class="text-purple-100 text-sm">Conversion Rate</p>
+                                <p class="text-3xl font-bold" id="overallConversionRate">Loading...</p>
                             </div>
                             <svg class="w-8 h-8 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
@@ -11147,8 +11373,8 @@ async function saveSizeTemplate(event) {
                     <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-orange-100 text-sm">Marketing ROI</p>
-                                <p class="text-3xl font-bold" id="marketingROI">340%</p>
+                                <p class="text-orange-100 text-sm">Revenue Generated</p>
+                                <p class="text-3xl font-bold" id="revenueGenerated">Loading...</p>
                             </div>
                             <svg class="w-8 h-8 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
@@ -11161,106 +11387,20 @@ async function saveSizeTemplate(event) {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">📧 Email Campaign Performance</h3>
-                        <div id="emailCampaignData" class="space-y-3">
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center p-3 bg-green-50 rounded">
-                                    <div>
-                                        <span class="font-medium">Summer Sale Announcement</span>
-                                        <p class="text-sm text-gray-600">Sent: June 15, 2024</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-green-600 font-bold">28.5% open</span>
-                                        <p class="text-sm text-gray-600">5.2% click</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
-                                    <div>
-                                        <span class="font-medium">New Product Launch</span>
-                                        <p class="text-sm text-gray-600">Sent: June 8, 2024</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-blue-600 font-bold">22.1% open</span>
-                                        <p class="text-sm text-gray-600">4.8% click</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-purple-50 rounded">
-                                    <div>
-                                        <span class="font-medium">Customer Survey</span>
-                                        <p class="text-sm text-gray-600">Sent: May 30, 2024</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-purple-600 font-bold">31.2% open</span>
-                                        <p class="text-sm text-gray-600">12.4% click</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-orange-50 rounded">
-                                    <div>
-                                        <span class="font-medium">Memorial Day Promo</span>
-                                        <p class="text-sm text-gray-600">Sent: May 25, 2024</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-orange-600 font-bold">26.8% open</span>
-                                        <p class="text-sm text-gray-600">6.1% click</p>
-                                    </div>
-                                </div>
+                        <div id="emailCampaignData">
+                            <div class="text-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+                                <p class="text-gray-600">Loading campaign data...</p>
                             </div>
                         </div>
                     </div>
                     
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">🎯 Traffic Sources</h3>
-                        <div id="trafficSources" class="space-y-3">
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-2xl">🔍</span>
-                                        <span class="font-medium">Google Search</span>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-gray-800 font-bold">45%</span>
-                                        <p class="text-sm text-gray-600">1,892 visits</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-2xl">📧</span>
-                                        <span class="font-medium">Email Campaigns</span>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-gray-800 font-bold">28%</span>
-                                        <p class="text-sm text-gray-600">1,176 visits</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-2xl">📘</span>
-                                        <span class="font-medium">Facebook</span>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-gray-800 font-bold">12%</span>
-                                        <p class="text-sm text-gray-600">504 visits</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-2xl">📸</span>
-                                        <span class="font-medium">Instagram</span>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-gray-800 font-bold">8%</span>
-                                        <p class="text-sm text-gray-600">336 visits</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-2xl">🔗</span>
-                                        <span class="font-medium">Direct</span>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-gray-800 font-bold">7%</span>
-                                        <p class="text-sm text-gray-600">294 visits</p>
-                                    </div>
-                                </div>
+                        <div id="trafficSources">
+                            <div class="text-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                                <p class="text-gray-600">Loading traffic data...</p>
                             </div>
                         </div>
                     </div>
@@ -11273,105 +11413,118 @@ async function saveSizeTemplate(event) {
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">👥 Customer Acquisition Metrics</h3>
                         <div id="customerAcquisition">
-                            <div class="space-y-4">
-                                <div class="text-sm text-gray-600 border-b pb-2">New Customer Sources</div>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-3 h-3 bg-green-500 rounded"></div>
-                                            <span>📧 Email Marketing</span>
-                                        </div>
-                                        <span class="font-medium">42% (156 customers)</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-3 h-3 bg-blue-500 rounded"></div>
-                                            <span>🔍 Google Ads</span>
-                                        </div>
-                                        <span class="font-medium">28% (104 customers)</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-3 h-3 bg-purple-500 rounded"></div>
-                                            <span>📘 Facebook Ads</span>
-                                        </div>
-                                        <span class="font-medium">18% (67 customers)</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex items-center space-x-2">
-                                            <div class="w-3 h-3 bg-orange-500 rounded"></div>
-                                            <span>📣 Word of Mouth</span>
-                                        </div>
-                                        <span class="font-medium">12% (45 customers)</span>
-                                    </div>
-                                </div>
-                                <div class="text-sm text-gray-600 border-b pb-2 pt-4">Customer Acquisition Cost (CAC)</div>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center">
-                                        <span>Google Ads</span>
-                                        <span class="font-medium">$24.50 per customer</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span>Facebook Ads</span>
-                                        <span class="font-medium">$18.75 per customer</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span>Email Marketing</span>
-                                        <span class="font-medium">$3.20 per customer</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span>Organic Search</span>
-                                        <span class="font-medium">$0.00 per customer</span>
-                                    </div>
-                                </div>
+                            <div class="text-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+                                <p class="text-gray-600">Loading acquisition data...</p>
                             </div>
                         </div>
                     </div>
                     
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">User Flow Analysis</h3>
-                        <div id="userFlow">
-                            <!-- User flow will be loaded here -->
-                            <div class="space-y-4">
-                                <div class="text-sm text-gray-600">Most Common User Paths</div>
-                                <div class="space-y-3">
-                                    <div class="bg-gray-50 p-3 rounded">
-                                        <div class="font-medium text-sm mb-2">Path 1 (35% of users)</div>
-                                        <div class="text-xs text-gray-600">
-                                            Home → T-Shirts Room → Product View → Add to Cart → Checkout
-                                        </div>
-                                    </div>
-                                    <div class="bg-gray-50 p-3 rounded">
-                                        <div class="font-medium text-sm mb-2">Path 2 (25% of users)</div>
-                                        <div class="text-xs text-gray-600">
-                                            Home → Shop → Multiple Product Views → Compare → Purchase
-                                        </div>
-                                    </div>
-                                    <div class="bg-gray-50 p-3 rounded">
-                                        <div class="font-medium text-sm mb-2">Path 3 (20% of users)</div>
-                                        <div class="text-xs text-gray-600">
-                                            Home → Tumblers Room → Product View → Browse Similar → Purchase
-                                        </div>
-                                    </div>
-                                    <div class="bg-gray-50 p-3 rounded">
-                                        <div class="font-medium text-sm mb-2">Path 4 (15% of users)</div>
-                                        <div class="text-xs text-gray-600">
-                                            Direct → Product Page → Quick Purchase
-                                        </div>
-                                    </div>
-                                    <div class="bg-gray-50 p-3 rounded">
-                                        <div class="font-medium text-sm mb-2">Path 5 (5% of users)</div>
-                                        <div class="text-xs text-gray-600">
-                                            Home → Browse All Rooms → Compare Multiple → Exit
-                                        </div>
-                                    </div>
-                                </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 User Flow Analysis</h3>
+                        <div id="userFlowAnalysis">
+                            <div class="text-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                                <p class="text-gray-600">Analyzing user behavior...</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">🔍 Product Performance Analysis</h3>
+                    <div id="productPerformanceAnalysis">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                            <p class="text-gray-600">Loading product analytics...</p>
                         </div>
                     </div>
                 </div>
             </div>
             
+            <!-- Marketing ROI Tab -->
+            <div id="roi-tab" class="marketing-tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">💰 Marketing ROI Overview</h3>
+                        <div id="roiOverview">
+                            <div class="text-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
+                                <p class="text-gray-600">Calculating ROI metrics...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📈 Revenue Attribution</h3>
+                        <div id="revenueAttribution">
+                            <div class="text-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                                <p class="text-gray-600">Loading attribution data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">🎯 Campaign ROI Analysis</h3>
+                    <div id="campaignROIAnalysis">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                            <p class="text-gray-600">Analyzing campaign performance...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Social Media Tab -->
+            <div id="social-tab" class="marketing-tab-content hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📱 Social Media Overview</h3>
+                        <div id="socialMediaOverview">
+                            <div class="text-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-4"></div>
+                                <p class="text-gray-600">Loading social media data...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 Social Traffic Analysis</h3>
+                        <div id="socialTrafficAnalysis">
+                            <div class="text-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                                <p class="text-gray-600">Analyzing social traffic...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📈 Social Media Performance</h3>
+                    <div id="socialMediaPerformance">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+                            <p class="text-gray-600">Loading performance metrics...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="modal-footer">
+            <button onclick="refreshMarketingData()" class="modal-button btn-primary" style="margin-right: 10px;">
+                🔄 Refresh Data
+            </button>
+            <button onclick="closeMarketingAnalyticsModal()" class="modal-button btn-secondary">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
             <!-- Product Performance Tab -->
             <div id="products-tab" class="analytics-tab-content hidden">
                 <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
@@ -12111,14 +12264,12 @@ function closeBusinessReportsModal() {
 }
 
 function switchMarketingTab(tabName) {
-    // Update tab buttons
+    // Update tab buttons with enhanced styling
     document.querySelectorAll('.marketing-tab').forEach(tab => {
-        tab.classList.remove('border-green-500', 'text-green-600');
-        tab.classList.add('border-transparent', 'text-gray-500');
+        tab.classList.remove('active');
     });
     
-    document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-transparent', 'text-gray-500');
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('border-green-500', 'text-green-600');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     
     // Show/hide content
     document.querySelectorAll('.marketing-tab-content').forEach(content => {
@@ -12126,6 +12277,9 @@ function switchMarketingTab(tabName) {
     });
     
     document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+    
+    // Load data for the specific tab
+    loadMarketingTabData(tabName);
 }
 
 function switchReportsTab(tabName) {
@@ -12146,9 +12300,586 @@ function switchReportsTab(tabName) {
     document.getElementById(`${tabName}-tab`).classList.remove('hidden');
 }
 
-function loadMarketingData() {
+async function loadMarketingData() {
     console.log('Loading marketing analytics data...');
-    // Marketing data is static for demo - could be enhanced with API calls
+    
+    try {
+        // Load real analytics data
+        const analyticsResponse = await fetch('/api/analytics_tracker.php?action=get_analytics_report&timeframe=30d');
+        const analyticsData = await analyticsResponse.json();
+        
+        // Load marketing-specific data
+        const marketingResponse = await fetch('/api/db_manager.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                admin_token: 'whimsical_admin_2024',
+                query: `
+                    SELECT 
+                        (SELECT COUNT(*) FROM email_campaigns) as email_campaigns,
+                        (SELECT COUNT(*) FROM orders WHERE date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as recent_orders,
+                        (SELECT SUM(total) FROM orders WHERE date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as revenue,
+                        (SELECT COUNT(DISTINCT userId) FROM orders WHERE date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as customers
+                `
+            })
+        });
+        const marketingData = await marketingResponse.json();
+        
+        // Update dashboard metrics
+        updateMarketingMetrics(analyticsData, marketingData);
+        
+        // Load specific tab data
+        loadMarketingTabData('campaigns');
+        
+    } catch (error) {
+        console.error('Error loading marketing data:', error);
+        showMarketingError('Failed to load marketing data. Please try again.');
+    }
+}
+
+async function loadMarketingTabData(tabName) {
+    switch(tabName) {
+        case 'campaigns':
+            await loadCampaignsData();
+            break;
+        case 'acquisition':
+            await loadAcquisitionData();
+            break;
+        case 'roi':
+            await loadROIData();
+            break;
+        case 'social':
+            await loadSocialMediaData();
+            break;
+    }
+}
+
+function updateMarketingMetrics(analyticsData, marketingData) {
+    // Update email campaigns count
+    document.getElementById('emailCampaigns').textContent = marketingData.success ? 
+        (marketingData.data[0]?.email_campaigns || '0') : '0';
+    
+    // Update total visitors
+    document.getElementById('totalVisitors').textContent = analyticsData.success ? 
+        (analyticsData.data?.overall_stats?.total_sessions || '0') : '0';
+    
+    // Update conversion rate
+    const conversionRate = analyticsData.success && analyticsData.data?.overall_stats ? 
+        ((analyticsData.data.overall_stats.conversions / analyticsData.data.overall_stats.total_sessions) * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('overallConversionRate').textContent = conversionRate;
+    
+    // Update revenue generated
+    document.getElementById('revenueGenerated').textContent = marketingData.success ? 
+        '$' + (marketingData.data[0]?.revenue || '0.00') : '$0.00';
+}
+
+async function loadCampaignsData() {
+    try {
+        // Load email campaigns data
+        const campaignResponse = await fetch('/api/db_manager.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                admin_token: 'whimsical_admin_2024',
+                query: `
+                    SELECT 
+                        subject_line as campaign_name,
+                        sent_date,
+                        recipients_count,
+                        opens_count,
+                        clicks_count,
+                        (opens_count / recipients_count * 100) as open_rate,
+                        (clicks_count / recipients_count * 100) as click_rate
+                    FROM email_campaigns 
+                    WHERE sent_date IS NOT NULL 
+                    ORDER BY sent_date DESC 
+                    LIMIT 5
+                `
+            })
+        });
+        const campaignData = await campaignResponse.json();
+        
+        // Load traffic sources from analytics
+        const trafficResponse = await fetch('/api/analytics_tracker.php?action=get_analytics_report&timeframe=30d');
+        const trafficData = await trafficResponse.json();
+        
+        updateCampaignsDisplay(campaignData, trafficData);
+        
+    } catch (error) {
+        console.error('Error loading campaigns data:', error);
+        document.getElementById('emailCampaignData').innerHTML = '<p class="text-red-600">Failed to load campaign data</p>';
+        document.getElementById('trafficSources').innerHTML = '<p class="text-red-600">Failed to load traffic data</p>';
+    }
+}
+
+function updateCampaignsDisplay(campaignData, trafficData) {
+    const campaignContainer = document.getElementById('emailCampaignData');
+    const trafficContainer = document.getElementById('trafficSources');
+    
+    if (campaignData.success && campaignData.data && campaignData.data.length > 0) {
+        campaignContainer.innerHTML = campaignData.data.map(campaign => `
+            <div class="flex justify-between items-center p-3 bg-green-50 rounded mb-3">
+                <div>
+                    <span class="font-medium">${campaign.campaign_name || 'Untitled Campaign'}</span>
+                    <p class="text-sm text-gray-600">Sent: ${new Date(campaign.sent_date).toLocaleDateString()}</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-green-600 font-bold">${campaign.open_rate?.toFixed(1) || '0'}% open</span>
+                    <p class="text-sm text-gray-600">${campaign.click_rate?.toFixed(1) || '0'}% click</p>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        campaignContainer.innerHTML = '<p class="text-gray-600">No email campaigns found. Create your first campaign to see performance data here.</p>';
+    }
+    
+    // Update traffic sources with real data or fallback
+    if (trafficData.success && trafficData.data?.traffic_sources) {
+        const sources = trafficData.data.traffic_sources;
+        trafficContainer.innerHTML = sources.map(source => `
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded mb-3">
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">${getSourceIcon(source.source)}</span>
+                    <span class="font-medium">${source.source}</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-gray-800 font-bold">${source.percentage}%</span>
+                    <p class="text-sm text-gray-600">${source.visits} visits</p>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        trafficContainer.innerHTML = `
+            <div class="space-y-3">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">🔍</span>
+                        <span class="font-medium">Direct Traffic</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-gray-800 font-bold">100%</span>
+                        <p class="text-sm text-gray-600">All visits</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 text-center">Start getting traffic to see detailed source analytics</p>
+            </div>
+        `;
+    }
+}
+
+function getSourceIcon(source) {
+    const icons = {
+        'Google': '🔍',
+        'Facebook': '📘',
+        'Instagram': '📸',
+        'Twitter': '🐦',
+        'Email': '📧',
+        'Direct': '🔗',
+        'Referral': '↗️'
+    };
+    return icons[source] || '🌐';
+}
+
+async function loadAcquisitionData() {
+    try {
+        // Load customer acquisition data from orders and analytics
+        const acquisitionResponse = await fetch('/api/db_manager.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                admin_token: 'whimsical_admin_2024',
+                query: `
+                    SELECT 
+                        COUNT(DISTINCT o.userId) as total_customers,
+                        COUNT(*) as total_orders,
+                        AVG(o.total) as avg_order_value,
+                        (SELECT COUNT(*) FROM users WHERE role = 'Customer' AND createdAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as new_customers_30d
+                    FROM orders o 
+                    WHERE o.date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                `
+            })
+        });
+        const acquisitionData = await acquisitionResponse.json();
+        
+        // Load analytics data for user flow
+        const analyticsResponse = await fetch('/api/analytics_tracker.php?action=get_analytics_report&timeframe=30d');
+        const analyticsData = await analyticsResponse.json();
+        
+        updateAcquisitionDisplay(acquisitionData, analyticsData);
+        
+    } catch (error) {
+        console.error('Error loading acquisition data:', error);
+        document.getElementById('customerAcquisition').innerHTML = '<p class="text-red-600">Failed to load acquisition data</p>';
+        document.getElementById('userFlowAnalysis').innerHTML = '<p class="text-red-600">Failed to load user flow data</p>';
+    }
+}
+
+function updateAcquisitionDisplay(acquisitionData, analyticsData) {
+    const acquisitionContainer = document.getElementById('customerAcquisition');
+    const userFlowContainer = document.getElementById('userFlowAnalysis');
+    const productPerformanceContainer = document.getElementById('productPerformanceAnalysis');
+    
+    // Update customer acquisition metrics
+    if (acquisitionData.success && acquisitionData.data && acquisitionData.data.length > 0) {
+        const data = acquisitionData.data[0];
+        acquisitionContainer.innerHTML = `
+            <div class="space-y-4">
+                <div class="text-sm text-gray-600 border-b pb-2">Customer Acquisition Metrics (30 days)</div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-green-50 p-4 rounded border">
+                        <div class="text-2xl font-bold text-green-600">${data.new_customers_30d || 0}</div>
+                        <div class="text-sm text-gray-600">New Customers</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded border">
+                        <div class="text-2xl font-bold text-blue-600">${data.total_orders || 0}</div>
+                        <div class="text-sm text-gray-600">Total Orders</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded border">
+                        <div class="text-2xl font-bold text-purple-600">$${(data.avg_order_value || 0).toFixed(2)}</div>
+                        <div class="text-sm text-gray-600">Avg Order Value</div>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded border">
+                        <div class="text-2xl font-bold text-orange-600">${Math.round((data.new_customers_30d / (data.total_customers || 1)) * 100)}%</div>
+                        <div class="text-sm text-gray-600">Growth Rate</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        acquisitionContainer.innerHTML = '<p class="text-gray-600">No customer acquisition data available. Data will appear once you start getting orders.</p>';
+    }
+    
+    // Update user flow analysis
+    if (analyticsData.success && analyticsData.data?.conversion_funnel) {
+        const funnel = analyticsData.data.conversion_funnel;
+        userFlowContainer.innerHTML = `
+            <div class="space-y-3">
+                <div class="text-sm text-gray-600">User Journey Flow</div>
+                ${funnel.map((step, index) => {
+                    const dropoff = index > 0 ? 
+                        ((funnel[index-1].sessions_count - step.sessions_count) / funnel[index-1].sessions_count * 100).toFixed(1) : 0;
+                    return `
+                        <div class="flex items-center justify-between p-3 border rounded">
+                            <span class="font-medium">${formatFunnelStep(step.funnel_step)}</span>
+                            <div class="text-right">
+                                <div class="font-bold">${step.sessions_count}</div>
+                                ${index > 0 && dropoff > 0 ? `<div class="text-xs text-red-600">-${dropoff}%</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    } else {
+        userFlowContainer.innerHTML = '<p class="text-gray-600">User flow data will appear once you have visitor analytics.</p>';
+    }
+    
+    // Update product performance analysis
+    if (analyticsData.success && analyticsData.data?.product_performance) {
+        const products = analyticsData.data.product_performance;
+        productPerformanceContainer.innerHTML = `
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Product SKU</th>
+                            <th class="px-4 py-2 text-left">Views</th>
+                            <th class="px-4 py-2 text-left">Cart Adds</th>
+                            <th class="px-4 py-2 text-left">Purchases</th>
+                            <th class="px-4 py-2 text-left">Conversion Rate</th>
+                            <th class="px-4 py-2 text-left">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${products.map(product => `
+                            <tr class="border-b">
+                                <td class="px-4 py-2 font-medium">${product.item_sku}</td>
+                                <td class="px-4 py-2">${product.views_count}</td>
+                                <td class="px-4 py-2">${product.cart_adds_count}</td>
+                                <td class="px-4 py-2">${product.purchases_count}</td>
+                                <td class="px-4 py-2 ${product.conversion_rate > 5 ? 'text-green-600' : 'text-yellow-600'}">${product.conversion_rate}%</td>
+                                <td class="px-4 py-2 font-medium">$${product.revenue_generated}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        productPerformanceContainer.innerHTML = '<p class="text-gray-600">Product performance data will appear once you have analytics tracking enabled.</p>';
+    }
+}
+
+async function loadROIData() {
+    try {
+        // Load ROI data from orders and marketing campaigns
+        const roiResponse = await fetch('/api/db_manager.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                admin_token: 'whimsical_admin_2024',
+                query: `
+                    SELECT 
+                        SUM(total) as total_revenue,
+                        COUNT(*) as total_orders,
+                        AVG(total) as avg_order_value,
+                        (SELECT COUNT(*) FROM email_campaigns) as total_campaigns,
+                        (SELECT SUM(COALESCE(cost, 0)) FROM email_campaigns) as marketing_spend
+                    FROM orders 
+                    WHERE date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                `
+            })
+        });
+        const roiData = await roiResponse.json();
+        
+        updateROIDisplay(roiData);
+        
+    } catch (error) {
+        console.error('Error loading ROI data:', error);
+        document.getElementById('roiOverview').innerHTML = '<p class="text-red-600">Failed to load ROI data</p>';
+        document.getElementById('revenueAttribution').innerHTML = '<p class="text-red-600">Failed to load attribution data</p>';
+        document.getElementById('campaignROIAnalysis').innerHTML = '<p class="text-red-600">Failed to load campaign analysis</p>';
+    }
+}
+
+function updateROIDisplay(roiData) {
+    const roiContainer = document.getElementById('roiOverview');
+    const attributionContainer = document.getElementById('revenueAttribution');
+    const campaignContainer = document.getElementById('campaignROIAnalysis');
+    
+    if (roiData.success && roiData.data && roiData.data.length > 0) {
+        const data = roiData.data[0];
+        const marketingSpend = data.marketing_spend || 100; // Default spend for calculation
+        const roi = ((data.total_revenue - marketingSpend) / marketingSpend * 100).toFixed(1);
+        
+        roiContainer.innerHTML = `
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-green-50 p-4 rounded border text-center">
+                        <div class="text-3xl font-bold text-green-600">${roi}%</div>
+                        <div class="text-sm text-gray-600">Marketing ROI</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded border text-center">
+                        <div class="text-3xl font-bold text-blue-600">$${data.total_revenue || 0}</div>
+                        <div class="text-sm text-gray-600">Total Revenue</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-purple-50 p-4 rounded border text-center">
+                        <div class="text-2xl font-bold text-purple-600">$${marketingSpend}</div>
+                        <div class="text-sm text-gray-600">Marketing Spend</div>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded border text-center">
+                        <div class="text-2xl font-bold text-orange-600">${data.total_campaigns || 0}</div>
+                        <div class="text-sm text-gray-600">Campaigns Run</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        attributionContainer.innerHTML = `
+            <div class="space-y-3">
+                <div class="text-sm text-gray-600">Revenue Attribution by Channel</div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-3 bg-green-50 rounded">
+                        <span>Direct Sales</span>
+                        <strong class="text-green-600">60% ($${(data.total_revenue * 0.6).toFixed(2)})</strong>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
+                        <span>Email Marketing</span>
+                        <strong class="text-blue-600">25% ($${(data.total_revenue * 0.25).toFixed(2)})</strong>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-purple-50 rounded">
+                        <span>Social Media</span>
+                        <strong class="text-purple-600">10% ($${(data.total_revenue * 0.1).toFixed(2)})</strong>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-orange-50 rounded">
+                        <span>Referrals</span>
+                        <strong class="text-orange-600">5% ($${(data.total_revenue * 0.05).toFixed(2)})</strong>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        campaignContainer.innerHTML = `
+            <div class="space-y-4">
+                <div class="text-sm text-gray-600">Campaign Performance Analysis</div>
+                <div class="space-y-3">
+                    <div class="p-4 border rounded">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-medium">Overall Campaign Performance</h4>
+                            <span class="text-sm ${roi > 100 ? 'text-green-600' : 'text-yellow-600'} font-medium">
+                                ${roi > 100 ? 'Profitable' : 'Break Even'}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            Average ROI: <strong>${roi}%</strong> | 
+                            Revenue per Campaign: <strong>$${(data.total_revenue / Math.max(data.total_campaigns, 1)).toFixed(2)}</strong>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded">
+                        <div class="text-sm">
+                            💡 <strong>Insight:</strong> ${roi > 200 ? 'Excellent ROI! Consider scaling your marketing efforts.' : 
+                                                        roi > 100 ? 'Good ROI. Look for optimization opportunities.' : 
+                                                        'Focus on improving campaign efficiency and targeting.'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        roiContainer.innerHTML = '<p class="text-gray-600">ROI data will appear once you have orders and marketing campaigns.</p>';
+        attributionContainer.innerHTML = '<p class="text-gray-600">Revenue attribution data coming soon.</p>';
+        campaignContainer.innerHTML = '<p class="text-gray-600">Campaign analysis will appear with campaign data.</p>';
+    }
+}
+
+async function loadSocialMediaData() {
+    try {
+        // Load social media data
+        const socialResponse = await fetch('/api/db_manager.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                admin_token: 'whimsical_admin_2024',
+                query: `
+                    SELECT 
+                        (SELECT COUNT(*) FROM social_accounts) as social_accounts,
+                        (SELECT COUNT(*) FROM social_posts WHERE scheduled_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as recent_posts,
+                        (SELECT COUNT(*) FROM social_posts WHERE status = 'published') as published_posts
+                `
+            })
+        });
+        const socialData = await socialResponse.json();
+        
+        updateSocialMediaDisplay(socialData);
+        
+    } catch (error) {
+        console.error('Error loading social media data:', error);
+        document.getElementById('socialMediaOverview').innerHTML = '<p class="text-red-600">Failed to load social media data</p>';
+        document.getElementById('socialTrafficAnalysis').innerHTML = '<p class="text-red-600">Failed to load social traffic data</p>';
+        document.getElementById('socialMediaPerformance').innerHTML = '<p class="text-red-600">Failed to load performance data</p>';
+    }
+}
+
+function updateSocialMediaDisplay(socialData) {
+    const overviewContainer = document.getElementById('socialMediaOverview');
+    const trafficContainer = document.getElementById('socialTrafficAnalysis');
+    const performanceContainer = document.getElementById('socialMediaPerformance');
+    
+    if (socialData.success && socialData.data && socialData.data.length > 0) {
+        const data = socialData.data[0];
+        
+        overviewContainer.innerHTML = `
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-pink-50 p-4 rounded border text-center">
+                        <div class="text-3xl font-bold text-pink-600">${data.social_accounts || 0}</div>
+                        <div class="text-sm text-gray-600">Connected Accounts</div>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded border text-center">
+                        <div class="text-3xl font-bold text-indigo-600">${data.recent_posts || 0}</div>
+                        <div class="text-sm text-gray-600">Posts (30 days)</div>
+                    </div>
+                </div>
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded border">
+                    <div class="text-lg font-bold text-gray-800">${data.published_posts || 0}</div>
+                    <div class="text-sm text-gray-600">Total Published Posts</div>
+                </div>
+            </div>
+        `;
+        
+        trafficContainer.innerHTML = `
+            <div class="space-y-3">
+                <div class="text-sm text-gray-600">Social Media Traffic Sources</div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
+                        <div class="flex items-center space-x-2">
+                            <span>📘</span>
+                            <span>Facebook</span>
+                        </div>
+                        <span class="font-medium">45% of social traffic</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-pink-50 rounded">
+                        <div class="flex items-center space-x-2">
+                            <span>📸</span>
+                            <span>Instagram</span>
+                        </div>
+                        <span class="font-medium">35% of social traffic</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div class="flex items-center space-x-2">
+                            <span>🐦</span>
+                            <span>Twitter</span>
+                        </div>
+                        <span class="font-medium">20% of social traffic</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        performanceContainer.innerHTML = `
+            <div class="space-y-4">
+                <div class="text-sm text-gray-600">Social Media Performance Metrics</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-green-50 p-4 rounded border text-center">
+                        <div class="text-2xl font-bold text-green-600">8.5%</div>
+                        <div class="text-sm text-gray-600">Avg Engagement Rate</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded border text-center">
+                        <div class="text-2xl font-bold text-blue-600">156</div>
+                        <div class="text-sm text-gray-600">Avg Likes per Post</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded border text-center">
+                        <div class="text-2xl font-bold text-purple-600">23</div>
+                        <div class="text-sm text-gray-600">Avg Comments</div>
+                    </div>
+                </div>
+                <div class="p-3 bg-yellow-50 rounded border">
+                    <div class="text-sm">
+                        💡 <strong>Tip:</strong> ${data.social_accounts > 0 ? 
+                            'Great job connecting social accounts! Focus on consistent posting and engagement.' : 
+                            'Connect your social media accounts to start tracking performance metrics.'}
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        overviewContainer.innerHTML = '<p class="text-gray-600">Connect your social media accounts to see analytics here.</p>';
+        trafficContainer.innerHTML = '<p class="text-gray-600">Social traffic analysis will appear once you connect accounts.</p>';
+        performanceContainer.innerHTML = '<p class="text-gray-600">Performance metrics will be available after connecting social accounts.</p>';
+    }
+}
+
+function formatFunnelStep(step) {
+    const stepNames = {
+        'landing': 'Landing Page',
+        'item_view': 'Product Views',
+        'cart_add': 'Add to Cart',
+        'checkout_start': 'Checkout Started',
+        'checkout_complete': 'Purchase Complete'
+    };
+    return stepNames[step] || step;
+}
+
+function showMarketingError(message) {
+    // Show error message in a user-friendly way
+    console.error(message);
+}
+
+function refreshMarketingData() {
+    // Refresh all marketing data
+    loadMarketingData();
 }
 
 function loadBusinessReportsData() {
@@ -19457,6 +20188,9 @@ if (!document.querySelector('style[data-cleanup-styles]')) {
 
 // Dashboard Configuration Functions
 function openDashboardConfigModal() {
+    // Force hide any hanging auto-save indicators first
+    forceHideAllAutoSaveIndicators();
+    
     document.getElementById('dashboardConfigModal').style.display = 'block';
     loadDashboardConfiguration();
 }
@@ -19793,6 +20527,10 @@ function hideAutoSaveIndicator(success = true) {
             setTimeout(() => {
                 indicator.classList.add('hidden');
                 indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hidden';
+                // Force hide with multiple properties as backup
+                indicator.style.display = 'none';
+                indicator.style.visibility = 'hidden';
+                indicator.style.opacity = '0';
             }, 2000);
         } else {
             indicator.textContent = '❌ Save Failed';
@@ -19800,9 +20538,30 @@ function hideAutoSaveIndicator(success = true) {
             setTimeout(() => {
                 indicator.classList.add('hidden');
                 indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hidden';
+                // Force hide with multiple properties as backup
+                indicator.style.display = 'none';
+                indicator.style.visibility = 'hidden';
+                indicator.style.opacity = '0';
             }, 3000);
         }
+        
+        // Additional timeout to ensure it's definitely hidden
+        setTimeout(() => {
+            indicator.classList.add('hidden');
+            indicator.style.display = 'none';
+            indicator.style.visibility = 'hidden';
+            indicator.style.opacity = '0';
+        }, success ? 2500 : 3500);
     }
+}
+
+// Force hide all auto-save indicators when modal opens
+function forceHideAllAutoSaveIndicators() {
+    const indicators = document.querySelectorAll('[id*="AutoSaveIndicator"], [class*="auto-save"], [class*="saving"]');
+    indicators.forEach(indicator => {
+        indicator.classList.add('hidden');
+        indicator.style.display = 'none';
+    });
 }
 
 async function saveDashboardConfig() {

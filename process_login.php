@@ -1,6 +1,14 @@
 <?php
-// Include the configuration file
+/**
+ * WhimsicalFrog Login Processing Endpoint
+ * 
+ * Handles user authentication using centralized auth system
+ * with proper password hashing and session management.
+ */
+
+// Include the configuration and auth files
 require_once 'api/config.php';
+require_once 'includes/auth.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -35,17 +43,16 @@ try {
     $username = $data['username'];
     $password = $data['password'];
     
-    // Create database connection using config
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
+    // Create database connection using centralized Database class
+    $pdo = Database::getInstance();
     
-    // Query for user
-    $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ? AND password = ?');
-    $stmt->execute([$username, $password]);
+    // Query for user (only get username, not password in WHERE clause)
+    $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ?');
+    $stmt->execute([$username]);
     $user = $stmt->fetch();
     
-    if ($user) {
-        // Include centralized auth system
-        require_once __DIR__ . '/includes/auth.php';
+    // Verify user exists and password is correct using password_verify
+    if ($user && password_verify($password, $user['password'])) {
         
         // Check for redirect after login
         $redirectUrl = $_SESSION['redirect_after_login'] ?? null;
@@ -72,18 +79,20 @@ try {
     
 } catch (PDOException $e) {
     // Handle database errors
+    error_log("Database error in login: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'error' => 'Database connection failed',
-        'details' => $e->getMessage()
+        'details' => 'Please try again later'
     ]);
     exit;
 } catch (Exception $e) {
     // Handle general errors
+    error_log("Login error: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'error' => 'An unexpected error occurred',
-        'details' => $e->getMessage()
+        'details' => 'Please try again later'
     ]);
     exit;
 }

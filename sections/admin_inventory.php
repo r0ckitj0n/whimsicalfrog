@@ -4894,27 +4894,46 @@ function displayCurrentImages(images, isViewModal = false) {
 // displayViewModalImages function removed - now using unified displayCurrentImages function
 
 function loadThumbnailImage(sku, container) {
-    if (!sku || !container) return;
+    if (!sku || !container) {
+        console.log('loadThumbnailImage: Missing sku or container', { sku, container });
+        return;
+    }
+    
+    console.log('Loading thumbnail for SKU:', sku);
     
     fetch(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`)
-    .then(response => response.json())
+    .then(response => {
+        console.log('API Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('API Response data for', sku, ':', data);
+        
         if (data.success && data.images && data.images.length > 0) {
             // Find primary image or use first image
             const primaryImage = data.images.find(img => img.is_primary) || data.images[0];
+            console.log('Using primary image:', primaryImage);
+            
+            // Try WebP first, fallback to PNG
+            const webpPath = primaryImage.image_path.replace(/\.(png|jpg|jpeg)$/i, '.webp');
+            const originalPath = primaryImage.image_path;
+            
+            console.log('Trying WebP path:', webpPath);
+            console.log('Fallback PNG path:', originalPath);
             
             container.innerHTML = `
-                <img src="${primaryImage.image_path}" alt="thumb" 
-                     style="width:40px;height:40px;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px #bbb;" 
-                     onerror="this.parentElement.innerHTML='<div style=&quot;width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;&quot;>No img</div>'">
+                <img src="${webpPath}" alt="thumb" 
+                     style="width:40px;height:40px;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px #bbb;"
+                     onerror="console.log('WebP failed, trying PNG'); this.src='${originalPath}'; this.onerror=function(){console.log('PNG also failed'); this.parentElement.innerHTML='<div style=&quot;width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;&quot;>No img</div>';}">
             `;
         } else {
+            console.log('No images found for', sku);
             container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>';
         }
     })
     .catch(error => {
         console.error('Error loading thumbnail for', sku, ':', error);
-        container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>';
+        container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">Error</div>';
     });
 }
 

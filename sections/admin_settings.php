@@ -377,7 +377,9 @@ const mapperOriginalImageHeight = 896;
 
 
 function openSystemConfigModal() {
-    document.getElementById('systemConfigModal').style.display = 'block';
+    const modal = document.getElementById('systemConfigModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
     loadSystemConfiguration();
 }
 
@@ -687,7 +689,9 @@ function closeSystemConfigModal() {
 }
 
 function openDatabaseMaintenanceModal() {
-    document.getElementById('databaseMaintenanceModal').style.display = 'block';
+    const modal = document.getElementById('databaseMaintenanceModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
     // Hide loading and show connection tab by default
     document.getElementById('databaseMaintenanceLoading').style.display = 'none';
     switchDatabaseTab(document.querySelector('[data-tab="connection"]'), 'connection');
@@ -1547,7 +1551,9 @@ async function compactRepairDatabase() {
 }
 
 function openRoomMapperModal() {
-    document.getElementById('roomMapperModal').style.display = 'flex';
+    const modal = document.getElementById('roomMapperModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     initializeRoomMapper();
 }
 
@@ -2315,7 +2321,9 @@ window.onclick = function(event) {
 
 // Room-Category Manager Functions
 function openRoomCategoryManagerModal() {
-    document.getElementById('roomCategoryManagerModal').style.display = 'flex';
+    const modal = document.getElementById('roomCategoryManagerModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     loadAvailableCategories();
     loadRoomCategorySummary();
     loadRoomCategories();
@@ -2579,7 +2587,9 @@ async function removeRoomCategory(assignmentId) {
 
 // Room-Category Visual Mapper Functions
 function openRoomCategoryMapperModal() {
-    document.getElementById('roomCategoryMapperModal').style.display = 'flex';
+    const modal = document.getElementById('roomCategoryMapperModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     loadRoomCategoryCards();
 }
 
@@ -2666,7 +2676,9 @@ let areaMapperData = {
 };
 
 function openAreaItemMapperModal() {
-    document.getElementById('areaItemMapperModal').style.display = 'flex';
+    const modal = document.getElementById('areaItemMapperModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     initializeAreaItemMapper();
 }
 
@@ -3325,7 +3337,9 @@ async function removeAreaMapping(mappingId) {
 let aiSettingsData = {};
 
 function openAISettingsModal() {
-    document.getElementById('aiSettingsModal').style.display = 'flex';
+    const modal = document.getElementById('aiSettingsModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     loadAISettings();
     loadAIProviders();
     loadContentToneOptions();
@@ -3333,7 +3347,9 @@ function openAISettingsModal() {
 }
 
 function closeAISettingsModal() {
-    document.getElementById('aiSettingsModal').style.display = 'none';
+    const modal = document.getElementById('aiSettingsModal');
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
 }
 
 async function loadAISettings() {
@@ -4753,7 +4769,9 @@ async function deleteBrandVoiceOptionFromDB(optionId) {
 <script>
 // Background Manager Functions
 function openBackgroundManagerModal() {
-    document.getElementById('backgroundManagerModal').style.display = 'flex';
+    const modal = document.getElementById('backgroundManagerModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     initializeBackgroundManager();
 }
 
@@ -5304,7 +5322,9 @@ function confirmAction() {
 
 // Email Configuration Functions
 async function openEmailConfigModal() {
-    document.getElementById('emailConfigModal').style.display = 'flex';
+    const modal = document.getElementById('emailConfigModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     
     // Load current configuration
     try {
@@ -5473,7 +5493,9 @@ let currentEmailHistoryPage = 1;
 const emailHistoryPageSize = 20;
 
 function openEmailHistoryModal() {
-    document.getElementById('emailHistoryModal').style.display = 'flex';
+    const modal = document.getElementById('emailHistoryModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     loadEmailHistory();
 }
 
@@ -5844,7 +5866,9 @@ function escapeHtml(text) {
 let currentEditingRoom = null;
 
 function openRoomSettingsModal() {
-    document.getElementById('roomSettingsModal').style.display = 'flex';
+    const modal = document.getElementById('roomSettingsModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     loadRoomSettings();
 }
 
@@ -13124,7 +13148,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // Categories Modal Functions
 function openCategoriesModal() {
-    document.getElementById('categoriesModal').style.display = 'flex';
+    const modal = document.getElementById('categoriesModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     loadCategoriesData();
 }
 

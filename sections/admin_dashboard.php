@@ -581,10 +581,7 @@ if (empty($dashboardConfig)) {
 
                         <script>
                         // Open order details modal function
-                        async function openOrderDetailsModal(orderId) {
-                            console.log('Opening order details modal for order:', orderId);
-                            
-                            try {
+                        async function openOrderDetailsModal(orderId) {try {
                                 // Show the modal
                                 const modal = document.getElementById('orderDetailsModal');
                                 if (modal) {

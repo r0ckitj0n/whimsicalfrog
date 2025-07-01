@@ -27,18 +27,12 @@ if (!$isLoggedIn) {
 <script>
     // Wait for both DOM and cart script to be loaded
     async function initializeCart() {
-        if (typeof window.cart !== 'undefined') {
-            console.log('Cart found, rendering...');
-            await window.cart.renderCart();
+        if (typeof window.cart !== 'undefined') {await window.cart.renderCart();
             
             // Listen for cart updates
-            window.addEventListener('cartUpdated', async function() {
-                console.log('Cart updated, re-rendering...');
-                await window.cart.renderCart();
+            window.addEventListener('cartUpdated', async function() {await window.cart.renderCart();
             });
-        } else {
-            console.log('Cart not found, retrying in 100ms...');
-            setTimeout(initializeCart, 100);
+        } else {setTimeout(initializeCart, 100);
         }
     }
 

@@ -1693,32 +1693,18 @@ function clearMapperAreas() {
 }
 
 // New room map management functions
-async function loadSavedMapsForRoom(roomType) {
-    console.log(`🔍 Loading saved maps for room: ${roomType}`);
-    
-    try {
-        const response = await fetch(`api/room_maps.php?room_type=${roomType}`);
-        console.log(`API response status: ${response.status}`);
-        
-        const data = await response.json();
-        console.log('API response data:', data);
-        
-        const savedMapsSelect = document.getElementById('savedMapsSelect');
+async function loadSavedMapsForRoom(roomType) {try {
+        const response = await fetch(`api/room_maps.php?room_type=${roomType}`);const data = await response.json();const savedMapsSelect = document.getElementById('savedMapsSelect');
         savedMapsSelect.innerHTML = '<option value="">Select saved map...</option>';
         
-        if (data.success && data.maps) {
-            console.log(`Found ${data.maps.length} maps for ${roomType}`);
-            data.maps.forEach(map => {
+        if (data.success && data.maps) {data.maps.forEach(map => {
                 const option = document.createElement('option');
                 option.value = map.id;
                 const protectedText = map.map_name === 'Original' ? ' 🔒 PROTECTED' : '';
                 const activeText = map.is_active ? ' (ACTIVE)' : '';
                 option.textContent = `${map.map_name}${activeText}${protectedText}`;
                 option.dataset.mapData = JSON.stringify(map);
-                savedMapsSelect.appendChild(option);
-                
-                console.log(`Added map to dropdown: ${option.textContent}`);
-            });
+                savedMapsSelect.appendChild(option);});
             
             // Add event listener to show bounding boxes when map is selected
             if (!savedMapsSelect.hasAttribute('data-listener-added')) {
@@ -1731,9 +1717,7 @@ async function loadSavedMapsForRoom(roomType) {
                 });
                 savedMapsSelect.setAttribute('data-listener-added', 'true');
             }
-        } else {
-            console.log(`No maps found for ${roomType}:`, data);
-        }
+        } else {}
         
         updateMapStatus(roomType);
     } catch (error) {
@@ -3918,10 +3902,7 @@ async function loadAllModels() {
             populateModelDropdown('openai', availableModels.openai);
             populateModelDropdown('anthropic', availableModels.anthropic);
             populateModelDropdown('google', availableModels.google);
-            populateModelDropdown('meta', availableModels.meta);
-            
-            console.log('✅ All AI models loaded successfully');
-        } else {
+            populateModelDropdown('meta', availableModels.meta);} else {
             console.error('❌ Failed to load AI models:', result.error);
             // Load fallback models
             loadFallbackModels();
@@ -3945,10 +3926,7 @@ async function loadAllModelsWithSelection(settings) {
             populateModelDropdownWithSelection('openai', availableModels.openai, settings.openai_model);
             populateModelDropdownWithSelection('anthropic', availableModels.anthropic, settings.anthropic_model);
             populateModelDropdownWithSelection('google', availableModels.google, settings.google_model);
-            populateModelDropdownWithSelection('meta', availableModels.meta, settings.meta_model);
-            
-            console.log('✅ All AI models loaded successfully with current selections');
-        } else {
+            populateModelDropdownWithSelection('meta', availableModels.meta, settings.meta_model);} else {
             console.error('❌ Failed to load AI models:', result.error);
             // Load fallback models with selections
             loadFallbackModelsWithSelection(settings);
@@ -3977,10 +3955,7 @@ async function loadModelsForCurrentProvider(settings) {
             
             // Populate the specific provider's model dropdown
             const modelKey = `${selectedProvider}_model`;
-            populateModelDropdownWithSelection(selectedProvider, result.models, settings[modelKey]);
-            
-            console.log(`✅ ${selectedProvider} models loaded successfully`);
-        } else {
+            populateModelDropdownWithSelection(selectedProvider, result.models, settings[modelKey]);} else {
             console.error(`❌ Failed to load ${selectedProvider} models:`, result.error);
             // Load fallback models for this provider
             loadFallbackModelsForProviderWithSelection(selectedProvider, settings);
@@ -4117,10 +4092,7 @@ function loadFallbackModels() {
     populateModelDropdown('openai', fallbackModels.openai);
     populateModelDropdown('anthropic', fallbackModels.anthropic);
     populateModelDropdown('google', fallbackModels.google);
-    populateModelDropdown('meta', fallbackModels.meta);
-    
-    console.log('⚠️ Using fallback models due to API unavailability');
-}
+    populateModelDropdown('meta', fallbackModels.meta);}
 
 function loadFallbackModelsForProvider(provider) {
     const fallbackModels = {
@@ -4147,9 +4119,7 @@ function loadFallbackModelsForProvider(provider) {
     
     if (fallbackModels[provider]) {
         availableModels[provider] = fallbackModels[provider];
-        populateModelDropdown(provider, fallbackModels[provider]);
-        console.log(`⚠️ Using fallback models for ${provider} due to API unavailability`);
-    }
+        populateModelDropdown(provider, fallbackModels[provider]);}
 }
 
 function loadFallbackModelsWithSelection(settings) {
@@ -4188,10 +4158,7 @@ function loadFallbackModelsWithSelection(settings) {
     populateModelDropdownWithSelection('openai', fallbackModels.openai, settings.openai_model);
     populateModelDropdownWithSelection('anthropic', fallbackModels.anthropic, settings.anthropic_model);
     populateModelDropdownWithSelection('google', fallbackModels.google, settings.google_model);
-    populateModelDropdownWithSelection('meta', fallbackModels.meta, settings.meta_model);
-    
-    console.log('⚠️ Using fallback models due to API unavailability');
-}
+    populateModelDropdownWithSelection('meta', fallbackModels.meta, settings.meta_model);}
 
 function loadFallbackModelsForProviderWithSelection(provider, settings) {
     const fallbackModels = {
@@ -4226,9 +4193,7 @@ function loadFallbackModelsForProviderWithSelection(provider, settings) {
     if (fallbackModels[provider]) {
         availableModels[provider] = fallbackModels[provider];
         const modelKey = `${provider}_model`;
-        populateModelDropdownWithSelection(provider, fallbackModels[provider], settings[modelKey]);
-        console.log(`⚠️ Using fallback models for ${provider} due to API unavailability`);
-    }
+        populateModelDropdownWithSelection(provider, fallbackModels[provider], settings[modelKey]);}
 }
 
 // Toggle provider sections based on selection
@@ -5699,10 +5664,7 @@ function fixSampleEmail() {
     // First check session state for debugging
     fetch('api/debug_session.php')
     .then(response => response.json())
-    .then(sessionData => {
-        console.log('Session Debug Info:', sessionData);
-        
-        if (!sessionData.auth_status.is_authenticated) {
+    .then(sessionData => {if (!sessionData.auth_status.is_authenticated) {
             showNotification('Error', 'Authentication required. Please refresh the page and try again.', 'error');
             button.innerHTML = originalText;
             button.disabled = false;
@@ -5743,9 +5705,7 @@ function fixSampleEmail() {
             showNotification('Success', data.message, 'success');
             
             // Show debug info if available
-            if (data.debug && data.debug.existing_emails) {
-                console.log('Sample Email Fix Debug Info:', data.debug);
-            }
+            if (data.debug && data.debug.existing_emails) {}
             
             // Refresh email history if it's open
             const emailHistoryModal = document.getElementById('emailHistoryModal');
@@ -8316,10 +8276,7 @@ async function loadAndInjectGlobalCSS() {
             const style = document.createElement('style');
             style.id = 'globalCSSInjection';
             style.textContent = cssVariables;
-            document.head.appendChild(style);
-            
-            console.log('Global CSS variables loaded and injected');
-        }
+            document.head.appendChild(style);}
     } catch (error) {
         console.error('Error loading global CSS variables:', error);
     }
@@ -12287,10 +12244,7 @@ function switchReportsTab(tabName) {
     document.getElementById(`${tabName}-tab`).classList.remove('hidden');
 }
 
-async function loadMarketingData() {
-    console.log('Loading marketing analytics data...');
-    
-    try {
+async function loadMarketingData() {try {
         // Load real analytics data
         const analyticsResponse = await fetch('/api/analytics_tracker.php?action=get_analytics_report&timeframe=30d');
         const analyticsData = await analyticsResponse.json();
@@ -12869,9 +12823,7 @@ function refreshMarketingData() {
     loadMarketingData();
 }
 
-function loadBusinessReportsData() {
-    console.log('Loading business reports data...');
-    // Business reports data is static for demo - could be enhanced with API calls
+function loadBusinessReportsData() {// Business reports data is static for demo - could be enhanced with API calls
 }
 
 async function loadAnalyticsData() {
@@ -13209,10 +13161,7 @@ function displayCategoriesData(categories) {
     };
     
     // Function to update example SKU in real-time
-    window.updateExampleSku = function(categoryName, skuCode) {
-        console.log('updateExampleSku called:', categoryName, skuCode);
-        
-        // Try multiple selectors to find the example SKU element
+    window.updateExampleSku = function(categoryName, skuCode) {// Try multiple selectors to find the example SKU element
         let exampleElement = document.querySelector(`tr[data-category="${categoryName}"] .example-sku`);
         
         if (!exampleElement) {
@@ -13229,10 +13178,7 @@ function displayCategoriesData(categories) {
         
         if (exampleElement) {
             const newExampleSku = `WF-${skuCode}-001`;
-            exampleElement.textContent = newExampleSku;
-            console.log('Updated example SKU to:', newExampleSku);
-            
-            // Add a subtle animation to show the change
+            exampleElement.textContent = newExampleSku;// Add a subtle animation to show the change
             exampleElement.style.background = '#dcfce7';
             exampleElement.style.borderColor = '#16a34a';
             exampleElement.style.transform = 'scale(1.05)';
@@ -13627,11 +13573,7 @@ function startEditSkuCode(element) {
     // Update example SKU in real-time as user types
     input.addEventListener('input', function() {
         const newCode = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        input.value = newCode; // Force uppercase and remove invalid chars
-        
-        console.log('SKU input changed:', newCode, 'for category:', categoryName);
-        
-        // Update example SKU immediately
+        input.value = newCode; // Force uppercase and remove invalid chars// Update example SKU immediately
         if (newCode.length >= 1) {
             updateExampleSku(categoryName, newCode);
         }
@@ -13671,11 +13613,7 @@ function saveSkuCodeEdit(element, input) {
     // Update the display
     element.textContent = newCode;
     element.dataset.original = newCode;
-    element.onclick = function() { startEditSkuCode(element); };
-    
-    console.log('Saving SKU code edit:', categoryName, newCode);
-    
-    // Update the example SKU with force refresh
+    element.onclick = function() { startEditSkuCode(element); };// Update the example SKU with force refresh
     setTimeout(() => {
         updateExampleSku(categoryName, newCode);
     }, 100);
@@ -13683,11 +13621,7 @@ function saveSkuCodeEdit(element, input) {
     // Store the custom mapping in localStorage for persistence
     const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');
     customSkuMappings[categoryName] = newCode;
-    localStorage.setItem('customSkuMappings', JSON.stringify(customSkuMappings));
-    
-    console.log('Custom SKU mappings updated:', customSkuMappings);
-    
-    showNotification('SKU Code Updated', `SKU code for "${categoryName}" updated to "${newCode}" (Example: WF-${newCode}-001)`, 'success');
+    localStorage.setItem('customSkuMappings', JSON.stringify(customSkuMappings));showNotification('SKU Code Updated', `SKU code for "${categoryName}" updated to "${newCode}" (Example: WF-${newCode}-001)`, 'success');
 }
 
 function cancelSkuCodeEdit(element, originalCode, categoryName) {
@@ -13824,13 +13758,7 @@ async function enhancedSaveCategoryEdit(element, input) {
 window.startEditCategory = enhancedStartEditCategory;
 
 // Function to refresh all example SKUs to ensure they match custom mappings
-function refreshAllExampleSkus() {
-    console.log('Refreshing all example SKUs...');
-    
-    const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');
-    console.log('Current custom SKU mappings:', customSkuMappings);
-    
-    // Find all category rows
+function refreshAllExampleSkus() {const customSkuMappings = JSON.parse(localStorage.getItem('customSkuMappings') || '{}');// Find all category rows
     const categoryRows = document.querySelectorAll('tr[data-category]');
     
     categoryRows.forEach(row => {
@@ -13844,9 +13772,7 @@ function refreshAllExampleSkus() {
             const expectedExample = `WF-${expectedCode}-001`;
             
             // Update SKU code if it doesn't match the expected custom mapping
-            if (customSkuMappings[categoryName] && currentSkuCode !== expectedCode) {
-                console.log(`Updating SKU code for ${categoryName}: ${currentSkuCode} -> ${expectedCode}`);
-                skuCodeElement.textContent = expectedCode;
+            if (customSkuMappings[categoryName] && currentSkuCode !== expectedCode) {skuCodeElement.textContent = expectedCode;
                 skuCodeElement.dataset.original = expectedCode;
             }
             
@@ -13863,11 +13789,7 @@ function refreshAllExampleSkus() {
                 }, 500);
             }
         }
-    });
-    
-    console.log('Example SKU refresh complete');
-    
-    // Show notification to user
+    });// Show notification to user
     showNotification('SKUs Refreshed', 'All example SKUs have been updated to match your custom settings', 'success');
 }
 
@@ -15459,13 +15381,7 @@ async function deleteSale(saleId) {
 // ===== DATABASE TABLES FUNCTIONALITY =====
 
 // Open Database Tables Modal
-function openDatabaseTablesModal() {
-    console.log('🗄️ Opening Database Tables modal...');
-    
-    // Check authentication status
-    console.log('🔐 Checking authentication...');
-    console.log('Current URL:', window.location.href);
-    console.log('Session storage user:', sessionStorage.getItem('user'));
+function openDatabaseTablesModal() {// Check authentication statusconsole.log('Session storage user:', sessionStorage.getItem('user'));
     
     document.getElementById('databaseTablesModal').style.display = 'flex';
     loadTablesList();
@@ -15479,9 +15395,7 @@ function closeDatabaseTablesModal() {
 
 // Load list of database tables
 async function loadTablesList() {
-    try {
-        console.log('📋 Loading database tables list...');
-        const response = await fetch('/api/database_tables.php?action=list_tables');
+    try {const response = await fetch('/api/database_tables.php?action=list_tables');
         
         // Check response status
         if (!response.ok) {
@@ -15489,11 +15403,7 @@ async function loadTablesList() {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        const data = await response.json();
-        
-        console.log('📋 Tables API Response:', data);
-        
-        if (data.success) {
+        const data = await response.json();if (data.success) {
             const tablesList = document.getElementById('tablesList');
             tablesList.innerHTML = '';
             
@@ -15507,12 +15417,8 @@ async function loadTablesList() {
                     `;
                     tableItem.onclick = () => selectTable(table);
                     tablesList.appendChild(tableItem);
-                });
-                console.log('✅ Loaded', data.tables.length, 'tables');
-            } else {
-                tablesList.innerHTML = '<div class="text-center py-8 text-gray-500">No tables found</div>';
-                console.log('ℹ️ No tables found');
-            }
+                });} else {
+                tablesList.innerHTML = '<div class="text-center py-8 text-gray-500">No tables found</div>';}
         } else {
             const tablesList = document.getElementById('tablesList');
             tablesList.innerHTML = `<div class="text-center py-8 text-red-500">Error: ${data.error}</div>`;
@@ -15528,10 +15434,7 @@ async function loadTablesList() {
 }
 
 // Select and view table
-async function selectTable(tableName) {
-    console.log('🎯 Selecting table:', tableName);
-    
-    // Update active state for all table items
+async function selectTable(tableName) {// Update active state for all table items
     document.querySelectorAll('.table-item').forEach(item => {
         item.classList.remove('bg-blue-50', 'border-blue-300', 'ring-2', 'ring-blue-500');
         item.classList.add('hover:bg-gray-50');
@@ -15556,11 +15459,7 @@ async function selectTable(tableName) {
         await Promise.all([
             loadTableInfo(tableName),
             loadTableData(tableName)
-        ]);
-        
-        console.log('✅ Successfully loaded table:', tableName);
-        
-        // Switch to data tab to show the results
+        ]);// Switch to data tab to show the results
         switchDatabaseTab('data');
         
     } catch (error) {
@@ -15643,10 +15542,7 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
         if (orderBy) {
             params.append('order_by', orderBy);
             params.append('order_dir', orderDir);
-        }
-        
-        console.log('🔍 Loading table data for:', tableName, 'Page:', currentPage);
-        const response = await fetch(`/api/database_tables.php?${params}`);
+        }const response = await fetch(`/api/database_tables.php?${params}`);
         
         // Check response status
         if (!response.ok) {
@@ -15654,11 +15550,7 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        const data = await response.json();
-        
-        console.log('📊 API Response:', data);
-        
-        if (data.success) {
+        const data = await response.json();if (data.success) {
             const dataTable = document.getElementById('tableData');
             totalRows = data.total_count || 0;
             
@@ -15708,14 +15600,9 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
                 `;
                 
                 // Update pagination controls
-                updatePaginationControls();
-                
-                console.log('✅ Successfully loaded', data.data.length, 'rows of', totalRows, 'total');
-            } else {
+                updatePaginationControls();} else {
                 dataTable.innerHTML = '<tbody><tr><td colspan="100%" class="text-center py-8 text-gray-500">No data found in this table</td></tr></tbody>';
-                document.getElementById('paginationControls').style.display = 'none';
-                console.log('ℹ️ Table is empty');
-            }
+                document.getElementById('paginationControls').style.display = 'none';}
         } else {
             const dataTable = document.getElementById('tableData');
             dataTable.innerHTML = `<tbody><tr><td colspan="100%" class="text-center py-8 text-red-500">Error: ${data.error || 'Unknown error'}</td></tr></tbody>`;
@@ -15803,10 +15690,7 @@ function sortTableData(tableName, column, direction) {
 let currentEditingCell = null;
 
 // Start editing a cell
-function startCellEdit(cell, tableName) {
-    console.log('🖱️ Starting cell edit:', cell.dataset.column, cell.dataset.rowIndex);
-    
-    // If another cell is being edited, cancel it first
+function startCellEdit(cell, tableName) {// If another cell is being edited, cancel it first
     if (currentEditingCell && currentEditingCell !== cell) {
         cancelCellEdit(currentEditingCell.querySelector('.cancel-btn'), new Event('click'));
     }
@@ -15877,17 +15761,7 @@ async function saveCellEdit(saveBtn, event) {
     const cell = saveBtn.closest('.editable-cell');
     const input = cell.querySelector('.cell-input');
     const newValue = input.value;
-    const originalValue = cell.dataset.originalValue;
-    
-    console.log('💾 Saving cell edit:', {
-        table: currentTableName,
-        column: cell.dataset.column,
-        row: cell.dataset.rowIndex,
-        oldValue: originalValue,
-        newValue: newValue
-    });
-    
-    // If value hasn't changed, just cancel
+    const originalValue = cell.dataset.originalValue;// If value hasn't changed, just cancel
     if (newValue === originalValue) {
         cancelCellEdit(cell.querySelector('.cancel-btn'), event);
         return;
@@ -15928,10 +15802,7 @@ async function saveCellEdit(saveBtn, event) {
             cell.title = newValue || '';
             
             // Clean up editing state
-            finishCellEdit(cell);
-            
-            console.log('✅ Cell updated successfully');
-            showSuccess( 'Cell updated successfully');
+            finishCellEdit(cell);showSuccess( 'Cell updated successfully');
             
         } else {
             console.error('❌ Failed to update cell:', result.error);
@@ -15956,10 +15827,7 @@ async function saveCellEdit(saveBtn, event) {
 function cancelCellEdit(cancelBtn, event) {
     event.stopPropagation();
     
-    const cell = cancelBtn.closest('.editable-cell');
-    console.log('❌ Canceling cell edit');
-    
-    finishCellEdit(cell);
+    const cell = cancelBtn.closest('.editable-cell');finishCellEdit(cell);
 }
 
 // Finish cell editing (common cleanup)
@@ -16121,9 +15989,7 @@ async function initializeHelpHintsDB() {
         const initResponse = await fetch('/api/init_help_tooltips_db.php');
         const initData = await initResponse.json();
         
-        if (initData.success) {
-            console.log('Help hints database initialized:', initData.message);
-            await loadHelpHintsData();
+        if (initData.success) {await loadHelpHintsData();
             await loadHelpHintsStats();
         } else {
             console.error('Failed to initialize help hints database:', initData.message);
@@ -19959,46 +19825,22 @@ function displaySystemAnalysis(analysis) {
     `;
 }
 
-async function cleanupStaleFiles() {
-    console.log('cleanupStaleFiles called');
-    console.log('showSuccess available:', typeof window.showSuccess);
-    console.log('wfNotifications available:', typeof window.wfNotifications);
-    
-    // Wait for notifications to load if they're not available yet
+async function cleanupStaleFiles() {// Wait for notifications to load if they're not available yet
     let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
-        console.log(`Waiting for notification system... attempt ${retryCount + 1}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {await new Promise(resolve => setTimeout(resolve, 100));
         retryCount++;
     }
     
     // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
-        console.log('Setting up notification functions from wfNotifications');
-        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
         window.showError = window.wfNotifications.error.bind(window.wfNotifications);
     }
     
     // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {
-        console.log('showSuccessLocal called with:', msg);
-        console.log('window.showSuccess type:', typeof window.showSuccess);
-        console.log('window.wfNotifications type:', typeof window.wfNotifications);
-        
-        try {
-            if (typeof window.showSuccess === 'function') {
-                console.log('Attempting to use branded success notification');
-                window.showSuccess(msg);
-                console.log('Branded success notification called successfully');
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {
-                console.log('Attempting to use wfNotifications directly');
-                window.wfNotifications.success(msg);
-                console.log('wfNotifications.success called successfully');
-                return;
-            } else {
-                console.log('No notification system available, falling back to alert');
-                alert('✅ ' + msg);
+    const showSuccessLocal = (msg) => {try {
+            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);return;
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);return;
+            } else {alert('✅ ' + msg);
             }
         } catch (error) {
             console.error('Error in showSuccessLocal:', error);
@@ -20006,21 +19848,12 @@ async function cleanupStaleFiles() {
         }
     };
     
-    const showErrorLocal = (msg) => {
-        console.log('showErrorLocal called with:', msg);
-        
-        try {
-            if (typeof window.showError === 'function') {
-                console.log('Using branded error notification');
-                window.showError(msg);
+    const showErrorLocal = (msg) => {try {
+            if (typeof window.showError === 'function') {window.showError(msg);
                 return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {
-                console.log('Using wfNotifications directly');
-                window.wfNotifications.error(msg);
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
                 return;
-            } else {
-                console.log('Falling back to alert');
-                alert('❌ ' + msg);
+            } else {alert('❌ ' + msg);
             }
         } catch (error) {
             console.error('Error in showErrorLocal:', error);
@@ -20028,26 +19861,13 @@ async function cleanupStaleFiles() {
         }
     };
     
-    // Use branded confirmation if available, otherwise simple confirm
-    console.log('About to show confirmation dialog');
-    const userConfirmed = confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.');
-    console.log('User confirmed:', userConfirmed);
-    
-    if (!userConfirmed) {
-        console.log('User cancelled operation');
-        return;
+    // Use branded confirmation if available, otherwise simple confirmconst userConfirmed = confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.');if (!userConfirmed) {return;
     }
     
-    try {
-        console.log('About to call showSuccessLocal');
-        showSuccessLocal('Scanning for stale files...');
+    try {showSuccessLocal('Scanning for stale files...');
         
         const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files&admin_token=whimsical_admin_2024');
-        const data = await response.json();
-        
-        console.log('Cleanup response:', data);
-        
-        if (data.success) {
+        const data = await response.json();if (data.success) {
             showCleanupResults('🗑️ File Cleanup Results', data);
             runSystemAnalysis(); // Refresh analysis
         } else {
@@ -20059,46 +19879,22 @@ async function cleanupStaleFiles() {
     }
 }
 
-async function removeUnusedCode() {
-    console.log('removeUnusedCode called');
-    console.log('showSuccess available:', typeof window.showSuccess);
-    console.log('wfNotifications available:', typeof window.wfNotifications);
-    
-    // Wait for notifications to load if they're not available yet
+async function removeUnusedCode() {// Wait for notifications to load if they're not available yet
     let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
-        console.log(`Waiting for notification system... attempt ${retryCount + 1}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {await new Promise(resolve => setTimeout(resolve, 100));
         retryCount++;
     }
     
     // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
-        console.log('Setting up notification functions from wfNotifications');
-        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
         window.showError = window.wfNotifications.error.bind(window.wfNotifications);
     }
     
     // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {
-        console.log('[removeUnusedCode] showSuccessLocal called with:', msg);
-        console.log('[removeUnusedCode] window.showSuccess type:', typeof window.showSuccess);
-        console.log('[removeUnusedCode] window.wfNotifications type:', typeof window.wfNotifications);
-        
-        try {
-            if (typeof window.showSuccess === 'function') {
-                console.log('[removeUnusedCode] Attempting to use branded success notification');
-                window.showSuccess(msg);
-                console.log('[removeUnusedCode] Branded success notification called successfully');
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {
-                console.log('[removeUnusedCode] Attempting to use wfNotifications directly');
-                window.wfNotifications.success(msg);
-                console.log('[removeUnusedCode] wfNotifications.success called successfully');
-                return;
-            } else {
-                console.log('[removeUnusedCode] No notification system available, falling back to alert');
-                alert('✅ ' + msg);
+    const showSuccessLocal = (msg) => {try {
+            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);return;
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);return;
+            } else {alert('✅ ' + msg);
             }
         } catch (error) {
             console.error('[removeUnusedCode] Error in showSuccessLocal:', error);
@@ -20106,21 +19902,12 @@ async function removeUnusedCode() {
         }
     };
     
-    const showErrorLocal = (msg) => {
-        console.log('[removeUnusedCode] showErrorLocal called with:', msg);
-        
-        try {
-            if (typeof window.showError === 'function') {
-                console.log('[removeUnusedCode] Using branded error notification');
-                window.showError(msg);
+    const showErrorLocal = (msg) => {try {
+            if (typeof window.showError === 'function') {window.showError(msg);
                 return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {
-                console.log('[removeUnusedCode] Using wfNotifications directly');
-                window.wfNotifications.error(msg);
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
                 return;
-            } else {
-                console.log('[removeUnusedCode] Falling back to alert');
-                alert('❌ ' + msg);
+            } else {alert('❌ ' + msg);
             }
         } catch (error) {
             console.error('[removeUnusedCode] Error in showErrorLocal:', error);
@@ -20128,23 +19915,13 @@ async function removeUnusedCode() {
         }
     };
     
-    // Use branded confirmation if available, otherwise simple confirm
-    console.log('[removeUnusedCode] About to show confirmation dialog');
-    if (!confirm('💬 Remove Stale Comments\n\nRemove stale comments from code files?\n\nThis action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.')) {
-        console.log('[removeUnusedCode] User cancelled operation');
-        return;
+    // Use branded confirmation if available, otherwise simple confirmif (!confirm('💬 Remove Stale Comments\n\nRemove stale comments from code files?\n\nThis action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.')) {return;
     }
     
-    try {
-        console.log('[removeUnusedCode] About to call showSuccessLocal');
-        showSuccessLocal('Scanning code files for stale comments...');
+    try {showSuccessLocal('Scanning code files for stale comments...');
         
         const response = await fetch('/api/cleanup_system.php?action=remove_unused_code&admin_token=whimsical_admin_2024');
-        const data = await response.json();
-        
-        console.log('Code cleanup response:', data);
-        
-        if (data.success) {
+        const data = await response.json();if (data.success) {
             showCleanupResults('💬 Code Cleanup Results', data);
             runSystemAnalysis(); // Refresh analysis
         } else {
@@ -20156,46 +19933,22 @@ async function removeUnusedCode() {
     }
 }
 
-async function optimizeDatabase() {
-    console.log('optimizeDatabase called');
-    console.log('showSuccess available:', typeof window.showSuccess);
-    console.log('wfNotifications available:', typeof window.wfNotifications);
-    
-    // Wait for notifications to load if they're not available yet
+async function optimizeDatabase() {// Wait for notifications to load if they're not available yet
     let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
-        console.log(`Waiting for notification system... attempt ${retryCount + 1}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
+    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {await new Promise(resolve => setTimeout(resolve, 100));
         retryCount++;
     }
     
     // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
-        console.log('Setting up notification functions from wfNotifications');
-        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
+    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
         window.showError = window.wfNotifications.error.bind(window.wfNotifications);
     }
     
     // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {
-        console.log('[optimizeDatabase] showSuccessLocal called with:', msg);
-        console.log('[optimizeDatabase] window.showSuccess type:', typeof window.showSuccess);
-        console.log('[optimizeDatabase] window.wfNotifications type:', typeof window.wfNotifications);
-        
-        try {
-            if (typeof window.showSuccess === 'function') {
-                console.log('[optimizeDatabase] Attempting to use branded success notification');
-                window.showSuccess(msg);
-                console.log('[optimizeDatabase] Branded success notification called successfully');
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {
-                console.log('[optimizeDatabase] Attempting to use wfNotifications directly');
-                window.wfNotifications.success(msg);
-                console.log('[optimizeDatabase] wfNotifications.success called successfully');
-                return;
-            } else {
-                console.log('[optimizeDatabase] No notification system available, falling back to alert');
-                alert('✅ ' + msg);
+    const showSuccessLocal = (msg) => {try {
+            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);return;
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);return;
+            } else {alert('✅ ' + msg);
             }
         } catch (error) {
             console.error('[optimizeDatabase] Error in showSuccessLocal:', error);
@@ -20203,21 +19956,12 @@ async function optimizeDatabase() {
         }
     };
     
-    const showErrorLocal = (msg) => {
-        console.log('[optimizeDatabase] showErrorLocal called with:', msg);
-        
-        try {
-            if (typeof window.showError === 'function') {
-                console.log('[optimizeDatabase] Using branded error notification');
-                window.showError(msg);
+    const showErrorLocal = (msg) => {try {
+            if (typeof window.showError === 'function') {window.showError(msg);
                 return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {
-                console.log('[optimizeDatabase] Using wfNotifications directly');
-                window.wfNotifications.error(msg);
+            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
                 return;
-            } else {
-                console.log('[optimizeDatabase] Falling back to alert');
-                alert('❌ ' + msg);
+            } else {alert('❌ ' + msg);
             }
         } catch (error) {
             console.error('[optimizeDatabase] Error in showErrorLocal:', error);
@@ -20225,23 +19969,13 @@ async function optimizeDatabase() {
         }
     };
     
-    // Use branded confirmation if available, otherwise simple confirm
-    console.log('[optimizeDatabase] About to show confirmation dialog');
-    if (!confirm('⚡ Optimize Database\n\nOptimize all database tables?\n\nThis action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.')) {
-        console.log('[optimizeDatabase] User cancelled operation');
-        return;
+    // Use branded confirmation if available, otherwise simple confirmif (!confirm('⚡ Optimize Database\n\nOptimize all database tables?\n\nThis action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.')) {return;
     }
     
-    try {
-        console.log('[optimizeDatabase] About to call showSuccessLocal');
-        showSuccessLocal('Starting database optimization... This may take a moment.');
+    try {showSuccessLocal('Starting database optimization... This may take a moment.');
         
         const response = await fetch('/api/cleanup_system.php?action=optimize_database&admin_token=whimsical_admin_2024');
-        const data = await response.json();
-        
-        console.log('Database optimization response:', data);
-        
-        if (data.success) {
+        const data = await response.json();if (data.success) {
             showDatabaseOptimizationResults(data);
             runSystemAnalysis(); // Refresh analysis
         } else {
@@ -20377,10 +20111,7 @@ function closeOptimizationResults() {
     }
 }
 
-function showCleanupResults(title, data) {
-    console.log('showCleanupResults called:', {title, data});
-    
-    try {
+function showCleanupResults(title, data) {try {
         const removedFiles = data.removed_files || [];
         const processedFiles = data.processed_files || [];
         const errors = data.errors || [];
@@ -20492,23 +20223,8 @@ function showCleanupResults(title, data) {
     
     document.body.insertAdjacentHTML('beforeend', resultsHtml);
     
-    // Also show a summary notification
-    console.log('[showCleanupResults] About to show summary notification:', data.message);
-    console.log('[showCleanupResults] window.showSuccess type:', typeof window.showSuccess);
-    console.log('[showCleanupResults] window.wfNotifications type:', typeof window.wfNotifications);
-    
-    try {
-        if (typeof window.showSuccess === 'function') {
-            console.log('[showCleanupResults] Using branded success notification');
-            window.showSuccess(data.message);
-            console.log('[showCleanupResults] Branded success notification called successfully');
-        } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {
-            console.log('[showCleanupResults] Using wfNotifications directly');
-            window.wfNotifications.success(data.message);
-            console.log('[showCleanupResults] wfNotifications.success called successfully');
-        } else {
-            console.log('[showCleanupResults] Falling back to alert');
-            alert('✅ ' + data.message);
+    // Also show a summary notificationtry {
+        if (typeof window.showSuccess === 'function') {window.showSuccess(data.message);} else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(data.message);} else {alert('✅ ' + data.message);
         }
     } catch (error) {
         console.error('[showCleanupResults] Error showing notification:', error);
@@ -21201,11 +20917,7 @@ async function handleReorder(sectionKey, dropZone, draggedElement, event) {
         // Adjust display_order for all items after the insertion point
         for (let i = newIndex + 1; i < newOrder.length; i++) {
             newOrder[i].display_order = i + 1;
-        }
-        
-        console.log('New order:', newOrder);
-        
-        // Send the reorder request
+        }// Send the reorder request
         const response = await fetch('/api/dashboard_sections.php', {
             method: 'POST',
             headers: {
@@ -22475,9 +22187,7 @@ function highlightSearchTerm(text, term) {
 // View specific log entry
 function viewLogEntry(logType, entryId) {
     closeSearchResults();
-    selectLog(logType);
-    // TODO: Scroll to specific entry if needed
-}
+    selectLog(logType);}
 
 // Close search results modal
 function closeSearchResults() {

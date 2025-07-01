@@ -136,12 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
             scale = viewportWidth / originalImageWidth;
             offsetY = (viewportHeight - (originalImageHeight * scale)) / 2;
             offsetX = 0;
-        }
-        
-        console.log('Landing page - Viewport dimensions:', viewportWidth, 'x', viewportHeight);
-        console.log('Landing page - Scale:', scale, 'Offsets:', offsetX, offsetY);
-        
-        // Position each clickable area
+        }// Position each clickable area
         areaCoordinates.forEach(area => {
             const element = document.querySelector(area.selector);
             if (element) {
@@ -149,9 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 element.style.top = `${(area.top * scale) + offsetY}px`;
                 element.style.left = `${(area.left * scale) + offsetX}px`;
                 element.style.width = `${area.width * scale}px`;
-                element.style.height = `${area.height * scale}px`;
-                console.log(`Positioned ${area.selector}:`, element.style.top, element.style.left);
-            }
+                element.style.height = `${area.height * scale}px`;}
         });
     }
 

@@ -679,9 +679,7 @@ async function loadPOSCSSVariables() {
             // Create and inject CSS
             const styleElement = document.createElement('style');
             styleElement.textContent = data.css_content;
-            document.head.appendChild(styleElement);
-            console.log('🎨 POS CSS variables loaded successfully');
-        }
+            document.head.appendChild(styleElement);}
     } catch (error) {
         console.error('Failed to load POS CSS variables:', error);
     }
@@ -698,18 +696,14 @@ let allItems = <?= json_encode($allItems) ?>;
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
         // Enter fullscreen
-        document.documentElement.requestFullscreen().then(() => {
-            console.log('🖥️ Entered fullscreen mode');
-            updateFullscreenButton(true);
+        document.documentElement.requestFullscreen().then(() => {updateFullscreenButton(true);
         }).catch(err => {
             console.error('Error entering fullscreen:', err);
             alert('Could not enter fullscreen mode');
         });
     } else {
         // Exit fullscreen
-        document.exitFullscreen().then(() => {
-            console.log('🖥️ Exited fullscreen mode');
-            updateFullscreenButton(false);
+        document.exitFullscreen().then(() => {updateFullscreenButton(false);
         }).catch(err => {
             console.error('Error exiting fullscreen:', err);
         });
@@ -734,10 +728,7 @@ document.addEventListener('fullscreenchange', function() {
 });
 
 // Initialize the POS system
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🛒 POS System initialized with', allItems.length, 'items ready for sale');
-    
-    showAllItems();
+document.addEventListener('DOMContentLoaded', function() {showAllItems();
     
     // Setup SKU search
     const skuSearch = document.getElementById('skuSearch');
@@ -767,26 +758,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Verify cards are clickable
     setTimeout(() => {
-        const cardCount = document.querySelectorAll('.item-card').length;
-        console.log(`✅ ${cardCount} clickable item cards ready for POS use`);
-        
-        // Debug cart elements
+        const cardCount = document.querySelectorAll('.item-card').length;// Debug cart elements
         const cartItems = document.getElementById('cartItems');
         const cartTotal = document.getElementById('posCartTotal');
-        const checkoutBtn = document.getElementById('checkoutBtn');
+        const checkoutBtn = document.getElementById('checkoutBtn');if (cartItems) {}
         
-        console.log('🔍 Cart element check:');
-        console.log('  cartItems:', cartItems ? 'Found' : 'Missing');
-        console.log('  cartTotal:', cartTotal ? 'Found' : 'Missing');
-        console.log('  checkoutBtn:', checkoutBtn ? 'Found' : 'Missing');
-        
-        if (cartItems) {
-            console.log('  cartItems HTML:', cartItems.innerHTML);
-        }
-        
-        // Cart system ready
-        console.log('✅ Cart system initialized and ready');
-    }, 500);
+        // Cart system ready}, 500);
 });
 
 // Show all items in the grid
@@ -803,19 +780,12 @@ function showAllItems() {
     allItems.forEach((item) => {
         const itemCard = createItemCard(item);
         grid.appendChild(itemCard);
-    });
-    
-    console.log(`📦 Displaying ${allItems.length} items in POS grid`);
-}
+    });}
 
 // Simple test cart display function
-function simpleCartDisplay() {
-    console.log('🧪 SIMPLE CART DISPLAY TEST');
-    const cartItems = document.getElementById('cartItems');
+function simpleCartDisplay() {const cartItems = document.getElementById('cartItems');
     if (cartItems) {
-        cartItems.innerHTML = '<div style="color: blue; padding: 1rem;">🧪 SIMPLE TEST: Cart has ' + cart.length + ' items</div>';
-        console.log('🧪 Simple cart display successful');
-    } else {
+        cartItems.innerHTML = '<div style="color: blue; padding: 1rem;">🧪 SIMPLE TEST: Cart has ' + cart.length + ' items</div>';} else {
         console.error('🧪 cartItems element not found');
     }
 }
@@ -867,20 +837,11 @@ function addToCart(item) {
     if (!item) {
         console.error('addToCart: item is null or undefined');
         return;
-    }
-    
-    console.log('🛒 Adding item to cart:', item);
-    
-    const existing = cart.find(cartItem => cartItem.sku === item.sku);
+    }const existing = cart.find(cartItem => cartItem.sku === item.sku);
     
     if (existing) {
-        existing.quantity += 1;
-        console.log(`➕ ${item.name} quantity increased to ${existing.quantity}, item price: $${existing.price}`);
-    } else {
-        const parsedPrice = parseFloat(item.retailPrice || 0);
-        console.log(`💰 Parsing price for ${item.name}: '${item.retailPrice}' -> ${parsedPrice}`);
-        
-        if (isNaN(parsedPrice) || parsedPrice === 0) {
+        existing.quantity += 1;} else {
+        const parsedPrice = parseFloat(item.retailPrice || 0);if (isNaN(parsedPrice) || parsedPrice === 0) {
             console.error('❌ Invalid price detected:', item.retailPrice, 'parsed as:', parsedPrice);
         }
         
@@ -900,10 +861,7 @@ function addToCart(item) {
     const subtotal = cart.reduce((sum, cartItem) => sum + (cartItem.price * cartItem.quantity), 0);
     const taxAmount = subtotal * TAX_RATE;
     const currentTotal = subtotal + taxAmount;
-    console.log('📊 Current cart state:', cart.length, 'items, calculated total: $' + currentTotal.toFixed(2));
-    console.log('📊 Cart contents:', cart);
-    
-    updateCartDisplay();
+    console.log('📊 Current cart state:', cart.length, 'items, calculated total: $' + currentTotal.toFixed(2));updateCartDisplay();
     
     // Visual feedback
     const skuSearch = document.getElementById('skuSearch');
@@ -944,9 +902,7 @@ function updateCartDisplay() {
             </div>
         `;
         cartTotal.textContent = '$0.00';
-        checkoutBtn.disabled = true;
-        console.log('📭 Cart cleared - empty state');
-        return;
+        checkoutBtn.disabled = true;return;
     }
     
     // Build cart HTML
@@ -1053,15 +1009,9 @@ function updateCartDisplay() {
                     newTotal.id = 'posCartTotal';
                     newTotal.textContent = totalString;
                     newTotal.style.cssText = cartTotal.style.cssText;
-                    cartTotal.parentNode.replaceChild(newTotal, cartTotal);
-                    console.log('🔄 Replaced cart total element as last resort');
-                } else {
-                    console.log('✅ Cart total update successful after retry:', finalDisplay);
-                }
+                    cartTotal.parentNode.replaceChild(newTotal, cartTotal);} else {}
             }, 100);
-        } else {
-            console.log('✅ Cart total updated successfully on first try:', currentDisplay);
-        }
+        } else {}
     }, 100);
     
     checkoutBtn.disabled = false;
@@ -1621,11 +1571,7 @@ async function processCheckout() {
             paymentStatus: 'Received',
             shippingMethod: 'Customer Pickup',
             order_status: 'Delivered'
-        };
-        
-        console.log('Processing checkout:', orderData);
-        
-        const response = await fetch('/api/add-order.php', {
+        };const response = await fetch('/api/add-order.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1889,9 +1835,7 @@ function emailReceipt(orderId) {
 function finishSale() {
     hidePOSModal();
     
-    // Clear cart and reset POS
-    console.log('🧹 Clearing cart after successful checkout...');
-    cart = [];
+    // Clear cart and reset POScart = [];
     updateCartDisplay();
     document.getElementById('skuSearch').value = '';
     showAllItems();
@@ -1900,18 +1844,13 @@ function finishSale() {
     setTimeout(() => {
         const cartTotal = document.getElementById('posCartTotal');
         if (cartTotal) {
-            const currentTotal = cartTotal.textContent || cartTotal.innerHTML;
-            console.log('✅ Cart total after clear:', currentTotal);
-            if (currentTotal !== '$0.00') {
+            const currentTotal = cartTotal.textContent || cartTotal.innerHTML;if (currentTotal !== '$0.00') {
                 console.warn('⚠️ Cart total not reset properly, forcing reset...');
                 cartTotal.textContent = '$0.00';
                 cartTotal.innerHTML = '$0.00';
             }
         }
-    }, 100);
-    
-    console.log('🧹 Sale completed and POS reset');
-}
+    }, 100);}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
@@ -1949,10 +1888,6 @@ document.addEventListener('keydown', function(e) {
             }
         });
     }
-});
-
-console.log('POS loaded successfully');
-console.log('Keyboard shortcuts: F1=Search, F2=Show All, F9=Checkout, Escape=Exit');
-</script>
+});</script>
 
 </div> <!-- Close pos-register --> 

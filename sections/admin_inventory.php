@@ -1239,9 +1239,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Define image management functions first
-function setPrimaryImage(sku, imageId) {
-    console.log('setPrimaryImage called with:', sku, imageId);
-    fetch('/api/set_primary_image.php', {
+function setPrimaryImage(sku, imageId) {fetch('/api/set_primary_image.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1252,13 +1250,9 @@ function setPrimaryImage(sku, imageId) {
             imageId: imageId
         })
     })
-    .then(response => {
-        console.log('Primary response status:', response.status);
-        return response.text(); // Get as text first to see what we're getting
+    .then(response => {return response.text(); // Get as text first to see what we're getting
     })
-    .then(text => {
-        console.log('Primary response text:', text);
-        try {
+    .then(text => {try {
             const data = JSON.parse(text);
             if (data.success) {
                 showSuccess( 'Primary image updated');
@@ -1277,10 +1271,7 @@ function setPrimaryImage(sku, imageId) {
     });
 }
 
-function deleteItemImage(imageId, sku) {
-    console.log('deleteItemImage called with:', imageId, sku);
-    
-    // Show custom confirmation modal
+function deleteItemImage(imageId, sku) {// Show custom confirmation modal
     showImageDeleteConfirmation(imageId, sku);
 }
 
@@ -1340,10 +1331,7 @@ function closeImageDeleteModal() {
     }
 }
 
-function confirmImageDelete(imageId, sku) {
-    console.log('Confirming delete for image:', imageId, sku);
-    
-    // Close the modal
+function confirmImageDelete(imageId, sku) {// Close the modal
     closeImageDeleteModal();
     
     // Proceed with deletion
@@ -1357,13 +1345,9 @@ function confirmImageDelete(imageId, sku) {
             imageId: imageId
         })
     })
-    .then(response => {
-        console.log('Delete response status:', response.status);
-        return response.text(); // Get as text first to see what we're getting
+    .then(response => {return response.text(); // Get as text first to see what we're getting
     })
-    .then(text => {
-        console.log('Delete response text:', text);
-        try {
+    .then(text => {try {
             const data = JSON.parse(text);
             if (data.success) {
                 showSuccess( 'Image deleted');
@@ -1386,26 +1370,16 @@ function confirmImageDelete(imageId, sku) {
 window.setPrimaryImage = setPrimaryImage;
 window.deleteItemImage = deleteItemImage;
 
-// Debug function availability
-console.log('Functions defined:', {
-    setPrimaryImage: typeof window.setPrimaryImage,
-    deleteItemImage: typeof window.deleteItemImage
-});
-
-// Add event delegation for image action buttons
+// Debug function availability// Add event delegation for image action buttons
 document.addEventListener('click', function(e) {
     if (e.target.dataset.action === 'set-primary') {
         e.preventDefault();
         const sku = e.target.dataset.sku;
-        const imageId = e.target.dataset.imageId;
-        console.log('Event delegation - setPrimaryImage called with:', sku, imageId);
-        setPrimaryImage(sku, imageId);
+        const imageId = e.target.dataset.imageId;setPrimaryImage(sku, imageId);
     } else if (e.target.dataset.action === 'delete-image') {
         e.preventDefault();
         const sku = e.target.dataset.sku;
-        const imageId = e.target.dataset.imageId;
-        console.log('Event delegation - deleteItemImage called with:', imageId, sku);
-        deleteItemImage(imageId, sku);
+        const imageId = e.target.dataset.imageId;deleteItemImage(imageId, sku);
     }
 });
 
@@ -1663,28 +1637,15 @@ function refreshCostBreakdown(useExistingData = false) {
     });
 }
 
-function renderCostBreakdown(data) {
-    console.log('renderCostBreakdown called with data:', data);
-    if (!data) {
-        console.log('No data provided, rendering empty lists');
-        ['materials', 'labor', 'energy', 'equipment'].forEach(type => renderCostList(type, []));
+function renderCostBreakdown(data) {if (!data) {['materials', 'labor', 'energy', 'equipment'].forEach(type => renderCostList(type, []));
         updateTotalsDisplay({ materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 });
         return;
-    }
-    console.log('Rendering cost breakdown with data:', data);
-    ['materials', 'labor', 'energy', 'equipment'].forEach(type => renderCostList(type, data[type] || []));
+    }['materials', 'labor', 'energy', 'equipment'].forEach(type => renderCostList(type, data[type] || []));
     updateTotalsDisplay(data.totals || { materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 });
 }
 
-function renderCostList(type, items) {
-    console.log(`renderCostList called for type: ${type}, items:`, items);
-    const listElement = document.getElementById(`${type}List`);
-    const viewListElement = document.getElementById(`view_${type}List`);
-    
-    console.log(`Found listElement for ${type}:`, listElement);
-    console.log(`Found viewListElement for ${type}:`, viewListElement);
-    
-    if (listElement) {
+function renderCostList(type, items) {const listElement = document.getElementById(`${type}List`);
+    const viewListElement = document.getElementById(`view_${type}List`);if (listElement) {
         listElement.innerHTML = ''; 
         if (!items || items.length === 0) {
             listElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added yet.</p>';
@@ -1744,9 +1705,7 @@ function updateTotalsDisplay(totals) {
         document.getElementById('energyTotalDisplay').textContent = '$' + parseFloat(totals.energyTotal || 0).toFixed(2);
         document.getElementById('equipmentTotalDisplay').textContent = '$' + parseFloat(totals.equipmentTotal || 0).toFixed(2);
         document.getElementById('suggestedCostDisplay').textContent = '$' + parseFloat(totals.suggestedCost || 0).toFixed(2);
-    } catch(e) {
-        console.log('Error in updateTotalsDisplay:', e);
-    }
+    } catch(e) {}
 }
 
 function showCostSuggestionChoiceDialog(suggestionData) {
@@ -2120,9 +2079,7 @@ async function replaceAllCostValues(button) {
         showInfo('Replacing all cost values with AI suggestions...');
         
         // Clear ALL existing cost items first
-        const allCategories = ['materials', 'labor', 'energy', 'equipment'];
-        console.log('Clearing all existing cost items for complete replacement');
-        await clearExistingCostItems(allCategories);
+        const allCategories = ['materials', 'labor', 'energy', 'equipment'];await clearExistingCostItems(allCategories);
         
         // Wait a moment for the clearing to complete
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -2198,10 +2155,7 @@ async function applySelectedCostFields(button) {
 }
 
 // Apply selected cost breakdown (modified version)
-async function applySelectedCostBreakdown(selectedData) {
-    console.log('Applying selected cost breakdown:', selectedData);
-    
-    // Show loading state
+async function applySelectedCostBreakdown(selectedData) {// Show loading state
     showInfo('Applying selected cost changes...');
     
     // Clear existing cost breakdown if any fields are selected
@@ -2222,9 +2176,7 @@ async function applySelectedCostBreakdown(selectedData) {
                 }
             });
             
-            if (categoriesToClear.length > 0) {
-                console.log('Clearing existing cost items for categories:', categoriesToClear);
-                await clearExistingCostItems(categoriesToClear);
+            if (categoriesToClear.length > 0) {await clearExistingCostItems(categoriesToClear);
                 
                 // Wait a moment for the clearing to complete
                 await new Promise(resolve => setTimeout(resolve, 500));
@@ -2235,18 +2187,13 @@ async function applySelectedCostBreakdown(selectedData) {
                 categories.forEach(category => {
                     if (selectedData.selectedFields[category] && selectedData.breakdown[category] !== null) {
                         const cost = parseFloat(selectedData.breakdown[category]);
-                        if (cost > 0) {
-                            console.log(`Queuing ${category} cost addition:`, cost);
-                            addPromises.push(addCostItemDirectly(category, `AI Suggested ${category.charAt(0).toUpperCase() + category.slice(1)}`, cost));
+                        if (cost > 0) {addPromises.push(addCostItemDirectly(category, `AI Suggested ${category.charAt(0).toUpperCase() + category.slice(1)}`, cost));
                         }
                     }
                 });
                 
                 if (addPromises.length > 0) {
-                    const results = await Promise.all(addPromises);
-                    console.log('All cost items added successfully:', results);
-                    
-                    // Refresh the cost breakdown display
+                    const results = await Promise.all(addPromises);// Refresh the cost breakdown display
                     setTimeout(() => {
                         refreshCostBreakdown();
                         showSuccess('Selected cost fields applied successfully!');
@@ -2265,10 +2212,7 @@ async function applySelectedCostBreakdown(selectedData) {
 }
 
 // Helper function to clear existing cost items for specific categories
-async function clearExistingCostItems(categories) {
-    console.log('Clearing existing cost items for categories:', categories);
-    
-    try {
+async function clearExistingCostItems(categories) {try {
         // First, get the current cost breakdown to find item IDs to delete
         const response = await fetch(`process_cost_breakdown.php?inventoryId=${currentItemSku}&costType=all`, {
             method: 'GET',
@@ -2292,20 +2236,14 @@ async function clearExistingCostItems(categories) {
         categories.forEach(category => {
             if (data.data[category] && Array.isArray(data.data[category])) {
                 data.data[category].forEach(item => {
-                    if (item.id) {
-                        console.log(`Queuing deletion of ${category} item ID ${item.id}`);
-                        deletePromises.push(deleteCostItemDirect(category, item.id));
+                    if (item.id) {deletePromises.push(deleteCostItemDirect(category, item.id));
                     }
                 });
             }
         });
         
         if (deletePromises.length > 0) {
-            const results = await Promise.all(deletePromises);
-            console.log('All existing cost items cleared:', results);
-        } else {
-            console.log('No existing cost items found to clear');
-        }
+            const results = await Promise.all(deletePromises);} else {}
         
     } catch (error) {
         console.error('Error clearing existing cost items:', error);
@@ -2314,10 +2252,7 @@ async function clearExistingCostItems(categories) {
 }
 
 // Helper function to delete a single cost item directly via API
-function deleteCostItemDirect(type, itemId) {
-    console.log(`Deleting ${type} cost item ID ${itemId}`);
-    
-    const url = `process_cost_breakdown.php?inventoryId=${currentItemSku}&costType=${type}&id=${itemId}`;
+function deleteCostItemDirect(type, itemId) {const url = `process_cost_breakdown.php?inventoryId=${currentItemSku}&costType=${type}&id=${itemId}`;
     
     return fetch(url, {
         method: 'DELETE',
@@ -2325,13 +2260,9 @@ function deleteCostItemDirect(type, itemId) {
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(response => {
-        console.log(`Delete ${type} item ${itemId} response status:`, response.status);
-        return response.json();
+    .then(response => {return response.json();
     })
-    .then(result => {
-        console.log(`Delete ${type} item ${itemId} result:`, result);
-        if (!result.success) {
+    .then(result => {if (!result.success) {
             console.error(`Failed to delete ${type} cost item ${itemId}:`, result.error);
             throw new Error(`Failed to delete ${type} cost item: ${result.error}`);
         }
@@ -2344,10 +2275,7 @@ function deleteCostItemDirect(type, itemId) {
 }
 
 // Helper function to add cost item directly
-function addCostItemDirectly(type, description, cost) {
-    console.log(`Adding ${type} cost:`, {type, description, cost, currentItemSku});
-    
-    const url = `process_cost_breakdown.php`;
+function addCostItemDirectly(type, description, cost) {const url = `process_cost_breakdown.php`;
     
     // Create the data object based on cost type
     let requestData = {
@@ -2361,11 +2289,7 @@ function addCostItemDirectly(type, description, cost) {
         requestData.name = description;
     } else {
         requestData.description = description;
-    }
-    
-    console.log(`Sending cost request to ${url} with JSON data:`, requestData);
-    
-    return fetch(url, {
+    }return fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -2373,13 +2297,9 @@ function addCostItemDirectly(type, description, cost) {
         },
         body: JSON.stringify(requestData)
     })
-    .then(response => {
-        console.log(`Cost ${type} response status:`, response.status);
-        return response.json();
+    .then(response => {return response.json();
     })
-    .then(result => {
-        console.log(`Cost ${type} result:`, result);
-        if (!result.success) {
+    .then(result => {if (!result.success) {
             console.error(`Failed to add ${type} cost:`, result.error);
             throw new Error(`Failed to add ${type} cost: ${result.error}`);
         }
@@ -2733,10 +2653,7 @@ async function useSuggestedPrice() {
     const button = event.target;
     const originalText = button.innerHTML;
     button.innerHTML = '🔍 Analyzing...';
-    button.disabled = true;
-    console.log('🔄 Button state changed to loading...');
-    
-    // Check if current AI model supports images
+    button.disabled = true;// Check if current AI model supports images
     const supportsImages = await checkAIImageSupport();
     
     // Gather item data
@@ -2750,9 +2667,7 @@ async function useSuggestedPrice() {
     };
     
     try {
-        // Call the price suggestion API
-        console.log('📡 Sending request to /api/suggest_price.php with data:', itemData);
-        const response = await fetch('/api/suggest_price.php', {
+        // Call the price suggestion APIconst response = await fetch('/api/suggest_price.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2760,19 +2675,9 @@ async function useSuggestedPrice() {
             },
             credentials: 'same-origin', // Include session cookies
             body: JSON.stringify(itemData)
-        });
-        
-        console.log('📨 Response status:', response.status);
-        const data = await response.json();
-        console.log('📋 Response data:', data);
-        
-        if (data.success) {
-            console.log('✅ Success! Showing price suggestion dialog');
-            // Show choice dialog with the new figures
+        });const data = await response.json();if (data.success) {// Show choice dialog with the new figures
             showPriceSuggestionChoiceDialog(data);
-        } else {
-            console.log('❌ API returned error:', data.error);
-            showError( data.error || 'Failed to get price suggestion');
+        } else {showError( data.error || 'Failed to get price suggestion');
         }
     } catch (error) {
         console.error('Error getting price suggestion:', error);
@@ -2974,23 +2879,12 @@ function applySuggestedCostToCostField(button) {
 
 async function getPricingExplanation(reasoningText) {
     try {
-        const url = `/api/get_pricing_explanation.php?text=${encodeURIComponent(reasoningText)}`;
-        console.log('Fetching from URL:', url);
-        
-        const response = await fetch(url);
-        console.log('Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('Response data:', data);
-        
-        if (data.success) {
+        const url = `/api/get_pricing_explanation.php?text=${encodeURIComponent(reasoningText)}`;const response = await fetch(url);const data = await response.json();if (data.success) {
             return {
                 title: data.title,
                 explanation: data.explanation
             };
-        } else {
-            console.log('API returned success=false:', data.error);
-            return {
+        } else {return {
                 title: 'AI Pricing Analysis',
                 explanation: 'Advanced algorithmic analysis considering multiple market factors and pricing strategies.'
             };
@@ -3119,12 +3013,7 @@ async function showPricingTooltip(event, reasoningText) {
     iconContainer.appendChild(loadingTooltip);
     
     try {
-        // Get explanation from database
-        console.log('Fetching explanation for:', reasoningText);
-        const explanationData = await getPricingExplanation(reasoningText);
-        console.log('Received explanation data:', explanationData);
-        
-        // Remove loading tooltip
+        // Get explanation from databaseconst explanationData = await getPricingExplanation(reasoningText);// Remove loading tooltip
         loadingTooltip.remove();
         
         // Create actual tooltip with data
@@ -3420,8 +3309,7 @@ function loadExistingViewPriceSuggestion(sku) {
     
     fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`)
     .then(response => response.json())
-    .then(data => {
-        console.log('View Price suggestion API response:', data); // Debug log
+    .then(data => {// Debug log
         if (data.success && data.suggestedPrice) {
             displayViewPriceSuggestion(data);
         } else {
@@ -3449,11 +3337,8 @@ function loadExistingPriceSuggestion(sku) {
     
     fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`)
     .then(response => response.json())
-    .then(data => {
-        console.log('📂 Loading existing price suggestion for SKU:', sku, 'Result:', data); // Debug log
-        if (data.success && data.suggestedPrice) {
-            console.log('✅ Found existing price suggestion, displaying it');
-            displayPriceSuggestion(data);
+    .then(data => {// Debug log
+        if (data.success && data.suggestedPrice) {displayPriceSuggestion(data);
         } else {
             console.log('ℹ️ No existing price suggestion found (this is normal) - showing placeholder');
             // Show placeholder if no existing suggestion
@@ -4201,10 +4086,7 @@ function performCostItemDeletion(id, type) {
 }
 
 
-document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemSku:', currentItemSku, 'costBreakdown:', costBreakdown);
-    
-    // Initialize navigation buttons for view/edit modes
+document.addEventListener('DOMContentLoaded', function() {// Initialize navigation buttons for view/edit modes
     if (modalMode === 'view' || modalMode === 'edit') {
         updateNavigationButtons();
     }
@@ -4222,31 +4104,21 @@ document.addEventListener('DOMContentLoaded', function() {
             refreshCostBreakdown(false);
             
             // Load existing price suggestion for edit mode
-            if (modalMode === 'edit') {
-                console.log('Loading existing price suggestion for edit mode, SKU:', currentItemSku);
-                loadExistingPriceSuggestion(currentItemSku);
+            if (modalMode === 'edit') {loadExistingPriceSuggestion(currentItemSku);
             }
             
             // Load existing price suggestion for view mode
-            if (modalMode === 'view') {
-                console.log('Loading existing price suggestion for view mode, SKU:', currentItemSku);
-                loadExistingViewPriceSuggestion(currentItemSku);
+            if (modalMode === 'view') {loadExistingViewPriceSuggestion(currentItemSku);
             }
             
-            // Load existing marketing suggestion for edit/view mode
-            console.log('Loading existing marketing suggestion for SKU:', currentItemSku);
-            loadExistingMarketingSuggestion(currentItemSku);
+            // Load existing marketing suggestion for edit/view modeloadExistingMarketingSuggestion(currentItemSku);
             
 
         } else if (modalMode === 'add') {
             console.log('Calling renderCostBreakdown(null) for add mode');
             renderCostBreakdown(null); 
-        } else {
-            console.log('Conditions not met - modalMode:', modalMode, 'currentItemSku:', currentItemSku, 'costBreakdown:', !!costBreakdown);
-        }
-    } else {
-        console.log('No modal mode active, skipping cost breakdown initialization');
-    }
+        } else {}
+    } else {}
     
     // Add event listener for delete cost buttons (using event delegation)
     document.addEventListener('click', function(e) {
@@ -4741,13 +4613,7 @@ document.getElementById('multiImageUpload')?.addEventListener('change', function
     autoUploadImages(files);
 });
 
-function autoUploadImages(files) {
-    console.log('autoUploadImages called with files:', files);
-    
-    const sku = (document.getElementById('skuEdit') || document.getElementById('skuDisplay'))?.value;
-    console.log('SKU:', sku);
-    
-    if (!sku) {
+function autoUploadImages(files) {const sku = (document.getElementById('skuEdit') || document.getElementById('skuDisplay'))?.value;if (!sku) {
         console.error('No SKU found');
         showError( 'SKU is required');
         hideUploadProgress();
@@ -4755,18 +4621,12 @@ function autoUploadImages(files) {
     }
     
     const formData = new FormData();
-    files.forEach((file, index) => {
-        console.log(`Adding file ${index + 1}:`, file.name, file.size, 'bytes');
-        formData.append('images[]', file);
+    files.forEach((file, index) => {formData.append('images[]', file);
     });
     
     formData.append('sku', sku);
     formData.append('altText', document.getElementById('name')?.value || '');
-    formData.append('useAIProcessing', document.getElementById('useAIProcessing')?.checked ? 'true' : 'false');
-    
-    console.log('FormData prepared, starting upload...');
-    
-    // Update progress bar
+    formData.append('useAIProcessing', document.getElementById('useAIProcessing')?.checked ? 'true' : 'false');// Update progress bar
     const progressBar = document.getElementById('uploadProgressBar');
     progressBar.style.width = '25%';
     
@@ -4775,21 +4635,13 @@ function autoUploadImages(files) {
         body: formData,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(response => {
-        console.log('Upload response status:', response.status);
-        console.log('Upload response headers:', response.headers);
-        progressBar.style.width = '75%';
+    .then(response => {progressBar.style.width = '75%';
         return response.text(); // Get as text first to see what we're getting
     })
-    .then(text => {
-        console.log('Upload response text:', text);
-        progressBar.style.width = '100%';
+    .then(text => {progressBar.style.width = '100%';
         
         try {
-            const data = JSON.parse(text);
-            console.log('Parsed upload response:', data);
-            
-            if (data.success) {
+            const data = JSON.parse(text);if (data.success) {
                 showSuccess( data.message || `Successfully uploaded ${files.length} image(s)`);
                 
                 // Clear the file input
@@ -4974,11 +4826,7 @@ function displayCurrentImages(images, isViewModal = false) {
         // Use fixed pixel width to show exactly 3 images - calculate based on container
         // Container is ~506px, so each slide should be ~155px to fit 3 with gaps
         imageDiv.style.width = '155px';
-        imageDiv.style.marginRight = '15px';
-        
-        console.log(`Creating slide ${index + 1}, width: 155px, marginRight: 15px`);
-        
-        // Action buttons only for edit modal
+        imageDiv.style.marginRight = '15px';// Action buttons only for edit modal
         const actionButtons = isViewModal ? '' : `
             <div class="flex gap-1 mt-1 flex-wrap">
                         ${!image.is_primary ? `<button type="button" data-action="set-primary" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
@@ -5021,13 +4869,7 @@ function displayCurrentImages(images, isViewModal = false) {
     if (wrapper && images.length > 3) {
         // 3 images * 155px + 2 gaps * 15px = 495px
         wrapper.style.width = '495px';
-        wrapper.style.maxWidth = '495px';
-        console.log('Forced wrapper width to 495px to show exactly 3 images');
-    }
-    
-    console.log(`Track width set to: ${trackWidth} for ${images.length} images`);
-    
-    container.appendChild(carouselContainer);
+        wrapper.style.maxWidth = '495px';}container.appendChild(carouselContainer);
     
     // Initialize carousel position
     const positionVar = isViewModal ? 'viewCarouselPosition' : 'editCarouselPosition';
@@ -5040,23 +4882,12 @@ function displayCurrentImages(images, isViewModal = false) {
         const containerWidth = container.offsetWidth;
         const trackElement = document.getElementById(trackId);
         const trackWidth = trackElement ? trackElement.offsetWidth : 'not found';
-        const slides = trackElement ? trackElement.querySelectorAll('.carousel-slide') : [];
-        
-        console.log(`Carousel debug for ${carouselType}:`);
-        console.log(`- Container width: ${containerWidth}px`);
-        console.log(`- Track width: ${trackWidth}px`);
-        console.log(`- Number of slides: ${slides.length}`);
-        if (slides.length > 0) {
-            console.log(`- First slide width: ${slides[0].offsetWidth}px`);
-            console.log(`- First slide computed width: ${getComputedStyle(slides[0]).width}`);
+        const slides = trackElement ? trackElement.querySelectorAll('.carousel-slide') : [];if (slides.length > 0) {console.log(`- First slide computed width: ${getComputedStyle(slides[0]).width}`);
         }
     }, 200);
     
     // Update carousel navigation visibility
-    updateCarouselNavigation(carouselType, images.length);
-    
-    console.log('Loaded', images.length, 'images for', carouselType, 'carousel, track width:', trackWidth);
-}
+    updateCarouselNavigation(carouselType, images.length);}
 
 // Helper functions removed - now using carousel layout
 
@@ -5097,24 +4928,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Wait a bit for the DOM to be fully ready
         setTimeout(() => {
             const skuField = document.getElementById('skuEdit') || document.getElementById('skuDisplay');
-            if (skuField && skuField.value) {
-                console.log('Loading current images for edit modal:', skuField.value);
-                loadCurrentImages(skuField.value, false);
-            } else {
-                console.log('No SKU found for loading images');
-            }
+            if (skuField && skuField.value) {loadCurrentImages(skuField.value, false);
+            } else {}
         }, 200);
     } else if (modalMode === 'view' && viewId) {
         // Load images for view modal
         setTimeout(() => {
             // For view modal, get the SKU from the readonly field
             const skuField = document.getElementById('skuDisplay');
-            if (skuField && skuField.value) {
-                console.log('Loading current images for view modal:', skuField.value);
-                loadCurrentImages(skuField.value, true);
-            } else {
-                console.log('No SKU found for view modal');
-                const container = document.getElementById('currentImagesList');
+            if (skuField && skuField.value) {loadCurrentImages(skuField.value, true);
+            } else {const container = document.getElementById('currentImagesList');
                 const loadingDiv = document.getElementById('viewModalImagesLoading');
                 if (loadingDiv) loadingDiv.remove();
                 if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">No SKU available</div>';
@@ -5334,11 +5157,7 @@ function normalizeCarouselImageHeights(trackId) {
             
             // Set minimum height to ensure reasonable size
             maxHeight = Math.max(maxHeight, 200);
-            maxHeight = Math.min(maxHeight, 400); // Cap at 400px
-            
-            console.log(`Setting carousel image height to: ${maxHeight}px`);
-            
-            // Apply the height to all image containers
+            maxHeight = Math.min(maxHeight, 400); // Cap at 400px// Apply the height to all image containers
             imageContainers.forEach(container => {
                 container.style.height = maxHeight + 'px';
             });
@@ -5396,21 +5215,13 @@ function moveCarousel(type, direction) {
     const positionVar = type === 'edit' ? 'editCarouselPosition' : 'viewCarouselPosition';
     
     const track = document.getElementById(trackId);
-    if (!track) {
-        console.log(`Carousel track not found: ${trackId}`);
-        return;
+    if (!track) {return;
     }
     
     const slides = track.querySelectorAll('.carousel-slide');
     const totalSlides = slides.length;
-    const slidesToShow = 3; // Show 3 images at a time
-    
-    console.log(`Moving ${type} carousel, direction: ${direction}, total slides: ${totalSlides}`);
-    
-    // Only allow navigation if there are more than 3 images
-    if (totalSlides <= slidesToShow) {
-        console.log(`Not enough slides to navigate: ${totalSlides} <= ${slidesToShow}`);
-        return;
+    const slidesToShow = 3; // Show 3 images at a time// Only allow navigation if there are more than 3 images
+    if (totalSlides <= slidesToShow) {return;
     }
     
     const maxPosition = Math.max(0, totalSlides - slidesToShow);
@@ -5429,11 +5240,7 @@ function moveCarousel(type, direction) {
     // Apply transform - move by one slide width including margin
     // Each slide is 155px + 15px margin = 170px per slide
     const translateX = -(currentPosition * 170);
-    track.style.transform = `translateX(${translateX}px)`;
-    
-    console.log(`Moved to position ${currentPosition}, translateX: ${translateX}px, maxPosition: ${maxPosition}`);
-    
-    // Update button visibility
+    track.style.transform = `translateX(${translateX}px)`;// Update button visibility
     updateCarouselNavigation(type, totalSlides);
 }
 
@@ -5442,9 +5249,7 @@ function updateCarouselNavigation(type, totalSlides) {
     const positionVar = type === 'edit' ? 'editCarouselPosition' : 'viewCarouselPosition';
     
     const track = document.getElementById(trackId);
-    if (!track) {
-        console.log(`Track not found for navigation update: ${trackId}`);
-        return;
+    if (!track) {return;
     }
     
     const container = track.closest('.image-carousel-container');
@@ -5453,18 +5258,10 @@ function updateCarouselNavigation(type, totalSlides) {
     
     const slidesToShow = 3;
     const currentPosition = window[positionVar] || 0;
-    const maxPosition = Math.max(0, totalSlides - slidesToShow);
-    
-    console.log(`Updating ${type} navigation: totalSlides=${totalSlides}, currentPosition=${currentPosition}, maxPosition=${maxPosition}`);
-    
-    if (prevBtn) {
-        prevBtn.style.display = currentPosition === 0 ? 'none' : 'block';
-        console.log(`${type} prev button:`, currentPosition === 0 ? 'hidden' : 'visible');
-    }
+    const maxPosition = Math.max(0, totalSlides - slidesToShow);if (prevBtn) {
+        prevBtn.style.display = currentPosition === 0 ? 'none' : 'block';}
     if (nextBtn) {
-        nextBtn.style.display = currentPosition >= maxPosition ? 'none' : 'block';
-        console.log(`${type} next button:`, currentPosition >= maxPosition ? 'hidden' : 'visible');
-    }
+        nextBtn.style.display = currentPosition >= maxPosition ? 'none' : 'block';}
 }
 
 // Cost Breakdown Template Functions
@@ -5698,12 +5495,8 @@ function trackMarketingFieldChange(fieldId, value = null) {
     
     // Update specific field change states
     if (fieldId === 'marketingTitle') {
-        hasTitleChanges = hasChanged;
-        console.log('Title changes:', hasTitleChanges);
-    } else if (fieldId === 'marketingDescription') {
-        hasDescriptionChanges = hasChanged;
-        console.log('Description changes:', hasDescriptionChanges);
-    }
+        hasTitleChanges = hasChanged;} else if (fieldId === 'marketingDescription') {
+        hasDescriptionChanges = hasChanged;}
     
     // Update global change state
     if (hasChanged && !hasMarketingChanges) {
@@ -5748,10 +5541,7 @@ function checkAllMarketingFieldsForChanges() {
 }
 
 // Update save button visibility based on changes
-function updateMarketingSaveButtonVisibility() {
-    console.log('Updating save button visibility - Title:', hasTitleChanges, 'Description:', hasDescriptionChanges);
-    
-    // Title save button
+function updateMarketingSaveButtonVisibility() {// Title save button
     const titleSaveButton = document.querySelector('[onclick*="applyAndSaveMarketingTitle"]');
     if (titleSaveButton) {
         if (hasTitleChanges) {
@@ -5947,9 +5737,7 @@ function showMarketingModal() {
     if (modal) {
         modal.style.display = 'flex';
         modal.classList.add('show');
-        modal.classList.remove('hidden');
-        console.log('Marketing Manager: Modal display set to flex with show class');
-    }
+        modal.classList.remove('hidden');}
 }
 
 function hideMarketingModal() {
@@ -5957,24 +5745,16 @@ function hideMarketingModal() {
     if (modal) {
         modal.style.display = 'none';
         modal.classList.remove('show');
-        modal.classList.add('hidden');
-        console.log('Marketing Manager: Modal display set to none');
-    }
+        modal.classList.add('hidden');}
 }
 
-function openMarketingManager() {
-    console.log('Marketing Manager: Opening modal for SKU:', currentItemSku);
-    
-    if (!currentItemSku) {
+function openMarketingManager() {if (!currentItemSku) {
         showValidation('No item selected. Please select an item first.');
         return;
     }
     
     // Get the modal
-    const modal = document.getElementById('marketingManagerModal');
-    console.log('Marketing Manager: Modal element found:', !!modal);
-    
-    if (!modal) {
+    const modal = document.getElementById('marketingManagerModal');if (!modal) {
         console.error('Marketing Manager modal not found');
         return;
     }
@@ -6018,9 +5798,7 @@ function openMarketingManager() {
             opacity: 1 !important;
             position: relative !important;
             z-index: 50001 !important;
-        `;
-        console.log('Marketing Manager: Professional modal content styled');
-    }
+        `;}
     
     // Force it to the front of the DOM (this was the key fix!)
     document.body.appendChild(modal);
@@ -6029,11 +5807,7 @@ function openMarketingManager() {
     const skuIndicator = document.getElementById('currentEditingSku');
     if (skuIndicator) {
         skuIndicator.textContent = currentItemSku;
-    }
-    
-    console.log('Marketing Manager: Modal opened with professional styling');
-    
-    // Load the item image in the header
+    }// Load the item image in the header
     loadMarketingItemImage();
     
     // Load marketing data and show content tab
@@ -6044,20 +5818,14 @@ function openMarketingManager() {
 function closeMarketingManager() {
     const modal = document.getElementById('marketingManagerModal');
     if (modal) {
-        modal.style.display = 'none';
-        console.log('Marketing Manager: Modal closed');
-        
-        // Clear any unsaved changes warning if needed
+        modal.style.display = 'none';// Clear any unsaved changes warning if needed
         hasMarketingChanges = false;
         hasTitleChanges = false;
         hasDescriptionChanges = false;
     }
 }
 
-function applyMarketingToItem() {
-    console.log('Marketing Manager: Applying marketing content to item fields');
-    
-    // Get the marketing title and description fields
+function applyMarketingToItem() {// Get the marketing title and description fields
     const marketingTitle = document.getElementById('marketingTitle');
     const marketingDescription = document.getElementById('marketingDescription');
     
@@ -6076,9 +5844,7 @@ function applyMarketingToItem() {
         itemNameField.style.backgroundColor = '#dcfce7';
         itemNameField.style.border = '2px solid #22c55e';
         
-        appliedChanges++;
-        console.log('Marketing Manager: Applied title:', newTitle);
-    }
+        appliedChanges++;}
     
     // Apply marketing description to item description if both exist and have content
     if (marketingDescription && marketingDescription.value.trim() && itemDescriptionField) {
@@ -6089,9 +5855,7 @@ function applyMarketingToItem() {
         itemDescriptionField.style.backgroundColor = '#dcfce7';
         itemDescriptionField.style.border = '2px solid #22c55e';
         
-        appliedChanges++;
-        console.log('Marketing Manager: Applied description:', newDescription);
-    }
+        appliedChanges++;}
     
     if (appliedChanges > 0) {
         showSuccess(`✅ Applied ${appliedChanges} marketing ${appliedChanges === 1 ? 'field' : 'fields'} to item successfully!`);
@@ -6134,22 +5898,14 @@ function showMarketingManagerTab(tabName) {
     loadMarketingTabContent(tabName);
 }
 
-function loadMarketingData() {
-    console.log('Marketing Manager: loadMarketingData called');
-    const contentDiv = document.getElementById('marketingManagerContent');
-    console.log('Marketing Manager: Content div found:', !!contentDiv);
-    
-    if (contentDiv) {
+function loadMarketingData() {const contentDiv = document.getElementById('marketingManagerContent');if (contentDiv) {
         contentDiv.innerHTML = '<div class="modal-loading">' +
             '<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>' +
             '<p class="mt-4 text-gray-600">Loading marketing data...</p>' +
         '</div>';
         
         // Force content div to be visible with clean styling
-        contentDiv.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
-        
-        console.log('Marketing Manager: Content div styled and populated');
-    }
+        contentDiv.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';}
     
     // Load content tab by default
     showMarketingManagerTab('content');
@@ -6428,23 +6184,11 @@ function loadConversionTab(contentDiv) {
 }
 
 function loadExistingMarketingData() {
-    if (!currentItemSku) {
-        console.log('Marketing Manager: No currentItemSku available');
-        return Promise.resolve();
-    }
-    
-    console.log('Marketing Manager: Loading data for SKU:', currentItemSku);
-    
-    return fetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}&_t=${Date.now()}`)
+    if (!currentItemSku) {return Promise.resolve();
+    }return fetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}&_t=${Date.now()}`)
     .then(response => response.json())
-    .then(data => {
-        console.log('Marketing Manager: API response for SKU', currentItemSku, ':', data);
-        if (data.success && data.data) {
-            console.log('Marketing Manager: Populating fields with item-specific data');
-            populateMarketingFields(data.data);
-        } else {
-            console.log('Marketing Manager: No existing data found for SKU', currentItemSku, '- fields will be empty');
-            clearMarketingFields(); // Clear any cached/previous content
+    .then(data => {if (data.success && data.data) {populateMarketingFields(data.data);
+        } else {clearMarketingFields(); // Clear any cached/previous content
         }
         return data;
     })
@@ -6456,36 +6200,23 @@ function loadExistingMarketingData() {
 }
 
 function loadMarketingItemImage() {
-    if (!currentItemSku) {
-        console.log('Marketing Manager: No SKU available for image loading');
-        return;
-    }
-    
-    console.log('Marketing Manager: Loading primary image for SKU:', currentItemSku);
-    
-    fetch(`/api/get_item_images.php?sku=${encodeURIComponent(currentItemSku)}`)
+    if (!currentItemSku) {return;
+    }fetch(`/api/get_item_images.php?sku=${encodeURIComponent(currentItemSku)}`)
     .then(response => response.json())
     .then(data => {
         const headerContainer = document.getElementById('marketingItemImageHeader');
         
-        if (!headerContainer) {
-            console.log('Marketing Manager: Header image container not found');
-            return;
+        if (!headerContainer) {return;
         }
         
         if (data.success && data.primaryImage && data.primaryImage.file_exists) {
-            const primaryImage = data.primaryImage;
-            console.log('Marketing Manager: Loading primary image:', primaryImage.image_path);
-            
-            headerContainer.innerHTML = '<div class="w-40 h-40 rounded-lg border-2 border-gray-200 overflow-hidden bg-white shadow-lg">' +
+            const primaryImage = data.primaryImage;headerContainer.innerHTML = '<div class="w-40 h-40 rounded-lg border-2 border-gray-200 overflow-hidden bg-white shadow-lg">' +
                 '<img src="' + primaryImage.image_path + '" ' +
                      'alt="' + currentItemSku + '" ' +
                      'class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" ' +
                      'onerror="this.parentElement.innerHTML=\'<div class=\\\'w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs\\\'>📷</div>\'">' +
             '</div>';
-        } else {
-            console.log('Marketing Manager: No primary image found for SKU:', currentItemSku);
-            // Show placeholder
+        } else {// Show placeholder
             headerContainer.innerHTML = '<div class="w-40 h-40 rounded-lg border-2 border-gray-200 bg-gray-100 flex flex-col items-center justify-center shadow-lg">' +
                 '<svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
                     '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>' +
@@ -6508,10 +6239,7 @@ function loadMarketingItemImage() {
     });
 }
 
-function clearMarketingFields() {
-    console.log('Marketing Manager: Clearing all fields to prevent cached content');
-    
-    // Clear text fields
+function clearMarketingFields() {// Clear text fields
     const textFields = [
         'marketingTitle', 'marketingDescription', 'targetAudience', 'demographics',
         'psychographics', 'searchIntent', 'seasonalRelevance'
@@ -6566,10 +6294,7 @@ function clearMarketingFields() {
     updateMarketingSaveButtonVisibility();
 }
 
-function populateMarketingFields(data) {
-    console.log('Marketing Manager: Populating fields with data:', data);
-    
-    // Populate text fields (excluding brand voice and content tone which are global settings)
+function populateMarketingFields(data) {// Populate text fields (excluding brand voice and content tone which are global settings)
     const textFields = {
         'marketingTitle': 'suggested_title',
         'marketingDescription': 'suggested_description',
@@ -6583,9 +6308,7 @@ function populateMarketingFields(data) {
     let fieldsPopulated = false;
     Object.keys(textFields).forEach(fieldId => {
         const field = document.getElementById(fieldId);
-        if (field && data[textFields[fieldId]]) {
-            console.log(`Marketing Manager: Setting ${fieldId} to:`, data[textFields[fieldId]]);
-            field.value = data[textFields[fieldId]];
+        if (field && data[textFields[fieldId]]) {field.value = data[textFields[fieldId]];
             fieldsPopulated = true;
             
             // Trigger individual field change tracking
@@ -6621,11 +6344,7 @@ function populateMarketingFields(data) {
     if (fieldsPopulated) {
         hasMarketingChanges = true;
         updateMarketingSaveButtonVisibility();
-    }
-    
-    console.log('Marketing Manager: Fields populated successfully, fieldsPopulated:', fieldsPopulated);
-    
-    // Populate list fields
+    }// Populate list fields
     const listFields = {
         'sellingPointsList': 'selling_points',
         'competitiveAdvantagesList': 'competitive_advantages',
@@ -7187,10 +6906,7 @@ function populateAllMarketingTabs(aiData) {
     
     // Wait for all saves to complete
     Promise.all(savePromises).then(results => {
-        const successCount = results.filter(r => r.success).length;
-        console.log(`Successfully saved ${successCount}/${fieldsToSave.length} marketing fields`);
-        
-                 // Add visual indicators to tabs that now have AI content
+        const successCount = results.filter(r => r.success).length;// Add visual indicators to tabs that now have AI content
          addAIContentBadges(['audience', 'selling', 'seo', 'conversion']);
          
          // If user is currently viewing one of the populated tabs, refresh it
@@ -7325,11 +7041,7 @@ function generateFreshMarketingComparison() {
         brand_voice: brandVoiceField ? brandVoiceField.value : '',
         content_tone: contentToneField ? contentToneField.value : '',
         fresh_start: true  // This tells the API to ignore existing marketing data
-    };
-
-    console.log('Fresh Marketing Generation: Generating fresh content for SKU:', currentItemSku);
-
-    fetch('/api/suggest_marketing.php', {
+    };fetch('/api/suggest_marketing.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -7447,10 +7159,7 @@ async function updateGlobalMarketingDefault(settingType, value) {
 }
 
 // AI Content Generation with Comparison Modal
-function generateAllMarketingContent() {
-    console.log('generateAllMarketingContent called');
-    
-    if (!currentItemSku) {
+function generateAllMarketingContent() {if (!currentItemSku) {
         showError( 'No item selected for marketing content generation');
         return;
     }
@@ -7462,15 +7171,10 @@ function generateAllMarketingContent() {
     startAIAnalysisProcess();
 }
 
-function showAIComparisonModal() {
-    console.log('showAIComparisonModal called');
-    const modal = document.getElementById('aiComparisonModal');
+function showAIComparisonModal() {const modal = document.getElementById('aiComparisonModal');
     const progressSection = document.getElementById('aiAnalysisProgressSection');
     
-    if (modal) {
-        console.log('AI Comparison Modal found, applying visibility fixes');
-        
-        // Remove hidden class
+    if (modal) {// Remove hidden class
         modal.classList.remove('hidden');
         
         // Clear any existing CSS classes that might hide it
@@ -7494,10 +7198,7 @@ function showAIComparisonModal() {
         `;
         
         // Force it to the front of the DOM (same fix as Marketing Manager)
-        document.body.appendChild(modal);
-        
-        console.log('AI Comparison Modal visibility forced');
-    } else {
+        document.body.appendChild(modal);} else {
         console.error('AI Comparison Modal not found!');
     }
     
@@ -7512,18 +7213,10 @@ function showAIComparisonModal() {
     const contentDiv = document.getElementById('aiComparisonContent');
     if (contentDiv) {
         contentDiv.innerHTML = '<div class="text-center text-gray-500 py-8">AI analysis in progress...</div>';
-    }
-    
-    console.log('AI Comparison Modal setup complete');
-}
+    }}
 
-function closeAIComparisonModal() {
-    console.log('closeAIComparisonModal function called');
-    const modal = document.getElementById('aiComparisonModal');
-    if (modal) {
-        console.log('AI Comparison Modal found, hiding modal');
-        
-        // Reset all inline styles that were set by showAIComparisonModal
+function closeAIComparisonModal() {const modal = document.getElementById('aiComparisonModal');
+    if (modal) {// Reset all inline styles that were set by showAIComparisonModal
         modal.style.cssText = '';
         
         // Add the hidden class
@@ -7532,10 +7225,7 @@ function closeAIComparisonModal() {
         // Force hide with inline styles to override any remaining CSS
         modal.style.display = 'none !important';
         modal.style.visibility = 'hidden !important';
-        modal.style.opacity = '0 !important';
-        
-        console.log('AI Comparison Modal closed successfully');
-    } else {
+        modal.style.opacity = '0 !important';} else {
         console.error('AI Comparison Modal not found!');
     }
 }
@@ -7698,14 +7388,9 @@ function showComparisonResults(data) {
     aiComparisonData = data;
     selectedChanges = {};
     
-    // First, get current marketing data from database to compare against
-    console.log('Loading current marketing data from database for comparison...');
-    
-    fetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}&_t=${Date.now()}`)
+    // First, get current marketing data from database to compare againstfetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}&_t=${Date.now()}`)
         .then(response => response.json())
-        .then(currentData => {
-            console.log('Current marketing data loaded:', currentData);
-            buildComparisonInterface(data, currentData.data);
+        .then(currentData => {buildComparisonInterface(data, currentData.data);
         })
         .catch(error => {
             console.error('Error loading current marketing data:', error);
@@ -7869,11 +7554,7 @@ function toggleSelectAll() {
     }
 }
 
-function toggleComparison(fieldKey) {
-    console.log('toggleComparison called for field:', fieldKey);
-    const checkbox = document.getElementById(`comparison-${fieldKey}-checkbox`);
-    console.log('Checkbox found:', checkbox, 'checked:', checkbox?.checked);
-    if (checkbox.checked) {
+function toggleComparison(fieldKey) {const checkbox = document.getElementById(`comparison-${fieldKey}-checkbox`);if (checkbox.checked) {
         // Get the value from the correct location in the AI data
         let value = null;
         if (fieldKey === 'title') {
@@ -7887,17 +7568,9 @@ function toggleComparison(fieldKey) {
         }
         
         if (value) {
-            selectedChanges[fieldKey] = value;
-            console.log('Added to selectedChanges:', fieldKey, '=', value);
-        }
+            selectedChanges[fieldKey] = value;}
     } else {
-        delete selectedChanges[fieldKey];
-        console.log('Removed from selectedChanges:', fieldKey);
-    }
-    
-    console.log('Current selectedChanges after toggle:', selectedChanges);
-    
-    // Update select all checkbox state based on individual selections
+        delete selectedChanges[fieldKey];}// Update select all checkbox state based on individual selections
     updateSelectAllState();
     
     // Update apply button text
@@ -7927,14 +7600,9 @@ function updateSelectAllState() {
     }
 }
 
-function applySelectedChanges() {
-    console.log('applySelectedChanges called');
-    console.log('selectedChanges object:', selectedChanges);
-    console.log('selectedChanges keys length:', Object.keys(selectedChanges).length);
+function applySelectedChanges() {console.log('selectedChanges keys length:', Object.keys(selectedChanges).length);
     
-    if (Object.keys(selectedChanges).length === 0) {
-        console.log('No changes selected, showing warning');
-        showWarning('Please select at least one change to apply');
+    if (Object.keys(selectedChanges).length === 0) {showWarning('Please select at least one change to apply');
         return;
     }
     
@@ -7942,15 +7610,8 @@ function applySelectedChanges() {
         console.error('No SKU available for saving changes');
         showError('Unable to save changes - no item SKU available');
         return;
-    }
-    
-    console.log('Saving selected changes to database for SKU:', currentItemSku);
-    
-    // Save all selected changes to the database
-    const savePromises = Object.entries(selectedChanges).map(([fieldKey, value]) => {
-        console.log(`Saving field ${fieldKey} to database:`, value);
-        
-        return fetch('/api/marketing_manager.php?action=update_field', {
+    }// Save all selected changes to the database
+    const savePromises = Object.entries(selectedChanges).map(([fieldKey, value]) => {return fetch('/api/marketing_manager.php?action=update_field', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -7965,9 +7626,7 @@ function applySelectedChanges() {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                console.log(`✅ Successfully saved ${fieldKey} to database`);
-            } else {
+            if (data.success) {} else {
                 console.error(`❌ Failed to save ${fieldKey}:`, data.error);
                 throw new Error(`Failed to save ${fieldKey}: ${data.error}`);
             }
@@ -7983,11 +7642,7 @@ function applySelectedChanges() {
     Promise.all(savePromises)
         .then(results => {
             const successCount = results.filter(r => r.success).length;
-            const failCount = results.length - successCount;
-            
-            console.log(`Database save results: ${successCount} success, ${failCount} failed`);
-            
-            if (successCount > 0) {
+            const failCount = results.length - successCount;if (successCount > 0) {
                 // Update main form fields for title and description only
                 // (Marketing Manager will load from database when opened)
                 updateMainFormFields();
@@ -8002,9 +7657,7 @@ function applySelectedChanges() {
                 showError('Failed to save changes to database');
             }
             
-            // Close AI comparison modal immediately
-            console.log('Closing AI Comparison Modal...');
-            closeAIComparisonModal();
+            // Close AI comparison modal immediatelycloseAIComparisonModal();
         })
         .catch(error => {
             console.error('Error in batch save operation:', error);
@@ -8028,9 +7681,7 @@ function applySelectedChanges() {
                 // They will be loaded from database when Marketing Manager opens
             }
             
-            if (targetField) {
-                console.log(`Updating main form field ${fieldKey}`);
-                targetField.value = value;
+            if (targetField) {targetField.value = value;
                 targetField.style.backgroundColor = '#f0fdf4'; // Light green highlight
                 
                 // Remove highlight after delay
@@ -8044,20 +7695,14 @@ function applySelectedChanges() {
     function refreshMarketingManagerContent() {
         // Check if Marketing Manager modal is open
         const marketingModal = document.getElementById('marketingManagerModal');
-        if (marketingModal && !marketingModal.classList.contains('hidden')) {
-            console.log('Marketing Manager is open - refreshing content from database');
-            
-            // Reload the current tab content to reflect database changes
+        if (marketingModal && !marketingModal.classList.contains('hidden')) {// Reload the current tab content to reflect database changes
             const activeTab = document.querySelector('.admin-tab-button.active');
             if (activeTab) {
                 const tabName = activeTab.textContent.includes('📝') ? 'content' :
                               activeTab.textContent.includes('👥') ? 'audience' :
                               activeTab.textContent.includes('⭐') ? 'selling' :
                               activeTab.textContent.includes('🔍') ? 'seo' :
-                              activeTab.textContent.includes('💰') ? 'conversion' : 'content';
-                
-                console.log('Refreshing active tab:', tabName);
-                loadMarketingTabContent(tabName);
+                              activeTab.textContent.includes('💰') ? 'conversion' : 'content';loadMarketingTabContent(tabName);
             }
         }
     }
@@ -8109,10 +7754,7 @@ window.closeMarketingManager = closeMarketingManager;
 document.addEventListener("click", function(event) {
     if (event.target && event.target.id === "open-marketing-manager-btn") {
         event.preventDefault();
-        event.stopPropagation();
-        console.log("Marketing Manager button clicked - opening modal");
-        
-        // Don't close the edit modal - just open Marketing Manager on top
+        event.stopPropagation();// Don't close the edit modal - just open Marketing Manager on top
         if (typeof openMarketingManager === "function") {
             openMarketingManager();
         } else {
@@ -8125,21 +7767,14 @@ document.addEventListener("click", function(event) {
 // Color Management Functions
 
 // Load colors for the current item
-async function loadItemColors() {
-    console.log('loadItemColors called, currentItemSku:', currentItemSku);
-    
-    // Try to get SKU from multiple sources
+async function loadItemColors() {// Try to get SKU from multiple sources
     if (!currentItemSku) {
         const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
         if (skuField && skuField.value) {
-            currentItemSku = skuField.value;
-            console.log('Found SKU from field:', currentItemSku);
-        }
+            currentItemSku = skuField.value;}
     }
     
-    if (!currentItemSku) {
-        console.log('No SKU available for loading colors');
-        const colorsLoading = document.getElementById('colorsLoading');
+    if (!currentItemSku) {const colorsLoading = document.getElementById('colorsLoading');
         if (colorsLoading) {
             colorsLoading.textContent = 'No SKU available';
         }
@@ -8153,14 +7788,8 @@ async function loadItemColors() {
         colorsLoading.style.display = 'block';
     }
     
-    try {
-        console.log('Fetching colors for SKU:', currentItemSku);
-        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
-        const data = await response.json();
-        
-        console.log('Colors API response:', data);
-        
-        if (data.success) {
+    try {const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
+        const data = await response.json();if (data.success) {
             renderColors(data.colors);
         } else {
             console.error('Error loading colors:', data.message);
@@ -8278,10 +7907,7 @@ async function editColor(colorId) {
 }
 
 // Delete color
-async function deleteColor(colorId) {
-    console.log('🗑️ deleteColor called with colorId:', colorId);
-    
-    // Create a styled confirmation modal instead of browser confirm
+async function deleteColor(colorId) {// Create a styled confirmation modal instead of browser confirm
     const confirmResult = await showStyledConfirm(
         'Delete Color',
         'Are you sure you want to delete this color? This action cannot be undone.',
@@ -8289,14 +7915,8 @@ async function deleteColor(colorId) {
         'Cancel'
     );
     
-    if (!confirmResult) {
-        console.log('❌ User cancelled color deletion');
-        return;
-    }
-    
-    console.log('✅ User confirmed color deletion, proceeding...');
-    
-    try {
+    if (!confirmResult) {return;
+    }try {
         const response = await fetch('/api/item_colors.php?action=delete_color', {
             method: 'POST',
             headers: {
@@ -8305,16 +7925,9 @@ async function deleteColor(colorId) {
             body: JSON.stringify({ color_id: colorId })
         });
         
-        const data = await response.json();
-        console.log('📡 API response:', data);
-        
-        if (data.success) {
-            console.log('🎉 Color deleted successfully, calling showToast...');
-            showSuccess( 'Color deleted successfully');
+        const data = await response.json();if (data.success) {showSuccess( 'Color deleted successfully');
             loadItemColors(); // Reload colors
-        } else {
-            console.log('❌ API error:', data.message);
-            showError( 'Error deleting color: ' + data.message);
+        } else {showError( 'Error deleting color: ' + data.message);
         }
     } catch (error) {
         console.error('💥 Error deleting color:', error);
@@ -8894,13 +8507,8 @@ async function syncStockLevels() {
 }
 
 // Load colors when modal opens
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemSku:', currentItemSku);
-    
-    // Load colors when in edit mode and we have a valid SKU
-    if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {
-        console.log('Loading colors for SKU:', currentItemSku);
-        setTimeout(loadItemColors, 500); // Small delay to ensure elements are ready
+document.addEventListener('DOMContentLoaded', function() {// Load colors when in edit mode and we have a valid SKU
+    if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {setTimeout(loadItemColors, 500); // Small delay to ensure elements are ready
         
         // Check if structure analysis should be shown (only in edit mode)
         if (modalMode === 'edit') {
@@ -8910,9 +8518,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fallback: try to get SKU from form fields
         const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
         if (skuField && skuField.value) {
-            currentItemSku = skuField.value;
-            console.log('Found SKU from field:', currentItemSku);
-            setTimeout(loadItemColors, 500);
+            currentItemSku = skuField.value;setTimeout(loadItemColors, 500);
             
             // Check if structure analysis should be shown
             if (modalMode === 'edit') {
@@ -8980,9 +8586,7 @@ async function loadColorOptions() {
 
 // Load sizes for current item
 async function loadItemSizes(colorId = null) {
-    if (!currentItemSku) {
-        console.log('No currentItemSku available for loading sizes');
-        return;
+    if (!currentItemSku) {return;
     }
     
     // Determine which color to load sizes for
@@ -9005,9 +8609,7 @@ async function loadItemSizes(colorId = null) {
         const response = await fetch(url);
         const data = await response.json();
         
-        if (data.success) {
-            console.log('Loaded sizes:', data.sizes);
-            renderSizes(data.sizes);
+        if (data.success) {renderSizes(data.sizes);
         } else {
             console.error('Error loading sizes:', data.message);
             renderSizes([]);
@@ -9483,21 +9085,13 @@ function initializeSizeManagement() {
 // Add to the existing DOMContentLoaded event listener
 const originalDOMContentLoaded = document.addEventListener;
 document.addEventListener('DOMContentLoaded', function() {
-    // Call existing color loading logic
-    console.log('DOMContentLoaded - modalMode:', modalMode, 'currentItemSku:', currentItemSku);
-    
-    // Load colors when in edit mode and we have a valid SKU
-    if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {
-        console.log('Loading colors for SKU:', currentItemSku);
-        console.log('Initializing Gender, Size & Color interface...');
-        setTimeout(initializeGenderSizeColorInterface, 200);
+    // Call existing color loading logic// Load colors when in edit mode and we have a valid SKU
+    if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {setTimeout(initializeGenderSizeColorInterface, 200);
     } else if (document.getElementById('sku') || document.getElementById('skuDisplay')) {
         // Fallback: try to get SKU from form fields
         const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
         if (skuField && skuField.value) {
-            currentItemSku = skuField.value;
-            console.log('Found SKU from field:', currentItemSku);
-            setTimeout(initializeGenderSizeColorInterface, 200);
+            currentItemSku = skuField.value;setTimeout(initializeGenderSizeColorInterface, 200);
         }
     }
 });
@@ -10777,24 +10371,18 @@ function closeStructureViewModal() {
 
 // Check if structure analysis should be shown (only for backwards structures)
 async function checkAndShowStructureAnalysis() {
-    if (!currentItemSku) {
-        console.log('No SKU available for structure analysis check');
-        return;
+    if (!currentItemSku) {return;
     }
     
     try {
         const response = await fetch('/api/redesign_size_color_system.php?action=check_if_backwards&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
         const data = await response.json();
         
-        if (data.success && data.is_backwards) {
-            console.log('Structure is backwards, showing analysis section');
-            const analysisSection = document.getElementById('structureAnalysisSection');
+        if (data.success && data.is_backwards) {const analysisSection = document.getElementById('structureAnalysisSection');
             if (analysisSection) {
                 analysisSection.style.display = 'block';
             }
-        } else {
-            console.log('Structure is not backwards, hiding analysis section');
-            const analysisSection = document.getElementById('structureAnalysisSection');
+        } else {const analysisSection = document.getElementById('structureAnalysisSection');
             if (analysisSection) {
                 analysisSection.style.display = 'none';
             }
@@ -10815,12 +10403,7 @@ async function checkAndShowStructureAnalysis() {
 // ===== NEW SIZE-COLOR COMBINATIONS INTERFACE =====
 
 // Load size-color combinations in an intuitive format
-async function loadSizeColorCombinations() {
-    console.log('Loading size-color combinations for SKU:', currentItemSku);
-    
-    if (!currentItemSku) {
-        console.log('No SKU available for loading combinations');
-        const combinationsLoading = document.getElementById('combinationsLoading');
+async function loadSizeColorCombinations() {if (!currentItemSku) {const combinationsLoading = document.getElementById('combinationsLoading');
         if (combinationsLoading) {
             combinationsLoading.textContent = 'No SKU available';
         }
@@ -10836,13 +10419,7 @@ async function loadSizeColorCombinations() {
     
     try {
         console.log('Making API call to:', '/api/redesign_size_color_system.php?action=propose_new_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
-        const response = await fetch('/api/redesign_size_color_system.php?action=propose_new_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
-        console.log('API response status:', response.status);
-        const data = await response.json();
-        
-        console.log('Size-color combinations API response:', data);
-        
-        if (data.success) {
+        const response = await fetch('/api/redesign_size_color_system.php?action=propose_new_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');const data = await response.json();if (data.success) {
             renderSizeColorCombinations(data);
             updateStockSummary(data);
         } else {
@@ -11579,9 +11156,7 @@ function checkFirstTimeEdit() {
     
     // If we're in edit mode and the item was just added, show badges
     if (editParam && wasJustAdded === editParam && modalMode === 'edit') {
-        isFirstTimeEdit = true;
-        console.log('First time edit detected for item:', editParam);
-        return true;
+        isFirstTimeEdit = true;return true;
     }
     
     return false;
@@ -11589,11 +11164,7 @@ function checkFirstTimeEdit() {
 
 // Show step badges for first-time users
 function showStepBadges() {
-    if (stepBadgesShown || !isFirstTimeEdit) return;
-    
-    console.log('Showing step badges for first-time edit');
-    
-    // Show all three step badges
+    if (stepBadgesShown || !isFirstTimeEdit) return;// Show all three step badges
     const badge1 = document.getElementById('step-badge-1');
     const badge2 = document.getElementById('step-badge-2'); 
     const badge3 = document.getElementById('step-badge-3');
@@ -11620,10 +11191,7 @@ function showStepBadges() {
 }
 
 // Hide step badges
-function hideStepBadges() {
-    console.log('Hiding step badges');
-    
-    const badges = [
+function hideStepBadges() {const badges = [
         document.getElementById('step-badge-1'),
         document.getElementById('step-badge-2'),
         document.getElementById('step-badge-3')
@@ -11653,9 +11221,7 @@ function addStepBadgeEventListeners() {
             const badge1 = document.getElementById('step-badge-1');
             if (badge1 && !badge1.classList.contains('hidden')) {
                 badge1.classList.remove('pulse');
-                badge1.classList.add('hidden');
-                console.log('Step 1 badge hidden after Marketing Manager click');
-            }
+                badge1.classList.add('hidden');}
         });
     }
     
@@ -11666,9 +11232,7 @@ function addStepBadgeEventListeners() {
             const badge2 = document.getElementById('step-badge-2');
             if (badge2 && !badge2.classList.contains('hidden')) {
                 badge2.classList.remove('pulse');
-                badge2.classList.add('hidden');
-                console.log('Step 2 badge hidden after Get Suggested Cost click');
-            }
+                badge2.classList.add('hidden');}
         });
     }
     
@@ -11679,9 +11243,7 @@ function addStepBadgeEventListeners() {
             const badge3 = document.getElementById('step-badge-3');
             if (badge3 && !badge3.classList.contains('hidden')) {
                 badge3.classList.remove('pulse');
-                badge3.classList.add('hidden');
-                console.log('Step 3 badge hidden after Get Suggested Price click');
-            }
+                badge3.classList.add('hidden');}
         });
     }
     
@@ -11703,10 +11265,7 @@ function addStepBadgeEventListeners() {
 // Initialize step badges system
 function initializeStepBadges() {
     // Check if this is first-time edit
-    if (checkFirstTimeEdit()) {
-        console.log('First-time edit detected, preparing step badges');
-        
-        // Add event listeners
+    if (checkFirstTimeEdit()) {// Add event listeners
         addStepBadgeEventListeners();
         
         // Show badges after modal is fully loaded
@@ -11718,9 +11277,7 @@ function initializeStepBadges() {
 
 // Set flag when new item is added (call this from the add item success handler)
 function markItemAsJustAdded(itemSku) {
-    sessionStorage.setItem('justAddedItem', itemSku);
-    console.log('Marked item as just added:', itemSku);
-}
+    sessionStorage.setItem('justAddedItem', itemSku);}
 
 // Initialize step badges when modal loads
 if (modalMode === 'edit') {

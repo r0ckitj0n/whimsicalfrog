@@ -93,10 +93,7 @@ console.log('Room 6 (Window Wraps) loaded with <?php echo count($roomHelper->get
 
 // Item Details Modal functionality - like yesterday's behavior
 window.showItemDetailsModal = async function(sku) {
-    try {
-        console.log('Opening item details modal for SKU:', sku);
-        
-        // Fetch item details
+    try {// Fetch item details
         const response = await fetch(`api/get_item_details.php?sku=${sku}`);
         const data = await response.json();
         
@@ -260,10 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success && data.coordinates && data.coordinates.length > 0) {
-                baseAreas = data.coordinates;
-                console.log(`Loaded ${ROOM_TYPE} coordinates from database:`, data.map_name);
-                
-                // Initialize coordinates after loading
+                baseAreas = data.coordinates;// Initialize coordinates after loading
                 updateAreaCoordinates();
                 
                 // Re-setup popup events after positioning (fix for hover issues)
@@ -285,14 +279,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Function to setup popup events after positioning
-    function setupPopupEventsAfterPositioning() {
-        console.log('Setting up popup events after positioning...');
-        
-        // Get all product icons
-        const productIcons = document.querySelectorAll('.item-icon');
-        console.log(`Found ${productIcons.length} product icons to setup`);
-        
-        productIcons.forEach((icon, index) => {
+    function setupPopupEventsAfterPositioning() {// Get all product icons
+        const productIcons = document.querySelectorAll('.item-icon');productIcons.forEach((icon, index) => {
             // Make sure the element is interactive
             icon.style.pointerEvents = 'auto';
             icon.style.cursor = 'pointer';
@@ -306,39 +294,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     try {
                         // Decode HTML entities and parse JSON
                         const jsonString = match[1].replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-                        const productData = JSON.parse(jsonString);
-                        
-                        console.log(`Setting up popup for product ${index + 1}:`, productData.sku);
-                        
-                        // Remove existing event listeners by cloning the element
+                        const productData = JSON.parse(jsonString);// Remove existing event listeners by cloning the element
                         const newIcon = icon.cloneNode(true);
                         icon.parentNode.replaceChild(newIcon, icon);
                         
                         // Add fresh event listeners
-                        newIcon.addEventListener('mouseenter', function(e) {
-                            console.log('Mouse enter on product:', productData.sku);
-                            if (typeof window.showGlobalPopup === 'function') {
+                        newIcon.addEventListener('mouseenter', function(e) {if (typeof window.showGlobalPopup === 'function') {
                                 window.showGlobalPopup(this, productData);
                             } else {
                                 console.error('showGlobalPopup function not available');
                             }
                         });
                         
-                        newIcon.addEventListener('mouseleave', function(e) {
-                            console.log('Mouse leave on product:', productData.sku);
-                            if (typeof window.hideGlobalPopup === 'function') {
+                        newIcon.addEventListener('mouseleave', function(e) {if (typeof window.hideGlobalPopup === 'function') {
                                 window.hideGlobalPopup();
                             } else {
                                 console.error('hideGlobalPopup function not available');
                             }
                         });
                         
-                        newIcon.addEventListener('click', function(e) {
-                            console.log('Click on product:', productData.sku);
-                            console.log('showItemDetailsModal available:', typeof window.showItemDetailsModal);
-                            if (typeof window.showItemDetailsModal === 'function') {
-                                console.log('Calling showItemDetailsModal on click...');
-                                window.showItemDetailsModal(productData.sku);
+                        newIcon.addEventListener('click', function(e) {if (typeof window.showItemDetailsModal === 'function') {window.showItemDetailsModal(productData.sku);
                             } else {
                                 console.error('showItemDetailsModal function not available on click');
                             }

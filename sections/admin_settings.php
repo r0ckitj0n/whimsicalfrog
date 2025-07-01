@@ -20282,7 +20282,8 @@ function showCleanupResults(title, data) {
     
     document.body.insertAdjacentHTML('beforeend', resultsHtml);
     
-    // Also show a summary notificationtry {
+    // Also show a summary notification
+    try {
         if (typeof window.showSuccess === 'function') {window.showSuccess(data.message);} else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(data.message);} else {alert('✅ ' + data.message);
         }
     } catch (error) {

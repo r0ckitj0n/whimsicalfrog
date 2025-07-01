@@ -169,9 +169,23 @@ try {
         $shippingAddressJson = json_encode($shippingAddress);
     }
     
-    // Add shippingMethod and shippingAddress to the insert statement
-    $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, shippingAddress, order_status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?,?)");
-    $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $shippingAddressJson, $orderStatus, $date, $paymentStatus]);
+    // Insert the order
+    $stmt = $pdo->prepare("INSERT INTO orders (id, customerNum, total, paymentMethod, paymentStatus, status, date, shippingMethod, shippingAddress, specialInstructions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $success = $stmt->execute([$orderId, $customerNum, $input['total'], $paymentMethod, $paymentStatus, $orderStatus, $date, $shippingMethod, $shippingAddressJson, $input['specialInstructions']]);
+    
+    if (!$success) {
+        throw new Exception("Failed to create order");
+    }
+    
+    // Log order creation
+    DatabaseLogger::logOrderActivity(
+        $orderId,
+        'created',
+        'New order created with total: $' . number_format($input['total'], 2),
+        null,
+        $orderStatus,
+        $customerNum
+    );
     
     // Get the next order item ID sequence number by finding the highest existing ID
     $maxIdStmt = $pdo->prepare("SELECT id FROM order_items WHERE id REGEXP '^OI[0-9]+$' ORDER BY CAST(SUBSTRING(id, 3) AS UNSIGNED) DESC LIMIT 1");

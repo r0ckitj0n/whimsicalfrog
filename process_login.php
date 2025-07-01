@@ -53,6 +53,16 @@ try {
     
     // Verify user exists and password is correct using password_verify
     if ($user && password_verify($password, $user['password'])) {
+        // Password is correct, log the user in
+        $userData = [
+            'userId' => $user['id'],
+            'username' => $user['username'],
+            'email' => $user['email'],
+            'role' => $user['role']
+        ];
+        
+        $_SESSION['user'] = $userData;
+        $_SESSION['auth_time'] = time();
         
         // Check for redirect after login
         $redirectUrl = $_SESSION['redirect_after_login'] ?? null;
@@ -60,6 +70,15 @@ try {
         
         // Use centralized login function
         loginUser($user);
+        
+        // Log successful login
+        DatabaseLogger::logUserActivity(
+            'login',
+            'User logged in successfully',
+            'user',
+            $user['id'],
+            $user['id']
+        );
         
         // User authenticated successfully
         echo json_encode([
@@ -73,6 +92,17 @@ try {
             'redirectUrl' => $redirectUrl // Include redirect URL in response
         ]);
     } else {
+        // Log failed login attempt
+        if (class_exists('DatabaseLogger')) {
+            DatabaseLogger::logUserActivity(
+                'login_failed',
+                "Failed login attempt for username: $username",
+                'user',
+                null,
+                null
+            );
+        }
+        
         http_response_code(401);
         echo json_encode(['error' => 'Invalid username or password']);
     }

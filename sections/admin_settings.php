@@ -206,18 +206,34 @@
           <span class="button-text">File Explorer</span>
         </button>
         
-        <button onclick="openHelpHintsModal()" id="help-hints-btn" class="btn-primary btn-full-width admin-settings-button">
-          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span class="button-text">Help Hints Management</span>
-        </button>
-        
         <button onclick="openWebsiteLogsModal()" id="website-logs-btn" class="btn-primary btn-full-width admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
           <span class="button-text">Website Logs</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- AI & Automation Section -->
+    <div class="settings-section integration-section">
+      <div class="section-header">
+        <h2 class="section-title">AI & Automation</h2>
+        <p class="section-description">Artificial intelligence configuration and automation settings</p>
+      </div>
+      <div class="section-content">
+        <button id="aiSettingsBtn" onclick="openAISettingsModal()" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+          <span class="button-text">AI Settings</span>
+        </button>
+        
+        <button onclick="openHelpHintsModal()" id="help-hints-btn" class="btn-primary btn-full-width admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="button-text">Help Hints Management</span>
         </button>
         
         <button id="databaseMaintenanceBtn" onclick="openDatabaseMaintenanceModal()" class="btn-primary btn-full-width admin-settings-button">
@@ -239,22 +255,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
           </svg>
           <span class="button-text">System Cleanup</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- AI & Automation Section -->
-    <div class="settings-section integration-section">
-      <div class="section-header">
-        <h2 class="section-title">AI & Automation</h2>
-        <p class="section-description">Artificial intelligence configuration and automation settings</p>
-      </div>
-      <div class="section-content">
-        <button id="aiSettingsBtn" onclick="openAISettingsModal()" class="btn-primary btn-full-width admin-settings-button">
-          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-          </svg>
-          <span class="button-text">AI Settings</span>
         </button>
       </div>
     </div>
@@ -3969,7 +3969,7 @@ async function loadModelsForCurrentProvider(settings) {
     }
     
     try {
-        const response = await fetch(`/api/get_ai_models.php?provider=${selectedProvider}`);
+        const response = await fetch(`/api/get_ai_models.php?provider=${selectedProvider}&admin_token=whimsical_admin_2024`);
         const result = await response.json();
         
         if (result.success) {
@@ -3996,7 +3996,7 @@ async function refreshModels(provider) {
     try {
         showNotification('Refreshing Models', `Loading ${provider} models...`, 'info');
         
-        const response = await fetch(`/api/get_ai_models.php?provider=${provider}`);
+        const response = await fetch(`/api/get_ai_models.php?provider=${provider}&admin_token=whimsical_admin_2024`);
         const result = await response.json();
         
         if (result.success) {
@@ -4264,7 +4264,7 @@ let contentToneOptions = [];
 async function loadContentToneOptions() {
     try {
         // First try to get active options
-        const response = await fetch('/api/content_tone_options.php?action=get_active');
+        const response = await fetch('/api/content_tone_options.php?action=get_active&admin_token=whimsical_admin_2024');
         const result = await response.json();
         
         if (result.success && result.options.length > 0) {
@@ -4286,7 +4286,7 @@ async function loadContentToneOptions() {
 
 async function initializeDefaultContentToneOptions() {
     try {
-        const response = await fetch('/api/content_tone_options.php?action=initialize_defaults', {
+        const response = await fetch('/api/content_tone_options.php?action=initialize_defaults&admin_token=whimsical_admin_2024', {
             method: 'POST'
         });
         const result = await response.json();
@@ -4475,7 +4475,7 @@ async function saveContentToneOptions() {
 async function saveContentToneOption(option, isNew = false) {
     try {
         const action = isNew ? 'add' : 'update';
-        const response = await fetch(`/api/content_tone_options.php?action=${action}`, {
+        const response = await fetch(`/api/content_tone_options.php?action=${action}&admin_token=whimsical_admin_2024`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -4501,7 +4501,7 @@ async function saveContentToneOption(option, isNew = false) {
 
 async function deleteContentToneOptionFromDB(optionId) {
     try {
-        const response = await fetch(`/api/content_tone_options.php?action=delete&id=${optionId}`, {
+        const response = await fetch(`/api/content_tone_options.php?action=delete&id=${optionId}&admin_token=whimsical_admin_2024`, {
             method: 'DELETE'
         });
         
@@ -4524,7 +4524,7 @@ let brandVoiceOptions = [];
 async function loadBrandVoiceOptions() {
     try {
         // First try to get active options
-        const response = await fetch('/api/brand_voice_options.php?action=get_active');
+        const response = await fetch('/api/brand_voice_options.php?action=get_active&admin_token=whimsical_admin_2024');
         const result = await response.json();
         
         if (result.success && result.options.length > 0) {
@@ -4546,7 +4546,7 @@ async function loadBrandVoiceOptions() {
 
 async function initializeDefaultBrandVoiceOptions() {
     try {
-        const response = await fetch('/api/brand_voice_options.php?action=initialize_defaults', {
+        const response = await fetch('/api/brand_voice_options.php?action=initialize_defaults&admin_token=whimsical_admin_2024', {
             method: 'POST'
         });
         const result = await response.json();
@@ -4735,7 +4735,7 @@ async function saveBrandVoiceOptions() {
 async function saveBrandVoiceOption(option, isNew = false) {
     try {
         const action = isNew ? 'add' : 'update';
-        const response = await fetch(`/api/brand_voice_options.php?action=${action}`, {
+        const response = await fetch(`/api/brand_voice_options.php?action=${action}&admin_token=whimsical_admin_2024`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -4761,7 +4761,7 @@ async function saveBrandVoiceOption(option, isNew = false) {
 
 async function deleteBrandVoiceOptionFromDB(optionId) {
     try {
-        const response = await fetch(`/api/brand_voice_options.php?action=delete&id=${optionId}`, {
+        const response = await fetch(`/api/brand_voice_options.php?action=delete&id=${optionId}&admin_token=whimsical_admin_2024`, {
             method: 'DELETE'
         });
         
@@ -11843,24 +11843,6 @@ async function saveSizeTemplate(event) {
                     </div>
                 </div>
             </div>
-            </div>
-            
-            <!-- Footer Controls -->
-            <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <select id="analyticsTimeframe" onchange="refreshAnalytics()" class="modal-select">
-                        <option value="1d">Last 24 Hours</option>
-                        <option value="7d" selected>Last 7 Days</option>
-                        <option value="30d">Last 30 Days</option>
-                        <option value="90d">Last 90 Days</option>
-                    </select>
-                    <button onclick="refreshAnalytics()" class="modal-button btn-secondary">
-                        🔄 Refresh Data
-                    </button>
-                </div>
-                <button onclick="closeAnalyticsModal()" class="modal-button btn-secondary">
-                    Close
-                </button>
             </div>
         </div>
     </div>
@@ -22087,7 +22069,7 @@ async function loadAvailableLogs() {
             availableLogs = data.logs;
             renderLogsList();
         } else {
-            showError('Failed to load logs: ' + data.message);
+            showError('Failed to load logs: ' + (data.message || data.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error loading logs:', error);
@@ -22191,7 +22173,7 @@ async function selectLog(logType) {
             document.getElementById('downloadLogBtn').style.display = 'inline-flex';
             document.getElementById('clearLogBtn').style.display = data.log_info.can_clear ? 'inline-flex' : 'none';
         } else {
-            showError('Failed to load log: ' + data.message);
+            showError('Failed to load log: ' + (data.message || data.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error loading log:', error);
@@ -22388,7 +22370,7 @@ async function clearCurrentLog() {
             refreshCurrentLog();
             loadAvailableLogs(); // Refresh the sidebar
         } else {
-            showError('Failed to clear log: ' + data.message);
+            showError('Failed to clear log: ' + (data.message || data.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error clearing log:', error);
@@ -22424,7 +22406,7 @@ async function searchAllLogs() {
         if (data.success) {
             showSearchResults(data.results, query);
         } else {
-            showError('Search failed: ' + data.message);
+            showError('Search failed: ' + (data.message || data.error || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error searching logs:', error);

@@ -42,12 +42,49 @@ class EmailHelper {
         ], $options);
 
         try {
+            $result = false;
             if (self::$config['smtp_enabled']) {
-                return self::sendWithSMTP($to, $subject, $body, $options);
+                $result = self::sendWithSMTP($to, $subject, $body, $options);
             } else {
-                return self::sendWithMail($to, $subject, $body, $options);
+                $result = self::sendWithMail($to, $subject, $body, $options);
             }
+            
+            // Log successful email
+            if ($result && class_exists('DatabaseLogger')) {
+                $emailType = 'general';
+                if (strpos($subject, 'Order Confirmation') !== false) {
+                    $emailType = 'order_confirmation';
+                } elseif (strpos($subject, 'New Order Received') !== false) {
+                    $emailType = 'admin_notification';
+                } elseif (strpos($subject, 'Welcome') !== false) {
+                    $emailType = 'welcome';
+                } elseif (strpos($subject, 'Password Reset') !== false) {
+                    $emailType = 'password_reset';
+                }
+                
+                DatabaseLogger::logEmail(
+                    is_array($to) ? implode(', ', $to) : $to,
+                    $options['from_email'],
+                    $subject,
+                    $emailType,
+                    'sent'
+                );
+            }
+            
+            return $result;
         } catch (Exception $e) {
+            // Log failed email
+            if (class_exists('DatabaseLogger')) {
+                DatabaseLogger::logEmail(
+                    is_array($to) ? implode(', ', $to) : $to,
+                    $options['from_email'],
+                    $subject,
+                    'general',
+                    'failed',
+                    $e->getMessage()
+                );
+            }
+            
             Logger::error('Email send failed', [
                 'to' => $to,
                 'subject' => $subject,

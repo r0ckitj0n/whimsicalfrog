@@ -44,52 +44,7 @@ try {
 function listAvailableLogs($pdo) {
     $logs = [];
     
-    // File-based logs
-    $fileLogPatterns = [
-        './monitor.log' => ['name' => 'System Monitor Log', 'description' => 'System monitoring and health checks', 'category' => 'System'],
-        './cron_test.log' => ['name' => 'Cron Test Log', 'description' => 'Scheduled task testing and execution', 'category' => 'System'],
-        './php_server.log' => ['name' => 'PHP Server Log', 'description' => 'PHP development server logs', 'category' => 'Development'],
-        './autostart.log' => ['name' => 'Autostart Log', 'description' => 'Application startup and initialization', 'category' => 'System'],
-        './server.log' => ['name' => 'Server Log', 'description' => 'General server activity and requests', 'category' => 'System'],
-        './inventory_errors.log' => ['name' => 'Inventory Errors', 'description' => 'Inventory management error tracking', 'category' => 'Application'],
-        '/var/log/apache2/access.log' => ['name' => 'Apache Access Log', 'description' => 'Web server access requests', 'category' => 'Web Server'],
-        '/var/log/apache2/error.log' => ['name' => 'Apache Error Log', 'description' => 'Web server errors and warnings', 'category' => 'Web Server'],
-        '/var/log/nginx/access.log' => ['name' => 'Nginx Access Log', 'description' => 'Web server access requests', 'category' => 'Web Server'],
-        '/var/log/nginx/error.log' => ['name' => 'Nginx Error Log', 'description' => 'Web server errors and warnings', 'category' => 'Web Server'],
-        '/var/log/mysql/error.log' => ['name' => 'MySQL Error Log', 'description' => 'Database server errors', 'category' => 'Database'],
-        '/var/log/php7.4/fpm.log' => ['name' => 'PHP-FPM Log', 'description' => 'PHP FastCGI Process Manager logs', 'category' => 'PHP'],
-        '/var/log/php8.0/fpm.log' => ['name' => 'PHP-FPM Log', 'description' => 'PHP FastCGI Process Manager logs', 'category' => 'PHP'],
-        '/var/log/php8.1/fpm.log' => ['name' => 'PHP-FPM Log', 'description' => 'PHP FastCGI Process Manager logs', 'category' => 'PHP'],
-        '/var/log/php8.2/fpm.log' => ['name' => 'PHP-FPM Log', 'description' => 'PHP FastCGI Process Manager logs', 'category' => 'PHP']
-    ];
-    
-    // Check which file logs exist
-    foreach ($fileLogPatterns as $path => $info) {
-        if (file_exists($path) && is_readable($path)) {
-            $size = filesize($path);
-            $entries = 0;
-            
-            // Count lines to estimate entries
-            if ($size < 10 * 1024 * 1024) { // Only count for files under 10MB
-                $entries = $size > 0 ? count(file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)) : 0;
-            } else {
-                $entries = 'Large file';
-            }
-            
-            $logs[] = [
-                'type' => 'file_' . md5($path),
-                'name' => $info['name'],
-                'description' => $info['description'],
-                'category' => $info['category'],
-                'entries' => is_numeric($entries) ? $entries : 0,
-                'size' => formatFileSize($size),
-                'path' => $path,
-                'log_source' => 'file'
-            ];
-        }
-    }
-    
-    // Database-based logs
+    // Database-based logs only
     $databaseLogs = [
         'analytics_logs' => [
             'name' => 'Analytics Logs',
@@ -128,8 +83,8 @@ function listAvailableLogs($pdo) {
             'description' => 'PHP errors, exceptions, and debugging info',
             'category' => 'Application',
             'table' => 'error_logs',
-            'timestamp_field' => 'timestamp',
-            'message_field' => 'error_message'
+            'timestamp_field' => 'created_at',
+            'message_field' => 'message'
         ],
         'admin_activity_logs' => [
             'name' => 'Admin Activity Logs',
@@ -166,8 +121,18 @@ function listAvailableLogs($pdo) {
         try {
             $stmt = $pdo->query("SELECT COUNT(*) as count FROM $tableName");
             $count = $stmt->fetch()['count'];
+            
+            // Get last entry timestamp
+            $lastEntryTime = null;
+            $timestampField = $info['timestamp_field'];
+            $lastStmt = $pdo->query("SELECT MAX($timestampField) as last_entry FROM $tableName");
+            $lastResult = $lastStmt->fetch();
+            if ($lastResult && $lastResult['last_entry']) {
+                $lastEntryTime = $lastResult['last_entry'];
+            }
         } catch (Exception $e) {
             $count = 0;
+            $lastEntryTime = null;
         }
         
         $logs[] = [
@@ -177,6 +142,9 @@ function listAvailableLogs($pdo) {
             'category' => $info['category'],
             'entries' => $count,
             'table' => $tableName,
+            'timestamp_field' => $info['timestamp_field'],
+            'message_field' => $info['message_field'],
+            'last_entry' => $lastEntryTime,
             'log_source' => 'database'
         ];
     }
@@ -205,10 +173,62 @@ function createLogTable($pdo, $tableName, $type) {
             )";
             break;
             
+        case 'error_logs':
+            $sql = "CREATE TABLE $tableName (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                error_type VARCHAR(100) NOT NULL DEFAULT 'ERROR',
+                message TEXT NOT NULL,
+                context_data JSON,
+                user_id INT NULL,
+                file_path VARCHAR(500),
+                line_number INT,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_created_at (created_at),
+                INDEX idx_error_type (error_type),
+                INDEX idx_file_path (file_path)
+            )";
+            break;
+            
+        case 'user_activity_logs':
+            $sql = "CREATE TABLE $tableName (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NULL,
+                session_id VARCHAR(255),
+                activity_type VARCHAR(100) NOT NULL,
+                activity_description TEXT,
+                target_type VARCHAR(100),
+                target_id INT,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_user_id (user_id),
+                INDEX idx_timestamp (timestamp),
+                INDEX idx_activity_type (activity_type)
+            )";
+            break;
+            
+        case 'admin_activity_logs':
+            $sql = "CREATE TABLE $tableName (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                admin_user_id INT NOT NULL,
+                action_type VARCHAR(100) NOT NULL,
+                action_description TEXT,
+                target_type VARCHAR(100),
+                target_id INT,
+                ip_address VARCHAR(45),
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_admin_user_id (admin_user_id),
+                INDEX idx_timestamp (timestamp),
+                INDEX idx_action_type (action_type)
+            )";
+            break;
+            
         case 'order_logs':
             $sql = "CREATE TABLE $tableName (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                order_id INT NOT NULL,
+                order_id VARCHAR(50) NOT NULL,
                 user_id INT NULL,
                 action VARCHAR(100) NOT NULL,
                 log_message TEXT,
@@ -225,65 +245,16 @@ function createLogTable($pdo, $tableName, $type) {
         case 'inventory_logs':
             $sql = "CREATE TABLE $tableName (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                item_sku VARCHAR(100) NOT NULL,
-                change_type VARCHAR(50) NOT NULL,
-                previous_quantity INT,
-                new_quantity INT,
-                change_amount INT,
+                item_sku VARCHAR(50) NOT NULL,
+                action_type VARCHAR(100) NOT NULL,
                 change_description TEXT,
-                admin_user_id INT NULL,
+                old_quantity INT,
+                new_quantity INT,
+                old_price DECIMAL(10,2),
+                new_price DECIMAL(10,2),
+                user_id INT NULL,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_item_sku (item_sku),
-                INDEX idx_timestamp (timestamp),
-                INDEX idx_change_type (change_type)
-            )";
-            break;
-            
-        case 'user_activity_logs':
-            $sql = "CREATE TABLE $tableName (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NULL,
-                activity_type VARCHAR(100) NOT NULL,
-                activity_description TEXT,
-                ip_address VARCHAR(45),
-                user_agent TEXT,
-                session_id VARCHAR(255),
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_user_id (user_id),
-                INDEX idx_timestamp (timestamp),
-                INDEX idx_activity_type (activity_type)
-            )";
-            break;
-            
-        case 'error_logs':
-            $sql = "CREATE TABLE $tableName (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                error_level VARCHAR(20) NOT NULL DEFAULT 'ERROR',
-                error_message TEXT NOT NULL,
-                file_path VARCHAR(500),
-                line_number INT,
-                stack_trace TEXT,
-                user_id INT NULL,
-                session_id VARCHAR(255),
-                request_uri VARCHAR(500),
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_timestamp (timestamp),
-                INDEX idx_error_level (error_level),
-                INDEX idx_file_path (file_path)
-            )";
-            break;
-            
-        case 'admin_activity_logs':
-            $sql = "CREATE TABLE $tableName (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                admin_user_id INT NOT NULL,
-                action_type VARCHAR(100) NOT NULL,
-                action_description TEXT,
-                target_type VARCHAR(100),
-                target_id INT,
-                ip_address VARCHAR(45),
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_admin_user_id (admin_user_id),
                 INDEX idx_timestamp (timestamp),
                 INDEX idx_action_type (action_type)
             )";
@@ -310,160 +281,99 @@ function createLogTable($pdo, $tableName, $type) {
         try {
             $pdo->exec($sql);
         } catch (Exception $e) {
-            // Table creation failed, but continue
+            error_log("Failed to create log table $tableName: " . $e->getMessage());
         }
     }
 }
 
 function getLogContent($pdo) {
     $type = $_GET['type'] ?? '';
-    $page = max(1, intval($_GET['page'] ?? 1));
-    $limit = max(10, min(500, intval($_GET['limit'] ?? 100)));
+    $page = (int)($_GET['page'] ?? 1);
+    $limit = (int)($_GET['limit'] ?? 50);
     $offset = ($page - 1) * $limit;
     
-    if (strpos($type, 'file_') === 0) {
-        // File-based log
-        getFileLogContent($type, $page, $limit, $offset);
-    } else {
-        // Database-based log
-        getDatabaseLogContent($pdo, $type, $page, $limit, $offset);
-    }
-}
-
-function getFileLogContent($type, $page, $limit, $offset) {
-    // Find the file path from our patterns
-    $fileLogPatterns = [
-        'file_' . md5('./monitor.log') => './monitor.log',
-        'file_' . md5('./cron_test.log') => './cron_test.log',
-        'file_' . md5('./php_server.log') => './php_server.log',
-        'file_' . md5('./autostart.log') => './autostart.log',
-        'file_' . md5('./server.log') => './server.log',
-        'file_' . md5('./inventory_errors.log') => './inventory_errors.log',
-        'file_' . md5('/var/log/apache2/access.log') => '/var/log/apache2/access.log',
-        'file_' . md5('/var/log/apache2/error.log') => '/var/log/apache2/error.log',
-        'file_' . md5('/var/log/nginx/access.log') => '/var/log/nginx/access.log',
-        'file_' . md5('/var/log/nginx/error.log') => '/var/log/nginx/error.log',
-        'file_' . md5('/var/log/mysql/error.log') => '/var/log/mysql/error.log',
-        'file_' . md5('/var/log/php7.4/fpm.log') => '/var/log/php7.4/fpm.log',
-        'file_' . md5('/var/log/php8.0/fpm.log') => '/var/log/php8.0/fpm.log',
-        'file_' . md5('/var/log/php8.1/fpm.log') => '/var/log/php8.1/fpm.log',
-        'file_' . md5('/var/log/php8.2/fpm.log') => '/var/log/php8.2/fpm.log'
-    ];
-    
-    $filePath = $fileLogPatterns[$type] ?? null;
-    if (!$filePath || !file_exists($filePath) || !is_readable($filePath)) {
-        echo json_encode(['success' => false, 'error' => 'Log file not found or not readable']);
+    if (empty($type)) {
+        echo json_encode(['success' => false, 'error' => 'Log type required']);
         return;
     }
     
-    // Read file lines
-    $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $totalLines = count($lines);
-    
-    // Reverse to get newest first
-    $lines = array_reverse($lines);
-    
-    // Paginate
-    $paginatedLines = array_slice($lines, $offset, $limit);
-    
-    // Format entries
-    $entries = [];
-    foreach ($paginatedLines as $i => $line) {
-        $entries[] = [
-            'id' => $offset + $i + 1,
-            'message' => $line,
-            'timestamp' => null, // File logs don't always have parseable timestamps
-            'level' => extractLogLevel($line)
-        ];
-    }
-    
-    $pagination = [
-        'current_page' => $page,
-        'total_pages' => ceil($totalLines / $limit),
-        'total_entries' => $totalLines,
-        'has_previous' => $page > 1,
-        'has_next' => $page < ceil($totalLines / $limit),
-        'start' => $offset + 1,
-        'end' => min($offset + $limit, $totalLines)
-    ];
-    
-    echo json_encode([
-        'success' => true,
-        'entries' => $entries,
-        'pagination' => $pagination,
-        'log_info' => [
-            'type' => $type,
-            'source' => 'file',
-            'path' => $filePath,
-            'can_clear' => is_writable($filePath)
-        ]
-    ]);
+    getDatabaseLogContent($pdo, $type, $page, $limit, $offset);
 }
 
 function getDatabaseLogContent($pdo, $type, $page, $limit, $offset) {
-    $databaseLogs = [
-        'analytics_logs' => ['table' => 'analytics_logs', 'timestamp_field' => 'timestamp', 'message_field' => 'event_data'],
-        'order_logs' => ['table' => 'order_logs', 'timestamp_field' => 'created_at', 'message_field' => 'log_message'],
-        'inventory_logs' => ['table' => 'inventory_logs', 'timestamp_field' => 'timestamp', 'message_field' => 'change_description'],
-        'user_activity_logs' => ['table' => 'user_activity_logs', 'timestamp_field' => 'timestamp', 'message_field' => 'activity_description'],
-        'error_logs' => ['table' => 'error_logs', 'timestamp_field' => 'timestamp', 'message_field' => 'error_message'],
-        'admin_activity_logs' => ['table' => 'admin_activity_logs', 'timestamp_field' => 'timestamp', 'message_field' => 'action_description'],
-        'email_logs' => ['table' => 'email_logs', 'timestamp_field' => 'sent_at', 'message_field' => 'email_subject']
+    // Map log types to table configurations
+    $logConfigs = [
+        'analytics_logs' => [
+            'table' => 'analytics_logs',
+            'timestamp_field' => 'timestamp',
+            'fields' => 'id, user_id, session_id, page_url, event_type, event_data, ip_address, timestamp'
+        ],
+        'error_logs' => [
+            'table' => 'error_logs',
+            'timestamp_field' => 'created_at',
+            'fields' => 'id, error_type, message, context_data, user_id, file_path, line_number, ip_address, created_at'
+        ],
+        'user_activity_logs' => [
+            'table' => 'user_activity_logs',
+            'timestamp_field' => 'timestamp',
+            'fields' => 'id, user_id, session_id, activity_type, activity_description, target_type, target_id, ip_address, timestamp'
+        ],
+        'admin_activity_logs' => [
+            'table' => 'admin_activity_logs',
+            'timestamp_field' => 'timestamp',
+            'fields' => 'id, admin_user_id, action_type, action_description, target_type, target_id, ip_address, timestamp'
+        ],
+        'order_logs' => [
+            'table' => 'order_logs',
+            'timestamp_field' => 'created_at',
+            'fields' => 'id, order_id, user_id, action, log_message, previous_status, new_status, admin_user_id, created_at'
+        ],
+        'inventory_logs' => [
+            'table' => 'inventory_logs',
+            'timestamp_field' => 'timestamp',
+            'fields' => 'id, item_sku, action_type, change_description, old_quantity, new_quantity, old_price, new_price, user_id, timestamp'
+        ],
+        'email_logs' => [
+            'table' => 'email_logs',
+            'timestamp_field' => 'sent_at',
+            'fields' => 'id, to_email, from_email, email_subject, email_type, status, error_message, sent_at'
+        ]
     ];
     
-    $logInfo = $databaseLogs[$type] ?? null;
-    if (!$logInfo) {
+    if (!isset($logConfigs[$type])) {
         echo json_encode(['success' => false, 'error' => 'Unknown log type']);
         return;
     }
     
-    $table = $logInfo['table'];
-    $timestampField = $logInfo['timestamp_field'];
-    $messageField = $logInfo['message_field'];
+    $config = $logConfigs[$type];
+    $table = $config['table'];
+    $timestampField = $config['timestamp_field'];
+    $fields = $config['fields'];
     
     try {
         // Get total count
-        $countStmt = $pdo->query("SELECT COUNT(*) as total FROM $table");
-        $total = $countStmt->fetch()['total'];
+        $countStmt = $pdo->prepare("SELECT COUNT(*) as total FROM $table");
+        $countStmt->execute();
+        $totalCount = $countStmt->fetch()['total'];
         
-        // Get entries
-        $sql = "SELECT *, $timestampField as timestamp, $messageField as message FROM $table 
-                ORDER BY $timestampField DESC LIMIT $limit OFFSET $offset";
-        $stmt = $pdo->query($sql);
+        // Get log entries
+        $stmt = $pdo->prepare("
+            SELECT $fields 
+            FROM $table 
+            ORDER BY $timestampField DESC 
+            LIMIT ? OFFSET ?
+        ");
+        $stmt->execute([$limit, $offset]);
         $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Format entries
-        $formattedEntries = [];
-        foreach ($entries as $entry) {
-            $formattedEntries[] = [
-                'id' => $entry['id'],
-                'message' => $entry['message'] ?? 'No message',
-                'timestamp' => $entry['timestamp'],
-                'level' => $entry['error_level'] ?? 'INFO',
-                'context' => array_diff_key($entry, ['id' => '', 'message' => '', 'timestamp' => ''])
-            ];
-        }
-        
-        $pagination = [
-            'current_page' => $page,
-            'total_pages' => ceil($total / $limit),
-            'total_entries' => $total,
-            'has_previous' => $page > 1,
-            'has_next' => $page < ceil($total / $limit),
-            'start' => $offset + 1,
-            'end' => min($offset + $limit, $total)
-        ];
         
         echo json_encode([
             'success' => true,
-            'entries' => $formattedEntries,
-            'pagination' => $pagination,
-            'log_info' => [
-                'type' => $type,
-                'source' => 'database',
-                'table' => $table,
-                'can_clear' => true
-            ]
+            'type' => $type,
+            'entries' => $entries,
+            'total' => $totalCount,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => ceil($totalCount / $limit)
         ]);
         
     } catch (Exception $e) {
@@ -472,392 +382,215 @@ function getDatabaseLogContent($pdo, $type, $page, $limit, $offset) {
 }
 
 function searchLogs($pdo) {
-    $input = json_decode(file_get_contents('php://input'), true);
-    $query = $input['query'] ?? '';
-    $logType = $input['log_type'] ?? 'all';
+    $query = $_GET['query'] ?? '';
+    $type = $_GET['type'] ?? '';
     
-    if (!$query) {
+    if (empty($query)) {
         echo json_encode(['success' => false, 'error' => 'Search query required']);
         return;
     }
     
-    $results = [];
-    
-    // Search database logs
-    if ($logType === 'all' || $logType === 'database') {
-        $results = array_merge($results, searchDatabaseLogs($pdo, $query));
-    }
-    
-    // Search file logs
-    if ($logType === 'all' || $logType === 'files') {
-        $results = array_merge($results, searchFileLogs($query));
-    }
-    
-    // Sort by timestamp (newest first)
-    usort($results, function($a, $b) {
-        return strtotime($b['timestamp']) - strtotime($a['timestamp']);
-    });
-    
-    echo json_encode(['success' => true, 'results' => $results]);
+    searchDatabaseLogs($pdo, $query, $type);
 }
 
-function searchDatabaseLogs($pdo, $query) {
+function searchDatabaseLogs($pdo, $query, $type = '') {
     $results = [];
-    $tables = [
-        'error_logs' => 'error_message',
-        'order_logs' => 'log_message',
-        'admin_activity_logs' => 'action_description',
-        'user_activity_logs' => 'activity_description',
-        'inventory_logs' => 'change_description',
-        'email_logs' => 'email_subject'
+    
+    // Define searchable tables and their key fields
+    $searchTables = [
+        'analytics_logs' => ['page_url', 'event_type', 'event_data'],
+        'error_logs' => ['error_type', 'message', 'file_path'],
+        'user_activity_logs' => ['activity_type', 'activity_description'],
+        'admin_activity_logs' => ['action_type', 'action_description'],
+        'order_logs' => ['order_id', 'action', 'log_message'],
+        'inventory_logs' => ['item_sku', 'change_description'],
+        'email_logs' => ['to_email', 'email_subject', 'email_type']
     ];
     
-    foreach ($tables as $table => $messageField) {
+    // If specific type requested, only search that table
+    if (!empty($type) && isset($searchTables[$type])) {
+        $searchTables = [$type => $searchTables[$type]];
+    }
+    
+    foreach ($searchTables as $table => $fields) {
         try {
-            $sql = "SELECT id, $messageField as message, 
-                           COALESCE(timestamp, created_at, sent_at) as timestamp
-                    FROM $table 
-                    WHERE $messageField LIKE :query 
-                    ORDER BY COALESCE(timestamp, created_at, sent_at) DESC 
-                    LIMIT 20";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute(['query' => "%$query%"]);
+            $whereConditions = [];
+            $params = [];
             
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $results[] = [
-                    'log_type' => $table,
-                    'id' => $row['id'],
-                    'message' => $row['message'],
-                    'timestamp' => $row['timestamp']
-                ];
+            foreach ($fields as $field) {
+                $whereConditions[] = "$field LIKE ?";
+                $params[] = "%$query%";
             }
+            
+            // Get timestamp field for ordering
+            $timestampField = ($table === 'error_logs') ? 'created_at' : 
+                             (($table === 'order_logs' || $table === 'email_logs') ? 
+                              ($table === 'email_logs' ? 'sent_at' : 'created_at') : 'timestamp');
+            
+            $sql = "SELECT *, '$table' as source_table FROM $table WHERE " . implode(' OR ', $whereConditions) . " ORDER BY $timestampField DESC LIMIT 20";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $tableResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $results = array_merge($results, $tableResults);
+            
         } catch (Exception $e) {
-            // Table might not exist, continue
+            // Table might not exist, continue with others
+            continue;
         }
     }
     
-    return $results;
-}
-
-function searchFileLogs($query) {
-    $results = [];
-    $filePaths = [
-        './monitor.log',
-        './cron_test.log',
-        './php_server.log',
-        './autostart.log',
-        './server.log',
-        './inventory_errors.log'
-    ];
-    
-    foreach ($filePaths as $path) {
-        if (file_exists($path) && is_readable($path)) {
-            $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $lineNum => $line) {
-                if (stripos($line, $query) !== false) {
-                    $results[] = [
-                        'log_type' => 'file_' . basename($path),
-                        'id' => $lineNum + 1,
-                        'message' => $line,
-                        'timestamp' => date('Y-m-d H:i:s') // File logs don't have reliable timestamps
-                    ];
-                    
-                    if (count($results) >= 50) break 2; // Limit results
-                }
-            }
-        }
-    }
-    
-    return $results;
+    echo json_encode(['success' => true, 'results' => $results, 'query' => $query]);
 }
 
 function clearLog($pdo) {
-    $input = json_decode(file_get_contents('php://input'), true);
-    $type = $input['type'] ?? '';
+    $type = $_POST['type'] ?? '';
     
-    if (strpos($type, 'file_') === 0) {
-        // Clear file log
-        clearFileLog($type);
-    } else {
-        // Clear database log
-        clearDatabaseLog($pdo, $type);
-    }
-}
-
-function clearFileLog($type) {
-    $fileLogPatterns = [
-        'file_' . md5('./monitor.log') => './monitor.log',
-        'file_' . md5('./cron_test.log') => './cron_test.log',
-        'file_' . md5('./php_server.log') => './php_server.log',
-        'file_' . md5('./autostart.log') => './autostart.log',
-        'file_' . md5('./server.log') => './server.log',
-        'file_' . md5('./inventory_errors.log') => './inventory_errors.log'
-    ];
-    
-    $filePath = $fileLogPatterns[$type] ?? null;
-    if (!$filePath || !file_exists($filePath) || !is_writable($filePath)) {
-        echo json_encode(['success' => false, 'error' => 'Cannot clear this log file']);
+    if (empty($type)) {
+        echo json_encode(['success' => false, 'error' => 'Log type required']);
         return;
     }
     
-    if (file_put_contents($filePath, '') !== false) {
-        echo json_encode(['success' => true, 'message' => 'Log file cleared successfully']);
-    } else {
-        echo json_encode(['success' => false, 'error' => 'Failed to clear log file']);
-    }
+    clearDatabaseLog($pdo, $type);
 }
 
 function clearDatabaseLog($pdo, $type) {
-    $databaseLogs = [
-        'analytics_logs' => 'analytics_logs',
-        'order_logs' => 'order_logs',
-        'inventory_logs' => 'inventory_logs',
-        'user_activity_logs' => 'user_activity_logs',
-        'error_logs' => 'error_logs',
-        'admin_activity_logs' => 'admin_activity_logs',
-        'email_logs' => 'email_logs'
+    $validTables = [
+        'analytics_logs', 'error_logs', 'user_activity_logs', 
+        'admin_activity_logs', 'order_logs', 'inventory_logs', 'email_logs'
     ];
     
-    $table = $databaseLogs[$type] ?? null;
-    if (!$table) {
-        echo json_encode(['success' => false, 'error' => 'Unknown log type']);
+    if (!in_array($type, $validTables)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid log type']);
         return;
     }
     
     try {
-        $pdo->exec("DELETE FROM $table");
-        echo json_encode(['success' => true, 'message' => 'Database log cleared successfully']);
+        $stmt = $pdo->prepare("DELETE FROM $type");
+        $result = $stmt->execute();
+        
+        if ($result) {
+            // Reset auto-increment
+            $pdo->exec("ALTER TABLE $type AUTO_INCREMENT = 1");
+            echo json_encode(['success' => true, 'message' => ucfirst(str_replace('_', ' ', $type)) . ' cleared successfully']);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to clear log']);
+        }
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'error' => 'Failed to clear database log: ' . $e->getMessage()]);
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
     }
 }
 
 function downloadLog($pdo) {
     $type = $_GET['type'] ?? '';
     
-    if (strpos($type, 'file_') === 0) {
-        downloadFileLog($type);
-    } else {
-        downloadDatabaseLog($pdo, $type);
-    }
-}
-
-function downloadFileLog($type) {
-    $fileLogPatterns = [
-        'file_' . md5('./monitor.log') => './monitor.log',
-        'file_' . md5('./cron_test.log') => './cron_test.log',
-        'file_' . md5('./php_server.log') => './php_server.log',
-        'file_' . md5('./autostart.log') => './autostart.log',
-        'file_' . md5('./server.log') => './server.log',
-        'file_' . md5('./inventory_errors.log') => './inventory_errors.log'
-    ];
-    
-    $filePath = $fileLogPatterns[$type] ?? null;
-    if (!$filePath || !file_exists($filePath) || !is_readable($filePath)) {
-        http_response_code(404);
+    if (empty($type)) {
+        echo json_encode(['success' => false, 'error' => 'Log type required']);
         return;
     }
     
-    header('Content-Type: text/plain');
-    header('Content-Disposition: attachment; filename="' . basename($filePath) . '"');
-    header('Content-Length: ' . filesize($filePath));
-    readfile($filePath);
+    downloadDatabaseLog($pdo, $type);
 }
 
 function downloadDatabaseLog($pdo, $type) {
-    $databaseLogs = [
-        'analytics_logs' => 'analytics_logs',
-        'order_logs' => 'order_logs',
-        'inventory_logs' => 'inventory_logs',
-        'user_activity_logs' => 'user_activity_logs',
-        'error_logs' => 'error_logs',
-        'admin_activity_logs' => 'admin_activity_logs',
-        'email_logs' => 'email_logs'
+    $validTables = [
+        'analytics_logs', 'error_logs', 'user_activity_logs', 
+        'admin_activity_logs', 'order_logs', 'inventory_logs', 'email_logs'
     ];
     
-    $table = $databaseLogs[$type] ?? null;
-    if (!$table) {
-        http_response_code(404);
+    if (!in_array($type, $validTables)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid log type']);
         return;
     }
     
     try {
-        $stmt = $pdo->query("SELECT * FROM $table ORDER BY id DESC");
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $pdo->prepare("SELECT * FROM $type ORDER BY id DESC");
+        $stmt->execute();
+        $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        header('Content-Type: text/plain');
-        header('Content-Disposition: attachment; filename="' . $type . '_' . date('Y-m-d') . '.txt"');
+        // Set headers for file download
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $type . '_' . date('Y-m-d_H-i-s') . '.csv"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
         
-        foreach ($rows as $row) {
-            echo implode("\t", $row) . "\n";
+        // Output CSV
+        $output = fopen('php://output', 'w');
+        
+        if (!empty($entries)) {
+            // Write header row
+            fputcsv($output, array_keys($entries[0]));
+            
+            // Write data rows
+            foreach ($entries as $entry) {
+                fputcsv($output, $entry);
+            }
         }
+        
+        fclose($output);
+        exit;
+        
     } catch (Exception $e) {
         http_response_code(500);
-        echo "Error: " . $e->getMessage();
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
     }
 }
 
 function cleanupOldLogs($pdo) {
     $cutoffDate = date('Y-m-d H:i:s', strtotime('-30 days'));
-    $cleanup_results = [
-        'database_logs' => [],
-        'file_logs' => [],
-        'cutoff_date' => $cutoffDate
-    ];
+    $results = [];
     
-    // Clean up database logs
-    $databaseLogs = [
+    $logTables = [
         'analytics_logs' => 'timestamp',
-        'order_logs' => 'created_at', 
-        'inventory_logs' => 'timestamp',
+        'error_logs' => 'created_at',
         'user_activity_logs' => 'timestamp',
-        'error_logs' => 'timestamp',
         'admin_activity_logs' => 'timestamp',
+        'order_logs' => 'created_at',
+        'inventory_logs' => 'timestamp',
         'email_logs' => 'sent_at'
     ];
     
-    foreach ($databaseLogs as $table => $timestampField) {
+    foreach ($logTables as $table => $timestampField) {
         try {
-            // Check if table exists
-            $stmt = $pdo->query("SHOW TABLES LIKE '$table'");
-            if ($stmt->rowCount() > 0) {
-                // Count old records before cleanup
-                $countStmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE $timestampField < ?");
-                $countStmt->execute([$cutoffDate]);
-                $oldCount = $countStmt->fetch()['count'];
+            // Count old entries first
+            $countStmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE $timestampField < ?");
+            $countStmt->execute([$cutoffDate]);
+            $oldCount = $countStmt->fetch()['count'];
+            
+            if ($oldCount > 0) {
+                // Delete old entries
+                $deleteStmt = $pdo->prepare("DELETE FROM $table WHERE $timestampField < ?");
+                $deleted = $deleteStmt->execute([$cutoffDate]);
                 
-                if ($oldCount > 0) {
-                    // Delete old records
-                    $deleteStmt = $pdo->prepare("DELETE FROM $table WHERE $timestampField < ?");
-                    $deleteStmt->execute([$cutoffDate]);
-                    
-                    $cleanup_results['database_logs'][$table] = [
-                        'deleted_records' => $oldCount,
-                        'timestamp_field' => $timestampField
+                if ($deleted) {
+                    $results[$table] = [
+                        'deleted' => $oldCount,
+                        'status' => 'success'
+                    ];
+                } else {
+                    $results[$table] = [
+                        'deleted' => 0,
+                        'status' => 'failed',
+                        'error' => 'Delete operation failed'
                     ];
                 }
+            } else {
+                $results[$table] = [
+                    'deleted' => 0,
+                    'status' => 'no_old_entries'
+                ];
             }
         } catch (Exception $e) {
-            $cleanup_results['database_logs'][$table] = [
+            $results[$table] = [
+                'deleted' => 0,
+                'status' => 'error',
                 'error' => $e->getMessage()
             ];
         }
     }
     
-    // Clean up file logs (rotate/truncate old content)
-    $fileLogPaths = [
-        './monitor.log',
-        './cron_test.log', 
-        './php_server.log',
-        './autostart.log',
-        './server.log',
-        './inventory_errors.log'
-    ];
-    
-    foreach ($fileLogPaths as $logPath) {
-        if (file_exists($logPath) && is_writable($logPath)) {
-            try {
-                $originalSize = filesize($logPath);
-                $cleanedLines = cleanupFileLogContent($logPath, $cutoffDate);
-                $newSize = file_exists($logPath) ? filesize($logPath) : 0;
-                
-                $cleanup_results['file_logs'][$logPath] = [
-                    'original_size' => formatFileSize($originalSize),
-                    'new_size' => formatFileSize($newSize),
-                    'lines_kept' => $cleanedLines,
-                    'space_freed' => formatFileSize($originalSize - $newSize)
-                ];
-            } catch (Exception $e) {
-                $cleanup_results['file_logs'][$logPath] = [
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
-    }
-    
-    return $cleanup_results;
-}
-
-function cleanupFileLogContent($logPath, $cutoffDate) {
-    if (!file_exists($logPath) || !is_readable($logPath) || !is_writable($logPath)) {
-        return 0;
-    }
-    
-    $cutoffTimestamp = strtotime($cutoffDate);
-    $tempFile = $logPath . '.tmp';
-    $keptLines = 0;
-    
-    $inputHandle = fopen($logPath, 'r');
-    $outputHandle = fopen($tempFile, 'w');
-    
-    if (!$inputHandle || !$outputHandle) {
-        if ($inputHandle) fclose($inputHandle);
-        if ($outputHandle) fclose($outputHandle);
-        return 0;
-    }
-    
-    while (($line = fgets($inputHandle)) !== false) {
-        $lineTimestamp = extractTimestampFromLogLine($line);
-        
-        // Keep the line if we can't parse timestamp (safer) or if it's newer than cutoff
-        if ($lineTimestamp === false || $lineTimestamp >= $cutoffTimestamp) {
-            fwrite($outputHandle, $line);
-            $keptLines++;
-        }
-    }
-    
-    fclose($inputHandle);
-    fclose($outputHandle);
-    
-    // Replace original file with cleaned version
-    if ($keptLines > 0) {
-        rename($tempFile, $logPath);
-    } else {
-        // If no lines to keep, create empty file
-        unlink($tempFile);
-        file_put_contents($logPath, '');
-    }
-    
-    return $keptLines;
-}
-
-function extractTimestampFromLogLine($line) {
-    // Try different timestamp formats common in log files
-    $patterns = [
-        // [Mon Jun 30 21:08:36 2025] format
-        '/\[([A-Z][a-z]{2} [A-Z][a-z]{2} \d{1,2} \d{2}:\d{2}:\d{2} \d{4})\]/',
-        // 2024-12-30 14:35:22 format  
-        '/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/',
-        // 2024/12/30 14:35:22 format
-        '/(\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2})/',
-        // Dec 30 14:35:22 format
-        '/([A-Z][a-z]{2} \d{1,2} \d{2}:\d{2}:\d{2})/',
-    ];
-    
-    foreach ($patterns as $pattern) {
-        if (preg_match($pattern, $line, $matches)) {
-            $timestamp = strtotime($matches[1]);
-            if ($timestamp !== false) {
-                return $timestamp;
-            }
-        }
-    }
-    
-    return false;
-}
-
-// formatFileSize function is available from includes/functions.php
-
-function extractLogLevel($line) {
-    if (preg_match('/\b(FATAL|CRITICAL|ERROR)\b/i', $line)) {
-        return 'ERROR';
-    } elseif (preg_match('/\b(WARN|WARNING)\b/i', $line)) {
-        return 'WARNING';
-    } elseif (preg_match('/\b(INFO|SUCCESS)\b/i', $line)) {
-        return 'INFO';
-    } elseif (preg_match('/\b(DEBUG)\b/i', $line)) {
-        return 'DEBUG';
-    }
-    return 'INFO';
+    return $results;
 }
 ?> 

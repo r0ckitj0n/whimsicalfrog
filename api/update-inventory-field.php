@@ -41,12 +41,29 @@ try {
         }
     }
     
+    // Get old value for logging
+    $oldValueStmt = $pdo->prepare("SELECT `$field` FROM items WHERE sku = ?");
+    $oldValueStmt->execute([$sku]);
+    $oldValue = $oldValueStmt->fetchColumn();
+    
     // Update the field in items table using SKU as primary key
     $stmt = $pdo->prepare("UPDATE items SET `$field` = ? WHERE sku = ?");
     $stmt->execute([$value, $sku]);
     
     if ($stmt->rowCount() > 0) {
-        echo json_encode(['success'=>true,'message'=>ucfirst($field) . ' updated successfully']);
+        // Log inventory change
+        $description = "Field '$field' updated to '$value'";
+        DatabaseLogger::logInventoryChange(
+            $sku,
+            'field_update',
+            $description,
+            null, // old quantity not available for field updates
+            null, // new quantity not available for field updates
+            null, // old price not available for field updates
+            null  // new price not available for field updates
+        );
+        
+        echo json_encode(['success' => true, 'message' => 'Field updated successfully']);
     } else {
         // Check if item exists
         $checkStmt = $pdo->prepare("SELECT sku FROM items WHERE sku = ?");

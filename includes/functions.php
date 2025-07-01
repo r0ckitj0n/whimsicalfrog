@@ -10,12 +10,22 @@
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/response.php';
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/database_logger.php';
+require_once __DIR__ . '/error_logger.php';
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/http_client.php';
 require_once __DIR__ . '/file_helper.php';
 require_once __DIR__ . '/email_helper.php';
 require_once __DIR__ . '/stock_manager.php';
 require_once __DIR__ . '/auth_helper.php';
+
+// Initialize database logging system
+try {
+    DatabaseLogger::init();
+    ErrorLogger::init();
+} catch (Exception $e) {
+    error_log("Failed to initialize logging system: " . $e->getMessage());
+}
 
 /**
  * Generates an HTML <img> tag with WebP support and fallback to the original image format.

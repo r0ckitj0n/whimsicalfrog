@@ -32,10 +32,32 @@ try {
         }
         $stmt = $pdo->prepare("UPDATE orders SET order_status='Shipped', trackingNumber=?, fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END, paymentStatus=IF(paymentStatus='Received', paymentStatus, 'Received') WHERE id=?");
         $stmt->execute([$tracking, $noteLine, $noteLine, $payLine, $payLine, $orderId]);
+        
+        // Log admin activity
+        if (class_exists('DatabaseLogger')) {
+            DatabaseLogger::logAdminActivity(
+                'order_shipped',
+                "Marked order $orderId as shipped with tracking: $tracking",
+                'order',
+                $orderId
+            );
+        }
+        
         echo json_encode(['success'=>true,'message'=>'Order marked as shipped.']);
     } elseif ($action === 'deliver') {
         $stmt = $pdo->prepare("UPDATE orders SET order_status='Delivered', fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END WHERE id=?");
         $stmt->execute([$noteLine, $noteLine, $payLine, $payLine, $orderId]);
+        
+        // Log admin activity
+        if (class_exists('DatabaseLogger')) {
+            DatabaseLogger::logAdminActivity(
+                'order_delivered',
+                "Marked order $orderId as delivered",
+                'order',
+                $orderId
+            );
+        }
+        
         echo json_encode(['success'=>true,'message'=>'Order marked as delivered.']);
     } elseif ($action === 'note') {
         if ($noteLine === '' && $payLine === '') {
@@ -44,6 +66,21 @@ try {
         }
         $stmt = $pdo->prepare("UPDATE orders SET fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END WHERE id=?");
         $stmt->execute([$noteLine, $noteLine, $payLine, $payLine, $orderId]);
+        
+        // Log admin activity
+        if (class_exists('DatabaseLogger')) {
+            $noteDescription = "Added notes to order $orderId";
+            if ($noteRaw) $noteDescription .= " (fulfillment: $noteRaw)";
+            if ($payRaw) $noteDescription .= " (payment: $payRaw)";
+            
+            DatabaseLogger::logAdminActivity(
+                'order_note_added',
+                $noteDescription,
+                'order',
+                $orderId
+            );
+        }
+        
         echo json_encode(['success'=>true,'message'=>'Notes saved.']);
     } elseif ($action === 'updateField') {
         $field = $_POST['field'] ?? '';

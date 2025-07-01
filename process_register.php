@@ -84,10 +84,19 @@ try {
     $userId = $compactDate . $sequenceNum;
     
     // Insert new user
-    $stmt = $pdo->prepare('INSERT INTO users (id, username, email, password, firstName, lastName, role, phoneNumber, addressLine1, addressLine2, city, state, zipCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $result = $stmt->execute([$userId, $username, $email, $password, $firstName, $lastName, 'Customer', $phoneNumber, $addressLine1, $addressLine2, $city, $state, $zipCode]);
-    
-    if ($result) {
+    $stmt = $pdo->prepare("INSERT INTO users (username, email, password, firstName, lastName, phoneNumber, role) VALUES (?, ?, ?, ?, ?, ?, 'customer')");
+    if ($stmt->execute([$username, $email, $password, $firstName, $lastName, $phoneNumber])) {
+        $userId = $pdo->lastInsertId();
+        
+        // Log successful registration
+        DatabaseLogger::logUserActivity(
+            'registration',
+            'New user registered: ' . $username,
+            'user',
+            $userId,
+            $userId
+        );
+        
         // Registration successful - now automatically log the user in
         
         // Start session if not already started

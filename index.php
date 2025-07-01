@@ -41,6 +41,26 @@ if (strpos($page, 'admin') === 0 && !$isAdmin && !isAdminWithToken()) {
 
 define('INCLUDED_FROM_INDEX', true);
 
+// Initialize logging systems
+if (class_exists('DatabaseLogger')) {
+    DatabaseLogger::init();
+}
+
+if (class_exists('ErrorLogger')) {
+    ErrorLogger::init();
+}
+
+// Log page view for analytics
+if (class_exists('DatabaseLogger')) {
+    $pageUrl = $_SERVER['REQUEST_URI'] ?? '/?page=' . $page;
+    $eventData = [
+        'page' => $page,
+        'user_type' => $isAdmin ? 'admin' : ($isLoggedIn ? 'user' : 'guest'),
+        'timestamp' => date('Y-m-d H:i:s')
+    ];
+    DatabaseLogger::logPageView($pageUrl, $eventData);
+}
+
 // Note: getImageTag() function is now centralized in includes/functions.php
 
 // Database-driven content initialization

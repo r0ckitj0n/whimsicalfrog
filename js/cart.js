@@ -1189,7 +1189,7 @@ function emergencyCartCleanup() {
     }
 }
 
-// Global function to refresh cart display
+// Global function to refresh cart display with scroll position preservation
 window.refreshCartDisplay = async function() {
     console.log('🔄 Starting cart display refresh...');
     
@@ -1202,13 +1202,49 @@ window.refreshCartDisplay = async function() {
     const cartContainer = document.getElementById('cartContainer');
     const cartItems = document.getElementById('cartItems');
     const hasCartContainer = !!(cartItems || cartContainer);
+    const activeContainer = cartItems || cartContainer;
+    
+    // Capture scroll position before refresh
+    let savedScrollTop = 0;
+    let scrollableElement = null;
+    
+    if (activeContainer) {
+        // Find the scrollable element - could be the container itself or a parent
+        scrollableElement = activeContainer;
+        
+        // Check if the container itself is scrollable
+        if (activeContainer.scrollHeight > activeContainer.clientHeight) {
+            savedScrollTop = activeContainer.scrollTop;
+            console.log('📍 Captured container scroll position:', savedScrollTop);
+        } else {
+            // Look for scrollable parent elements
+            let parent = activeContainer.parentElement;
+            while (parent && parent !== document.body) {
+                if (parent.scrollHeight > parent.clientHeight) {
+                    scrollableElement = parent;
+                    savedScrollTop = parent.scrollTop;
+                    console.log('📍 Captured parent scroll position:', savedScrollTop, 'from element:', parent.className || parent.tagName);
+                    break;
+                }
+                parent = parent.parentElement;
+            }
+            
+            // If no scrollable parent found, use window scroll
+            if (!scrollableElement || scrollableElement === activeContainer) {
+                scrollableElement = window;
+                savedScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                console.log('📍 Captured window scroll position:', savedScrollTop);
+            }
+        }
+    }
     
     console.log('🔍 Container check:', {
         cartContainer: !!cartContainer,
         cartItems: !!cartItems,
         cartExists: !!window.cart,
         itemCount: window.cart ? window.cart.items.length : 'N/A',
-        currentPage: window.location.search
+        currentPage: window.location.search,
+        savedScrollTop: savedScrollTop
     });
     
     // If we're supposed to be on the cart page but don't have a cart container,
@@ -1224,8 +1260,27 @@ window.refreshCartDisplay = async function() {
             await window.cart.renderCart();
             console.log('✅ Cart rendered successfully');
             
+            // Restore scroll position after DOM is updated
+            if (scrollableElement && savedScrollTop > 0) {
+                // Use requestAnimationFrame to ensure DOM is fully updated
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        try {
+                            if (scrollableElement === window) {
+                                window.scrollTo(0, savedScrollTop);
+                                console.log('📍 Restored window scroll position to:', savedScrollTop);
+                            } else {
+                                scrollableElement.scrollTop = savedScrollTop;
+                                console.log('📍 Restored container scroll position to:', savedScrollTop);
+                            }
+                        } catch (error) {
+                            console.warn('⚠️ Could not restore scroll position:', error);
+                        }
+                    });
+                });
+            }
+            
             // Double-check the container content after render
-            const activeContainer = cartItems || cartContainer;
             if (activeContainer) {
                 console.log('📄 Container content length:', activeContainer.innerHTML.length);
                 console.log('📄 Container preview:', activeContainer.innerHTML.substring(0, 100) + '...');

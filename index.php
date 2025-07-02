@@ -209,9 +209,10 @@ $seoData = generatePageSEO($page, $currentSku);
             $db = Database::getInstance();
             $rules = $db->query("SELECT rule_name, css_property, css_value, category FROM global_css_rules WHERE is_active = 1 ORDER BY category, rule_name")->fetchAll(PDO::FETCH_ASSOC);
             
-            // Generate CSS from database rules
+            // Generate CSS from database rules using same logic as API
             $cssOutput = "/* Database-Generated CSS Rules */\n";
             $currentCategory = '';
+            $utilityClasses = [];
             
             foreach ($rules as $rule) {
                 if ($rule['category'] !== $currentCategory) {
@@ -219,7 +220,31 @@ $seoData = generatePageSEO($page, $currentSku);
                     $cssOutput .= "\n/* " . ucfirst($currentCategory) . " Rules */\n";
                 }
                 
-                $cssOutput .= "." . $rule['rule_name'] . " { " . $rule['css_property'] . ": " . $rule['css_value'] . "; }\n";
+                // Check if this is a utility class (contains full CSS block)
+                if (strpos($rule['rule_name'], '_utility_class') !== false && strpos($rule['css_value'], '{') !== false) {
+                    // This is a utility class - store it for later processing
+                    $utilityClasses[] = $rule;
+                    continue;
+                }
+                
+                // Regular CSS variable
+                $cssOutput .= ":root {\n";
+                $cssOutput .= "    --{$rule['rule_name']}: {$rule['css_value']};\n";
+                $cssOutput .= "}\n\n";
+                
+                // Also generate utility classes for regular properties
+                $className = str_replace('_', '-', $rule['rule_name']);
+                $cssOutput .= ".{$className} {\n";
+                $cssOutput .= "    {$rule['css_property']}: {$rule['css_value']};\n";
+                $cssOutput .= "}\n\n";
+            }
+            
+            // Add utility classes at the end
+            if (!empty($utilityClasses)) {
+                $cssOutput .= "\n/* Utility Classes */\n";
+                foreach ($utilityClasses as $utilityRule) {
+                    $cssOutput .= $utilityRule['css_value'] . "\n\n";
+                }
             }
             
             echo $cssOutput;

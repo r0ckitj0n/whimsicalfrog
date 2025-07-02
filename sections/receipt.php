@@ -314,7 +314,69 @@ $pending = ($order['paymentStatus'] === 'Pending');
     line-height: 1.2 !important;
   }
 }
+
+/* Brand button styling for receipt page */
+.brand-button {
+    background-color: #87ac3a;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+}
+
+.brand-button:hover {
+    background-color: #6b8e23;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.brand-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 </style>
+
+<script>
+// Centralized print receipt function using PrintUtils
+function printReceipt() {
+    if (window.PrintUtils && typeof window.PrintUtils.printReceipt === 'function') {
+        // Use centralized PrintUtils for consistent functionality
+        window.PrintUtils.printReceipt('<?= htmlspecialchars($orderId) ?>', <?= $order['total'] ?? 0 ?>);
+    } else {
+        console.warn('PrintUtils not available, falling back to basic print');
+        window.print();
+    }
+}
+
+// Initialize print functionality when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize centralized print system
+    if (window.PrintUtils && typeof window.PrintUtils.initialize === 'function') {
+        window.PrintUtils.initialize('receipt', '<?= htmlspecialchars($orderId) ?>');
+        
+        // Setup keyboard shortcuts using centralized system
+        window.PrintUtils.setupPrintShortcuts(printReceipt);
+    } else {
+        console.warn('PrintUtils not available, using fallback initialization');
+        console.log('Receipt print functionality initialized for Order ID: <?= htmlspecialchars($orderId) ?>');
+        
+        // Fallback keyboard shortcut
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                printReceipt();
+            }
+        });
+    }
+});
+</script>
 
 <!-- Simple Receipt Header with Company Info -->
 <div class="receipt-container max-w-2xl mx-auto bg-white shadow-md rounded p-6 mt-6">
@@ -413,6 +475,8 @@ $pending = ($order['paymentStatus'] === 'Pending');
     <?php endif; ?>
 
     <div class="text-center mt-4">
-        <button id="printBtn" onclick="window.print();" class="px-4 py-2 bg-[#87ac3a] hover:bg-[#a3cc4a] text-white rounded">Print Receipt</button>
+        <button id="printBtn" onclick="printReceipt();" class="brand-button">
+            🖨️ Print Receipt
+        </button>
     </div>
 </div> 

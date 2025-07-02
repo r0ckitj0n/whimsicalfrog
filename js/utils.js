@@ -306,9 +306,162 @@ class DOMUtils {
     }
 }
 
+class PrintUtils {
+    /**
+     * Print a receipt with centralized functionality
+     * @param {string} orderId - Order ID for tracking
+     * @param {number} orderTotal - Order total for analytics
+     * @param {Object} options - Print options
+     */
+    static async printReceipt(orderId, orderTotal = 0, options = {}) {
+        const defaults = {
+            showNotifications: true,
+            trackAnalytics: true,
+            preparationDelay: 500,
+            successDelay: 1000
+        };
+        
+        const config = { ...defaults, ...options };
+        
+        try {
+            // Log print action for analytics
+            if (config.trackAnalytics && window.analytics && typeof window.analytics.track === 'function') {
+                window.analytics.track('receipt-printed', {
+                    orderId: orderId,
+                    orderTotal: orderTotal,
+                    timestamp: new Date().toISOString(),
+                    source: 'print-utils'
+                });
+            }
+
+            // Show print preparation message
+            if (config.showNotifications && window.showInfo && typeof window.showInfo === 'function') {
+                window.showInfo('Preparing receipt for printing...', { duration: config.preparationDelay + 500 });
+            }
+
+            // Small delay to let notification show, then print
+            setTimeout(() => {
+                window.print();
+            }, config.preparationDelay);
+
+            // Track successful print dialog opening
+            setTimeout(() => {
+                if (config.showNotifications && window.showSuccess && typeof window.showSuccess === 'function') {
+                    window.showSuccess('Receipt sent to printer! 🖨️', { duration: 3000 });
+                }
+            }, config.successDelay);
+
+            return { success: true, orderId: orderId };
+
+        } catch (error) {
+            console.error('Print receipt error:', error);
+            
+            // Fallback to simple print if centralized functions fail
+            window.print();
+            
+            // Show error message if notification system is available
+            if (config.showNotifications && window.showError && typeof window.showError === 'function') {
+                window.showError('Print function encountered an issue but should still work.', { duration: 3000 });
+            }
+            
+            return { success: false, error: error.message, orderId: orderId };
+        }
+    }
+
+    /**
+     * Print any document with preparation
+     * @param {Object} options - Print options
+     */
+    static async printDocument(options = {}) {
+        const defaults = {
+            showNotifications: true,
+            preparationMessage: 'Preparing document for printing...',
+            successMessage: 'Document sent to printer! 🖨️',
+            preparationDelay: 300
+        };
+        
+        const config = { ...defaults, ...options };
+        
+        try {
+            // Show print preparation message
+            if (config.showNotifications && window.showInfo && typeof window.showInfo === 'function') {
+                window.showInfo(config.preparationMessage, { duration: config.preparationDelay + 500 });
+            }
+
+            // Small delay to let notification show, then print
+            setTimeout(() => {
+                window.print();
+            }, config.preparationDelay);
+
+            // Show success message
+            setTimeout(() => {
+                if (config.showNotifications && window.showSuccess && typeof window.showSuccess === 'function') {
+                    window.showSuccess(config.successMessage, { duration: 3000 });
+                }
+            }, config.preparationDelay + 700);
+
+            return { success: true };
+
+        } catch (error) {
+            console.error('Print document error:', error);
+            
+            // Fallback to simple print
+            window.print();
+            
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Setup keyboard shortcuts for printing
+     * @param {Function} printFunction - Function to call when Ctrl+P is pressed
+     */
+    static setupPrintShortcuts(printFunction) {
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                if (typeof printFunction === 'function') {
+                    printFunction();
+                } else {
+                    PrintUtils.printDocument();
+                }
+            }
+        });
+    }
+
+    /**
+     * Initialize print functionality with system checks
+     * @param {string} pageType - Type of page being initialized
+     * @param {string} identifier - Page identifier (like order ID)
+     */
+    static initialize(pageType = 'document', identifier = '') {
+        console.log(`Print functionality initialized for ${pageType}${identifier ? ': ' + identifier : ''}`);
+        
+        // Check if centralized notification system is available
+        if (typeof window.showInfo === 'function') {
+            console.log('✅ Centralized notification system detected');
+        } else {
+            console.log('⚠️ Centralized notification system not available - using fallback');
+        }
+        
+        // Check if analytics system is available
+        if (window.analytics && typeof window.analytics.track === 'function') {
+            console.log('✅ Analytics system detected');
+        } else {
+            console.log('ℹ️ Analytics system not available');
+        }
+
+        return {
+            notificationSystem: typeof window.showInfo === 'function',
+            analyticsSystem: window.analytics && typeof window.analytics.track === 'function'
+        };
+    }
+}
+
 // Make utilities available globally
 window.ApiClient = ApiClient;
 window.DOMUtils = DOMUtils;
+window.PrintUtils = PrintUtils;
 
 // Global API client instance
 const apiClient = new ApiClient();
@@ -325,6 +478,8 @@ window.formatCurrency = DOMUtils.formatCurrency;
 window.escapeHtml = DOMUtils.escapeHtml;
 window.showToast = DOMUtils.showToast;
 window.confirmDialog = DOMUtils.confirm;
+window.printReceipt = (orderId, orderTotal) => PrintUtils.printReceipt(orderId, orderTotal);
+window.printDocument = (options) => PrintUtils.printDocument(options);
 
 // Deprecation warnings for direct fetch usage (development only)
 if (window.location.hostname === 'localhost' || window.location.hostname.includes('dev')) {

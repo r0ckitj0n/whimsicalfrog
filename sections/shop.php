@@ -45,7 +45,23 @@ if (!isset($GLOBALS['marketingHelper'])) {
         color: #ffffff !important;
     }
 
-    /* Note: Add to Cart button styling now handled by global CSS rules system using .brand-button class */
+    /* Brand button styling for shop page - using global CSS values */
+    .brand-button {
+        background-color: #87ac3a;
+        color: #ffffff;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .brand-button:hover {
+        background-color: #6b8e23 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
+    }
 
     /* Out of stock badge styling for shop page */
     .product-card {
@@ -405,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     <div class="mt-2 text-sm <?php echo $stock>0 ? 'text-gray-600' : 'text-red-600'; ?>">In stock: <?php echo $stock; ?></div>
                     <div class="flex justify-between items-center mt-auto">
-                        <span class="product-price font-bold text-[#87ac3a]" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
+                        <span class="product-price font-bold text-black" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
                         <button class="<?php echo $stock>0 ? 'brand-button' : 'bg-gray-400 cursor-not-allowed text-white'; ?> px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg"
                                 <?php if($stock==0) echo 'disabled'; ?>
                                 onclick="event.stopPropagation(); showProductDetails('<?php echo $sku; ?>')"

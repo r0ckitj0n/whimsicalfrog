@@ -997,7 +997,23 @@ function renderDetailedItemModal($item, $images = []) {
         font-weight: bold;
     }
     
-    /* Note: Add to cart button styling now handled by global CSS rules system using .brand-button class */
+    /* Brand button styling for detailed modal - using global CSS values */
+    .brand-button {
+        background-color: #87ac3a;
+        color: #ffffff;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .brand-button:hover {
+        background-color: #6b8e23 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
+    }
     </style>
     
     <?php

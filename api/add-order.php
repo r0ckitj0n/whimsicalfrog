@@ -170,8 +170,8 @@ try {
     }
     
     // Insert the order
-    $stmt = $pdo->prepare("INSERT INTO orders (id, customerNum, total, paymentMethod, paymentStatus, status, date, shippingMethod, shippingAddress, specialInstructions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $success = $stmt->execute([$orderId, $customerNum, $input['total'], $paymentMethod, $paymentStatus, $orderStatus, $date, $shippingMethod, $shippingAddressJson, $input['specialInstructions']]);
+    $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, paymentStatus, order_status, date, shippingMethod, shippingAddress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $success = $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $paymentStatus, $orderStatus, $date, $shippingMethod, $shippingAddressJson]);
     
     if (!$success) {
         throw new Exception("Failed to create order");
@@ -184,7 +184,7 @@ try {
         'New order created with total: $' . number_format($input['total'], 2),
         null,
         $orderStatus,
-        $customerNum
+        $input['customerId']
     );
     
     // Get the next order item ID sequence number by finding the highest existing ID

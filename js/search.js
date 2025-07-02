@@ -24,13 +24,13 @@ class SearchModal {
     createModalHTML() {
         const modalHTML = `
             <!-- Search Results Modal -->
-            <div id="searchModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-                <div class="search-modal-content" style="background: white; margin: 50px auto; padding: 20px; width: 90%; max-width: 800px; border-radius: 8px; max-height: 80vh; overflow-y: auto;">
-                    <div class="search-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                        <h2 class="search-modal-title" style="margin: 0; color: #333;">Search Results</h2>
-                        <button class="search-modal-close" onclick="searchModal.close()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+            <div id="searchModal" class="search-modal-overlay">
+                <div class="search-modal-content">
+                    <div class="search-modal-header">
+                        <h2 class="search-modal-title">Search Results</h2>
+                        <button class="search-modal-close" onclick="searchModal.close()">&times;</button>
                     </div>
-                    <div class="search-modal-body" id="searchModalBody">
+                    <div class="search-modal-results">
                         <!-- Search results will be populated here -->
                     </div>
                 </div>
@@ -110,7 +110,7 @@ class SearchModal {
     }
 
     showLoading() {
-        const modalBody = document.getElementById('searchModalBody');
+        const modalBody = document.querySelector('.search-modal-results');
         modalBody.innerHTML = `
             <div class="search-loading">
                 <div class="spinner"></div>
@@ -123,7 +123,7 @@ class SearchModal {
         // Store results for later use
         this.currentResults = data.results || [];
         
-        const modalBody = document.getElementById('searchModalBody');
+        const modalBody = document.querySelector('.search-modal-results');
         
         if (data.results.length === 0) {
             modalBody.innerHTML = `
@@ -184,7 +184,7 @@ class SearchModal {
     }
 
     displayError(message) {
-        const modalBody = document.getElementById('searchModalBody');
+        const modalBody = document.querySelector('.search-modal-results');
         modalBody.innerHTML = `
             <div class="search-error">
                 <div class="search-error-icon">⚠️</div>

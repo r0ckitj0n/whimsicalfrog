@@ -73,29 +73,29 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             // Validate the discount percentage
             if (isNaN(validDiscountPercentage) || validDiscountPercentage <= 0) {
                 console.error('Invalid discount percentage in sale data:', saleData.discountPercentage);
-                // Fall back to regular price display
-                const price = parseFloat(item.retailPrice || item.price);
-                priceElement.textContent = `$${price.toFixed(2)}`;
-                if (unitPriceElement) {
-                    unitPriceElement.textContent = `$${price.toFixed(2)}`;
-                }
                 return;
             }
             
-            const salePrice = calculateSalePrice(originalPrice, validDiscountPercentage);
+            const salePrice = originalPrice - (originalPrice * validDiscountPercentage / 100);
             
-            // Format sale price display while preserving existing classes
-            const saleHTML = `
-                <span style="text-decoration: line-through; color: #999; font-size: 0.9em;">$${originalPrice.toFixed(2)}</span>
-                <span style="color: #dc2626; font-weight: bold; margin-left: 5px;">$${salePrice.toFixed(2)}</span>
-                <span style="color: #dc2626; font-size: 0.8em; margin-left: 5px;">(${Math.round(validDiscountPercentage)}% off)</span>
+            // Create sale price display using CSS classes instead of inline styles
+            const salePriceHTML = `
+                <span class="sale-price-original">$${originalPrice.toFixed(2)}</span>
+                <span class="sale-price-current">$${salePrice.toFixed(2)}</span>
+                <span class="sale-discount-text">(${Math.round(validDiscountPercentage)}% off)</span>
             `;
             
-            priceElement.innerHTML = saleHTML;
+            // Preserve existing classes while updating content
+            const existingClasses = priceElement.className;
+            priceElement.innerHTML = salePriceHTML;
+            priceElement.className = existingClasses; // Restore original classes
             
+            // Handle unit price if provided
             if (unitPriceElement) {
-                unitPriceElement.innerHTML = saleHTML;
+                unitPriceElement.innerHTML = salePriceHTML;
             }
+            
+            console.log(`✅ Sale price displayed for ${item.sku}: ${validDiscountPercentage}% off`);
             
             // Update item object with sale price for cart
             item.salePrice = salePrice;
@@ -103,9 +103,11 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             item.isOnSale = true;
             item.discountPercentage = validDiscountPercentage;
         } else {
-            // No sale, display regular price while preserving all existing classes and styles
+            // No sale - display regular price, preserving original classes
             const price = parseFloat(item.retailPrice || item.price);
+            const existingClasses = priceElement.className;
             priceElement.textContent = `$${price.toFixed(2)}`;
+            priceElement.className = existingClasses; // Restore original classes
             
             if (unitPriceElement) {
                 unitPriceElement.textContent = `$${price.toFixed(2)}`;
@@ -114,14 +116,12 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             item.isOnSale = false;
         }
     } catch (error) {
-        console.log('No sale data available for', item.sku);
-        // Display regular price on error while preserving all existing classes and styles
+        console.error('Error checking sale price:', error);
+        // Fallback to regular price on error, preserving original classes
         const price = parseFloat(item.retailPrice || item.price);
+        const existingClasses = priceElement.className;
         priceElement.textContent = `$${price.toFixed(2)}`;
-        
-        if (unitPriceElement) {
-            unitPriceElement.textContent = `$${price.toFixed(2)}`;
-        }
+        priceElement.className = existingClasses; // Restore original classes
     }
 }
 
@@ -372,29 +372,12 @@ function addSaleBadgeToCardWithDiscount(itemCard, discountPercentage) {
         existingBadge.remove();
     }
     
-    // Create new sale badge
+    // Create new sale badge using CSS classes
     const saleBadge = document.createElement('div');
     saleBadge.className = 'sale-badge';
     saleBadge.innerHTML = `
         <span class="sale-text">SALE</span>
         <span class="sale-percentage">${Math.round(validDiscountPercentage)}% OFF</span>
-    `;
-    
-    // Add sale badge styles
-    saleBadge.style.cssText = `
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: linear-gradient(135deg, #ff4444, #cc0000);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: bold;
-        z-index: 10;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        text-align: center;
-        line-height: 1.2;
     `;
     
     // Ensure item card has relative positioning

@@ -1540,7 +1540,10 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
     
     // Display price with sale formatting if applicable
     if (finalPrice < price) {
-        const saleHTML = `<span style="text-decoration: line-through; color: #999; font-size: 0.9em;">$${parseFloat(price).toFixed(2)}</span> <span style="color: #dc2626; font-weight: bold;">$${parseFloat(finalPrice).toFixed(2)}</span>`;
+        const saleHTML = `
+            <span class="sale-price-original">$${parseFloat(price).toFixed(2)}</span>
+            <span class="sale-price-current">$${parseFloat(finalPrice).toFixed(2)}</span>
+        `;
         if (modalProductPrice) modalProductPrice.innerHTML = saleHTML;
         if (modalUnitPrice) modalUnitPrice.innerHTML = saleHTML;
     } else {

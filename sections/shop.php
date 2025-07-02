@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mb-2">
                         <div class="flex flex-wrap gap-1">
                             <?php foreach (array_slice($sellingPoints, 0, 2) as $point): ?>
-                                <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                <span class="inline-block text-green-800 text-xs px-2 py-1 rounded-full" style="background-color: #ecfdf4;">
                                     ✓ <?php echo htmlspecialchars($point); ?>
                                 </span>
                             <?php endforeach; ?>

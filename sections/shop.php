@@ -421,8 +421,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     <div class="mt-2 text-sm <?php echo $stock>0 ? 'text-gray-600' : 'text-red-600'; ?>">In stock: <?php echo $stock; ?></div>
                     <div class="flex justify-between items-center mt-auto">
-                        <span class="product-price font-bold text-black" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
-                        <button class="<?php echo $stock>0 ? 'brand-button' : 'bg-gray-400 cursor-not-allowed text-white'; ?> px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg"
+                        <span class="product-price font-bold text-black text-xl px-3 py-1" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
+                        <button class="<?php echo $stock>0 ? 'brand-button text-xs leading-tight' : 'bg-gray-400 cursor-not-allowed text-white text-xs'; ?> px-3 py-2 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg min-w-[80px] max-w-[90px]"
                                 <?php if($stock==0) echo 'disabled'; ?>
                                 onclick="event.stopPropagation(); showProductDetails('<?php echo $sku; ?>')"
                                 data-product-id="<?php echo $productId; ?>"
@@ -435,9 +435,41 @@ document.addEventListener('DOMContentLoaded', function() {
                             } else {
                                 // Use random cart button text if no specific call to action is set
                                 if (!empty($callToActions)) {
-                                    echo htmlspecialchars($callToActions[0]);
+                                    $buttonText = htmlspecialchars($callToActions[0]);
                                 } else {
-                                    echo htmlspecialchars(getRandomCartButtonText());
+                                    $buttonText = htmlspecialchars(getRandomCartButtonText());
+                                }
+                                
+                                // Smart text wrapping - split at better points
+                                if (strlen($buttonText) > 8) {
+                                    // Common button text patterns and their optimal breaks
+                                    $betterBreaks = [
+                                        'Add to Cart' => 'Add to<br>Cart',
+                                        'Buy Now' => 'Buy<br>Now',
+                                        'Order Now' => 'Order<br>Now',
+                                        'Get Yours Today' => 'Get Yours<br>Today',
+                                        'Shop Now' => 'Shop<br>Now',
+                                        'Purchase' => 'Purchase',
+                                        'Buy Today' => 'Buy<br>Today',
+                                        'Order Today' => 'Order<br>Today'
+                                    ];
+                                    
+                                    if (isset($betterBreaks[$buttonText])) {
+                                        echo $betterBreaks[$buttonText];
+                                    } else {
+                                        // Fallback: split longer text at better points
+                                        $words = explode(' ', $buttonText);
+                                        if (count($words) >= 2) {
+                                            $midpoint = ceil(count($words) / 2);
+                                            $firstHalf = implode(' ', array_slice($words, 0, $midpoint));
+                                            $secondHalf = implode(' ', array_slice($words, $midpoint));
+                                            echo $firstHalf . '<br>' . $secondHalf;
+                                        } else {
+                                            echo $buttonText;
+                                        }
+                                    }
+                                } else {
+                                    echo $buttonText;
                                 }
                             }
                             ?>

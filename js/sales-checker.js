@@ -84,14 +84,14 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
                 cls.includes('text-') || cls.includes('font-') || cls.includes('px-') || cls.includes('py-')
             ).join(' ');
             
-            // Ensure we're using text-xl for shop page prices
-            const finalSizeClasses = sizeClasses.includes('text-xl') ? sizeClasses : sizeClasses.replace(/text-\w+/, 'text-xl');
+            // Ensure we're using text-2xl for shop page prices
+            const finalSizeClasses = sizeClasses.includes('text-2xl') ? sizeClasses : sizeClasses.replace(/text-\w+/, 'text-2xl');
             
             // Create sale price display using CSS classes and inline styles to guarantee size
             const salePriceHTML = `
-                <span class="sale-price-original ${finalSizeClasses}" style="font-size: 1.25rem !important;">$${originalPrice.toFixed(2)}</span>
-                <span class="sale-price-current ${finalSizeClasses}" style="font-size: 1.25rem !important;">$${salePrice.toFixed(2)}</span>
-                <span class="sale-discount-text ${finalSizeClasses}" style="font-size: 1.25rem !important;">(${Math.round(validDiscountPercentage)}% off)</span>
+                <span class="sale-price-original ${finalSizeClasses}" style="font-size: 2rem !important;">$${originalPrice.toFixed(2)}</span>
+                <span class="sale-price-current ${finalSizeClasses}" style="font-size: 2rem !important;">$${salePrice.toFixed(2)}</span>
+                <span class="sale-discount-text ${finalSizeClasses}" style="font-size: 2rem !important;">(${Math.round(validDiscountPercentage)}% off)</span>
             `;
             
             // Preserve existing classes while updating content

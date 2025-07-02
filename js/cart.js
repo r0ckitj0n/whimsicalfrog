@@ -785,9 +785,9 @@ class ShoppingCart {
         
         cartContainer.innerHTML = cartContentHTML;
         
-        // Add event listener for checkout button
+        // Add event listener for checkout button (prevent duplicates)
         const checkoutBtn = document.getElementById('proceedCheckoutBtn');
-        if (checkoutBtn) {
+        if (checkoutBtn && !checkoutBtn.hasEventListener) {
             checkoutBtn.addEventListener('click', () => {
                 console.log('🛒 Checkout button clicked via event listener!');
                 if (window.cart && typeof window.cart.checkout === 'function') {
@@ -797,6 +797,7 @@ class ShoppingCart {
                     alert('Error: Cart system not ready. Please refresh the page and try again.');
                 }
             });
+            checkoutBtn.hasEventListener = true;
         }
         
         // Store scroll restoration function on the cart container for external access
@@ -856,19 +857,27 @@ class ShoppingCart {
         }
 
         // Create payment method modal
+        console.log('📋 Creating payment method modal...');
         this.createPaymentMethodModal();
     }
 
     createPaymentMethodModal() {
+        console.log('🎯 createPaymentMethodModal method called');
+        
         // Remove existing modal if any
         const existingModal = document.getElementById('paymentMethodModal');
         if (existingModal) {
+            console.log('🗑️ Removing existing modal');
             existingModal.remove();
         }
 
+        console.log('🏗️ Creating modal element...');
         const modal = document.createElement('div');
         modal.id = 'paymentMethodModal';
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center';
+        modal.style.zIndex = '99999'; // Higher than cart page z-index
+        
+        console.log('🎨 Modal element created with classes:', modal.className);
         
         const paymentMethods = [
             { value: 'credit_card', label: 'Credit Card', icon: '💳' },
@@ -962,7 +971,9 @@ class ShoppingCart {
             </div>
         `;
 
+        console.log('📋 Appending modal to document body...');
         document.body.appendChild(modal);
+        console.log('✅ Modal appended successfully');
 
         // Add event listener for shipping method changes
         modal.querySelectorAll('input[name="shippingMethod"]').forEach(input => {

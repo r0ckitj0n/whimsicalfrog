@@ -166,6 +166,17 @@ class WhimsicalFrogNotifications {
             }, 200);
         }
 
+        // Add click handler to open cart modal when notification is clicked
+        notification.addEventListener('click', function(e) {
+            // Don't trigger if clicking the close button
+            if (e.target.closest('.wf-notification-close')) {
+                return;
+            }
+            
+            // Open cart modal
+            window.location.href = '/?page=cart';
+        });
+
         return notification;
     }
 

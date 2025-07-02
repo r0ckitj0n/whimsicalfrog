@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                  data-stock="<?php echo $stockLevel; ?>"
                                  onmouseenter="showGlobalPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
                                  onmouseleave="hideGlobalPopup()"
-                                 onclick="openQuantityModal(<?php echo htmlspecialchars(json_encode($item)); ?>)"
+                                 onclick="showItemDetailsModal('<?php echo htmlspecialchars($item['sku']); ?>')"
                                  style="cursor: pointer;">
                                 <img src="<?php echo htmlspecialchars($primaryImageUrl); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>" 

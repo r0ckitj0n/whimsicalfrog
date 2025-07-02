@@ -75,33 +75,15 @@ const ROOM_TYPE = <?php echo json_encode($roomHelper->getRoomType()); ?>;
 
 console.log('Room 5 (Sublimation) loaded with <?php echo count($roomHelper->getRoomItems()); ?> items');
 
-// Item Details Modal functionality - like yesterday's behavior
-window.showItemDetailsModal = async function(sku) {
-    try {// Fetch item details
-        const response = await fetch(`api/get_item_details.php?sku=${sku}`);
-        const data = await response.json();
-        
-        if (data.success && data.item) {
-            // Find and show the detailed modal (it's included in the page)
-            const modal = document.getElementById('detailedItemModal');
-            if (modal) {
-                // Update modal content with the item data
-                updateDetailedModalContent(data.item, data.images || []);
-                modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden'; // Prevent background scrolling
-            } else {
-                console.error('Detailed product modal not found');
-                // Fallback to quantity modal
-                window.showQuantityModal(sku, data.item.name, data.item.retailPrice, data.item.primaryImageUrl);
-            }
-        } else {
-            console.error('Failed to load item details:', data.message);
-        }
-    } catch (error) {
-        console.error('Error opening item details modal:', error);
+// Item Details Modal functionality - use global modal system
+window.showItemDetailsModal = function(sku) {
+    // Use the existing global modal system
+    if (typeof window.showGlobalItemModal === 'function') {
+        window.showGlobalItemModal(sku);
+    } else {
+        console.error('Global item modal system not available');
     }
 };
-// updateDetailedModalContent function moved to modal-functions.js for centralization
 
 // Modal close functions (matching the detailed modal component)
 function closeDetailedModal() {

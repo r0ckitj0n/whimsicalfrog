@@ -724,46 +724,48 @@ loadTooltipJS();
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const currentPage = urlParams.get('page') || 'landing';
-            const fromMain = urlParams.get('from') === 'main';
+            const body = document.body;
+            const supportsWebP = document.documentElement.classList.contains('webp');
             
-            let roomType = 'landing';
+            // Remove any existing background classes
+            body.classList.remove('is-landing', 'is-main-room', 'is-individual-room', 'is-room2', 'is-room3', 'is-room4', 'is-room5', 'is-room6');
             
-            // Special handling for main room navigation
-            if (fromMain && ['room2', 'room3', 'room4', 'room5', 'room6'].includes(currentPage)) {
-                roomType = 'room_main';
-                const body = document.body;
-                const supportsWebP = document.documentElement.classList.contains('webp');
-                const imageUrl = supportsWebP ? 'images/room_main.webp' : 'images/room_main.png';
-                
+            // Landing page - show home background
+            if (currentPage === 'landing') {
+                const imageUrl = supportsWebP ? 'images/home_background.webp' : 'images/home_background.png';
                 body.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
+                body.classList.add('is-landing');
                 body.classList.add('dynamic-bg-loaded');
                 return;
             }
             
-            // Map pages to room types
-            const pageRoomMap = {
-                'room_main': 'room_main', 'room2': 'room2', 'room3': 'room3', 
-                'room4': 'room4', 'room5': 'room5', 'room6': 'room6',
-                'shop': 'room_main', 'cart': 'room_main', 'login': 'room_main', 'admin': 'room_main'
-            };
-            
-            roomType = pageRoomMap[currentPage] || 'landing';
-            
-            // Fetch background from database
-            const response = await fetch(`api/get_background.php?room_type=${roomType}`);
-            const data = await response.json();
-            
-            if (data.success && data.background) {
-                const background = data.background;
-                const body = document.body;
-                const supportsWebP = document.documentElement.classList.contains('webp');
-                const imageUrl = supportsWebP && background.webp_filename ? 
-                    `images/${background.webp_filename}` : 
-                    `images/${background.image_filename}`;
-                
+            // Main room - show home background behind it
+            if (currentPage === 'room_main') {
+                const imageUrl = supportsWebP ? 'images/home_background.webp' : 'images/home_background.png';
                 body.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
+                body.classList.add('is-main-room');
                 body.classList.add('dynamic-bg-loaded');
+                return;
             }
+            
+            // Individual rooms (2-6) - show main room background on body, specific room on container
+            if (['room2', 'room3', 'room4', 'room5', 'room6'].includes(currentPage)) {
+                // Set main room background on body
+                const mainRoomUrl = supportsWebP ? 'images/room_main.webp' : 'images/room_main.png';
+                body.style.backgroundImage = `url('${mainRoomUrl}?v=${Date.now()}')`;
+                
+                // Add classes for styling
+                body.classList.add('is-individual-room', `is-${currentPage}`);
+                body.classList.add('dynamic-bg-loaded');
+                return;
+            }
+            
+            // Other pages (shop, cart, login, admin) - show main room background
+            const mainRoomUrl = supportsWebP ? 'images/room_main.webp' : 'images/room_main.png';
+            body.style.backgroundImage = `url('${mainRoomUrl}?v=${Date.now()}')`;
+            body.classList.add('is-main-room');
+            body.classList.add('dynamic-bg-loaded');
+            
         } catch (error) {
             console.error('Error loading dynamic background:', error);
         }

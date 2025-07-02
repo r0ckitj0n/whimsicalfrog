@@ -78,17 +78,22 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             
             const salePrice = originalPrice - (originalPrice * validDiscountPercentage / 100);
             
-            // Create sale price display using CSS classes instead of inline styles
+            // Extract font/size classes from the original element to apply to spans
+            const existingClasses = priceElement.className;
+            const sizeClasses = existingClasses.split(' ').filter(cls => 
+                cls.includes('text-') || cls.includes('font-') || cls.includes('px-') || cls.includes('py-')
+            ).join(' ');
+            
+            // Create sale price display using CSS classes and preserving size styling
             const salePriceHTML = `
-                <span class="sale-price-original">$${originalPrice.toFixed(2)}</span>
-                <span class="sale-price-current">$${salePrice.toFixed(2)}</span>
-                <span class="sale-discount-text">(${Math.round(validDiscountPercentage)}% off)</span>
+                <span class="sale-price-original ${sizeClasses}">$${originalPrice.toFixed(2)}</span>
+                <span class="sale-price-current ${sizeClasses}">$${salePrice.toFixed(2)}</span>
+                <span class="sale-discount-text ${sizeClasses}">(${Math.round(validDiscountPercentage)}% off)</span>
             `;
             
             // Preserve existing classes while updating content
-            const existingClasses = priceElement.className;
             priceElement.innerHTML = salePriceHTML;
-            priceElement.className = existingClasses; // Restore original classes
+            priceElement.className = existingClasses; // Restore original classes to container
             
             // Handle unit price if provided
             if (unitPriceElement) {

@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     <div class="mt-2 text-sm <?php echo $stock>0 ? 'text-gray-600' : 'text-red-600'; ?>">In stock: <?php echo $stock; ?></div>
                     <div class="flex justify-between items-center mt-auto">
-                        <span class="product-price font-bold text-black text-sm px-3 py-1" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
+                        <span class="product-price font-bold text-black text-xl px-3 py-1" style="font-size: 1.25rem !important;" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
                         <button class="<?php echo $stock>0 ? 'brand-button text-sm leading-tight' : 'bg-gray-400 cursor-not-allowed text-white text-sm'; ?> px-3 py-2 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg min-w-[80px] max-w-[90px]"
                                 <?php if($stock==0) echo 'disabled'; ?>
                                 onclick="event.stopPropagation(); showProductDetails('<?php echo $sku; ?>')"

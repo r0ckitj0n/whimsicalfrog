@@ -84,11 +84,14 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
                 cls.includes('text-') || cls.includes('font-') || cls.includes('px-') || cls.includes('py-')
             ).join(' ');
             
-            // Create sale price display using CSS classes and preserving size styling
+            // Ensure we're using text-xl for shop page prices
+            const finalSizeClasses = sizeClasses.includes('text-xl') ? sizeClasses : sizeClasses.replace(/text-\w+/, 'text-xl');
+            
+            // Create sale price display using CSS classes and inline styles to guarantee size
             const salePriceHTML = `
-                <span class="sale-price-original ${sizeClasses}">$${originalPrice.toFixed(2)}</span>
-                <span class="sale-price-current ${sizeClasses}">$${salePrice.toFixed(2)}</span>
-                <span class="sale-discount-text ${sizeClasses}">(${Math.round(validDiscountPercentage)}% off)</span>
+                <span class="sale-price-original ${finalSizeClasses}" style="font-size: 1.25rem !important;">$${originalPrice.toFixed(2)}</span>
+                <span class="sale-price-current ${finalSizeClasses}" style="font-size: 1.25rem !important;">$${salePrice.toFixed(2)}</span>
+                <span class="sale-discount-text ${finalSizeClasses}" style="font-size: 1.25rem !important;">(${Math.round(validDiscountPercentage)}% off)</span>
             `;
             
             // Preserve existing classes while updating content

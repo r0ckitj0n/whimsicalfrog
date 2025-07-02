@@ -678,7 +678,13 @@ $seoData = generatePageSEO($page, $currentSku);
 <script src="js/image-viewer.js?v=<?php echo time(); ?>"></script>
 
 <!-- Page-specific Scripts -->
-<?php if ($page !== 'admin'): ?>
+<?php 
+// Load cart.js for non-admin pages AND admin pages that need cart functionality
+$needsCart = ($page !== 'admin') || 
+             ($page === 'admin' && isset($_GET['section']) && in_array($_GET['section'], ['pos'])) ||
+             ($page === 'cart');
+
+if ($needsCart): ?>
 <script src="js/modal-manager.js?v=1751411847"></script>
 <script src="js/cart.js?v=<?php echo time(); ?>"></script>
 <?php endif; ?>

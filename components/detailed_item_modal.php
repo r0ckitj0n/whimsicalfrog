@@ -22,7 +22,7 @@ function renderDetailedItemModal($item, $images = []) {
     $sellingPoints = getSellingPoints($item['sku'] ?? '');
     
     ?>
-    <div id="detailedItemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4" onclick="closeDetailedModalOnOverlay(event)">
+    <div id="detailedItemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[999] flex items-center justify-center p-4" onclick="closeDetailedModalOnOverlay(event)">
         <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] overflow-hidden relative" onclick="event.stopPropagation()">
             <!-- Close Button -->
             <button onclick="closeDetailedModal()" class="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-shadow">

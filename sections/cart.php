@@ -9,7 +9,7 @@ if (!$isLoggedIn) {
     exit;
 }
 ?>
-<section id="cartPage" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);" onclick="window.location.href='/?page=room_main';">
+<section id="cartPage" class="fixed inset-0 z-[999] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);" onclick="window.location.href='/?page=room_main';">
     <!-- Cart modal container -->
     <div class="bg-white rounded-lg shadow-xl overflow-hidden w-full max-w-3xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation();">
         <!-- Header with title and back button -->

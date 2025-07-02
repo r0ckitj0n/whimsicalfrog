@@ -327,9 +327,9 @@ class ShoppingCart {
         // Clean up any hidden notifications
         this.cleanupHiddenNotifications();
         
-        // Show cart status (empty cart)
+        // Show cart status (empty cart) with brand green success styling
         setTimeout(() => {
-            window.showInfo('🛒 Cart is now empty', {
+            window.showSuccess('🛒 Cart is now empty', {
                 duration: 3000,
                 title: 'Cart Cleared'
             });
@@ -1093,7 +1093,7 @@ class ShoppingCart {
             statusTitle = 'Cart Status';
         }
         
-        window.showInfo(statusMessage, {
+        window.showSuccess(statusMessage, {
             duration: 5000, // Show for 5 seconds when manually called
             title: statusTitle
         });

@@ -762,7 +762,21 @@ class ShoppingCart {
                 ${guaranteeMessage}
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-lg font-semibold">Total: $${this.getTotal().toFixed(2)}</span>
-                    <button onclick="cart.clearCart(); setTimeout(async () => await window.refreshCartDisplay(), 100);" class="px-4 py-2 rounded text-white" style="background-color: #6b7280; color: white !important; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
+                    <button onclick="
+                        // Capture scroll position before clear
+                        const cartContainer = document.getElementById('cartContainer') || document.getElementById('cartItems');
+                        if (cartContainer) {
+                            const scrollableChild = cartContainer.querySelector('.overflow-y-auto');
+                            if (scrollableChild) {
+                                window.pendingScrollRestore = {
+                                    scrollTop: 0, // Reset to top after clear
+                                    elementClass: scrollableChild.className
+                                };
+                            }
+                        }
+                        cart.clearCart(); 
+                        setTimeout(async () => await window.refreshCartDisplay(), 100);
+                    " class="px-4 py-2 rounded text-white" style="background-color: #6b7280; color: white !important; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
                 </div>
                 ${footerMessage}
                 <button onclick="cart.checkout()" class="brand-button w-full py-3 px-6 rounded-lg font-semibold">Proceed to Checkout</button>
@@ -770,6 +784,24 @@ class ShoppingCart {
         `;
         
         cartContainer.innerHTML = cartContentHTML;
+        
+        // Store scroll restoration function on the cart container for external access
+        if (window.pendingScrollRestore) {
+            const { scrollTop, elementClass } = window.pendingScrollRestore;
+            console.log('📍 Applying pending scroll restore:', scrollTop, 'to element with class:', elementClass);
+            
+            // Find the scrollable element again
+            const scrollableChild = cartContainer.querySelector('.overflow-y-auto, [style*="overflow-y: auto"], [style*="overflow: auto"]');
+            if (scrollableChild) {
+                setTimeout(() => {
+                    scrollableChild.scrollTop = scrollTop;
+                    console.log('📍 Applied pending scroll restore to:', scrollTop);
+                }, 10);
+            }
+            
+            // Clear the pending restore
+            delete window.pendingScrollRestore;
+        }
     }
 
     async checkout() {
@@ -1209,11 +1241,16 @@ window.refreshCartDisplay = async function() {
     let scrollableElement = null;
     
     if (activeContainer) {
-        // Find the scrollable element - could be the container itself or a parent
-        scrollableElement = activeContainer;
+        // First check for the actual scrollable child div (overflow-y-auto)
+        const scrollableChild = activeContainer.querySelector('.overflow-y-auto, [style*="overflow-y: auto"], [style*="overflow: auto"]');
         
-        // Check if the container itself is scrollable
-        if (activeContainer.scrollHeight > activeContainer.clientHeight) {
+        if (scrollableChild && scrollableChild.scrollHeight > scrollableChild.clientHeight) {
+            scrollableElement = scrollableChild;
+            savedScrollTop = scrollableChild.scrollTop;
+            console.log('📍 Captured scrollable child position:', savedScrollTop, 'from element:', scrollableChild.className);
+        } else if (activeContainer.scrollHeight > activeContainer.clientHeight) {
+            // Check if the container itself is scrollable
+            scrollableElement = activeContainer;
             savedScrollTop = activeContainer.scrollTop;
             console.log('📍 Captured container scroll position:', savedScrollTop);
         } else {
@@ -1270,8 +1307,20 @@ window.refreshCartDisplay = async function() {
                                 window.scrollTo(0, savedScrollTop);
                                 console.log('📍 Restored window scroll position to:', savedScrollTop);
                             } else {
-                                scrollableElement.scrollTop = savedScrollTop;
-                                console.log('📍 Restored container scroll position to:', savedScrollTop);
+                                // If the original scrollable element was a child, find the new one after re-render
+                                let targetElement = scrollableElement;
+                                
+                                if (scrollableElement.classList && scrollableElement.classList.contains('overflow-y-auto')) {
+                                    // Re-find the scrollable child after DOM update
+                                    const newScrollableChild = activeContainer.querySelector('.overflow-y-auto, [style*="overflow-y: auto"], [style*="overflow: auto"]');
+                                    if (newScrollableChild) {
+                                        targetElement = newScrollableChild;
+                                        console.log('📍 Found new scrollable child element after re-render');
+                                    }
+                                }
+                                
+                                targetElement.scrollTop = savedScrollTop;
+                                console.log('📍 Restored scroll position to:', savedScrollTop, 'on element:', targetElement.className || targetElement.tagName);
                             }
                         } catch (error) {
                             console.warn('⚠️ Could not restore scroll position:', error);
@@ -1312,6 +1361,19 @@ window.refreshCartDisplay = async function() {
 function removeFromCart(sku, color = null, size = null, gender = null) {
     console.log(`🎯 Global removeFromCart called with: ${sku}, ${color}, ${size}, ${gender}`);
     if (cart) {
+        // Capture scroll position before removal
+        const cartContainer = document.getElementById('cartContainer') || document.getElementById('cartItems');
+        if (cartContainer) {
+            const scrollableChild = cartContainer.querySelector('.overflow-y-auto, [style*="overflow-y: auto"], [style*="overflow: auto"]');
+            if (scrollableChild) {
+                window.pendingScrollRestore = {
+                    scrollTop: scrollableChild.scrollTop,
+                    elementClass: scrollableChild.className
+                };
+                console.log('📍 Stored scroll position before remove:', scrollableChild.scrollTop);
+            }
+        }
+        
         cart.removeItem(sku, color, size, gender);
         // Refresh cart display after removal
         setTimeout(async () => {
@@ -1323,6 +1385,19 @@ function removeFromCart(sku, color = null, size = null, gender = null) {
 function updateQuantity(sku, newQuantity, color = null, size = null, gender = null) {
     console.log(`🎯 Global updateQuantity called with: ${sku}, ${newQuantity}, ${color}, ${size}, ${gender}`);
     if (cart) {
+        // Capture scroll position before quantity update
+        const cartContainer = document.getElementById('cartContainer') || document.getElementById('cartItems');
+        if (cartContainer) {
+            const scrollableChild = cartContainer.querySelector('.overflow-y-auto, [style*="overflow-y: auto"], [style*="overflow: auto"]');
+            if (scrollableChild) {
+                window.pendingScrollRestore = {
+                    scrollTop: scrollableChild.scrollTop,
+                    elementClass: scrollableChild.className
+                };
+                console.log('📍 Stored scroll position before quantity update:', scrollableChild.scrollTop);
+            }
+        }
+        
         cart.updateQuantity(sku, newQuantity, color, size, gender);
         // Refresh cart display after quantity update
         setTimeout(async () => {

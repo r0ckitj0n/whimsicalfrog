@@ -453,7 +453,7 @@ class RoomHelper {
         return "
         <div class=\"room-header-overlay\">
             <div class=\"back-button-container\">
-                <a href=\"/?page=main_room\" class=\"back-to-main-button\">
+                <a href=\"/?page=room_main\" class=\"back-to-main-button\">
                     <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">
                         <path d=\"m12 19-7-7 7-7\"></path>
                         <path d=\"m19 12-7 7-7-7\"></path>

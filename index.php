@@ -16,7 +16,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'landing';
 
 // Define allowed pages
 $allowed_pages = [
-    'landing', 'main_room', 'shop', 'cart', 'login', 'register', 'admin', 'admin_inventory',
+    'landing', 'room_main', 'shop', 'cart', 'login', 'register', 'admin', 'admin_inventory',
     'room2', 'room3', 'room4', 'room5', 'room6',
     'admin_customers', 'admin_orders', 'admin_reports', 'admin_marketing', 'admin_settings',
     'account_settings', 'receipt'
@@ -114,7 +114,7 @@ try {
     // Database-driven search bar visibility
     function shouldShowSearchBar($pdo, $currentPage) {
         $pageToRoomMap = [
-            'landing' => 0, 'main_room' => 1, 'room2' => 2, 'room3' => 3, 
+            'landing' => 0, 'room_main' => 1, 'room2' => 2, 'room3' => 3, 
             'room4' => 4, 'room5' => 5, 'room6' => 6
         ];
         
@@ -717,7 +717,7 @@ loadTooltipJS();
             
             // Map pages to room types
             const pageRoomMap = {
-                'main_room': 'room_main', 'room2': 'room2', 'room3': 'room3', 
+                'room_main': 'room_main', 'room2': 'room2', 'room3': 'room3', 
                 'room4': 'room4', 'room5': 'room5', 'room6': 'room6',
                 'shop': 'room_main', 'cart': 'room_main', 'login': 'room_main', 'admin': 'room_main'
             };
@@ -814,7 +814,7 @@ loadTooltipJS();
                         return;
                     }
                     
-                    window.location.href = data.role === 'Admin' ? '/?page=admin' : '/?page=main_room';
+                    window.location.href = data.role === 'Admin' ? '/?page=admin' : '/?page=room_main';
                 } catch (error) {
                     errorMessage.textContent = error.message;
                     errorMessage.classList.remove('hidden');

@@ -403,7 +403,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Room Header Inside Container -->
         <div class="room-header-overlay">
             <div class="back-button-container">
-                <a href="/?page=main_room" class="back-to-main-button">
+                <a href="/?page=room_main" class="back-to-main-button">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
@@ -692,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // If click is not on room container or its children, navigate to main room
         if (roomContainer && !roomContainer.contains(e.target)) {
 
-            window.location.href = '/?page=main_room';
+                            window.location.href = '/?page=room_main';
         }
     });
     

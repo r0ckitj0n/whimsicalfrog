@@ -79,7 +79,7 @@
 </style>
 
 <section id="landingPage" class="relative">
-    <a href="/?page=main_room" class="clickable-area area-1" title="Enter the Main Room">
+    <a href="/?page=room_main" class="clickable-area area-1" title="Enter the Main Room">
         <picture>
             <source srcset="images/sign_welcome.webp" type="image/webp">
             <source srcset="images/sign_welcome.png" type="image/png">

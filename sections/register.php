@@ -141,7 +141,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
             sessionStorage.setItem('user', JSON.stringify(data.userData));
             
             // Determine redirect URL based on device type
-            const redirectUrl = isMobileDevice() ? '/?page=shop' : '/?page=main_room';
+            const redirectUrl = isMobileDevice() ? '/?page=shop' : '/?page=room_main';
             const destinationName = isMobileDevice() ? 'shop' : 'main room';
             
             // Hide the form

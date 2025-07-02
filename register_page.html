@@ -1255,7 +1255,7 @@ console.log('Keyboard shortcuts: F1=Search, F2=Show All, F9=Checkout, Escape=Exi
             
             // Map pages to room types
             const pageRoomMap = {
-                'main_room': 'room_main', 'room2': 'room2', 'room3': 'room3', 
+                'room_main': 'room_main', 'room2': 'room2', 'room3': 'room3', 
                 'room4': 'room4', 'room5': 'room5', 'room6': 'room6',
                 'shop': 'room_main', 'cart': 'room_main', 'login': 'room_main', 'admin': 'room_main'
             };
@@ -1352,7 +1352,7 @@ console.log('Keyboard shortcuts: F1=Search, F2=Show All, F9=Checkout, Escape=Exi
                         return;
                     }
                     
-                    window.location.href = data.role === 'Admin' ? '/?page=admin' : '/?page=main_room';
+                    window.location.href = data.role === 'Admin' ? '/?page=admin' : '/?page=room_main';
                 } catch (error) {
                     errorMessage.textContent = error.message;
                     errorMessage.classList.remove('hidden');

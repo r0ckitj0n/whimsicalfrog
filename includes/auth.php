@@ -134,7 +134,7 @@ function requireAdmin($apiResponse = false) {
             echo json_encode(['error' => 'Admin privileges required']);
             exit;
         } else {
-            header('Location: /?page=main_room');
+            header('Location: /?page=room_main');
             exit;
         }
     }

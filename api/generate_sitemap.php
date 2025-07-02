@@ -28,7 +28,7 @@ try {
     
     // Add main room
     echo "    <url>\n";
-    echo "        <loc>{$baseUrl}/?page=main_room</loc>\n";
+            echo "        <loc>{$baseUrl}/?page=room_main</loc>\n";
     echo "        <lastmod>" . date('Y-m-d') . "</lastmod>\n";
     echo "        <changefreq>weekly</changefreq>\n";
     echo "        <priority>0.9</priority>\n";

@@ -16,7 +16,7 @@ if (!$isLoggedIn) {
         <div class="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-merienda" style="color:#87ac3a !important;">Shopping Cart</h1>
-                <a href="/?page=main_room" class="back-button text-white text-sm" style="background:rgba(107,142,35,0.9);padding:6px 12px;border-radius:20px;text-decoration:none;font-weight:bold;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                <a href="/?page=room_main" class="back-button text-white text-sm" style="background:rgba(107,142,35,0.9);padding:6px 12px;border-radius:20px;text-decoration:none;font-weight:bold;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
                     ← Back to Main Room
                 </a>
             </div>

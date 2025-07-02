@@ -45,52 +45,7 @@ if (!isset($GLOBALS['marketingHelper'])) {
         color: #ffffff !important;
     }
 
-    /* Add to Cart button styling - force green color */
-    .add-to-cart-btn {
-        background-color: #87ac3a !important;
-        color: #ffffff !important;
-        border: none !important;
-        padding: 8px 16px !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        transition: all 0.2s ease !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-    }
-
-    .add-to-cart-btn:hover:not(:disabled) {
-        background-color: #a3cc4a !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-        transform: translateY(-1px) !important;
-    }
-
-    .add-to-cart-btn:disabled {
-        background-color: #9ca3af !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-        box-shadow: none !important;
-    }
-
-    /* Modal Add to Cart button styling - highest specificity */
-    div #confirmAddToCart,
-    #confirmAddToCart {
-        background-color: #87ac3a !important;
-        color: #ffffff !important;
-        border: none !important;
-        padding: 8px 16px !important;
-        border-radius: 6px !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-    }
-
-    div #confirmAddToCart:hover,
-    #confirmAddToCart:hover {
-        background-color: #a3cc4a !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-        transform: translateY(-1px) !important;
-    }
+    /* Note: Add to Cart button styling now handled by global CSS rules system using .brand-button class */
 
     /* Out of stock badge styling for shop page */
     .product-card {
@@ -451,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mt-2 text-sm <?php echo $stock>0 ? 'text-gray-600' : 'text-red-600'; ?>">In stock: <?php echo $stock; ?></div>
                     <div class="flex justify-between items-center mt-auto">
                         <span class="product-price font-bold text-[#87ac3a]" data-sku="<?php echo $sku; ?>" data-original-price="<?php echo $price; ?>"><?php echo $formattedPrice; ?></span>
-                        <button class="add-to-cart-btn <?php echo $stock>0 ? 'bg-[#87ac3a] hover:bg-[#a3cc4a]' : 'bg-gray-400 cursor-not-allowed'; ?> text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg"
+                        <button class="<?php echo $stock>0 ? 'brand-button' : 'bg-gray-400 cursor-not-allowed text-white'; ?> px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg"
                                 <?php if($stock==0) echo 'disabled'; ?>
                                 onclick="event.stopPropagation(); showProductDetails('<?php echo $sku; ?>')"
                                 data-product-id="<?php echo $productId; ?>"

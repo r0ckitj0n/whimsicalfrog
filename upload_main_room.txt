@@ -1,0 +1,6 @@
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
+put images/main_room.png -o images/main_room.png
+put images/main_room.webp -o images/main_room.webp
+bye 

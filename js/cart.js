@@ -779,21 +779,25 @@ class ShoppingCart {
                     " class="px-4 py-2 rounded text-white" style="background-color: #6b7280; color: white !important; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
                 </div>
                 ${footerMessage}
-                <button onclick="
-                    console.log('🔍 Button clicked - checking cart object...');
-                    console.log('window.cart exists:', typeof window.cart);
-                    console.log('checkout method exists:', typeof window.cart?.checkout);
-                    if (window.cart && typeof window.cart.checkout === 'function') {
-                        window.cart.checkout();
-                    } else {
-                        console.error('❌ Cart object or checkout method not available!');
-                        alert('Error: Cart system not ready. Please refresh the page and try again.');
-                    }
-                " class="brand-button w-full py-3 px-6 rounded-lg font-semibold" style="background-color: #87ac3a !important; color: #ffffff !important; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">Proceed to Checkout</button>
+                <button id="proceedCheckoutBtn" class="brand-button w-full py-3 px-6 rounded-lg font-semibold" style="background-color: #87ac3a !important; color: #ffffff !important; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">Proceed to Checkout</button>
             </div>
         `;
         
         cartContainer.innerHTML = cartContentHTML;
+        
+        // Add event listener for checkout button
+        const checkoutBtn = document.getElementById('proceedCheckoutBtn');
+        if (checkoutBtn) {
+            checkoutBtn.addEventListener('click', () => {
+                console.log('🛒 Checkout button clicked via event listener!');
+                if (window.cart && typeof window.cart.checkout === 'function') {
+                    window.cart.checkout();
+                } else {
+                    console.error('❌ Cart object or checkout method not available!');
+                    alert('Error: Cart system not ready. Please refresh the page and try again.');
+                }
+            });
+        }
         
         // Store scroll restoration function on the cart container for external access
         if (window.pendingScrollRestore) {

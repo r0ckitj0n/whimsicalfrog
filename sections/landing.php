@@ -90,6 +90,27 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Check for logout success notification
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('logout') === 'success') {
+        // Show logout success notification
+        if (window.showSuccess && typeof window.showSuccess === 'function') {
+            window.showSuccess('You have been logged out successfully. Thank you for visiting Whimsical Frog! 👋', { 
+                duration: 4000,
+                persistent: false 
+            });
+        } else {
+            // Fallback notification
+            console.log('✅ User logged out successfully');
+        }
+        
+        // Clean up URL by removing the logout parameter
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.delete('logout');
+        window.history.replaceState({}, '', newUrl);
+    }
+    
+    // Original landing page code below
     if (window.innerWidth < 1000) {
         // Mobile/tablet: CSS-only layout; skip JS adjustments entirely
         return;

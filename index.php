@@ -793,10 +793,32 @@ loadTooltipJS();
 
     window.addEventListener('cartUpdated', updateMainCartCounter);
 
-    // Authentication handling
-    function logout() {
-        sessionStorage.removeItem('user');
-        window.location.href = '/logout.php'; 
+    // Enhanced authentication handling using centralized AuthUtils
+    async function logout() {
+        if (window.AuthUtils && typeof window.AuthUtils.logout === 'function') {
+            // Use centralized AuthUtils for consistent logout functionality
+            await window.AuthUtils.logout({
+                showNotifications: true,
+                trackAnalytics: true,
+                redirectDelay: 500
+            });
+        } else {
+            console.warn('AuthUtils not available, using fallback logout');
+            
+            // Fallback logout functionality
+            try {
+                sessionStorage.clear();
+                localStorage.removeItem('cart');
+                localStorage.removeItem('user');
+                
+                setTimeout(() => {
+                    window.location.href = '/logout.php';
+                }, 500);
+            } catch (error) {
+                console.error('Fallback logout error:', error);
+                window.location.href = '/logout.php';
+            }
+        }
     }
 
     // Login form handling

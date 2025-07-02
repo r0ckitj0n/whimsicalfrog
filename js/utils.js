@@ -462,6 +462,7 @@ class PrintUtils {
 window.ApiClient = ApiClient;
 window.DOMUtils = DOMUtils;
 window.PrintUtils = PrintUtils;
+window.AuthUtils = AuthUtils;
 
 // Global API client instance
 const apiClient = new ApiClient();
@@ -472,6 +473,115 @@ window.apiPost = (url, data = null, options = {}) => apiClient.post(url, data, o
 window.apiPut = (url, data = null, options = {}) => apiClient.put(url, data, options);
 window.apiDelete = (url, options = {}) => apiClient.delete(url, options);
 
+class AuthUtils {
+    /**
+     * Enhanced logout with centralized systems integration
+     * @param {Object} options - Logout options
+     */
+    static async logout(options = {}) {
+        const defaults = {
+            showNotifications: true,
+            trackAnalytics: true,
+            clearStorage: true,
+            redirectDelay: 500,
+            redirectUrl: '/logout.php'
+        };
+        
+        const config = { ...defaults, ...options };
+        
+        try {
+            // Show logout notification
+            if (config.showNotifications && window.showInfo && typeof window.showInfo === 'function') {
+                window.showInfo('Logging out...', { duration: config.redirectDelay + 1500 });
+            }
+
+            // Clear all client-side storage
+            if (config.clearStorage) {
+                sessionStorage.clear();
+                localStorage.removeItem('cart');
+                localStorage.removeItem('user');
+                localStorage.removeItem('userPreferences');
+                localStorage.removeItem('authToken');
+                
+                // Clear any auth cookies on client side
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+            }
+
+            // Log logout action for analytics
+            if (config.trackAnalytics && window.analytics && typeof window.analytics.track === 'function') {
+                window.analytics.track('user-logout', {
+                    timestamp: new Date().toISOString(),
+                    source: 'auth-utils',
+                    redirectUrl: config.redirectUrl
+                });
+            }
+
+            // Small delay to let notification show, then redirect
+            setTimeout(() => {
+                window.location.href = config.redirectUrl;
+            }, config.redirectDelay);
+
+            return { success: true };
+
+        } catch (error) {
+            console.error('Logout error:', error);
+            
+            // Show error but still proceed with logout
+            if (config.showNotifications && window.showError && typeof window.showError === 'function') {
+                window.showError('Logout encountered an issue but will proceed.', { duration: 3000 });
+            }
+            
+            // Fallback to direct redirect
+            setTimeout(() => {
+                window.location.href = config.redirectUrl;
+            }, config.redirectDelay + 500);
+            
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * Check if user is logged in (client-side check)
+     * @returns {boolean}
+     */
+    static isLoggedIn() {
+        const sessionUser = sessionStorage.getItem('user');
+        const localUser = localStorage.getItem('user');
+        return !!(sessionUser || localUser);
+    }
+
+    /**
+     * Get current user data from client storage
+     * @returns {Object|null}
+     */
+    static getCurrentUser() {
+        try {
+            const sessionUser = sessionStorage.getItem('user');
+            const localUser = localStorage.getItem('user');
+            
+            const userData = sessionUser || localUser;
+            return userData ? JSON.parse(userData) : null;
+        } catch (error) {
+            console.error('Error getting current user:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Check if current user is admin (client-side check)
+     * @returns {boolean}
+     */
+    static isAdmin() {
+        const user = this.getCurrentUser();
+        if (!user) return false;
+        
+        const role = (user.role || '').toLowerCase();
+        return role === 'admin';
+    }
+}
+
 // Utility functions for common patterns
 window.debounce = DOMUtils.debounce;
 window.formatCurrency = DOMUtils.formatCurrency;
@@ -480,6 +590,10 @@ window.showToast = DOMUtils.showToast;
 window.confirmDialog = DOMUtils.confirm;
 window.printReceipt = (orderId, orderTotal) => PrintUtils.printReceipt(orderId, orderTotal);
 window.printDocument = (options) => PrintUtils.printDocument(options);
+window.logout = (options) => AuthUtils.logout(options);
+window.checkAuth = () => AuthUtils.isLoggedIn();
+window.getCurrentUser = () => AuthUtils.getCurrentUser();
+window.isAdmin = () => AuthUtils.isAdmin();
 
 // Deprecation warnings for direct fetch usage (development only)
 if (window.location.hostname === 'localhost' || window.location.hostname.includes('dev')) {

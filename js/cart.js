@@ -779,7 +779,7 @@ class ShoppingCart {
                     " class="px-4 py-2 rounded text-white" style="background-color: #6b7280; color: white !important; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
                 </div>
                 ${footerMessage}
-                <button onclick="cart.checkout()" class="brand-button w-full py-3 px-6 rounded-lg font-semibold">Proceed to Checkout</button>
+                <button onclick="window.cart.checkout()" class="brand-button w-full py-3 px-6 rounded-lg font-semibold" style="background-color: #87ac3a !important; color: #ffffff !important; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">Proceed to Checkout</button>
             </div>
         `;
         
@@ -934,7 +934,7 @@ class ShoppingCart {
 
                 <div class="flex space-x-2">
                     <button onclick="document.getElementById('paymentMethodModal').remove()" class="flex-1 py-2 px-4 rounded text-white" style="background-color: #6b7280; color: white !important; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Cancel</button>
-                    <button onclick="cart.proceedToCheckout()" class="brand-button flex-1 py-2 px-4 rounded">Place Order</button>
+                    <button onclick="window.cart.proceedToCheckout()" class="brand-button flex-1 py-2 px-4 rounded" style="background-color: #87ac3a !important; color: #ffffff !important; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">Place Order</button>
                 </div>
             </div>
         `;

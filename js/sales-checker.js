@@ -84,7 +84,7 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             
             const salePrice = calculateSalePrice(originalPrice, validDiscountPercentage);
             
-            // Format sale price display
+            // Format sale price display while preserving existing classes
             const saleHTML = `
                 <span style="text-decoration: line-through; color: #999; font-size: 0.9em;">$${originalPrice.toFixed(2)}</span>
                 <span style="color: #dc2626; font-weight: bold; margin-left: 5px;">$${salePrice.toFixed(2)}</span>
@@ -103,7 +103,7 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             item.isOnSale = true;
             item.discountPercentage = validDiscountPercentage;
         } else {
-            // No sale, display regular price
+            // No sale, display regular price while preserving all existing classes and styles
             const price = parseFloat(item.retailPrice || item.price);
             priceElement.textContent = `$${price.toFixed(2)}`;
             
@@ -115,7 +115,7 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
         }
     } catch (error) {
         console.log('No sale data available for', item.sku);
-        // Display regular price on error
+        // Display regular price on error while preserving all existing classes and styles
         const price = parseFloat(item.retailPrice || item.price);
         priceElement.textContent = `$${price.toFixed(2)}`;
         

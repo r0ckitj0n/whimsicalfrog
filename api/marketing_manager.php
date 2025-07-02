@@ -49,39 +49,7 @@ try {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
 }
-
-function getMarketingData($pdo) {
-    $sku = $_GET['sku'] ?? '';
-    if (empty($sku)) {
-        echo json_encode(['success' => false, 'error' => 'SKU is required.']);
-        return;
-    }
-    
-    $stmt = $pdo->prepare("SELECT * FROM marketing_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1");
-    $stmt->execute([$sku]);
-    $data = $stmt->fetch();
-    
-    if ($data) {
-        // Decode JSON fields
-        $jsonFields = [
-            'keywords', 'emotional_triggers', 'selling_points', 'competitive_advantages',
-            'unique_selling_points', 'value_propositions', 'marketing_channels',
-            'urgency_factors', 'social_proof_elements', 'call_to_action_suggestions',
-            'conversion_triggers', 'objection_handlers', 'seo_keywords', 'content_themes',
-            'customer_benefits', 'pain_points_addressed', 'lifestyle_alignment'
-        ];
-        
-        foreach ($jsonFields as $field) {
-            if (isset($data[$field])) {
-                $data[$field] = json_decode($data[$field], true) ?? [];
-            }
-        }
-        
-        echo json_encode(['success' => true, 'data' => $data]);
-    } else {
-        echo json_encode(['success' => true, 'data' => null]);
-    }
-}
+// getMarketingData function moved to data_manager.php for centralization
 
 function updateMarketingField($pdo) {
     $input = json_decode(file_get_contents('php://input'), true);

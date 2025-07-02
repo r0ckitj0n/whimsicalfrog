@@ -47,72 +47,7 @@ switch ($method) {
         echo json_encode(['success' => false, 'message' => 'Method not allowed']);
         break;
 }
-
-function handleGet($pdo) {
-    $roomType = $_GET['room_type'] ?? null;
-    $activeOnly = isset($_GET['active_only']) && $_GET['active_only'] === 'true';
-    
-    try {
-        if ($roomType) {
-            // Get backgrounds for specific room
-            $sql = "SELECT * FROM backgrounds WHERE room_type = ?";
-            $params = [$roomType];
-            
-            if ($activeOnly) {
-                $sql .= " AND is_active = 1";
-            }
-            
-            $sql .= " ORDER BY background_name = 'Original' DESC, created_at DESC";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $backgrounds = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            if ($activeOnly && count($backgrounds) > 0) {
-                echo json_encode(['success' => true, 'background' => $backgrounds[0]]);
-            } else {
-                echo json_encode(['success' => true, 'backgrounds' => $backgrounds]);
-            }
-        } else {
-            // Get all backgrounds grouped by room
-            $stmt = $pdo->prepare("
-                SELECT room_type, COUNT(*) as total_count, 
-                       SUM(is_active) as active_count,
-                       GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background
-                FROM backgrounds 
-                GROUP BY room_type 
-                ORDER BY room_type
-            ");
-            $stmt->execute();
-            $summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            echo json_encode(['success' => true, 'summary' => $summary]);
-        }
-    } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
-    }
-}
-
-function handlePost($pdo, $input) {
-    $action = $input['action'] ?? '';
-    
-    switch ($action) {
-        case 'save':
-            saveBackground($pdo, $input);
-            break;
-        case 'apply':
-            applyBackground($pdo, $input);
-            break;
-        case 'upload':
-            handleUpload($pdo, $input);
-            break;
-        default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
-            break;
-    }
-}
+// handlePost function moved to api_handlers_extended.php for centralization
 
 function saveBackground($pdo, $input) {
     $roomType = $input['room_type'] ?? '';

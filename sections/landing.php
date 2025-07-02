@@ -47,8 +47,6 @@
         display: block;
     }
     
-    /* General mobile overrides are below inside @media block */
-    
     /* Responsive adjustments */
     @media (max-width: 767px) {
         /* On small screens centre the sign with flexbox */
@@ -60,8 +58,6 @@
             height: 100vh;
             margin-top: 0;
         }
-
-
 
         /* Welcome sign placement */
         .area-1 {
@@ -80,14 +76,7 @@
             margin: 0 auto;
         }
     }
-</style> 
-
-<!-- Simplified mobile layout -->
-<div class="mobile-welcome" style="display:flex;justify-content:center;align-items:center;height:100vh;">
-    <a href="/?page=shop" title="Enter the Shop">
-        <img src="images/sign_welcome.png" alt="Welcome - Tap to Enter" style="width:80vw;max-width:400px;height:auto;">
-    </a>
-</div>
+</style>
 
 <section id="landingPage" class="relative">
     <a href="/?page=main_room" class="clickable-area area-1" title="Enter the Main Room">
@@ -136,7 +125,9 @@ document.addEventListener('DOMContentLoaded', function() {
             scale = viewportWidth / originalImageWidth;
             offsetY = (viewportHeight - (originalImageHeight * scale)) / 2;
             offsetX = 0;
-        }// Position each clickable area
+        }
+        
+        // Position each clickable area
         areaCoordinates.forEach(area => {
             const element = document.querySelector(area.selector);
             if (element) {
@@ -144,7 +135,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 element.style.top = `${(area.top * scale) + offsetY}px`;
                 element.style.left = `${(area.left * scale) + offsetX}px`;
                 element.style.width = `${area.width * scale}px`;
-                element.style.height = `${area.height * scale}px`;}
+                element.style.height = `${area.height * scale}px`;
+            }
         });
     }
 
@@ -162,22 +154,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
-<style>
-/* Show simplified welcome by default, hide on large screens */
-.mobile-welcome a { display:block; }
-
-@media (min-width: 768px) {
-    .mobile-welcome { display:none !important; }
-}
-
-@media (max-width: 767px) {
-    /* Hide the original room map */
-    #landingPage { display:none !important; }
-
-    /* Ensure anchor not hidden by global rules */
-    body.is-landing .mobile-welcome a[href="/?page=shop"] {
-        display:block !important;
-    }
-}
-</style>

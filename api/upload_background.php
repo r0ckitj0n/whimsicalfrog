@@ -9,6 +9,10 @@
  * - Database integration
  */
 
+
+
+require_once __DIR__ . '/image_helper.php';
+require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/ai_image_processor.php';
 
@@ -33,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Check authentication
 session_start();
 if (!isset($_SESSION['user']) || !is_array($_SESSION['user']) || 
-    !isset($_SESSION['user']['role']) || strtolower($_SESSION['user']['role']) !== 'admin') {
+    require_once __DIR__ . '/../includes/auth.php'; !isAdminWithToken()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Admin access required']);
     exit;
@@ -238,17 +242,7 @@ function getTargetDimensions($roomType) {
             return ['width' => 1280, 'height' => 896]; // ~10:7 ratio for room pages
     }
 }
-
-/**
- * Sanitize filename for safe storage
- */
-function sanitizeFilename($filename) {
-    // Remove or replace unsafe characters
-    $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
-    $filename = preg_replace('/_+/', '_', $filename); // Remove multiple underscores
-    $filename = trim($filename, '_'); // Remove leading/trailing underscores
-    return $filename;
-}
+// sanitizeFilename function moved to security_validator.php for centralization
 
 /**
  * Calculate file size reduction percentage
@@ -261,12 +255,3 @@ function calculateFileSizeReduction($originalSize, $newSize) {
 /**
  * Format file size in human readable format
  */
-function formatFileSize($bytes) {
-    if ($bytes <= 0) return '0 B';
-    
-    $units = ['B', 'KB', 'MB', 'GB'];
-    $factor = floor(log($bytes, 1024));
-    $factor = min($factor, count($units) - 1);
-    
-    return round($bytes / (1024 ** $factor), 1) . ' ' . $units[$factor];
-} 

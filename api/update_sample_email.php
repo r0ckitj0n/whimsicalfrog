@@ -7,7 +7,7 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 session_start();
 
 // Check if user is admin
-if (!isset($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin') {
+if (require_once __DIR__ . '/../includes/auth.php'; !isAdminWithToken()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Access denied']);
     exit;

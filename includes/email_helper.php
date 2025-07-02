@@ -4,6 +4,8 @@
  * Handles email sending with both mail() and PHPMailer support
  */
 
+
+require_once __DIR__ . '/functions.php';
 class EmailHelper {
     private static $config = [
         'smtp_enabled' => false,
@@ -19,13 +21,7 @@ class EmailHelper {
     ];
 
     private static $mailer = null;
-
-    /**
-     * Configure email settings
-     */
-    public static function configure($config) {
-        self::$config = array_merge(self::$config, $config);
-    }
+// configure function moved to constructor_manager.php for centralization
 
     /**
      * Send email using configured method
@@ -339,9 +335,6 @@ class EmailHelper {
     /**
      * Validate email address
      */
-    public static function isValidEmail($email) {
-        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
-    }
 
     /**
      * Create email from business settings

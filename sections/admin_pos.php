@@ -1,10 +1,13 @@
 <?php
 // Admin POS - Point of Sale System
-require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Get database instance
+$db = Database::getInstance();
 
 // Initialize database
 try {
-    $db = Database::getInstance();
+    
     
     // Get all items for searching
     $stmt = $db->query("SELECT i.sku, i.name, i.retailPrice, COALESCE(img.image_path, i.imageUrl) as imageUrl FROM items i LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1 ORDER BY i.name");
@@ -699,7 +702,11 @@ function toggleFullscreen() {
         document.documentElement.requestFullscreen().then(() => {updateFullscreenButton(true);
         }).catch(err => {
             console.error('Error entering fullscreen:', err);
+            if (window.showWarning) {
+            window.showWarning('Could not enter fullscreen mode');
+        } else {
             alert('Could not enter fullscreen mode');
+        }
         });
     } else {
         // Exit fullscreen
@@ -751,7 +758,11 @@ document.addEventListener('DOMContentLoaded', function() {showAllItems();
                 this.value = '';
                 showAllItems();
             } else {
-                alert('Item not found: ' + sku);
+                if (window.showError) {
+            window.showError('Item not found: ' + sku);
+        } else {
+            alert('Item not found: ' + sku);
+        }
             }
         }
     });
@@ -833,54 +844,7 @@ function createItemCard(item) {
 }
 
 // Add item to cart
-function addToCart(item) {
-    if (!item) {
-        console.error('addToCart: item is null or undefined');
-        return;
-    }const existing = cart.find(cartItem => cartItem.sku === item.sku);
-    
-    if (existing) {
-        existing.quantity += 1;} else {
-        const parsedPrice = parseFloat(item.retailPrice || 0);if (isNaN(parsedPrice) || parsedPrice === 0) {
-            console.error('❌ Invalid price detected:', item.retailPrice, 'parsed as:', parsedPrice);
-        }
-        
-        const newItem = {
-            sku: item.sku,
-            name: item.name,
-            price: parsedPrice,
-            quantity: 1
-        };
-        cart.push(newItem);
-        console.log(`🛒 Added ${item.name} to cart - Price: $${parsedPrice} (from '${item.retailPrice}')`);
-    }
-    
-    // Log current cart state before updating display
-    // Calculate total with tax (matches checkout calculation)
-    const TAX_RATE = 0.0825; // 8.25% sales tax
-    const subtotal = cart.reduce((sum, cartItem) => sum + (cartItem.price * cartItem.quantity), 0);
-    const taxAmount = subtotal * TAX_RATE;
-    const currentTotal = subtotal + taxAmount;
-    console.log('📊 Current cart state:', cart.length, 'items, calculated total: $' + currentTotal.toFixed(2));updateCartDisplay();
-    
-    // Visual feedback
-    const skuSearch = document.getElementById('skuSearch');
-    if (skuSearch) {
-        skuSearch.style.borderColor = '#4CAF50';
-        setTimeout(() => {
-            skuSearch.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-        }, 300);
-    }
-    
-    // Additional visual feedback - flash the cart
-    const cartElement = document.querySelector('.pos-cart');
-    if (cartElement) {
-        cartElement.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
-        setTimeout(() => {
-            cartElement.style.backgroundColor = '';
-        }, 300);
-    }
-}
+// addToCart function moved to js/cart.js for centralization
 
 // Update cart display
 function updateCartDisplay() {

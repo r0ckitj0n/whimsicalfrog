@@ -240,47 +240,7 @@ function analyzeCostStructure($name, $description, $category, $pdo) {
         'analysis' => $enhancedAnalysis
     ];
 }
-
-function loadAISettings($pdo) {
-    $settings = [
-        'ai_cost_temperature' => 0.7,
-        'ai_price_temperature' => 0.7,
-        'ai_cost_multiplier_base' => 1.0,
-        'ai_price_multiplier_base' => 1.0,
-        'ai_conservative_mode' => false,
-        'ai_market_research_weight' => 0.3,
-        'ai_cost_plus_weight' => 0.4,
-        'ai_value_based_weight' => 0.3
-    ];
-    
-    try {
-        $stmt = $pdo->prepare("SELECT setting_key, setting_value, setting_type FROM business_settings WHERE category = 'ai'");
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        foreach ($results as $row) {
-            $key = $row['setting_key'];
-            $value = $row['setting_value'];
-            $type = $row['setting_type'];
-            
-            // Convert value based on type
-            switch ($type) {
-                case 'number':
-                    $settings[$key] = (float)$value;
-                    break;
-                case 'boolean':
-                    $settings[$key] = in_array(strtolower($value), ['true', '1']);
-                    break;
-                default:
-                    $settings[$key] = $value;
-            }
-        }
-    } catch (Exception $e) {
-        error_log("Error loading AI settings: " . $e->getMessage());
-    }
-    
-    return $settings;
-}
+// loadAISettings function moved to ai_manager.php for centralization
 
 function analyzeItem($name, $description) {
     $text = strtolower($name . ' ' . $description);

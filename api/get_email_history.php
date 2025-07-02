@@ -24,7 +24,7 @@ $debug = [
 error_log("Email history auth debug: " . json_encode($debug));
 
 if (!isset($_SESSION['user']) || !isset($_SESSION['user']['role']) || 
-    ($_SESSION['user']['role'] !== 'Admin' && $_SESSION['user']['role'] !== 'admin')) {
+    require_once __DIR__ . '/../includes/auth.php'; !isAdminWithToken()) {
     ob_clean();
     http_response_code(403);
     echo json_encode([

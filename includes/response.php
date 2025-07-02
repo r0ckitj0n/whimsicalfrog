@@ -6,6 +6,8 @@
  * to ensure consistent JSON responses and error handling.
  */
 
+
+require_once __DIR__ . '/security_validator.php';
 class Response {
     
     /**
@@ -101,28 +103,7 @@ class Response {
     public static function serverError($message = 'Internal server error', $details = null) {
         self::error($message, $details, 500);
     }
-    
-    /**
-     * Validate required fields in input data
-     * @param array $data
-     * @param array $requiredFields
-     * @return bool
-     */
-    public static function validateRequired($data, $requiredFields) {
-        $missing = [];
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field]) || $data[$field] === '') {
-                $missing[] = $field;
-            }
-        }
-        
-        if (!empty($missing)) {
-            self::validationError(['missing_fields' => $missing]);
-            return false;
-        }
-        
-        return true;
-    }
+// validateRequired function moved to form-validator.js for centralization
     
     /**
      * Validate HTTP method

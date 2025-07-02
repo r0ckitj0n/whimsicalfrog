@@ -1,10 +1,15 @@
 <?php
+
+require_once __DIR__ . '/../includes/auth.php';
 // Admin Orders Management Section
 ob_start();
 
 // Use centralized database connection
 require_once __DIR__ . '/../includes/functions.php';
+
+// Get database instance
 $db = Database::getInstance();
+
 
 // Get filter parameters with null coalescing
 $filters = [
@@ -834,13 +839,9 @@ async function deleteOrder() {
 }
 
 // Notification functions
-function showSuccess(message) {
-    showNotification(message, 'success');
-}
+// showSuccess function moved to js/global-notifications.js for centralization
 
-function showError(message) {
-    showNotification(message, 'error');
-}
+// showError function moved to js/global-notifications.js for centralization
 
 function showNotification(message, type) {
     const toast = document.createElement('div');
@@ -1030,7 +1031,14 @@ async function impersonateCustomer(customerId) {
         const data = await response.json();
         
         if (data.success) {
-            alert(data.message + '\n\nYou will now be redirected to shop as this customer.');
+            if (window.showSuccess) {
+                window.showSuccess(data.message + ' You will now be redirected to shop as this customer.', {
+                    title: '🛒 Shop as Customer',
+                    duration: 5000
+                });
+            } else {
+                alert(data.message + '\n\nYou will now be redirected to shop as this customer.');
+            }
             window.location.href = data.redirect_url;
         } else {
             showError(data.error || 'Failed to impersonate customer');

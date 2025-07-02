@@ -717,3 +717,10 @@ window.testPopup = function() {
 };
 
 console.log('Test function available: window.testPopup()'); 
+/**
+ * showPopup - Centralized from multiple files
+ */
+function showPopup(element, item) {
+    // Delegate to global popup system
+    window.showGlobalPopup(element, item);
+}

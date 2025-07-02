@@ -157,29 +157,35 @@ function renderDetailedItemModal($item, $images = []) {
                             <div id="detailedOptionsContainer" class="space-y-3">
                                 <!-- Gender Selection (First in hierarchy) -->
                                 <div id="genderSelection" class="hidden">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Gender/Style:</label>
-                                    <select id="itemGenderSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Gender/Style: <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="itemGenderSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field">
                                         <option value="">Select a style...</option>
                                     </select>
                                 </div>
                                 
                                 <!-- Size Selection (Second in hierarchy) -->
-                                <div id="sizeSelection" class="hidden">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Size:</label>
-                                    <select id="itemSizeSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500">
-                                        <option value="">Select a size...</option>
-                                    </select>
-                                    <div id="sizeStockInfo" class="text-xs text-gray-500 mt-1"></div>
-                                </div>
+                                                            <div id="sizeSelection" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Size: <span class="text-red-500">*</span>
+                                </label>
+                                <select id="itemSizeSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field">
+                                    <option value="">Select a size...</option>
+                                </select>
+                                <div id="sizeStockInfo" class="text-xs text-gray-500 mt-1"></div>
+                            </div>
                                 
                                 <!-- Color Selection (Third in hierarchy) -->
-                                <div id="colorSelection" class="hidden">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Color:</label>
-                                    <select id="itemColorSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500">
-                                        <option value="">Select a color...</option>
-                                    </select>
-                                    <div id="colorStockInfo" class="text-xs text-gray-500 mt-1"></div>
-                                </div>
+                                                            <div id="colorSelection" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Color: <span class="text-red-500">*</span>
+                                </label>
+                                <select id="itemColorSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field">
+                                    <option value="">Select a color...</option>
+                                </select>
+                                <div id="colorStockInfo" class="text-xs text-gray-500 mt-1"></div>
+                            </div>
                             </div>
                             
                             <!-- Quantity and Add to Cart -->
@@ -356,7 +362,16 @@ function renderDetailedItemModal($item, $images = []) {
         const modal = document.getElementById('detailedItemModal');
         if (modal) {
             modal.classList.add('hidden');
+            
+            // Clear any scrollbar monitor
+            if (window.scrollbarMonitor) {
+                clearInterval(window.scrollbarMonitor);
+                window.scrollbarMonitor = null;
+            }
+            
+            // Restore scrolling and remove padding
             document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
     }
     
@@ -433,6 +448,16 @@ function renderDetailedItemModal($item, $images = []) {
             modal.style.display = 'none';
             modal.classList.add('hidden');
             modal.classList.remove('show');
+            
+            // Clear any scrollbar monitor
+            if (window.scrollbarMonitor) {
+                clearInterval(window.scrollbarMonitor);
+                window.scrollbarMonitor = null;
+            }
+            
+            // Restore scrolling and remove padding
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
             
             // Reset options
             window.currentItemOptions = {
@@ -718,7 +743,7 @@ function renderDetailedItemModal($item, $images = []) {
         }
     }
     
-    // Enhanced addDetailedToCart function
+    // Enhanced addDetailedToCart function with validation
     window.addDetailedToCart = function(sku) {
         const quantity = parseInt(document.getElementById('detailedQuantity')?.value || 1);
         const currentItem = window.currentDetailedItem;
@@ -726,6 +751,107 @@ function renderDetailedItemModal($item, $images = []) {
         if (!currentItem) {
             console.error('No current item data available');
             return;
+        }
+        
+        // Validation: Check if color selection is required but not selected
+        const colorSelect = document.getElementById('itemColorSelect');
+        const colorSelection = document.getElementById('colorSelection');
+        if (colorSelect && colorSelection && !colorSelection.classList.contains('hidden')) {
+            const selectedColor = colorSelect.value;
+            if (!selectedColor) {
+                // Add visual feedback
+                colorSelect.classList.add('validation-error');
+                setTimeout(() => colorSelect.classList.remove('validation-error'), 3000);
+                
+                if (window.cart && window.cart.showErrorNotification) {
+                    window.cart.showErrorNotification('Please select a color before adding to cart.');
+                } else if (window.showValidation) {
+                    window.showValidation('Please select a color before adding to cart.');
+                } else {
+                    alert('Please select a color before adding to cart.');
+                }
+                return;
+            }
+            
+            // Check if there's enough color inventory available
+            const selectedOption = colorSelect.options[colorSelect.selectedIndex];
+            const availableStock = parseInt(selectedOption.dataset.stock || 0);
+            
+                            if (quantity > availableStock) {
+                const errorMsg = availableStock === 0 ? 
+                    'This color is currently out of stock.' :
+                    `Only ${availableStock} of this color available.`;
+                
+                if (window.cart && window.cart.showErrorNotification) {
+                    window.cart.showErrorNotification(errorMsg);
+                } else if (window.showError) {
+                    window.showError(errorMsg);
+                } else {
+                    alert(errorMsg);
+                }
+                return;
+            }
+        }
+        
+        // Validation: Check if size selection is required but not selected
+        const sizeSelect = document.getElementById('itemSizeSelect');
+        const sizeSelection = document.getElementById('sizeSelection');
+        if (sizeSelect && sizeSelection && !sizeSelection.classList.contains('hidden')) {
+            const selectedSize = sizeSelect.value;
+            if (!selectedSize) {
+                // Add visual feedback
+                sizeSelect.classList.add('validation-error');
+                setTimeout(() => sizeSelect.classList.remove('validation-error'), 3000);
+                
+                if (window.cart && window.cart.showErrorNotification) {
+                    window.cart.showErrorNotification('Please select a size before adding to cart.');
+                } else if (window.showValidation) {
+                    window.showValidation('Please select a size before adding to cart.');
+                } else {
+                    alert('Please select a size before adding to cart.');
+                }
+                return;
+            }
+            
+            // Check if there's enough size inventory available
+            const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+            const availableStock = parseInt(selectedOption.dataset.stock || 0);
+            
+                            if (quantity > availableStock) {
+                const errorMsg = availableStock === 0 ? 
+                    'This size is currently out of stock.' :
+                    `Only ${availableStock} of this size available.`;
+                
+                if (window.cart && window.cart.showErrorNotification) {
+                    window.cart.showErrorNotification(errorMsg);
+                } else if (window.showError) {
+                    window.showError(errorMsg);
+                } else {
+                    alert(errorMsg);
+                }
+                return;
+            }
+        }
+        
+        // Validation: Check if gender selection is required but not selected
+        const genderSelect = document.getElementById('itemGenderSelect');
+        const genderSelection = document.getElementById('genderSelection');
+        if (genderSelect && genderSelection && !genderSelection.classList.contains('hidden')) {
+            const selectedGender = genderSelect.value;
+            if (!selectedGender) {
+                // Add visual feedback
+                genderSelect.classList.add('validation-error');
+                setTimeout(() => genderSelect.classList.remove('validation-error'), 3000);
+                
+                if (window.cart && window.cart.showErrorNotification) {
+                    window.cart.showErrorNotification('Please select a gender/style before adding to cart.');
+                } else if (window.showValidation) {
+                    window.showValidation('Please select a gender/style before adding to cart.');
+                } else {
+                    alert('Please select a gender/style before adding to cart.');
+                }
+                return;
+            }
         }
         
         // Build cart item with proper structure
@@ -762,9 +888,14 @@ function renderDetailedItemModal($item, $images = []) {
         // Add to cart using the proper cart system
         if (typeof window.cart !== 'undefined' && window.cart.addItem) {
             window.cart.addItem(cartItem);
+            // Note: Cart class will handle the notification automatically via showAddToCartNotifications()
         } else {
             console.error('Cart system not available');
-            alert('Unable to add item to cart. Please try again.');
+            if (window.showError) {
+                window.showError('Unable to add item to cart. Please try again.');
+            } else {
+                alert('Unable to add item to cart. Please try again.');
+            }
         }
         
         // Close modal
@@ -772,24 +903,22 @@ function renderDetailedItemModal($item, $images = []) {
     };
     
     // Hook into the existing modal opening function - safer approach
-    if (typeof window.showGlobalItemModal !== 'undefined') {
-        // Store reference to original function only once
-        if (!window.originalShowGlobalItemModal) {
-            window.originalShowGlobalItemModal = window.showGlobalItemModal;
-            
-            // Override the function
-            window.showGlobalItemModal = function(sku, itemData) {
-                // Call original function
-                const result = window.originalShowGlobalItemModal(sku, itemData);
+    // Instead of overriding the global function, we'll enhance the existing showDetailedModalComponent
+    if (typeof window.showDetailedModalComponent === 'undefined') {
+        window.showDetailedModalComponent = function(sku, itemData) {
+            // Show the modal
+            const modal = document.getElementById('detailedItemModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.classList.remove('hidden');
                 
-                // Load options after modal opens
+                // The global modal system already handles scrollbar preservation
+                // We just need to load our additional options
                 setTimeout(() => {
                     loadItemOptions(sku);
                 }, 100);
-                
-                return result;
-            };
-        }
+            }
+        };
     }
     
     // Function to open image zoom
@@ -800,7 +929,8 @@ function renderDetailedItemModal($item, $images = []) {
         if (modal && image) {
             image.src = imageSrc;
             modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            // Don't interfere with the main modal's scrollbar management
+            // The main modal already has scrollbar preservation active
         }
     }
     
@@ -809,7 +939,8 @@ function renderDetailedItemModal($item, $images = []) {
         const modal = document.getElementById('imageZoomModal');
         if (modal) {
             modal.classList.add('hidden');
-            document.body.style.overflow = '';
+            // Don't interfere with the main modal's scrollbar management
+            // The main modal will handle scrollbar restoration when it closes
         }
     }
     
@@ -830,6 +961,53 @@ function renderDetailedItemModal($item, $images = []) {
         addDetailedToCart: typeof addDetailedToCart
     });
     </script>
+    
+    <style>
+    /* Required field validation styles */
+    .required-field {
+        position: relative;
+    }
+    
+    .required-field:invalid {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2) !important;
+    }
+    
+    .required-field:focus:invalid {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+    }
+    
+    /* Validation error highlight */
+    .validation-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1) !important;
+        animation: shake 0.3s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        75% { transform: translateX(2px); }
+    }
+    
+    /* Required asterisk styling */
+    .text-red-500 {
+        color: #ef4444;
+        font-weight: bold;
+    }
+    
+    /* Add to cart button states */
+    .wf-add-to-cart-btn:disabled {
+        background-color: #9ca3af !important;
+        cursor: not-allowed !important;
+        opacity: 0.6;
+    }
+    
+    .wf-add-to-cart-btn:disabled:hover {
+        background-color: #9ca3af !important;
+    }
+    </style>
     
     <?php
     return ob_get_clean();

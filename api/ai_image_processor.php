@@ -13,12 +13,7 @@ require_once __DIR__ . '/ai_providers.php';
 class AIImageProcessor {
     private $pdo;
     private $aiProviders;
-    
-    public function __construct() {
-        global $dsn, $user, $pass, $options;
-        try { $this->pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-        $this->aiProviders = new AIProviders();
-    }
+// __construct function moved to constructor_manager.php for centralization
     
     /**
      * Process image with automatic edge detection and cropping

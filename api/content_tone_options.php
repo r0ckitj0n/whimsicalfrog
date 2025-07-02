@@ -17,7 +17,7 @@ header('Content-Type: application/json');
     $isAdmin = false;
     
     // Check session authentication first
-    if (isset($_SESSION['user_id']) && isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'admin') {
+    require_once __DIR__ . '/../includes/auth.php'; if (isAdminWithToken()) {
         $isAdmin = true;
     }
     

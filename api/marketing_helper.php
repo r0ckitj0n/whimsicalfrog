@@ -5,9 +5,13 @@ class MarketingHelper {
     private $pdo;
     
     public function __construct() {
-        global $dsn, $user, $pass, $options;
-        try { $this->pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-        $this->initializeTables();
+        try {
+            $this->pdo = Database::getInstance();
+            $this->initializeTables();
+        } catch (Exception $e) {
+            error_log("MarketingHelper initialization failed: " . $e->getMessage());
+            throw $e;
+        }
     }
     
     private function initializeTables() {
@@ -49,6 +53,10 @@ class MarketingHelper {
     }
     
     public function getMarketingData($sku) {
+        if (empty($sku)) {
+            return null;
+        }
+        
         $stmt = $this->pdo->prepare("SELECT * FROM marketing_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1");
         $stmt->execute([$sku]);
         $data = $stmt->fetch();

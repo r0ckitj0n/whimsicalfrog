@@ -178,79 +178,9 @@ class FileHelper {
 
         return true;
     }
-
-    /**
-     * Copy file with error handling
-     */
-    public static function copy($source, $destination, $overwrite = false) {
-        if (!file_exists($source)) {
-            throw new Exception("Source file not found: $source");
-        }
-
-        if (file_exists($destination) && !$overwrite) {
-            throw new Exception("Destination file exists: $destination");
-        }
-
-        // Create destination directory if needed
-        $directory = dirname($destination);
-        if (!is_dir($directory)) {
-            if (!mkdir($directory, 0755, true)) {
-                throw new Exception("Failed to create destination directory: $directory");
-            }
-        }
-
-        if (!copy($source, $destination)) {
-            throw new Exception("Failed to copy file from $source to $destination");
-        }
-
-        return true;
-    }
-
-    /**
-     * Move/rename file with error handling
-     */
-    public static function move($source, $destination, $overwrite = false) {
-        if (!file_exists($source)) {
-            throw new Exception("Source file not found: $source");
-        }
-
-        if (file_exists($destination) && !$overwrite) {
-            throw new Exception("Destination file exists: $destination");
-        }
-
-        // Create destination directory if needed
-        $directory = dirname($destination);
-        if (!is_dir($directory)) {
-            if (!mkdir($directory, 0755, true)) {
-                throw new Exception("Failed to create destination directory: $directory");
-            }
-        }
-
-        if (!rename($source, $destination)) {
-            throw new Exception("Failed to move file from $source to $destination");
-        }
-
-        return true;
-    }
-
-    /**
-     * Delete file with error handling
-     */
-    public static function delete($filePath) {
-        if (!file_exists($filePath)) {
-            return true; // Already deleted
-        }
-
-        if (!is_writable(dirname($filePath))) {
-            throw new Exception("Directory not writable for deletion: " . dirname($filePath));
-        }
-
-        if (!unlink($filePath)) {
-            throw new Exception("Failed to delete file: $filePath");
-        }
-
-        return true;
-    }
+// copy function moved to file_operations.php for centralization
+// move function moved to file_operations.php for centralization
+// delete function moved to database_operations.php for centralization
 
     /**
      * Get file information

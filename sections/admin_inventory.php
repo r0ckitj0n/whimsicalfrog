@@ -10,7 +10,7 @@ require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/logger.php';
 
 // Get database instance
-$pdo = Database::getInstance();
+$pdo = Database::getInstance()->getConnection();
 
 // Initialize data processing
 $editItem = null;
@@ -3013,7 +3013,9 @@ async function showPricingTooltip(event, reasoningText) {
     iconContainer.appendChild(loadingTooltip);
     
     try {
-        // Get explanation from databaseconst explanationData = await getPricingExplanation(reasoningText);// Remove loading tooltip
+        // Get explanation from database
+        const explanationData = await getPricingExplanation(reasoningText);
+        // Remove loading tooltip
         loadingTooltip.remove();
         
         // Create actual tooltip with data
@@ -4104,14 +4106,17 @@ document.addEventListener('DOMContentLoaded', function() {// Initialize navigati
             refreshCostBreakdown(false);
             
             // Load existing price suggestion for edit mode
-            if (modalMode === 'edit') {loadExistingPriceSuggestion(currentItemSku);
+            if (modalMode === 'edit') {
+                loadExistingPriceSuggestion(currentItemSku);
             }
             
             // Load existing price suggestion for view mode
-            if (modalMode === 'view') {loadExistingViewPriceSuggestion(currentItemSku);
+            if (modalMode === 'view') {
+                loadExistingViewPriceSuggestion(currentItemSku);
             }
             
-            // Load existing marketing suggestion for edit/view modeloadExistingMarketingSuggestion(currentItemSku);
+            // Load existing marketing suggestion for edit/view mode
+            loadExistingMarketingSuggestion(currentItemSku);
             
 
         } else if (modalMode === 'add') {

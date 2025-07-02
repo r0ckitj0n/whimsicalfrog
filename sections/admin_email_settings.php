@@ -10,7 +10,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 // Include database and email configuration
 require_once 'api/config.php';
 require_once 'api/email_config.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 // Handle form submissions
 $message = '';

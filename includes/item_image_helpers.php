@@ -5,53 +5,7 @@
  */
 
 require_once __DIR__ . '/../api/config.php';
-
-/**
- * Get the primary image for an item by SKU
- */
-function getPrimaryImageBySku($sku) {
-    try {
-        $pdo = getDbConnection();
-        if (!$pdo) {
-            return false;
-        }
-        
-        $stmt = $pdo->prepare("
-            SELECT * FROM item_images 
-            WHERE sku = ? AND is_primary = 1 
-            ORDER BY id ASC LIMIT 1
-        ");
-        $stmt->execute([$sku]);
-        $primaryImage = $stmt->fetch();
-        
-        if ($primaryImage) {
-            // Add file existence check
-            $primaryImage['file_exists'] = file_exists($primaryImage['image_path']);
-            return $primaryImage;
-        }
-        
-        // If no primary image, get the first available image
-        $stmt = $pdo->prepare("
-            SELECT * FROM item_images 
-            WHERE sku = ? 
-            ORDER BY id ASC LIMIT 1
-        ");
-        $stmt->execute([$sku]);
-        $image = $stmt->fetch();
-        
-        if ($image) {
-            // Add file existence check
-            $image['file_exists'] = file_exists($image['image_path']);
-            return $image;
-        }
-        
-        return false;
-        
-    } catch (PDOException $e) {
-        error_log("Database error in getPrimaryImageBySku: " . $e->getMessage());
-        return false;
-    }
-}
+// getPrimaryImageBySku function moved to image_helper.php for centralization
 
 /**
  * Get all images for an item by SKU
@@ -141,83 +95,8 @@ function getImageUrlWithFallback($imagePath, $sku = null) {
     // Return null - let CSS handle the fallback
     return null;
 }
-
-/**
- * Get image with fallback handling
- */
-function getImageWithFallback($sku) {
-    $primaryImage = getPrimaryImageBySku($sku);
-    if ($primaryImage && !empty($primaryImage['image_path'])) {
-        return $primaryImage['image_path'];
-    }
-    return null; // No placeholder needed - use CSS fallback
-}
-
-/**
- * Get database connection
- */
-function getDbConnection() {
-    static $pdo = null;
-    
-    if ($pdo === null) {
-        try {
-            // Detect environment
-            $isLocalhost = false;
-            
-            // Check if running from command line
-            if (PHP_SAPI === 'cli') {
-                $isLocalhost = true;
-            }
-            
-            // Check HTTP_HOST for localhost indicators
-            if (isset($_SERVER['HTTP_HOST'])) {
-                if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
-                    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false) {
-                    $isLocalhost = true;
-                }
-            }
-            
-            // Check SERVER_NAME for localhost indicators
-            if (isset($_SERVER['SERVER_NAME'])) {
-                if (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || 
-                    strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false) {
-                    $isLocalhost = true;
-                }
-            }
-            
-            // Database configuration based on environment
-            if ($isLocalhost) {
-                // Local database credentials
-                $host = 'localhost';
-                $db   = 'whimsicalfrog';
-                $user = 'root';
-                $pass = 'Palz2516';
-            } else {
-                // Production database credentials - IONOS values
-                $host = 'db5017975223.hosting-data.io';
-                $db   = 'dbs14295502';
-                $user = 'dbu2826619';
-                $pass = 'Palz2516!';
-            }
-            
-            // Create DSN and options
-            $charset = 'utf8mb4';
-            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-            $options = [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-            ];
-            
-            try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-        } catch (PDOException $e) {
-            error_log("Database connection error in getDbConnection: " . $e->getMessage());
-            return null;
-        }
-    }
-    
-    return $pdo;
-}
+// getImageWithFallback function moved to image_helper.php for centralization
+// getDbConnection function moved to database.php for centralization
 
 /**
  * Get fallback image from old system

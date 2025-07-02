@@ -66,15 +66,29 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
     try {
         const saleData = await checkItemSale(item.sku);
         
-        if (saleData.isOnSale) {
+        if (saleData.isOnSale && saleData.discountPercentage) {
             const originalPrice = parseFloat(item.retailPrice || item.price);
-            const salePrice = calculateSalePrice(originalPrice, saleData.discountPercentage);
+            const validDiscountPercentage = parseFloat(saleData.discountPercentage);
+            
+            // Validate the discount percentage
+            if (isNaN(validDiscountPercentage) || validDiscountPercentage <= 0) {
+                console.error('Invalid discount percentage in sale data:', saleData.discountPercentage);
+                // Fall back to regular price display
+                const price = parseFloat(item.retailPrice || item.price);
+                priceElement.textContent = `$${price.toFixed(2)}`;
+                if (unitPriceElement) {
+                    unitPriceElement.textContent = `$${price.toFixed(2)}`;
+                }
+                return;
+            }
+            
+            const salePrice = calculateSalePrice(originalPrice, validDiscountPercentage);
             
             // Format sale price display
             const saleHTML = `
                 <span style="text-decoration: line-through; color: #999; font-size: 0.9em;">$${originalPrice.toFixed(2)}</span>
                 <span style="color: #dc2626; font-weight: bold; margin-left: 5px;">$${salePrice.toFixed(2)}</span>
-                <span style="color: #dc2626; font-size: 0.8em; margin-left: 5px;">(${saleData.discountPercentage}% off)</span>
+                <span style="color: #dc2626; font-size: 0.8em; margin-left: 5px;">(${Math.round(validDiscountPercentage)}% off)</span>
             `;
             
             priceElement.innerHTML = saleHTML;
@@ -87,7 +101,7 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             item.salePrice = salePrice;
             item.originalPrice = originalPrice;
             item.isOnSale = true;
-            item.discountPercentage = saleData.discountPercentage;
+            item.discountPercentage = validDiscountPercentage;
         } else {
             // No sale, display regular price
             const price = parseFloat(item.retailPrice || item.price);
@@ -116,10 +130,7 @@ let hoverTimeout = null;
 let hideTimeout = null;
 
 // Popup functions now use the global system
-function showPopup(element, item) {
-    // Delegate to global popup system
-    window.showGlobalPopup(element, item);
-}
+// showPopup function moved to js/global-popup.js for centralization
 
 function hidePopup() {
     if (typeof window.hideGlobalPopup === 'function') {
@@ -325,7 +336,7 @@ function addSaleBadgeToCard(skuOrCard, discountPercentageOrCard) {
         itemCard = discountPercentageOrCard;
         // Get discount from sale data
         checkItemSale(sku).then(saleData => {
-            if (saleData) {
+            if (saleData && saleData.isOnSale && saleData.discountPercentage) {
                 addSaleBadgeToCardWithDiscount(itemCard, saleData.discountPercentage);
             }
         });
@@ -336,12 +347,22 @@ function addSaleBadgeToCard(skuOrCard, discountPercentageOrCard) {
         discountPercentage = discountPercentageOrCard;
     }
     
-    addSaleBadgeToCardWithDiscount(itemCard, discountPercentage);
+    // Only proceed if we have valid data
+    if (itemCard && discountPercentage) {
+        addSaleBadgeToCardWithDiscount(itemCard, discountPercentage);
+    }
 }
 
 function addSaleBadgeToCardWithDiscount(itemCard, discountPercentage) {
     if (!itemCard || !itemCard.querySelector) {
         console.error('Invalid item card element provided to addSaleBadgeToCard');
+        return;
+    }
+    
+    // Validate discount percentage
+    const validDiscountPercentage = parseFloat(discountPercentage);
+    if (isNaN(validDiscountPercentage) || validDiscountPercentage <= 0) {
+        console.error('Invalid discount percentage provided to addSaleBadgeToCardWithDiscount:', discountPercentage);
         return;
     }
     
@@ -356,7 +377,7 @@ function addSaleBadgeToCardWithDiscount(itemCard, discountPercentage) {
     saleBadge.className = 'sale-badge';
     saleBadge.innerHTML = `
         <span class="sale-text">SALE</span>
-        <span class="sale-percentage">${Math.round(discountPercentage)}% OFF</span>
+        <span class="sale-percentage">${Math.round(validDiscountPercentage)}% OFF</span>
     `;
     
     // Add sale badge styles
@@ -392,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const sku = card.getAttribute('data-sku');
             if (sku) {
                 const saleData = await checkItemSale(sku);
-                if (saleData) {
+                if (saleData && saleData.isOnSale && saleData.discountPercentage) {
                     addSaleBadgeToCard(card, saleData.discountPercentage);
                 }
             }
@@ -428,7 +449,5 @@ window.checkItemSale = checkItemSale;
 window.calculateSalePrice = calculateSalePrice;
 window.checkAndDisplaySalePrice = checkAndDisplaySalePrice;
 window.addSaleBadgeToCard = addSaleBadgeToCard;
-window.showPopup = showPopup;
-window.hidePopup = hidePopup;
-window.globalShowPopup = showPopup;
-window.globalHidePopup = hidePopup; 
+// Note: showPopup and hidePopup are provided by global-popup.js
+// window.showPopup and window.hidePopup are set up there 

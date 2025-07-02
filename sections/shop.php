@@ -7,8 +7,8 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 
 // Include the image carousel component and helpers
 require_once __DIR__ . '/../components/image_carousel.php';
-require_once __DIR__ . '/../components/detailed_product_modal.php';
-require_once __DIR__ . '/../includes/item_image_helpers.php';
+require_once __DIR__ . '/../components/detailed_item_modal.php';
+require_once __DIR__ . '/../includes/image_helper.php';
 require_once __DIR__ . '/../api/business_settings_helper.php';
 require_once __DIR__ . '/../api/marketing_helper.php';
 
@@ -260,18 +260,71 @@ if (!isset($GLOBALS['marketingHelper'])) {
 // Shop page now uses the global item modal system
 // All modal functionality is handled by js/global-item-modal.js
 
-// Show product details using global modal system
+// Show product details using global modal system with robust retry mechanism
 function showProductDetails(sku) {
     if (typeof window.showGlobalItemModal === 'function') {
         window.showGlobalItemModal(sku);
     } else {
-        console.error('Global item modal system not loaded');
-        alert('Unable to load item details. Please refresh the page.');
+        console.warn('Global item modal system not yet loaded, retrying...');
+        // Retry with progressive delays
+        let retryCount = 0;
+        const maxRetries = 5;
+        
+        function attemptRetry() {
+            retryCount++;
+            if (typeof window.showGlobalItemModal === 'function') {
+                console.log('Global item modal system loaded after', retryCount, 'retries');
+                window.showGlobalItemModal(sku);
+            } else if (retryCount < maxRetries) {
+                console.warn('Retry attempt', retryCount, 'of', maxRetries);
+                setTimeout(attemptRetry, 100 * retryCount); // Progressive delay
+            } else {
+                console.error('Global item modal system failed to load after', maxRetries, 'retries');
+                if (window.showError) {
+                window.showError('Unable to load item details. Please refresh the page and try again.');
+            } else {
+                alert('Unable to load item details. Please refresh the page and try again.');
+            }
+            }
+        }
+        
+        setTimeout(attemptRetry, 100);
     }
 }
 
 // Make function globally available
 window.showProductDetails = showProductDetails;
+
+// Scrollbar preservation override - runs after all other scripts
+document.addEventListener('DOMContentLoaded', function() {
+    // Store original scrollbar width
+    const originalScrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    
+    // Override any function that might set overflow hidden without padding
+    const originalSetAttribute = Element.prototype.setAttribute;
+    const originalSetProperty = CSSStyleDeclaration.prototype.setProperty;
+    
+    // Monitor for overflow hidden being set on body
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.target === document.body && mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                if (document.body.style.overflow === 'hidden' && document.body.style.paddingRight !== originalScrollbarWidth + 'px') {
+                    document.body.style.paddingRight = originalScrollbarWidth + 'px';
+                }
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['style']
+    });
+    
+    // Clean up observer when page unloads
+    window.addEventListener('beforeunload', function() {
+        observer.disconnect();
+    });
+});
 </script>
 
 <section id="shopPage" class="py-6">
@@ -430,8 +483,7 @@ window.showProductDetails = showProductDetails;
 </section>
 
 <?php
-// Include the quantity modal component for color and size selection
-require_once __DIR__ . '/../components/quantity_modal.php';
+// Shop page uses global item modal system - no quantity modal needed
 ?>
 
 

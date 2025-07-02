@@ -24,8 +24,6 @@
     <link href="css/button-styles.css?v=1751313635" rel="stylesheet">
     <link href="css/global-modals.css?v=1751313635" rel="stylesheet">
     <link href="css/search-modal.css?v=1751313635" rel="stylesheet">
-    <link href="css/help-tooltips.css?v=1751313635" rel="stylesheet">
-    <link href="css/room-popups.css?v=1751313635" rel="stylesheet">
     <link href="css/room-headers.css?v=1751313635" rel="stylesheet">
     <link href="css/notification-overrides.css?v=1751313635" rel="stylesheet">
     
@@ -1029,57 +1027,7 @@ function createItemCard(item) {
 }
 
 // Add item to cart
-function addToCart(item) {
-    if (!item) {
-        console.error('addToCart: item is null or undefined');
-        return;
-    }
-    
-    const existing = cart.find(cartItem => cartItem.sku === item.sku);
-    
-    if (existing) {
-        existing.quantity += 1;
-        console.log(`➕ ${item.name} quantity increased to ${existing.quantity}`);
-    } else {
-        const newItem = {
-            sku: item.sku,
-            name: item.name,
-            price: parseFloat(item.retailPrice || 0),
-            quantity: 1
-        };
-        cart.push(newItem);
-        console.log(`🛒 Added ${item.name} to cart ($${newItem.price})`);
-    }
-    
-    console.log('🔍 Current cart contents:', JSON.stringify(cart, null, 2));
-    console.log('🔧 About to call updateCartDisplay, function type:', typeof updateCartDisplay);
-    if (typeof updateCartDisplay === 'function') {
-        console.log('✅ updateCartDisplay is a function, calling it now...');
-        updateCartDisplay();
-        console.log('✅ updateCartDisplay call completed');
-    } else {
-        console.error('❌ updateCartDisplay is not a function!', updateCartDisplay);
-        alert('ERROR: updateCartDisplay is not defined as a function');
-    }
-    
-    // Visual feedback
-    const skuSearch = document.getElementById('skuSearch');
-    if (skuSearch) {
-        skuSearch.style.borderColor = '#4CAF50';
-        setTimeout(() => {
-            skuSearch.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-        }, 300);
-    }
-    
-    // Additional visual feedback - flash the cart
-    const cartElement = document.querySelector('.pos-cart');
-    if (cartElement) {
-        cartElement.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
-        setTimeout(() => {
-            cartElement.style.backgroundColor = '';
-        }, 300);
-    }
-}
+// addToCart function moved to js/cart.js for centralization
 
 // Update cart display
 function updateCartDisplay() {
@@ -1261,6 +1209,8 @@ console.log('Keyboard shortcuts: F1=Search, F2=Show All, F9=Checkout, Escape=Exi
 <!-- Core JavaScript Libraries -->
 <script src="js/global-notifications.js?v=1751313635"></script>
 <script src="js/image-viewer.js?v=1751313635"></script>
+<script src="js/modal-manager.js?v=1751411847"></script>
+<script src="js/cart.js?v=1751313635"></script>
 
 <!-- Page-specific Scripts -->
 
@@ -1271,7 +1221,7 @@ console.log('Keyboard shortcuts: F1=Search, F2=Show All, F9=Checkout, Escape=Exi
 <script src="js/analytics.js?v=1751313635"></script>
 
 <!-- Admin-specific Scripts -->
-<script src="js/help-tooltips.js?v=1751313635"></script>
+    <!-- Tooltip JS loaded dynamically if needed -->
 
 <!-- WebP Support Detection -->
 <script>

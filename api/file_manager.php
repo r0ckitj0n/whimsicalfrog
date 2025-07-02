@@ -1,4 +1,8 @@
 <?php
+
+
+require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../includes/functions.php';
 require_once 'config.php';
 
 // Change working directory to parent directory (project root)
@@ -79,17 +83,6 @@ function isFileViewable($filename) {
     return in_array($ext, $viewableExtensions);
 }
 
-function formatFileSize($bytes) {
-    if ($bytes >= 1073741824) {
-        return number_format($bytes / 1073741824, 2) . ' GB';
-    } elseif ($bytes >= 1048576) {
-        return number_format($bytes / 1048576, 2) . ' MB';
-    } elseif ($bytes >= 1024) {
-        return number_format($bytes / 1024, 2) . ' KB';
-    } else {
-        return $bytes . ' bytes';
-    }
-}
 
 function listDirectory($path = '') {
     $path = sanitizePath($path);

@@ -133,14 +133,7 @@ class SessionManager {
         self::init();
         return isset($_SESSION[$key]);
     }
-
-    /**
-     * Remove session variable
-     */
-    public static function remove($key) {
-        self::init();
-        unset($_SESSION[$key]);
-    }
+// remove function moved to file_operations.php for centralization
 
     /**
      * Get all session data

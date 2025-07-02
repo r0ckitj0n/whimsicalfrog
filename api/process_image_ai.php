@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Check authentication
 session_start();
 if (!isset($_SESSION['user']) || !is_array($_SESSION['user']) || 
-    !isset($_SESSION['user']['role']) || strtolower($_SESSION['user']['role']) !== 'admin') {
+    require_once __DIR__ . '/../includes/auth.php'; !isAdminWithToken()) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Admin access required']);
     exit;

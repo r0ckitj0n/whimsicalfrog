@@ -41,107 +41,84 @@ switch ($method) {
         echo json_encode(['success' => false, 'message' => 'Method not allowed']);
         break;
 }
-
 function handleGet($pdo) {
-    $action = $_GET['action'] ?? '';
+    $action = $_GET['action'] ?? 'get_all';
+    
+    switch ($action) {
+        case 'get_all':
+            getAllAssignments($pdo);
+            break;
+        case 'get_summary':
+            getSummary($pdo);
+            break;
+        case 'get_room':
+            getRoomAssignments($pdo);
+            break;
+        default:
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            break;
+    }
+}
+
+function getAllAssignments($pdo) {
+    try {
+        $stmt = $pdo->query("
+            SELECT rca.*, c.name as category_name, c.description as category_description
+            FROM room_category_assignments rca 
+            JOIN categories c ON rca.category_id = c.id 
+            ORDER BY rca.room_number, rca.display_order
+        ");
+        $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'assignments' => $assignments]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+function getSummary($pdo) {
+    try {
+        $stmt = $pdo->query("
+            SELECT 
+                rca.room_number,
+                rca.room_name,
+                GROUP_CONCAT(c.name ORDER BY rca.display_order SEPARATOR ', ') as categories,
+                COUNT(*) as category_count,
+                MAX(CASE WHEN rca.is_primary = 1 THEN c.name END) as primary_category
+            FROM room_category_assignments rca 
+            JOIN categories c ON rca.category_id = c.id 
+            GROUP BY rca.room_number, rca.room_name
+            ORDER BY rca.room_number
+        ");
+        $summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'summary' => $summary]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+function getRoomAssignments($pdo) {
     $roomNumber = $_GET['room_number'] ?? null;
-    $roomId = $_GET['room_id'] ?? null;
-    $categoryId = $_GET['category_id'] ?? null;
+    
+    if ($roomNumber === null) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Room number is required']);
+        return;
+    }
     
     try {
-        if ($action === 'get_primary_category') {
-            // Get primary category for a specific room
-            $room = $roomNumber ?? $roomId;
-            if ($room === null) {
-                echo json_encode(['success' => false, 'message' => 'Room number or room_id is required']);
-                return;
-            }
-            
-            $stmt = $pdo->prepare("
-                SELECT rca.*, c.name, c.description, c.id as category_id
-                FROM room_category_assignments rca 
-                JOIN categories c ON rca.category_id = c.id 
-                WHERE rca.room_number = ? AND rca.is_primary = 1
-                LIMIT 1
-            ");
-            $stmt->execute([$room]);
-            $primaryCategory = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($primaryCategory) {
-                echo json_encode([
-                    'success' => true, 
-                    'category' => [
-                        'id' => $primaryCategory['category_id'],
-                        'name' => $primaryCategory['name'],
-                        'description' => $primaryCategory['description']
-                    ]
-                ]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'No primary category found for this room']);
-            }
-        } elseif ($roomNumber !== null) {
-            // Get categories for specific room
-            $stmt = $pdo->prepare("
-                SELECT rca.*, c.name as category_name, c.description as category_description
-                FROM room_category_assignments rca 
-                JOIN categories c ON rca.category_id = c.id 
-                WHERE rca.room_number = ? 
-                ORDER BY rca.is_primary DESC, rca.display_order ASC, c.name ASC
-            ");
-            $stmt->execute([$roomNumber]);
-            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            echo json_encode(['success' => true, 'assignments' => $assignments]);
-        } elseif ($categoryId !== null) {
-            // Get rooms for specific category
-            $stmt = $pdo->prepare("
-                SELECT rca.*, c.name as category_name 
-                FROM room_category_assignments rca 
-                JOIN categories c ON rca.category_id = c.id 
-                WHERE rca.category_id = ? 
-                ORDER BY rca.is_primary DESC, rca.room_number ASC
-            ");
-            $stmt->execute([$categoryId]);
-            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            echo json_encode(['success' => true, 'assignments' => $assignments]);
-        } else {
-            // Get all assignments with summary
-            $stmt = $pdo->prepare("
-                SELECT 
-                    rca.room_number,
-                    rca.room_name,
-                    COUNT(*) as total_categories,
-                    SUM(rca.is_primary) as primary_categories,
-                    GROUP_CONCAT(
-                        CASE WHEN rca.is_primary = 1 THEN c.name END 
-                        ORDER BY rca.display_order 
-                        SEPARATOR ', '
-                    ) as primary_category_names,
-                    GROUP_CONCAT(
-                        c.name 
-                        ORDER BY rca.is_primary DESC, rca.display_order ASC 
-                        SEPARATOR ', '
-                    ) as all_categories
-                FROM room_category_assignments rca 
-                JOIN categories c ON rca.category_id = c.id
-                GROUP BY rca.room_number, rca.room_name 
-                ORDER BY rca.room_number
-            ");
-            $stmt->execute();
-            $summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Also get available categories
-            $categoriesStmt = $pdo->prepare("SELECT id, name, description FROM categories WHERE is_active = 1 ORDER BY display_order, name");
-            $categoriesStmt->execute();
-            $availableCategories = $categoriesStmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            echo json_encode([
-                'success' => true, 
-                'summary' => $summary,
-                'available_categories' => $availableCategories
-            ]);
-        }
+        $stmt = $pdo->prepare("
+            SELECT rca.*, c.name as category_name, c.description as category_description
+            FROM room_category_assignments rca 
+            JOIN categories c ON rca.category_id = c.id 
+            WHERE rca.room_number = ?
+            ORDER BY rca.display_order
+        ");
+        $stmt->execute([$roomNumber]);
+        $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode(['success' => true, 'assignments' => $assignments]);
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
@@ -149,10 +126,10 @@ function handleGet($pdo) {
 }
 
 function handlePost($pdo, $input) {
-    $action = $input['action'] ?? '';
+    $action = $input['action'] ?? $_GET['action'] ?? 'add';
     
     switch ($action) {
-        case 'add_assignment':
+        case 'add':
             addAssignment($pdo, $input);
             break;
         case 'set_primary':
@@ -169,6 +146,10 @@ function handlePost($pdo, $input) {
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
             break;
     }
+}
+
+function handlePut($pdo, $input) {
+    handlePost($pdo, $input);
 }
 
 function addAssignment($pdo, $input) {

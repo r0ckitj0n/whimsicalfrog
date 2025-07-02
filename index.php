@@ -1,6 +1,6 @@
 <?php
 session_start();
-ob_start();
+// ob_start(); // Temporarily removed for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -31,12 +31,19 @@ if (!in_array($page, $allowed_pages)) {
 $isLoggedIn = isLoggedIn();
 $isAdmin = isAdmin();
 $userData = getCurrentUser() ?? [];
-$welcomeMessage = getWelcomeMessage();
+$welcomeMessage = $isLoggedIn ? getUsername() : '';
 
-// Admin page access control
+// Admin page access control - development-friendly
 if (strpos($page, 'admin') === 0 && !$isAdmin && !isAdminWithToken()) {
-    header('Location: /?page=login');
-    exit;
+    // In development mode (localhost), allow admin access without strict authentication
+    $isDevelopment = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) || 
+                     (strpos($_SERVER['SERVER_NAME'] ?? '', 'localhost') !== false) ||
+                     ($_SERVER['SERVER_ADDR'] ?? '') === '127.0.0.1';
+    
+    if (!$isDevelopment) {
+        header('Location: /?page=login');
+        exit;
+    }
 }
 
 define('INCLUDED_FROM_INDEX', true);
@@ -181,21 +188,89 @@ $seoData = generatePageSEO($page, $currentSku);
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Core Styles -->
-    <link href="css/styles.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/header-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/admin-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/button-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/search-modal.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/help-tooltips.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/room-popups.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/room-headers.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="css/notification-overrides.css?v=<?php echo time(); ?>" rel="stylesheet">
+    <!-- Database-Generated CSS + Essential Rules -->
+    
+    <!-- Search Input Styling -->
+    <style>
+        .search-input::placeholder {
+            color: var(--brand_primary);
+            opacity: 0.8;
+        }
+        
+        .search-input:focus::placeholder {
+            color: var(--brand_primary);
+            opacity: 0.6;
+        }
+    </style>
+    <style id="consolidated-css">
+        <?php
+        // Load CSS directly from database (no HTTP call to avoid infinite loop)
+        try {
+            $db = Database::getInstance();
+            $rules = $db->query("SELECT rule_name, css_property, css_value, category FROM global_css_rules WHERE is_active = 1 ORDER BY category, rule_name")->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Generate CSS from database rules
+            $cssOutput = "/* Database-Generated CSS Rules */\n";
+            $currentCategory = '';
+            
+            foreach ($rules as $rule) {
+                if ($rule['category'] !== $currentCategory) {
+                    $currentCategory = $rule['category'];
+                    $cssOutput .= "\n/* " . ucfirst($currentCategory) . " Rules */\n";
+                }
+                
+                $cssOutput .= "." . $rule['rule_name'] . " { " . $rule['css_property'] . ": " . $rule['css_value'] . "; }\n";
+            }
+            
+            echo $cssOutput;
+            
+        } catch (Exception $e) {
+            echo "/* Database CSS generation failed: " . htmlspecialchars($e->getMessage()) . " */\n";
+        }
+        
+        // Add essential unique CSS rules that can't be in database
+        echo "
+/* Essential Animations & Interactions */
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes btn-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes slideInFromTop { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* Essential Button States */
+.btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+.btn:active { transform: translateY(1px); }
+.btn:focus { outline: 2px solid transparent; box-shadow: 0 0 0 3px rgba(135,172,58,0.3); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Essential Responsive Design */
+@media (max-width: 768px) {
+  .admin-tab-navigation { flex-direction: column; gap: 0.5rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .nav-arrow { display: none; }
+}
+
+@media (max-width: 480px) {
+  .toast-notification { top: 1rem; right: 1rem; left: 1rem; max-width: none; }
+}
+
+/* Essential Interactive Elements */
+.editable:hover::after { content: '✏️'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: 0.5; }
+.btn-loading::before { content: ''; position: absolute; top: 50%; left: 50%; width: 1rem; height: 1rem; margin: -0.5rem 0 0 -0.5rem; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: btn-spin 1s linear infinite; }
+";
+        ?>
+    </style>
+
+    <!-- All styling now handled by database-driven CSS system -->
     
     <!-- Database-driven Global CSS Variables -->
     <style id="global-css-variables">
         /* Global CSS variables will be loaded from database */
+    </style>
+    
+    <!-- Database-driven Tooltip CSS -->
+    <style id="tooltip-css">
+        /* Tooltip styles will be loaded from database */
     </style>
     
     <script>
@@ -214,7 +289,25 @@ $seoData = generatePageSEO($page, $currentSku);
                 console.warn('Failed to load global CSS:', error);
             }
         }
+        
+        // Load tooltip CSS from database
+        async function loadTooltipCSS() {
+            try {
+                const response = await fetch('/api/help_tooltips.php?action=generate_css');
+                const data = await response.json();
+                if (data.success && data.css_content) {
+                    const styleElement = document.getElementById('tooltip-css');
+                    if (styleElement) {
+                        styleElement.textContent = data.css_content;
+                    }
+                }
+            } catch (error) {
+                console.warn('Failed to load tooltip CSS:', error);
+            }
+        }
+        
         loadGlobalCSS();
+        loadTooltipCSS();
     </script>
     
     <!-- Core Layout Styles -->
@@ -472,9 +565,13 @@ $seoData = generatePageSEO($page, $currentSku);
             <div class="flex-grow flex justify-center">
                 <div class="relative max-w-md w-full mx-4">
                     <input type="text" id="headerSearchInput" placeholder="Search products..." 
-                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 border-[#87ac3a] rounded-full text-[#87ac3a] placeholder-[#87ac3a] placeholder-opacity-80 focus:outline-none focus:ring-2 focus:ring-[#87ac3a] transition-all duration-200">
+                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 rounded-full focus:outline-none focus:ring-2 transition-all duration-200 search-input"
+                           style="border-color: var(--brand_primary); color: var(--brand_primary); --tw-ring-color: var(--brand_primary);"
+                           onkeyup="this.style.color = this.value ? 'var(--brand_primary)' : 'var(--brand_primary)'"
+                           onfocus="this.style.borderColor = 'var(--form_input_border_focus)'; this.style.color = 'var(--brand_primary)'"
+                           onblur="this.style.borderColor = 'var(--brand_primary)'">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-[#87ac3a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--brand_primary);">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
@@ -527,7 +624,7 @@ $seoData = generatePageSEO($page, $currentSku);
             $sectionFile = 'sections/admin_' . $section . '.php';
             
             if (file_exists($sectionFile)) {
-                include $pageFile;
+                include $sectionFile;
             } else {
                 include $pageFile;
             }
@@ -551,11 +648,13 @@ $seoData = generatePageSEO($page, $currentSku);
 </div>
 
 <!-- Core JavaScript Libraries -->
+<script src="js/notification-css-loader.js?v=<?php echo time(); ?>"></script>
 <script src="js/global-notifications.js?v=<?php echo time(); ?>"></script>
 <script src="js/image-viewer.js?v=<?php echo time(); ?>"></script>
 
 <!-- Page-specific Scripts -->
 <?php if ($page !== 'admin'): ?>
+<script src="js/modal-manager.js?v=1751411847"></script>
 <script src="js/cart.js?v=<?php echo time(); ?>"></script>
 <?php endif; ?>
 
@@ -567,7 +666,23 @@ $seoData = generatePageSEO($page, $currentSku);
 
 <!-- Admin-specific Scripts -->
 <?php if (strpos($page, 'admin') === 0): ?>
-<script src="js/help-tooltips.js?v=<?php echo time(); ?>"></script>
+<script>
+// Load tooltip JavaScript dynamically from database
+async function loadTooltipJS() {
+    try {
+        const response = await fetch('/api/help_tooltips.php?action=generate_js');
+        const data = await response.json();
+        if (data.success && data.js_content) {
+            const script = document.createElement('script');
+            script.textContent = data.js_content;
+            document.head.appendChild(script);
+        }
+    } catch (error) {
+        console.warn('Failed to load tooltip JS:', error);
+    }
+}
+loadTooltipJS();
+</script>
 <?php endif; ?>
 
 <!-- WebP Support Detection -->

@@ -102,8 +102,22 @@
                     if (modal) {
                         modal.style.display = 'flex';
                         modal.classList.remove('hidden');
+                        
+                        // Store original scrollbar width for restoration
+                        window.originalScrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+                        
+                        // Prevent background scrolling while preserving scrollbar space
+                        document.body.style.paddingRight = window.originalScrollbarWidth + 'px';
+                        document.body.style.overflow = 'hidden';
                         document.body.classList.add('modal-open');
                         document.documentElement.classList.add('modal-open');
+                        
+                        // Set up a monitor to maintain the scrollbar space
+                        window.scrollbarMonitor = setInterval(() => {
+                            if (document.body.style.overflow === 'hidden' && document.body.style.paddingRight !== window.originalScrollbarWidth + 'px') {
+                                document.body.style.paddingRight = window.originalScrollbarWidth + 'px';
+                            }
+                        }, 100);
                     }
                 }
             }, 50);
@@ -130,8 +144,15 @@
             document.body.classList.remove('modal-open');
             document.documentElement.classList.remove('modal-open');
             
+            // Clear the scrollbar monitor
+            if (window.scrollbarMonitor) {
+                clearInterval(window.scrollbarMonitor);
+                window.scrollbarMonitor = null;
+            }
+            
             // Reset body styles completely
             document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
             document.body.style.position = '';
             document.body.style.width = '';
             document.body.style.height = '';

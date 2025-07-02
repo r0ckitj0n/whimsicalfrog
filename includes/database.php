@@ -1,22 +1,76 @@
 <?php
 /**
- * Centralized Database Connection Helper
- * 
- * This file provides a single point for database connections and common database operations
- * to ensure consistency and reduce code duplication across the application.
+ * WhimsicalFrog Database Connection and Query Management
+ * Centralized functions to eliminate duplication and improve maintainability
+ * Generated: 2025-07-01 23:15:56
  */
 
-require_once __DIR__ . '/../api/config.php';
+// Include configuration
+require_once __DIR__ . '/../config.php';
 
+/**
+ * Database management class
+ */
 class Database {
     private static $instance = null;
     private $pdo;
     
+    /**
+     * Private constructor to prevent direct instantiation
+     */
     private function __construct() {
         try {
-            $this->pdo = new PDO($GLOBALS['dsn'], $GLOBALS['user'], $GLOBALS['pass'], $GLOBALS['options']);
+            // Detect environment
+            $isLocalhost = false;
+            
+            // Check if running from command line
+            if (PHP_SAPI === 'cli') {
+                $isLocalhost = true;
+            }
+            
+            // Check HTTP_HOST for localhost indicators
+            if (isset($_SERVER['HTTP_HOST'])) {
+                if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
+                    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false) {
+                    $isLocalhost = true;
+                }
+            }
+            
+            // Check SERVER_NAME for localhost indicators
+            if (isset($_SERVER['SERVER_NAME'])) {
+                if (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || 
+                    strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false) {
+                    $isLocalhost = true;
+                }
+            }
+            
+            // Database configuration based on environment
+            if ($isLocalhost) {
+                // Local database credentials
+                $host = 'localhost';
+                $db   = 'whimsicalfrog';
+                $user = 'root';
+                $pass = 'Palz2516';
+            } else {
+                // Production database credentials - IONOS values
+                $host = 'db5017975223.hosting-data.io';
+                $db   = 'dbs14295502';
+                $user = 'dbu2826619';
+                $pass = 'Palz2516!';
+            }
+            
+            // Create DSN and options
+            $charset = 'utf8mb4';
+            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+            $options = [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES   => false,
+            ];
+            
+            $this->pdo = new PDO($dsn, $user, $pass, $options);
         } catch (PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
+            error_log("Database connection error: " . $e->getMessage());
             throw $e;
         }
     }
@@ -31,17 +85,77 @@ class Database {
         }
         return self::$instance->pdo;
     }
+
+    /**
+     * Get the Database object instance (for accessing the PDO connection)
+     * @return Database
+     */
+    public static function getInstanceObject() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Get the PDO connection directly
+     * @return PDO
+     */
+    public function getConnection() {
+        return $this->pdo;
+    }
     
     /**
      * Get a fresh database connection (for cases that need it)
      * @return PDO
      */
-    public static function getConnection() {
-        return new PDO($GLOBALS['dsn'], $GLOBALS['user'], $GLOBALS['pass'], $GLOBALS['options']);
+    public static function getFreshConnection() {
+        // Use same logic as constructor but return new instance
+        $isLocalhost = false;
+        
+        if (PHP_SAPI === 'cli') {
+            $isLocalhost = true;
+        }
+        
+        if (isset($_SERVER['HTTP_HOST'])) {
+            if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
+                strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false) {
+                $isLocalhost = true;
+            }
+        }
+        
+        if (isset($_SERVER['SERVER_NAME'])) {
+            if (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || 
+                strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false) {
+                $isLocalhost = true;
+            }
+        }
+        
+        if ($isLocalhost) {
+            $host = 'localhost';
+            $db   = 'whimsicalfrog';
+            $user = 'root';
+            $pass = 'Palz2516';
+        } else {
+            $host = 'db5017975223.hosting-data.io';
+            $db   = 'dbs14295502';
+            $user = 'dbu2826619';
+            $pass = 'Palz2516!';
+        }
+        
+        $charset = 'utf8mb4';
+        $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+        $options = [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ];
+        
+        return new PDO($dsn, $user, $pass, $options);
     }
-    
+
     /**
-     * Execute a prepared statement and return results
+     * Execute a prepared statement and return PDOStatement
      * @param string $sql
      * @param array $params
      * @return PDOStatement
@@ -63,6 +177,7 @@ class Database {
         $stmt = self::query($sql, $params);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
     
     /**
      * Execute a prepared statement and return all rows
@@ -74,19 +189,7 @@ class Database {
         $stmt = self::query($sql, $params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
-    /**
-     * Execute an INSERT and return the last insert ID
-     * @param string $sql
-     * @param array $params
-     * @return string
-     */
-    public static function insert($sql, $params = []) {
-        $pdo = self::getInstance();
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $pdo->lastInsertId();
-    }
+
     
     /**
      * Execute an UPDATE/DELETE and return affected rows
@@ -98,6 +201,7 @@ class Database {
         $stmt = self::query($sql, $params);
         return $stmt->rowCount();
     }
+
     
     /**
      * Begin transaction
@@ -105,6 +209,7 @@ class Database {
     public static function beginTransaction() {
         return self::getInstance()->beginTransaction();
     }
+
     
     /**
      * Commit transaction
@@ -112,6 +217,7 @@ class Database {
     public static function commit() {
         return self::getInstance()->commit();
     }
+
     
     /**
      * Rollback transaction
@@ -120,4 +226,23 @@ class Database {
         return self::getInstance()->rollBack();
     }
 }
-?> 
+
+/**
+ * Get database connection
+ */
+function getDbConnection() {
+    static $pdo = null;
+    
+    if ($pdo === null) {
+        try {
+            $pdo = Database::getInstance();
+        } catch (PDOException $e) {
+            error_log("Database connection error in getDbConnection: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    return $pdo;
+}
+
+?>

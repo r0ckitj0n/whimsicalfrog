@@ -24,11 +24,11 @@ class SearchModal {
     createModalHTML() {
         const modalHTML = `
             <!-- Search Results Modal -->
-            <div id="searchModal">
-                <div class="search-modal-content">
-                    <div class="search-modal-header">
-                        <h2 class="search-modal-title">Search Results</h2>
-                        <button class="search-modal-close" onclick="searchModal.close()">&times;</button>
+            <div id="searchModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+                <div class="search-modal-content" style="background: white; margin: 50px auto; padding: 20px; width: 90%; max-width: 800px; border-radius: 8px; max-height: 80vh; overflow-y: auto;">
+                    <div class="search-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                        <h2 class="search-modal-title" style="margin: 0; color: #333;">Search Results</h2>
+                        <button class="search-modal-close" onclick="searchModal.close()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
                     </div>
                     <div class="search-modal-body" id="searchModalBody">
                         <!-- Search results will be populated here -->

@@ -6,6 +6,9 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 
 require_once __DIR__ . '/../includes/functions.php';
 
+// Get database instance
+$db = Database::getInstance();
+
 // Date range parameters
 $startInput = $_GET['start_date'] ?? '';
 $endInput = $_GET['end_date'] ?? '';
@@ -47,13 +50,13 @@ $tableStatus = [
 ];
 
 try {
-    $db = Database::getInstance();
+    
     
     // Get customer metrics
-    $metrics['customerCount'] = $db->query("SELECT COUNT(*) FROM users WHERE role = 'Customer' OR roleType = 'Customer'")->fetchColumn() ?: 0;
+    $metrics['customerCount'] = Database::queryRow("SELECT COUNT(*) FROM users WHERE role = 'Customer' OR roleType = 'Customer'") ?: 0;
     
     // Check if orders table exists and get order-related metrics
-    $tablesResult = $db->query("SHOW TABLES LIKE 'orders'")->fetchAll();
+    $tablesResult = Database::queryAll("SHOW TABLES LIKE 'orders'");
     if (!empty($tablesResult)) {
         // Order metrics with date filtering
         $orderParams = [':start' => $startParam, ':end' => $endParam];
@@ -138,27 +141,27 @@ try {
     // Check marketing tables
     $tables = ['email_campaigns', 'discount_codes', 'social_accounts', 'social_posts'];
     foreach ($tables as $table) {
-        $result = $db->query("SHOW TABLES LIKE '$table'")->fetchAll();
+        $result = Database::queryAll("SHOW TABLES LIKE '$table'");
         $tableStatus[str_replace('_', '', $table)] = !empty($result);
     }
     
     // Load marketing data if tables exist
     if ($tableStatus['emailcampaigns']) {
-        $marketingData['emailCampaigns'] = $db->query("SELECT * FROM email_campaigns ORDER BY created_date DESC")->fetchAll();
+        $marketingData['emailCampaigns'] = Database::queryAll("SELECT * FROM email_campaigns ORDER BY created_date DESC");
         
-        $subscribersTable = $db->query("SHOW TABLES LIKE 'email_subscribers'")->fetchAll();
+        $subscribersTable = Database::queryAll("SHOW TABLES LIKE 'email_subscribers'");
         if (!empty($subscribersTable)) {
-            $marketingData['emailSubscribers'] = $db->query("SELECT * FROM email_subscribers WHERE status = 'active'")->fetchAll();
+            $marketingData['emailSubscribers'] = Database::queryAll("SELECT * FROM email_subscribers WHERE status = 'active'");
         }
     }
     
     if ($tableStatus['discountcodes']) {
-        $marketingData['discountCodes'] = $db->query("SELECT * FROM discount_codes ORDER BY start_date DESC")->fetchAll();
+        $marketingData['discountCodes'] = Database::queryAll("SELECT * FROM discount_codes ORDER BY start_date DESC");
     }
     
     if ($tableStatus['socialaccounts']) {
-        $marketingData['socialAccounts'] = $db->query("SELECT * FROM social_accounts")->fetchAll();
-        $marketingData['socialPosts'] = $db->query("SELECT * FROM social_posts ORDER BY scheduled_date DESC")->fetchAll();
+        $marketingData['socialAccounts'] = Database::queryAll("SELECT * FROM social_accounts");
+        $marketingData['socialPosts'] = Database::queryAll("SELECT * FROM social_posts ORDER BY scheduled_date DESC");
     }
     
     $tableStatus['allTablesExist'] = $tableStatus['emailcampaigns'] && $tableStatus['discountcodes'] && $tableStatus['socialaccounts'];

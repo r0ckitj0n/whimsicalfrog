@@ -1,22 +1,20 @@
 <?php
 // Admin Dashboard - Configurable widget-based dashboard
-require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 try {
-    $db = Database::getInstance();
-    
     // Get dashboard configuration
-    $dashboardConfig = $db->query('SELECT * FROM dashboard_sections WHERE is_active = 1 ORDER BY display_order ASC')->fetchAll();
+    $dashboardConfig = Database::queryAll('SELECT * FROM dashboard_sections WHERE is_active = 1 ORDER BY display_order ASC');
     
     // Fetch core metrics
-    $totalItems = $db->query('SELECT COUNT(*) as count FROM items')->fetch()['count'] ?? 0;
-    $totalOrders = $db->query('SELECT COUNT(*) as count FROM orders')->fetch()['count'] ?? 0;
-    $totalCustomers = $db->query('SELECT COUNT(*) as count FROM users WHERE role != "admin"')->fetch()['count'] ?? 0;
-    $totalRevenue = $db->query('SELECT SUM(total) as revenue FROM orders')->fetch()['revenue'] ?? 0;
+    $totalItems = Database::queryRow('SELECT COUNT(*) as count FROM items')['count'] ?? 0;
+    $totalOrders = Database::queryRow('SELECT COUNT(*) as count FROM orders')['count'] ?? 0;
+    $totalCustomers = Database::queryRow('SELECT COUNT(*) as count FROM users WHERE role != "admin"')['count'] ?? 0;
+    $totalRevenue = Database::queryRow('SELECT SUM(total) as revenue FROM orders')['revenue'] ?? 0;
     
     // Get recent activity
-    $recentOrders = $db->query('SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.userId = u.id ORDER BY o.date DESC LIMIT 5')->fetchAll();
-    $lowStockItems = $db->query('SELECT * FROM items WHERE stockLevel <= reorderPoint AND stockLevel > 0 ORDER BY stockLevel ASC LIMIT 5')->fetchAll();
+    $recentOrders = Database::queryAll('SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.userId = u.id ORDER BY o.date DESC LIMIT 5');
+    $lowStockItems = Database::queryAll('SELECT * FROM items WHERE stockLevel <= reorderPoint AND stockLevel > 0 ORDER BY stockLevel ASC LIMIT 5');
     
 } catch (Exception $e) {
     Logger::error('Dashboard data loading failed', ['error' => $e->getMessage()]);
@@ -199,13 +197,13 @@ if (empty($dashboardConfig)) {
                         <!-- Inventory Summary Section -->
                         <div class="space-y-3">
                             <?php 
-                                                         $inventoryStats = $db->query('SELECT 
+                                                         $inventoryStats = Database::queryRow('SELECT 
                                  COUNT(*) as total_items,
                                  COUNT(CASE WHEN stockLevel <= reorderPoint AND stockLevel > 0 THEN 1 END) as low_stock,
                                  COUNT(CASE WHEN stockLevel = 0 THEN 1 END) as out_of_stock,
                                  SUM(stockLevel * COALESCE(costPrice, 0)) as inventory_value
-                                 FROM items')->fetch();
-                            $topItems = $db->query('SELECT name, sku, stockLevel, reorderPoint FROM items ORDER BY stockLevel DESC LIMIT 3')->fetchAll();
+                                 FROM items');
+                            $topItems = Database::queryAll('SELECT name, sku, stockLevel, reorderPoint FROM items ORDER BY stockLevel DESC LIMIT 3');
                             ?>
                             <div class="grid grid-cols-2 gap-3 mb-4">
                                 <div class="bg-blue-50 p-3 rounded text-center">
@@ -235,10 +233,10 @@ if (empty($dashboardConfig)) {
                         <!-- Customer Summary Section -->
                         <div class="space-y-3">
                             <?php 
-                                                         $customerStats = $db->query('SELECT 
+                                                         $customerStats = Database::queryRow('SELECT 
                                  COUNT(*) as total_customers
-                                 FROM users WHERE role != \'admin\'')->fetch();
-                             $recentCustomers = $db->query('SELECT username, email FROM users WHERE role != \'admin\' ORDER BY id DESC LIMIT 3')->fetchAll();
+                                 FROM users WHERE role != \'admin\'');
+                             $recentCustomers = Database::queryAll('SELECT username, email FROM users WHERE role != \'admin\' ORDER BY id DESC LIMIT 3');
                             ?>
                                                          <div class="grid grid-cols-1 gap-3 mb-4">
                                  <div class="bg-green-50 p-3 rounded text-center">
@@ -264,11 +262,11 @@ if (empty($dashboardConfig)) {
                         <!-- Marketing Tools Section -->
                         <div class="space-y-3">
                             <?php 
-                            $marketingStats = $db->query('SELECT 
+                            $marketingStats = Database::queryRow('SELECT 
                                 (SELECT COUNT(*) FROM email_campaigns) as email_campaigns,
                                 (SELECT COUNT(*) FROM discount_codes WHERE (end_date IS NULL OR end_date >= CURDATE())) as active_discounts,
                                 (SELECT COUNT(*) FROM social_posts WHERE scheduled_date >= CURDATE()) as scheduled_posts
-                            ')->fetch();
+                            ');
                             ?>
                             <div class="grid grid-cols-1 gap-2 mb-4">
                                 <div class="bg-orange-50 p-3 rounded text-center">
@@ -343,15 +341,13 @@ if (empty($dashboardConfig)) {
 
                         $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
 
-                        $stmt = $db->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id {$whereClause} ORDER BY o.date DESC");
-                        $stmt->execute($params);
-                        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        $orders = Database::queryAll("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id {$whereClause} ORDER BY o.date DESC", $params);
 
                         // Get unique values for filter dropdowns
-                        $statusOptions = $db->query("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status")->fetchAll(PDO::FETCH_COLUMN);
-                        $paymentMethodOptions = $db->query("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod")->fetchAll(PDO::FETCH_COLUMN);
-                        $shippingMethodOptions = $db->query("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod")->fetchAll(PDO::FETCH_COLUMN);
-                        $paymentStatusOptions = $db->query("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus")->fetchAll(PDO::FETCH_COLUMN);
+                        $statusOptions = Database::queryAll("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status", [], PDO::FETCH_COLUMN);
+                        $paymentMethodOptions = Database::queryAll("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod", [], PDO::FETCH_COLUMN);
+                        $shippingMethodOptions = Database::queryAll("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod", [], PDO::FETCH_COLUMN);
+                        $paymentStatusOptions = Database::queryAll("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus", [], PDO::FETCH_COLUMN);
                         ?>
                         
                         <div class="space-y-4">
@@ -465,9 +461,7 @@ if (empty($dashboardConfig)) {
                                                                 class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-none p-0"
                                                                 title="Click to view order details">
                                                             <?php
-                                                            $items = $db->prepare("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?");
-                                                            $items->execute([$order['id']]);
-                                                            $totalItems = $items->fetchColumn();
+                                                            $totalItems = Database::queryRow("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?", [$order['id']])['total_items'] ?? 0;
                                                             echo ($totalItems ?: '0') . ' item' . (($totalItems != 1) ? 's' : '');
                                                             ?>
                                                         </button>
@@ -596,14 +590,22 @@ if (empty($dashboardConfig)) {
                                         document.body.style.overflow = 'hidden';
                                     } else {
                                         console.error('Failed to load order details:', result.message);
-                                        alert('Failed to load order details');
+                                        if (window.showError) {
+                    window.showError('Failed to load order details');
+                } else {
+                    alert('Failed to load order details');
+                }
                                     }
                                 } else {
                                     console.error('Order details modal not found');
                                 }
                             } catch (error) {
                                 console.error('Error opening order details modal:', error);
-                                alert('Error loading order details');
+                                if (window.showError) {
+                    window.showError('Error loading order details');
+                } else {
+                    alert('Error loading order details');
+                }
                             }
                         }
                         
@@ -675,26 +677,7 @@ if (empty($dashboardConfig)) {
                         document.addEventListener('DOMContentLoaded', function() {
                             // Force hide any hanging progress indicators when section loads
                             hideAutoSaveIndicator();
-                            
-                            // Function to force hide auto-save indicators
-                            function hideAutoSaveIndicator() {
-                                const indicators = document.querySelectorAll('.auto-save-indicator, .progress-bar, .loading-indicator');
-                                indicators.forEach(indicator => {
-                                    indicator.style.display = 'none';
-                                    indicator.style.visibility = 'hidden';
-                                    indicator.style.opacity = '0';
-                                    indicator.classList.add('hidden');
-                                });
-                                
-                                // Set timeout to double-check
-                                setTimeout(() => {
-                                    indicators.forEach(indicator => {
-                                        indicator.style.display = 'none';
-                                        indicator.style.visibility = 'hidden';
-                                        indicator.style.opacity = '0';
-                                    });
-                                }, 100);
-                            }
+// hideAutoSaveIndicator function moved to ui-manager.js for centralization
                             const editableFields = document.querySelectorAll('.order-field-update');
                             editableFields.forEach(field => {
                                 field.addEventListener('change', async function() {
@@ -840,11 +823,11 @@ if (empty($dashboardConfig)) {
                         <!-- Reports Summary Section -->
                         <div class="space-y-2">
                             <?php 
-                            $reportsStats = $db->query('SELECT 
+                            $reportsStats = Database::queryRow('SELECT 
                                 COUNT(*) as total_orders,
                                 SUM(total) as total_revenue,
                                 AVG(total) as avg_order_value
-                                FROM orders WHERE DATE(date) >= CURDATE() - INTERVAL 30 DAY')->fetch();
+                                FROM orders WHERE DATE(date) >= CURDATE() - INTERVAL 30 DAY');
                             ?>
                             <div class="grid grid-cols-1 gap-1 mb-2">
                                 <div class="bg-teal-50 p-2 rounded text-center">

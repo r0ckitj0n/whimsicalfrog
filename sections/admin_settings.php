@@ -688,10 +688,26 @@ function closeSystemConfigModal() {
     document.getElementById('systemConfigModal').style.display = 'none';
 }
 
-function openDatabaseMaintenanceModal() {
+window.openDatabaseMaintenanceModal = function openDatabaseMaintenanceModal() {
+    console.log('openDatabaseMaintenanceModal called');
     const modal = document.getElementById('databaseMaintenanceModal');
+    if (!modal) {
+        console.error('databaseMaintenanceModal element not found!');
+        if (window.showError) {
+            window.showError('Database Maintenance modal not found. Please refresh the page.');
+        } else {
+            alert('Database Maintenance modal not found. Please refresh the page.');
+        }
+        return;
+    }
+    console.log('Opening database maintenance modal...');
+    console.log('Modal before changes:', modal.style.display, modal.classList.contains('hidden'));
     modal.classList.remove('hidden');
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
+    console.log('Modal after changes:', modal.style.display, modal.classList.contains('hidden'));
+    console.log('Modal computed style:', window.getComputedStyle(modal).display, window.getComputedStyle(modal).visibility);
+    console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
+    console.log('Modal position:', modal.getBoundingClientRect());
     // Hide loading and show connection tab by default
     document.getElementById('databaseMaintenanceLoading').style.display = 'none';
     switchDatabaseTab(document.querySelector('[data-tab="connection"]'), 'connection');
@@ -834,6 +850,12 @@ function switchDatabaseTab(tabElement, tabName) {
             break;
         case 'ssl':
             setupSSLHandlers();
+            break;
+        case 'query':
+            initializeQueryConsole();
+            break;
+        case 'tools':
+            initializeMaintenanceTools();
             break;
     }
 }
@@ -1548,6 +1570,1317 @@ async function compactRepairDatabase() {
             progressSteps.appendChild(retryButton);
         }
     }
+}
+
+// ======================================
+// QUERY CONSOLE FUNCTIONS
+// ======================================
+
+function initializeQueryConsole() {
+    console.log('Initializing Query Console...');
+}
+
+function executeQuery() {
+    const queryText = document.getElementById('sqlQuery').value.trim();
+    const limitResults = document.getElementById('limitResults').checked;
+    
+    if (!queryText) {
+        if (window.showValidation) {
+            window.showValidation('Please enter a SQL query');
+        } else {
+            alert('Please enter a SQL query');
+        }
+        return;
+    }
+    
+    // Show loading state
+    const resultDiv = document.getElementById('queryResults');
+    const contentDiv = document.getElementById('queryResultsContent');
+    const infoDiv = document.getElementById('queryInfo');
+    
+    resultDiv.classList.remove('hidden');
+    contentDiv.innerHTML = '<div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div><div class="mt-2 text-gray-600">Executing query...</div></div>';
+    infoDiv.textContent = '';
+    
+    // Prepare query with limit if needed
+    let finalQuery = queryText;
+    if (limitResults && !queryText.toLowerCase().includes('limit')) {
+        finalQuery += ' LIMIT 100';
+    }
+    
+    // Execute query via db_manager API
+    fetch('/api/db_manager.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: 'query',
+            sql: finalQuery,
+            admin_token: 'whimsical_admin_2024'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayQueryResults(data, queryText);
+        } else {
+            contentDiv.innerHTML = `<div class="text-red-600 p-4">Error: ${data.error || 'Query execution failed'}</div>`;
+            infoDiv.textContent = '';
+        }
+    })
+    .catch(error => {
+        contentDiv.innerHTML = `<div class="text-red-600 p-4">Network Error: ${error.message}</div>`;
+        infoDiv.textContent = '';
+    });
+}
+
+function displayQueryResults(data, originalQuery) {
+    const contentDiv = document.getElementById('queryResultsContent');
+    const infoDiv = document.getElementById('queryInfo');
+    
+    if (data.data && data.data.length > 0) {
+        // Display table results
+        const columns = Object.keys(data.data[0]);
+        let tableHtml = `
+            <div class="overflow-x-auto max-h-80">
+                <table class="min-w-full bg-white border border-gray-200 text-xs">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            ${columns.map(col => `<th class="px-3 py-2 border-b text-left font-semibold text-gray-700">${col}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.data.map((row, index) => `
+                            <tr class="hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}">
+                                ${columns.map(col => {
+                                    let value = row[col];
+                                    if (value === null) value = '<span class="text-gray-400 italic">NULL</span>';
+                                    else if (typeof value === 'string' && value.length > 100) value = value.substring(0, 100) + '...';
+                                    else if (typeof value === 'string') value = value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    return `<td class="px-3 py-2 border-b text-gray-800">${value}</td>`;
+                                }).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        contentDiv.innerHTML = tableHtml;
+        infoDiv.textContent = `${data.data.length} rows returned (${data.execution_time || 0}ms)`;
+    } else if (data.affected_rows !== undefined) {
+        // Display modification results
+        contentDiv.innerHTML = `
+            <div class="text-green-600 p-4 text-center">
+                <div class="text-lg font-semibold">Query Executed Successfully</div>
+                <div class="text-sm mt-2">Affected rows: ${data.affected_rows}</div>
+                ${data.insert_id ? `<div class="text-sm">Insert ID: ${data.insert_id}</div>` : ''}
+            </div>
+        `;
+        infoDiv.textContent = `Affected: ${data.affected_rows} rows (${data.execution_time || 0}ms)`;
+    } else {
+        contentDiv.innerHTML = '<div class="text-gray-600 p-4 text-center">Query executed successfully - no data returned</div>';
+        infoDiv.textContent = `Executed successfully (${data.execution_time || 0}ms)`;
+    }
+}
+
+function clearQuery() {
+    document.getElementById('sqlQuery').value = '';
+    document.getElementById('queryResults').classList.add('hidden');
+}
+
+function loadQueryTemplates() {
+    const templateModal = document.getElementById('queryTemplatesModal');
+    if (templateModal.classList.contains('hidden')) {
+        templateModal.classList.remove('hidden');
+    } else {
+        templateModal.classList.add('hidden');
+    }
+}
+
+function hideQueryTemplates() {
+    document.getElementById('queryTemplatesModal').classList.add('hidden');
+}
+
+function insertTemplate(templateQuery) {
+    document.getElementById('sqlQuery').value = templateQuery;
+    hideQueryTemplates();
+}
+
+// ======================================
+// MAINTENANCE TOOLS FUNCTIONS
+// ======================================
+
+function initializeMaintenanceTools() {
+    console.log('Initializing Maintenance Tools...');
+}
+
+// Database Tool Results Modal Functions
+function openDatabaseToolResultsModal(title, content, isSuccess = true) {
+    const modal = document.getElementById('databaseToolResultsModal');
+    const titleElement = document.getElementById('toolResultsModalTitle');
+    const contentElement = document.getElementById('toolResultsModalContent');
+    
+    titleElement.textContent = title;
+    contentElement.innerHTML = `
+        <div class="p-4 ${isSuccess ? 'text-green-800 bg-green-50 border border-green-200' : 'text-red-800 bg-red-50 border border-red-200'} rounded">
+            ${content}
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+function closeDatabaseToolResultsModal() {
+    document.getElementById('databaseToolResultsModal').style.display = 'none';
+}
+
+// Legacy function for compatibility - redirects to modal
+function showToolResult(message, isSuccess = true) {
+    openDatabaseToolResultsModal('🛠️ Tool Results', message, isSuccess);
+}
+
+function clearToolResults() {
+    closeDatabaseToolResultsModal();
+}
+
+async function optimizeAllTables() {
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = 'Optimizing...';
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'optimize_tables',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '⚡ Table Optimization Results',
+                `
+                <div class="font-semibold mb-2">✅ Table Optimization Complete</div>
+                <div class="text-sm">Optimized ${result.tables_optimized || 0} tables successfully</div>
+                ${result.details ? `<div class="text-xs mt-2 font-mono">${result.details}</div>` : ''}
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '⚡ Table Optimization Results',
+                `❌ Optimization failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '⚡ Table Optimization Results',
+            `❌ Network error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Optimize Tables';
+    }
+}
+
+async function analyzeIndexes() {
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = 'Analyzing...';
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'analyze_indexes',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '🗂️ Index Analysis Results',
+                `
+                <div class="font-semibold mb-2">🗂️ Index Analysis Complete</div>
+                <div class="text-sm">Analyzed ${result.indexes_analyzed || 0} indexes</div>
+                ${result.recommendations ? `<div class="text-xs mt-2">${result.recommendations}</div>` : ''}
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '🗂️ Index Analysis Results',
+                `❌ Analysis failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '🗂️ Index Analysis Results',
+            `❌ Network error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Analyze Indexes';
+    }
+}
+
+async function cleanupDatabase() {
+    const button = event.target;
+    
+    // Show branded confirmation dialog
+    const confirmed = await showMaintenanceConfirm(
+        'Database Cleanup',
+        `<div class="space-y-3">
+            <div class="font-semibold">🧹 Clean Database Records</div>
+            <div><strong>What this does:</strong></div>
+            <ul class="list-disc list-inside space-y-1 text-xs">
+                <li>Removes orphaned and invalid records</li>
+                <li>Cleans up temporary and expired data</li>
+                <li>Removes broken foreign key references</li>
+                <li>Optimizes database structure</li>
+            </ul>
+            <div class="font-medium">⚠️ <strong>Caution:</strong> Will permanently delete orphaned data</div>
+            <div class="text-xs opacity-75">Backup recommended before running cleanup</div>
+        </div>`,
+        'warning'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    button.disabled = true;
+    button.textContent = 'Cleaning...';
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'cleanup_database',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '🧹 Database Cleanup Results',
+                `
+                <div class="font-semibold mb-2">🧹 Database Cleanup Complete</div>
+                <div class="text-sm">Removed ${result.orphaned_records || 0} orphaned records</div>
+                <div class="text-sm">Cleaned ${result.temp_files || 0} temporary files</div>
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '🧹 Database Cleanup Results',
+                `❌ Cleanup failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '🧹 Database Cleanup Results',
+            `❌ Network error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Clean Database';
+    }
+}
+
+async function repairTables() {
+    const button = event.target;
+    
+    // Show branded confirmation dialog
+    const confirmed = await showMaintenanceConfirm(
+        'Table Repair',
+        `<div class="space-y-3">
+            <div class="font-semibold">🔧 Repair Database Tables</div>
+            <div><strong>What this does:</strong></div>
+            <ul class="list-disc list-inside space-y-1 text-xs">
+                <li>Fixes corrupted table structures</li>
+                <li>Rebuilds damaged indexes</li>
+                <li>Recovers data from corrupted tables</li>
+                <li>Repairs MyISAM table files</li>
+            </ul>
+            <div class="font-medium text-red-600">🚨 <strong>High Risk Operation:</strong> May cause data loss</div>
+            <div class="text-xs opacity-75 text-red-500">Create a full database backup before proceeding!</div>
+        </div>`,
+        'danger'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    button.disabled = true;
+    button.textContent = 'Repairing...';
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'repair_tables',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '🔧 Table Repair Results',
+                `
+                <div class="font-semibold mb-2">🔧 Table Repair Complete</div>
+                <div class="text-sm">Repaired ${result.tables_repaired || 0} tables</div>
+                ${result.details ? `<div class="text-xs mt-2 font-mono">${result.details}</div>` : ''}
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '🔧 Table Repair Results',
+                `❌ Repair failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '🔧 Table Repair Results',
+            `❌ Network error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Repair Tables';
+    }
+}
+
+async function analyzeDatabaseSize() {
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = 'Analyzing...';
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'analyze_size',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '📊 Database Size Analysis Results',
+                `
+                <div class="font-semibold mb-2">📊 Database Size Analysis</div>
+                <div class="text-sm space-y-1">
+                    <div>Total Database Size: ${result.total_size || 'Unknown'}</div>
+                    <div>Data Size: ${result.data_size || 'Unknown'}</div>
+                    <div>Index Size: ${result.index_size || 'Unknown'}</div>
+                    <div>Largest Table: ${result.largest_table || 'Unknown'}</div>
+                </div>
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '📊 Database Size Analysis Results',
+                `❌ Analysis failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '📊 Database Size Analysis Results',
+            `❌ Network error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Analyze Size';
+    }
+}
+
+async function showPerformanceMonitor() {
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = 'Loading...';
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'performance_monitor',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '📈 Performance Monitor Results',
+                `
+                <div class="font-semibold mb-2">📈 Performance Monitor</div>
+                <div class="text-sm space-y-1">
+                    <div>Active Connections: ${result.connections || 0}</div>
+                    <div>Slow Queries: ${result.slow_queries || 0}</div>
+                    <div>Query Cache Hit Rate: ${result.cache_hit_rate || 'N/A'}</div>
+                    <div>Average Query Time: ${result.avg_query_time || 'N/A'}</div>
+                </div>
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '📈 Performance Monitor Results',
+                `❌ Monitor failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '📈 Performance Monitor Results',
+            `❌ Network error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = 'View Performance';
+    }
+}
+
+async function checkForeignKeys() {
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = 'Checking...';
+    
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'check_foreign_keys',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '🔗 Foreign Key Check Results',
+                `
+                <div class="font-semibold mb-2">🔗 Foreign Key Check Complete</div>
+                <div class="text-sm space-y-1">
+                    <div>Foreign Keys Checked: ${result.keys_checked || 0}</div>
+                    <div>Integrity Issues: ${result.issues_found || 0}</div>
+                    ${result.issues_found > 0 ? `<div class="text-red-600">⚠️ ${result.issues_found} issues found - check logs</div>` : '<div class="text-green-600">✅ All foreign keys are valid</div>'}
+                </div>
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '🔗 Foreign Key Check Results',
+                `❌ Check failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '🔗 Foreign Key Check Results',
+            `❌ Network error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Check Integrity';
+    }
+}
+
+function showExportTools() {
+    openDatabaseToolResultsModal(
+        '📤 Export Tools',
+        `
+        <div class="font-semibold mb-2">📤 Export Tools</div>
+        <div class="text-sm text-gray-600 mb-3">Select tables to export:</div>
+        <div class="space-y-2">
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" value="items" class="export-table-checkbox">
+                <span>Items Table</span>
+            </label>
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" value="orders" class="export-table-checkbox">
+                <span>Orders Table</span>
+            </label>
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" value="users" class="export-table-checkbox">
+                <span>Users Table</span>
+            </label>
+        </div>
+        <div class="mt-4">
+            <button onclick="performExport()" class="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded text-sm">
+                Export Selected Tables
+            </button>
+        </div>
+        `
+    );
+}
+
+function showSchemaBrowser() {
+    openDatabaseToolResultsModal(
+        '🗄️ Schema Browser',
+        `
+        <div class="font-semibold mb-2">🗄️ Schema Browser</div>
+        <div class="text-sm text-gray-600 mb-3">Database structure overview:</div>
+        <div id="schemaContent" class="text-sm">
+            <div class="text-center py-4">
+                <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-600"></div>
+                <div>Loading schema...</div>
+            </div>
+        </div>
+        `
+    );
+    
+    // Load schema information
+    loadDatabaseSchema();
+}
+
+async function loadDatabaseSchema() {
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'get_schema',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.tables) {
+            const schemaContent = document.getElementById('schemaContent');
+            let html = '<div class="space-y-3">';
+            
+            result.tables.forEach(table => {
+                html += `
+                    <div class="border border-gray-200 rounded p-3">
+                        <div class="font-semibold text-gray-800">${table.name}</div>
+                        <div class="text-xs text-gray-600">${table.rows} rows, ${table.size}</div>
+                        <div class="text-xs text-gray-500 mt-1">${table.columns.join(', ')}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            schemaContent.innerHTML = html;
+        }
+    } catch (error) {
+        const schemaContent = document.getElementById('schemaContent');
+        if (schemaContent) {
+            schemaContent.innerHTML = '<div class="text-red-600">Error loading schema</div>';
+        }
+    }
+}
+
+// Branded notification system for database maintenance
+function showMaintenanceNotification(title, message, type = 'info', confirmCallback = null, cancelCallback = null) {
+    const modal = document.createElement('div');
+    modal.className = 'admin-modal-overlay';
+    modal.style.display = 'flex';
+    modal.style.zIndex = '12000';
+    
+    const typeConfig = {
+        'info': { 
+            icon: 'ℹ️', 
+            color: 'blue',
+            bgColor: 'bg-blue-50',
+            borderColor: 'border-blue-200',
+            textColor: 'text-blue-800'
+        },
+        'warning': { 
+            icon: '⚠️', 
+            color: 'amber',
+            bgColor: 'bg-amber-50',
+            borderColor: 'border-amber-200',
+            textColor: 'text-amber-800'
+        },
+        'danger': { 
+            icon: '🚨', 
+            color: 'red',
+            bgColor: 'bg-red-50',
+            borderColor: 'border-red-200',
+            textColor: 'text-red-800'
+        },
+        'success': { 
+            icon: '✅', 
+            color: 'green',
+            bgColor: 'bg-green-50',
+            borderColor: 'border-green-200',
+            textColor: 'text-green-800'
+        }
+    };
+    
+    const config = typeConfig[type] || typeConfig['info'];
+    const isConfirm = confirmCallback !== null;
+    
+    modal.innerHTML = `
+        <div class="admin-modal-content" style="max-width: 500px;" onclick="event.stopPropagation()">
+            <div class="mt-3">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">${config.icon}</span>
+                        <h3 class="text-lg font-bold text-gray-900">${title}</h3>
+                    </div>
+                    ${!isConfirm ? `
+                        <button onclick="this.closest('.admin-modal-overlay').remove()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    ` : ''}
+                </div>
+                
+                <!-- Content -->
+                <div class="${config.bgColor} ${config.borderColor} ${config.textColor} border rounded-lg p-4 mb-6">
+                    <div class="text-sm leading-relaxed">${message}</div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="flex justify-end space-x-3">
+                    ${isConfirm ? `
+                        <button onclick="this.closest('.admin-modal-overlay').remove(); ${cancelCallback ? `(${cancelCallback})()` : ''}" 
+                                class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium transition-colors">
+                            Cancel
+                        </button>
+                        <button onclick="this.closest('.admin-modal-overlay').remove(); (${confirmCallback})()" 
+                                class="px-4 py-2 bg-${config.color}-600 hover:bg-${config.color}-700 text-white rounded-md font-medium transition-colors">
+                            Continue
+                        </button>
+                    ` : `
+                        <button onclick="this.closest('.admin-modal-overlay').remove()" 
+                                class="px-4 py-2 bg-${config.color}-600 hover:bg-${config.color}-700 text-white rounded-md font-medium transition-colors">
+                            Close
+                        </button>
+                    `}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Close on overlay click for non-confirm dialogs
+    if (!isConfirm) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+    
+    document.body.appendChild(modal);
+    return modal;
+}
+
+// Quick success notification for completed operations
+// showSuccessNotification function moved to js/global-notifications.js for centralization
+
+// Quick error notification for failed operations
+function showErrorNotification(title, message) {
+    showMaintenanceNotification(title, message, 'danger');
+}
+
+// Enhanced completion handler for database operations
+function handleDatabaseOperationResult(operation, result) {
+    if (result.success) {
+        let successMessage = `<div class="space-y-2">
+            <div class="font-semibold">${operation} completed successfully!</div>
+            <div class="text-sm">${result.message || 'Operation finished without errors.'}</div>
+        </div>`;
+        
+        // Add specific details if available
+        if (result.details) {
+            successMessage += `<div class="text-xs mt-2 opacity-75">${result.details}</div>`;
+        }
+        
+        showSuccessNotification(operation + ' Complete', successMessage);
+    } else {
+        let errorMessage = `<div class="space-y-2">
+            <div class="font-semibold">${operation} failed!</div>
+            <div class="text-sm">${result.message || 'Unknown error occurred.'}</div>
+            <div class="text-xs mt-2 opacity-75">Please check your database configuration and try again.</div>
+        </div>`;
+        
+        showErrorNotification(operation + ' Failed', errorMessage);
+    }
+}
+
+// Add confirmation helper for the 2 functions that originally used browser confirm()
+async function showMaintenanceConfirm(title, message, type = 'warning') {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'admin-modal-overlay';
+        modal.style.display = 'flex';
+        modal.style.zIndex = '12000';
+        
+        const typeConfig = {
+            'warning': { 
+                icon: '⚠️', 
+                color: 'amber',
+                bgColor: 'bg-amber-50',
+                borderColor: 'border-amber-200',
+                textColor: 'text-amber-800'
+            },
+            'danger': { 
+                icon: '🚨', 
+                color: 'red',
+                bgColor: 'bg-red-50',
+                borderColor: 'border-red-200',
+                textColor: 'text-red-800'
+            }
+        };
+        
+        const config = typeConfig[type] || typeConfig['warning'];
+        
+        modal.innerHTML = `
+            <div class="admin-modal-content" style="max-width: 500px;">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 ${config.bgColor} ${config.borderColor} border rounded-full flex items-center justify-center mr-3">
+                            <span class="text-lg">${config.icon}</span>
+                        </div>
+                        <h3 class="text-lg font-bold ${config.textColor}">${title}</h3>
+                    </div>
+                    <div class="${config.bgColor} ${config.borderColor} border rounded-lg p-4 mb-4">
+                        ${message}
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="this.closest('.admin-modal-overlay').remove(); window.maintenanceConfirmResolve(false)" 
+                                class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium transition-colors">
+                            Cancel
+                        </button>
+                        <button onclick="this.closest('.admin-modal-overlay').remove(); window.maintenanceConfirmResolve(true)" 
+                                class="px-4 py-2 bg-${config.color}-600 hover:bg-${config.color}-700 text-white rounded-md font-medium transition-colors">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Store resolve function globally for button access
+        window.maintenanceConfirmResolve = resolve;
+        
+        document.body.appendChild(modal);
+    });
+}
+
+// ======================================
+// DATABASE IMPORT TOOLS
+// ======================================
+
+function showImportTools() {
+    openDatabaseToolResultsModal(
+        '📥 Database Import Tools',
+        `
+        <div class="space-y-6">
+            <div class="bg-violet-50 border border-violet-200 rounded-lg p-4">
+                <h4 class="font-semibold text-violet-800 mb-2">📥 Import Data into Tables</h4>
+                <p class="text-sm text-violet-700">Upload SQL files or CSV data to import into specific database tables.</p>
+            </div>
+            
+            <!-- Import from SQL File -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <h5 class="font-semibold text-gray-800 mb-3">🗃️ Import from SQL File</h5>
+                <div class="space-y-3">
+                    <input type="file" id="sqlFileInput" accept=".sql" class="block w-full text-sm text-gray-500 
+                        file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 
+                        file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 
+                        hover:file:bg-violet-100">
+                    <div class="text-xs text-gray-600">
+                        Upload a .sql file containing INSERT, UPDATE, or other data modification statements.
+                    </div>
+                    <button onclick="importSQLFile()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                        Import SQL File
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Import CSV to Table -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <h5 class="font-semibold text-gray-800 mb-3">📊 Import CSV to Table</h5>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Target Table</label>
+                            <select id="importTableSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Select table...</option>
+                                <option value="items">items</option>
+                                <option value="customers">customers</option>
+                                <option value="orders">orders</option>
+                                <option value="order_items">order_items</option>
+                                <option value="categories">categories</option>
+                                <option value="users">users</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">CSV File</label>
+                            <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-sm text-gray-500 
+                                file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 
+                                file:text-xs file:font-semibold file:bg-violet-50 file:text-violet-700 
+                                hover:file:bg-violet-100">
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="csvHasHeaders" checked class="mr-2">
+                            <span class="text-sm text-gray-700">First row contains headers</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="csvReplaceData" class="mr-2">
+                            <span class="text-sm text-gray-700">Replace existing data</span>
+                        </label>
+                    </div>
+                    
+                    <div class="text-xs text-gray-600">
+                        CSV should have columns matching the target table structure. Data will be inserted as new records unless "Replace existing data" is checked.
+                    </div>
+                    
+                    <button onclick="importCSVFile()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                        Import CSV Data
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Import JSON Data -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <h5 class="font-semibold text-gray-800 mb-3">🔗 Import JSON Data</h5>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Target Table</label>
+                            <select id="jsonTableSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Select table...</option>
+                                <option value="items">items</option>
+                                <option value="customers">customers</option>
+                                <option value="orders">orders</option>
+                                <option value="order_items">order_items</option>
+                                <option value="categories">categories</option>
+                                <option value="users">users</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">JSON File</label>
+                            <input type="file" id="jsonFileInput" accept=".json" class="block w-full text-sm text-gray-500 
+                                file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 
+                                file:text-xs file:font-semibold file:bg-violet-50 file:text-violet-700 
+                                hover:file:bg-violet-100">
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-600">
+                        JSON should contain an array of objects with keys matching table column names.
+                    </div>
+                    
+                    <button onclick="importJSONFile()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                        Import JSON Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        `
+    );
+}
+
+// Import Functions
+async function importSQLFile() {
+    const fileInput = document.getElementById('sqlFileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a SQL file to import');
+        return;
+    }
+    
+    if (!file.name.toLowerCase().endsWith('.sql')) {
+        alert('Please select a valid .sql file');
+        return;
+    }
+    
+    // Show loading state
+    const button = document.querySelector('button[onclick="importSQLFile()"]');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Importing...';
+    
+    try {
+        const fileContent = await readFileAsText(file);
+        
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'import_sql',
+                sql_content: fileContent,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '📥 SQL Import Results',
+                `
+                <div class="font-semibold mb-2 text-green-600">✅ SQL Import Successful</div>
+                <div class="text-sm space-y-1">
+                    <div>Statements executed: ${result.statements_executed || 0}</div>
+                    <div>Rows affected: ${result.rows_affected || 0}</div>
+                    ${result.warnings ? `<div class="text-amber-600">⚠️ Warnings: ${result.warnings}</div>` : ''}
+                </div>
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '📥 SQL Import Results',
+                `❌ Import failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '📥 SQL Import Results',
+            `❌ Error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+async function importCSVFile() {
+    const tableSelect = document.getElementById('importTableSelect');
+    const fileInput = document.getElementById('csvFileInput');
+    const hasHeaders = document.getElementById('csvHasHeaders').checked;
+    const replaceData = document.getElementById('csvReplaceData').checked;
+    
+    const table = tableSelect.value;
+    const file = fileInput.files[0];
+    
+    if (!table) {
+        alert('Please select a target table');
+        return;
+    }
+    
+    if (!file) {
+        alert('Please select a CSV file to import');
+        return;
+    }
+    
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        alert('Please select a valid .csv file');
+        return;
+    }
+    
+    // Show loading state
+    const button = document.querySelector('button[onclick="importCSVFile()"]');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Importing...';
+    
+    try {
+        const fileContent = await readFileAsText(file);
+        
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'import_csv',
+                table_name: table,
+                csv_content: fileContent,
+                has_headers: hasHeaders,
+                replace_data: replaceData,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '📊 CSV Import Results',
+                `
+                <div class="font-semibold mb-2 text-green-600">✅ CSV Import Successful</div>
+                <div class="text-sm space-y-1">
+                    <div>Table: ${table}</div>
+                    <div>Rows imported: ${result.rows_imported || 0}</div>
+                    <div>Columns mapped: ${result.columns_mapped || 0}</div>
+                    ${result.skipped_rows ? `<div class="text-amber-600">⚠️ Skipped rows: ${result.skipped_rows}</div>` : ''}
+                </div>
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '📊 CSV Import Results',
+                `❌ Import failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '📊 CSV Import Results',
+            `❌ Error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+async function importJSONFile() {
+    const tableSelect = document.getElementById('jsonTableSelect');
+    const fileInput = document.getElementById('jsonFileInput');
+    
+    const table = tableSelect.value;
+    const file = fileInput.files[0];
+    
+    if (!table) {
+        alert('Please select a target table');
+        return;
+    }
+    
+    if (!file) {
+        alert('Please select a JSON file to import');
+        return;
+    }
+    
+    if (!file.name.toLowerCase().endsWith('.json')) {
+        alert('Please select a valid .json file');
+        return;
+    }
+    
+    // Show loading state
+    const button = document.querySelector('button[onclick="importJSONFile()"]');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Importing...';
+    
+    try {
+        const fileContent = await readFileAsText(file);
+        
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'import_json',
+                table_name: table,
+                json_content: fileContent,
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openDatabaseToolResultsModal(
+                '🔗 JSON Import Results',
+                `
+                <div class="font-semibold mb-2 text-green-600">✅ JSON Import Successful</div>
+                <div class="text-sm space-y-1">
+                    <div>Table: ${table}</div>
+                    <div>Records imported: ${result.records_imported || 0}</div>
+                    <div>Fields mapped: ${result.fields_mapped || 0}</div>
+                    ${result.validation_errors ? `<div class="text-amber-600">⚠️ Validation errors: ${result.validation_errors}</div>` : ''}
+                </div>
+                `
+            );
+        } else {
+            openDatabaseToolResultsModal(
+                '🔗 JSON Import Results',
+                `❌ Import failed: ${result.message}`,
+                false
+            );
+        }
+    } catch (error) {
+        openDatabaseToolResultsModal(
+            '🔗 JSON Import Results',
+            `❌ Error: ${error.message}`,
+            false
+        );
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+// Helper function to read file content
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = e => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+    });
+}
+
+async function executeInitializeDatabase() {
+    
+    try {
+        openDatabaseToolResultsModal('🚀 Database Initialization', 'Initializing database...', true);
+        
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'initialize_database',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            let content = `
+                <div class="space-y-4">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-800 mb-2">✅ Database Initialization Complete!</h4>
+                        <p class="text-green-700 text-sm">Successfully initialized the database with all necessary tables and default data.</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-blue-800 mb-2">📊 Summary</h5>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <div class="font-medium text-blue-800">Tables Created:</div>
+                                <div class="text-blue-700">${result.tables_created || 0}</div>
+                            </div>
+                            <div>
+                                <div class="font-medium text-blue-800">Tables Skipped:</div>
+                                <div class="text-blue-700">${result.tables_skipped || 0}</div>
+                            </div>
+                            <div>
+                                <div class="font-medium text-blue-800">Default Records Added:</div>
+                                <div class="text-blue-700">${result.default_records || 0}</div>
+                            </div>
+                            <div>
+                                <div class="font-medium text-blue-800">Execution Time:</div>
+                                <div class="text-blue-700">${result.execution_time || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+            `;
+            
+            if (result.details && result.details.length > 0) {
+                content += `
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-gray-800 mb-2">📋 Detailed Log</h5>
+                        <div class="space-y-1 max-h-48 overflow-y-auto">
+                `;
+                
+                result.details.forEach(detail => {
+                    const iconColor = detail.type === 'success' ? 'text-green-600' : 
+                                    detail.type === 'skip' ? 'text-yellow-600' : 'text-blue-600';
+                    const icon = detail.type === 'success' ? '✅' : 
+                               detail.type === 'skip' ? '⏭️' : 'ℹ️';
+                    
+                    content += `
+                        <div class="flex items-start space-x-2 text-sm">
+                            <span class="${iconColor}">${icon}</span>
+                            <span class="text-gray-700">${detail.message}</span>
+                        </div>
+                    `;
+                });
+                
+                content += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (result.warnings && result.warnings.length > 0) {
+                content += `
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-amber-800 mb-2">⚠️ Warnings</h5>
+                        <ul class="text-amber-700 text-sm space-y-1">
+                `;
+                
+                result.warnings.forEach(warning => {
+                    content += `<li>• ${warning}</li>`;
+                });
+                
+                content += `
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            content += '</div>';
+            
+            openDatabaseToolResultsModal('🚀 Database Initialization Results', content, true);
+            
+        } else {
+            throw new Error(result.message || 'Database initialization failed');
+        }
+        
+    } catch (error) {
+        console.error('Database initialization error:', error);
+        openDatabaseToolResultsModal('🚀 Database Initialization Failed', 
+            `<div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 class="font-semibold text-red-800 mb-2">❌ Initialization Failed</h4>
+                <p class="text-red-700">${error.message}</p>
+            </div>`, false);
+    }
+}
+
+function performExport() {
+    const checkboxes = document.querySelectorAll('.export-table-checkbox:checked');
+    const tables = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (tables.length === 0) {
+        alert('Please select at least one table to export');
+        return;
+    }
+    
+    // Create download link for export
+    const params = new URLSearchParams({
+        action: 'export_tables',
+        tables: tables.join(','),
+        admin_token: 'whimsical_admin_2024'
+    });
+    
+    const downloadUrl = `/api/database_maintenance.php?${params.toString()}`;
+    window.open(downloadUrl, '_blank');
+    
+    openDatabaseToolResultsModal(
+        '📤 Export Progress',
+        `
+        <div class="font-semibold mb-2">📤 Export Started</div>
+        <div class="text-sm">Exporting ${tables.length} table(s): ${tables.join(', ')}</div>
+        <div class="text-xs text-gray-600 mt-2">Download should start automatically...</div>
+        `
+    );
 }
 
 function openRoomMapperModal() {
@@ -3351,21 +4684,7 @@ function closeAISettingsModal() {
     modal.style.display = 'none';
     modal.classList.add('hidden');
 }
-
-async function loadAISettings() {
-    try {
-        const response = await fetch('/api/ai_settings.php?action=get_settings');
-        const data = await response.json();
-        
-        if (data.success) {
-            displayAISettings(data.settings);
-        } else {
-            showAISettingsError('Failed to load AI settings: ' + data.error);
-        }
-    } catch (error) {
-        showAISettingsError('Error loading AI settings: ' + error.message);
-    }
-}
+// loadAISettings function moved to ai_manager.php for centralization
 
 async function loadAIProviders() {
     try {
@@ -5321,10 +6640,26 @@ function confirmAction() {
 }
 
 // Email Configuration Functions
-async function openEmailConfigModal() {
+window.openEmailConfigModal = async function openEmailConfigModal() {
+    console.log('openEmailConfigModal called');
     const modal = document.getElementById('emailConfigModal');
+    if (!modal) {
+        console.error('emailConfigModal element not found!');
+                    if (window.showError) {
+                window.showError('Email Configuration modal not found. Please refresh the page.');
+            } else {
+                alert('Email Configuration modal not found. Please refresh the page.');
+            }
+        return;
+    }
+    console.log('Opening email config modal...');
+    console.log('Modal before changes:', modal.style.display, modal.classList.contains('hidden'));
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
+    console.log('Modal after changes:', modal.style.display, modal.classList.contains('hidden'));
+    console.log('Modal computed style:', window.getComputedStyle(modal).display, window.getComputedStyle(modal).visibility);
+    console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
+    console.log('Modal position:', modal.getBoundingClientRect());
     
     // Load current configuration
     try {
@@ -5492,10 +6827,26 @@ document.addEventListener('DOMContentLoaded', function() {
 let currentEmailHistoryPage = 1;
 const emailHistoryPageSize = 20;
 
-function openEmailHistoryModal() {
+window.openEmailHistoryModal = function openEmailHistoryModal() {
+    console.log('openEmailHistoryModal called');
     const modal = document.getElementById('emailHistoryModal');
+    if (!modal) {
+        console.error('emailHistoryModal element not found!');
+                    if (window.showError) {
+                window.showError('Email History modal not found. Please refresh the page.');
+            } else {
+                alert('Email History modal not found. Please refresh the page.');
+            }
+        return;
+    }
+    console.log('Opening email history modal...');
+    console.log('Modal before changes:', modal.style.display, modal.classList.contains('hidden'));
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
+    console.log('Modal after changes:', modal.style.display, modal.classList.contains('hidden'));
+    console.log('Modal computed style:', window.getComputedStyle(modal).display, window.getComputedStyle(modal).visibility);
+    console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
+    console.log('Modal position:', modal.getBoundingClientRect());
     loadEmailHistory();
 }
 
@@ -5675,8 +7026,15 @@ function loadEmailHistoryPage(direction) {
     }
 }
 
-function fixSampleEmail() {
+window.fixSampleEmail = function fixSampleEmail() {
+    console.log('fixSampleEmail called');
     const button = document.getElementById('fixSampleEmailBtn');
+    if (!button) {
+        console.error('fixSampleEmailBtn element not found!');
+        alert('Fix Sample Email button not found. Please refresh the page.');
+        return;
+    }
+    console.log('Starting fix sample email process...');
     const originalText = button.innerHTML;
     
     // Show loading state
@@ -5701,7 +7059,7 @@ function fixSampleEmail() {
         // Proceed with fixing sample email using database manager
         const formData = new FormData();
         formData.append('action', 'fix_sample_email');
-                        // Uses centralized auth - no token needed
+        formData.append('admin_token', 'whimsical_admin_2024'); // Admin token fallback
         
         return fetch('api/db_manager.php', {
             method: 'POST',
@@ -6160,8 +7518,8 @@ function showRoomSettingsSuccess(message) {
 </script>
 
 <!-- Email History Modal -->
-<div id="emailHistoryModal" class="admin-modal-overlay" style="display: none;" onclick="closeEmailHistoryModal()">
-    <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+<div id="emailHistoryModal" class="admin-modal-overlay" style="display: none; z-index: 10000;" onclick="closeEmailHistoryModal()">
+    <div class="admin-modal-content" style="max-width: 1200px;" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-800">Email History</h3>
@@ -6312,8 +7670,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Email Configuration Modal -->
-<div id="emailConfigModal" class="admin-modal-overlay" style="display: none;" onclick="closeEmailConfigModal()">
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+<div id="emailConfigModal" class="admin-modal-overlay" style="display: none; z-index: 10000;" onclick="closeEmailConfigModal()">
+    <div class="admin-modal-content" style="max-width: 800px;" onclick="event.stopPropagation()">
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-800">Email Configuration</h3>
@@ -6585,8 +7943,8 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Maintenance Modal -->
-<div id="databaseMaintenanceModal" class="admin-modal-overlay" style="display: none;" onclick="closeDatabaseMaintenanceModal()">
-    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
+<div id="databaseMaintenanceModal" class="admin-modal-overlay" style="display: none; z-index: 10000;" onclick="closeDatabaseMaintenanceModal()">
+    <div class="admin-modal-content" style="max-width: 1200px;" onclick="event.stopPropagation()">
         <div class="mt-3">
             <!-- Modal Header -->
             <div class="flex items-center justify-between mb-4">
@@ -6607,6 +7965,8 @@ function showRoomSettingsSuccess(message) {
                 <button class="admin-tab" onclick="switchDatabaseTab(this, 'ssl')" data-tab="ssl">🔒 SSL/Security</button>
                 <button class="admin-tab" onclick="switchDatabaseTab(this, 'stats')" data-tab="stats">📊 Statistics</button>
                 <button class="admin-tab" onclick="switchDatabaseTab(this, 'backup')" data-tab="backup">💾 Backup</button>
+                <button class="admin-tab" onclick="switchDatabaseTab(this, 'query')" data-tab="query">🔍 Query</button>
+                <button class="admin-tab" onclick="switchDatabaseTab(this, 'tools')" data-tab="tools">🛠️ Tools</button>
             </div>
 
             <!-- Modal Content -->
@@ -6773,8 +8133,8 @@ function showRoomSettingsSuccess(message) {
                 <!-- Backup Tab -->
                 <div id="backupTab" class="db-tab-content hidden">
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                        <h4 class="font-semibold text-green-800 mb-2">💾 Database Backup & Maintenance</h4>
-                        <p class="text-sm text-green-700">Create backups and perform database maintenance operations.</p>
+                        <h4 class="font-semibold text-green-800 mb-2">💾 Database Backup & Restore</h4>
+                        <p class="text-sm text-green-700">Create database backups and restore from backup files with full safety controls.</p>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -6788,19 +8148,341 @@ function showRoomSettingsSuccess(message) {
                             <div class="text-xs text-green-600 mt-1">Export complete database</div>
                         </button>
                         
-                        <button onclick="compactRepairDatabase()" class="p-4 bg-blue-100 hover:bg-blue-200 border-2 border-blue-300 rounded-lg text-blue-800 font-medium transition-colors">
+                        <button onclick="showDatabaseRestoreModal()" class="p-4 bg-purple-100 hover:bg-purple-200 border-2 border-purple-300 rounded-lg text-purple-800 font-medium transition-colors">
                             <div class="flex items-center justify-center mb-2">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                 </svg>
                             </div>
-                            <div>Repair & Optimize</div>
-                            <div class="text-xs text-blue-600 mt-1">Fix and optimize tables</div>
+                            <div>Restore Database</div>
+                            <div class="text-xs text-purple-600 mt-1">Restore from backup file</div>
                         </button>
                     </div>
                 </div>
                 
+                <!-- Query Tab -->
+                <div id="queryTab" class="db-tab-content hidden">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-blue-800 mb-2">🔍 SQL Query Console</h4>
+                        <p class="text-sm text-blue-700">Execute custom SQL queries against your database. Use with caution.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Query Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SQL Query</label>
+                            <textarea id="sqlQuery" rows="8" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" placeholder="SELECT * FROM items LIMIT 10;&#10;&#10;-- Use SELECT queries to view data&#10;-- Use INSERT/UPDATE/DELETE with caution&#10;-- Always backup before modifying data"></textarea>
+                        </div>
+                        
+                        <!-- Query Actions -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex space-x-3">
+                                <button onclick="executeQuery()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">
+                                    ▶️ Execute Query
+                                </button>
+                                <button onclick="clearQuery()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium">
+                                    🗑️ Clear
+                                </button>
+                                <button onclick="loadQueryTemplates()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium">
+                                    📋 Templates
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="limitResults" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                                    <span class="text-sm text-gray-700">Limit to 100 results</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Query Results -->
+                        <div id="queryResults" class="hidden">
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg">
+                                <div class="px-4 py-3 border-b border-gray-200 bg-gray-100">
+                                    <div class="flex items-center justify-between">
+                                        <h5 class="font-semibold text-gray-800">Query Results</h5>
+                                        <div id="queryInfo" class="text-sm text-gray-600"></div>
+                                    </div>
+                                </div>
+                                <div id="queryResultsContent" class="p-4 max-h-96 overflow-auto">
+                                    <!-- Results will be displayed here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Query Templates Modal -->
+                        <div id="queryTemplatesModal" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <h5 class="font-semibold text-green-800 mb-3">📋 Common Query Templates</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <button onclick="insertTemplate('SELECT * FROM items ORDER BY sku;')" class="text-left p-3 bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                    <div class="font-medium text-green-800">View All Items</div>
+                                    <div class="text-green-600 text-xs">SELECT * FROM items</div>
+                                </button>
+                                <button onclick="insertTemplate('SELECT COUNT(*) as total_orders, SUM(totalAmount) as total_revenue FROM orders;')" class="text-left p-3 bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                    <div class="font-medium text-green-800">Order Statistics</div>
+                                    <div class="text-green-600 text-xs">Count & revenue totals</div>
+                                </button>
+                                <button onclick="insertTemplate('SELECT table_name, table_rows, data_length, index_length FROM information_schema.tables WHERE table_schema = DATABASE();')" class="text-left p-3 bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                    <div class="font-medium text-green-800">Table Sizes</div>
+                                    <div class="text-green-600 text-xs">Show all table information</div>
+                                </button>
+                                <button onclick="insertTemplate('SELECT i.sku, i.name, i.stockLevel, COUNT(oi.sku) as orders_count FROM items i LEFT JOIN order_items oi ON i.sku = oi.sku GROUP BY i.sku ORDER BY orders_count DESC;')" class="text-left p-3 bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                    <div class="font-medium text-green-800">Popular Items</div>
+                                    <div class="text-green-600 text-xs">Items by order frequency</div>
+                                </button>
+                                <button onclick="insertTemplate('SHOW PROCESSLIST;')" class="text-left p-3 bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                    <div class="font-medium text-green-800">Active Connections</div>
+                                    <div class="text-green-600 text-xs">Show current processes</div>
+                                </button>
+                                <button onclick="insertTemplate('SELECT table_name, constraint_name, column_name, referenced_table_name, referenced_column_name FROM information_schema.key_column_usage WHERE table_schema = DATABASE() AND referenced_table_name IS NOT NULL;')" class="text-left p-3 bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                    <div class="font-medium text-green-800">Foreign Keys</div>
+                                    <div class="text-green-600 text-xs">Show all foreign key relationships</div>
+                                </button>
+                            </div>
+                            <div class="mt-3 text-center">
+                                <button onclick="hideQueryTemplates()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm">
+                                    Close Templates
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tools Tab -->
+                <div id="toolsTab" class="db-tab-content hidden">
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-orange-800 mb-2">🛠️ Database Maintenance Tools</h4>
+                        <p class="text-sm text-orange-700">Advanced database maintenance and optimization tools for administrators.</p>
+                    </div>
+                    
+                    <!-- Tools Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        
+                        <!-- Database Initialization -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-amber-600 text-xl">🚀</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Initialize Database</h5>
+                                    <p class="text-xs text-gray-600">Set up tables & default data</p>
+                                </div>
+                            </div>
+                            <button onclick="initializeDatabase()" class="w-full px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium">
+                                Initialize DB
+                            </button>
+                        </div>
+                        
+                        <!-- Table Optimization -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-blue-600 text-xl">⚡</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Table Optimization</h5>
+                                    <p class="text-xs text-gray-600">Optimize all database tables</p>
+                                </div>
+                            </div>
+                            <button onclick="optimizeAllTables()" class="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium">
+                                Optimize Tables
+                            </button>
+                        </div>
+                        
+                        <!-- Index Analysis -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-purple-600 text-xl">🗂️</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Index Analysis</h5>
+                                    <p class="text-xs text-gray-600">Analyze and optimize indexes</p>
+                                </div>
+                            </div>
+                            <button onclick="analyzeIndexes()" class="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium">
+                                Analyze Indexes
+                            </button>
+                        </div>
+                        
+                        <!-- Database Cleanup -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-green-600 text-xl">🧹</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Database Cleanup</h5>
+                                    <p class="text-xs text-gray-600">Remove orphaned records</p>
+                                </div>
+                            </div>
+                            <button onclick="cleanupDatabase()" class="w-full px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
+                                Clean Database
+                            </button>
+                        </div>
+                        
+                        <!-- Table Repair -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-red-600 text-xl">🔧</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Table Repair</h5>
+                                    <p class="text-xs text-gray-600">Repair corrupted tables</p>
+                                </div>
+                            </div>
+                            <button onclick="repairTables()" class="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium">
+                                Repair Tables
+                            </button>
+                        </div>
+                        
+                        <!-- Size Analysis -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-indigo-600 text-xl">📊</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Size Analysis</h5>
+                                    <p class="text-xs text-gray-600">Analyze database storage</p>
+                                </div>
+                            </div>
+                            <button onclick="analyzeDatabaseSize()" class="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">
+                                Analyze Size
+                            </button>
+                        </div>
+                        
+                        <!-- Performance Monitor -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-yellow-600 text-xl">📈</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Performance Monitor</h5>
+                                    <p class="text-xs text-gray-600">Monitor query performance</p>
+                                </div>
+                            </div>
+                            <button onclick="showPerformanceMonitor()" class="w-full px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium">
+                                View Performance
+                            </button>
+                        </div>
+                        
+                        <!-- Foreign Key Check -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-teal-600 text-xl">🔗</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Foreign Keys</h5>
+                                    <p class="text-xs text-gray-600">Validate referential integrity</p>
+                                </div>
+                            </div>
+                            <button onclick="checkForeignKeys()" class="w-full px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded text-sm font-medium">
+                                Check Integrity
+                            </button>
+                        </div>
+                        
+                        <!-- Export Tools -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-pink-600 text-xl">📤</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Export Tools</h5>
+                                    <p class="text-xs text-gray-600">Export specific tables</p>
+                                </div>
+                            </div>
+                            <button onclick="showExportTools()" class="w-full px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded text-sm font-medium">
+                                Export Data
+                            </button>
+                        </div>
+                        
+                        <!-- Import Tools -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-violet-600 text-xl">📥</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Import Tools</h5>
+                                    <p class="text-xs text-gray-600">Import data from files</p>
+                                </div>
+                            </div>
+                            <button onclick="showImportTools()" class="w-full px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                                Import Data
+                            </button>
+                        </div>
+                        
+                        <!-- Schema Browser -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-center mb-3">
+                                <div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center mr-3">
+                                    <span class="text-cyan-600 text-xl">🗄️</span>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-gray-800">Schema Browser</h5>
+                                    <p class="text-xs text-gray-600">Browse database structure</p>
+                                </div>
+                            </div>
+                            <button onclick="showSchemaBrowser()" class="w-full px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-medium">
+                                Browse Schema
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tool Results Area -->
+                    <div id="toolResults" class="mt-6 hidden">
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg">
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gray-100">
+                                <div class="flex items-center justify-between">
+                                    <h5 class="font-semibold text-gray-800">Tool Results</h5>
+                                    <button onclick="clearToolResults()" class="text-gray-500 hover:text-gray-700 text-sm">
+                                        Clear Results
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="toolResultsContent" class="p-4 max-h-96 overflow-auto">
+                                <!-- Tool results will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Content will be loaded dynamically here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Database Tool Results Modal -->
+<div id="databaseToolResultsModal" class="admin-modal-overlay" style="display: none; z-index: 11000;" onclick="closeDatabaseToolResultsModal()">
+    <div class="admin-modal-content" style="max-width: 900px;" onclick="event.stopPropagation()">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="toolResultsModalTitle" class="text-lg font-bold text-gray-900">🛠️ Tool Results</h3>
+                <button onclick="closeDatabaseToolResultsModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div id="toolResultsModalContent" class="space-y-4 max-h-96 overflow-auto">
+                <!-- Tool results will be displayed here -->
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="mt-6 flex justify-end space-x-3">
+                <button onclick="closeDatabaseToolResultsModal()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium">
+                    Close
+                </button>
             </div>
         </div>
     </div>
@@ -6932,6 +8614,214 @@ function showRoomSettingsSuccess(message) {
                         <span class="font-medium text-gray-700">Type:</span>
                         <span id="fileType" class="text-gray-600">-</span>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Database Restore Modal -->
+<div id="databaseRestoreModal" class="admin-modal-overlay" style="display: none; z-index: 11000;" onclick="closeDatabaseRestoreModal()">
+    <div class="admin-modal-content" style="max-width: 800px;" onclick="event.stopPropagation()">
+        <div class="mt-3">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">🔄 Database Restore</h3>
+                <button onclick="closeDatabaseRestoreModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Progress Indicator -->
+            <div class="mb-6">
+                <div class="flex items-center">
+                    <div id="step1" class="flex items-center step-indicator active">
+                        <div class="step-number">1</div>
+                        <span class="ml-2 text-sm font-medium">Select Backup</span>
+                    </div>
+                    <div class="flex-1 h-px bg-gray-300 mx-4"></div>
+                    <div id="step2" class="flex items-center step-indicator">
+                        <div class="step-number">2</div>
+                        <span class="ml-2 text-sm font-medium">Verify & Options</span>
+                    </div>
+                    <div class="flex-1 h-px bg-gray-300 mx-4"></div>
+                    <div id="step3" class="flex items-center step-indicator">
+                        <div class="step-number">3</div>
+                        <span class="ml-2 text-sm font-medium">Restore</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 1: Select Backup -->
+            <div id="restoreStep1" class="restore-step">
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-semibold text-purple-800 mb-2">📁 Select Restore Source</h4>
+                    <p class="text-sm text-purple-700">Choose how you want to provide the database backup file.</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Upload Option -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <label class="flex items-start space-x-3 cursor-pointer">
+                            <input type="radio" name="restoreMethod" value="upload" class="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2" checked>
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-lg">📤</span>
+                                    <span class="font-medium text-gray-900">Upload Backup File</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Upload a .sql backup file from your computer</p>
+                                <div class="file-upload-area border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                                    <input type="file" id="backupFile" accept=".sql,.txt" class="hidden" onchange="handleFileSelect(event)">
+                                    <div id="uploadPrompt">
+                                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                        <p class="text-sm text-gray-600">Click to upload or drag and drop</p>
+                                        <p class="text-xs text-gray-500">Supports .sql and .txt files</p>
+                                        <button type="button" onclick="document.getElementById('backupFile').click()" class="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm">
+                                            Choose File
+                                        </button>
+                                    </div>
+                                    <div id="fileSelected" class="hidden">
+                                        <svg class="w-8 h-8 mx-auto mb-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <p id="fileName" class="text-sm font-medium text-gray-900"></p>
+                                        <p id="fileSize" class="text-xs text-gray-500"></p>
+                                        <button type="button" onclick="clearFileSelection()" class="mt-2 text-sm text-purple-600 hover:text-purple-800">
+                                            Choose Different File
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Server Backup Option -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <label class="flex items-start space-x-3 cursor-pointer">
+                            <input type="radio" name="restoreMethod" value="server" class="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-lg">🗄️</span>
+                                    <span class="font-medium text-gray-900">Server Backup Files</span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">Restore from existing backup files on the server</p>
+                                <div id="serverBackups" class="space-y-2">
+                                    <div class="text-sm text-gray-500">Loading server backups...</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Verify & Options -->
+            <div id="restoreStep2" class="restore-step hidden">
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-semibold text-amber-800 mb-2">⚠️ Restore Configuration</h4>
+                    <p class="text-sm text-amber-700">Review your restore settings and choose what to restore.</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Backup Info -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-900 mb-2">📄 Backup Information</h5>
+                        <div id="backupInfo" class="text-sm text-gray-600 space-y-1">
+                            <!-- Will be populated with backup details -->
+                        </div>
+                    </div>
+                    
+                    <!-- Restore Options -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-900 mb-3">🔧 Restore Options</h5>
+                        <div class="space-y-3">
+                            <label class="flex items-start space-x-3">
+                                <input type="checkbox" id="dropTables" class="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2" checked>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-900">Drop Existing Tables</span>
+                                    <p class="text-xs text-gray-500">Remove current tables before restoring (recommended for full restore)</p>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-start space-x-3">
+                                <input type="checkbox" id="createBackup" class="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2" checked>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-900">Create Pre-Restore Backup</span>
+                                    <p class="text-xs text-gray-500">Backup current database before restoring (highly recommended)</p>
+                                </div>
+                            </label>
+                            
+                            <label class="flex items-start space-x-3">
+                                <input type="checkbox" id="ignoreErrors" class="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-900">Continue on Errors</span>
+                                    <p class="text-xs text-gray-500">Continue restoration even if some statements fail</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Warning -->
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-start space-x-2">
+                            <svg class="w-5 h-5 text-red-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            <div class="text-sm">
+                                <p class="font-medium text-red-800">⚠️ Important Warning</p>
+                                <p class="text-red-700 mt-1">This will replace your current database. All existing data will be lost unless you create a backup first. This action cannot be undone.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Restore Progress -->
+            <div id="restoreStep3" class="restore-step hidden">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-semibold text-blue-800 mb-2">🔄 Restoration in Progress</h4>
+                    <p class="text-sm text-blue-700">Please wait while the database is being restored...</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="restoreProgress" class="bg-purple-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    
+                    <!-- Status Messages -->
+                    <div id="restoreStatus" class="space-y-2">
+                        <!-- Status updates will appear here -->
+                    </div>
+                    
+                    <!-- Results -->
+                    <div id="restoreResults" class="hidden border border-gray-200 rounded-lg p-4">
+                        <h5 class="font-medium text-gray-900 mb-2">📊 Restoration Results</h5>
+                        <div id="restoreResultsContent" class="text-sm text-gray-600">
+                            <!-- Results will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="mt-6 flex justify-between">
+                <button id="restorePrevBtn" onclick="previousRestoreStep()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium hidden">
+                    ← Previous
+                </button>
+                <div class="flex space-x-3">
+                    <button onclick="closeDatabaseRestoreModal()" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium">
+                        Cancel
+                    </button>
+                    <button id="restoreNextBtn" onclick="nextRestoreStep()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium" disabled>
+                        Next →
+                    </button>
+                    <button id="restoreExecuteBtn" onclick="executeRestore()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium hidden">
+                        🔄 Start Restore
+                    </button>
                 </div>
             </div>
         </div>
@@ -7412,10 +9302,7 @@ function showFileInfo(path, fileData = null) {
     }
 }
 
-function formatFileSize(bytes) {
-    if (bytes >= 1073741824) {
-        return (bytes / 1073741824).toFixed(2) + ' GB';
-    } else if (bytes >= 1048576) {
+// formatFileSize function available from js/utils.js else if (bytes >= 1048576) {
         return (bytes / 1048576).toFixed(2) + ' MB';
     } else if (bytes >= 1024) {
         return (bytes / 1024).toFixed(2) + ' KB';
@@ -7803,10 +9690,7 @@ function closeBackupProgressModal() {
 }
 
 // Helper function for file size formatting (client-side)
-function formatFileSize(bytes) {
-    if (bytes >= 1073741824) {
-        return (bytes / 1073741824).toFixed(2) + ' GB';
-    } else if (bytes >= 1048576) {
+// formatFileSize function available from js/utils.js else if (bytes >= 1048576) {
         return (bytes / 1048576).toFixed(2) + ' MB';
     } else if (bytes >= 1024) {
         return (bytes / 1024).toFixed(2) + ' KB';
@@ -10371,42 +12255,7 @@ async function changeTemplateAssignment(emailType) {
         showError('Error loading templates');
     }
 }
-
-async function sendTestEmail(templateId) {
-    const testEmail = prompt('Enter email address to send test email to:');
-    
-    if (!testEmail) {
-        return;
-    }
-    
-    if (!testEmail.includes('@') || !testEmail.includes('.')) {
-        showError('Please enter a valid email address');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/email_templates.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'send_test',
-                template_id: templateId,
-                test_email: testEmail
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess('Test email sent successfully to ' + testEmail + '!');
-        } else {
-            showError('Failed to send test email: ' + data.error);
-        }
-    } catch (error) {
-        console.error('Error sending test email:', error);
-        showError('Error sending test email');
-    }
-}
+// sendTestEmail function moved to email_manager.php for centralization
 
 // ========== COLOR TEMPLATE MANAGEMENT ==========
 
@@ -14550,36 +16399,7 @@ async function removeCartButtonText(index) {
         showError( 'Failed to remove cart button text');
     }
 }
-
-async function resetToDefaults() {
-    if (!confirm('Are you sure you want to reset to default cart button texts? This will replace all your custom variations.')) {
-        return;
-    }
-    
-    const defaultTexts = [
-        'Add to Cart',
-        'Buy Now',
-        'Get Yours Today',
-        'Shop Now',
-        'Order Now',
-        'Purchase',
-        'Take Home',
-        'Make It Mine',
-        'Grab One',
-        'Pick One Up',
-        'Add to Bag',
-        'Get One Now'
-    ];
-    
-    try {
-        await saveCartButtonTexts(defaultTexts);
-        displayCartButtonTexts(defaultTexts);
-        showSuccess( 'Reset to default cart button texts');
-    } catch (error) {
-        console.error('Error resetting cart button texts:', error);
-        showError( 'Failed to reset cart button texts');
-    }
-}
+// resetToDefaults function moved to data_manager.php for centralization
 
 async function saveCartButtonTexts(texts) {
     const response = await fetch('/api/business_settings.php', {
@@ -16026,8 +17846,22 @@ let helpHintsData = [];
 let currentEditingHint = null;
 
 // Open Help Hints Management Modal
-function openHelpHintsModal() {
-    document.getElementById('helpHintsModal').style.display = 'flex';
+window.openHelpHintsModal = function openHelpHintsModal() {
+    console.log('openHelpHintsModal called');
+    const modal = document.getElementById('helpHintsModal');
+    if (!modal) {
+        console.error('helpHintsModal element not found!');
+        alert('Help Hints modal not found. Please refresh the page.');
+        return;
+    }
+    console.log('Opening help hints modal...');
+    console.log('Modal before changes:', modal.style.display, modal.classList.contains('hidden'));
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    console.log('Modal after changes:', modal.style.display, modal.classList.contains('hidden'));
+    console.log('Modal computed style:', window.getComputedStyle(modal).display, window.getComputedStyle(modal).visibility);
+    console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
+    console.log('Modal position:', modal.getBoundingClientRect());
     initializeHelpHintsDB();
 }
 
@@ -16060,7 +17894,7 @@ async function initializeHelpHintsDB() {
 // Load help hints data
 async function loadHelpHintsData() {
     try {
-        const response = await fetch('/api/help_tooltips.php?action=list_all');
+        const response = await fetch('/api/help_tooltips.php?action=list_all&admin_token=whimsical_admin_2024');
         const data = await response.json();
         
         if (data.success) {
@@ -16080,7 +17914,7 @@ async function loadHelpHintsData() {
 // Load help hints statistics
 async function loadHelpHintsStats() {
     try {
-        const response = await fetch('/api/help_tooltips.php?action=get_stats');
+        const response = await fetch('/api/help_tooltips.php?action=get_stats&admin_token=whimsical_admin_2024');
         const data = await response.json();
         
         if (data.success) {
@@ -16242,7 +18076,7 @@ async function saveHelpHint() {
             data.id = currentEditingHint;
         }
         
-        const response = await fetch(`${url}?action=${action}`, {
+        const response = await fetch(`${url}?action=${action}&admin_token=whimsical_admin_2024`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16269,7 +18103,7 @@ async function saveHelpHint() {
 // Toggle help hint active status
 async function toggleHelpHint(hintId) {
     try {
-        const response = await fetch('/api/help_tooltips.php?action=toggle', {
+        const response = await fetch('/api/help_tooltips.php?action=toggle&admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16299,7 +18133,7 @@ async function deleteHelpHint(hintId) {
     }
     
     try {
-        const response = await fetch('/api/help_tooltips.php?action=delete', {
+        const response = await fetch('/api/help_tooltips.php?action=delete&admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16338,7 +18172,7 @@ async function bulkToggleHints() {
     }
     
     try {
-        const response = await fetch('/api/help_tooltips.php?action=bulk_toggle', {
+        const response = await fetch('/api/help_tooltips.php?action=bulk_toggle&admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16367,7 +18201,7 @@ async function bulkToggleHints() {
 // Export help hints
 async function exportHelpHints() {
     try {
-        const response = await fetch('/api/help_tooltips.php?action=export');
+        const response = await fetch('/api/help_tooltips.php?action=export&admin_token=whimsical_admin_2024');
         const blob = await response.blob();
         
         const url = window.URL.createObjectURL(blob);
@@ -16400,7 +18234,7 @@ async function importHelpHints() {
         const text = await file.text();
         const tooltips = JSON.parse(text);
         
-        const response = await fetch('/api/help_tooltips.php?action=import', {
+        const response = await fetch('/api/help_tooltips.php?action=import&admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16429,7 +18263,7 @@ async function toggleGlobalTooltips() {
     const enabled = document.getElementById('globalTooltipsEnabled').checked;
     
     try {
-        const response = await fetch('/api/help_tooltips.php?action=set_global_enabled', {
+        const response = await fetch('/api/help_tooltips.php?action=set_global_enabled&admin_token=whimsical_admin_2024', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16469,8 +18303,8 @@ async function toggleGlobalTooltips() {
 </script>
 
 <!-- Help Hints Management Modal -->
-<div id="helpHintsModal" class="admin-modal-overlay" style="display: none;" onclick="closeHelpHintsModal()">
-    <div class="bg-white shadow-xl w-full h-full flex flex-col" onclick="event.stopPropagation()">
+<div id="helpHintsModal" class="admin-modal-overlay" style="display: none; z-index: 10000;" onclick="closeHelpHintsModal()">
+    <div class="admin-modal-content" style="width: 100%; height: 100%; max-width: none; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
         <!-- Modal Header -->
         <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
             <div>
@@ -19880,205 +21714,7 @@ function displaySystemAnalysis(analysis) {
         </div>
     `;
 }
-
-async function cleanupStaleFiles() {
-    // Wait for notifications to load if they're not available yet
-    let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        retryCount++;
-    }
-    
-    // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
-        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
-        window.showError = window.wfNotifications.error.bind(window.wfNotifications);
-    }
-    
-    // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {
-        try {
-            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);
-                return;
-            } else {alert('✅ ' + msg);
-            }
-        } catch (error) {
-            console.error('Error in showSuccessLocal:', error);
-            alert('✅ ' + msg);
-        }
-    };
-    
-    const showErrorLocal = (msg) => {
-        try {
-            if (typeof window.showError === 'function') {window.showError(msg);
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
-                return;
-            } else {alert('❌ ' + msg);
-            }
-        } catch (error) {
-            console.error('Error in showErrorLocal:', error);
-            alert('❌ ' + msg);
-        }
-    };
-    
-    // Use branded confirmation if available, otherwise simple confirm
-    const userConfirmed = confirm('🗑️ Clean Stale Files\n\nRemove backup and temporary files?\n\nThis action will remove backup files, temporary files, and other safe-to-delete files. This is generally very safe and will help clean up your server space.');
-    if (!userConfirmed) {
-        return;
-    }
-    
-    try {
-        showSuccessLocal('Scanning for stale files...');
-        
-        const response = await fetch('/api/cleanup_system.php?action=cleanup_stale_files&admin_token=whimsical_admin_2024');
-        const data = await response.json();
-        
-        if (data.success) {
-            showCleanupResults('🗑️ File Cleanup Results', data);
-            runSystemAnalysis(); // Refresh analysis
-        } else {
-            showErrorLocal('File cleanup failed: ' + data.error);
-        }
-    } catch (error) {
-        console.error('File cleanup error:', error);
-        showErrorLocal('File cleanup failed: ' + error.message);
-    }
-}
-
-async function removeUnusedCode() {
-    // Wait for notifications to load if they're not available yet
-    let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        retryCount++;
-    }
-    
-    // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
-        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
-        window.showError = window.wfNotifications.error.bind(window.wfNotifications);
-    }
-    
-    // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {
-        try {
-            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);
-                return;
-            } else {alert('✅ ' + msg);
-            }
-        } catch (error) {
-            console.error('[removeUnusedCode] Error in showSuccessLocal:', error);
-            alert('✅ ' + msg);
-        }
-    };
-    
-    const showErrorLocal = (msg) => {
-        try {
-            if (typeof window.showError === 'function') {window.showError(msg);
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
-                return;
-            } else {alert('❌ ' + msg);
-            }
-        } catch (error) {
-            console.error('[removeUnusedCode] Error in showErrorLocal:', error);
-            alert('❌ ' + msg);
-        }
-    };
-    
-    // Use branded confirmation if available, otherwise simple confirm
-    if (!confirm('💬 Remove Stale Comments\n\nRemove stale comments from code files?\n\nThis action will remove TODO, FIXME, DEBUG, and other stale comments from your code files. Only comments are removed - no actual code will be touched.')) {
-        return;
-    }
-    
-    try {
-        showSuccessLocal('Scanning code files for stale comments...');
-        
-        const response = await fetch('/api/cleanup_system.php?action=remove_unused_code&admin_token=whimsical_admin_2024');
-        const data = await response.json();
-        
-        if (data.success) {
-            showCleanupResults('💬 Code Cleanup Results', data);
-            runSystemAnalysis(); // Refresh analysis
-        } else {
-            showErrorLocal('Code cleanup failed: ' + data.error);
-        }
-    } catch (error) {
-        console.error('Code cleanup error:', error);
-        showErrorLocal('Code cleanup failed: ' + error.message);
-    }
-}
-
-async function optimizeDatabase() {
-    // Wait for notifications to load if they're not available yet
-    let retryCount = 0;
-    while (typeof window.showSuccess !== 'function' && typeof window.wfNotifications !== 'object' && retryCount < 5) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        retryCount++;
-    }
-    
-    // Set up notification functions if needed
-    if (typeof window.showSuccess !== 'function' && typeof window.wfNotifications === 'object') {
-        window.showSuccess = window.wfNotifications.success.bind(window.wfNotifications);
-        window.showError = window.wfNotifications.error.bind(window.wfNotifications);
-    }
-    
-    // Robust notification functions with branded modals
-    const showSuccessLocal = (msg) => {
-        try {
-            if (typeof window.showSuccess === 'function') {window.showSuccess(msg);
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {window.wfNotifications.success(msg);
-                return;
-            } else {alert('✅ ' + msg);
-            }
-        } catch (error) {
-            console.error('[optimizeDatabase] Error in showSuccessLocal:', error);
-            alert('✅ ' + msg);
-        }
-    };
-    
-    const showErrorLocal = (msg) => {
-        try {
-            if (typeof window.showError === 'function') {window.showError(msg);
-                return;
-            } else if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {window.wfNotifications.error(msg);
-                return;
-            } else {alert('❌ ' + msg);
-            }
-        } catch (error) {
-            console.error('[optimizeDatabase] Error in showErrorLocal:', error);
-            alert('❌ ' + msg);
-        }
-    };
-    
-    // Use branded confirmation if available, otherwise simple confirm
-    if (!confirm('⚡ Optimize Database\n\nOptimize all database tables?\n\nThis action will run MySQL OPTIMIZE TABLE on all database tables to improve performance and reclaim space. This is a standard maintenance operation that is completely safe.')) {
-        return;
-    }
-    
-    try {
-        showSuccessLocal('Starting database optimization... This may take a moment.');
-        
-        const response = await fetch('/api/cleanup_system.php?action=optimize_database&admin_token=whimsical_admin_2024');
-        const data = await response.json();
-        
-        if (data.success) {
-            showDatabaseOptimizationResults(data);
-            runSystemAnalysis(); // Refresh analysis
-        } else {
-            showErrorLocal('Database optimization failed: ' + data.error);
-        }
-    } catch (error) {
-        console.error('Database optimization error:', error);
-        showErrorLocal('Database optimization failed: ' + error.message);
-    }
-}
+// optimizeDatabase function moved to system_cleanup.php for centralization
 
 function showDatabaseOptimizationResults(data) {
     const summary = data.summary;
@@ -20685,53 +22321,8 @@ function updateSectionWidth(sectionKey, widthClass) {
         saveDashboardConfig();
     }, 1000);
 }
-
-// Auto-save indicator functions
-function showAutoSaveIndicator() {
-    const indicator = document.getElementById('dashboardAutoSaveIndicator');
-    if (indicator) {
-        indicator.classList.remove('hidden');
-        indicator.textContent = '💾 Auto-saving...';
-        indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm';
-    }
-}
-
-function hideAutoSaveIndicator(success = true) {
-    const indicator = document.getElementById('dashboardAutoSaveIndicator');
-    if (indicator) {
-        if (success) {
-            indicator.textContent = '✅ Saved';
-            indicator.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm';
-            setTimeout(() => {
-                indicator.classList.add('hidden');
-                indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hidden';
-                // Force hide with multiple properties as backup
-                indicator.style.display = 'none';
-                indicator.style.visibility = 'hidden';
-                indicator.style.opacity = '0';
-            }, 2000);
-        } else {
-            indicator.textContent = '❌ Save Failed';
-            indicator.className = 'px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm';
-            setTimeout(() => {
-                indicator.classList.add('hidden');
-                indicator.className = 'px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hidden';
-                // Force hide with multiple properties as backup
-                indicator.style.display = 'none';
-                indicator.style.visibility = 'hidden';
-                indicator.style.opacity = '0';
-            }, 3000);
-        }
-        
-        // Additional timeout to ensure it's definitely hidden
-        setTimeout(() => {
-            indicator.classList.add('hidden');
-            indicator.style.display = 'none';
-            indicator.style.visibility = 'hidden';
-            indicator.style.opacity = '0';
-        }, success ? 2500 : 3500);
-    }
-}
+// showAutoSaveIndicator function moved to ui-manager.js for centralization
+// hideAutoSaveIndicator function moved to ui-manager.js for centralization
 
 // Force hide all auto-save indicators when modal opens
 function forceHideAllAutoSaveIndicators() {
@@ -22316,6 +23907,408 @@ function filterCurrentLogEntries(query) {
         }
     });
 }
+
+// Database Restore Modal Functions
+let currentRestoreStep = 1;
+let selectedBackupFile = null;
+let selectedServerBackup = null;
+
+// Show database restore modal
+window.showDatabaseRestoreModal = function() {
+    currentRestoreStep = 1;
+    selectedBackupFile = null;
+    selectedServerBackup = null;
+    updateRestoreStepDisplay();
+    loadServerBackups();
+    document.getElementById('databaseRestoreModal').style.display = 'flex';
+}
+
+// Close database restore modal
+function closeDatabaseRestoreModal() {
+    document.getElementById('databaseRestoreModal').style.display = 'none';
+    currentRestoreStep = 1;
+    selectedBackupFile = null;
+    selectedServerBackup = null;
+}
+
+// Handle file selection
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        selectedBackupFile = file;
+        
+        // Show file selected state
+        document.getElementById('uploadPrompt').classList.add('hidden');
+        document.getElementById('fileSelected').classList.remove('hidden');
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        
+        // Enable next button
+        updateNavigationButtons();
+    }
+}
+
+// Clear file selection
+function clearFileSelection() {
+    selectedBackupFile = null;
+    document.getElementById('backupFile').value = '';
+    document.getElementById('uploadPrompt').classList.remove('hidden');
+    document.getElementById('fileSelected').classList.add('hidden');
+    updateNavigationButtons();
+}
+
+// Load server backups
+async function loadServerBackups() {
+    try {
+        const response = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'list_backups',
+                admin_token: 'whimsical_admin_2024'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.backups) {
+            displayServerBackups(result.backups);
+        } else {
+            document.getElementById('serverBackups').innerHTML = '<div class="text-sm text-gray-500">No server backups found</div>';
+        }
+    } catch (error) {
+        console.error('Error loading server backups:', error);
+        document.getElementById('serverBackups').innerHTML = '<div class="text-sm text-red-500">Error loading backups</div>';
+    }
+}
+
+// Display server backups
+function displayServerBackups(backups) {
+    const container = document.getElementById('serverBackups');
+    
+    if (backups.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-500">No server backups available</div>';
+        return;
+    }
+    
+    let html = '<div class="space-y-2 max-h-48 overflow-y-auto">';
+    
+    backups.forEach(backup => {
+        html += `
+            <div class="backup-file-item p-3 border border-gray-200 rounded-lg cursor-pointer" 
+                 onclick="selectServerBackup('${backup.filename}', '${backup.path}')">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium text-sm text-gray-900">${backup.filename}</div>
+                        <div class="text-xs text-gray-500">Created: ${backup.created}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-gray-600">${backup.size}</div>
+                        <div class="text-xs text-gray-500">${backup.age}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Select server backup
+function selectServerBackup(filename, path) {
+    selectedServerBackup = { filename, path };
+    
+    // Update UI to show selection
+    document.querySelectorAll('.backup-file-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+    
+    // Select the server radio button
+    document.querySelector('input[name="restoreMethod"][value="server"]').checked = true;
+    
+    updateNavigationButtons();
+}
+
+// Update step display
+function updateRestoreStepDisplay() {
+    // Update step indicators
+    document.querySelectorAll('.step-indicator').forEach((step, index) => {
+        step.classList.remove('active', 'completed');
+        if (index + 1 < currentRestoreStep) {
+            step.classList.add('completed');
+        } else if (index + 1 === currentRestoreStep) {
+            step.classList.add('active');
+        }
+    });
+    
+    // Show/hide step content
+    document.querySelectorAll('.restore-step').forEach((step, index) => {
+        step.classList.toggle('hidden', index + 1 !== currentRestoreStep);
+    });
+    
+    updateNavigationButtons();
+}
+
+// Update navigation buttons
+function updateNavigationButtons() {
+    const nextBtn = document.getElementById('restoreNextBtn');
+    const prevBtn = document.getElementById('restorePrevBtn');
+    const executeBtn = document.getElementById('restoreExecuteBtn');
+    
+    // Show/hide previous button
+    prevBtn.classList.toggle('hidden', currentRestoreStep === 1);
+    
+    // Handle next/execute button logic
+    if (currentRestoreStep === 1) {
+        nextBtn.classList.remove('hidden');
+        executeBtn.classList.add('hidden');
+        
+        // Enable/disable based on selection
+        const uploadMethod = document.querySelector('input[name="restoreMethod"][value="upload"]').checked;
+        const serverMethod = document.querySelector('input[name="restoreMethod"][value="server"]').checked;
+        
+        const canProceed = (uploadMethod && selectedBackupFile) || (serverMethod && selectedServerBackup);
+        nextBtn.disabled = !canProceed;
+        
+    } else if (currentRestoreStep === 2) {
+        nextBtn.classList.add('hidden');
+        executeBtn.classList.remove('hidden');
+        
+    } else if (currentRestoreStep === 3) {
+        nextBtn.classList.add('hidden');
+        executeBtn.classList.add('hidden');
+    }
+}
+
+// Next step
+function nextRestoreStep() {
+    if (currentRestoreStep === 1) {
+        // Validate selection and move to step 2
+        const uploadMethod = document.querySelector('input[name="restoreMethod"][value="upload"]').checked;
+        const serverMethod = document.querySelector('input[name="restoreMethod"][value="server"]').checked;
+        
+        if ((uploadMethod && selectedBackupFile) || (serverMethod && selectedServerBackup)) {
+            currentRestoreStep = 2;
+            updateRestoreStepDisplay();
+            populateBackupInfo();
+        }
+    }
+}
+
+// Previous step
+function previousRestoreStep() {
+    if (currentRestoreStep > 1) {
+        currentRestoreStep--;
+        updateRestoreStepDisplay();
+    }
+}
+
+// Populate backup information
+function populateBackupInfo() {
+    const container = document.getElementById('backupInfo');
+    
+    if (selectedBackupFile) {
+        container.innerHTML = `
+            <div><strong>Source:</strong> Uploaded File</div>
+            <div><strong>Filename:</strong> ${selectedBackupFile.name}</div>
+            <div><strong>Size:</strong> ${formatFileSize(selectedBackupFile.size)}</div>
+            <div><strong>Type:</strong> ${selectedBackupFile.type || 'SQL Backup'}</div>
+        `;
+    } else if (selectedServerBackup) {
+        container.innerHTML = `
+            <div><strong>Source:</strong> Server Backup</div>
+            <div><strong>Filename:</strong> ${selectedServerBackup.filename}</div>
+            <div><strong>Path:</strong> ${selectedServerBackup.path}</div>
+        `;
+    }
+}
+
+// Execute restore
+async function executeRestore() {
+    if (!confirm('This will replace your current database with the backup. This action cannot be undone. Are you sure you want to continue?')) {
+        return;
+    }
+    
+    currentRestoreStep = 3;
+    updateRestoreStepDisplay();
+    
+    const progressBar = document.getElementById('restoreProgress');
+    const statusContainer = document.getElementById('restoreStatus');
+    const resultsContainer = document.getElementById('restoreResults');
+    const resultsContent = document.getElementById('restoreResultsContent');
+    
+    // Reset progress
+    progressBar.style.width = '0%';
+    statusContainer.innerHTML = '';
+    resultsContainer.classList.add('hidden');
+    
+    try {
+        // Step 1: Create pre-restore backup (if enabled)
+        if (document.getElementById('createBackup').checked) {
+            addStatusMessage('Creating pre-restore backup...', 'info');
+            progressBar.style.width = '20%';
+            
+            const backupResponse = await fetch('/api/database_maintenance.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'create_backup',
+                    admin_token: 'whimsical_admin_2024'
+                })
+            });
+            
+            const backupResult = await backupResponse.json();
+            if (backupResult.success) {
+                addStatusMessage('✅ Pre-restore backup created successfully', 'success');
+            } else {
+                throw new Error('Failed to create pre-restore backup: ' + backupResult.message);
+            }
+        }
+        
+        // Step 2: Drop existing tables (if enabled)
+        if (document.getElementById('dropTables').checked) {
+            addStatusMessage('Dropping existing tables...', 'info');
+            progressBar.style.width = '40%';
+            
+            const dropResponse = await fetch('/api/database_maintenance.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'drop_all_tables',
+                    admin_token: 'whimsical_admin_2024'
+                })
+            });
+            
+            const dropResult = await dropResponse.json();
+            if (dropResult.success) {
+                addStatusMessage('✅ Existing tables dropped successfully', 'success');
+            } else {
+                throw new Error('Failed to drop tables: ' + dropResult.message);
+            }
+        }
+        
+        // Step 3: Restore from backup
+        addStatusMessage('Restoring database from backup...', 'info');
+        progressBar.style.width = '70%';
+        
+        const formData = new FormData();
+        formData.append('action', 'restore_database');
+        formData.append('admin_token', 'whimsical_admin_2024');
+        formData.append('ignore_errors', document.getElementById('ignoreErrors').checked ? '1' : '0');
+        
+        if (selectedBackupFile) {
+            formData.append('backup_file', selectedBackupFile);
+        } else if (selectedServerBackup) {
+            formData.append('server_backup_path', selectedServerBackup.path);
+        }
+        
+        const restoreResponse = await fetch('/api/database_maintenance.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const restoreResult = await restoreResponse.json();
+        
+        progressBar.style.width = '100%';
+        
+        if (restoreResult.success) {
+            addStatusMessage('✅ Database restoration completed successfully!', 'success');
+            
+            // Show results
+            resultsContent.innerHTML = `
+                <div class="space-y-2">
+                    <div><strong>Tables Restored:</strong> ${restoreResult.tables_restored || 'N/A'}</div>
+                    <div><strong>Records Restored:</strong> ${restoreResult.records_restored || 'N/A'}</div>
+                    <div><strong>Execution Time:</strong> ${restoreResult.execution_time || 'N/A'}</div>
+                    ${restoreResult.warnings ? `<div class="text-amber-600"><strong>Warnings:</strong> ${restoreResult.warnings}</div>` : ''}
+                </div>
+            `;
+            resultsContainer.classList.remove('hidden');
+            
+            // Add final success message
+            setTimeout(() => {
+                addStatusMessage('🎉 Database restore operation completed! You may need to refresh the page.', 'success');
+            }, 1000);
+            
+        } else {
+            throw new Error(restoreResult.message || 'Restoration failed');
+        }
+        
+    } catch (error) {
+        console.error('Restore error:', error);
+        addStatusMessage('❌ Restoration failed: ' + error.message, 'error');
+        progressBar.style.width = '0%';
+        progressBar.classList.add('bg-red-600');
+    }
+}
+
+// Add status message
+function addStatusMessage(message, type) {
+    const container = document.getElementById('restoreStatus');
+    const messageDiv = document.createElement('div');
+    
+    let bgColor = 'bg-blue-50';
+    let textColor = 'text-blue-800';
+    
+    if (type === 'success') {
+        bgColor = 'bg-green-50';
+        textColor = 'text-green-800';
+    } else if (type === 'error') {
+        bgColor = 'bg-red-50';
+        textColor = 'text-red-800';
+    } else if (type === 'warning') {
+        bgColor = 'bg-amber-50';
+        textColor = 'text-amber-800';
+    }
+    
+    messageDiv.className = `p-3 ${bgColor} ${textColor} rounded-lg border text-sm`;
+    messageDiv.textContent = message;
+    
+    container.appendChild(messageDiv);
+    container.scrollTop = container.scrollHeight;
+}
+
+// Format file size
+// formatFileSize function available from js/utils.js
+
+// Add drag and drop support
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.querySelector('.file-upload-area');
+    if (uploadArea) {
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.sql') || file.name.endsWith('.txt')) {
+                    document.getElementById('backupFile').files = files;
+                    handleFileSelect({ target: { files: files } });
+                } else {
+                    alert('Please select a .sql or .txt file');
+                }
+            }
+        });
+    }
+    
+    // Add radio button change listeners
+    document.querySelectorAll('input[name="restoreMethod"]').forEach(radio => {
+        radio.addEventListener('change', updateNavigationButtons);
+    });
+});
 </script>
 
 <style>

@@ -345,32 +345,7 @@ function removeEmptyTables($pdo) {
         'message' => count($removed) . ' empty tables removed successfully'
     ]);
 }
-
-function cleanupStaleFiles() {
-    $unusedFiles = getUnusedFiles();
-    $removed = [];
-    $errors = [];
-    
-    foreach ($unusedFiles as $file) {
-        try {
-            if (unlink($file['path'])) {
-                $removed[] = basename($file['path']);
-            }
-        } catch (Exception $e) {
-            $errors[] = [
-                'file' => $file['path'],
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-    
-    echo json_encode([
-        'success' => true,
-        'removed_files' => $removed,
-        'errors' => $errors,
-        'message' => count($removed) . ' stale files removed successfully'
-    ]);
-}
+// cleanupStaleFiles function moved to system_cleanup.php for centralization
 
 function removeUnusedCode() {
     $processed = [];

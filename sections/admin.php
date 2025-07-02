@@ -1,6 +1,9 @@
 <?php
 // Admin Dashboard - Main administrative interface
-require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Get current user data
+$userData = getCurrentUser() ?? [];
 
 // Initialize data arrays
 $inventoryData = [];
@@ -8,22 +11,20 @@ $ordersData = [];
 $customersData = [];
 
 try {
-    $db = Database::getInstance();
-    
     // Fetch core data with optimized queries
-    $inventoryData = $db->query('SELECT * FROM items ORDER BY sku')->fetchAll();
-    $ordersData = $db->query('SELECT * FROM orders ORDER BY created_at DESC')->fetchAll();
+    $inventoryData = Database::queryAll('SELECT * FROM items ORDER BY sku');
+    $ordersData = Database::queryAll('SELECT * FROM orders ORDER BY date DESC');
     
     // Enhanced orders with items and formatted shipping
     foreach ($ordersData as &$order) {
-        $order['items'] = $db->query('SELECT * FROM order_items WHERE orderId = ?', [$order['id']])->fetchAll();
+        $order['items'] = Database::queryAll('SELECT * FROM order_items WHERE orderId = ?', [$order['id']]);
         
         if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
             $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
         }
     }
     
-    $customersData = $db->query('SELECT * FROM users ORDER BY firstName, lastName')->fetchAll();
+    $customersData = Database::queryAll('SELECT * FROM users ORDER BY firstName, lastName');
     
 } catch (Exception $e) {
     Logger::error('Admin dashboard data loading failed', ['error' => $e->getMessage()]);

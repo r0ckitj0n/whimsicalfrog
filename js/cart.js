@@ -1,3 +1,6 @@
+// Centralized cart functions - used throughout the application
+// Functions moved here from: register_page.html, sections/admin_pos.php
+
 class ShoppingCart {
     constructor() {
         this.items = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -232,44 +235,91 @@ class ShoppingCart {
     }
 
     removeItem(itemSku, color = null, size = null, gender = null) {
-        const key = this.getUniqueKey(itemSku, color, size, gender);
-        delete this.items[key];
-        this.saveCart();
-        this.updateCartCount();
-        this.dispatchCartUpdate();
+        // Normalize parameters - convert string 'null' to actual null
+        if (color === 'null') color = null;
+        if (size === 'null') size = null;
+        if (gender === 'null') gender = null;
         
-        // Clean up any hidden notifications
-        this.cleanupHiddenNotifications();
+        console.log(`🗑️ Removing item: ${itemSku}, color: ${color}, size: ${size}, gender: ${gender}`);
+        console.log(`📊 Cart before removal:`, this.items.length, 'items');
         
-        console.log(`Removed item: ${itemSku}, color: ${color}, size: ${size}, gender: ${gender}`);
+        // Find item in array that matches all criteria
+        const itemIndex = this.items.findIndex(cartItem => {
+            const cartColor = cartItem.color || null;
+            const cartSize = cartItem.size || null;
+            const cartGender = cartItem.gender || null;
+            return cartItem.sku === itemSku && 
+                   cartColor === color && 
+                   cartSize === size &&
+                   cartGender === gender;
+        });
+        
+        if (itemIndex !== -1) {
+            this.items.splice(itemIndex, 1);
+            console.log(`📊 Cart after removal:`, this.items.length, 'items');
+            this.saveCart();
+            console.log(`💾 Cart saved to localStorage`);
+            
+            // Verify localStorage was updated
+            const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
+            console.log(`✅ localStorage verification:`, savedCart.length, 'items');
+            
+            this.updateCartCount();
+            this.dispatchCartUpdate();
+            
+            // Clean up any hidden notifications
+            this.cleanupHiddenNotifications();
+            
+            console.log(`✅ Removed item: ${itemSku}, color: ${color}, size: ${size}, gender: ${gender}`);
+        } else {
+            console.warn(`❌ Item not found for removal: ${itemSku}, color: ${color}, size: ${size}, gender: ${gender}`);
+            console.log(`🔍 Available items:`, this.items.map(item => ({sku: item.sku, color: item.color, size: item.size, gender: item.gender})));
+        }
     }
 
     updateQuantity(itemSku, quantity, color = null, size = null, gender = null) {
-        const key = this.getUniqueKey(itemSku, color, size, gender);
-        if (this.items[key]) {
+        // Normalize parameters - convert string 'null' to actual null
+        if (color === 'null') color = null;
+        if (size === 'null') size = null;
+        if (gender === 'null') gender = null;
+        
+        // Find item in array that matches all criteria
+        const existingItem = this.items.find(cartItem => {
+            const cartColor = cartItem.color || null;
+            const cartSize = cartItem.size || null;
+            const cartGender = cartItem.gender || null;
+            return cartItem.sku === itemSku && 
+                   cartColor === color && 
+                   cartSize === size &&
+                   cartGender === gender;
+        });
+        
+        if (existingItem) {
             if (quantity <= 0) {
                 this.removeItem(itemSku, color, size, gender);
             } else {
-                this.items[key].quantity = quantity;
+                existingItem.quantity = quantity;
                 this.saveCart();
                 this.updateCartCount();
                 this.dispatchCartUpdate();
             }
+        } else {
+            console.warn(`Item not found for quantity update: ${itemSku}, color: ${color}, size: ${size}, gender: ${gender}`);
         }
     }
 
     getTotal() {
-        return Object.values(this.items).reduce((total, item) => {
+        return this.items.reduce((total, item) => {
             return total + (parseFloat(item.price) * item.quantity);
         }, 0);
     }
 
     getItemCount() {
-        return Object.values(this.items).reduce((count, item) => count + item.quantity, 0);
+        return this.items.reduce((count, item) => count + item.quantity, 0);
     }
 
     clearCart() {
-        this.items = {};
+        this.items = [];
         this.saveCart();
         this.updateCartCount();
         this.dispatchCartUpdate();
@@ -360,7 +410,7 @@ class ShoppingCart {
         
         // Show cart status toast with a delay after the main notification
         setTimeout(() => {
-            window.showInfo(statusMessage, {
+            window.showSuccess(statusMessage, {
                 duration: 5000, // Show for 5 seconds
                 title: 'Cart Status'
             });
@@ -371,7 +421,7 @@ class ShoppingCart {
         // Clean up any hidden notifications first
         this.cleanupHiddenNotifications();
         
-        // Build display name for notifications
+        // Build comprehensive notification message
         let displayName = item.name;
         let detailParts = [];
         
@@ -383,16 +433,23 @@ class ShoppingCart {
             displayName += ` (${detailParts.join(', ')})`;
         }
         
-        // 1. Show toast notification in top right corner (next to cart icon)
+        // Format price and create comprehensive message
         const formattedPrice = '$' + (parseFloat(item.price) || 0).toFixed(2);
-        const toastMessage = `${displayName} - ${formattedPrice}`;
+        const quantityText = addedQuantity > 1 ? ` (${addedQuantity})` : '';
         
-        this.showNotification(toastMessage);
+        // Create a single, comprehensive notification message
+        const notificationMessage = `🛒 ${displayName}${quantityText} - ${formattedPrice}`;
         
-        // 2. Show small popup notification near the item (if possible)
+        // Show the main notification with title
+        window.showSuccess(notificationMessage, {
+            title: '✅ Added to Cart',
+            duration: 5000
+        });
+        
+        // Show small popup notification near the item (if possible) - but don't duplicate the main notification
         this.showItemPopupNotification(item, addedQuantity, totalQuantity, isNewItem);
         
-        // 3. Show cart status toast after a brief delay
+        // Show cart status toast after a brief delay
         this.showCartStatusToast();
     }
     
@@ -542,6 +599,12 @@ class ShoppingCart {
             console.warn('Cart container not found (tried cartContainer and cartItems)');
             return;
         }
+        
+        console.log('🎯 Found cart container:', cartContainer.id, 'with', this.items.length, 'items to render');
+        
+        // Force reload from localStorage to ensure we have the latest data
+        this.items = JSON.parse(localStorage.getItem('cart') || '[]');
+        console.log('🔄 Reloaded cart from localStorage:', this.items.length, 'items');
 
         // Load sales verbiage
         let salesVerbiage = {};
@@ -575,8 +638,8 @@ class ShoppingCart {
             return;
         }
 
-        // Refresh product data before rendering
-        await this.refreshProductData();
+        // Skip refreshProductData during cart refresh to prevent overwriting cart changes
+        // await this.refreshProductData();
 
         // Process each item to get the correct color-specific image
         const processedItems = await Promise.all(this.items.map(async (item) => {
@@ -671,10 +734,10 @@ class ShoppingCart {
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button onclick="updateQuantity('${item.sku}', ${item.quantity - 1}, ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'}, ${item.gender ? `'${item.gender}'` : 'null'})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">-</button>
+                    <button onclick="updateQuantity('${item.sku}', ${item.quantity - 1}, ${item.color ? `'${item.color}'` : null}, ${item.size ? `'${item.size}'` : null}, ${item.gender ? `'${item.gender}'` : null})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">-</button>
                     <span class="px-3 py-1 bg-gray-100 rounded">${item.quantity}</span>
-                    <button onclick="updateQuantity('${item.sku}', ${item.quantity + 1}, ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'}, ${item.gender ? `'${item.gender}'` : 'null'})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">+</button>
-                    <button onclick="removeFromCart('${item.sku}', ${item.color ? `'${item.color}'` : 'null'}, ${item.size ? `'${item.size}'` : 'null'}, ${item.gender ? `'${item.gender}'` : 'null'})" class="px-2 py-1 rounded ml-2" style="background-color: #dc2626; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Remove</button>
+                    <button onclick="updateQuantity('${item.sku}', ${item.quantity + 1}, ${item.color ? `'${item.color}'` : null}, ${item.size ? `'${item.size}'` : null}, ${item.gender ? `'${item.gender}'` : null})" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">+</button>
+                    <button onclick="removeFromCart('${item.sku}', ${item.color ? `'${item.color}'` : null}, ${item.size ? `'${item.size}'` : null}, ${item.gender ? `'${item.gender}'` : null})" class="px-2 py-1 rounded ml-2" style="background-color: #dc2626; color: white; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">Remove</button>
                 </div>
             </div>
             `;
@@ -685,16 +748,28 @@ class ShoppingCart {
                 <span class="font-semibold">💎 ${salesVerbiage.cart_footer_message}</span>
             </div>` : '';
 
-        cartContainer.innerHTML = headerMessage + urgencyMessage + socialProofMessage + cartHTML + guaranteeMessage + `
-            <div class="p-4 border-t border-gray-200 bg-gray-50">
+        // Create the structured layout for the new cart design
+        const cartContentHTML = `
+            <div class="flex-shrink-0 p-4 border-b border-gray-200">
+                ${headerMessage}
+                ${urgencyMessage}
+                ${socialProofMessage}
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                ${cartHTML}
+            </div>
+            <div class="flex-shrink-0 border-t border-gray-200 bg-gray-50 p-4">
+                ${guaranteeMessage}
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-lg font-semibold">Total: $${this.getTotal().toFixed(2)}</span>
-                    <button onclick="cart.clearCart()" class="px-4 py-2 rounded text-white" style="background-color: #6b7280; color: white !important; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
+                    <button onclick="cart.clearCart(); setTimeout(async () => await window.refreshCartDisplay(), 100);" class="px-4 py-2 rounded text-white" style="background-color: #6b7280; color: white !important; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">Clear Cart</button>
                 </div>
                 ${footerMessage}
                 <button onclick="cart.checkout()" class="brand-button w-full py-3 px-6 rounded-lg font-semibold">Proceed to Checkout</button>
             </div>
         `;
+        
+        cartContainer.innerHTML = cartContentHTML;
     }
 
     async checkout() {
@@ -1078,7 +1153,7 @@ async function addToCart(sku, name, price, imageUrl = null) {
             image: imageUrl,
             quantity: 1
         });
-        cart.showNotification(`Added ${name} to cart`);
+        // Note: Cart class will handle the notification automatically via showAddToCartNotifications()
     } catch (error) {
         console.error('Error adding item to cart:', error);
     }
@@ -1114,15 +1189,90 @@ function emergencyCartCleanup() {
     }
 }
 
+// Global function to refresh cart display
+window.refreshCartDisplay = async function() {
+    console.log('🔄 Starting cart display refresh...');
+    
+    // Log current cart state before refresh
+    if (window.cart) {
+        console.log('📊 Cart refresh - items:', window.cart.items.length);
+    }
+    
+    // Check for cart containers first
+    const cartContainer = document.getElementById('cartContainer');
+    const cartItems = document.getElementById('cartItems');
+    const hasCartContainer = !!(cartItems || cartContainer);
+    
+    console.log('🔍 Container check:', {
+        cartContainer: !!cartContainer,
+        cartItems: !!cartItems,
+        cartExists: !!window.cart,
+        itemCount: window.cart ? window.cart.items.length : 'N/A',
+        currentPage: window.location.search
+    });
+    
+    // If we're supposed to be on the cart page but don't have a cart container,
+    // we might be on the login page due to redirect - skip refresh
+    if (window.location.search.includes('page=cart') && !hasCartContainer) {
+        console.warn('⚠️ On cart page but no cart container found - likely redirected to login');
+        return;
+    }
+    
+    // Re-render the cart if we're on the cart page (async operation)
+    if (window.cart && typeof window.cart.renderCart === 'function' && hasCartContainer) {
+        try {
+            await window.cart.renderCart();
+            console.log('✅ Cart rendered successfully');
+            
+            // Double-check the container content after render
+            const activeContainer = cartItems || cartContainer;
+            if (activeContainer) {
+                console.log('📄 Container content length:', activeContainer.innerHTML.length);
+                console.log('📄 Container preview:', activeContainer.innerHTML.substring(0, 100) + '...');
+            }
+        } catch (error) {
+            console.error('❌ Error rendering cart:', error);
+        }
+    } else if (!hasCartContainer) {
+        console.log('ℹ️ No cart container found - not on cart page, skipping cart render');
+    } else {
+        console.warn('⚠️ Cart or renderCart method not available');
+    }
+    
+    // Update cart count in header/navigation (this should always work)
+    if (window.cart && typeof window.cart.updateCartCount === 'function') {
+        window.cart.updateCartCount();
+        console.log('✅ Cart count updated');
+    }
+    
+    // Dispatch cart update event for any other components listening
+    if (window.cart && typeof window.cart.dispatchCartUpdate === 'function') {
+        window.cart.dispatchCartUpdate();
+        console.log('✅ Cart update event dispatched');
+    }
+    
+    console.log('🔄 Cart display refresh completed');
+};
+
 function removeFromCart(sku, color = null, size = null, gender = null) {
+    console.log(`🎯 Global removeFromCart called with: ${sku}, ${color}, ${size}, ${gender}`);
     if (cart) {
         cart.removeItem(sku, color, size, gender);
+        // Refresh cart display after removal
+        setTimeout(async () => {
+            await window.refreshCartDisplay();
+        }, 100); // Small delay to ensure cart update is complete
     }
 }
 
 function updateQuantity(sku, newQuantity, color = null, size = null, gender = null) {
+    console.log(`🎯 Global updateQuantity called with: ${sku}, ${newQuantity}, ${color}, ${size}, ${gender}`);
     if (cart) {
         cart.updateQuantity(sku, newQuantity, color, size, gender);
+        // Refresh cart display after quantity update
+        setTimeout(async () => {
+            await window.refreshCartDisplay();
+        }, 100); // Small delay to ensure cart update is complete
     }
 }
 
@@ -1564,6 +1714,10 @@ window.confirmAddToCart = function() {
     if (colorSelect && window.currentModalProduct.availableColors && window.currentModalProduct.availableColors.length > 1) {
         const selectedColor = colorSelect.value;
         if (!selectedColor) {
+            // Add visual feedback
+            colorSelect.classList.add('validation-error');
+            setTimeout(() => colorSelect.classList.remove('validation-error'), 3000);
+            
             if (window.cart && window.cart.showErrorNotification) {
                 window.cart.showErrorNotification('Please select a color before adding to cart.');
             } else if (window.cart && window.cart.showNotification) {
@@ -1611,6 +1765,10 @@ window.confirmAddToCart = function() {
         Object.keys(window.currentModalProduct.colorSpecificSizes || {}).length > 0)) {
         const selectedSize = sizeSelect.value;
         if (!selectedSize) {
+            // Add visual feedback
+            sizeSelect.classList.add('validation-error');
+            setTimeout(() => sizeSelect.classList.remove('validation-error'), 3000);
+            
             if (window.cart && window.cart.showErrorNotification) {
                 window.cart.showErrorNotification('Please select a size before adding to cart.');
             } else if (window.cart && window.cart.showNotification) {

@@ -16,13 +16,16 @@ class WhimsicalFrogNotifications {
         if (!this.container) {
             this.container = document.createElement('div');
             this.container.id = 'wf-notification-container';
+            this.container.className = 'wf-notification-container';
+            
+            // Use CSS variables from database for container styling
             this.container.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 2147483648;
+                position: var(--notification-container-position, fixed);
+                top: var(--notification-container-top, 24px);
+                right: var(--notification-container-right, 24px);
+                z-index: var(--notification-container-zindex, 2147483647);
                 pointer-events: none;
-                max-width: 420px;
+                max-width: var(--notification-container-width, 420px);
                 width: 100%;
             `;
             document.body.appendChild(this.container);
@@ -46,7 +49,7 @@ class WhimsicalFrogNotifications {
         // Trigger animation
         requestAnimationFrame(() => {
             notification.style.opacity = '1';
-            notification.style.transform = 'translateX(0) scale(1)';
+            notification.style.transform = 'var(--notification-transform-show, translateX(0) scale(1))';
         });
 
         // Debug logging
@@ -72,49 +75,30 @@ class WhimsicalFrogNotifications {
         notification.dataset.id = id;
         notification.dataset.type = type;
         
-        const config = this.getTypeConfig(type);
+        // Apply branded styling using CSS variables from database
+        notification.style.cssText = `
+            background: var(--notification-${type}-bg, ${this.getFallbackColor(type, 'background')});
+            border: var(--notification-border-width, 2px) var(--notification-border-style, solid) var(--notification-${type}-border, ${this.getFallbackColor(type, 'border')});
+            color: var(--notification-${type}-text, ${this.getFallbackColor(type, 'text')});
+            border-radius: var(--notification-border-radius, 16px);
+            padding: var(--notification-padding, 20px 24px);
+            margin-bottom: var(--notification-margin, 16px);
+            box-shadow: var(--notification-${type}-shadow, ${this.getFallbackShadow(type)});
+            backdrop-filter: var(--notification-backdrop-filter, blur(12px) saturate(180%));
+            font-family: var(--notification-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+            font-size: var(--notification-font-size, 15px);
+            font-weight: var(--notification-font-weight, 500);
+            line-height: var(--notification-line-height, 1.5);
+            opacity: 0;
+            transform: var(--notification-transform-enter, translateX(100%) scale(0.9));
+            transition: var(--notification-transition, all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275));
+            pointer-events: auto;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        `;
         
-        // Apply base styles without colors for success notifications (to allow CSS override)
-        if (type === 'success') {
-            notification.style.cssText = `
-                border-radius: 12px;
-                padding: 16px 20px;
-                margin-bottom: 12px;
-                box-shadow: 0 10px 25px ${config.shadow};
-                backdrop-filter: blur(10px);
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                font-size: 14px;
-                font-weight: 500;
-                opacity: 0;
-                transform: translateX(100%) scale(0.9);
-                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                pointer-events: auto;
-                position: relative;
-                overflow: hidden;
-                cursor: pointer;
-            `;
-        } else {
-            notification.style.cssText = `
-                background: ${config.background};
-                border: 2px solid ${config.border};
-                color: ${config.color};
-                border-radius: 12px;
-                padding: 16px 20px;
-                margin-bottom: 12px;
-                box-shadow: 0 10px 25px ${config.shadow};
-                backdrop-filter: blur(10px);
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                font-size: 14px;
-                font-weight: 500;
-                opacity: 0;
-                transform: translateX(100%) scale(0.9);
-                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                pointer-events: auto;
-                position: relative;
-                overflow: hidden;
-                cursor: pointer;
-            `;
-        }
+        // Brand accent is now handled by CSS pseudo-element ::before
 
         // Add click-to-dismiss functionality
         notification.addEventListener('click', (event) => {
@@ -132,62 +116,43 @@ class WhimsicalFrogNotifications {
 
         // Add hover effect to indicate clickability
         notification.addEventListener('mouseenter', () => {
-            notification.style.transform = 'translateX(0) scale(1.02)';
+            notification.style.transform = 'var(--notification-transform-hover, translateX(0) scale(1.02))';
             notification.style.cursor = 'pointer';
         });
 
         notification.addEventListener('mouseleave', () => {
-            notification.style.transform = 'translateX(0) scale(1)';
+            notification.style.transform = 'var(--notification-transform-show, translateX(0) scale(1))';
         });
 
         // Make the entire notification clearly clickable
         notification.style.cursor = 'pointer';
         notification.title = 'Click to dismiss';
 
-        // Create HTML content without inline color styles for success notifications
-        if (type === 'success') {
-            notification.innerHTML = `
-                <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
-                    <div class="wf-notification-icon" style="font-size: 20px; flex-shrink: 0; margin-top: 1px;">
-                        ${config.icon}
-                    </div>
-                    <div class="wf-notification-body" style="flex: 1; min-width: 0;">
-                        ${title ? `<div class="wf-notification-title" style="font-weight: 600; margin-bottom: 4px;">${title}</div>` : ''}
-                        <div class="wf-notification-message" style="line-height: 1.4; word-wrap: break-word;">
-                            ${message}
-                        </div>
-                        ${actions ? this.createActions(actions) : ''}
-                    </div>
-                    ${!persistent ? `
-                        <button class="wf-notification-close" onclick="event.stopPropagation(); window.wfNotifications.remove(${id})" 
-                                style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0;"
-                                onmouseover="this.style.backgroundColor='rgba(255,255,255,0.2)'"
-                                onmouseout="this.style.backgroundColor='transparent'">&times;</button>
-                    ` : ''}
+        // Create HTML content with branded styling
+        const iconSize = 'var(--notification-icon-size, 24px)';
+        const titleWeight = 'var(--notification-title-weight, 600)';
+        const titleMargin = 'var(--notification-title-margin, 6px)';
+        
+        notification.innerHTML = `
+            <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px; position: relative; z-index: 1;">
+                <div class="wf-notification-icon" style="font-size: ${iconSize}; flex-shrink: 0; margin-top: 1px;">
+                    ${this.getTypeIcon(type)}
                 </div>
-            `;
-        } else {
-            notification.innerHTML = `
-                <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
-                    <div class="wf-notification-icon" style="font-size: 20px; flex-shrink: 0; margin-top: 1px;">
-                        ${config.icon}
+                <div class="wf-notification-body" style="flex: 1; min-width: 0;">
+                    ${title ? `<div class="wf-notification-title" style="font-weight: ${titleWeight}; margin-bottom: ${titleMargin};">${title}</div>` : ''}
+                    <div class="wf-notification-message" style="word-wrap: break-word;">
+                        ${message}
                     </div>
-                    <div class="wf-notification-body" style="flex: 1; min-width: 0;">
-                        ${title ? `<div class="wf-notification-title" style="font-weight: 600; margin-bottom: 4px; color: ${config.titleColor};">${title}</div>` : ''}
-                        <div class="wf-notification-message" style="line-height: 1.4; word-wrap: break-word;">
-                            ${message}
-                        </div>
-                        ${actions ? this.createActions(actions) : ''}
-                    </div>
-                    ${!persistent ? `
-                        <button class="wf-notification-close" onclick="event.stopPropagation(); window.wfNotifications.remove(${id})" 
-                                style="background: none; border: none; color: ${config.closeColor}; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0;"
-                                onmouseover="this.style.backgroundColor='rgba(0,0,0,0.1)'"
-                                onmouseout="this.style.backgroundColor='transparent'">&times;</button>
-                    ` : ''}
+                    ${actions ? this.createActions(actions) : ''}
                 </div>
-            `;
-        }
+                ${!persistent ? `
+                    <button class="wf-notification-close" onclick="event.stopPropagation(); window.wfNotifications.remove(${id})" 
+                            style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0; opacity: 0.7;"
+                            onmouseover="this.style.opacity='1'; this.style.backgroundColor='rgba(255,255,255,0.2)'"
+                            onmouseout="this.style.opacity='0.7'; this.style.backgroundColor='transparent'">&times;</button>
+                ` : ''}
+            </div>
+        `;
 
         // Add pulse effect for emphasis on certain types
         if (type === 'warning' || type === 'error') {
@@ -292,7 +257,7 @@ class WhimsicalFrogNotifications {
         if (notification && notification.parentElement) {
             console.log(`Removing notification ${id} from DOM`);
             notification.style.opacity = '0';
-            notification.style.transform = 'translateX(100%) scale(0.9)';
+            notification.style.transform = 'var(--notification-transform-enter, translateX(100%) scale(0.9))';
             
             setTimeout(() => {
                 if (notification.parentElement) {
@@ -332,6 +297,63 @@ class WhimsicalFrogNotifications {
 
     validation(message, options = {}) {
         return this.show(message, 'validation', options);
+    }
+    
+    // Helper methods for fallback styling
+    getFallbackColor(type, property) {
+        const fallbacks = {
+            success: {
+                background: 'linear-gradient(135deg, #87ac3a, #6b8e23)',
+                border: '#556B2F',
+                text: '#ffffff'
+            },
+            error: {
+                background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+                border: '#991b1b',
+                text: '#ffffff'
+            },
+            warning: {
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                border: '#b45309',
+                text: '#ffffff'
+            },
+            info: {
+                background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                border: '#1d4ed8',
+                text: '#ffffff'
+            },
+            validation: {
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                border: '#b45309',
+                text: '#ffffff'
+            }
+        };
+        
+        return fallbacks[type]?.[property] || fallbacks.info[property];
+    }
+    
+    getFallbackShadow(type) {
+        const shadows = {
+            success: '0 12px 28px rgba(135, 172, 58, 0.35), 0 4px 8px rgba(135, 172, 58, 0.15)',
+            error: '0 12px 28px rgba(220, 38, 38, 0.35), 0 4px 8px rgba(220, 38, 38, 0.15)',
+            warning: '0 12px 28px rgba(245, 158, 11, 0.35), 0 4px 8px rgba(245, 158, 11, 0.15)',
+            info: '0 12px 28px rgba(59, 130, 246, 0.35), 0 4px 8px rgba(59, 130, 246, 0.15)',
+            validation: '0 12px 28px rgba(245, 158, 11, 0.35), 0 4px 8px rgba(245, 158, 11, 0.15)'
+        };
+        
+        return shadows[type] || shadows.info;
+    }
+    
+    getTypeIcon(type) {
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️',
+            validation: '⚠️'
+        };
+        
+        return icons[type] || icons.info;
     }
 }
 
@@ -421,3 +443,28 @@ if (window.cart && typeof window.cart.showNotification === 'function') {
 }
 
 console.log('✅ WhimsicalFrog Global Notification System initialized'); 
+/**
+ * showError - Centralized from multiple files
+ */
+function showError(message) {
+    showNotification(message, 'error');
+
+/**
+ * showSuccess - Centralized from multiple files
+ */
+function showSuccess(message) {
+    showNotification(message, 'success');
+}
+
+/**
+ * showSuccessNotification - Centralized from multiple files
+ */
+function showSuccessNotification(title, message) {
+    showMaintenanceNotification(title, message, 'success');
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        const modal = document.querySelector('.admin-modal-overlay:last-child');
+        if (modal) modal.remove();
+    }, 3000);
+}
+}

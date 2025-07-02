@@ -29,21 +29,10 @@ class AuthHelper {
             return true;
         }
         
-        // Check session-based authentication
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        // Check session-based authentication using centralized auth functions
+        require_once __DIR__ . '/auth.php';
         
-        // Check various session structures
-        if (isset($_SESSION['user']) && is_array($_SESSION['user'])) {
-            $userData = $_SESSION['user'];
-            if (strtolower($userData['role'] ?? '') === 'admin') {
-                return true;
-            }
-        }
-        
-        // Alternative session structure check
-        if (isset($_SESSION['user_id']) && isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'admin') {
+        if (isAdmin()) {
             return true;
         }
         
@@ -132,18 +121,14 @@ class AuthHelper {
  * Compatibility function for existing code that calls getCurrentUser()
  * @deprecated Use AuthHelper::getCurrentUser() instead
  */
-if (!function_exists('getCurrentUser')) {
-    function getCurrentUser(): ?array {
-        return AuthHelper::getCurrentUser();
-    }
+function getCurrentUserFromHelper(): ?array {
+    return AuthHelper::getCurrentUser();
 }
 
 /**
  * Compatibility function for checking if user is admin  
  * @deprecated Use AuthHelper::isAdmin() instead
  */
-if (!function_exists('isAdminWithToken')) {
-    function isAdminWithToken(): bool {
-        return AuthHelper::isAdmin();
-    }
+function isAdminWithTokenHelper(): bool {
+    return AuthHelper::isAdmin();
 } 

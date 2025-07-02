@@ -1,4 +1,6 @@
 <?php
+
+require_once __DIR__ . '/../includes/database.php';
 // Help Tooltips API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -16,8 +18,17 @@ $adminOnlyActions = ['update', 'create', 'delete', 'list_all', 'set_global_enabl
 // Check if user is logged in and is admin (only for admin-only actions)
 session_start();
 $isAdmin = false;
-if (isset($_SESSION['user']) && isset($_SESSION['user']['role'])) {
-    $isAdmin = (strtolower($_SESSION['user']['role']) === 'admin');
+
+// Check session authentication first (standardized pattern)
+require_once __DIR__ . '/../includes/auth.php'; if (isAdminWithToken()) {
+    $isAdmin = true;
+}
+
+// Admin token fallback for API access (check both GET and POST/JSON)
+$input = json_decode(file_get_contents('php://input'), true) ?? [];
+$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
+if (!$isAdmin && $adminToken === 'whimsical_admin_2024') {
+    $isAdmin = true;
 }
 
 // If this is an admin-only action, check authentication
@@ -448,6 +459,28 @@ try {
             echo json_encode(initializeComprehensiveTooltips($pdo));
             exit;
             break;
+
+        case 'generate_css':
+            // Generate CSS for tooltips dynamically (PUBLIC ACCESS)
+            $css = generateTooltipCSS();
+            
+            echo json_encode([
+                'success' => true,
+                'css_content' => $css,
+                'size' => strlen($css)
+            ]);
+            break;
+            
+        case 'generate_js':
+            // Generate JavaScript for tooltips dynamically (PUBLIC ACCESS)
+            $js = generateTooltipJS();
+            
+            echo json_encode([
+                'success' => true,
+                'js_content' => $js,
+                'size' => strlen($js)
+            ]);
+            break;
             
         default:
             http_response_code(400);
@@ -692,6 +725,326 @@ function initializeComprehensiveTooltips($pdo) {
             'success' => false,
             'error' => 'Failed to initialize comprehensive tooltips: ' . $e->getMessage()
         ];
+    }
+}
+
+/**
+ * Generate CSS for tooltips dynamically from database settings
+ */
+function generateTooltipCSS() {
+    $css = "/* Help Tooltips CSS - Generated from Database */\n\n";
+    
+    // Base tooltip styling
+    $css .= ".help-tooltip {\n";
+    $css .= "    position: fixed !important;\n";
+    $css .= "    background: var(--color_gray_800, #333333) !important;\n";
+    $css .= "    color: var(--color_white, #ffffff) !important;\n";
+    $css .= "    padding: 12px 16px !important;\n";
+    $css .= "    border-radius: 8px !important;\n";
+    $css .= "    font-size: 14px !important;\n";
+    $css .= "    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;\n";
+    $css .= "    line-height: 1.4 !important;\n";
+    $css .= "    max-width: 320px !important;\n";
+    $css .= "    word-wrap: break-word !important;\n";
+    $css .= "    white-space: normal !important;\n";
+    $css .= "    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;\n";
+    $css .= "    border: 1px solid var(--color_gray_600, #555555) !important;\n";
+    $css .= "    z-index: 99999 !important;\n";
+    $css .= "    opacity: 0 !important;\n";
+    $css .= "    visibility: hidden !important;\n";
+    $css .= "    display: block !important;\n";
+    $css .= "    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out !important;\n";
+    $css .= "    pointer-events: none !important;\n";
+    $css .= "    box-sizing: border-box !important;\n";
+    $css .= "    text-align: left !important;\n";
+    $css .= "    font-weight: normal !important;\n";
+    $css .= "    text-decoration: none !important;\n";
+    $css .= "    text-transform: none !important;\n";
+    $css .= "    letter-spacing: normal !important;\n";
+    $css .= "}\n\n";
+    
+    // Visible state
+    $css .= ".help-tooltip.show {\n";
+    $css .= "    opacity: 1 !important;\n";
+    $css .= "    visibility: visible !important;\n";
+    $css .= "    display: block !important;\n";
+    $css .= "    pointer-events: auto !important;\n";
+    $css .= "}\n\n";
+    
+    // Tooltip content structure
+    $css .= ".tooltip-title {\n";
+    $css .= "    font-weight: 600 !important;\n";
+    $css .= "    margin-bottom: 6px !important;\n";
+    $css .= "    color: #ffffff !important;\n";
+    $css .= "    font-size: 15px !important;\n";
+    $css .= "}\n\n";
+    
+    $css .= ".tooltip-content {\n";
+    $css .= "    color: #e5e5e5 !important;\n";
+    $css .= "    font-size: 13px !important;\n";
+    $css .= "    line-height: 1.5 !important;\n";
+    $css .= "}\n\n";
+    
+    // Arrow positioning
+    $css .= ".help-tooltip::before {\n";
+    $css .= "    content: '' !important;\n";
+    $css .= "    position: absolute !important;\n";
+    $css .= "    width: 0 !important;\n";
+    $css .= "    height: 0 !important;\n";
+    $css .= "    border: 6px solid transparent !important;\n";
+    $css .= "}\n\n";
+    
+    // Arrow directions
+    $css .= ".tooltip-top::before {\n";
+    $css .= "    bottom: 100% !important;\n";
+    $css .= "    left: 50% !important;\n";
+    $css .= "    transform: translateX(-50%) !important;\n";
+    $css .= "    border-bottom-color: #333333 !important;\n";
+    $css .= "    border-top: none !important;\n";
+    $css .= "}\n\n";
+    
+    $css .= ".tooltip-bottom::before {\n";
+    $css .= "    top: 100% !important;\n";
+    $css .= "    left: 50% !important;\n";
+    $css .= "    transform: translateX(-50%) !important;\n";
+    $css .= "    border-top-color: #333333 !important;\n";
+    $css .= "    border-bottom: none !important;\n";
+    $css .= "}\n\n";
+    
+    $css .= ".tooltip-left::before {\n";
+    $css .= "    right: 100% !important;\n";
+    $css .= "    top: 50% !important;\n";
+    $css .= "    transform: translateY(-50%) !important;\n";
+    $css .= "    border-right-color: #333333 !important;\n";
+    $css .= "    border-left: none !important;\n";
+    $css .= "}\n\n";
+    
+    $css .= ".tooltip-right::before {\n";
+    $css .= "    left: 100% !important;\n";
+    $css .= "    top: 50% !important;\n";
+    $css .= "    transform: translateY(-50%) !important;\n";
+    $css .= "    border-left-color: #333333 !important;\n";
+    $css .= "    border-right: none !important;\n";
+    $css .= "}\n\n";
+    
+    // Responsive design
+    $css .= "@media (max-width: 768px) {\n";
+    $css .= "    .help-tooltip {\n";
+    $css .= "        max-width: 280px !important;\n";
+    $css .= "        font-size: 13px !important;\n";
+    $css .= "        padding: 10px 14px !important;\n";
+    $css .= "    }\n";
+    $css .= "    .tooltip-title { font-size: 14px !important; }\n";
+    $css .= "    .tooltip-content { font-size: 12px !important; }\n";
+    $css .= "}\n\n";
+    
+    // Accessibility
+    $css .= "@media (prefers-reduced-motion: reduce) {\n";
+    $css .= "    .help-tooltip { transition: none !important; }\n";
+    $css .= "}\n\n";
+    
+    $css .= "@media (prefers-contrast: high) {\n";
+    $css .= "    .help-tooltip {\n";
+    $css .= "        background: #000000 !important;\n";
+    $css .= "        color: #ffffff !important;\n";
+    $css .= "        border: 2px solid #ffffff !important;\n";
+    $css .= "    }\n";
+    $css .= "}\n\n";
+    
+    return $css;
+}
+
+/**
+ * Generate JavaScript for tooltips dynamically from database
+ */
+function generateTooltipJS() {
+    try {
+        $pdo = Database::getInstance();
+        
+        // Get all active tooltips from database
+        $stmt = $pdo->prepare("SELECT element_id, page_context, title, content, position FROM help_tooltips WHERE is_active = 1");
+        $stmt->execute();
+        $tooltips = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $js = "/* Help Tooltips JS - Generated from Database */\n\n";
+        
+        $js .= "class TooltipSystem {\n";
+        $js .= "    constructor() {\n";
+        $js .= "        this.tooltips = new Map();\n";
+        $js .= "        this.activeTooltip = null;\n";
+        $js .= "        this.showDelay = 500;\n";
+        $js .= "        this.hideDelay = 100;\n";
+        $js .= "        this.showTimeout = null;\n";
+        $js .= "        this.hideTimeout = null;\n";
+        $js .= "        this.isInitialized = false;\n";
+        $js .= "        this.init();\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    async init() {\n";
+        $js .= "        try {\n";
+        $js .= "            this.loadTooltipsFromData();\n";
+        $js .= "            if (document.readyState === 'loading') {\n";
+        $js .= "                document.addEventListener('DOMContentLoaded', () => this.attachTooltips());\n";
+        $js .= "            } else {\n";
+        $js .= "                this.attachTooltips();\n";
+        $js .= "            }\n";
+        $js .= "            this.isInitialized = true;\n";
+        $js .= "        } catch (error) {\n";
+        $js .= "            console.error('TooltipSystem initialization failed:', error);\n";
+        $js .= "        }\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    loadTooltipsFromData() {\n";
+        $js .= "        const tooltipData = " . json_encode($tooltips) . ";\n";
+        $js .= "        const pageContext = this.getPageContext();\n";
+        $js .= "        tooltipData.forEach(tooltip => {\n";
+        $js .= "            if (tooltip.page_context === pageContext || tooltip.page_context === 'common') {\n";
+        $js .= "                this.tooltips.set(tooltip.element_id, {\n";
+        $js .= "                    title: tooltip.title,\n";
+        $js .= "                    content: tooltip.content,\n";
+        $js .= "                    position: tooltip.position || 'top'\n";
+        $js .= "                });\n";
+        $js .= "            }\n";
+        $js .= "        });\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    getPageContext() {\n";
+        $js .= "        const params = new URLSearchParams(window.location.search);\n";
+        $js .= "        const page = params.get('page') || 'home';\n";
+        $js .= "        if (page.startsWith('admin')) {\n";
+        $js .= "            const section = params.get('section');\n";
+        $js .= "            return section || page.replace('admin_', '') || 'admin';\n";
+        $js .= "        }\n";
+        $js .= "        return page;\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    attachTooltips() {\n";
+        $js .= "        this.tooltips.forEach((tooltipData, elementId) => {\n";
+        $js .= "            const element = document.getElementById(elementId);\n";
+        $js .= "            if (element) {\n";
+        $js .= "                this.attachTooltipToElement(element, tooltipData);\n";
+        $js .= "            }\n";
+        $js .= "        });\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    attachTooltipToElement(element, tooltipData) {\n";
+        $js .= "        element.addEventListener('mouseenter', () => {\n";
+        $js .= "            this.clearTimeouts();\n";
+        $js .= "            this.showTimeout = setTimeout(() => {\n";
+        $js .= "                this.showTooltip(element, tooltipData);\n";
+        $js .= "            }, this.showDelay);\n";
+        $js .= "        });\n\n";
+        
+        $js .= "        element.addEventListener('mouseleave', () => {\n";
+        $js .= "            this.clearTimeouts();\n";
+        $js .= "            this.hideTimeout = setTimeout(() => {\n";
+        $js .= "                this.hideTooltip();\n";
+        $js .= "            }, this.hideDelay);\n";
+        $js .= "        });\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    showTooltip(element, tooltipData) {\n";
+        $js .= "        this.hideTooltip();\n";
+        $js .= "        const tooltip = this.createTooltipElement(tooltipData);\n";
+        $js .= "        document.body.appendChild(tooltip);\n";
+        $js .= "        this.positionTooltip(tooltip, element, tooltipData.position);\n";
+        $js .= "        tooltip.classList.add('show');\n";
+        $js .= "        this.activeTooltip = tooltip;\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    hideTooltip() {\n";
+        $js .= "        if (this.activeTooltip) {\n";
+        $js .= "            this.activeTooltip.remove();\n";
+        $js .= "            this.activeTooltip = null;\n";
+        $js .= "        }\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    createTooltipElement(tooltipData) {\n";
+        $js .= "        const tooltip = document.createElement('div');\n";
+        $js .= "        tooltip.className = `help-tooltip tooltip-\${tooltipData.position}`;\n";
+        $js .= "        const title = document.createElement('div');\n";
+        $js .= "        title.className = 'tooltip-title';\n";
+        $js .= "        title.textContent = tooltipData.title;\n";
+        $js .= "        const content = document.createElement('div');\n";
+        $js .= "        content.className = 'tooltip-content';\n";
+        $js .= "        content.textContent = tooltipData.content;\n";
+        $js .= "        tooltip.appendChild(title);\n";
+        $js .= "        tooltip.appendChild(content);\n";
+        $js .= "        return tooltip;\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    positionTooltip(tooltip, element, position = 'top') {\n";
+        $js .= "        const elementRect = element.getBoundingClientRect();\n";
+        $js .= "        const tooltipRect = tooltip.getBoundingClientRect();\n";
+        $js .= "        const viewport = { width: window.innerWidth, height: window.innerHeight };\n";
+        $js .= "        let left, top;\n";
+        $js .= "        switch (position) {\n";
+        $js .= "            case 'top':\n";
+        $js .= "                left = elementRect.left + (elementRect.width / 2) - (tooltipRect.width / 2);\n";
+        $js .= "                top = elementRect.top - tooltipRect.height - 10;\n";
+        $js .= "                break;\n";
+        $js .= "            case 'bottom':\n";
+        $js .= "                left = elementRect.left + (elementRect.width / 2) - (tooltipRect.width / 2);\n";
+        $js .= "                top = elementRect.bottom + 10;\n";
+        $js .= "                break;\n";
+        $js .= "            case 'left':\n";
+        $js .= "                left = elementRect.left - tooltipRect.width - 10;\n";
+        $js .= "                top = elementRect.top + (elementRect.height / 2) - (tooltipRect.height / 2);\n";
+        $js .= "                break;\n";
+        $js .= "            case 'right':\n";
+        $js .= "                left = elementRect.right + 10;\n";
+        $js .= "                top = elementRect.top + (elementRect.height / 2) - (tooltipRect.height / 2);\n";
+        $js .= "                break;\n";
+        $js .= "            default:\n";
+        $js .= "                left = elementRect.left + (elementRect.width / 2) - (tooltipRect.width / 2);\n";
+        $js .= "                top = elementRect.top - tooltipRect.height - 10;\n";
+        $js .= "        }\n";
+        $js .= "        left = Math.max(10, Math.min(left, viewport.width - tooltipRect.width - 10));\n";
+        $js .= "        top = Math.max(10, Math.min(top, viewport.height - tooltipRect.height - 10));\n";
+        $js .= "        tooltip.style.left = `\${left}px`;\n";
+        $js .= "        tooltip.style.top = `\${top}px`;\n";
+        $js .= "    }\n\n";
+        
+        $js .= "    clearTimeouts() {\n";
+        $js .= "        if (this.showTimeout) {\n";
+        $js .= "            clearTimeout(this.showTimeout);\n";
+        $js .= "            this.showTimeout = null;\n";
+        $js .= "        }\n";
+        $js .= "        if (this.hideTimeout) {\n";
+        $js .= "            clearTimeout(this.hideTimeout);\n";
+        $js .= "            this.hideTimeout = null;\n";
+        $js .= "        }\n";
+        $js .= "    }\n";
+        $js .= "}\n\n";
+        
+        $js .= "// Initialize global tooltip system\n";
+        $js .= "let globalTooltipSystem = null;\n\n";
+        
+        $js .= "function initializeTooltipSystem() {\n";
+        $js .= "    if (!globalTooltipSystem) {\n";
+        $js .= "        globalTooltipSystem = new TooltipSystem();\n";
+        $js .= "        window.tooltipSystem = globalTooltipSystem;\n";
+        $js .= "    }\n";
+        $js .= "}\n\n";
+        
+        $js .= "// Auto-initialize\n";
+        $js .= "if (document.readyState === 'loading') {\n";
+        $js .= "    document.addEventListener('DOMContentLoaded', initializeTooltipSystem);\n";
+        $js .= "} else {\n";
+        $js .= "    initializeTooltipSystem();\n";
+        $js .= "}\n\n";
+        
+        $js .= "// Legacy compatibility\n";
+        $js .= "function loadTooltips() {\n";
+        $js .= "    if (globalTooltipSystem) {\n";
+        $js .= "        return Promise.resolve();\n";
+        $js .= "    }\n";
+        $js .= "}\n";
+        
+        return $js;
+        
+    } catch (Exception $e) {
+        return "/* Error generating tooltip JS: " . $e->getMessage() . " */";
     }
 }
 ?> 

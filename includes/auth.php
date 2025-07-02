@@ -1,15 +1,13 @@
 <?php
 /**
- * Centralized Authentication System for WhimsicalFrog
- * 
- * This file provides consistent authentication and authorization
- * functions across the entire application.
+ * WhimsicalFrog User Authentication and Authorization
+ * Centralized functions to eliminate duplication and improve maintainability
+ * Generated: 2025-07-01 23:15:56
  */
 
-// Ensure session is started
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// Include database functions
+require_once __DIR__ . '/database.php';
+
 
 /**
  * Check if user is logged in
@@ -18,6 +16,7 @@ if (session_status() == PHP_SESSION_NONE) {
 function isLoggedIn() {
     return isset($_SESSION['user']) && !empty($_SESSION['user']);
 }
+
 
 /**
  * Get current user data
@@ -50,6 +49,7 @@ function getCurrentUser() {
     }
 }
 
+
 /**
  * Check if current user is admin
  * @return bool
@@ -64,6 +64,7 @@ function isAdmin() {
     return $role === 'admin';
 }
 
+
 /**
  * Get user role
  * @return string
@@ -72,6 +73,7 @@ function getUserRole() {
     $user = getCurrentUser();
     return $user['role'] ?? 'guest';
 }
+
 
 /**
  * Get user ID
@@ -82,6 +84,7 @@ function getUserId() {
     return $user['userId'] ?? null;
 }
 
+
 /**
  * Get username
  * @return string|null
@@ -91,22 +94,6 @@ function getUsername() {
     return $user['username'] ?? null;
 }
 
-/**
- * Get user's full name
- * @return string
- */
-function getUserFullName() {
-    $user = getCurrentUser();
-    if (!$user) {
-        return 'Guest';
-    }
-    
-    $firstName = $user['firstName'] ?? '';
-    $lastName = $user['lastName'] ?? '';
-    $fullName = trim($firstName . ' ' . $lastName);
-    
-    return !empty($fullName) ? $fullName : ($user['username'] ?? 'User');
-}
 
 /**
  * Require authentication (redirect if not logged in)
@@ -121,6 +108,7 @@ function requireAuth($redirectTo = null) {
         exit;
     }
 }
+
 
 /**
  * Require admin privileges
@@ -152,6 +140,7 @@ function requireAdmin($apiResponse = false) {
     }
 }
 
+
 /**
  * Check admin with fallback token (for API endpoints)
  * @param string $validToken Optional admin token for fallback auth
@@ -174,6 +163,7 @@ function isAdminWithToken($validToken = 'whimsical_admin_2024') {
     
     return $providedToken === $validToken;
 }
+
 
 /**
  * API Authentication check with JSON response
@@ -214,6 +204,7 @@ function checkApiAuth($requireAdmin = false, $adminToken = 'whimsical_admin_2024
     }
 }
 
+
 /**
  * Login user
  * @param array $userData User data from database
@@ -228,6 +219,7 @@ function loginUser($userData) {
         'lastName' => $userData['lastName'] ?? null
     ];
 }
+
 
 /**
  * Logout user
@@ -245,54 +237,4 @@ function logoutUser() {
     // session_destroy();
 }
 
-/**
- * Get welcome message for user
- * @return string
- */
-function getWelcomeMessage() {
-    $user = getCurrentUser();
-    if (!$user) {
-        return '';
-    }
-    
-    $firstName = $user['firstName'] ?? '';
-    $lastName = $user['lastName'] ?? '';
-    
-    if (!empty($firstName) || !empty($lastName)) {
-        return "Welcome, " . trim($firstName . ' ' . $lastName);
-    }
-    
-    return "Welcome, " . ($user['username'] ?? 'User');
-}
-
-/**
- * Debug authentication state (for troubleshooting)
- * @return array
- */
-function getAuthDebugInfo() {
-    return [
-        'session_id' => session_id(),
-        'session_status' => session_status(),
-        'is_logged_in' => isLoggedIn(),
-        'is_admin' => isAdmin(),
-        'user_role' => getUserRole(),
-        'user_id' => getUserId(),
-        'username' => getUsername(),
-        'full_name' => getUserFullName(),
-        'session_keys' => array_keys($_SESSION),
-        'user_data' => getCurrentUser()
-    ];
-}
-
-/**
- * Set global variables for backward compatibility
- */
-function setGlobalAuthVars() {
-    $GLOBALS['isLoggedIn'] = isLoggedIn();
-    $GLOBALS['isAdmin'] = isAdmin();
-    $GLOBALS['userData'] = getCurrentUser() ?? [];
-    $GLOBALS['welcomeMessage'] = getWelcomeMessage();
-}
-
-// Auto-set global variables when this file is included
-setGlobalAuthVars(); 
+?>

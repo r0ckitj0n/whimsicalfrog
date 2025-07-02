@@ -6,16 +6,17 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 }
 
 // Authentication check - case insensitive
-require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php';
 
-if (!isset($_SESSION['user']['role']) || strtolower($_SESSION['user']['role']) !== 'admin') {
+require_once __DIR__ . '/../includes/auth.php';
+if (!isAdminWithToken()) {
     echo '<div class="text-danger">Access denied.</div>';
     return;
 }
 
 try {
-    $db = Database::getInstance();
-    $categories = $db->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category")->fetchAll(PDO::FETCH_COLUMN);
+    $categories = Database::queryAll("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
+    $categories = array_column($categories, 'category');
 } catch (Exception $e) {
     Logger::error('Categories loading failed', ['error' => $e->getMessage()]);
     $categories = [];

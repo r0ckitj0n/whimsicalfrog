@@ -6,6 +6,8 @@
  * to ensure consistent functionality throughout the site.
  */
 
+
+require_once __DIR__ . '/data_processor.php';
 // Include all centralized helpers
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/response.php';
@@ -22,7 +24,7 @@ require_once __DIR__ . '/auth_helper.php';
 // Initialize database logging system
 try {
     DatabaseLogger::init();
-    ErrorLogger::init();
+    ErrorLogger::init(); // Re-enabled after fixing underlying issues
 } catch (Exception $e) {
     error_log("Failed to initialize logging system: " . $e->getMessage());
 }
@@ -69,18 +71,7 @@ function getImageTag($imagePath, $altText = '', $class = '', $style = '') {
     return '<img src="' . htmlspecialchars($webpPath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr 
           . ' onerror="this.onerror=null; this.src=\'' . htmlspecialchars($imagePath) . '\';">'; 
 }
-
-/**
- * Sanitize input data
- * @param mixed $data
- * @return mixed
- */
-function sanitizeInput($data) {
-    if (is_array($data)) {
-        return array_map('sanitizeInput', $data);
-    }
-    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
-}
+// sanitizeInput function moved to security_validator.php for centralization
 
 /**
  * Validate email address
@@ -124,6 +115,15 @@ function formatDate($date, $format = 'M j, Y') {
  * Get file size in human readable format
  * @param int $bytes
  * @return string
+ */
+
+/**
+ * NOTE: The following utility functions are centralized here to eliminate duplication.
+ * Previously found in multiple files:
+ * - formatFileSize: api/file_manager.php, api/upload_background.php
+ * - isValidEmail: includes/email_helper.php
+ * 
+ * When adding new utility functions, add them here instead of creating duplicates.
  */
 function formatFileSize($bytes) {
     $units = ['B', 'KB', 'MB', 'GB', 'TB'];

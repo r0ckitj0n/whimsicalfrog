@@ -6,35 +6,27 @@ ob_start();
 ob_clean();
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
+// Start session first to access session data
+session_start();
+
 // Include database configuration first
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json');
 
-// Use centralized authentication
-// Admin authentication with token fallback for API access
-    $isAdmin = false;
-    
-    // Parse JSON input
-    $input = json_decode(file_get_contents('php://input'), true) ?? [];
-    
-    // Check session authentication first
-    if (isset($_SESSION['user_id']) && isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'admin') {
-        $isAdmin = true;
-    }
-    
-    // Admin token fallback for API access (check both GET and POST/JSON)
-    $adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
-    if (!$isAdmin && $adminToken === 'whimsical_admin_2024') {
-        $isAdmin = true;
-    }
-    
-    if (!$isAdmin) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Admin access required']);
-        exit;
-    }
+// Use centralized authentication functions
+require_once __DIR__ . '/../includes/auth.php';
+
+// Parse JSON input for admin token fallback
+$input = json_decode(file_get_contents('php://input'), true) ?? [];
+
+// Check authentication using centralized functions
+if (!isAdminWithToken()) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Admin access required']);
+    exit;
+}
 
 try {
     try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }

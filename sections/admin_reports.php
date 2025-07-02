@@ -6,6 +6,9 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 
 require_once __DIR__ . '/../includes/functions.php';
 
+// Get database instance
+$db = Database::getInstance();
+
 // Date filtering
 $startDate = $_GET['start_date'] ?? '';
 $endDate = $_GET['end_date'] ?? '';
@@ -30,10 +33,10 @@ $paymentsReceived = 0;
 $paymentsPending = 0;
 
 try {
-    $db = Database::getInstance();
+    
     
     // Get total customers (non-admin users)
-    $metrics['totalCustomers'] = $db->query("SELECT COUNT(*) FROM users WHERE role != 'admin'")->fetchColumn() ?: 0;
+    $metrics['totalCustomers'] = Database::queryRow("SELECT COUNT(*) FROM users WHERE role != 'admin'") ?: 0;
     
     // Get total orders and revenue (YTD)
     $currentYear = date('Y');
@@ -126,10 +129,10 @@ try {
     }
     
     // Get low stock products
-    $lowStockProducts = $db->query("SELECT name, stockLevel, reorderPoint 
+    $lowStockProducts = Database::queryAll("SELECT name, stockLevel, reorderPoint 
                                     FROM items 
                                     WHERE stockLevel <= reorderPoint 
-                                    ORDER BY stockLevel ASC")->fetchAll();
+                                    ORDER BY stockLevel ASC");
     
 } catch (Exception $e) {
     Logger::error('Admin Reports Database Error: ' . $e->getMessage());

@@ -9,7 +9,7 @@ require_once __DIR__ . '/../includes/functions.php';
 ?>
 
 <!-- CSS link for main room styles -->
-<link href="css/main-room.css?v=<?php echo time(); ?>" rel="stylesheet">
+<!-- Main room styling now handled by database-driven CSS system -->
 
 <section id="mainRoomPage" class="main-room-section">
     <!-- T-Shirts Door -->

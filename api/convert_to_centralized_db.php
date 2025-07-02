@@ -15,7 +15,7 @@ if (!isset($_SESSION)) {
 
 $isAdmin = false;
 if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
-    $isAdmin = (strtolower($_SESSION['role']) === 'admin');
+    require_once __DIR__ . '/../includes/auth.php'; $isAdmin = isAdminWithToken();
 }
 
 // Allow admin token for CLI/API access

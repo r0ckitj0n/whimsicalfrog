@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart Notifications Test - WhimsicalFrog</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            margin: 0;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #87ac3a;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            background: #f9fafb;
+        }
+        
+        .test-section h2 {
+            color: #374151;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+        
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .test-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            background: linear-gradient(135deg, #87ac3a, #6b8e23);
+            color: white;
+        }
+        
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
+        }
+        
+        .expected-behavior {
+            background: #e0f2fe;
+            border: 2px solid #0284c7;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .expected-behavior h3 {
+            color: #0284c7;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .expected-behavior ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .expected-behavior li {
+            margin: 5px 0;
+            color: #0369a1;
+        }
+        
+        .cart-info {
+            background: #f0fdf4;
+            border: 2px solid #87ac3a;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .cart-info h3 {
+            color: #87ac3a;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        #cartStatus {
+            font-weight: 600;
+            color: #15803d;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="header">
+            <h1>🛒 Cart Notifications Test</h1>
+            <p>Testing consolidated cart notifications - should show only ONE notification per add-to-cart action</p>
+        </div>
+
+        <div class="expected-behavior">
+            <h3>✅ Expected Behavior</h3>
+            <ul>
+                <li><strong>Before Fix:</strong> Two notifications appeared (duplicate messages)</li>
+                <li><strong>After Fix:</strong> Only ONE comprehensive notification should appear</li>
+                <li><strong>Notification Format:</strong> "🛒 [Item Name] ([Details]) - $[Price] added to cart!"</li>
+                <li><strong>Title:</strong> "✅ Added to Cart"</li>
+                <li><strong>Duration:</strong> 5 seconds</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Simple Item Tests</h2>
+            <div class="test-buttons">
+                <button class="test-btn" onclick="testSimpleItem()">
+                    Add Simple T-Shirt ($24.99)
+                </button>
+                <button class="test-btn" onclick="testItemWithOptions()">
+                    Add T-Shirt with Options ($29.99)
+                </button>
+                <button class="test-btn" onclick="testMultipleQuantity()">
+                    Add 3x Hoodie ($39.99)
+                </button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Advanced Tests</h2>
+            <div class="test-buttons">
+                <button class="test-btn" onclick="testQuickSequence()">
+                    Quick Add Sequence (3 items)
+                </button>
+                <button class="test-btn" onclick="testDifferentPrices()">
+                    Test Different Price Formats
+                </button>
+                <button class="test-btn" onclick="clearCart()">
+                    Clear Cart
+                </button>
+            </div>
+        </div>
+
+        <div class="cart-info">
+            <h3>🛒 Current Cart Status</h3>
+            <div id="cartStatus">Loading...</div>
+            <button class="test-btn" onclick="updateCartStatus()" style="margin-top: 10px; width: auto;">
+                Refresh Cart Status
+            </button>
+        </div>
+    </div>
+
+    <!-- Include the cart and notification systems -->
+    <script src="js/notification-css-loader.js"></script>
+    <script src="js/global-notifications.js"></script>
+    <script src="js/cart.js"></script>
+
+    <script>
+        // Test functions
+        function testSimpleItem() {
+            console.log('Testing simple item add...');
+            if (window.cart) {
+                window.cart.addItem({
+                    sku: 'TEST001',
+                    name: 'Classic T-Shirt',
+                    price: 24.99,
+                    quantity: 1,
+                    image: 'images/items/TEST001A.png'
+                });
+            } else {
+                showError('Cart system not initialized');
+            }
+        }
+
+        function testItemWithOptions() {
+            console.log('Testing item with options...');
+            if (window.cart) {
+                window.cart.addItem({
+                    sku: 'TEST002',
+                    name: 'Premium T-Shirt',
+                    price: 29.99,
+                    quantity: 1,
+                    color: 'Forest Green',
+                    size: 'Large',
+                    gender: 'Unisex',
+                    image: 'images/items/TEST002A.png'
+                });
+            } else {
+                showError('Cart system not initialized');
+            }
+        }
+
+        function testMultipleQuantity() {
+            console.log('Testing multiple quantity...');
+            if (window.cart) {
+                window.cart.addItem({
+                    sku: 'TEST003',
+                    name: 'Cozy Hoodie',
+                    price: 39.99,
+                    quantity: 3,
+                    color: 'Charcoal',
+                    size: 'Medium',
+                    image: 'images/items/TEST003A.png'
+                });
+            } else {
+                showError('Cart system not initialized');
+            }
+        }
+
+        function testQuickSequence() {
+            console.log('Testing quick sequence...');
+            const items = [
+                { sku: 'SEQ001', name: 'Item One', price: 15.99, quantity: 1 },
+                { sku: 'SEQ002', name: 'Item Two', price: 25.99, quantity: 2, color: 'Blue' },
+                { sku: 'SEQ003', name: 'Item Three', price: 35.99, quantity: 1, size: 'XL' }
+            ];
+
+            items.forEach((item, index) => {
+                setTimeout(() => {
+                    if (window.cart) {
+                        window.cart.addItem(item);
+                    }
+                }, index * 1000); // 1 second apart
+            });
+        }
+
+        function testDifferentPrices() {
+            console.log('Testing different price formats...');
+            const priceTests = [
+                { sku: 'PRICE001', name: 'Free Item', price: 0, quantity: 1 },
+                { sku: 'PRICE002', name: 'Expensive Item', price: 199.99, quantity: 1 },
+                { sku: 'PRICE003', name: 'Odd Price', price: 12.34, quantity: 1 }
+            ];
+
+            priceTests.forEach((item, index) => {
+                setTimeout(() => {
+                    if (window.cart) {
+                        window.cart.addItem(item);
+                    }
+                }, index * 1500); // 1.5 seconds apart
+            });
+        }
+
+        function clearCart() {
+            console.log('Clearing cart...');
+            if (window.cart) {
+                window.cart.clearCart();
+                updateCartStatus();
+            }
+        }
+
+        function updateCartStatus() {
+            if (window.cart) {
+                const itemCount = window.cart.getItemCount();
+                const total = window.cart.getTotal();
+                const formattedTotal = '$' + total.toFixed(2);
+                
+                const statusEl = document.getElementById('cartStatus');
+                if (itemCount === 0) {
+                    statusEl.textContent = 'Cart is empty';
+                } else {
+                    statusEl.textContent = `${itemCount} item${itemCount !== 1 ? 's' : ''} • ${formattedTotal}`;
+                }
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a moment for cart to initialize
+            setTimeout(() => {
+                updateCartStatus();
+                
+                // Show welcome message
+                showInfo('🧪 Cart notification test page loaded. Click the buttons above to test!', {
+                    title: '🐸 Test Page Ready',
+                    duration: 6000
+                });
+            }, 500);
+        });
+
+        // Update cart status whenever cart changes
+        window.addEventListener('cartUpdated', updateCartStatus);
+
+        console.log('🧪 Cart Notifications Test Page Loaded');
+    </script>
+</body>
+</html> 

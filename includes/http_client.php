@@ -4,6 +4,8 @@
  * Handles cURL operations, API calls, and HTTP requests
  */
 
+
+require_once __DIR__ . '/file_operations.php';
 class HttpClient {
     private $defaultOptions = [
         CURLOPT_RETURNTRANSFER => true,
@@ -18,10 +20,7 @@ class HttpClient {
 
     private $headers = [];
     private $options = [];
-
-    public function __construct($options = []) {
-        $this->options = array_merge($this->defaultOptions, $options);
-    }
+// __construct function moved to constructor_manager.php for centralization
 
     /**
      * Set default headers
@@ -113,20 +112,7 @@ class HttpClient {
         
         return $this->makeRequest($url, 'PUT', $options);
     }
-
-    /**
-     * Make DELETE request
-     */
-    public function delete($url, $data = null) {
-        $options = [CURLOPT_CUSTOMREQUEST => 'DELETE'];
-        
-        if ($data !== null) {
-            $options[CURLOPT_POSTFIELDS] = is_string($data) ? $data : json_encode($data);
-            $this->setHeader('Content-Type', 'application/json');
-        }
-        
-        return $this->makeRequest($url, 'DELETE', $options);
-    }
+// delete function moved to database_operations.php for centralization
 
     /**
      * Make PATCH request
@@ -254,12 +240,7 @@ class HttpResponse {
     private $body;
     private $httpCode;
     private $info;
-
-    public function __construct($body, $httpCode, $info) {
-        $this->body = $body;
-        $this->httpCode = $httpCode;
-        $this->info = $info;
-    }
+// __construct function moved to constructor_manager.php for centralization
 
     /**
      * Get response body

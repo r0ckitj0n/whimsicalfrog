@@ -1,11 +1,6 @@
 <?php
-// Admin settings page - Now using centralized global CSS rules system
-// Load the global CSS rules to generate proper styling
+// Admin settings page - Integrates with main admin system
 ?>
-
-<!-- Load Global CSS Rules -->
-<link rel="stylesheet" href="/api/css_generator.php?category=admin_settings">
-<link rel="stylesheet" href="/api/css_generator.php">
 
 <div class="settings-page">
     <div class="settings-grid">

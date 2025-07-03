@@ -643,17 +643,9 @@ $seoData = generatePageSEO($page, $currentSku);
         <?php 
         $pageFile = 'sections/' . $page . '.php';
         
-        // Handle admin section parameter
-        if ($page === 'admin' && isset($_GET['section'])) {
-            $section = $_GET['section'];
-            $sectionFile = 'sections/admin_' . $section . '.php';
-            
-            if (file_exists($sectionFile)) {
-                include $sectionFile;
-            } else {
-                include $pageFile;
-            }
-        } else if (file_exists($pageFile)) {
+        // Always load the main admin.php file for any admin page
+        // It will handle section routing internally
+        if (file_exists($pageFile)) {
             include $pageFile;
         } else {
             echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Page not found</h1></div>';

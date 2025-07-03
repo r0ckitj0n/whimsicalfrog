@@ -41,7 +41,98 @@ switch ($method) {
         echo json_encode(['success' => false, 'message' => 'Method not allowed']);
         break;
 }
-// handlePost function moved to api_handlers_extended.php for centralization
+function handleGet($pdo) {
+    $action = $_GET['action'] ?? 'get_all';
+    
+    switch ($action) {
+        case 'get_all':
+            getAllRooms($pdo);
+            break;
+        case 'get_room':
+            getRoom($pdo);
+            break;
+        case 'get_navigation_rooms':
+            getNavigationRooms($pdo);
+            break;
+        default:
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            break;
+    }
+}
+
+function getAllRooms($pdo) {
+    try {
+        $stmt = $pdo->query("SELECT * FROM room_settings ORDER BY display_order, room_number");
+        $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        echo json_encode([
+            'success' => true,
+            'rooms' => $rooms,
+            'count' => count($rooms)
+        ]);
+        
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+function getRoom($pdo) {
+    $roomNumber = $_GET['room_number'] ?? null;
+    
+    if ($roomNumber === null) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Room number is required']);
+        return;
+    }
+    
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM room_settings WHERE room_number = ?");
+        $stmt->execute([$roomNumber]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($room) {
+            echo json_encode(['success' => true, 'room' => $room]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Room not found']);
+        }
+        
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+function getNavigationRooms($pdo) {
+    try {
+        $stmt = $pdo->query("SELECT * FROM room_settings WHERE room_number >= 2 AND is_active = 1 ORDER BY display_order, room_number");
+        $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        echo json_encode([
+            'success' => true,
+            'rooms' => $rooms,
+            'count' => count($rooms)
+        ]);
+        
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+function handlePost($pdo, $input) {
+    $action = $input['action'] ?? null;
+    
+    if ($action === 'create_room') {
+        createRoom($pdo, $input);
+    } elseif ($action === 'update_room') {
+        updateRoom($pdo, $input);
+    } else {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid action']);
+    }
+}
 
 function createRoom($pdo, $input) {
     $requiredFields = ['room_number', 'room_name', 'door_label'];

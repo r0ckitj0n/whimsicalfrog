@@ -304,15 +304,15 @@ $seoData = generatePageSEO($page, $currentSku);
         async function loadGlobalCSS() {
             try {
                 const response = await fetch('/api/global_css_rules.php?action=generate_css');
-                const cssText = await response.text();
-                if (cssText && cssText.trim()) {
+                const data = await response.json();
+                if (data.success && data.css_content) {
                     const styleElement = document.getElementById('global-css-variables');
                     if (styleElement) {
-                        styleElement.textContent = cssText;
-                        console.log('✅ Global CSS loaded successfully:', cssText.length + ' characters');
+                        styleElement.textContent = data.css_content;
+                        console.log('✅ Global CSS loaded successfully:', data.css_content.length + ' characters');
                     }
                 } else {
-                    console.warn('❌ Empty CSS response received');
+                    console.warn('❌ CSS loading failed:', data.message || 'Unknown error');
                 }
             } catch (error) {
                 console.warn('Failed to load global CSS:', error);
@@ -329,15 +329,15 @@ $seoData = generatePageSEO($page, $currentSku);
         async function loadTooltipCSS() {
             try {
                 const response = await fetch('/api/help_tooltips.php?action=generate_css');
-                const cssText = await response.text();
-                if (cssText && cssText.trim()) {
+                const data = await response.json();
+                if (data.success && data.css_content) {
                     const styleElement = document.getElementById('tooltip-css');
                     if (styleElement) {
-                        styleElement.textContent = cssText;
-                        console.log('✅ Tooltip CSS loaded successfully:', cssText.length + ' characters');
+                        styleElement.textContent = data.css_content;
+                        console.log('✅ Tooltip CSS loaded successfully:', data.css_content.length + ' characters');
                     }
                 } else {
-                    console.warn('❌ Empty tooltip CSS response received');
+                    console.warn('❌ Tooltip CSS loading failed:', data.message || 'Unknown error');
                 }
             } catch (error) {
                 console.warn('Failed to load tooltip CSS:', error);

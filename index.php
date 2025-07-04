@@ -304,12 +304,15 @@ $seoData = generatePageSEO($page, $currentSku);
         async function loadGlobalCSS() {
             try {
                 const response = await fetch('/api/global_css_rules.php?action=generate_css');
-                const data = await response.json();
-                if (data.success && data.css_content) {
+                const cssText = await response.text();
+                if (cssText && cssText.trim()) {
                     const styleElement = document.getElementById('global-css-variables');
                     if (styleElement) {
-                        styleElement.textContent = data.css_content;
+                        styleElement.textContent = cssText;
+                        console.log('✅ Global CSS loaded successfully:', cssText.length + ' characters');
                     }
+                } else {
+                    console.warn('❌ Empty CSS response received');
                 }
             } catch (error) {
                 console.warn('Failed to load global CSS:', error);
@@ -320,12 +323,15 @@ $seoData = generatePageSEO($page, $currentSku);
         async function loadTooltipCSS() {
             try {
                 const response = await fetch('/api/help_tooltips.php?action=generate_css');
-                const data = await response.json();
-                if (data.success && data.css_content) {
+                const cssText = await response.text();
+                if (cssText && cssText.trim()) {
                     const styleElement = document.getElementById('tooltip-css');
                     if (styleElement) {
-                        styleElement.textContent = data.css_content;
+                        styleElement.textContent = cssText;
+                        console.log('✅ Tooltip CSS loaded successfully:', cssText.length + ' characters');
                     }
+                } else {
+                    console.warn('❌ Empty tooltip CSS response received');
                 }
             } catch (error) {
                 console.warn('Failed to load tooltip CSS:', error);

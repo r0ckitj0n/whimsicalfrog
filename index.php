@@ -318,6 +318,12 @@ $seoData = generatePageSEO($page, $currentSku);
                 console.warn('Failed to load global CSS:', error);
             }
         }
+
+        // Load CSS immediately when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGlobalCSS();
+            loadTooltipCSS();
+        });
         
         // Load tooltip CSS from database
         async function loadTooltipCSS() {

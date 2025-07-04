@@ -107,39 +107,40 @@ function generateCSSContent($rules) {
     $css .= "/* Generated on: " . date('Y-m-d H:i:s') . " */\n\n";
     
     $currentCategory = '';
-    $utilityClasses = [];
+    $groupedRules = [];
     
+    // Group rules by selector
     foreach ($rules as $rule) {
-        if ($rule['category'] !== $currentCategory) {
-            $currentCategory = $rule['category'];
-            $css .= "\n/* " . ucfirst($currentCategory) . " */\n";
+        // Extract selector from rule_name (format: ".selector { property }")
+        if (preg_match('/^(.+?)\s*\{\s*(.+?)\s*\}$/', $rule['rule_name'], $matches)) {
+            $selector = trim($matches[1]);
+            
+            if (!isset($groupedRules[$selector])) {
+                $groupedRules[$selector] = [];
+            }
+            
+            $groupedRules[$selector][] = [
+                'property' => $rule['css_property'],
+                'value' => $rule['css_value'],
+                'category' => $rule['category']
+            ];
         }
-        
-        // Check if this is a utility class (contains full CSS block)
-        if (strpos($rule['rule_name'], '_utility_class') !== false && strpos($rule['css_value'], '{') !== false) {
-            // This is a utility class - store it for later processing
-            $utilityClasses[] = $rule;
-            continue;
-        }
-        
-        // Regular CSS variable
-        $css .= ":root {\n";
-        $css .= "    --{$rule['rule_name']}: {$rule['css_value']};\n";
-        $css .= "}\n\n";
-        
-        // Also generate utility classes for regular properties
-        $className = str_replace('_', '-', $rule['rule_name']);
-        $css .= ".{$className} {\n";
-        $css .= "    {$rule['css_property']}: {$rule['css_value']};\n";
-        $css .= "}\n\n";
     }
     
-    // Add utility classes at the end
-    if (!empty($utilityClasses)) {
-        $css .= "\n/* Utility Classes */\n";
-        foreach ($utilityClasses as $utilityRule) {
-            $css .= $utilityRule['css_value'] . "\n\n";
+    // Generate CSS from grouped rules
+    $currentCategory = '';
+    foreach ($groupedRules as $selector => $properties) {
+        // Add category comment
+        if (!empty($properties) && $properties[0]['category'] !== $currentCategory) {
+            $currentCategory = $properties[0]['category'];
+            $css .= "/* " . ucfirst($currentCategory) . " */\n";
         }
+        
+        $css .= "{$selector} {\n";
+        foreach ($properties as $prop) {
+            $css .= "    {$prop['property']}: {$prop['value']};\n";
+        }
+        $css .= "}\n\n";
     }
     
     return $css;

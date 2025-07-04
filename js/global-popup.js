@@ -80,6 +80,10 @@ window.showGlobalPopupMain = function(element, product) {
         window.popupOpen = true;
         window.currentProduct = product;
         
+        // Store current SKU for detail modal access
+        window.currentPopupSku = product.sku;
+        popup.setAttribute('data-sku', product.sku);
+        
         // Update popup content using correct selectors from the HTML
         const popupImage = popup.querySelector('#popupImage');
         const popupTitle = popup.querySelector('#popupTitle');
@@ -89,27 +93,31 @@ window.showGlobalPopupMain = function(element, product) {
         const popupCurrentPrice = popup.querySelector('#popupCurrentPrice');
         const popupDescription = popup.querySelector('#popupDescription');
         const popupAddBtn = popup.querySelector('#popupAddBtn');
+        const popupDetailsBtn = popup.querySelector('#popupDetailsBtn');
         
         console.log('Found popup elements:', {
             image: !!popupImage,
             title: !!popupTitle,
             price: !!popupCurrentPrice,
             description: !!popupDescription,
-            addBtn: !!popupAddBtn
+            addBtn: !!popupAddBtn,
+            detailsBtn: !!popupDetailsBtn
         });
         
         if (popupImage) {
-            // Try .webp first (most common format), then .png
-            popupImage.src = `images/items/${product.sku}A.webp`;
+            // Use the image from product data if available, or construct path
+            const imagePath = product.primaryImageUrl || product.image || `images/items/${product.sku}A.webp`;
+            popupImage.src = imagePath;
             popupImage.onerror = function() {
                 // Try .png if .webp fails
                 this.src = `images/items/${product.sku}A.png`;
                 this.onerror = function() {
                     // Finally fall back to placeholder
-                    this.src = 'images/items/placeholder.webp';
+                    this.src = 'images/placeholder.png';
                     this.onerror = null;
                 };
             };
+            popupImage.alt = product.name || product.productName || 'Product';
         }
         
         if (popupTitle) {
@@ -128,13 +136,13 @@ window.showGlobalPopupMain = function(element, product) {
             const stockLevel = parseInt(product.stockLevel || product.stock || 0);
             if (stockLevel <= 0) {
                 popupStock.textContent = 'Out of Stock';
-                popupStock.className = 'popup-stock-info out-of-stock';
+                popupStock.className = 'popup-stock out-of-stock';
             } else if (stockLevel <= 5) {
                 popupStock.textContent = `${stockLevel} Left`;
-                popupStock.className = 'popup-stock-info limited-stock';
+                popupStock.className = 'popup-stock limited-stock';
             } else {
                 popupStock.textContent = 'In Stock';
-                popupStock.className = 'popup-stock-info in-stock';
+                popupStock.className = 'popup-stock in-stock';
             }
         }
         
@@ -154,7 +162,7 @@ window.showGlobalPopupMain = function(element, product) {
         // Position and show popup
         positionPopup(element, popup);
         
-        // Set up button handlers
+        // Set up add to cart button handler
         if (popupAddBtn) {
             popupAddBtn.onclick = function(e) {
                 e.preventDefault();
@@ -169,26 +177,36 @@ window.showGlobalPopupMain = function(element, product) {
             };
         }
         
+        // Set up details button handler (already has onclick in HTML)
+        if (popupDetailsBtn) {
+            // Handler is already set in the HTML: onclick="showItemDetailsModal(window.currentPopupSku)"
+            console.log('Details button found and ready');
+        }
+        
         // Set up popup content click handler to open detailed modal
-        popup.onclick = function(e) {
-            // Don't interfere with button clicks
-            if (e.target === popupAddBtn || popupAddBtn.contains(e.target)) {
-                return;
-            }
-            
-            e.preventDefault();
-            e.stopPropagation();
-            hidePopupImmediate();
-            
-            if (typeof window.showGlobalItemModal === 'function') {
-                console.log('Opening detailed modal from popup click for:', product.sku);
-                window.showGlobalItemModal(product.sku);
-            } else if (typeof window.showItemDetailsModal === 'function') {
-                window.showItemDetailsModal(product.sku);
-            } else {
-                console.error('No modal function available from popup click');
-            }
-        };
+        const popupContent = popup.querySelector('.popup-content');
+        if (popupContent) {
+            popupContent.onclick = function(e) {
+                // Don't interfere with button clicks
+                if (e.target === popupAddBtn || popupAddBtn.contains(e.target) ||
+                    e.target === popupDetailsBtn || popupDetailsBtn.contains(e.target)) {
+                    return;
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+                hidePopupImmediate();
+                
+                if (typeof window.showGlobalItemModal === 'function') {
+                    console.log('Opening detailed modal from popup click for:', product.sku);
+                    window.showGlobalItemModal(product.sku);
+                } else if (typeof window.showItemDetailsModal === 'function') {
+                    window.showItemDetailsModal(product.sku);
+                } else {
+                    console.error('No modal function available from popup click');
+                }
+            };
+        }
         
         console.log('Popup should now be visible with show class:', popup.classList.contains('show'));
     }, 50); // Short delay to ensure clean state transition

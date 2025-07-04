@@ -209,42 +209,43 @@ $seoData = generatePageSEO($page, $currentSku);
             $db = Database::getInstance();
             $rules = $db->query("SELECT rule_name, css_property, css_value, category FROM global_css_rules WHERE is_active = 1 ORDER BY category, rule_name")->fetchAll(PDO::FETCH_ASSOC);
             
-            // Generate CSS from database rules using same logic as API
+            // Generate CSS from database rules using corrected logic
             $cssOutput = "/* Database-Generated CSS Rules */\n";
             $currentCategory = '';
-            $utilityClasses = [];
+            $groupedRules = [];
             
+            // Group rules by selector
             foreach ($rules as $rule) {
-                if ($rule['category'] !== $currentCategory) {
-                    $currentCategory = $rule['category'];
-                    $cssOutput .= "\n/* " . ucfirst($currentCategory) . " Rules */\n";
+                // Extract selector from rule_name (format: ".selector { property }")
+                if (preg_match('/^(.+?)\s*\{\s*(.+?)\s*\}$/', $rule['rule_name'], $matches)) {
+                    $selector = trim($matches[1]);
+                    
+                    if (!isset($groupedRules[$selector])) {
+                        $groupedRules[$selector] = [];
+                    }
+                    
+                    $groupedRules[$selector][] = [
+                        'property' => $rule['css_property'],
+                        'value' => $rule['css_value'],
+                        'category' => $rule['category']
+                    ];
                 }
-                
-                // Check if this is a utility class (contains full CSS block)
-                if (strpos($rule['rule_name'], '_utility_class') !== false && strpos($rule['css_value'], '{') !== false) {
-                    // This is a utility class - store it for later processing
-                    $utilityClasses[] = $rule;
-                    continue;
-                }
-                
-                // Regular CSS variable
-                $cssOutput .= ":root {\n";
-                $cssOutput .= "    --{$rule['rule_name']}: {$rule['css_value']};\n";
-                $cssOutput .= "}\n\n";
-                
-                // Also generate utility classes for regular properties
-                $className = str_replace('_', '-', $rule['rule_name']);
-                $cssOutput .= ".{$className} {\n";
-                $cssOutput .= "    {$rule['css_property']}: {$rule['css_value']};\n";
-                $cssOutput .= "}\n\n";
             }
             
-            // Add utility classes at the end
-            if (!empty($utilityClasses)) {
-                $cssOutput .= "\n/* Utility Classes */\n";
-                foreach ($utilityClasses as $utilityRule) {
-                    $cssOutput .= $utilityRule['css_value'] . "\n\n";
+            // Generate CSS from grouped rules
+            $currentCategory = '';
+            foreach ($groupedRules as $selector => $properties) {
+                // Add category comment
+                if (!empty($properties) && $properties[0]['category'] !== $currentCategory) {
+                    $currentCategory = $properties[0]['category'];
+                    $cssOutput .= "\n/* " . ucfirst($currentCategory) . " */\n";
                 }
+                
+                $cssOutput .= "{$selector} {\n";
+                foreach ($properties as $prop) {
+                    $cssOutput .= "    {$prop['property']}: {$prop['value']};\n";
+                }
+                $cssOutput .= "}\n\n";
             }
             
             echo $cssOutput;

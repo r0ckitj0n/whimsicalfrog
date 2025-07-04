@@ -52,8 +52,7 @@ $footerData = [
 ];
 ?>
 
-<!-- Footer CSS (Include this in your head section) -->
-<link rel="stylesheet" href="/css/footer-styles.css">
+<!-- Footer CSS now loaded from database via main CSS system -->
 
 <!-- Main Footer -->
 <footer class="site-footer footer-theme-<?php echo $footerConfig['theme']; ?>">

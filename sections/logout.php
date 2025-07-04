@@ -17,14 +17,24 @@ session_destroy();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logged Out</title>
-    <link rel="stylesheet" href="/css/tailwind.min.css">
+    <style>
+        body { background-color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .container { background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 2rem; max-width: 28rem; width: 100%; text-align: center; }
+        .title { font-size: 1.5rem; font-weight: bold; color: #15803d; margin-bottom: 1rem; }
+        .text { margin-bottom: 1.5rem; color: #6b7280; }
+        .btn { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 4px; text-decoration: none; font-weight: 600; }
+        .btn-primary { background-color: #16a34a; color: white; }
+        .btn-primary:hover { background-color: #15803d; }
+        .btn-secondary { background-color: #e5e7eb; color: #374151; margin-left: 1rem; }
+        .btn-secondary:hover { background-color: #d1d5db; }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white shadow rounded-lg p-8 max-w-md w-full text-center">
-        <h1 class="text-2xl font-bold text-green-700 mb-4">You have been logged out successfully.</h1>
-        <p class="mb-6 text-gray-600">Thank you for visiting Whimsical Frog.</p>
-        <a href="/?page=login" class="inline-block px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold">Log In Again</a>
-        <a href="/" class="ml-4 inline-block px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-semibold">Return Home</a>
+<body>
+    <div class="container">
+        <h1 class="title">You have been logged out successfully.</h1>
+        <p class="text">Thank you for visiting Whimsical Frog.</p>
+        <a href="/?page=login" class="btn btn-primary">Log In Again</a>
+        <a href="/" class="btn btn-secondary">Return Home</a>
     </div>
 </body>
 </html> 

@@ -19,8 +19,24 @@ Auth::requireAdmin();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Configuration Manager - WhimsicalFrog Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="../css/admin-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="../css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
+    <!-- Admin styles now loaded from database via main CSS system -->
+    <style>
+        /* Load essential CSS from database */
+        <?php
+        // For standalone admin files, load CSS directly from database
+        require_once '../includes/database.php';
+        try {
+            $db = Database::getInstance();
+            $rules = $db->query("SELECT rule_name, css_property, css_value FROM global_css_rules WHERE is_active = 1 AND category IN ('admin', 'modals', 'forms', 'buttons') ORDER BY category, rule_name")->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($rules as $rule) {
+                echo ".{$rule['rule_name']} { {$rule['css_property']}: {$rule['css_value']}; }\n";
+            }
+        } catch (Exception $e) {
+            echo "/* CSS loading failed */\n";
+        }
+        ?>
+    </style>
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">

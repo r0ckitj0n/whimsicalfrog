@@ -103,8 +103,7 @@ $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 
 ?>
-<!-- Load CSS utilities for comprehensive styling -->
-<link rel="stylesheet" href="css/button-styles.css">
+<!-- CSS utilities now loaded from database via main CSS system -->
 <style>
     /* Toast notifications handled by global utility classes */
 

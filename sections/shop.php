@@ -1,3 +1,101 @@
+
+<!-- Database-driven CSS for shop -->
+<style id="shop-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadShopCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=shop');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('shop-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ shop CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load shop CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>shop CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadShopCSS);
+</script>
+
+
+<!-- Database-driven CSS for shop -->
+
+<script>
+    // Load CSS from database
+    async function loadShopCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=shop');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('shop-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ shop CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load shop CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>shop CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadShopCSS);
+</script>
+
+
+<!-- Database-driven CSS for shop -->
+
+<script>
+    // Load CSS from database
+    async function loadShopCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=shop');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('shop-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ shop CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load shop CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>shop CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadShopCSS);
+</script>
+
 <?php
 // Shop page section
 if (!defined('INCLUDED_FROM_INDEX')) {
@@ -20,212 +118,7 @@ if (!isset($GLOBALS['marketingHelper'])) {
 // Categories are already loaded in index.php and available in $categories
 ?>
 
-<style>
-    /* Use the same green from the header bar */
-    :root {
-        --wf-green: #87ac3a;
-        --wf-green-light: #a3cc4a;
-    }
 
-    #shopPage h1 {
-        color: var(--wf-green) !important; /* override global reset */
-    }
-
-    /* Category buttons styling */
-    .category-btn {
-        background: var(--wf-green);
-        color: #ffffff !important; /* override reset */
-        border: none;
-        transition: background 0.2s ease;
-    }
-
-    .category-btn:hover,
-    .category-btn.active {
-        background: var(--wf-green-light);
-        color: #ffffff !important;
-    }
-
-    /* Brand button styling for shop page - using global CSS values */
-    .brand-button {
-        background-color: #87ac3a;
-        color: #ffffff;
-        border-radius: 6px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        border: none;
-    }
-    
-    .brand-button:hover {
-        background-color: #6b8e23 !important;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
-    }
-
-    /* Out of stock badge styling for shop page */
-    .product-card {
-        position: relative;
-    }
-    
-    .out-of-stock-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #dc2626;
-        color: black;
-        font-size: 12px;
-        font-weight: bold;
-        padding: 6px 10px;
-        border-radius: 14px;
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        z-index: 10;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .product-card.out-of-stock .bg-white {
-        opacity: 0.8;
-        filter: grayscale(20%);
-    }
-    
-    .product-card.out-of-stock:hover .bg-white {
-        opacity: 0.9;
-        filter: grayscale(10%);
-    }
-
-    /* Complete scrollbar fix for shop page and modals */
-    
-    /* Prevent horizontal scrolling on shop page */
-    #shopPage {
-        overflow-x: hidden !important;
-        max-width: 100vw;
-    }
-    
-    /* Ensure product grid doesn't cause horizontal overflow */
-    #productsGrid {
-        overflow-x: hidden !important;
-        max-width: 100%;
-    }
-    
-    /* Fix body scrolling when modals are open - highest priority */
-    body.modal-open {
-        overflow: hidden !important;
-        position: fixed !important;
-        width: 100% !important;
-        height: 100% !important;
-        top: 0 !important;
-        left: 0 !important;
-    }
-    
-    /* Ensure html doesn't scroll when modal is open */
-    html.modal-open {
-        overflow: hidden !important;
-        position: fixed !important;
-        width: 100% !important;
-        height: 100% !important;
-    }
-    
-    /* Modal overlay - prevent any scrolling */
-    .modal-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: rgba(0, 0, 0, 0.5) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        overflow: hidden !important;
-        z-index: 9999;
-    }
-    
-    /* Modal content with proper scrolling */
-    .modal-with-scrollbar {
-        display: flex;
-        flex-direction: column;
-        max-height: 90vh;
-        overflow: hidden;
-    }
-
-    .modal-content-scrollable {
-        flex: 1;
-        max-height: calc(90vh - 80px);
-        overflow-y: auto;
-        overflow-x: hidden;
-        scrollbar-width: thin;
-        scrollbar-color: #cbd5e0 #f7fafc;
-    }
-    
-    /* Custom scrollbar for modal content only */
-    .modal-content-scrollable::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    .modal-content-scrollable::-webkit-scrollbar-track {
-        background: #f7fafc;
-        border-radius: 4px;
-    }
-    
-    .modal-content-scrollable::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 4px;
-    }
-    
-    .modal-content-scrollable::-webkit-scrollbar-thumb:hover {
-        background: #a0aec0;
-    }
-    
-    /* Popup Options Styling */
-    .popup-options-container {
-        margin: 12px 0;
-        padding: 8px 0;
-        border-top: 1px solid #e5e7eb;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .popup-option-group {
-        margin-bottom: 8px;
-    }
-
-    .popup-option-group:last-child {
-        margin-bottom: 0;
-    }
-
-    .popup-option-group label {
-        display: block;
-        font-size: 12px;
-        font-weight: 500;
-        color: #374151;
-        margin-bottom: 4px;
-    }
-
-    .popup-color-select,
-    .popup-size-select,
-    .popup-quantity-input {
-        width: 100%;
-        padding: 4px 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 12px;
-        background: white;
-        color: #374151;
-    }
-
-    .popup-color-select:focus,
-    .popup-size-select:focus,
-    .popup-quantity-input:focus {
-        outline: none;
-        border-color: #87ac3a;
-        box-shadow: 0 0 0 1px rgba(135, 172, 58, 0.2);
-    }
-
-    .popup-quantity-input {
-        max-width: 80px;
-    }
-</style>
 
 <script>
 // Shop page now uses the global item modal system
@@ -394,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     echo '</div>';
                 } else {
                     // Show CSS-only fallback if no images
-                    echo '<div class="product-image-placeholder" style="height: 192px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6c757d;">';
+                    echo '<div class="image-placeholder">';
                     echo '<div style="font-size: 3rem; margin-bottom: 0.5rem; opacity: 0.7;">📷</div>';
                     echo '<div style="font-size: 0.9rem; font-weight: 500;">No Image Available</div>';
                     echo '</div>';

@@ -648,7 +648,7 @@ class ShoppingCart {
             // If item has a color, try to get the color-specific image
             if (item.color) {
                 try {
-                    const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${item.sku}`);
+                    const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${item.sku}&in_stock_only=true`);
                     const colorData = await colorResponse.json();
                     
                     if (colorData.success && colorData.colors) {
@@ -1479,7 +1479,7 @@ window.showQuantityModal = async function(sku, name, price, image, selectedColor
     // Check for color options and populate dropdown
     let availableColors = [];
     try {
-        const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${sku}`);
+        const colorResponse = await fetch(`/api/item_colors.php?action=get_colors&item_sku=${sku}&in_stock_only=true`);
         const colorData = await colorResponse.json();
         if (colorData.success && colorData.colors.length > 0) {
             availableColors = colorData.colors;

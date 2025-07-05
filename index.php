@@ -144,9 +144,31 @@ if ($page === 'landing') {
     $bodyClass = 'is-landing';
 } elseif (strpos($page, 'admin') === 0) {
     $bodyClass = 'is-admin admin-page';
+} elseif (in_array($page, ['room2', 'room3', 'room4', 'room5', 'room6'])) {
+    $bodyClass = $page; // Add room-specific class (room2, room3, etc.)
+} elseif ($page === 'room_main') {
+    // Check if main room fullscreen is enabled
+    try {
+        $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE setting_key = 'main_room_fullscreen' AND category = 'rooms'");
+        $stmt->execute();
+        $fullScreenSetting = $stmt->fetch(PDO::FETCH_ASSOC);
+        $isMainRoomFullscreen = $fullScreenSetting ? filter_var($fullScreenSetting['setting_value'], FILTER_VALIDATE_BOOLEAN) : false;
+        
+        if ($isMainRoomFullscreen) {
+            $bodyClass = 'main-room-fullscreen';
+        }
+    } catch (Exception $e) {
+        error_log("Error checking main room fullscreen setting: " . $e->getMessage());
+    }
 }
 
-$isFullscreenPage = in_array($page, ['landing']);
+// Add room_main to fullscreen pages when fullscreen mode is enabled
+$fullscreenPages = ['landing'];
+if ($page === 'room_main' && $isMainRoomFullscreen) {
+    $fullscreenPages[] = 'room_main';
+}
+
+$isFullscreenPage = in_array($page, $fullscreenPages);
 if ($isFullscreenPage) {
     $bodyClass .= ' body-fullscreen-layout';
 }
@@ -190,18 +212,7 @@ $seoData = generatePageSEO($page, $currentSku);
     
     <!-- Database-Generated CSS + Essential Rules -->
     
-    <!-- Search Input Styling -->
-    <style>
-        .search-input::placeholder {
-            color: var(--brand_primary);
-            opacity: 0.8;
-        }
-        
-        .search-input:focus::placeholder {
-            color: var(--brand_primary);
-            opacity: 0.6;
-        }
-    </style>
+    <!-- All CSS now generated from database -->
     <style id="consolidated-css">
         <?php
         // Load CSS directly from database (no HTTP call to avoid infinite loop)
@@ -251,7 +262,12 @@ $seoData = generatePageSEO($page, $currentSku);
             echo $cssOutput;
             
         } catch (Exception $e) {
-            echo "/* Database CSS generation failed: " . htmlspecialchars($e->getMessage()) . " */\n";
+            // Hard fail - no fallback CSS
+            http_response_code(500);
+            echo "/* FATAL ERROR: Database CSS generation failed: " . htmlspecialchars($e->getMessage()) . " */\n";
+            echo "/* Database connection required for CSS loading. Please check database connection. */\n";
+            // Stop execution to prevent mixed results
+            exit('Database connection failed. Please refresh the page or contact support.');
         }
         
         // Add essential unique CSS rules that can't be in database
@@ -304,6 +320,9 @@ $seoData = generatePageSEO($page, $currentSku);
         async function loadGlobalCSS() {
             try {
                 const response = await fetch('/api/global_css_rules.php?action=generate_css');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 const data = await response.json();
                 if (data.success && data.css_content) {
                     const styleElement = document.getElementById('global-css-variables');
@@ -312,10 +331,19 @@ $seoData = generatePageSEO($page, $currentSku);
                         console.log('✅ Global CSS loaded successfully:', data.css_content.length + ' characters');
                     }
                 } else {
-                    console.warn('❌ CSS loading failed:', data.message || 'Unknown error');
+                    throw new Error(data.message || 'CSS generation failed');
                 }
             } catch (error) {
-                console.warn('Failed to load global CSS:', error);
+                console.error('❌ FATAL: Failed to load global CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; left: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>Global CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
             }
         }
 
@@ -329,6 +357,9 @@ $seoData = generatePageSEO($page, $currentSku);
         async function loadTooltipCSS() {
             try {
                 const response = await fetch('/api/help_tooltips.php?action=generate_css');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 const data = await response.json();
                 if (data.success && data.css_content) {
                     const styleElement = document.getElementById('tooltip-css');
@@ -337,10 +368,19 @@ $seoData = generatePageSEO($page, $currentSku);
                         console.log('✅ Tooltip CSS loaded successfully:', data.css_content.length + ' characters');
                     }
                 } else {
-                    console.warn('❌ Tooltip CSS loading failed:', data.message || 'Unknown error');
+                    throw new Error(data.message || 'Tooltip CSS generation failed');
                 }
             } catch (error) {
-                console.warn('Failed to load tooltip CSS:', error);
+                console.error('❌ FATAL: Failed to load tooltip CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 40px; left: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>Tooltip CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
             }
         }
         
@@ -394,72 +434,7 @@ $seoData = generatePageSEO($page, $currentSku);
             background-image: url('images/room_main.webp?v=cb2');
         }
         
-        /* Navigation Styles - Restored Original WhimsicalFrog Design */
-        nav.main-nav {
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent) !important;
-            padding-top: 5px !important;
-            padding-bottom: 5px !important;
-            display: block !important;
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 50 !important;
-        }
-        
-        nav.main-nav a,
-        nav.main-nav p,
-        nav.main-nav span {
-            color: #87ac3a !important;
-            font-size: 1.1rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-            line-height: 1.2;
-        }
-        
-        .nav-link {
-            color: #87ac3a !important;
-            padding: 8px 12px !important;
-            border-radius: 6px !important;
-            text-decoration: none !important;
-            font-size: 0.875rem !important;
-            font-weight: 500 !important;
-            transition: all 0.2s ease !important;
-            display: inline-flex !important;
-            align-items: center !important;
-        }
-        
-        .nav-links {
-            display: flex !important;
-            align-items: center !important;
-            gap: 0.5rem !important;
-        }
-        
-        .nav-link:hover {
-            color: #a3cc4a !important;
-            background-color: rgba(135, 172, 58, 0.1);
-        }
-        
-        .tagline {
-            color: #87ac3a !important;
-            font-size: 1.3rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-            margin-top: 0.25rem;
-            line-height: 1.2;
-        }
-        
-        .welcome-message {
-            color: #87ac3a !important;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-            font-size: 0.875rem;
-            margin-left: 0.5rem;
-        }
-        
-        #cartCount, #cartTotal {
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-        }
-        
-        nav.main-nav svg {
-            stroke: #87ac3a !important;
-            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.7));
-        }
+        /* All navigation styles moved to database-driven CSS system */
         
         /* Custom Alert System */
         .custom-alert {
@@ -603,13 +578,9 @@ $seoData = generatePageSEO($page, $currentSku);
             <div class="flex-grow flex justify-center">
                 <div class="relative max-w-md w-full mx-4">
                     <input type="text" id="headerSearchInput" placeholder="Search products..." 
-                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 rounded-full focus:outline-none focus:ring-2 transition-all duration-200 search-input"
-                           style="border-color: var(--brand_primary); color: var(--brand_primary); --tw-ring-color: var(--brand_primary);"
-                           onkeyup="this.style.color = this.value ? 'var(--brand_primary)' : 'var(--brand_primary)'"
-                           onfocus="this.style.borderColor = 'var(--form_input_border_focus)'; this.style.color = 'var(--brand_primary)'"
-                           onblur="this.style.borderColor = 'var(--brand_primary)'">
+                           class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 rounded-full focus:outline-none focus:ring-2 transition-all duration-200 search-input">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--brand_primary);">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #87ac3a;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
@@ -718,6 +689,280 @@ async function loadTooltipJS() {
     }
 }
 loadTooltipJS();
+
+// Admin Modal Functions
+function openCSSRulesModal() {
+    showNotification('CSS Rules modal not implemented yet', 'info');
+}
+
+function openBackgroundManagerModal() {
+    showNotification('Background Manager modal not implemented yet', 'info');
+}
+
+function openRoomMapperModal() {
+    showNotification('Room Mapper modal not implemented yet', 'info');
+}
+
+function openAreaItemMapperModal() {
+    showNotification('Area Item Mapper modal not implemented yet', 'info');
+}
+
+function openRoomBackgroundSettingsModal() {
+    createRoomBackgroundModal();
+    showRoomBackgroundModal();
+}
+
+function openDashboardConfigModal() {
+    showNotification('Dashboard Config modal not implemented yet', 'info');
+}
+
+function openCategoriesModal() {
+    showNotification('Categories modal not implemented yet', 'info');
+}
+
+function openGlobalColorSizeModal() {
+    showNotification('Global Color Size modal not implemented yet', 'info');
+}
+
+function openEnhancedRoomSettingsModal() {
+    showNotification('Enhanced Room Settings modal not implemented yet', 'info');
+}
+
+function openRoomCategoryManagerModal() {
+    showNotification('Room Category Manager modal not implemented yet', 'info');
+}
+
+function openBusinessSettingsModal() {
+    showNotification('Business Settings modal not implemented yet', 'info');
+}
+
+function openSalesAdminModal() {
+    showNotification('Sales Admin modal not implemented yet', 'info');
+}
+
+function openSquareSettingsModal() {
+    showNotification('Square Settings modal not implemented yet', 'info');
+}
+
+function openEmailConfigModal() {
+    showNotification('Email Config modal not implemented yet', 'info');
+}
+
+function openEmailHistoryModal() {
+    showNotification('Email History modal not implemented yet', 'info');
+}
+
+function openReceiptSettingsModal() {
+    showNotification('Receipt Settings modal not implemented yet', 'info');
+}
+
+function openSystemConfigModal() {
+    showNotification('System Config modal not implemented yet', 'info');
+}
+
+function openDatabaseTablesModal() {
+    showNotification('Database Tables modal not implemented yet', 'info');
+}
+
+function openFileExplorerModal() {
+    showNotification('File Explorer modal not implemented yet', 'info');
+}
+
+function openWebsiteLogsModal() {
+    showNotification('Website Logs modal not implemented yet', 'info');
+}
+
+function openAISettingsModal() {
+    showNotification('AI Settings modal not implemented yet', 'info');
+}
+
+function openHelpHintsModal() {
+    showNotification('Help Hints modal not implemented yet', 'info');
+}
+
+function openDatabaseMaintenanceModal() {
+    showNotification('Database Maintenance modal not implemented yet', 'info');
+}
+
+function openSystemCleanupModal() {
+    showNotification('System Cleanup modal not implemented yet', 'info');
+}
+
+// Room Background Settings Modal
+function createRoomBackgroundModal() {
+    // Remove existing modal if it exists
+    const existingModal = document.getElementById('roomBackgroundModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'roomBackgroundModal';
+    modal.className = 'admin-modal-overlay';
+    modal.innerHTML = `
+        <div class="admin-modal-content" style="max-width: 600px; width: 90%;">
+            <div class="admin-modal-header">
+                <h2>🏞️ Room Background Settings</h2>
+                <button type="button" class="modal-close" onclick="closeRoomBackgroundModal()">×</button>
+            </div>
+            <div class="admin-modal-body">
+                <div class="settings-section">
+                    <h3>Main Room Background</h3>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="mainRoomFullscreen" onchange="toggleMainRoomFullscreen()">
+                            Enable Fullscreen Background
+                        </label>
+                        <p class="help-text">Display the main room background image behind the navigation</p>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="mainRoomTitle" onchange="toggleMainRoomTitle()">
+                            Show Room Title
+                        </label>
+                        <p class="help-text">Display the room title overlay</p>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Background Mode</h3>
+                    <div class="form-group">
+                        <label for="backgroundMode">Background Display Mode:</label>
+                        <select id="backgroundMode" onchange="updateBackgroundMode()">
+                            <option value="fullscreen">Fullscreen (covers entire viewport)</option>
+                            <option value="normal">Normal (within container)</option>
+                            <option value="overlay">Overlay (on top of previous background)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Status</h3>
+                    <div id="settingsStatus" class="status-info">
+                        <div class="loading-spinner">Loading current settings...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeRoomBackgroundModal()">Cancel</button>
+                <button type="button" class="btn-primary" onclick="saveRoomBackgroundSettings()">Save Settings</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function showRoomBackgroundModal() {
+    const modal = document.getElementById('roomBackgroundModal');
+    if (modal) {
+        modal.style.display = 'block';
+        loadCurrentSettings();
+    }
+}
+
+function closeRoomBackgroundModal() {
+    const modal = document.getElementById('roomBackgroundModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function loadCurrentSettings() {
+    try {
+        const response = await fetch('/api/db_manager.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                admin_token: 'whimsical_admin_2024',
+                query: 'SELECT * FROM business_settings WHERE category = "rooms"',
+                operation: 'select'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.results) {
+            const settings = {};
+            data.results.forEach(row => {
+                settings[row.setting_key] = row.setting_value;
+            });
+            
+            // Update form fields
+            document.getElementById('mainRoomFullscreen').checked = settings.main_room_fullscreen === 'true';
+            document.getElementById('mainRoomTitle').checked = settings.main_room_show_title === 'true';
+            document.getElementById('backgroundMode').value = settings.room_background_mode || 'fullscreen';
+            
+            // Update status
+            const statusDiv = document.getElementById('settingsStatus');
+            statusDiv.innerHTML = `
+                <div class="status-item">
+                    <span class="status-label">Main Room Fullscreen:</span>
+                    <span class="status-value ${settings.main_room_fullscreen === 'true' ? 'active' : 'inactive'}">
+                        ${settings.main_room_fullscreen === 'true' ? 'Enabled' : 'Disabled'}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Background Mode:</span>
+                    <span class="status-value">${settings.room_background_mode || 'fullscreen'}</span>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+        document.getElementById('settingsStatus').innerHTML = '<div class="error">Error loading settings</div>';
+    }
+}
+
+async function toggleMainRoomFullscreen() {
+    const enabled = document.getElementById('mainRoomFullscreen').checked;
+    await updateSetting('main_room_fullscreen', enabled ? 'true' : 'false');
+}
+
+async function toggleMainRoomTitle() {
+    const enabled = document.getElementById('mainRoomTitle').checked;
+    await updateSetting('main_room_show_title', enabled ? 'true' : 'false');
+}
+
+async function updateBackgroundMode() {
+    const mode = document.getElementById('backgroundMode').value;
+    await updateSetting('room_background_mode', mode);
+}
+
+async function updateSetting(key, value) {
+    try {
+        const response = await fetch('/api/db_manager.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                admin_token: 'whimsical_admin_2024',
+                query: `UPDATE business_settings SET setting_value = '${value}' WHERE setting_key = '${key}'`,
+                operation: 'update'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`${key} updated successfully`, 'success');
+        } else {
+            showNotification(`Error updating ${key}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating setting:', error);
+        showNotification('Error updating setting', 'error');
+    }
+}
+
+async function saveRoomBackgroundSettings() {
+    showNotification('All settings have been saved automatically', 'success');
+    closeRoomBackgroundModal();
+    
+    // Reload the page to apply changes
+    setTimeout(() => {
+        window.location.reload();
+    }, 1000);
+}
 </script>
 <?php endif; ?>
 

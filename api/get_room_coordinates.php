@@ -46,14 +46,15 @@ try {
     }
     
 } catch (PDOException $e) {
-    // Log error but don't expose sensitive database info
+    // Log error and fail hard - no fallback
     error_log("Room coordinates API error: " . $e->getMessage());
     
-    // Return graceful fallback
+    // Hard fail - no graceful fallback
+    http_response_code(500);
     echo json_encode([
-        'success' => true,
-        'coordinates' => [],
-        'message' => 'No active room map found in database'
+        'success' => false,
+        'error' => 'Database connection failed',
+        'message' => 'Room mapping requires database connection. Please refresh the page or contact support.'
     ]);
 }
 ?> 

@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for header_template -->
+<style id="header_template-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadHeader_templateCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=header_template');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('header_template-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ header_template CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load header_template CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>header_template CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadHeader_templateCSS);
+</script>
+
 <?php
 /**
  * Header Template Component
@@ -118,6 +152,23 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
                         </a>
                     <?php endforeach; ?>
                 </nav>
+
+                <!-- Admin Welcome Info (only shown on admin pages) -->
+                <?php if ($current_page === 'admin' || (isset($_GET['page']) && $_GET['page'] === 'admin')): ?>
+                    <?php
+                    // Get admin user data
+                    $adminUserData = getCurrentUser() ?? [];
+                    $adminName = trim(($adminUserData['firstName'] ?? '') . ' ' . ($adminUserData['lastName'] ?? ''));
+                    if (empty($adminName)) {
+                        $adminName = $adminUserData['username'] ?? 'Admin';
+                    }
+                    $adminRole = $adminUserData['role'] ?? 'Administrator';
+                    ?>
+                    <div class="admin-welcome">
+                        <div class="admin-name">Welcome, <?= htmlspecialchars($adminName) ?> (<?= htmlspecialchars($adminRole) ?>)</div>
+                        <div class="admin-last-login">Last login: <?= date('F j, Y, g:i a') ?></div>
+                    </div>
+                <?php endif; ?>
 
                 <!-- Cart Link -->
                 <?php if ($config['show_cart']): ?>
@@ -264,43 +315,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<style>
-/* Component-specific styles (will be overridden by main CSS files) */
-.header-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-}
-
-.logo-text-container {
-    display: flex;
-    flex-direction: column;
-    margin-left: 0.5rem;
-}
-
-.search-input-container {
-    position: relative;
-    width: 100%;
-}
-
-.mobile-auth-section {
-    border-top: 1px solid #e5e7eb;
-    padding-top: 1rem;
-    margin-top: 1rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: <?php echo $config['mobile_breakpoint']; ?>) {
-    .header-center {
-        display: none !important;
-    }
-    
-    .header-right .nav-links {
-        display: none !important;
-    }
-    
-    .mobile-menu-toggle {
-        display: block !important;
-    }
-}
-</style> 
+ 

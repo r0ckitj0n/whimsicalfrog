@@ -4,149 +4,133 @@
  * Generated: 2025-07-01 23:22:19
  */
 
-console.log('Loading room-coordinate-manager.js...');
+// Simple and Direct Room Coordinate System
+// No complex scaling, just direct pixel positioning
 
-// Room coordinate management system
-window.RoomCoordinates = window.RoomCoordinates || {};
+console.log('🎯 Loading Simple Room Coordinate System...');
 
-// Global variables for room positioning
-window.originalImageWidth = 1280;
-window.originalImageHeight = 896;
-window.baseAreas = [];
-window.roomOverlayWrapper = null;
-
-function updateAreaCoordinates() {
-    console.log('🎯 updateAreaCoordinates called');
+// Simple coordinate system that just scales from database size to display size
+function simpleCoordinateSystem(roomType) {
+    console.log(`🎯 Initializing simple coordinate system for ${roomType}...`);
     
-    if (!window.roomOverlayWrapper) {
-        console.error('❌ Room overlay wrapper not found for scaling.');
+    // Get room overlay wrapper
+    const roomWrapper = document.querySelector('.room-overlay-wrapper');
+    if (!roomWrapper) {
+        console.error('❌ Room overlay wrapper not found');
         return;
     }
-
-    const wrapperWidth = window.roomOverlayWrapper.offsetWidth;
-    const wrapperHeight = window.roomOverlayWrapper.offsetHeight;
     
-    console.log(`📐 Wrapper dimensions: ${wrapperWidth}x${wrapperHeight}`);
-
-    const wrapperAspectRatio = wrapperWidth / wrapperHeight;
-    const imageAspectRatio = window.originalImageWidth / window.originalImageHeight;
+    console.log('✅ Room overlay wrapper found:', roomWrapper);
     
-    console.log(`📐 Aspect ratios: wrapper=${wrapperAspectRatio}, image=${imageAspectRatio}`);
-
-    let renderedImageWidth, renderedImageHeight;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    if (wrapperAspectRatio > imageAspectRatio) {
-        renderedImageHeight = wrapperHeight;
-        renderedImageWidth = renderedImageHeight * imageAspectRatio;
-        offsetX = (wrapperWidth - renderedImageWidth) / 2;
-    } else {
-        renderedImageWidth = wrapperWidth;
-        renderedImageHeight = renderedImageWidth / imageAspectRatio;
-        offsetY = (wrapperHeight - renderedImageHeight) / 2;
-    }
-
-    const scaleX = renderedImageWidth / window.originalImageWidth;
-    const scaleY = renderedImageHeight / window.originalImageHeight;
-    
-    console.log(`📐 Scaling: scaleX=${scaleX}, scaleY=${scaleY}, offsetX=${offsetX}, offsetY=${offsetY}`);
-
-    // Position item icons based on database coordinates
-    // Database coordinates use selectors like ".area-1", ".area-2", etc.
-    // We need to map these to item-icon-0, item-icon-1, etc.
-    if (window.baseAreas && window.baseAreas.length > 0) {
-        console.log(`🎯 Processing ${window.baseAreas.length} areas...`);
-        
-        window.baseAreas.forEach((areaData, index) => {
-            // Extract area number from selector (e.g. ".area-1" -> 1)
-            const areaNumber = parseInt(areaData.selector.replace('.area-', ''));
-            // Map to item-icon index (area-1 -> item-icon-0, area-2 -> item-icon-1, etc.)
-            const itemIndex = areaNumber - 1;
-            const itemElement = document.getElementById('item-icon-' + itemIndex);
-            
-            if (itemElement) {
-                const newTop = (areaData.top * scaleY + offsetY);
-                const newLeft = (areaData.left * scaleX + offsetX);
-                const newWidth = (areaData.width * scaleX);
-                const newHeight = (areaData.height * scaleY);
-                
-                itemElement.style.top = newTop + 'px';
-                itemElement.style.left = newLeft + 'px';
-                itemElement.style.width = newWidth + 'px';
-                itemElement.style.height = newHeight + 'px';
-                
-                console.log(`✅ Positioned ${areaData.selector} -> item-icon-${itemIndex}: top=${newTop}px, left=${newLeft}px, width=${newWidth}px, height=${newHeight}px`);
+    // Fetch coordinates from database
+    console.log(`📡 Fetching coordinates from /api/get_room_coordinates.php?room_type=${roomType}`);
+    fetch(`/api/get_room_coordinates.php?room_type=${roomType}`)
+        .then(response => {
+            console.log('📡 Response received:', response.status, response.statusText);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📡 Data received:', data);
+            if (data.success && data.coordinates) {
+                console.log('✅ Coordinates loaded:', data.coordinates);
+                applySimpleCoordinates(data.coordinates);
             } else {
-                console.warn(`⚠️ No item element found for ${areaData.selector} (item-icon-${itemIndex})`);
+                console.error('❌ Failed to load coordinates:', data.message);
             }
+        })
+        .catch(error => {
+            console.error('❌ Error loading coordinates:', error);
         });
-    } else {
-        console.error('❌ No baseAreas available for positioning');
-    }
 }
 
-async function loadRoomCoordinatesFromDatabase() {
-    try {
-        // Use the ROOM_TYPE variable if available, otherwise try to detect from URL
-        const roomType = window.ROOM_TYPE || (window.location.href.includes('room') ? 
-            window.location.href.match(/room(\d+)/)?.[0] : 'room2');
-        
-        console.log('Loading coordinates for room type:', roomType);
-        
-        const response = await fetch(`api/get_room_coordinates.php?room_type=${roomType}`);
-        
-        // Check if the response is ok (not 500 error)
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: Database not available`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success && data.coordinates && data.coordinates.length > 0) {
-            window.baseAreas = data.coordinates;
-            console.log(`✅ Loaded ${data.coordinates.length} coordinates for ${roomType}:`, data.coordinates);
+// Apply coordinates with simple scaling
+function applySimpleCoordinates(coordinates) {
+    console.log('🎯 Applying simple coordinates...');
+    
+    // Get current screen size to determine scale
+    const screenWidth = window.innerWidth;
+    let scaleFactor;
+    
+    if (screenWidth <= 480) {
+        scaleFactor = 400 / 1280; // Mobile: 0.3125
+    } else if (screenWidth <= 768) {
+        scaleFactor = 800 / 1280; // Tablet: 0.625
+    } else {
+        scaleFactor = 1600 / 1280; // Desktop: 1.25
+    }
+    
+    console.log(`📐 Screen width: ${screenWidth}px, Scale factor: ${scaleFactor}`);
+    
+    // Apply to each item
+    coordinates.forEach((coord, index) => {
+        const item = document.getElementById(`item-icon-${index}`);
+        if (item) {
+            const top = Math.round(coord.top * scaleFactor);
+            const left = Math.round(coord.left * scaleFactor);
+            const width = Math.round(coord.width * scaleFactor);
+            const height = Math.round(coord.height * scaleFactor);
             
-            // Initialize coordinates after loading
-            setTimeout(function() {
-                console.log('🔄 Applying coordinates...');
-                updateAreaCoordinates();
-            }, 200);
+            item.style.position = 'absolute';
+            item.style.top = `${top}px`;
+            item.style.left = `${left}px`;
+            item.style.width = `${width}px`;
+            item.style.height = `${height}px`;
             
-            // Update on window resize
-            window.addEventListener('resize', function() {
-                clearTimeout(window.resizeTimeout);
-                window.resizeTimeout = setTimeout(function() {
-                    updateAreaCoordinates();
-                }, 100);
-            });
+            console.log(`✅ Item ${index}: positioned at ${left},${top} (${width}x${height})`);
         } else {
-            console.error(`❌ No active room map found in database for ${roomType}`);
+            console.warn(`⚠️ Item ${index} not found`);
         }
-    } catch (error) {
-        console.error(`❌ Error loading room coordinates from database:`, error);
-    }
+    });
 }
 
-// Initialize the coordinate system when DOM is ready
+// Make it globally available
+window.simpleCoordinateSystem = simpleCoordinateSystem;
+
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing room coordinate system...');
+    console.log('🎯 DOM loaded, checking for room type...');
+    console.log('🎯 Available window variables:', {
+        ROOM_TYPE: window.ROOM_TYPE,
+        roomType: window.roomType,
+        roomNumber: window.roomNumber
+    });
     
-    // Find the room overlay wrapper
-    window.roomOverlayWrapper = document.querySelector('.room-overlay-wrapper');
-    
-    if (window.roomOverlayWrapper) {
-        // Load coordinates from database after a short delay to ensure all elements are rendered
-        setTimeout(function() {
-            loadRoomCoordinatesFromDatabase();
-        }, 100);
+    // Check if room type is set
+    if (window.ROOM_TYPE) {
+        console.log(`🎯 Room type found: ${window.ROOM_TYPE}`);
+        simpleCoordinateSystem(window.ROOM_TYPE);
+    } else if (window.roomType) {
+        console.log(`🎯 Room type found (fallback): ${window.roomType}`);
+        simpleCoordinateSystem(window.roomType);
     } else {
-        console.error('Room overlay wrapper not found');
+        console.log('⚠️ No room type found, waiting...');
+        // Try again after delay
+        setTimeout(() => {
+            console.log('🎯 Retrying after delay...');
+            console.log('🎯 Available window variables after delay:', {
+                ROOM_TYPE: window.ROOM_TYPE,
+                roomType: window.roomType,
+                roomNumber: window.roomNumber
+            });
+            if (window.ROOM_TYPE) {
+                console.log(`🎯 Room type found after delay: ${window.ROOM_TYPE}`);
+                simpleCoordinateSystem(window.ROOM_TYPE);
+            } else if (window.roomType) {
+                console.log(`🎯 Room type found after delay (fallback): ${window.roomType}`);
+                simpleCoordinateSystem(window.roomType);
+            } else {
+                console.error('❌ Still no room type found');
+            }
+        }, 500);
     }
 });
 
-// Expose functions globally
-window.updateAreaCoordinates = updateAreaCoordinates;
-window.loadRoomCoordinatesFromDatabase = loadRoomCoordinatesFromDatabase;
-
-console.log('room-coordinate-manager.js loaded successfully');
+// Handle window resize
+window.addEventListener('resize', function() {
+    console.log('🎯 Window resized, reapplying coordinates...');
+    if (window.ROOM_TYPE) {
+        simpleCoordinateSystem(window.ROOM_TYPE);
+    } else if (window.roomType) {
+        simpleCoordinateSystem(window.roomType);
+    }
+});

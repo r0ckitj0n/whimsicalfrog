@@ -1,82 +1,105 @@
+
+<!-- Database-driven CSS for landing -->
+<style id="landing-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadLandingCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=landing');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('landing-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ landing CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load landing CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>landing CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadLandingCSS);
+</script>
+
+
+<!-- Database-driven CSS for landing -->
+
+<script>
+    // Load CSS from database
+    async function loadLandingCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=landing');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('landing-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ landing CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load landing CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>landing CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadLandingCSS);
+</script>
+
+
+<!-- Database-driven CSS for landing -->
+
+<script>
+    // Load CSS from database
+    async function loadLandingCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=landing');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('landing-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ landing CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load landing CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>landing CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadLandingCSS);
+</script>
+
 <?php
 // Landing page section
 ?>
-<style>
-    #landingPage {
-        /* Background image is handled by the body element in index.php */
-        position: relative; /* For absolute positioning of clickable areas */
-        width: 100%;
-        height: 100vh;
-        overflow: hidden;
-    }
-    
-    .clickable-area {
-        position: absolute;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background-color: rgba(255, 255, 255, 0.0); /* Transparent background */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .clickable-area:hover {
-        transform: scale(1.1); /* Enlarge to 110% on hover */
-    }
-    
-    .clickable-area img {
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;
-        height: auto;
-        object-fit: contain;
-    }
-    
-    /* Area 1 base coordinates for desktop */
-    .area-1 {
-        top: 414px;
-        left: 466px;
-        width: 285px;
-        height: 153px;
-        border-radius: 8px;
-    }
-    
-    .area-1 img {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 767px) {
-        /* On small screens centre the sign with flexbox */
-        #landingPage {
-            background-size: cover; /* Ensure background fills small screens */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin-top: 0;
-        }
 
-        /* Welcome sign placement */
-        .area-1 {
-            position: static !important;
-            transform: none !important;
-            width: 80vw;
-            max-width: 400px;
-            height: auto;
-            display: block !important;
-            z-index: 9999;
-        }
-
-        .clickable-area {
-            position: relative !important;
-            display: block;
-            margin: 0 auto;
-        }
-    }
-</style>
 
 <section id="landingPage" class="relative">
     <a href="/?page=room_main" class="clickable-area area-1" title="Enter the Main Room">

@@ -24,7 +24,7 @@ class SearchModal {
     createModalHTML() {
         const modalHTML = `
             <!-- Search Results Modal -->
-            <div id="searchModal" class="search-modal-overlay">
+            <div id="searchModal" class="search-modal-overlay" style="display: none;">
                 <div class="search-modal-content">
                     <div class="search-modal-header">
                         <h2 class="search-modal-title">Search Results</h2>

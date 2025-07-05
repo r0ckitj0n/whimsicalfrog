@@ -1,3 +1,41 @@
+
+<!-- Database-driven CSS for room_template -->
+<style id="room_template-css">
+/* CSS will be loaded from database */
+</style>
+
+<!-- Room Template CSS Fix - Override any database CSS issues -->
+<link rel="stylesheet" href="css/room_template_fix.css?v=<?php echo time(); ?>">
+
+<script>
+    // Load CSS from database
+    async function loadRoom_templateCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=room_template');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('room_template-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ room_template CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load room_template CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>room_template CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadRoom_templateCSS);
+</script>
+
 <?php
 
 require_once __DIR__ . '/image_helper.php';
@@ -161,234 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<style>
-    .room-container {
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        position: relative;
-        border-radius: 15px;
-        overflow: hidden;
-    }
-    
-    /* Modal-specific styles */
-    <?php if (isset($_GET['modal'])): ?>
-    body {
-        background: none !important;
-        margin: 0;
-        padding: 0;
-    }
-    
-    .room-container {
-        margin: 0;
-        border-radius: 0;
-        height: 100vh;
-    }
-    
-    .room-overlay-wrapper {
-        border-radius: 0;
-        height: 100%;
-        padding-top: 0;
-    }
-    
-    .room-overlay-content {
-        padding-top: 60px; /* Account for modal header */
-    }
-    <?php endif; ?>
-    
-    .room-overlay-wrapper {
-        width: 100%;
-        padding-top: 70%; /* 1280x896 aspect ratio (896/1280 * 100) */
-        position: relative;
-        background-image: url('images/<?php echo $roomType; ?>.webp?v=cb2');
-        background-size: contain;
-        background-position: center;
-        background-repeat: no-repeat;
-        border-radius: 15px;
-        overflow: hidden;
-    }
 
-    .no-webp .room-overlay-wrapper {
-        background-image: url('images/<?php echo $roomType; ?>.png?v=cb2');
-    }
-
-    .room-overlay-content {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-    
-    .shelf-area {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-    }
-    
-    .item-icon {
-        position: absolute;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        z-index: 10;
-        pointer-events: auto;
-    }
-    
-    .item-icon:hover {
-        transform: scale(1.1);
-        z-index: 100;
-    }
-    
-    .item-icon img {
-        width: auto;
-        height: auto;
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-    }
-    
-    /* Out of stock badge styling */
-    .out-of-stock-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: #dc2626;
-        color: black;
-        font-size: 12px;
-        font-weight: bold;
-        padding: 4px 8px;
-        border-radius: 12px;
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        z-index: 10;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .item-icon.out-of-stock {
-        opacity: 0.7;
-        filter: grayscale(30%);
-    }
-    
-    .item-icon.out-of-stock:hover {
-        opacity: 0.9;
-        filter: grayscale(10%);
-    }
-
-    /* Modal Add to Cart button styling */
-    div #confirmAddToCart,
-    #confirmAddToCart {
-        background-color: #87ac3a !important;
-        color: #ffffff !important;
-        border: none !important;
-        padding: 8px 16px !important;
-        border-radius: 6px !important;
-        font-weight: 500 !important;
-        transition: all 0.2s ease !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-    }
-
-    div #confirmAddToCart:hover,
-    #confirmAddToCart:hover {
-        background-color: #6b8e23 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-    }
-
-    /* Room Header Overlay Styling */
-    .room-header-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        pointer-events: none; /* Allow clicks to pass through to room elements */
-    }
-
-    .back-button-container {
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-        pointer-events: auto; /* Enable clicks on the button */
-    }
-
-    .back-to-main-button {
-        background: var(--back-button-bg-color, rgba(107, 142, 35, 0.9));
-        color: var(--back-button-text-color, #ffffff) !important;
-        font-weight: 600;
-        padding: 12px 24px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        white-space: nowrap;
-        min-width: 220px;
-        justify-content: center;
-    }
-    
-    .back-to-main-button:hover {
-        background: var(--back-button-hover-bg, rgba(107, 142, 35, 1)) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-        color: var(--back-button-text-color, #ffffff) !important;
-    }
-    
-    .back-to-main-button svg {
-        color: var(--back-button-text-color, #ffffff) !important;
-        stroke: var(--back-button-text-color, #ffffff) !important;
-    }
-    
-    .back-to-main-button span {
-        color: var(--back-button-text-color, #ffffff) !important;
-    }
-
-    .room-title-overlay {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        text-align: right;
-        pointer-events: auto; /* Enable text selection */
-        background: white;
-        padding: 1rem 1.5rem;
-        border-radius: 0.75rem;
-        border: 2px solid var(--room-title-color, #87ac3a);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        max-width: 400px;
-    }
-
-    .room-title-overlay .room-title {
-        color: var(--room-title-color, #87ac3a);
-        margin: 0 0 0.5rem 0;
-        font-size: var(--room-title-font-size, 1.75rem);
-        font-weight: bold;
-        text-shadow: none;
-        font-family: var(--room-title-font-family, 'Merienda', cursive);
-    }
-
-    .room-title-overlay .room-description {
-        color: var(--room-description-color, #87ac3a);
-        opacity: 0.8;
-        margin: 0;
-        font-size: var(--room-description-font-size, 0.95rem);
-        line-height: 1.4;
-        text-shadow: none;
-    }
-</style>
 
 <!-- Room Header with Dynamic Content and SEO Structure (Hidden, for SEO only) -->
 <header class="room-header" role="banner" style="display: none;">
@@ -497,7 +308,7 @@ echo renderGlobalPopupCSS();
             <div class="order-summary" style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 <div class="summary-row total" style="display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; font-weight: bold;">
                     <span>Total:</span>
-                    <span id="modalTotal" style="color: #87ac3a;">$0.00</span>
+                    <span id="modalTotal" style="color: var(--primary-color, #87ac3a);">$0.00</span>
                 </div>
                 <div style="display: flex; justify-content: center; margin-top: 5px; font-size: 0.85rem; color: #666;">
                     <span id="modalUnitPrice">$0.00</span> × <span id="modalQuantity">1</span>

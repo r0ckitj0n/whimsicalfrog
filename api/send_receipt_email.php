@@ -133,18 +133,34 @@ function generateReceiptEmailContent($orderData) {
     foreach ($orderData['items'] as $item) {
         $itemTotal = $item['price'] * $item['quantity'];
         $itemsHTML .= '
-            <tr style="border-bottom: 1px solid #e5e7eb;">
-                <td style="padding: 12px 0; vertical-align: top;">
-                    <div style="font-weight: 600; color: #374151; margin-bottom: 4px;">' . htmlspecialchars($item['name']) . '</div>
-                    <div style="font-size: 0.875rem; color: #6b7280;">SKU: ' . htmlspecialchars($item['sku']) . '</div>
-                    <div style="font-size: 0.875rem; color: #6b7280;">' . $item['quantity'] . ' × $' . number_format($item['price'], 2) . '</div>
+            <tr class="receipt-item-row">
+                <td class="receipt-item-cell">
+                    <div class="receipt-item-name">' . htmlspecialchars($item['name']) . '</div>
+                    <div class="receipt-item-meta">SKU: ' . htmlspecialchars($item['sku']) . '</div>
+                    <div class="receipt-item-meta">' . $item['quantity'] . ' × $' . number_format($item['price'], 2) . '</div>
                 </td>
-                <td style="padding: 12px 0; text-align: right; vertical-align: top; font-weight: 600; color: #374151;">
-                    $' . number_format($itemTotal, 2) . '
+                <td class="receipt-item-cell receipt-item-price">
+                    $' . number_format($item['quantity'] * $item['price'], 2) . '
                 </td>
             </tr>';
     }
     
+    $paymentSection = '';
+    if (isset($orderData['cashReceived']) && $orderData['cashReceived'] > 0) {
+        $paymentSection = '
+            <div class="receipt-payment-section">
+                <h3 class="receipt-payment-title">Payment Details</h3>
+                <div class="receipt-order-row">
+                    <span class="receipt-order-label">Cash Received:</span>
+                    <span class="receipt-order-value">$' . number_format($orderData['cashReceived'] ?? 0, 2) . '</span>
+                </div>
+                <div class="receipt-order-row">
+                    <span class="receipt-order-label">Change Given:</span>
+                    <span class="receipt-order-value">$' . number_format($orderData['changeAmount'] ?? 0, 2) . '</span>
+                </div>
+            </div>';
+    }
+
     return '
     <!DOCTYPE html>
     <html lang="en">
@@ -153,81 +169,62 @@ function generateReceiptEmailContent($orderData) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Receipt - Order #' . htmlspecialchars($orderData['orderId']) . '</title>
     </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; background-color: #f9fafb;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+    <body class="receipt-email-body">
+        <div class="receipt-email-container">
             
-            <!-- Header -->
-            <div style="background: linear-gradient(135deg, #87ac3a 0%, #6b8e23 100%); color: white; padding: 32px 24px; text-align: center;">
-                <h1 style="margin: 0; font-size: 2rem; font-weight: 700; letter-spacing: -0.025em;">WHIMSICALFROG</h1>
-                <p style="margin: 8px 0 0 0; font-size: 1.125rem; opacity: 0.9;">Receipt for Your Purchase</p>
+            <div class="receipt-email-header">
+                <h1 class="receipt-email-title">WHIMSICALFROG</h1>
+                <p class="receipt-email-subtitle">Receipt for Your Purchase</p>
             </div>
             
-            <!-- Order Info -->
-            <div style="padding: 24px; border-bottom: 1px solid #e5e7eb; background-color: #f9fafb;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <span style="font-weight: 600; color: #374151;">Order ID:</span>
-                    <span style="color: #6b7280; font-family: \'Courier New\', monospace;">' . htmlspecialchars($orderData['orderId']) . '</span>
+            <div class="receipt-order-info">
+                <div class="receipt-order-row">
+                    <span class="receipt-order-label">Order ID:</span>
+                    <span class="receipt-order-value receipt-order-id">' . htmlspecialchars($orderData['orderId']) . '</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <span style="font-weight: 600; color: #374151;">Date:</span>
-                    <span style="color: #6b7280;">' . $timestamp . '</span>
+                <div class="receipt-order-row">
+                    <span class="receipt-order-label">Date:</span>
+                    <span class="receipt-order-value">' . $timestamp . '</span>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-weight: 600; color: #374151;">Payment Method:</span>
-                    <span style="color: #6b7280;">' . htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified') . '</span>
+                <div class="receipt-order-row">
+                    <span class="receipt-order-label">Payment Method:</span>
+                    <span class="receipt-order-value">' . htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified') . '</span>
                 </div>
             </div>
             
-            <!-- Items -->
-            <div style="padding: 24px;">
-                <h2 style="margin: 0 0 20px 0; font-size: 1.25rem; font-weight: 600; color: #374151;">Items Purchased</h2>
-                <table style="width: 100%; border-collapse: collapse;">
+            <div class="receipt-items-section">
+                <h2 class="receipt-items-title">Items Purchased</h2>
+                <table class="receipt-items-table">
                     ' . $itemsHTML . '
                 </table>
             </div>
             
-            <!-- Totals -->
-            <div style="padding: 24px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                    <span style="color: #6b7280;">Subtotal:</span>
-                    <span style="color: #374151; font-weight: 500;">$' . number_format($orderData['subtotal'], 2) . '</span>
+            <div class="receipt-totals-section">
+                <div class="receipt-total-row">
+                    <span class="receipt-total-label">Subtotal:</span>
+                    <span class="receipt-total-value">$' . number_format($orderData['subtotal'], 2) . '</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                    <span style="color: #6b7280;">Sales Tax (' . number_format(($orderData['taxRate'] ?? 0) * 100, 2) . '%):</span>
-                    <span style="color: #374151; font-weight: 500;">$' . number_format($orderData['taxAmount'] ?? 0, 2) . '</span>
+                <div class="receipt-total-row">
+                    <span class="receipt-total-label">Sales Tax (' . number_format(($orderData['taxRate'] ?? 0) * 100, 2) . '%):</span>
+                    <span class="receipt-total-value">$' . number_format($orderData['taxAmount'] ?? 0, 2) . '</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding-top: 16px; border-top: 2px solid #87ac3a;">
-                    <span style="font-size: 1.125rem; font-weight: 700; color: #374151;">TOTAL:</span>
-                    <span style="font-size: 1.125rem; font-weight: 700; color: #87ac3a;">$' . number_format($orderData['total'], 2) . '</span>
+                <div class="receipt-grand-total">
+                    <span class="receipt-grand-total-label">TOTAL:</span>
+                    <span class="receipt-grand-total-value">$' . number_format($orderData['total'], 2) . '</span>
                 </div>
             </div>
             
-            ' . (($orderData['paymentMethod'] ?? '') === 'Cash' ? '
-            <!-- Cash Payment Details -->
-            <div style="padding: 24px; border-top: 1px solid #e5e7eb;">
-                <h3 style="margin: 0 0 16px 0; font-size: 1rem; font-weight: 600; color: #374151;">Payment Details</h3>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="color: #6b7280;">Cash Received:</span>
-                    <span style="color: #374151; font-weight: 500;">$' . number_format($orderData['cashReceived'] ?? 0, 2) . '</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: #6b7280;">Change Given:</span>
-                    <span style="color: #374151; font-weight: 500;">$' . number_format($orderData['changeAmount'] ?? 0, 2) . '</span>
-                </div>
-            </div>
-            ' : '') . '
+            ' . $paymentSection . '
             
-            <!-- Footer -->
-            <div style="padding: 24px; text-align: center; background-color: #87ac3a; color: white;">
-                <p style="margin: 0 0 8px 0; font-size: 1.125rem; font-weight: 600;">Thank you for your business!</p>
-                <p style="margin: 0; opacity: 0.9;">Visit us online at WhimsicalFrog.com</p>
+            <div class="receipt-footer">
+                <p class="receipt-footer-title">Thank you for your business!</p>
+                <p class="receipt-footer-text">Visit us online at WhimsicalFrog.com</p>
             </div>
             
         </div>
         
-        <!-- Footer text -->
-        <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 0.875rem;">
-            <p>This email was sent from the WhimsicalFrog Point of Sale system.</p>
+        <div class="receipt-disclaimer">
+            <p>This is an automated receipt. Please keep for your records.</p>
         </div>
     </body>
     </html>';

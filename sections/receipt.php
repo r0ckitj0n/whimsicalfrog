@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for receipt -->
+<style id="receipt-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadReceiptCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=receipt');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('receipt-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ receipt CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load receipt CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>receipt CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadReceiptCSS);
+</script>
+
 <?php
 if (!defined('INCLUDED_FROM_INDEX')) {
     // allow standalone access as fallback
@@ -189,159 +223,7 @@ function getReceiptMessage($pdo, $order, $orderItems) {
 $total = number_format($order['total'] ?? 0, 2);
 $pending = ($order['paymentStatus'] === 'Pending');
 ?>
-<style>
-@media print {
-  /* Hide the entire navigation structure */
-  nav,
-  header,
-  .site-header,
-  .header-container,
-  .header-content,
-  .header-left,
-  .header-center,
-  .header-right,
-  .nav-links,
-  .mobile-menu,
-  .search-container,
-  .cart-link,
-  .user-menu,
-  .auth-links,
-  .mobile-menu-toggle,
-  .logo-link,
-  .search-bar,
-  #printBtn,
-  .no-print { 
-    display: none !important; 
-  }
-  
-  /* Use visibility approach to hide everything except receipt - ONLY when printing */
-  body {
-    background: white !important;
-    font-size: 10pt !important;
-    line-height: 1.2 !important;
-  }
-  
-  /* Hide everything during print, then show only receipt */
-  body > *:not(.receipt-container) {
-    visibility: hidden !important;
-  }
-  
-  /* Show only the receipt container and its contents */
-  .receipt-container,
-  .receipt-container * {
-    visibility: visible !important;
-  }
-  
-  /* Position the receipt container for print */
-  .receipt-container {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 10px !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    max-width: none !important;
-    background: white !important;
-    transform: scale(0.9) !important;
-    transform-origin: top left !important;
-  }
-  
-  /* Reset page margins for print */
-  @page {
-    margin: 0.3in;
-    size: letter;
-  }
-  
-  /* Make sure tables print nicely */
-  table {
-    border-collapse: collapse !important;
-    width: 100% !important;
-  }
-  
-  th, td {
-    border: 1px solid #333 !important;
-    padding: 4px !important;
-    font-size: 9pt !important;
-  }
-  
-  thead tr {
-    background: #f0f0f0 !important;
-  }
-  
-  /* Ensure colors are print-friendly */
-  h1, h2, h3 {
-    color: #000 !important;
-  }
-  
-  /* Make sure the company header prints nicely */
-  .receipt-container h1 {
-    color: #000 !important;
-    font-size: 18pt !important;
-    margin-bottom: 8px !important;
-  }
-  
-  /* Logo styling for print */
-  .receipt-container img {
-    max-height: 50px !important;
-    width: auto !important;
-    display: block !important;
-  }
-  
-  /* Company header layout for print */
-  .receipt-container .flex {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  
-  /* Website URL styling for print */
-  .receipt-container .text-\[#87ac3a\] {
-    color: #87ac3a !important;
-    font-weight: 600 !important;
-  }
-  
-  /* Ensure alert boxes are visible in print */
-  .bg-yellow-100,
-  .bg-green-100 {
-    background: #f9f9f9 !important;
-    border: 1px solid #ccc !important;
-    color: #000 !important;
-    padding: 8px !important;
-    margin: 4px 0 !important;
-    font-size: 9pt !important;
-    line-height: 1.2 !important;
-  }
-}
 
-/* Brand button styling for receipt page */
-.brand-button {
-    background-color: #87ac3a;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-}
-
-.brand-button:hover {
-    background-color: #6b8e23;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.brand-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-</style>
 
 <script>
 // Centralized print receipt function using PrintUtils

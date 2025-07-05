@@ -1,3 +1,4 @@
+
 <?php
 // Cart page content - Check authentication first
 if (!$isLoggedIn) {
@@ -9,13 +10,47 @@ if (!$isLoggedIn) {
     exit;
 }
 ?>
+
+<!-- Database-driven CSS for cart -->
+<style id="cart-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadCartCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=cart');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('cart-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ cart CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load cart CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>cart CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadCartCSS);
+</script>
+
 <section id="cartPage" class="fixed inset-0 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5); z-index: 9999 !important;" onclick="window.location.href='/?page=room_main';">
     <!-- Cart modal container -->
     <div class="bg-white rounded-lg shadow-xl overflow-hidden w-full max-w-3xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation();">
         <!-- Header with title and back button -->
         <div class="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-merienda" style="color:#87ac3a !important;">Shopping Cart</h1>
+                <h1 class="text-2xl font-merienda" style="color: var(--primary-color);">Shopping Cart</h1>
                 <a href="/?page=room_main" class="back-button text-white text-sm" style="background:rgba(107,142,35,0.9);padding:6px 12px;border-radius:20px;text-decoration:none;font-weight:bold;transition:all 0.3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
                     ← Back to Main Room
                 </a>
@@ -30,74 +65,18 @@ if (!$isLoggedIn) {
     </div>
 </section>
 
-<style>
-/* Cart modal styling */
-#cartPage {
-    backdrop-filter: blur(4px);
-}
-
-#cartPage > div {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-@media (max-width: 768px) {
-    #cartPage {
-        padding: 1rem;
-    }
-    
-    #cartPage > div {
-        max-width: calc(100vw - 2rem);
-        max-height: calc(100vh - 2rem);
-    }
-}
-
-@media (min-width: 769px) {
-    #cartPage > div {
-        min-width: 600px;
-        max-width: 800px;
-    }
-}
-
-/* Custom scrollbar for cart items */
-#cartItems {
-    scrollbar-width: thin;
-    scrollbar-color: #87ac3a #f1f5f9;
-}
-
-#cartItems::-webkit-scrollbar {
-    width: 8px;
-}
-
-#cartItems::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
-}
-
-#cartItems::-webkit-scrollbar-thumb {
-    background: #87ac3a;
-    border-radius: 4px;
-}
-
-#cartItems::-webkit-scrollbar-thumb:hover {
-    background: #6b8e23;
-}
-
-/* Ensure modal content fits properly */
-#cartPage > div {
-    min-height: 400px;
-    max-height: 90vh;
-}
-</style>
-
 <script>
     // Wait for both DOM and cart script to be loaded
     async function initializeCart() {
-        if (typeof window.cart !== 'undefined') {await window.cart.renderCart();
+        if (typeof window.cart !== 'undefined') {
+            await window.cart.renderCart();
             
             // Listen for cart updates
-            window.addEventListener('cartUpdated', async function() {await window.cart.renderCart();
+            window.addEventListener('cartUpdated', async function() {
+                await window.cart.renderCart();
             });
-        } else {setTimeout(initializeCart, 100);
+        } else {
+            setTimeout(initializeCart, 100);
         }
     }
 

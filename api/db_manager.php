@@ -132,42 +132,42 @@ try {
         case 'fix_sample_email':
             // Direct sample email fix without separate script
             $sampleEmailContent = '
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #87ac3a; margin: 0;">WhimsicalFrog</h1>
-                    <p style="color: #666; margin: 5px 0;">Custom Products & Design</p>
-                </div>
-                
-                <h2 style="color: #333;">Order Confirmation #01F14P23</h2>
+                    <div class="email-container">
+            <div class="email-header">
+                <h1 class="email-title">WhimsicalFrog</h1>
+                <p class="email-subtitle">Custom Products & Design</p>
+            </div>
+            
+            <h2 style="color: #333;">Order Confirmation #01F14P23</h2>
                 
                 <p>Dear John Doe,</p>
                 
                 <p>Thank you for your order! We have received your order and it is being processed.</p>
                 
-                <h3 style="color: #87ac3a;">Order Details:</h3>
-                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                    <tr style="background-color: #f5f5f5;">
-                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Item</th>
-                        <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Quantity</th>
-                        <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Price</th>
+                <h3 class="email-section-title">Order Details:</h3>
+                <table class="email-table">
+                    <tr class="email-table-header">
+                        <th class="email-table-header">Item</th>
+                        <th class="email-table-header" style="text-align: right;">Quantity</th>
+                        <th class="email-table-header" style="text-align: right;">Price</th>
                     </tr>
                     <tr>
-                        <td style="padding: 10px; border: 1px solid #ddd;">Custom T-Shirt Design</td>
-                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">2</td>
-                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$25.00</td>
+                        <td class="email-table-cell">Custom T-Shirt Design</td>
+                        <td class="email-table-cell" style="text-align: right;">2</td>
+                        <td class="email-table-cell" style="text-align: right;">$25.00</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px; border: 1px solid #ddd;">Custom Tumbler</td>
-                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">1</td>
-                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$15.00</td>
+                        <td class="email-table-cell">Custom Tumbler</td>
+                        <td class="email-table-cell" style="text-align: right;">1</td>
+                        <td class="email-table-cell" style="text-align: right;">$15.00</td>
                     </tr>
-                    <tr style="background-color: #f5f5f5; font-weight: bold;">
-                        <td style="padding: 10px; border: 1px solid #ddd;" colspan="2">Total:</td>
-                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">$40.00</td>
+                    <tr class="email-table-total">
+                        <td class="email-table-cell" colspan="2">Total:</td>
+                        <td class="email-table-cell" style="text-align: right;">$40.00</td>
                     </tr>
                 </table>
                 
-                <h3 style="color: #87ac3a;">Shipping Information:</h3>
+                <h3 class="email-section-title">Shipping Information:</h3>
                 <p>John Doe<br>
                 123 Main Street<br>
                 Anytown, ST 12345</p>
@@ -181,7 +181,7 @@ try {
                 
                 <p>Thank you for choosing WhimsicalFrog!</p>
                 
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+                <div class="email-footer">
                     <p>This is an automated email. Please do not reply to this email address.</p>
                 </div>
             </div>';

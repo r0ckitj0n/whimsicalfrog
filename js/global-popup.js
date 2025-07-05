@@ -46,6 +46,179 @@ window.globalPopupState = {
 };
 
 /**
+ * Load sales lingo for popup
+ * @param {Object} product - Product data object
+ */
+async function loadSalesLingo(product) {
+    try {
+        // Determine category based on product data
+        let lingoCategory = 'medium'; // Default to medium phrases
+        const stockLevel = parseInt(product.stockLevel || product.stock || 0);
+        
+        // Prefer high-impact messages for limited stock items
+        if (stockLevel <= 5 && stockLevel > 0) {
+            lingoCategory = 'urgency';
+        } else if (stockLevel > 0) {
+            // Randomly choose between categories for in-stock items
+            const categories = ['medium', 'value', 'short'];
+            lingoCategory = categories[Math.floor(Math.random() * categories.length)];
+        }
+        
+        // Fetch sales messages
+        const response = await fetch(`/api/popup_sales_lingo.php?action=get_random&category=${lingoCategory}&limit=3&min_priority=2`);
+        const data = await response.json();
+        
+        if (data.success && data.messages && data.messages.length > 0) {
+            return data.messages;
+        }
+        
+        // Fallback messages if API fails
+        return [
+            {category: 'medium', message: '🔥 Customer favorite - you\'ll love it!', priority: 2},
+            {category: 'medium', message: '✨ Handcrafted with love and attention!', priority: 2}
+        ];
+        
+    } catch (error) {
+        console.error('Error loading sales lingo:', error);
+        // Return fallback messages
+        return [
+            {category: 'medium', message: '🎨 Custom made just for you!', priority: 2},
+            {category: 'medium', message: '💯 Satisfaction guaranteed!', priority: 2}
+        ];
+    }
+}
+
+/**
+ * Intelligently breaks long text at natural points for better display
+ * @param {string} text - The text to potentially break
+ * @param {number} maxLength - Maximum characters before considering a break
+ * @returns {string} Text with HTML line breaks inserted at natural points
+ */
+function addIntelligentLineBreaks(text, maxLength = 25) {
+    if (text.length <= maxLength) {
+        return text;
+    }
+    
+    const words = text.split(' ');
+    if (words.length <= 2) {
+        return text; // Don't break very short phrases
+    }
+    
+    // Find the best break point (closest to middle)
+    const targetBreak = text.length / 2;
+    let bestBreakIndex = 0;
+    let bestDistance = Infinity;
+    
+    let currentLength = 0;
+    for (let i = 0; i < words.length - 1; i++) {
+        currentLength += words[i].length + 1; // +1 for space
+        const distance = Math.abs(currentLength - targetBreak);
+        
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestBreakIndex = i;
+        }
+    }
+    
+    // Split at the best point
+    const firstPart = words.slice(0, bestBreakIndex + 1).join(' ');
+    const secondPart = words.slice(bestBreakIndex + 1).join(' ');
+    
+    return `${firstPart}<br/>${secondPart}`;
+}
+
+/**
+ * Update popup with sales lingo
+ * @param {HTMLElement} popup - The popup element
+ * @param {Array} salesMessages - Array of sales lingo messages
+ */
+function updatePopupSalesLingo(messages) {
+    const topLingo = document.getElementById('popupTopLingo');
+    const bottomLingo = document.getElementById('popupBottomLingo');
+    
+    if (!topLingo || !bottomLingo) return;
+    
+    // Clear existing content
+    topLingo.innerHTML = '';
+    bottomLingo.innerHTML = '';
+    
+    if (!messages || messages.length === 0) {
+        topLingo.classList.add('hidden');
+        bottomLingo.classList.add('hidden');
+        return;
+    }
+    
+    // Calculate total text length
+    const totalLength = messages.reduce((sum, msg) => sum + msg.message.length, 0);
+    const targetTopLength = totalLength / 2;
+    
+    // Find the best split point
+    let topMessages = [];
+    let bottomMessages = [];
+    let currentTopLength = 0;
+    
+    for (let i = 0; i < messages.length; i++) {
+        const msgLength = messages[i].message.length;
+        
+        // If adding this message to top would be closer to target than not adding it
+        if (Math.abs((currentTopLength + msgLength) - targetTopLength) < Math.abs(currentTopLength - targetTopLength)) {
+            topMessages.push(messages[i]);
+            currentTopLength += msgLength;
+        } else {
+            // Put remaining messages in bottom
+            bottomMessages = messages.slice(i);
+            break;
+        }
+    }
+    
+    // Ensure we have at least one message somewhere
+    if (topMessages.length === 0 && bottomMessages.length === 0) {
+        topMessages = [messages[0]];
+        bottomMessages = messages.slice(1);
+    }
+    
+    // Display top messages
+    if (topMessages.length > 0) {
+        // If multiple messages in top, combine them with separators
+        let topText = topMessages.map(msg => msg.message).join(' • ');
+        
+        // Add intelligent line breaks for long text
+        topText = addIntelligentLineBreaks(topText);
+        
+        topLingo.innerHTML = topText;
+        topLingo.classList.remove('hidden');
+        
+        // Use highest priority for styling
+        const maxPriority = Math.max(...topMessages.map(msg => msg.priority));
+        if (maxPriority >= 3) {
+            topLingo.style.background = 'linear-gradient(135deg, #dc2626, #ef4444)';
+        } else if (maxPriority >= 2) {
+            topLingo.style.background = 'linear-gradient(135deg, #f59e0b, #f97316)';
+        } else {
+            topLingo.style.background = 'linear-gradient(135deg, #10b981, #14b8a6)';
+        }
+    } else {
+        topLingo.classList.add('hidden');
+    }
+    
+    // Display bottom messages
+    if (bottomMessages.length > 0) {
+        let bottomHTML = '';
+        
+        bottomMessages.forEach(msg => {
+            const priorityClass = msg.priority >= 3 ? 'priority-high' : 
+                                msg.priority >= 2 ? 'priority-medium' : 'priority-low';
+            bottomHTML += `<div class="lingo-bullet ${priorityClass}" style="font-size: 11px; padding: 3px 6px; margin: 2px 0; border-radius: 4px; background: rgba(255,255,255,0.9); color: #374151; font-weight: 500;">${msg.message}</div>`;
+        });
+        
+        bottomLingo.innerHTML = bottomHTML;
+        bottomLingo.classList.remove('hidden');
+    } else {
+        bottomLingo.classList.add('hidden');
+    }
+}
+
+/**
  * Show product popup - MAIN IMPLEMENTATION
  * @param {HTMLElement} element - The element that triggered the popup
  * @param {Object} product - Product data object
@@ -74,7 +247,7 @@ window.showGlobalPopupMain = function(element, product) {
     }
     
     // Short delay to ensure clean state before showing new popup
-    setTimeout(() => {
+    setTimeout(async () => {
         // Double check that this is still the intended popup
         window.isShowingPopup = true;
         window.popupOpen = true;
@@ -159,6 +332,14 @@ window.showGlobalPopupMain = function(element, product) {
             popupDescription.textContent = product.description || '';
         }
         
+        // Load and display sales lingo
+        try {
+            const salesMessages = await loadSalesLingo(product);
+            updatePopupSalesLingo(salesMessages);
+        } catch (error) {
+            console.error('Error loading sales lingo for popup:', error);
+        }
+        
         // Position and show popup
         positionPopup(element, popup);
         
@@ -219,11 +400,10 @@ window.positionPopup = function(element, popup) {
     console.log('Positioning popup...', element, popup);
     
     const rect = element.getBoundingClientRect();
-    const roomContainer = element.closest('.room-container') || document.body;
-    const containerRect = roomContainer.getBoundingClientRect();
-
-    let left = rect.left - containerRect.left + rect.width + 10;
-    let top = rect.top - containerRect.top - 50;
+    
+    // Use simple viewport coordinates since popup is position: fixed
+    let left = rect.left + rect.width + 10;
+    let top = rect.top - 50;
 
     console.log('Initial position calculations:', { left, top, rectLeft: rect.left, rectTop: rect.top });
 

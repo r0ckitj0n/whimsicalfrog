@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for admin_inventory -->
+<style id="admin_inventory-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadAdmin_inventoryCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=admin_inventory');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('admin_inventory-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ admin_inventory CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load admin_inventory CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>admin_inventory CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadAdmin_inventoryCSS);
+</script>
+
 <?php
 // Admin Inventory Management Section
 ob_start();
@@ -104,19 +138,7 @@ $messageType = $_GET['type'] ?? '';
 
 ?>
 <!-- CSS utilities now loaded from database via main CSS system -->
-<style>
-    /* Toast notifications handled by global utility classes */
 
-    /* Inventory table styles handled by global utility classes */
-
-    /* Action buttons handled by global utility classes */
-
-    /* Cost breakdown styles handled by global utility classes */
-
-    /* Navigation and inline editing styles handled by global utility classes */
-
-    /* All inventory management styles handled by comprehensive global utility classes */
-</style>
 
 <div class="admin-content-container">
     <div class="admin-filter-section">
@@ -164,7 +186,7 @@ $messageType = $_GET['type'] ?? '';
                     <tr data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['sku']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
                         <td>
                             <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" style="width:40px;height:40px;">
-                                <div class="thumbnail-loading" style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;">...</div>
+                                <div class="thumbnail-placeholder">...</div>
                             </div>
                         </td>
                         <td class="text-center">
@@ -4932,12 +4954,12 @@ function loadThumbnailImage(sku, container) {
             `;
         } else {
             console.log('No images found for', sku);
-            container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">No img</div>';
+                                    container.innerHTML = '<div class="thumbnail-placeholder">No img</div>';
         }
     })
     .catch(error => {
         console.error('Error loading thumbnail for', sku, ':', error);
-        container.innerHTML = '<div style="width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;">Error</div>';
+                            container.innerHTML = '<div class="thumbnail-placeholder">Error</div>';
     });
 }
 
@@ -9982,22 +10004,7 @@ function createRestructureModal(proposal) {
             
             <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc; max-height: calc(90vh - 160px);">
-                <style>
-                    #restructureModal .overflow-y-auto::-webkit-scrollbar {
-                        width: 8px;
-                    }
-                    #restructureModal .overflow-y-auto::-webkit-scrollbar-track {
-                        background: #f7fafc;
-                        border-radius: 4px;
-                    }
-                    #restructureModal .overflow-y-auto::-webkit-scrollbar-thumb {
-                        background: #cbd5e0;
-                        border-radius: 4px;
-                    }
-                    #restructureModal .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-                        background: #a0aec0;
-                    }
-                </style>
+                
                 
                 <!-- Summary Section -->
                 <div class="p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-b">
@@ -10310,22 +10317,7 @@ function createStructureViewModal(data) {
             
             <!-- Scrollable Content -->
             <div class="p-6 overflow-y-auto flex-1" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
-                <style>
-                    #structureViewModal .overflow-y-auto::-webkit-scrollbar {
-                        width: 8px;
-                    }
-                    #structureViewModal .overflow-y-auto::-webkit-scrollbar-track {
-                        background: #f7fafc;
-                        border-radius: 4px;
-                    }
-                    #structureViewModal .overflow-y-auto::-webkit-scrollbar-thumb {
-                        background: #cbd5e0;
-                        border-radius: 4px;
-                    }
-                    #structureViewModal .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-                        background: #a0aec0;
-                    }
-                </style>
+                
                 
                 <div class="mb-4">
                     <div class="text-sm text-gray-600 mb-4">

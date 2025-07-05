@@ -86,14 +86,22 @@ try {
     switch ($action) {
         case 'get_colors':
             $itemSku = $_GET['item_sku'] ?? '';
+            $inStockOnly = isset($_GET['in_stock_only']) && $_GET['in_stock_only'] === 'true';
+            
             if (empty($itemSku)) {
                 throw new Exception('Item SKU is required');
+            }
+            
+            // Build query with optional stock filter
+            $whereClause = "WHERE item_sku = ? AND is_active = 1";
+            if ($inStockOnly) {
+                $whereClause .= " AND stock_level > 0";
             }
             
             $stmt = $pdo->prepare("
                 SELECT id, item_sku, color_name, color_code, image_path, stock_level, is_active, display_order
                 FROM item_colors 
-                WHERE item_sku = ? AND is_active = 1 
+                $whereClause 
                 ORDER BY display_order ASC, color_name ASC
             ");
             $stmt->execute([$itemSku]);

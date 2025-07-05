@@ -19,590 +19,7 @@ try {
 }
 ?>
 
-<style>
-/* Full-screen POS styling */
-.pos-register {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--pos-main-bg, #c8e6c9);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    font-family: var(--pos-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
-    color: var(--pos-text-color, #333);
-    font-weight: var(--pos-text-weight, 700);
-    overflow-y: auto;
-}
 
-.pos-header {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.pos-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-    color: #333;
-}
-
-.pos-header-buttons {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.pos-fullscreen-btn {
-    background: var(--pos-fullscreen-bg, rgba(255, 255, 255, 0.1));
-    color: var(--pos-button-text, #333);
-    border: 2px solid var(--pos-fullscreen-border, rgba(255, 255, 255, 0.3));
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: var(--pos-text-weight, 700);
-    transition: all 0.3s ease;
-}
-
-.pos-fullscreen-btn:hover {
-    background: var(--pos-fullscreen-hover-bg, rgba(255, 255, 255, 0.2));
-    transform: translateY(-2px);
-}
-
-.pos-exit-btn {
-    background: var(--pos-exit-bg, #dc3545);
-    color: var(--pos-exit-text, white);
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: var(--pos-text-weight, 700);
-    transition: all 0.3s ease;
-}
-
-.pos-exit-btn:hover {
-    background: var(--pos-exit-hover-bg, #c82333);
-    transform: translateY(-2px);
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.pos-main {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 2rem;
-    padding: 2rem;
-}
-
-.pos-left-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.pos-search-section {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.pos-search-title {
-    color: var(--pos-text-color, #333);
-    font-size: var(--pos-heading-size, 1.25rem);
-    font-weight: var(--pos-text-weight, 700);
-    margin: 0 0 1rem 0;
-}
-
-.pos-search-methods {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-}
-
-.pos-search-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--pos-input-border, #666);
-    border-radius: 8px;
-    background: var(--pos-input-bg, rgba(255, 255, 255, 0.9));
-    color: var(--pos-text-color, #333);
-    font-size: 1rem;
-    font-weight: var(--pos-text-weight, 700);
-}
-
-.pos-search-input::placeholder {
-    color: var(--pos-placeholder-color, #666);
-}
-
-.pos-search-input:focus {
-    outline: none;
-    border-color: var(--pos-input-focus-border, #333);
-    background: var(--pos-input-focus-bg, white);
-}
-
-.pos-browse-btn {
-    background: rgba(76, 175, 80, 0.8);
-    color: white;
-    border: none;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.pos-browse-btn:hover {
-    background: rgba(76, 175, 80, 1);
-    transform: translateY(-2px);
-}
-
-.pos-items-grid {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    flex: 1;
-}
-
-.items-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
-}
-
-.item-card {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    pointer-events: auto;
-    position: relative;
-    z-index: 1;
-}
-
-.item-card:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.item-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 6px;
-    margin: 0 auto 0.5rem;
-    display: block;
-    background: rgba(255, 255, 255, 0.1);
-    pointer-events: none;
-}
-
-.item-name {
-    color: var(--pos-text-color, #333);
-    font-size: var(--pos-item-name-size, 0.875rem);
-    font-weight: var(--pos-text-weight, 700);
-    margin: 0.5rem 0;
-    line-height: 1.3;
-    pointer-events: none;
-}
-
-.item-sku {
-    color: var(--pos-sku-color, #666);
-    font-size: var(--pos-sku-size, 0.75rem);
-    font-family: monospace;
-    font-weight: var(--pos-text-weight, 700);
-    margin: 0.25rem 0;
-    pointer-events: none;
-}
-
-.item-price {
-    color: var(--pos-price-color, #dc3545);
-    font-size: var(--pos-price-size, 1.25rem);
-    pointer-events: none;
-    font-weight: var(--pos-price-weight, 700);
-    margin: 0.5rem 0 0 0;
-}
-
-.pos-cart {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.cart-header {
-    background: transparent;
-    color: #333;
-    padding: 1rem;
-    text-align: center;
-}
-
-.cart-title {
-    margin: 0;
-    font-size: var(--pos-heading-size, 1.25rem);
-    font-weight: var(--pos-text-weight, 700);
-    color: var(--pos-text-color, #333);
-}
-
-.cart-items {
-    flex: 1;
-    padding: 1rem;
-}
-
-.cart-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #eee;
-}
-
-.cart-item:last-child {
-    border-bottom: none;
-}
-
-.cart-item-info {
-    flex: 1;
-}
-
-.cart-item-name {
-    font-weight: 500;
-    color: #333;
-    margin: 0 0 0.25rem 0;
-    font-size: 0.875rem;
-}
-
-.cart-item-sku {
-    color: #666;
-    font-size: 0.75rem;
-    font-family: monospace;
-}
-
-.cart-item-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.qty-btn {
-    background: transparent;
-    border: 1px solid #ddd;
-    width: 30px;
-    height: 30px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-}
-
-.qty-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.qty-display {
-    min-width: 40px;
-    text-align: center;
-    font-weight: 500;
-}
-
-.cart-item-price {
-    color: #2196F3;
-    font-weight: 600;
-    margin-left: 0.5rem;
-}
-
-.cart-summary {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-top: 2px solid #2196F3;
-}
-
-.cart-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #dc3545;
-    margin-bottom: 1rem;
-    border: none;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    background: rgba(255,255,255,0.1);
-    padding: 1rem;
-    border-radius: 8px;
-}
-
-.cart-total span {
-    color: #dc3545;
-    border: none;
-    font-size: 2.5rem;
-    font-weight: 700;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
-}
-
-/* Ensure cart total is always visible */
-#posCartTotal {
-    color: #dc3545 !important;
-    font-size: 2.5rem !important;
-    font-weight: 700 !important;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.3) !important;
-    display: inline !important;
-    visibility: visible !important;
-}
-
-.checkout-btn {
-    width: 100%;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 1rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.checkout-btn:hover {
-    background: #45a049;
-    transform: translateY(-2px);
-}
-
-.checkout-btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.empty-cart {
-    text-align: center;
-    color: #666;
-    padding: 2rem;
-    font-style: italic;
-}
-
-.cart-item {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.cart-item-info {
-    flex: 1;
-}
-
-.cart-item-name {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 0.25rem;
-}
-
-.cart-item-sku {
-    font-size: 0.75rem;
-    color: #666;
-    font-family: monospace;
-}
-
-.cart-item-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.qty-btn {
-    background: transparent;
-    color: #333;
-    border: 1px solid #ddd;
-    width: 30px;
-    height: 30px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: bold;
-}
-
-.qty-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.qty-display {
-    background: #f5f5f5;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    min-width: 30px;
-    text-align: center;
-    font-weight: 500;
-}
-
-.cart-item-price {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #4CAF50;
-    margin-left: 0.5rem;
-}
-
-/* POS Modal Styles */
-.pos-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: posModalFadeIn 0.3s ease;
-}
-
-@keyframes posModalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.pos-modal-content {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    min-width: 400px;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow: hidden;
-    animation: posModalSlideIn 0.3s ease;
-}
-
-@keyframes posModalSlideIn {
-    from { 
-        opacity: 0;
-        transform: translateY(-50px) scale(0.9);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.pos-modal-header {
-    padding: 1.5rem;
-    color: white;
-    font-weight: bold;
-}
-
-.pos-modal-body {
-    padding: 2rem;
-    font-size: 1.1rem;
-    line-height: 1.5;
-    color: #333;
-    text-align: center;
-}
-
-.pos-modal-footer {
-    padding: 1rem 2rem 2rem;
-    text-align: center;
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-}
-
-.pos-modal-btn {
-    padding: 0.75rem 2rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    min-width: 120px;
-}
-
-.pos-modal-btn-close {
-    background: #4CAF50;
-    color: white;
-}
-
-.pos-modal-btn-close:hover {
-    background: #45a049;
-    transform: translateY(-2px);
-}
-
-.pos-modal-btn-confirm {
-    background: #4CAF50;
-    color: white;
-}
-
-.pos-modal-btn-confirm:hover {
-    background: #45a049;
-    transform: translateY(-2px);
-}
-
-.pos-modal-btn-cancel {
-    background: #f5f5f5;
-    color: #333;
-    border: 2px solid #ddd;
-}
-
-.pos-modal-btn-cancel:hover {
-    background: #e0e0e0;
-    transform: translateY(-2px);
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .pos-main {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        padding: 1rem;
-    }
-    
-    .pos-search-methods {
-        grid-template-columns: 1fr;
-    }
-    
-    .items-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    }
-    
-    .pos-modal-content {
-        min-width: 300px;
-        margin: 1rem;
-    }
-    
-    .pos-modal-footer {
-        flex-direction: column;
-    }
-}
-</style>
 
 <div class="pos-register">
     <!-- Header -->
@@ -654,7 +71,7 @@ try {
             <div class="cart-summary">
                 <div class="cart-total">
                     <span>Total:</span>
-                    <span id="posCartTotal" style="color: #dc3545 !important; font-size: 2.5rem !important; font-weight: 700 !important; text-shadow: 3px 3px 6px rgba(0,0,0,0.3) !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; background: rgba(255,255,255,0.1) !important; padding: 4px 8px !important; border-radius: 4px !important; border: 2px solid #dc3545 !important;">$0.00</span>
+                    <span id="posCartTotal" class="pos-cart-total">$0.00</span>
                 </div>
                 <button class="checkout-btn" id="checkoutBtn" onclick="processCheckout()" disabled>
                     💳 Complete Sale
@@ -796,7 +213,7 @@ function showAllItems() {
 // Simple test cart display function
 function simpleCartDisplay() {const cartItems = document.getElementById('cartItems');
     if (cartItems) {
-        cartItems.innerHTML = '<div style="color: blue; padding: 1rem;">🧪 SIMPLE TEST: Cart has ' + cart.length + ' items</div>';} else {
+                        cartItems.innerHTML = '<div class="debug-info">🧪 SIMPLE TEST: Cart has ' + cart.length + ' items</div>';} else {
         console.error('🧪 cartItems element not found');
     }
 }
@@ -1019,14 +436,14 @@ function showPOSModal(title, message, type = 'info', autoClose = false) {
         'processing': '#9C27B0'
     };
     
-    modal.innerHTML = `
-        <div class="pos-modal-content">
-            <div class="pos-modal-header" style="background: ${colorMap[type]};">
-                <h3 style="margin: 0; color: white; display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="font-size: 1.5rem;">${iconMap[type]}</span>
-                    ${title}
-                </h3>
-            </div>
+            modal.innerHTML = `
+            <div class="pos-modal-content">
+                <div class="pos-modal-header" style="background: ${colorMap[type]};">
+                    <h3 class="pos-modal-header">
+                        <span style="font-size: 1.5rem;">${iconMap[type]}</span>
+                        ${title}
+                    </h3>
+                </div>
             <div class="pos-modal-body">
                 ${message}
             </div>
@@ -1062,7 +479,7 @@ function showPOSConfirm(title, message, confirmText = 'Confirm', cancelText = 'C
         modal.innerHTML = `
             <div class="pos-modal-content">
                 <div class="pos-modal-header" style="background: #FF9800;">
-                    <h3 style="margin: 0; color: white; display: flex; align-items: center; gap: 0.5rem;">
+                    <h3 class="pos-modal-header">
                         <span style="font-size: 1.5rem;">❓</span>
                         ${title}
                     </h3>
@@ -1124,7 +541,7 @@ function showPaymentMethodSelector(total) {
                     </div>
                     
                     <div class="payment-methods" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
-                        <button class="payment-method-btn" data-method="Cash" style="background: #4CAF50; color: white; border: none; padding: 1rem; border-radius: 8px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 1rem;">
+                        <button class="payment-method-btn pos-payment-method pos-payment-cash" data-method="Cash">
                             <span style="font-size: 1.5rem;">💵</span>
                             <div style="text-align: left;">
                                 <div style="font-weight: bold;">Cash</div>
@@ -1132,7 +549,7 @@ function showPaymentMethodSelector(total) {
                             </div>
                         </button>
                         
-                        <button class="payment-method-btn" data-method="Credit Card" style="background: #2196F3; color: white; border: none; padding: 1rem; border-radius: 8px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 1rem;">
+                        <button class="payment-method-btn pos-payment-method pos-payment-credit" data-method="Credit Card">
                             <span style="font-size: 1.5rem;">💳</span>
                             <div style="text-align: left;">
                                 <div style="font-weight: bold;">Credit Card</div>
@@ -1140,7 +557,7 @@ function showPaymentMethodSelector(total) {
                             </div>
                         </button>
                         
-                        <button class="payment-method-btn" data-method="Debit Card" style="background: #FF9800; color: white; border: none; padding: 1rem; border-radius: 8px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 1rem;">
+                        <button class="payment-method-btn pos-payment-method pos-payment-debit" data-method="Debit Card">
                             <span style="font-size: 1.5rem;">💳</span>
                             <div style="text-align: left;">
                                 <div style="font-weight: bold;">Debit Card</div>
@@ -1148,7 +565,7 @@ function showPaymentMethodSelector(total) {
                             </div>
                         </button>
                         
-                        <button class="payment-method-btn" data-method="Check" style="background: #9C27B0; color: white; border: none; padding: 1rem; border-radius: 8px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 1rem;">
+                        <button class="payment-method-btn pos-payment-method pos-payment-check" data-method="Check">
                             <span style="font-size: 1.5rem;">📝</span>
                             <div style="text-align: left;">
                                 <div style="font-weight: bold;">Check</div>
@@ -1701,13 +1118,103 @@ function printReceipt() {
         <html>
         <head>
             <title>Receipt - Order ${new Date().getTime()}</title>
-            <style>
-                body { margin: 0; padding: 0; background: white; }
-                @media print {
-                    body { margin: 0; }
-                }
-            </style>
-        </head>
+            
+        
+<!-- Database-driven CSS for admin_pos -->
+
+<script>
+    // Load CSS from database
+    async function loadAdmin_posCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=admin_pos');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('admin_pos-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ admin_pos CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load admin_pos CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>admin_pos CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadAdmin_posCSS);
+</script>
+
+<!-- Database-driven CSS for admin_pos -->
+
+<script>
+    // Load CSS from database
+    async function loadAdmin_posCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=admin_pos');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('admin_pos-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ admin_pos CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load admin_pos CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>admin_pos CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadAdmin_posCSS);
+</script>
+
+<!-- Database-driven CSS for admin_pos -->
+<style id="admin_pos-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadAdmin_posCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=admin_pos');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('admin_pos-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ admin_pos CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load admin_pos CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>admin_pos CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadAdmin_posCSS);
+</script>
+</head>
         <body>
             ${receiptContent}
             <script>

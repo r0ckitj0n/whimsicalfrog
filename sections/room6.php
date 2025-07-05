@@ -38,13 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Global Product Popup -->
-<?php 
-require_once __DIR__ . '/../components/global_popup.php';
-echo renderGlobalPopup();
-echo renderGlobalPopupCSS();
-?>
-
 <!-- Room container -->
 <?php echo $roomHelper->renderRoomContainer(
     $roomHelper->renderRoomHeader() . 

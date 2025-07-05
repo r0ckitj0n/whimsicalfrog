@@ -939,7 +939,7 @@ async function showAddItemModal() {
                     <input type="text" id="itemSearch" class="form-input" placeholder="Search by SKU or name...">
                 </div>
                 <div class="items-list" id="itemsList" style="max-height: 300px; overflow-y: auto;">
-                    <div style="text-align: center; padding: 20px; color: #666;">Loading items...</div>
+                    <div class="loading-message">Loading items...</div>
                 </div>
             </div>
         </div>
@@ -958,23 +958,23 @@ async function showAddItemModal() {
             
             if (data.success) {
                 if (data.items.length === 0) {
-                    itemsList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No items found</div>';
+                                            itemsList.innerHTML = '<div class="no-items-message">No items found</div>';
                 } else {
                     itemsList.innerHTML = data.items.map(item => `
                         <div class="item-card-small" onclick="addItemToOrder('${item.sku}', '${item.name.replace(/'/g, "\\'")}', ${item.retailPrice})" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; cursor: pointer; border-radius: 4px;">
                             <div class="item-info">
                                 <div class="item-name" style="font-weight: 500;">${item.name}</div>
-                                <div class="item-sku" style="color: #666; font-size: 0.875rem;">${item.sku}</div>
-                            </div>
-                            <div class="item-price" style="font-weight: 600; color: #007bff;">$${parseFloat(item.retailPrice || 0).toFixed(2)}</div>
+                                                            <div class="item-sku">${item.sku}</div>
+                        </div>
+                        <div class="item-price">$${parseFloat(item.retailPrice || 0).toFixed(2)}</div>
                         </div>
                     `).join('');
                 }
             } else {
-                itemsList.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Failed to load items</div>';
+                                    itemsList.innerHTML = '<div class="error-message">Failed to load items</div>';
             }
         } catch (error) {
-            itemsList.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;">Network error</div>';
+                            itemsList.innerHTML = '<div class="error-message">Network error</div>';
         }
     };
     

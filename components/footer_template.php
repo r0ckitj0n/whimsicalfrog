@@ -125,8 +125,8 @@ $footerData = [
                 
                 <?php if ($footerConfig['show_newsletter']): ?>
                 <div class="footer-newsletter">
-                    <h4 class="footer-heading" style="font-size: 16px; margin-bottom: 10px;">Newsletter</h4>
-                    <p class="footer-text" style="font-size: 13px; margin-bottom: 10px;">Get updates on new products and special offers!</p>
+                                    <h4 class="footer-heading">Newsletter</h4>
+                <p class="footer-text">Get updates on new products and special offers!</p>
                     <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
                         <input type="email" name="email" placeholder="Your email address" class="footer-newsletter-input" required>
                         <button type="submit" class="footer-newsletter-button">Subscribe</button>
@@ -186,7 +186,7 @@ $footerData = [
                 
                 <?php if ($footerConfig['show_newsletter']): ?>
                 <div class="footer-newsletter">
-                    <h4 class="footer-heading" style="font-size: 16px;">Stay Updated</h4>
+                    <h4 class="footer-heading">Stay Updated</h4>
                     <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
                         <input type="email" name="email" placeholder="Email address" class="footer-newsletter-input" required>
                         <button type="submit" class="footer-newsletter-button">Join</button>
@@ -242,7 +242,7 @@ $footerData = [
                 
                 <?php if ($footerConfig['show_newsletter']): ?>
                 <div class="footer-newsletter footer-mt-medium">
-                    <h4 class="footer-heading" style="font-size: 16px;">Newsletter</h4>
+                    <h4 class="footer-heading">Newsletter</h4>
                     <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
                         <input type="email" name="email" placeholder="Your email" class="footer-newsletter-input" required>
                         <button type="submit" class="footer-newsletter-button">Subscribe</button>
@@ -276,8 +276,8 @@ $footerData = [
             
             <?php if ($footerConfig['show_newsletter']): ?>
             <div class="footer-newsletter footer-mt-medium">
-                <h4 class="footer-heading" style="font-size: 16px;">Stay Connected</h4>
-                <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST" style="max-width: 400px; margin: 0 auto;">
+                <h4 class="footer-heading">Stay Connected</h4>
+                <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
                     <input type="email" name="email" placeholder="Enter your email address" class="footer-newsletter-input" required>
                     <button type="submit" class="footer-newsletter-button">Subscribe</button>
                 </form>

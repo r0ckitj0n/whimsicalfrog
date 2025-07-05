@@ -2,7 +2,8 @@
 // Admin settings page - Integrates with main admin system
 ?>
 
-<div class="settings-page">
+<!-- This page now properly integrates with the centralized admin navbar from admin.php -->
+<div class="admin-content-container">
     <div class="settings-grid">
     
     <!-- Content Management Section -->
@@ -46,6 +47,22 @@
           </svg>
           <span class="button-text">Room-Category Links</span>
         </button>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <button type="button" onclick="openGlobalColorsAndSizes()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v10a4 4 0 004 4h8a2 2 0 002-2V7a2 2 0 00-2-2z"></path>
+                                </svg>
+                                Global Colors & Sizes
+                            </button>
+                            
+                            <button type="button" onclick="openPopupSalesLingo()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm font-medium flex items-center text-left">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a9.863 9.863 0 01-4.255-.949L5 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+                                </svg>
+                                Popup Sales Lingo
+                            </button>
+                        </div>
       </div>
     </div>
 
@@ -82,6 +99,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
           </svg>
           <span class="button-text">Area-Item Mapper</span>
+        </button>
+        
+        <button id="roomBackgroundBtn" onclick="openRoomBackgroundSettingsModal()" class="admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span class="button-text">Room Background Settings</span>
         </button>
       </div>
     </div>
@@ -230,14 +254,12 @@
     </div>
 </div>
 
-<script>
-console.log('✅ Admin Settings Page loaded with Global CSS Rules');
+<!-- Include Popup Sales Lingo Modal -->
+<?php include __DIR__ . '/../components/popup_sales_lingo_modal.php'; ?>
 
-// Ensure global CSS is applied by injecting CSS variables
-document.addEventListener('DOMContentLoaded', function() {
-    // This will be automatically handled by the linked CSS files above
-    console.log('Admin settings styling loaded from global CSS rules');
-});
+<!-- All styling now comes from the centralized Global CSS Rules system via admin.php -->
+<script>
+console.log('✅ Admin Settings Page now properly integrated with centralized admin system');
 
 // All modal functions are handled by the main admin system in index.php
 // This keeps the settings page clean and focused on layout only

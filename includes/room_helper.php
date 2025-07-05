@@ -205,11 +205,43 @@ class RoomHelper {
     }
     
     /**
-     * Render required CSS links
+     * Render CSS links and loading scripts
      */
     public function renderCssLinks() {
         return "
-        <!-- All room styling now handled by database-driven CSS system -->
+        <!-- Database-driven CSS for room_template -->
+        <style id=\"room_template-css\">
+        /* CSS will be loaded from database */
+        </style>
+
+        <script>
+            // Load CSS from database
+            async function loadRoom_templateCSS() {
+                try {
+                    const response = await fetch('/api/css_generator.php?category=room_template');
+                    const cssText = await response.text();
+                    const styleElement = document.getElementById('room_template-css');
+                    if (styleElement && cssText) {
+                        styleElement.textContent = cssText;
+                        console.log('✅ room_template CSS loaded from database');
+                    }
+                } catch (error) {
+                    console.error('❌ FATAL: Failed to load room_template CSS:', error);
+                    // Show error to user - no fallback
+                    const errorDiv = document.createElement('div');
+                    errorDiv.innerHTML = `
+                        <div style=\"position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;\">
+                            <strong>room_template CSS Loading Error</strong><br>
+                            Database connection failed. Please refresh the page.
+                        </div>
+                    `;
+                    document.body.appendChild(errorDiv);
+                }
+            }
+            
+            // Load CSS when DOM is ready
+            document.addEventListener('DOMContentLoaded', loadRoom_templateCSS);
+        </script>
         ";
     }
     
@@ -226,72 +258,20 @@ class RoomHelper {
         window.roomItems = " . json_encode($this->roomItems) . ";
         window.roomNumber = '{$this->roomNumber}';
         window.roomType = '{$this->roomType}';
-        window.ROOM_TYPE = '{$this->roomType}';
         
-        // Room coordinate system data
-        window.originalImageWidth = 1280;
-        window.originalImageHeight = 896;
-        window.baseAreas = " . json_encode($coordinates) . ";
-        window.roomOverlayWrapper = null;
+        // Room coordinate system - Simple initialization
+        window.ROOM_TYPE = '{$this->roomType}';
         
         // Initialize coordinate system when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            window.roomOverlayWrapper = document.querySelector('.room-overlay-wrapper');
-            if (window.roomOverlayWrapper && window.baseAreas && window.baseAreas.length > 0) {
-                updateItemPositions();
-                
-                // Update positions on window resize
-                let resizeTimeout;
-                window.addEventListener('resize', function() {
-                    clearTimeout(resizeTimeout);
-                    resizeTimeout = setTimeout(function() {
-                        updateItemPositions();
-                        adjustTitleBoxSize();
-                    }, 100);
-                });
-            }
+            console.log('🎯 Room helper DOM loaded, room type:', window.ROOM_TYPE);
+            
+            // The room-coordinate-manager.js will handle the coordinate system
+            // No need to do anything here - it's all handled automatically
             
             // Initialize title box sizing
             adjustTitleBoxSize();
         });
-        
-        // Function to update item positions with scaling
-        function updateItemPositions() {
-            if (!window.roomOverlayWrapper || !window.baseAreas) return;
-            
-            const wrapperWidth = window.roomOverlayWrapper.offsetWidth;
-            const wrapperHeight = window.roomOverlayWrapper.offsetHeight;
-            
-            const wrapperAspectRatio = wrapperWidth / wrapperHeight;
-            const imageAspectRatio = window.originalImageWidth / window.originalImageHeight;
-            
-            let renderedImageWidth, renderedImageHeight;
-            let offsetX = 0;
-            let offsetY = 0;
-            
-            if (wrapperAspectRatio > imageAspectRatio) {
-                renderedImageHeight = wrapperHeight;
-                renderedImageWidth = renderedImageHeight * imageAspectRatio;
-                offsetX = (wrapperWidth - renderedImageWidth) / 2;
-            } else {
-                renderedImageWidth = wrapperWidth;
-                renderedImageHeight = renderedImageWidth / imageAspectRatio;
-                offsetY = (wrapperHeight - renderedImageHeight) / 2;
-            }
-            
-            const scaleX = renderedImageWidth / window.originalImageWidth;
-            const scaleY = renderedImageHeight / window.originalImageHeight;
-            
-            window.baseAreas.forEach((areaData, index) => {
-                const itemElement = document.getElementById('item-icon-' + index);
-                if (itemElement && areaData) {
-                    itemElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
-                    itemElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
-                    itemElement.style.width = (areaData.width * scaleX) + 'px';
-                    itemElement.style.height = (areaData.height * scaleY) + 'px';
-                }
-            });
-        }
         
         // Function to adjust title box size and text size dynamically
         function adjustTitleBoxSize() {
@@ -455,8 +435,7 @@ class RoomHelper {
             <div class=\"back-button-container\">
                 <a href=\"/?page=room_main\" class=\"back-to-main-button\">
                     <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">
-                        <path d=\"m12 19-7-7 7-7\"></path>
-                        <path d=\"m19 12-7 7-7-7\"></path>
+                        <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 19l-7-7m0 0l7-7m-7 7h18\"></path>
                     </svg>
                     <span>Back to Main Room</span>
                 </a>

@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for login -->
+<style id="login-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadLoginCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=login');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('login-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ login CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load login CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>login CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadLoginCSS);
+</script>
+
 <?php
 // Login page section
 ?>
@@ -33,33 +67,4 @@
     </p>
 </section>
 
-<style>
-/* Ensure login button visibility */
-#loginButton {
-    background: #87ac3a !important;
-    color: white !important;
-    border: 2px solid #556B2F !important;
-    padding: 12px 16px !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    width: 100% !important;
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    z-index: 999 !important;
-    position: relative !important;
-}
 
-#loginButton:hover {
-    background: #a3cc4a !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-#loginButton:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-</style>

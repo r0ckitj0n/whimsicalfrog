@@ -4,132 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhimsicalFrog Database Status</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
+    
+
+<!-- Database-driven CSS for db_status -->
+<style id="db_status-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadDb_statusCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=db_status');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('db_status-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ db_status CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load db_status CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>db_status CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .status-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .status-card h3 {
-            margin-top: 0;
-            color: #4a5568;
-            font-size: 1.3em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
-        .status-online {
-            background: #48bb78;
-            box-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
-        }
-        
-        .status-offline {
-            background: #f56565;
-            box-shadow: 0 0 10px rgba(245, 101, 101, 0.5);
-        }
-        
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-        
-        .stat-value {
-            font-weight: bold;
-            color: #2d3748;
-        }
-        
-        .actions {
-            text-align: center;
-            margin-top: 30px;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            margin: 0 10px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            border: 2px solid rgba(255,255,255,0.3);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
-        .error {
-            background: #fed7d7;
-            color: #c53030;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        
-        .success {
-            background: #c6f6d5;
-            color: #22543d;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-    </style>
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadDb_statusCSS);
+</script>
 </head>
 <body>
     <div class="container">

@@ -30,15 +30,41 @@ if (!$authenticated) {
     <html>
     <head>
         <title>Database Manager - Authentication</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 50px; background: #f5f5f5; }
-            .login-form { background: white; padding: 30px; border-radius: 8px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-            input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
-            button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-            button:hover { background: #005a87; }
-            .error { color: red; margin: 10px 0; }
-        </style>
-    </head>
+        
+    
+<!-- Database-driven CSS for db_web_manager -->
+<style id="db_web_manager-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadDb_web_managerCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=db_web_manager');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('db_web_manager-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ db_web_manager CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load db_web_manager CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>db_web_manager CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadDb_web_managerCSS);
+</script>
+</head>
     <body>
         <div class="login-form">
             <h2>🐸 Database Manager</h2>
@@ -188,41 +214,45 @@ if (isset($_POST['action'])) {
 <html>
 <head>
     <title>WhimsicalFrog Database Manager</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .header { background: #007cba; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .env-switcher { margin-bottom: 20px; }
-        .env-switcher a { padding: 10px 20px; margin-right: 10px; background: white; text-decoration: none; border-radius: 4px; border: 2px solid #007cba; }
-        .env-switcher a.active { background: #007cba; color: white; }
-        .panel { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .status-item { padding: 15px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid #007cba; }
-        .status-item strong { display: block; font-size: 1.2em; color: #007cba; }
-        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; }
-        button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
-        button:hover { background: #005a87; }
-        button.secondary { background: #6c757d; }
-        button.secondary:hover { background: #545b62; }
-        .results { margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 8px 12px; border: 1px solid #ddd; text-align: left; }
-        th { background: #f8f9fa; font-weight: bold; }
-        tr:nth-child(even) { background: #f8f9fa; }
-        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        .loading { text-align: center; padding: 20px; color: #666; }
-        .tabs { display: flex; margin-bottom: 20px; }
-        .tab { padding: 10px 20px; background: #e9ecef; border: none; cursor: pointer; margin-right: 5px; }
-        .tab.active { background: #007cba; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .logout { float: right; }
-    </style>
+    
+
+<!-- Database-driven CSS for db_web_manager -->
+<style id="db_web_manager-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadDb_web_managerCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=db_web_manager');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('db_web_manager-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ db_web_manager CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load db_web_manager CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>db_web_manager CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadDb_web_managerCSS);
+</script>
 </head>
 <body>
     <div class="header">
         <h1>🐸 WhimsicalFrog Database Manager</h1>
-        <a href="?logout=1" class="logout" style="color: white; text-decoration: none;">Logout</a>
+                        <a href="?logout=1" class="logout-link">Logout</a>
     </div>
     
     <div class="env-switcher">

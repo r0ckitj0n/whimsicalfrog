@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for image_carousel -->
+<style id="image_carousel-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadImage_carouselCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=image_carousel');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('image_carousel-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ image_carousel CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load image_carousel CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>image_carousel CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadImage_carouselCSS);
+</script>
+
 <?php
 /**
  * Image Carousel Component
@@ -123,23 +157,7 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
         <?php endif; ?>
     </div>
     
-    <style>
-    .carousel-prev:hover, .carousel-next:hover {
-        background: rgba(135, 172, 58, 1) !important;
-    }
     
-    .thumbnail:hover {
-        border-color: #87ac3a !important;
-    }
-    
-    .indicator.active {
-        background: #87ac3a !important;
-    }
-    
-    .indicator:hover {
-        background: #a3cc4a !important;
-    }
-    </style>
     
     <script>
     // Carousel functionality

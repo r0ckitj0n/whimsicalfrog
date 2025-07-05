@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for room_main -->
+<style id="room_main-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadRoom_mainCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=room_main');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('room_main-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ room_main CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load room_main CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>room_main CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadRoom_mainCSS);
+</script>
+
 <?php
 /**
  * Main room page with clickable doors for each category
@@ -64,112 +98,7 @@ $sectionClass = $isFullScreen ? 'main-room-section fullscreen' : 'main-room-sect
 ?>
 
 <!-- Dynamic Main Room Styles -->
-<style>
-.main-room-section.fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 40;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-image: url('images/room_main.webp');
-}
 
-.webp .main-room-section.fullscreen {
-    background-image: url('images/room_main.webp');
-}
-
-.main-room-section .door-area {
-    position: absolute;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 10;
-    /* Coordinates will be set by JavaScript, not CSS */
-}
-
-.main-room-section .door-area:hover {
-    transform: scale(1.05);
-}
-
-.main-room-section .door-picture {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-.main-room-section .door-sign {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: filter 0.3s ease;
-}
-
-.main-room-section .door-area:hover .door-sign {
-    filter: brightness(1.1) drop-shadow(0 0 10px rgba(135, 172, 58, 0.5));
-}
-
-.main-room-section .door-label {
-    position: absolute;
-    bottom: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: #87ac3a;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-}
-
-.main-room-section .door-area:hover .door-label {
-    opacity: 1;
-}
-
-/* Main room title overlay (if configured) */
-.main-room-title {
-    position: absolute;
-    top: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    color: #87ac3a;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 1rem 2rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    font-family: 'Merienda', cursive;
-    z-index: 20;
-}
-
-.main-room-title h1 {
-    margin: 0 0 0.5rem 0;
-    font-size: 2rem;
-    font-weight: bold;
-}
-
-.main-room-title p {
-    margin: 0;
-    font-size: 1rem;
-    opacity: 0.8;
-}
-
-/* Loading states */
-.door-area.loading {
-    opacity: 0.7;
-    pointer-events: none;
-}
-
-.door-area.loading .door-sign {
-    filter: grayscale(0.5);
-}
-</style>
 
 <section id="mainRoomPage" class="<?php echo $sectionClass; ?>">
     <!-- Main Room Title (if configured and enabled) -->
@@ -226,13 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Apply full-screen adjustments if needed
     if (window.MainRoomData.isFullScreen) {
-        document.body.classList.add('main-room-fullscreen');
-        
-        // Hide navigation in full-screen mode
-        const nav = document.querySelector('nav.main-nav');
-        if (nav) {
-            nav.style.display = 'none';
-        }
+        // Class is now applied via PHP in index.php for reliable timing
         
         // Add logout link in full-screen mode
         const logoutLink = document.createElement('a');

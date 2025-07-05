@@ -47,149 +47,39 @@ if (!empty($selectedItemId)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cost Breakdown Manager - Whimsical Frog</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        /* Custom Styles */
-        .cost-breakdown {
-            background-color: #f9fafb;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 20px;
-            border: 1px solid #e2e8f0;
-        }
-        .cost-breakdown h3 {
-            color: #4a5568;
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 8px;
-        }
-        .cost-breakdown-section {
-            margin-bottom: 16px;
-        }
-        .cost-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px dashed #e2e8f0;
-        }
-        .cost-item:last-child {
-            border-bottom: none;
-        }
-        .cost-item-name {
-            font-weight: 500;
-        }
-        .cost-item-value {
-            font-weight: 600;
-            color: #4a5568;
-        }
-        .cost-totals {
-            background-color: #edf2f7;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 12px;
-        }
-        .cost-total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-        }
-        .suggested-cost {
-            color: #805ad5;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        .cost-label {
-            font-size: 14px;
-            color: #718096;
-        }
-        
-        /* Toast Notification */
-        .toast-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 4px;
-            color: white;
-            font-weight: 500;
-            z-index: 9999;
-            opacity: 0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transform: translateY(-20px);
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        .toast-notification.success {
-            background-color: #48bb78;
-        }
-        .toast-notification.error {
-            background-color: #f56565;
-        }
-        .toast-notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Action buttons now use standardized utility classes */
-        
-        /* Loading Spinner */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Animate cost changes */
-        .highlight-change {
-            animation: highlight 1s ease-out;
-        }
-        @keyframes highlight {
-            0% { background-color: #c6f6d5; }
-            100% { background-color: transparent; }
-        }
-        
-        /* Modal styles */
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-        .modal-backdrop.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .modal-content {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transform: scale(0.9);
-            transition: transform 0.3s;
-        }
-        .modal-backdrop.show .modal-content {
-            transform: scale(1);
-        }
+    
+    <!-- Database-driven CSS for cost_breakdown -->
+    <style id="cost_breakdown-css">
+    /* CSS will be loaded from database */
     </style>
+    <script>
+        // Load CSS from database
+        async function loadCost_breakdownCSS() {
+            try {
+                const response = await fetch('/api/css_generator.php?category=cost_breakdown');
+                const cssText = await response.text();
+                const styleElement = document.getElementById('cost_breakdown-css');
+                if (styleElement && cssText) {
+                    styleElement.textContent = cssText;
+                    console.log('✅ cost_breakdown CSS loaded from database');
+                }
+            } catch (error) {
+                console.error('❌ FATAL: Failed to load cost_breakdown CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>cost_breakdown CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+            }
+        }
+        
+        // Load CSS when DOM is ready
+        document.addEventListener('DOMContentLoaded', loadCost_breakdownCSS);
+    </script>
 </head>
 <body class="bg-gray-100">
     <!-- Toast Notification -->

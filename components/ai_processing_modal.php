@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for ai_processing -->
+<style id="ai_processing-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadAi_processingCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=ai_processing');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('ai_processing-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ ai_processing CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load ai_processing CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>ai_processing CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadAi_processingCSS);
+</script>
+
 <?php
 /**
  * AI Processing Modal Component
@@ -392,17 +426,4 @@ window.processImageWithAI = async function(imagePath, sku, options = {}) {
 };
 </script>
 
-<style>
-.animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: .5;
-    }
-}
-</style> 
+ 

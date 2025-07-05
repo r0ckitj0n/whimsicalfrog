@@ -20,23 +20,40 @@ Auth::requireAdmin();
     <title>Room Configuration Manager - WhimsicalFrog Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Admin styles now loaded from database via main CSS system -->
-    <style>
-        /* Load essential CSS from database */
-        <?php
-        // For standalone admin files, load CSS directly from database
-        require_once '../includes/database.php';
+    
+
+<!-- Database-driven CSS for room_config -->
+<style id="room_config-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadRoom_configCSS() {
         try {
-            $db = Database::getInstance();
-            $rules = $db->query("SELECT rule_name, css_property, css_value FROM global_css_rules WHERE is_active = 1 AND category IN ('admin', 'modals', 'forms', 'buttons') ORDER BY category, rule_name")->fetchAll(PDO::FETCH_ASSOC);
-            
-            foreach ($rules as $rule) {
-                echo ".{$rule['rule_name']} { {$rule['css_property']}: {$rule['css_value']}; }\n";
+            const response = await fetch('/api/css_generator.php?category=room_config');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('room_config-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ room_config CSS loaded from database');
             }
-        } catch (Exception $e) {
-            echo "/* CSS loading failed */\n";
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load room_config CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>room_config CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
         }
-        ?>
-    </style>
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadRoom_configCSS);
+</script>
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">

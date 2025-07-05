@@ -17,17 +17,40 @@ session_destroy();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logged Out</title>
-    <style>
-        body { background-color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        .container { background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 8px; padding: 2rem; max-width: 28rem; width: 100%; text-align: center; }
-        .title { font-size: 1.5rem; font-weight: bold; color: #15803d; margin-bottom: 1rem; }
-        .text { margin-bottom: 1.5rem; color: #6b7280; }
-        .btn { display: inline-block; padding: 0.5rem 1.5rem; border-radius: 4px; text-decoration: none; font-weight: 600; }
-        .btn-primary { background-color: #16a34a; color: white; }
-        .btn-primary:hover { background-color: #15803d; }
-        .btn-secondary { background-color: #e5e7eb; color: #374151; margin-left: 1rem; }
-        .btn-secondary:hover { background-color: #d1d5db; }
-    </style>
+    
+
+<!-- Database-driven CSS for logout -->
+<style id="logout-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadLogoutCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=logout');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('logout-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ logout CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load logout CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>logout CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadLogoutCSS);
+</script>
 </head>
 <body>
     <div class="container">

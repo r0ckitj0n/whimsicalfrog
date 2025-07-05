@@ -111,10 +111,19 @@ function generateCSSContent($rules) {
     
     // Group rules by selector
     foreach ($rules as $rule) {
-        // Extract selector from rule_name (format: ".selector { property }")
+        $selector = '';
+        
+        // Extract selector from rule_name - handle both formats:
+        // 1. ".selector { property }" format
+        // 2. ".selector" format (simple selector)
         if (preg_match('/^(.+?)\s*\{\s*(.+?)\s*\}$/', $rule['rule_name'], $matches)) {
             $selector = trim($matches[1]);
-            
+        } else {
+            // Simple selector format - just use the rule_name as selector
+            $selector = trim($rule['rule_name']);
+        }
+        
+        if (!empty($selector)) {
             if (!isset($groupedRules[$selector])) {
                 $groupedRules[$selector] = [];
             }

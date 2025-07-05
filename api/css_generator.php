@@ -43,28 +43,55 @@ function generateCSSContent($rules) {
     
     $currentCategory = '';
     $utilityClasses = [];
+    $cssRules = [];
     
-    // First pass: CSS variables and regular properties
+    // First pass: Group rules by selector and collect utility classes
     foreach ($rules as $rule) {
         if ($rule['category'] !== $currentCategory) {
             $currentCategory = $rule['category'];
-            $css .= "\n/* === " . ucwords(str_replace('_', ' ', $currentCategory)) . " === */\n";
         }
         
         // Check if this is a utility class (contains full CSS block)
         if (strpos($rule['rule_name'], '_utility_class') !== false && strpos($rule['css_value'], '{') !== false) {
-            // This is a utility class - store it for later processing
             $utilityClasses[] = $rule;
             continue;
         }
         
-        // Generate CSS variable
-        $css .= ":root {\n";
-        $css .= "    --{$rule['rule_name']}: {$rule['css_value']};\n";
-        $css .= "}\n\n";
+        // Check if this is a CSS selector (starts with . # or is an element name)
+        if (preg_match('/^(\.|#|[a-zA-Z]|\[|:)/', $rule['rule_name'])) {
+            // This is a CSS selector - group properties by selector
+            if (!isset($cssRules[$rule['category']])) {
+                $cssRules[$rule['category']] = [];
+            }
+            if (!isset($cssRules[$rule['category']][$rule['rule_name']])) {
+                $cssRules[$rule['category']][$rule['rule_name']] = [];
+            }
+            $cssRules[$rule['category']][$rule['rule_name']][] = [
+                'property' => $rule['css_property'],
+                'value' => $rule['css_value']
+            ];
+        } else {
+            // This is a CSS variable
+            $css .= ":root {\n";
+            $css .= "    --{$rule['rule_name']}: {$rule['css_value']};\n";
+            $css .= "}\n\n";
+        }
     }
     
-    // Second pass: Utility classes
+    // Second pass: Generate CSS rules for selectors
+    foreach ($cssRules as $category => $selectors) {
+        $css .= "\n/* === " . ucwords(str_replace('_', ' ', $category)) . " === */\n";
+        
+        foreach ($selectors as $selector => $properties) {
+            $css .= "{$selector} {\n";
+            foreach ($properties as $prop) {
+                $css .= "    {$prop['property']}: {$prop['value']};\n";
+            }
+            $css .= "}\n\n";
+        }
+    }
+    
+    // Third pass: Utility classes
     if (!empty($utilityClasses)) {
         $css .= "\n/* === Utility Classes === */\n";
         foreach ($utilityClasses as $utilityRule) {

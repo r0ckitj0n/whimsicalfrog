@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for detailed_item_modal -->
+<style id="detailed_item_modal-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadDetailed_item_modalCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=detailed_item_modal');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('detailed_item_modal-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ detailed_item_modal CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load detailed_item_modal CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>detailed_item_modal CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadDetailed_item_modalCSS);
+</script>
+
 <?php
 // Detailed Item Modal Component
 // This component displays comprehensive item information in a compact modal
@@ -507,7 +541,7 @@ function renderDetailedItemModal($item, $images = []) {
             // Load all sizes and colors to show what's available (but initially don't filter)
             const [sizesResponse, colorsResponse] = await Promise.all([
                 fetch(`/api/item_sizes.php?action=get_sizes&item_sku=${itemSku}`),
-                fetch(`/api/item_colors.php?action=get_colors&item_sku=${itemSku}`)
+                fetch(`/api/item_colors.php?action=get_colors&item_sku=${itemSku}&in_stock_only=true`)
             ]);
             
             const sizesData = await sizesResponse.json();
@@ -519,8 +553,150 @@ function renderDetailedItemModal($item, $images = []) {
             // Populate color options (but don't filter yet)
             populateColorOptions(colorsData.colors || []);
             
+            // Initialize hierarchical selection (grey out subordinate options)
+            initializeHierarchicalSelection();
+            
         } catch (error) {
             console.error('Error loading item options:', error);
+        }
+    }
+    
+    // Initialize hierarchical selection with greyed out subordinate options
+    function initializeHierarchicalSelection() {
+        // Start with all subordinate options disabled
+        setSubordinateOptionsState(true);
+        
+        // Set up gender selection handler
+        const genderSelect = document.getElementById('itemGenderSelect');
+        if (genderSelect) {
+            genderSelect.addEventListener('change', handleGenderSelection);
+        }
+        
+        // Set up size selection handler
+        const sizeSelect = document.getElementById('itemSizeSelect');
+        if (sizeSelect) {
+            sizeSelect.addEventListener('change', handleSizeSelection);
+        }
+        
+        // Set up color selection handler
+        const colorSelect = document.getElementById('itemColorSelect');
+        if (colorSelect) {
+            colorSelect.addEventListener('change', handleColorSelection);
+        }
+    }
+    
+    // Handle gender selection - enables/disables sizes
+    function handleGenderSelection(event) {
+        const hasGenderSelection = event.target.value !== '';
+        
+        // Enable/disable sizes based on gender selection
+        setSizeSelectState(!hasGenderSelection);
+        
+        if (hasGenderSelection) {
+            // Load sizes for the selected gender
+            loadSizesForGender(window.currentItemOptions.sku, event.target.value);
+        } else {
+            // Clear and disable subordinate options
+            clearSizeOptions();
+            clearColorOptions();
+            setColorSelectState(true);
+        }
+    }
+    
+    // Handle size selection - enables/disables colors
+    function handleSizeSelection(event) {
+        const hasSizeSelection = event.target.value !== '';
+        
+        // Enable/disable colors based on size selection
+        setColorSelectState(!hasSizeSelection);
+        
+        if (hasSizeSelection) {
+            // Load colors for the selected size
+            loadColorsForSize(window.currentItemOptions.sku, event.target.value);
+        } else {
+            // Clear color options
+            clearColorOptions();
+        }
+    }
+    
+    // Handle color selection - updates stock info
+    function handleColorSelection(event) {
+        const selectedOption = event.target.options[event.target.selectedIndex];
+        const stock = selectedOption.dataset.stock || 0;
+        
+        document.getElementById('colorStockInfo').textContent = 
+            stock > 0 ? `${stock} available in this color` : 'Out of stock in this color';
+        
+        updateAvailableStock();
+    }
+    
+    // Set subordinate options state (sizes and colors)
+    function setSubordinateOptionsState(disabled) {
+        setSizeSelectState(disabled);
+        setColorSelectState(disabled);
+    }
+    
+    // Set size select state with visual feedback
+    function setSizeSelectState(disabled) {
+        const sizeSelect = document.getElementById('itemSizeSelect');
+        const sizeContainer = sizeSelect?.closest('.space-y-3');
+        
+        if (sizeSelect) {
+            sizeSelect.disabled = disabled;
+            if (disabled) {
+                sizeSelect.style.opacity = '0.5';
+                sizeSelect.style.cursor = 'not-allowed';
+                sizeSelect.title = 'Please select a gender/style first';
+            } else {
+                sizeSelect.style.opacity = '1';
+                sizeSelect.style.cursor = 'pointer';
+                sizeSelect.title = '';
+            }
+        }
+    }
+    
+    // Set color select state with visual feedback
+    function setColorSelectState(disabled) {
+        const colorSelect = document.getElementById('itemColorSelect');
+        const colorContainer = colorSelect?.closest('.space-y-3');
+        
+        if (colorSelect) {
+            colorSelect.disabled = disabled;
+            if (disabled) {
+                colorSelect.style.opacity = '0.5';
+                colorSelect.style.cursor = 'not-allowed';
+                colorSelect.title = 'Please select a size first';
+            } else {
+                colorSelect.style.opacity = '1';
+                colorSelect.style.cursor = 'pointer';
+                colorSelect.title = '';
+            }
+        }
+    }
+    
+    // Clear size options with appropriate message
+    function clearSizeOptions() {
+        const sizeSelect = document.getElementById('itemSizeSelect');
+        if (sizeSelect) {
+            sizeSelect.innerHTML = '<option value="">Select a gender/style first...</option>';
+        }
+        
+        const sizeStockInfo = document.getElementById('sizeStockInfo');
+        if (sizeStockInfo) {
+            sizeStockInfo.textContent = '';
+        }
+    }
+    
+    // Clear color options with appropriate message
+    function clearColorOptions() {
+        const colorSelect = document.getElementById('itemColorSelect');
+        if (colorSelect) {
+            colorSelect.innerHTML = '<option value="">Select a size first...</option>';
+        }
+        
+        const colorStockInfo = document.getElementById('colorStockInfo');
+        if (colorStockInfo) {
+            colorStockInfo.textContent = '';
         }
     }
     
@@ -683,7 +859,7 @@ function renderDetailedItemModal($item, $images = []) {
     // Load colors for specific size
     async function loadColorsForSize(itemSku, sizeId) {
         try {
-            let url = `/api/item_colors.php?action=get_colors&item_sku=${itemSku}`;
+            let url = `/api/item_colors.php?action=get_colors&item_sku=${itemSku}&in_stock_only=true`;
             if (sizeId) {
                 url += `&size_id=${sizeId}`;
             }
@@ -962,59 +1138,7 @@ function renderDetailedItemModal($item, $images = []) {
     });
     </script>
     
-    <style>
-    /* Required field validation styles */
-    .required-field {
-        position: relative;
-    }
     
-    .required-field:invalid {
-        border-color: #ef4444 !important;
-        box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2) !important;
-    }
-    
-    .required-field:focus:invalid {
-        border-color: #ef4444 !important;
-        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
-    }
-    
-    /* Validation error highlight */
-    .validation-error {
-        border-color: #ef4444 !important;
-        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1) !important;
-        animation: shake 0.3s ease-in-out;
-    }
-    
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-2px); }
-        75% { transform: translateX(2px); }
-    }
-    
-    /* Required asterisk styling */
-    .text-red-500 {
-        color: #ef4444;
-        font-weight: bold;
-    }
-    
-    /* Brand button styling for detailed modal - using global CSS values */
-    .brand-button {
-        background-color: #87ac3a;
-        color: #ffffff;
-        border-radius: 6px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        border: none;
-    }
-    
-    .brand-button:hover {
-        background-color: #6b8e23 !important;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(135, 172, 58, 0.3);
-    }
-    </style>
     
     <?php
     return ob_get_clean();

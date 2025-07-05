@@ -1,3 +1,37 @@
+
+<!-- Database-driven CSS for admin_dashboard -->
+<style id="admin_dashboard-css">
+/* CSS will be loaded from database */
+</style>
+<script>
+    // Load CSS from database
+    async function loadAdmin_dashboardCSS() {
+        try {
+            const response = await fetch('/api/css_generator.php?category=admin_dashboard');
+            const cssText = await response.text();
+            const styleElement = document.getElementById('admin_dashboard-css');
+            if (styleElement && cssText) {
+                styleElement.textContent = cssText;
+                console.log('✅ admin_dashboard CSS loaded from database');
+            }
+        } catch (error) {
+            console.error('❌ FATAL: Failed to load admin_dashboard CSS:', error);
+                // Show error to user - no fallback
+                const errorDiv = document.createElement('div');
+                errorDiv.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
+                        <strong>admin_dashboard CSS Loading Error</strong><br>
+                        Database connection failed. Please refresh the page.
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+        }
+    }
+    
+    // Load CSS when DOM is ready
+    document.addEventListener('DOMContentLoaded', loadAdmin_dashboardCSS);
+</script>
+
 <?php
 // Admin Dashboard - Configurable widget-based dashboard
 require_once __DIR__ . '/../includes/functions.php';
@@ -527,51 +561,7 @@ if (empty($dashboardConfig)) {
                             </div>
                         </div>
 
-                        <style>
-                        /* Order fulfillment table styling */
-                        .admin-form-input-sm {
-                            padding: 0.25rem 0.5rem;
-                            border: 1px solid #d1d5db;
-                            border-radius: 0.375rem;
-                            font-size: 0.875rem;
-                            background: white;
-                            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-                        }
-
-                        .admin-form-input-sm:focus {
-                            outline: none;
-                            border-color: #3b82f6;
-                            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-                        }
-
-                        .admin-form-select-sm {
-                            padding: 0.25rem 0.5rem;
-                            border: 1px solid #d1d5db;
-                            border-radius: 0.375rem;
-                            font-size: 0.875rem;
-                            background: white;
-                            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-                        }
-
-                        .admin-form-select-sm:focus {
-                            outline: none;
-                            border-color: #3b82f6;
-                            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-                        }
-
-                        /* Ensure date inputs are properly sized */
-                        .admin-form-input-sm[type="date"] {
-                            min-width: 120px;
-                            font-family: inherit;
-                        }
-
-                        /* Hide auto-save indicator when hanging */
-                        .auto-save-indicator {
-                            display: none !important;
-                            visibility: hidden !important;
-                            opacity: 0 !important;
-                        }
-                        </style>
+                        
 
                         <script>
                         // Open order details modal function
@@ -1053,191 +1043,6 @@ function showOrderSaveSuccess() {
     }, 2000);
 }
 </script>
-
-<style>
-.dashboard-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 1rem;
-}
-
-
-
-.dashboard-grid {
-    min-height: 200px;
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 1.5rem;
-    grid-auto-rows: min-content;
-}
-
-.dashboard-section {
-    background: white;
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-    overflow: hidden;
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-}
-
-.dashboard-section:hover {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-section.full-width {
-    grid-column: span 12;
-}
-
-.dashboard-section.half-width {
-    grid-column: span 6;
-}
-
-.dashboard-section.third-width {
-    grid-column: span 4;
-}
-
-.dashboard-section.dragging {
-    opacity: 0.7;
-    transform: rotate(3deg);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-}
-
-.dashboard-section.drag-over {
-    border: 2px dashed #3b82f6;
-    background: #eff6ff;
-}
-
-.drag-handle {
-    transition: all 0.2s ease;
-}
-
-.drag-handle:hover {
-    transform: scale(1.1);
-}
-
-.section-header {
-    padding: 1rem;
-    border-bottom: 1px solid #f3f4f6;
-    background: #f9fafb;
-}
-
-.section-content {
-    padding: 1rem;
-    flex: 1;
-}
-
-.metric-card {
-    text-align: center;
-    transition: transform 0.2s ease;
-}
-
-.metric-card:hover {
-    transform: translateY(-2px);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .dashboard-container {
-        padding: 0.5rem;
-    }
-    
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .dashboard-section.full-width,
-    .dashboard-section.half-width,
-    .dashboard-section.third-width {
-        grid-column: span 12;
-    }
-    
-    .section-content {
-        padding: 0.75rem;
-    }
-    
-    /* Stack metrics vertically on mobile */
-    .dashboard-section .grid.grid-cols-2.md\\:grid-cols-4 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    /* Hide drag handles on mobile for better touch experience */
-    .drag-handle {
-        display: none;
-    }
-}
-
-/* Ensure no horizontal scroll */
-.dashboard-grid,
-.dashboard-section,
-.section-content,
-.metric-card {
-    max-width: 100%;
-    overflow-x: hidden;
-}
-
-/* Button styling */
-.dashboard-section a {
-    color: #3b82f6;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.dashboard-section a:hover {
-    color: #1d4ed8;
-    text-decoration: underline;
-}
-
-/* Enhanced dashboard modal styling */
-.modal-overlay.dashboard-modal .admin-modal-content {
-    border-radius: 0.75rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.modal-overlay.dashboard-modal .admin-modal-content .admin-modal-header {
-    padding: 1.5rem;
-    padding-bottom: 1rem;
-}
-
-.modal-overlay.dashboard-modal .admin-modal-header .modal-title {
-    margin-bottom: 0.5rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.modal-overlay.dashboard-modal .admin-modal-header .modal-description {
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: normal;
-    line-height: 1.5;
-}
-
-.modal-overlay.dashboard-modal .modal-body {
-    padding: 0 1.5rem 1.5rem;
-}
-
-/* Improve section cards in dashboard modal */
-.modal-overlay.dashboard-modal .grid > div {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.modal-overlay.dashboard-modal .grid > div:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* Better spacing for current sections */
-.modal-overlay.dashboard-modal #currentSectionsList > div {
-    padding: 1rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    background: #f9fafb;
-}
-</style>
 
 
 

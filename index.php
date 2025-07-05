@@ -995,9 +995,9 @@ async function saveRoomBackgroundSettings() {
                 return;
             }
             
-            // Main room - show home background behind it
+            // Main room - show room_main background
             if (currentPage === 'room_main') {
-                const imageUrl = supportsWebP ? 'images/home_background.webp' : 'images/home_background.png';
+                const imageUrl = supportsWebP ? 'images/room_main.webp' : 'images/room_main.png';
                 body.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
                 body.classList.add('is-main-room');
                 body.classList.add('dynamic-bg-loaded');

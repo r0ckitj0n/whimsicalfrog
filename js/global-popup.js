@@ -400,12 +400,21 @@ window.positionPopup = function(element, popup) {
     console.log('Positioning popup...', element, popup);
     
     const rect = element.getBoundingClientRect();
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
     
-    // Use simple viewport coordinates since popup is position: fixed
+    // Use viewport coordinates, accounting for scroll
     let left = rect.left + rect.width + 10;
-    let top = rect.top - 50;
+    let top = rect.top + scrollY - 50;
 
-    console.log('Initial position calculations:', { left, top, rectLeft: rect.left, rectTop: rect.top });
+    console.log('Initial position calculations:', { 
+        left, 
+        top, 
+        rectLeft: rect.left, 
+        rectTop: rect.top,
+        scrollY,
+        elementTop: rect.top + scrollY
+    });
 
     // Show popup temporarily to get actual dimensions
     popup.style.display = 'block';
@@ -418,6 +427,11 @@ window.positionPopup = function(element, popup) {
     const popupHeight = popupRect.height;
     
     console.log('Popup dimensions:', { width: popupWidth, height: popupHeight });
+
+    // For rooms, use viewport positioning since the room is fullscreen
+    // Convert back to viewport coordinates for popup positioning
+    left = rect.left + rect.width + 10;
+    top = rect.top - 50;
 
     // Adjust if popup would go off screen horizontally
     if (left + popupWidth > window.innerWidth) {

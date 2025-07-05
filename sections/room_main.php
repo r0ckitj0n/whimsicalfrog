@@ -3,24 +3,44 @@
 <style id="room_main-css">
 /* CSS will be loaded from database */
 </style>
+
+<!-- Database-driven CSS for room_template -->
+<style id="room_template-css">
+/* CSS will be loaded from database */
+</style>
+
+<!-- Database-driven CSS for rooms -->
+<style id="rooms-css">
+/* CSS will be loaded from database */
+</style>
+
+<!-- Database-driven CSS for room_layout -->
+<style id="room_layout-css">
+/* CSS will be loaded from database */
+</style>
+
 <script>
-    // Load CSS from database
+    // Load CSS from database - multiple categories like other room pages
     async function loadRoom_mainCSS() {
         try {
-            const response = await fetch('/api/css_generator.php?category=room_main');
-            const cssText = await response.text();
-            const styleElement = document.getElementById('room_main-css');
-            if (styleElement && cssText) {
-                styleElement.textContent = cssText;
-                console.log('✅ room_main CSS loaded from database');
+            const categories = ['room_main', 'room_template', 'rooms', 'room_layout'];
+            
+            for (const category of categories) {
+                const response = await fetch(`/api/css_generator.php?category=${category}`);
+                const cssText = await response.text();
+                const styleElement = document.getElementById(`${category}-css`);
+                if (styleElement && cssText) {
+                    styleElement.textContent = cssText;
+                    console.log(`✅ ${category} CSS loaded from database`);
+                }
             }
         } catch (error) {
-            console.error('❌ FATAL: Failed to load room_main CSS:', error);
+            console.error('❌ FATAL: Failed to load room CSS:', error);
                 // Show error to user - no fallback
                 const errorDiv = document.createElement('div');
                 errorDiv.innerHTML = `
                     <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
-                        <strong>room_main CSS Loading Error</strong><br>
+                        <strong>Room CSS Loading Error</strong><br>
                         Database connection failed. Please refresh the page.
                     </div>
                 `;

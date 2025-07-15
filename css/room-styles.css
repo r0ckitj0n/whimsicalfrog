@@ -1,0 +1,765 @@
+/* ==============================================
+   ROOM SYSTEM STYLES
+   ============================================== */
+
+/* Room CSS Variables - managed by Global CSS Rules */
+:root {
+
+
+
+
+
+
+    --room-container-width: 1280px;
+    --room-container-height: 896px;
+    --room-bg-size: 1280px 896px;
+}
+
+/* Room background classes moved to centralized room-iframe.css */
+
+/* Dynamic Room Background Loading */
+.dynamic-room-bg-loaded {
+    background-image: var(--dynamic-room-bg-url, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Room Background Wrapper */
+.room-overlay-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: background-image 0.3s ease;
+}
+
+/* Room Container Dimensions */
+.room-container-size {
+    width: var(--room-container-width);
+    height: var(--room-container-height);
+}
+
+/* Common Layout Classes */
+.display-none {
+    display: none;
+}
+
+.display-block {
+    display: block;
+}
+
+.display-flex {
+    display: flex;
+}
+
+.display-grid {
+    display: grid;
+}
+
+.position-fixed {
+    position: fixed;
+}
+
+.position-absolute {
+    position: absolute;
+}
+
+.position-relative {
+    position: relative;
+}
+
+/* Common Spacing Classes */
+.margin-0 {
+    margin: 0;
+}
+
+.margin-auto {
+    margin: 0 auto;
+}
+
+.padding-0 {
+    padding: 0;
+}
+
+.padding-20 {
+    padding: 20px;
+}
+
+.padding-12 {
+    padding: 12px;
+}
+
+.padding-24 {
+    padding: 24px;
+}
+
+.padding-32 {
+    padding: 32px;
+}
+
+.padding-1rem {
+    padding: 1rem;
+}
+
+/* Common Margin/Padding Classes */
+.margin-top-10 {
+    margin-top: 10px;
+}
+
+.margin-bottom-8 {
+    margin-bottom: 8px;
+}
+
+.padding-24 {
+    padding: 24px;
+}
+
+/* Common Display Classes */
+.display-none {
+    display: none;
+}
+
+.display-flex {
+    display: flex;
+}
+
+.display-grid {
+    display: grid;
+}
+
+.flex-direction-column {
+    flex-direction: column;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.justify-content-center {
+    justify-content: center;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Common Grid Classes */
+.grid-template-columns-1fr-1fr {
+    grid-template-columns: 1fr 1fr;
+}
+
+.grid-gap-05rem {
+    gap: 0.5rem;
+}
+
+/* Common Width/Height Classes */
+.width-auto {
+    width: auto;
+}
+
+.width-100 {
+    width: 100%;
+}
+
+.height-100 {
+    height: 100%;
+}
+
+/* Common Font Classes */
+.font-size-3rem {
+    font-size: 3rem;
+}
+
+.font-size-875rem {
+    font-size: 0.875rem;
+}
+
+.font-weight-500 {
+    font-weight: 500;
+}
+
+/* Common Color Classes */
+.color-6b7280 {
+    color: #6b7280;
+}
+
+.svg-icon-color-87ac3a {
+    color: #87ac3a;
+}
+
+.product-price-large {
+    font-size: 2rem;
+}
+
+/* Error Message Classes */
+.error-message-fixed {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #dc2626;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+.error-message-fixed-left {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #dc2626;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+.error-message-fixed-top-40 {
+    position: fixed;
+    top: 40px;
+    left: 20px;
+    background: #dc2626;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+/* Product Image Container */
+.product-image-container {
+    height: 192px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.product-image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* Common Text Alignment */
+.text-center {
+    text-align: center;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Common Width Classes */
+.width-100 {
+    width: 100%;
+}
+
+.width-auto {
+    width: auto;
+}
+
+.max-width-600 {
+    max-width: 600px;
+}
+
+.max-width-300 {
+    max-width: 300px;
+}
+
+/* Common Height Classes */
+.height-100 {
+    height: 100%;
+}
+
+.height-192 {
+    height: 192px;
+}
+
+/* Common Font Classes */
+.font-size-2rem {
+    font-size: 2rem;
+}
+
+.font-size-1125rem {
+    font-size: 1.125rem;
+}
+
+.font-size-875rem {
+    font-size: 0.875rem;
+}
+
+.font-size-125rem {
+    font-size: 1.25rem;
+}
+
+.font-size-095rem {
+    font-size: 0.95rem;
+}
+
+.font-size-175rem {
+    font-size: 1.75rem;
+}
+
+.font-weight-700 {
+    font-weight: 700;
+}
+
+.font-weight-600 {
+    font-weight: 600;
+}
+
+.font-weight-500 {
+    font-weight: 500;
+}
+
+.font-weight-bold {
+    font-weight: bold;
+}
+
+/* Common Color Classes */
+.color-white {
+    color: white;
+}
+
+.color-374151 {
+    color: #374151;
+}
+
+.color-6b7280 {
+    color: #6b7280;
+}
+
+.color-a0aec0 {
+    color: #a0aec0;
+}
+
+.color-87ac3a {
+    color: #87ac3a;
+}
+
+.color-dc2626 {
+    color: #dc2626;
+}
+
+.color-333 {
+    color: #333;
+}
+
+.color-666 {
+    color: #666;
+}
+
+.color-blue {
+    color: #3b82f6;
+}
+
+/* Common Background Classes */
+.bg-white {
+    background-color: white;
+}
+
+.bg-f8f9fa {
+    background-color: #fff;
+}
+
+.bg-dc2626 {
+    background-color: #dc2626;
+}
+
+.bg-87ac3a {
+    background-color: var(--brand-primary);
+}
+
+.bg-f9fafb {
+    background-color: #fff;
+}
+
+.bg-f5f5f5 {
+    background-color: #fff;
+}
+
+/* Common Border Classes */
+.border-radius-8 {
+    border-radius: 8px;
+}
+
+.border-radius-12 {
+    border-radius: 12px;
+}
+
+.border-1-solid-ddd {
+    border: 1px solid #ddd;
+}
+
+.border-1-solid-e5e7eb {
+    border: 1px solid #e5e7eb;
+}
+
+.border-2-solid-87ac3a {
+    border: 2px solid #87ac3a;
+}
+
+/* Common Flex Layout Classes */
+.flex-direction-column {
+    flex-direction: column;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.justify-content-center {
+    justify-content: center;
+}
+
+.justify-content-space-between {
+    justify-content: space-between;
+}
+
+/* Common Grid Layout Classes */
+.grid-template-columns-1fr-1fr {
+    grid-template-columns: 1fr 1fr;
+}
+
+.grid-gap-05rem {
+    gap: 0.5rem;
+}
+
+/* Common Z-Index Classes */
+.z-index-9999 {
+    z-index: 9999;
+}
+
+.z-index-1100 {
+    z-index: 1100;
+}
+
+/* Common Opacity Classes */
+.opacity-09 {
+    opacity: 0.9;
+}
+
+/* Common Shadow Classes */
+.shadow-0-4-6 {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%);
+}
+
+.shadow-0-20-40 {
+    box-shadow: 0 20px 40px rgb(0 0 0 / 30%);
+}
+
+.shadow-0-25-50 {
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
+}
+
+/* Common Overflow Classes */
+.overflow-hidden {
+    overflow: hidden;
+}
+
+/* Common Object Fit Classes */
+.object-fit-contain {
+    object-fit: contain;
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
+
+/* Common Line Height Classes */
+.line-height-1 {
+    line-height: 1;
+}
+
+.line-height-14 {
+    line-height: 1.4;
+}
+
+.line-height-125 {
+    line-height: 1.25;
+}
+
+/* Common Letter Spacing Classes */
+.letter-spacing-neg-025em {
+    letter-spacing: -0.025em;
+}
+
+/* Common Margin Classes */
+.margin-bottom-4 {
+    margin-bottom: 4px;
+}
+
+.margin-bottom-8 {
+    margin-bottom: 8px;
+}
+
+.margin-bottom-12 {
+    margin-bottom: 12px;
+}
+
+.margin-bottom-16 {
+    margin-bottom: 16px;
+}
+
+.margin-bottom-20 {
+    margin-bottom: 20px;
+}
+
+.margin-bottom-30 {
+    margin-bottom: 30px;
+}
+
+.margin-top-10 {
+    margin-top: 10px;
+}
+
+.margin-top-30 {
+    margin-top: 30px;
+}
+
+/* Common Padding Classes */
+.padding-top-12 {
+    padding-top: 12px;
+}
+
+.padding-top-16 {
+    padding-top: 16px;
+}
+
+.padding-top-20 {
+    padding-top: 20px;
+}
+
+.padding-right-20 {
+    padding-right: 20px;
+}
+
+.padding-left-20 {
+    padding-left: 20px;
+}
+
+.padding-vertical-12 {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.padding-horizontal-0 {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Common Border Top Classes */
+.border-top-1-solid-ddd {
+    border-top: 1px solid #ddd;
+}
+
+.border-top-1-solid-e5e7eb {
+    border-top: 1px solid #e5e7eb;
+}
+
+.border-top-2-solid-87ac3a {
+    border-top: 2px solid #87ac3a;
+}
+
+/* Common Border Bottom Classes */
+.border-bottom-1-solid-e5e7eb {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Common Vertical Align Classes */
+.vertical-align-top {
+    vertical-align: top;
+}
+
+/* Common Transform Classes */
+.transform-translateY-neg-1 {
+    transform: translateY(-1px);
+}
+
+.transform-translateY-neg-2 {
+    transform: translateY(-2px);
+}
+
+/* Common Font Family Classes */
+.font-family-courier {
+    font-family: 'Courier New', monospace;
+}
+
+.font-family-merienda {
+    font-family: Merienda, cursive;
+}
+
+/* Common Transition Classes */
+.transition-all-02s {
+    transition: all 0.2s ease;
+}
+
+.transition-all-03s {
+    transition: all 0.3s ease;
+}
+
+/* Common Cursor Classes */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Common User Select Classes */
+.user-select-none {
+    user-select: none;
+}
+
+/* Common White Space Classes */
+.white-space-nowrap {
+    white-space: nowrap;
+}
+
+/* Common Box Shadow Classes for Focus */
+.focus-shadow-87ac3a {
+    box-shadow: 0 0 0 3px rgb(135 172 58 / 30%);
+}
+
+/* Common Linear Gradient Classes */
+.bg-gradient-87ac3a-6b8e23 {
+    background: linear-gradient(135deg, #87ac3a 0%, #6b8e23 100%);
+}
+
+.bg-gradient-87ac3a-a3cc4a {
+    background: linear-gradient(to right, #87ac3a, #a3cc4a);
+}
+
+/* Common Outline Classes */
+.outline-none {
+    outline: none;
+}
+
+.outline-2-transparent {
+    outline: 2px solid transparent;
+}
+
+.outline-offset-2 {
+    outline-offset: 2px;
+}
+
+/* Common Flex Shrink Classes */
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+/* Common Flex Grow Classes */
+.flex-1 {
+    flex: 1;
+}
+
+/* Common Gap Classes */
+.gap-20 {
+    gap: 20px;
+}
+
+.gap-4 {
+    gap: 4px;
+}
+
+/* Common Align Items Classes */
+.align-items-flex-start {
+    align-items: flex-start;
+}
+
+/* Common Display Classes for Block/Inline */
+.display-inline-flex {
+    display: inline-flex;
+}
+
+.display-inline-block {
+    display: inline-block;
+}
+
+/* Common Text Decoration Classes */
+.text-decoration-none {
+    text-decoration: none;
+}
+
+/* Common Border Collapse Classes */
+.border-collapse-collapse {
+    border-collapse: collapse;
+}
+
+/* Common Product Image Container Classes */
+.product-image-container {
+    height: 192px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.product-image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* Error/Debug Message Classes */
+.error-message-fixed {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #dc2626;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+.error-message-fixed-left {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #dc2626;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+.error-message-fixed-top-40 {
+    position: fixed;
+    top: 40px;
+    left: 20px;
+    background: #dc2626;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    z-index: 9999;
+    max-width: 300px;
+}
+
+/* SVG Icon Classes */
+.svg-icon-h4-w4 {
+    height: 1rem;
+    width: 1rem;
+}
+
+.svg-icon-color-87ac3a {
+    color: #87ac3a;
+}
+
+/* Product Price Classes */
+.product-price-large {
+    font-size: 2rem;
+    font-weight: bold;
+    color: black;
+    padding: 0.75rem;
+} 

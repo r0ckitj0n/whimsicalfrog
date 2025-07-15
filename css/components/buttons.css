@@ -1,0 +1,366 @@
+/* ==========================================================================
+   MASTER BUTTON COMPONENT SYSTEM
+   ========================================================================== */
+
+/* Base Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-primary);
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  user-select: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  line-height: 1.25;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+/* Button Sizes */
+.btn-sm {
+  height: var(--button-height-sm);
+  padding: var(--button-padding-sm);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-md);
+}
+
+.btn-md {
+  height: var(--button-height-md);
+  padding: var(--button-padding-md);
+  font-size: var(--text-base);
+  border-radius: var(--radius-lg);
+}
+
+.btn-lg {
+  height: var(--button-height-lg);
+  padding: var(--button-padding-lg);
+  font-size: var(--text-lg);
+  border-radius: var(--radius-xl);
+}
+
+/* ==========================================================================
+   SOLID BUTTON VARIANTS
+   ========================================================================== */
+
+/* Primary */
+.btn-primary {
+  background: var(--brand-primary);
+  color: var(--white);
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Secondary (Alias for Primary) */
+.btn-secondary {
+  background: var(--brand-primary);
+  color: var(--white);
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  background: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Danger */
+.btn-danger {
+  background: var(--error);
+  color: var(--white);
+  border-color: var(--error);
+}
+
+.btn-danger:hover {
+  background: #b91c1c; /* A darker shade of var(--error) */
+  border-color: #b91c1c;
+}
+
+/* Success */
+.btn-success {
+  background: var(--success);
+  color: var(--white);
+  border-color: var(--success);
+}
+
+.btn-success:hover {
+  background: #15803d; /* A darker shade of var(--success) */
+  border-color: #15803d;
+}
+
+/* Warning */
+.btn-warning {
+  background: var(--warning);
+  color: var(--black);
+  border-color: var(--warning);
+}
+
+.btn-warning:hover {
+  background: #d97706; /* A darker shade of var(--warning) */
+  border-color: #d97706;
+}
+
+/* Info */
+.btn-info {
+  background: var(--info);
+  color: var(--white);
+  border-color: var(--info);
+}
+
+.btn-info:hover {
+  background: #1d4ed8; /* A darker shade of var(--info) */
+  border-color: #1d4ed8;
+}
+
+/* Light */
+.btn-light {
+    background-color: var(--gray-100);
+    color: var(--gray-800);
+    border-color: var(--gray-300);
+}
+
+.btn-light:hover {
+    background-color: var(--gray-200);
+}
+
+/* Dark */
+.btn-dark {
+    background-color: var(--gray-800);
+    color: var(--white);
+    border-color: var(--gray-800);
+}
+
+.btn-dark:hover {
+    background-color: var(--gray-900);
+}
+
+/* ==========================================================================
+   OUTLINE BUTTON VARIANTS
+   ========================================================================== */
+
+.btn-outline {
+  background-color: transparent;
+}
+
+.btn-outline:hover {
+    background-color: rgb(0 0 0 / 5%);
+}
+
+.btn-outline.btn-primary {
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.btn-outline.btn-primary:hover {
+  background-color: var(--brand-primary);
+  color: var(--white);
+}
+
+.btn-outline.btn-danger {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.btn-outline.btn-danger:hover {
+  background-color: var(--error);
+  color: var(--white);
+}
+
+.btn-outline.btn-success {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.btn-outline.btn-success:hover {
+  background-color: var(--success);
+  color: var(--white);
+}
+
+.btn-outline.btn-warning {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.btn-outline.btn-warning:hover {
+  background-color: var(--warning);
+  color: var(--black);
+}
+
+.btn-outline.btn-info {
+  color: var(--info);
+  border-color: var(--info);
+}
+
+.btn-outline.btn-info:hover {
+  background-color: var(--info);
+  color: var(--white);
+}
+
+/* ==========================================================================
+   OTHER BUTTON STYLES
+   ========================================================================== */
+
+/* Ghost */
+.btn-ghost {
+  background: transparent;
+  color: var(--brand-primary);
+  border-color: transparent;
+}
+
+.btn-ghost:hover {
+  background: var(--gray-100);
+}
+
+/* Link */
+.btn-link {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--brand-primary);
+    text-decoration: underline;
+}
+
+.btn-link:hover {
+    color: var(--brand-secondary);
+}
+
+/* Glass */
+.btn-glass {
+  background: rgb(255 255 255 / 10%);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid rgb(255 255 255 / 20%);
+  color: var(--white);
+}
+
+.btn-glass:hover {
+  background: rgb(255 255 255 / 20%);
+  border-color: rgb(255 255 255 / 30%);
+}
+
+/* ==========================================================================
+   BUTTON MODIFIERS
+   ========================================================================== */
+
+/* Icon Buttons */
+.btn-icon-only {
+  width: var(--button-height-md);
+  height: var(--button-height-md);
+  padding: 0;
+  border-radius: var(--radius-lg);
+}
+
+.btn-icon-only.btn-sm {
+  width: var(--button-height-sm);
+  height: var(--button-height-sm);
+}
+
+.btn-icon-only.btn-lg {
+  width: var(--button-height-lg);
+  height: var(--button-height-lg);
+}
+
+.btn > svg {
+    width: 1.25em;
+    height: 1.25em;
+}
+
+/* Block Button */
+.btn-block {
+  width: 100%;
+  display: block;
+}
+
+/* Loading State */
+.btn-loading {
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid;
+  border-color: currentcolor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ==========================================================================
+   SPECIALIZED BUTTON COMPONENTS
+   ========================================================================== */
+
+/* Back to Main Room Button */
+.back-to-main-button {
+  display: flex; /* Overrides .btn */
+  background: var(--brand-primary);
+  color: var(--white);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--backdrop-blur-sm);
+  box-shadow: var(--shadow-md);
+  min-width: 120px;
+}
+
+.back-to-main-button:hover {
+  background: var(--brand-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.back-to-main-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-md);
+}
+
+.back-to-main-button svg {
+  width: 16px;
+  height: 16px;
+  fill: currentcolor;
+}

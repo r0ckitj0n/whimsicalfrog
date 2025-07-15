@@ -1,0 +1,60 @@
+/* Landing Page Styles */
+
+/* Hide product modal on landing */
+body.mode-fullscreen #productModal { display: none !important; }
+
+
+/* Hide global nav on landing */
+body.mode-fullscreen nav.main-nav {
+    display: none !important;
+  }
+  
+  /* Full-screen background wrapper */
+  body.mode-fullscreen .fullscreen-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: none;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    
+    overflow: hidden;
+    z-index: 0;
+  }
+  
+  /* Overlay container for interactive areas */
+  body.mode-fullscreen #landingPage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: none;
+    z-index: 1;
+  }
+  
+  /* Welcome-sign hotspot */
+  body.mode-fullscreen .clickable-area {
+    position: absolute;
+    display: block;
+    cursor: pointer;
+  }
+  
+  /* DB-driven coords for area-1 */
+  body.mode-fullscreen .clickable-area.area-1 {
+    top: 46.25%;
+    left: 36.41%;
+    width: 22.27%;
+    height: 17.09%;
+  }
+  
+  /* Constrain the sign graphic to container’s width */
+  body.mode-fullscreen .clickable-area img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+  }

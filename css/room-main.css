@@ -1,0 +1,200 @@
+/* Room Main Page Styles - WhimsicalFrog */
+
+/* Fullscreen main room with proper z-index hierarchy */
+
+/* Fullscreen Main Room Styles */
+.main-room-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: transparent;
+    background-image: none;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    z-index: var(--z-base); /* Lower than header z-index (2800) */
+    overflow: hidden;
+}
+
+/* Header overlay gradient - dark fade at top, transparent at bottom */
+.main-room-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 120px; /* Gradient height */
+    background: linear-gradient(to bottom, rgb(0 0 0 / 70%) 0%, rgb(0 0 0 / 40%) 50%, transparent 100%);
+    z-index: var(--z-base); /* Lower than header z-index (2800) */
+    pointer-events: none; /* Allow clicks through to doors */
+}
+
+/* Room page header visibility fixes */
+.room-page-header {
+    background: rgb(0 0 0 / 70%); /* Ensure header has background for visibility */
+    backdrop-filter: blur(5px);
+}
+
+.room-page-header * {
+    color: var(--brand-primary); /* Ensure all text is visible */
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 80%); /* Add text shadow for contrast */
+}
+
+/* Essential door area positioning styles */
+.door-area {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: var(--z-door-areas); /* Use centralized z-index */
+}
+
+.door-area:hover {
+    transform: scale(1.05);
+}
+
+.door-picture {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.door-sign {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: filter 0.3s ease;
+}
+
+.door-area:hover .door-sign {
+    filter: brightness(1.1) drop-shadow(0 0 10px rgb(135 172 58 / 50%));
+}
+
+.door-label {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgb(0 0 0 / 80%);
+    color: var(--brand-primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.door-area:hover .door-label {
+    opacity: 1;
+}
+
+/* Error message styling */
+.no-doors-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgb(0 0 0 / 80%);
+    color: var(--brand-primary);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 18px;
+    text-align: center;
+    z-index: var(--z-notification);
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 80%);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 50%);
+}
+
+/* Mobile styles moved to css/responsive/mobile.css */ 
+
+/* Main Room Door Positioning */
+.door-positioned {
+    position: absolute;
+    top: var(--door-top, 0);
+    left: var(--door-left, 0);
+    width: var(--door-width, auto);
+    height: var(--door-height, auto);
+}
+
+/* Door Interaction States */
+.door-area.touch-active {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+
+.door-area.touch-inactive {
+    transform: scale(1);
+    transition: transform 0.2s ease;
+}
+
+/* Door Loading State */
+.door-area.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Door Accessibility */
+.door-area[tabindex="0"] {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.door-area[tabindex="0"]:focus {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+}
+
+/* Initial door positioning to prevent flash/swap effect */
+
+/* These are set to prevent elements from starting in wrong positions */
+
+/* JavaScript will override these with properly scaled coordinates */
+.door-area.area-1 {
+    top: 19.2%; /* 243/1280 * 100% */
+    left: 2.3%; /* 30/1280 * 100% */
+    width: 18.3%; /* 234/1280 * 100% */
+    height: 26.0%; /* 233/896 * 100% */
+}
+
+.door-area.area-2 {
+    top: 45.0%; /* 403/896 * 100% */
+    left: 30.5%; /* 390/1280 * 100% */
+    width: 15.8%; /* 202/1280 * 100% */
+    height: 26.9%; /* 241/896 * 100% */
+}
+
+.door-area.area-3 {
+    top: 30.2%; /* 271/896 * 100% */
+    left: 58.8%; /* 753/1280 * 100% */
+    width: 13.3%; /* 170/1280 * 100% */
+    height: 26.2%; /* 235/896 * 100% */
+}
+
+.door-area.area-4 {
+    top: 17.5%; /* 157/896 * 100% */
+    left: 38.0%; /* 486/1280 * 100% */
+    width: 14.8%; /* 190/1280 * 100% */
+    height: 25.7%; /* 230/896 * 100% */
+}
+
+.door-area.area-5 {
+    top: 32.5%; /* 291/896 * 100% */
+    left: 78.2%; /* 1001/1280 * 100% */
+    width: 15.4%; /* 197/1280 * 100% */
+    height: 28.5%; /* 255/896 * 100% */
+}
+
+/* Door positioning override - JavaScript will set these custom properties */
+.door-area.door-positioned {
+    top: var(--door-top, 0);
+    left: var(--door-left, 0);
+    width: var(--door-width, auto);
+    height: var(--door-height, auto);
+}
+
+ 

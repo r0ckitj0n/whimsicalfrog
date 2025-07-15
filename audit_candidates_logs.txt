@@ -1,0 +1,6 @@
+200:1752603606 80040 ./monitor.log
+252:1752533912 512874 ./logs/monitor.log
+253:1752603610 1791413 ./logs/php_server.log
+273:1752438311 263 ./scripts/php_server.log
+487:1752088310 86986 ./backups/monitor.log
+582:1752083202 175921 ./backups/php_server.log

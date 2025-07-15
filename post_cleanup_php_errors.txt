@@ -1,0 +1,2 @@
+
+Deprecated: Using ${var} in strings is deprecated, use {$var} instead in ./css/dynamic-styles.php on line 13

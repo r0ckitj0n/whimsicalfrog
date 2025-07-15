@@ -30762,3 +30762,110 @@
 [Tue Jul 15 16:30:07 2025] [::1]:58691 Accepted
 [Tue Jul 15 16:30:07 2025] [::1]:58691 [200]: POST /api/analytics_tracker.php?action=track_page_view
 [Tue Jul 15 16:30:07 2025] [::1]:58691 Closing
+[Tue Jul 15 16:30:17 2025] [::1]:58744 Accepted
+[Tue Jul 15 16:30:17 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:30:17 2025] [::1]:58744 [200]: GET /
+[Tue Jul 15 16:30:17 2025] [::1]:58744 Closing
+[Tue Jul 15 16:30:37 2025] [::1]:58854 Accepted
+[Tue Jul 15 16:30:37 2025] [::1]:58854 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:30:37 2025] [::1]:58854 Closing
+[Tue Jul 15 16:31:07 2025] [::1]:59016 Accepted
+[Tue Jul 15 16:31:07 2025] [::1]:59016 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:31:07 2025] [::1]:59016 Closing
+[Tue Jul 15 16:31:17 2025] [::1]:59072 Accepted
+[Tue Jul 15 16:31:17 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:31:17 2025] [::1]:59072 [200]: GET /
+[Tue Jul 15 16:31:17 2025] [::1]:59072 Closing
+[Tue Jul 15 16:31:37 2025] [::1]:59180 Accepted
+[Tue Jul 15 16:31:37 2025] [::1]:59180 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:31:37 2025] [::1]:59180 Closing
+[Tue Jul 15 16:32:07 2025] [::1]:59340 Accepted
+[Tue Jul 15 16:32:07 2025] [::1]:59340 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:32:07 2025] [::1]:59340 Closing
+[Tue Jul 15 16:32:17 2025] [::1]:59397 Accepted
+[Tue Jul 15 16:32:17 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:32:17 2025] [::1]:59397 [200]: GET /
+[Tue Jul 15 16:32:17 2025] [::1]:59397 Closing
+[Tue Jul 15 16:32:37 2025] [::1]:59498 Accepted
+[Tue Jul 15 16:32:37 2025] [::1]:59498 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:32:37 2025] [::1]:59498 Closing
+[Tue Jul 15 16:33:07 2025] [::1]:59649 Accepted
+[Tue Jul 15 16:33:07 2025] [::1]:59649 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:33:07 2025] [::1]:59649 Closing
+[Tue Jul 15 16:33:17 2025] [::1]:59701 Accepted
+[Tue Jul 15 16:33:17 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:33:17 2025] [::1]:59701 [200]: GET /
+[Tue Jul 15 16:33:17 2025] [::1]:59701 Closing
+[Tue Jul 15 16:33:37 2025] [::1]:59803 Accepted
+[Tue Jul 15 16:33:37 2025] [::1]:59803 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:33:37 2025] [::1]:59803 Closing
+[Tue Jul 15 16:34:07 2025] [::1]:59955 Accepted
+[Tue Jul 15 16:34:07 2025] [::1]:59955 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:34:07 2025] [::1]:59955 Closing
+[Tue Jul 15 16:34:17 2025] [::1]:60008 Accepted
+[Tue Jul 15 16:34:17 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:34:17 2025] [::1]:60008 [200]: GET /
+[Tue Jul 15 16:34:17 2025] [::1]:60008 Closing
+[Tue Jul 15 16:34:37 2025] [::1]:60111 Accepted
+[Tue Jul 15 16:34:37 2025] [::1]:60111 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:34:37 2025] [::1]:60111 Closing
+[Tue Jul 15 16:35:07 2025] [::1]:60272 Accepted
+[Tue Jul 15 16:35:07 2025] [::1]:60272 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:35:07 2025] [::1]:60272 Closing
+[Tue Jul 15 16:35:17 2025] [::1]:60325 Accepted
+[Tue Jul 15 16:35:18 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:35:18 2025] [::1]:60325 [200]: GET /
+[Tue Jul 15 16:35:18 2025] [::1]:60325 Closing
+[Tue Jul 15 16:35:37 2025] [::1]:60442 Accepted
+[Tue Jul 15 16:35:37 2025] [::1]:60442 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:35:37 2025] [::1]:60442 Closing
+[Tue Jul 15 16:36:07 2025] [::1]:60598 Accepted
+[Tue Jul 15 16:36:07 2025] [::1]:60598 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:36:07 2025] [::1]:60598 Closing
+[Tue Jul 15 16:36:18 2025] [::1]:60651 Accepted
+[Tue Jul 15 16:36:18 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:36:18 2025] [::1]:60651 [200]: GET /
+[Tue Jul 15 16:36:18 2025] [::1]:60651 Closing
+[Tue Jul 15 16:36:37 2025] [::1]:60758 Accepted
+[Tue Jul 15 16:36:37 2025] [::1]:60758 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:36:37 2025] [::1]:60758 Closing
+[Tue Jul 15 16:37:07 2025] [::1]:60910 Accepted
+[Tue Jul 15 16:37:07 2025] [::1]:60910 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:37:07 2025] [::1]:60910 Closing
+[Tue Jul 15 16:37:18 2025] [::1]:60967 Accepted
+[Tue Jul 15 16:37:18 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:37:18 2025] [::1]:60967 [200]: GET /
+[Tue Jul 15 16:37:18 2025] [::1]:60967 Closing
+[Tue Jul 15 16:37:37 2025] [::1]:61065 Accepted
+[Tue Jul 15 16:37:37 2025] [::1]:61065 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:37:37 2025] [::1]:61065 Closing
+[Tue Jul 15 16:38:07 2025] [::1]:61216 Accepted
+[Tue Jul 15 16:38:07 2025] [::1]:61216 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:38:07 2025] [::1]:61216 Closing
+[Tue Jul 15 16:38:18 2025] [::1]:61272 Accepted
+[Tue Jul 15 16:38:18 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:38:18 2025] [::1]:61272 [200]: GET /
+[Tue Jul 15 16:38:18 2025] [::1]:61272 Closing
+[Tue Jul 15 16:38:37 2025] [::1]:61372 Accepted
+[Tue Jul 15 16:38:37 2025] [::1]:61372 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:38:37 2025] [::1]:61372 Closing
+[Tue Jul 15 16:39:07 2025] [::1]:61522 Accepted
+[Tue Jul 15 16:39:07 2025] [::1]:61522 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:39:07 2025] [::1]:61522 Closing
+[Tue Jul 15 16:39:18 2025] [::1]:61583 Accepted
+[Tue Jul 15 16:39:18 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:39:18 2025] [::1]:61583 [200]: GET /
+[Tue Jul 15 16:39:18 2025] [::1]:61583 Closing
+[Tue Jul 15 16:39:37 2025] [::1]:61686 Accepted
+[Tue Jul 15 16:39:37 2025] [::1]:61686 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:39:37 2025] [::1]:61686 Closing
+[Tue Jul 15 16:40:07 2025] [::1]:61849 Accepted
+[Tue Jul 15 16:40:07 2025] [::1]:61849 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:40:07 2025] [::1]:61849 Closing
+[Tue Jul 15 16:40:18 2025] [::1]:61906 Accepted
+[Tue Jul 15 16:40:18 2025] PHP Warning:  filemtime(): stat failed for js/main-app.js in /Users/jongraves/Documents/Websites/WhimsicalFrog/index.php on line 462
+[Tue Jul 15 16:40:18 2025] [::1]:61906 [200]: GET /
+[Tue Jul 15 16:40:18 2025] [::1]:61906 Closing
+[Tue Jul 15 16:40:37 2025] [::1]:62019 Accepted
+[Tue Jul 15 16:40:37 2025] [::1]:62019 [200]: POST /api/analytics_tracker.php?action=track_page_view
+[Tue Jul 15 16:40:37 2025] [::1]:62019 Closing

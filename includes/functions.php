@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Common functions for the Whimsical Frog website
- * 
+ *
  * This file contains shared functions used across multiple PHP files
  * to ensure consistent functionality throughout the site.
  */
@@ -38,11 +39,12 @@ try {
  * @param string $style Optional inline styles for the image tag.
  * @return string The HTML <img> tag.
  */
-function getImageTag($imagePath, $altText = '', $class = '', $style = '') {
+function getImageTag($imagePath, $altText = '', $class = '', $style = '')
+{
     if (empty($imagePath)) {
         $imagePath = 'images/items/placeholder.webp'; // Default placeholder if path is empty
     }
-    
+
     $pathInfo = pathinfo($imagePath);
     $extension = strtolower($pathInfo['extension'] ?? '');
     $basePath = ($pathInfo['dirname'] && $pathInfo['dirname'] !== '.')
@@ -65,11 +67,11 @@ function getImageTag($imagePath, $altText = '', $class = '', $style = '') {
               . '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr . '>'
               . '</picture>';
     }
-    
+
     // Fallback with onerror handling
     $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
-    return '<img src="' . htmlspecialchars($webpPath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr 
-          . ' onerror="this.onerror=null; this.src=\'' . htmlspecialchars($imagePath) . '\';">'; 
+    return '<img src="' . htmlspecialchars($webpPath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr
+          . ' onerror="this.onerror=null; this.src=\'' . htmlspecialchars($imagePath) . '\';">';
 }
 // sanitizeInput function moved to security_validator.php for centralization
 
@@ -78,7 +80,8 @@ function getImageTag($imagePath, $altText = '', $class = '', $style = '') {
  * @param string $email
  * @return bool
  */
-function isValidEmail($email) {
+function isValidEmail($email)
+{
     return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
 }
 
@@ -87,7 +90,8 @@ function isValidEmail($email) {
  * @param int $length
  * @return string
  */
-function generateSecureToken($length = 32) {
+function generateSecureToken($length = 32)
+{
     return bin2hex(random_bytes($length / 2));
 }
 
@@ -97,7 +101,8 @@ function generateSecureToken($length = 32) {
  * @param string $currency
  * @return string
  */
-function formatPrice($price, $currency = '$') {
+function formatPrice($price, $currency = '$')
+{
     return $currency . number_format($price, 2);
 }
 
@@ -107,7 +112,8 @@ function formatPrice($price, $currency = '$') {
  * @param string $format
  * @return string
  */
-function formatDate($date, $format = 'M j, Y') {
+function formatDate($date, $format = 'M j, Y')
+{
     return date($format, strtotime($date));
 }
 
@@ -122,16 +128,17 @@ function formatDate($date, $format = 'M j, Y') {
  * Previously found in multiple files:
  * - formatFileSize: api/file_manager.php, api/upload_background.php
  * - isValidEmail: includes/email_helper.php
- * 
+ *
  * When adding new utility functions, add them here instead of creating duplicates.
  */
-function formatFileSize($bytes) {
+function formatFileSize($bytes)
+{
     $units = ['B', 'KB', 'MB', 'GB', 'TB'];
     $bytes = max($bytes, 0);
     $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
     $pow = min($pow, count($units) - 1);
     $bytes /= pow(1024, $pow);
-    
+
     return round($bytes, 2) . ' ' . $units[$pow];
 }
 
@@ -142,7 +149,8 @@ function formatFileSize($bytes) {
  * @param string $suffix
  * @return string
  */
-function truncateText($text, $length = 100, $suffix = '...') {
+function truncateText($text, $length = 100, $suffix = '...')
+{
     if (strlen($text) <= $length) {
         return $text;
     }
@@ -154,7 +162,8 @@ function truncateText($text, $length = 100, $suffix = '...') {
  * @param string $text
  * @return string
  */
-function generateSlug($text) {
+function generateSlug($text)
+{
     $text = strtolower($text);
     $text = preg_replace('/[^a-z0-9\s-]/', '', $text);
     $text = preg_replace('/[\s-]+/', '-', $text);
@@ -167,9 +176,10 @@ function generateSlug($text) {
  * Get client IP address
  * @return string
  */
-function getClientIP() {
+function getClientIP()
+{
     $ipKeys = ['HTTP_CF_CONNECTING_IP', 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
-    
+
     foreach ($ipKeys as $key) {
         if (array_key_exists($key, $_SERVER) === true) {
             foreach (explode(',', $_SERVER[$key]) as $ip) {
@@ -180,7 +190,7 @@ function getClientIP() {
             }
         }
     }
-    
+
     return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }
 
@@ -189,16 +199,27 @@ function getClientIP() {
  * @param string $datetime
  * @return string
  */
-function timeAgo($datetime) {
+function timeAgo($datetime)
+{
     $time = time() - strtotime($datetime);
-    
-    if ($time < 60) return 'just now';
-    if ($time < 3600) return floor($time/60) . ' minutes ago';
-    if ($time < 86400) return floor($time/3600) . ' hours ago';
-    if ($time < 2592000) return floor($time/86400) . ' days ago';
-    if ($time < 31536000) return floor($time/2592000) . ' months ago';
-    
-    return floor($time/31536000) . ' years ago';
+
+    if ($time < 60) {
+        return 'just now';
+    }
+    if ($time < 3600) {
+        return floor($time / 60) . ' minutes ago';
+    }
+    if ($time < 86400) {
+        return floor($time / 3600) . ' hours ago';
+    }
+    if ($time < 2592000) {
+        return floor($time / 86400) . ' days ago';
+    }
+    if ($time < 31536000) {
+        return floor($time / 2592000) . ' months ago';
+    }
+
+    return floor($time / 31536000) . ' years ago';
 }
 
 /**
@@ -206,7 +227,8 @@ function timeAgo($datetime) {
  * @param string $sku
  * @return string|false
  */
-function validateSKU($sku) {
+function validateSKU($sku)
+{
     $sku = trim(strtoupper($sku));
     if (preg_match('/^[A-Z0-9\-_]+$/', $sku)) {
         return $sku;
@@ -219,7 +241,8 @@ function validateSKU($sku) {
  * @param array $data
  * @return string
  */
-function arrayToCSV($data) {
+function arrayToCSV($data)
+{
     $output = fopen('php://temp', 'r+');
     foreach ($data as $row) {
         fputcsv($output, $row);
@@ -235,7 +258,8 @@ function arrayToCSV($data) {
  * @param string $string
  * @return bool
  */
-function isJSON($string) {
+function isJSON($string)
+{
     json_decode($string);
     return json_last_error() === JSON_ERROR_NONE;
 }
@@ -246,17 +270,18 @@ function isJSON($string) {
  * @param mixed $default
  * @return mixed
  */
-function env($key, $default = null) {
+function env($key, $default = null)
+{
     $value = getenv($key);
     if ($value === false) {
         return $default;
     }
-    
+
     // Convert string booleans
     if (in_array(strtolower($value), ['true', 'false'])) {
         return strtolower($value) === 'true';
     }
-    
+
     return $value;
 }
 
@@ -265,7 +290,8 @@ function env($key, $default = null) {
  * @param string $url
  * @param int $statusCode
  */
-function redirect($url, $statusCode = 302) {
+function redirect($url, $statusCode = 302)
+{
     header('Location: ' . $url, true, $statusCode);
     exit;
 }
@@ -274,7 +300,8 @@ function redirect($url, $statusCode = 302) {
  * Get current URL
  * @return string
  */
-function getCurrentURL() {
+function getCurrentURL()
+{
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     return $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 }
@@ -284,7 +311,8 @@ function getCurrentURL() {
  * @param string $roomType The type of room (e.g., 'landing', 'room_main').
  * @return string The URL of the background image, or an empty string if not found.
  */
-function get_active_background($roomType) {
+function get_active_background($roomType)
+{
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_type = ? AND is_active = 1 LIMIT 1");
@@ -294,7 +322,15 @@ function get_active_background($roomType) {
         if ($background) {
             // Prioritize WebP if a filename is present
             $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
-            return "images/" . $imageFile;
+            // Determine subdirectory prefix based on project structure
+            $prefix = 'images/';
+
+            // If backgrounds are organized into a backgrounds subfolder, prefer that path
+            if (file_exists(__DIR__ . '/../images/backgrounds/' . $imageFile)) {
+                $prefix = 'images/backgrounds/';
+            }
+
+            return $prefix . $imageFile;
         }
     } catch (Exception $e) {
         error_log('Error fetching active background: ' . $e->getMessage());
@@ -302,5 +338,3 @@ function get_active_background($roomType) {
 
     return ''; // Return empty string on failure or if no background is set
 }
-
-?>

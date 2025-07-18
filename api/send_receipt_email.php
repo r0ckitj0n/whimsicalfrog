@@ -50,7 +50,7 @@ try {
 
     // Send email using existing email configuration
     $subject = 'Receipt for Order #' . $orderData['orderId'] . ' - WhimsicalFrog';
-    
+
     // Use the existing email configuration
     $headers = [
         'From: ' . FROM_NAME . ' <' . FROM_EMAIL . '>',
@@ -59,17 +59,17 @@ try {
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=UTF-8'
     ];
-    
+
     // Add BCC if configured
     if (defined('BCC_EMAIL') && BCC_EMAIL) {
         $headers[] = 'Bcc: ' . BCC_EMAIL;
     }
-    
+
     $headerString = implode("\r\n", $headers);
-    
+
     $success = false;
     $errorMessage = '';
-    
+
     if (SMTP_ENABLED) {
         // Use SMTP if enabled
         try {
@@ -126,9 +126,10 @@ try {
     ]);
 }
 
-function generateReceiptEmailContent($orderData) {
+function generateReceiptEmailContent($orderData)
+{
     $timestamp = date('F j, Y \a\t g:i A T', strtotime($orderData['timestamp']));
-    
+
     $itemsHTML = '';
     foreach ($orderData['items'] as $item) {
         $itemTotal = $item['price'] * $item['quantity'];
@@ -144,7 +145,7 @@ function generateReceiptEmailContent($orderData) {
                 </td>
             </tr>';
     }
-    
+
     return '
     <!DOCTYPE html>
     <html lang="en">
@@ -233,7 +234,8 @@ function generateReceiptEmailContent($orderData) {
     </html>';
 }
 
-function sendEmailSMTP($to, $subject, $htmlBody) {
+function sendEmailSMTP($to, $subject, $htmlBody)
+{
     // Use the same SMTP implementation as the save_email_config.php
     $host = SMTP_HOST;
     $port = SMTP_PORT;
@@ -242,34 +244,39 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
     $encryption = SMTP_ENCRYPTION;
     $fromEmail = FROM_EMAIL;
     $fromName = FROM_NAME;
-    
+
     // Connect to SMTP server
     $socket = stream_socket_client(
         $host . ':' . $port,
-        $errno, $errstr, 30, STREAM_CLIENT_CONNECT
+        $errno,
+        $errstr,
+        30,
+        STREAM_CLIENT_CONNECT
     );
-    
+
     if (!$socket) {
         throw new Exception("Failed to connect to SMTP server $host:$port - $errstr ($errno)");
     }
-    
+
     // Function to read SMTP response
-    $readResponse = function() use ($socket) {
+    $readResponse = function () use ($socket) {
         $response = '';
         while (($line = fgets($socket, 515)) !== false) {
             $response .= $line;
-            if (isset($line[3]) && $line[3] == ' ') break;
+            if (isset($line[3]) && $line[3] == ' ') {
+                break;
+            }
         }
         return trim($response);
     };
-    
+
     // Initial server greeting
     $response = $readResponse();
     if (substr($response, 0, 3) != '220') {
         fclose($socket);
         throw new Exception("SMTP server not ready: $response");
     }
-    
+
     // EHLO
     fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
     $response = $readResponse();
@@ -277,7 +284,7 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
         fclose($socket);
         throw new Exception("EHLO failed: $response");
     }
-    
+
     // Start TLS if requested
     if ($encryption === 'tls') {
         fputs($socket, "STARTTLS\r\n");
@@ -286,13 +293,13 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
             fclose($socket);
             throw new Exception("STARTTLS failed: $response");
         }
-        
+
         // Enable TLS encryption
         if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
             fclose($socket);
             throw new Exception("Failed to enable TLS encryption");
         }
-        
+
         // Send EHLO again after TLS
         fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
         $response = $readResponse();
@@ -301,7 +308,7 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
             throw new Exception("EHLO after TLS failed: $response");
         }
     }
-    
+
     // Authenticate
     if ($username && $password) {
         fputs($socket, "AUTH LOGIN\r\n");
@@ -310,14 +317,14 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
             fclose($socket);
             throw new Exception("AUTH LOGIN failed: $response");
         }
-        
+
         fputs($socket, base64_encode($username) . "\r\n");
         $response = $readResponse();
         if (substr($response, 0, 3) != '334') {
             fclose($socket);
             throw new Exception("Username authentication failed: $response");
         }
-        
+
         fputs($socket, base64_encode($password) . "\r\n");
         $response = $readResponse();
         if (substr($response, 0, 3) != '235') {
@@ -325,7 +332,7 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
             throw new Exception("Password authentication failed: $response");
         }
     }
-    
+
     // MAIL FROM
     fputs($socket, "MAIL FROM: <$fromEmail>\r\n");
     $response = $readResponse();
@@ -333,7 +340,7 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
         fclose($socket);
         throw new Exception("MAIL FROM rejected: $response");
     }
-    
+
     // RCPT TO
     fputs($socket, "RCPT TO: <$to>\r\n");
     $response = $readResponse();
@@ -341,7 +348,7 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
         fclose($socket);
         throw new Exception("RCPT TO rejected: $response");
     }
-    
+
     // DATA
     fputs($socket, "DATA\r\n");
     $response = $readResponse();
@@ -349,7 +356,7 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
         fclose($socket);
         throw new Exception("DATA command rejected: $response");
     }
-    
+
     // Send email headers and body
     $email = "From: $fromName <$fromEmail>\r\n";
     $email .= "To: <$to>\r\n";
@@ -359,19 +366,19 @@ function sendEmailSMTP($to, $subject, $htmlBody) {
     $email .= "\r\n";
     $email .= $htmlBody . "\r\n";
     $email .= ".\r\n";
-    
+
     fputs($socket, $email);
     $response = $readResponse();
     if (substr($response, 0, 3) != '250') {
         fclose($socket);
         throw new Exception("Email delivery failed: $response");
     }
-    
+
     // QUIT
     fputs($socket, "QUIT\r\n");
     $readResponse();
     fclose($socket);
-    
+
     return true;
 }
 ?> 

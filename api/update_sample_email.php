@@ -18,8 +18,13 @@ if (!isAdminWithToken()) {
 require_once __DIR__ . '/config.php';
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Realistic sample email content
     $sampleEmailContent = '
         <div class="order-email-body">
@@ -75,12 +80,12 @@ try {
             <p>This is an automated email. Please do not reply to this email address.</p>
         </div>
     </div>';
-    
+
     // First, let's see what emails exist
     $checkSQL = "SELECT id, subject, created_by, email_type FROM email_logs ORDER BY sent_at DESC";
     $stmt = $pdo->query($checkSQL);
     $existingEmails = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo "<h3>📧 Current Emails in Database:</h3>";
     if (empty($existingEmails)) {
         echo "<p>No emails found in database.</p>";
@@ -97,11 +102,11 @@ try {
         }
         echo "</table>";
     }
-    
+
     // Try multiple update strategies
     $updated = false;
     $updateMessage = "";
-    
+
     // Strategy 1: Update by subject patterns
     $updateSQL1 = "
     UPDATE email_logs 
@@ -116,15 +121,15 @@ try {
         OR subject LIKE '%Email Logging System%'
         OR subject LIKE '%initialized%')
     LIMIT 1";
-    
+
     $stmt = $pdo->prepare($updateSQL1);
     $result1 = $stmt->execute([':sample_content' => $sampleEmailContent]);
-    
+
     if ($result1 && $stmt->rowCount() > 0) {
         $updated = true;
         $updateMessage = "Updated email by subject pattern match.";
     }
-    
+
     // Strategy 2: Update by created_by = 'system'
     if (!$updated) {
         $updateSQL2 = "
@@ -137,16 +142,16 @@ try {
             order_id = '01F14P23'
         WHERE created_by = 'system'
         LIMIT 1";
-        
+
         $stmt = $pdo->prepare($updateSQL2);
         $result2 = $stmt->execute([':sample_content' => $sampleEmailContent]);
-        
+
         if ($result2 && $stmt->rowCount() > 0) {
             $updated = true;
             $updateMessage = "Updated email by created_by = 'system'.";
         }
     }
-    
+
     // Strategy 3: Update the first email if it's a test_email type
     if (!$updated && !empty($existingEmails)) {
         $firstEmail = $existingEmails[0];
@@ -160,20 +165,20 @@ try {
                 email_type = 'order_confirmation',
                 order_id = '01F14P23'
             WHERE id = :email_id";
-            
+
             $stmt = $pdo->prepare($updateSQL3);
             $result3 = $stmt->execute([
                 ':sample_content' => $sampleEmailContent,
                 ':email_id' => $firstEmail['id']
             ]);
-            
+
             if ($result3 && $stmt->rowCount() > 0) {
                 $updated = true;
                 $updateMessage = "Updated the first test_email in the database.";
             }
         }
     }
-    
+
     // Strategy 4: Just update the most recent email
     if (!$updated && !empty($existingEmails)) {
         $firstEmail = $existingEmails[0];
@@ -186,19 +191,19 @@ try {
             email_type = 'order_confirmation',
             order_id = '01F14P23'
         WHERE id = :email_id";
-        
+
         $stmt = $pdo->prepare($updateSQL4);
         $result4 = $stmt->execute([
             ':sample_content' => $sampleEmailContent,
             ':email_id' => $firstEmail['id']
         ]);
-        
+
         if ($result4 && $stmt->rowCount() > 0) {
             $updated = true;
             $updateMessage = "Updated the most recent email in the database.";
         }
     }
-    
+
     // Strategy 5: If no emails exist, create a new one
     if (!$updated) {
         $insertSQL = "
@@ -206,16 +211,16 @@ try {
         VALUES 
         ('john.doe@example.com', 'orders@whimsicalfrog.us', 'Order Confirmation #01F14P23 - WhimsicalFrog', 
          :sample_content, 'order_confirmation', 'sent', NOW(), '01F14P23', 'system')";
-        
+
         $stmt = $pdo->prepare($insertSQL);
         $result5 = $stmt->execute([':sample_content' => $sampleEmailContent]);
-        
+
         if ($result5) {
             $updated = true;
             $updateMessage = "Created a new sample email since none existed.";
         }
     }
-    
+
     if ($updated) {
         echo "<h2>✅ Sample Email Updated Successfully</h2>";
         echo "<p>$updateMessage</p>";
@@ -228,7 +233,7 @@ try {
         echo '<p><a href="debug_email_logs.php" class="text-green-600 hover:text-green-800">→ View Debug Information</a></p>';
         echo '<p><a href="../index.php?page=admin&section=settings" class="text-green-600 hover:text-green-800">← Back to Admin Settings</a></p>';
     }
-    
+
 } catch (Exception $e) {
     echo "<h2>❌ Error Updating Sample Email</h2>";
     echo "<p>Error: " . htmlspecialchars($e->getMessage()) . "</p>";

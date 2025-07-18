@@ -36,37 +36,42 @@ if (empty($imageAnalysisData) || !is_array($imageAnalysisData)) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     $updatedImages = 0;
     $errors = [];
-    
+
     foreach ($imageAnalysisData as $imageData) {
         $imagePath = $imageData['image_path'] ?? '';
         $altText = $imageData['alt_text'] ?? '';
         $aiDescription = $imageData['description'] ?? '';
-        
+
         if (empty($imagePath)) {
             $errors[] = "Missing image path in analysis data";
             continue;
         }
-        
+
         // Update the item_images table with alt text and AI description
         $stmt = $pdo->prepare("
             UPDATE item_images 
             SET alt_text = ?, ai_description = ?, updated_at = CURRENT_TIMESTAMP 
             WHERE sku = ? AND image_path = ?
         ");
-        
+
         $result = $stmt->execute([$altText, $aiDescription, $sku, $imagePath]);
-        
+
         if ($result && $stmt->rowCount() > 0) {
             $updatedImages++;
         } else {
             $errors[] = "Failed to update image: " . $imagePath;
         }
     }
-    
+
     if ($updatedImages > 0) {
         echo json_encode([
             'success' => true,
@@ -81,7 +86,7 @@ try {
             'errors' => $errors
         ]);
     }
-    
+
 } catch (PDOException $e) {
     error_log("Error saving image alt text: " . $e->getMessage());
     http_response_code(500);

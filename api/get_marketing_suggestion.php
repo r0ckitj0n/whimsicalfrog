@@ -6,23 +6,24 @@ header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
-    $isAdmin = false;
-    
-    // Check session authentication first
-    require_once __DIR__ . '/../includes/auth.php'; if (isAdminWithToken()) {
-        $isAdmin = true;
-    }
-    
-    // Admin token fallback for API access
-    if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
-        $isAdmin = true;
-    }
-    
-    if (!$isAdmin) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Admin access required']);
-        exit;
-    }
+$isAdmin = false;
+
+// Check session authentication first
+require_once __DIR__ . '/../includes/auth.php';
+if (isAdminWithToken()) {
+    $isAdmin = true;
+}
+
+// Admin token fallback for API access
+if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
+    $isAdmin = true;
+}
+
+if (!$isAdmin) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Admin access required']);
+    exit;
+}
 
 // Check if SKU parameter is provided
 if (!isset($_GET['sku']) || empty($_GET['sku'])) {
@@ -34,8 +35,13 @@ if (!isset($_GET['sku']) || empty($_GET['sku'])) {
 $sku = trim($_GET['sku']);
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Get existing marketing suggestion for this SKU
     $stmt = $pdo->prepare("
         SELECT * FROM marketing_suggestions 
@@ -45,7 +51,7 @@ try {
     ");
     $stmt->execute([$sku]);
     $suggestion = $stmt->fetch();
-    
+
     if ($suggestion) {
         // Decode JSON fields
         $jsonFields = [
@@ -56,13 +62,13 @@ try {
             'customer_benefits', 'pain_points_addressed', 'lifestyle_alignment',
             'analysis_factors', 'market_trends'
         ];
-        
+
         foreach ($jsonFields as $field) {
             if (isset($suggestion[$field])) {
                 $suggestion[$field] = json_decode($suggestion[$field], true);
             }
         }
-        
+
         echo json_encode([
             'success' => true,
             'exists' => true,
@@ -75,7 +81,7 @@ try {
             'message' => 'No marketing suggestion found for this SKU.'
         ]);
     }
-    
+
 } catch (PDOException $e) {
     error_log("Database error in get_marketing_suggestion.php: " . $e->getMessage());
     http_response_code(500);

@@ -4,7 +4,7 @@
 // Sales checking functions
 async function checkItemSale(itemSku) {
     try {
-        const response = await fetch(`/api/sales.php?action=get_active_sales&item_sku=${itemSku}`);
+        const response = await apiGet(`sales.php?action=get_active_sales&item_sku=${itemSku}`);
         const data = await response.json();
         
         if (data.success && data.sale) {

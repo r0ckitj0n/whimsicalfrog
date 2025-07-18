@@ -1,4 +1,5 @@
 <?php
+
 // Include the configuration file
 require_once 'config.php';
 
@@ -23,8 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     // Create database connection
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Get filter parameters
     $filterDate = $_GET['filter_date'] ?? '';
     $filterItems = $_GET['filter_items'] ?? '';
@@ -115,7 +121,7 @@ try {
             'filter_payment_status' => $filterPaymentStatus
         ]
     ]);
-    
+
 } catch (PDOException $e) {
     // Handle database errors
     http_response_code(500);

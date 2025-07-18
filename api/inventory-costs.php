@@ -1,14 +1,15 @@
 <?php
+
 /**
  * Inventory Costs API
- * 
+ *
  * This API endpoint retrieves cost breakdown data for a specific inventory item,
  * including materials, labor, and energy costs. It calculates the total suggested cost
  * based on all components.
- * 
+ *
  * GET Parameters:
  * - inventoryId: The ID of the inventory item to fetch costs for
- * 
+ *
  * Response:
  * - success: Boolean indicating if the request was successful
  * - data: Object containing cost breakdown information
@@ -41,41 +42,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     $inventoryId = $_GET['inventoryId'];
-    
+
     try {
         // Connect to database
-        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-        
+        try {
+            $pdo = Database::getInstance();
+        } catch (Exception $e) {
+            error_log("Database connection failed: " . $e->getMessage());
+            throw $e;
+        }
+
         // Fetch materials costs
         $materialStmt = $pdo->prepare("SELECT * FROM inventory_materials WHERE inventoryId = ?");
         $materialStmt->execute([$inventoryId]);
         $materials = $materialStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Fetch labor costs
         $laborStmt = $pdo->prepare("SELECT * FROM inventory_labor WHERE inventoryId = ?");
         $laborStmt->execute([$inventoryId]);
         $labor = $laborStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Fetch energy costs
         $energyStmt = $pdo->prepare("SELECT * FROM inventory_energy WHERE inventoryId = ?");
         $energyStmt->execute([$inventoryId]);
         $energy = $energyStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Calculate totals
-        $materialTotal = array_reduce($materials, function($sum, $item) {
+        $materialTotal = array_reduce($materials, function ($sum, $item) {
             return $sum + floatval($item['cost']);
         }, 0);
-        
-        $laborTotal = array_reduce($labor, function($sum, $item) {
+
+        $laborTotal = array_reduce($labor, function ($sum, $item) {
             return $sum + floatval($item['cost']);
         }, 0);
-        
-        $energyTotal = array_reduce($energy, function($sum, $item) {
+
+        $energyTotal = array_reduce($energy, function ($sum, $item) {
             return $sum + floatval($item['cost']);
         }, 0);
-        
+
         $suggestedCost = $materialTotal + $laborTotal + $energyTotal;
-        
+
         // Format response
         $response = [
             'success' => true,
@@ -91,9 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 ]
             ]
         ];
-        
+
         echo json_encode($response);
-        
+
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode([

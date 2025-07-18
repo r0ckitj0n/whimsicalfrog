@@ -70,8 +70,8 @@
         badgeContainer.innerHTML = '';
 
         try {
-            const response = await fetch(`/api/get_badge_scores.php?sku=${sku}`);
-            const data = await response.json();
+            const data = await apiGet(`get_badge_scores.php?sku=${sku}`);
+            
 
             if (data.success && data.badges) {
                 const badges = data.badges;
@@ -105,7 +105,45 @@
         return badgeSpan;
     }
     
+    // -- Show & hide modal helpers --
+    function showDetailedModalComponent(sku, itemData = {}) {
+        const modal = document.getElementById('detailedItemModal');
+        if (!modal) return;
+
+        // Make sure the provided item data is stored for other helpers.
+        window.currentDetailedItem = itemData;
+
+        // Remove hidden/display styles applied by server template
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+
+        // Ensure modal is on top of any overlays
+        modal.style.zIndex = 3000;
+
+        // Close modal when clicking overlay (attribute set in template)
+        modal.addEventListener('click', (e) => {
+            if (e.target.dataset.action === 'closeDetailedModalOnOverlay') {
+                closeDetailedModalComponent();
+            }
+        });
+
+        // Optionally run content initializer
+        if (typeof initializeEnhancedModalContent === 'function') {
+            initializeEnhancedModalContent();
+        }
+    }
+
+    function closeDetailedModalComponent() {
+        const modal = document.getElementById('detailedItemModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+    }
+
     // -- Expose necessary functions to the global scope --
     window.initializeEnhancedModalContent = initializeEnhancedModalContent;
+    window.showDetailedModalComponent = showDetailedModalComponent;
+    window.closeDetailedModalComponent = closeDetailedModalComponent;
 
 })();

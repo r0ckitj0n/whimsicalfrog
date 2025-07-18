@@ -1,4 +1,5 @@
 <?php
+
 // scripts/remove-tailwind-classes.php
 // Remove all Tailwind utility classes that have been migrated to utilities.css
 
@@ -31,7 +32,7 @@ foreach ($files as $file) {
         '/class="([^"]*)"/i',
         function ($m) use ($classes) {
             $names = preg_split('/\s+/', $m[1], -1, PREG_SPLIT_NO_EMPTY);
-            $filtered = array_filter($names, function($n) use ($classes) {
+            $filtered = array_filter($names, function ($n) use ($classes) {
                 return !in_array($n, $classes, true);
             });
             if (empty($filtered)) {

@@ -1,10 +1,12 @@
 <?php
+
 /**
  * Centralized File Operations Helper
  * Handles file operations with proper error handling and security
  */
 
-class FileHelper {
+class FileHelper
+{
     private static $allowedExtensions = [
         'txt', 'json', 'xml', 'csv', 'log', 'md', 'yml', 'yaml',
         'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
@@ -17,7 +19,8 @@ class FileHelper {
     /**
      * Read file contents with error handling
      */
-    public static function read($filePath, $useIncludePath = false, $context = null, $offset = 0, $length = null) {
+    public static function read($filePath, $useIncludePath = false, $context = null, $offset = 0, $length = null)
+    {
         try {
             if (!file_exists($filePath)) {
                 throw new Exception("File not found: $filePath");
@@ -56,7 +59,8 @@ class FileHelper {
     /**
      * Write content to file with error handling
      */
-    public static function write($filePath, $data, $flags = 0, $context = null) {
+    public static function write($filePath, $data, $flags = 0, $context = null)
+    {
         try {
             // Create directory if it doesn't exist
             $directory = dirname($filePath);
@@ -99,48 +103,52 @@ class FileHelper {
     /**
      * Append content to file
      */
-    public static function append($filePath, $data, $context = null) {
+    public static function append($filePath, $data, $context = null)
+    {
         return self::write($filePath, $data, FILE_APPEND | LOCK_EX, $context);
     }
 
     /**
      * Read JSON file and decode
      */
-    public static function readJson($filePath, $associative = true) {
+    public static function readJson($filePath, $associative = true)
+    {
         $content = self::read($filePath);
         $data = json_decode($content, $associative);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Invalid JSON in file $filePath: " . json_last_error_msg());
         }
-        
+
         return $data;
     }
 
     /**
      * Write data as JSON to file
      */
-    public static function writeJson($filePath, $data, $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) {
+    public static function writeJson($filePath, $data, $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+    {
         $json = json_encode($data, $flags);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("JSON encoding error: " . json_last_error_msg());
         }
-        
+
         return self::write($filePath, $json);
     }
 
     /**
      * Read CSV file
      */
-    public static function readCsv($filePath, $delimiter = ',', $enclosure = '"', $escape = '\\') {
+    public static function readCsv($filePath, $delimiter = ',', $enclosure = '"', $escape = '\\')
+    {
         if (!file_exists($filePath)) {
             throw new Exception("CSV file not found: $filePath");
         }
 
         $data = [];
         $handle = fopen($filePath, 'r');
-        
+
         if ($handle === false) {
             throw new Exception("Failed to open CSV file: $filePath");
         }
@@ -159,9 +167,10 @@ class FileHelper {
     /**
      * Write CSV file
      */
-    public static function writeCsv($filePath, $data, $delimiter = ',', $enclosure = '"', $escape = '\\') {
+    public static function writeCsv($filePath, $data, $delimiter = ',', $enclosure = '"', $escape = '\\')
+    {
         $handle = fopen($filePath, 'w');
-        
+
         if ($handle === false) {
             throw new Exception("Failed to create CSV file: $filePath");
         }
@@ -178,20 +187,21 @@ class FileHelper {
 
         return true;
     }
-// copy function moved to file_operations.php for centralization
-// move function moved to file_operations.php for centralization
-// delete function moved to database_operations.php for centralization
+    // copy function moved to file_operations.php for centralization
+    // move function moved to file_operations.php for centralization
+    // delete function moved to database_operations.php for centralization
 
     /**
      * Get file information
      */
-    public static function getInfo($filePath) {
+    public static function getInfo($filePath)
+    {
         if (!file_exists($filePath)) {
             throw new Exception("File not found: $filePath");
         }
 
         $stat = stat($filePath);
-        
+
         return [
             'path' => $filePath,
             'name' => basename($filePath),
@@ -211,9 +221,10 @@ class FileHelper {
     /**
      * Check if file is safe to process
      */
-    public static function isSafe($filePath) {
+    public static function isSafe($filePath)
+    {
         $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-        
+
         // Check extension
         if (!in_array($extension, self::$allowedExtensions)) {
             return false;
@@ -230,23 +241,25 @@ class FileHelper {
     /**
      * Format bytes to human readable format
      */
-    public static function formatBytes($size, $precision = 2) {
+    public static function formatBytes($size, $precision = 2)
+    {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $size > 1024 && $i < count($units) - 1; $i++) {
             $size /= 1024;
         }
-        
+
         return round($size, $precision) . ' ' . $units[$i];
     }
 
     /**
      * Create temporary file
      */
-    public static function createTemp($prefix = 'wf_', $suffix = '.tmp') {
+    public static function createTemp($prefix = 'wf_', $suffix = '.tmp')
+    {
         $tempDir = sys_get_temp_dir();
         $tempFile = tempnam($tempDir, $prefix);
-        
+
         if ($tempFile === false) {
             throw new Exception("Failed to create temporary file");
         }
@@ -267,7 +280,8 @@ class FileHelper {
     /**
      * Read file in chunks (for large files)
      */
-    public static function readChunks($filePath, $chunkSize = 8192, $callback = null) {
+    public static function readChunks($filePath, $chunkSize = 8192, $callback = null)
+    {
         if (!file_exists($filePath)) {
             throw new Exception("File not found: $filePath");
         }
@@ -278,14 +292,14 @@ class FileHelper {
         }
 
         $chunks = [];
-        
+
         try {
             while (!feof($handle)) {
                 $chunk = fread($handle, $chunkSize);
                 if ($chunk === false) {
                     throw new Exception("Failed to read chunk from file: $filePath");
                 }
-                
+
                 if ($callback && is_callable($callback)) {
                     $callback($chunk);
                 } else {
@@ -302,43 +316,52 @@ class FileHelper {
     /**
      * Set allowed extensions
      */
-    public static function setAllowedExtensions(array $extensions) {
+    public static function setAllowedExtensions(array $extensions)
+    {
         self::$allowedExtensions = array_map('strtolower', $extensions);
     }
 
     /**
      * Set maximum file size
      */
-    public static function setMaxFileSize($size) {
+    public static function setMaxFileSize($size)
+    {
         self::$maxFileSize = $size;
     }
 }
 
 // Convenience functions
-function file_read($filePath, $useIncludePath = false, $context = null, $offset = 0, $length = null) {
+function file_read($filePath, $useIncludePath = false, $context = null, $offset = 0, $length = null)
+{
     return FileHelper::read($filePath, $useIncludePath, $context, $offset, $length);
 }
 
-function file_write($filePath, $data, $flags = 0, $context = null) {
+function file_write($filePath, $data, $flags = 0, $context = null)
+{
     return FileHelper::write($filePath, $data, $flags, $context);
 }
 
-function file_append($filePath, $data, $context = null) {
+function file_append($filePath, $data, $context = null)
+{
     return FileHelper::append($filePath, $data, $context);
 }
 
-function file_read_json($filePath, $associative = true) {
+function file_read_json($filePath, $associative = true)
+{
     return FileHelper::readJson($filePath, $associative);
 }
 
-function file_write_json($filePath, $data, $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) {
+function file_write_json($filePath, $data, $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+{
     return FileHelper::writeJson($filePath, $data, $flags);
 }
 
-function file_safe_delete($filePath) {
+function file_safe_delete($filePath)
+{
     return FileHelper::delete($filePath);
 }
 
-function file_get_info($filePath) {
+function file_get_info($filePath)
+{
     return FileHelper::getInfo($filePath);
-} 
+}

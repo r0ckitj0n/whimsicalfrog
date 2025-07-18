@@ -8,51 +8,55 @@ require_once __DIR__ . '/../api/marketing_helper.php';
 /**
  * Helper function to get image URL with fallback
  */
-function getImageUrl($imagePath, $directory, $extension = 'webp') {
+function getImageUrl($imagePath, $directory, $extension = 'webp')
+{
     if (empty($imagePath)) {
         return "images/{$directory}/placeholder.{$extension}";
     }
-    
+
     // Ensure brand prefix for image filenames when missing
     if (strpos($imagePath, 'WF-') !== 0 && strpos($imagePath, "/{$directory}/") === false && strpos($imagePath, 'images/') !== 0) {
         $imagePath = 'WF-' . $imagePath;
     }
-    
+
     // If path already includes directory, use as-is
     if (strpos($imagePath, "/{$directory}/") !== false || strpos($imagePath, "{$directory}/") !== false) {
         return $imagePath;
     }
-    
+
     // If it starts with images/, use as-is
     if (strpos($imagePath, 'images/') === 0) {
         return $imagePath;
     }
-    
+
     // If it looks like a SKU (no extension), add the A suffix and extension
     if (strpos($imagePath, '.') === false) {
         return "images/{$directory}/{$imagePath}A.{$extension}";
     }
-    
+
     // Add directory prefix
     return "images/{$directory}/" . $imagePath;
 }
 
-function renderDetailedItemModal($item, $images = []) {
+function renderDetailedItemModal($item, $images = [])
+{
     ob_start();
-    
+
     // Helper function to check if data exists and is not empty
-    function hasData($value) {
+    function hasData($value)
+    {
         return isset($value) && !empty($value) && $value !== 'N/A' && $value !== null;
     }
-    
+
     // Helper function to safely check if array key exists and has data
-    function hasItemData($item, $key) {
+    function hasItemData($item, $key)
+    {
         return isset($item[$key]) && hasData($item[$key]);
     }
-    
+
     // Get selling points for this item
     $sellingPoints = getSellingPoints($item['sku'] ?? '');
-    
+
     ?>
     <div id="detailedItemModal" class="detailed-item-modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4" data-action="closeDetailedModalOnOverlay">
         <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] overflow-hidden relative detailed-item-modal-container">
@@ -390,7 +394,8 @@ function renderDetailedItemModal($item, $images = []) {
 }
 
 // Legacy support - alias the old function name
-function renderDetailedProductModal($item, $images = []) {
+function renderDetailedProductModal($item, $images = [])
+{
     return renderDetailedItemModal($item, $images);
 }
 ?> 

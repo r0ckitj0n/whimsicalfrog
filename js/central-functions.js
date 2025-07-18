@@ -80,6 +80,16 @@ window.setupImageErrorHandling = function(img, sku = null) {
 
 console.log('Central functions loaded successfully');
 
+// Register as WF Core module (no init needed)
+if (window.WhimsicalFrog && typeof window.WhimsicalFrog.registerModule === 'function') {
+    window.WhimsicalFrog.registerModule('CentralFunctions', {
+        name: 'CentralFunctions',
+        init: function() {
+            console.log('[CentralFunctions] Module loaded');
+        }
+    });
+}
+
 // Centralized modal overlay click-to-close behavior
 // Closes static modal overlays when clicking outside modal content
 // and prevents clicks inside content from closing

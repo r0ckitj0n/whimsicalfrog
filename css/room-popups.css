@@ -14,7 +14,8 @@
     --popup-padding: 15px;
     --popup-min-width: 280px;
     --popup-max-width: 450px;
-    --popup-z-index: 200;
+    /* Popup should appear above room modal overlay (z-index ~2400) */
+    --popup-z-index: 2600;
     
     /* Popup Text Variables */
     --popup-title-color: #556B2F;
@@ -42,6 +43,13 @@
     --button-border-radius: 8px;
 }
 
+/* Ensure popups always appear above any modal overlay */
+.item-popup,
+.item-popup-legacy,
+.item-popup-enhanced {
+    z-index: var(--popup-z-index, 2600);
+}
+
 /* ==============================================
    STANDARD POPUP SYSTEM (Rooms 3, 4, 5, 6)
    ============================================== */
@@ -53,8 +61,9 @@
     border-radius: var(--popup-border-radius);
     padding: var(--popup-padding);
     box-shadow: var(--popup-shadow);
-    min-width: var(--popup-min-width);
-    max-width: var(--popup-max-width);
+    /* Provide fallbacks for browsers/contexts where CSS variables might be unset */
+    min-width: var(--popup-min-width, 280px);
+    max-width: var(--popup-max-width, 450px);
     width: auto;
     z-index: var(--popup-z-index);
     opacity: 0;
@@ -78,6 +87,7 @@
     z-index: var(--popup-z-index, var(--z-popups));
     left: var(--popup-left, 0);
     top: var(--popup-top, 0);
+    max-width: var(--popup-max-width, 450px); /* ensure stays constrained in positioned state */
 }
 
 /* Popup visibility and positioning states */

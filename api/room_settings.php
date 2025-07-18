@@ -13,7 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/config.php';
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]);
@@ -42,10 +47,11 @@ switch ($method) {
         break;
 }
 
-function handleGet($pdo) {
+function handleGet($pdo)
+{
     $action = $_GET['action'] ?? 'get_all';
     $roomNumber = $_GET['room_number'] ?? null;
-    
+
     try {
         if ($action === 'get_all') {
             // Get all room settings ordered by display order
@@ -56,9 +62,9 @@ function handleGet($pdo) {
             ");
             $stmt->execute();
             $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             echo json_encode(['success' => true, 'rooms' => $rooms]);
-            
+
         } elseif ($action === 'get_room' && $roomNumber !== null) {
             // Get specific room settings
             $stmt = $pdo->prepare("
@@ -67,13 +73,13 @@ function handleGet($pdo) {
             ");
             $stmt->execute([$roomNumber]);
             $room = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($room) {
                 echo json_encode(['success' => true, 'room' => $room]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Room not found']);
             }
-            
+
         } elseif ($action === 'get_navigation_rooms') {
             // Get rooms that should appear in navigation (product rooms)
             $stmt = $pdo->prepare("
@@ -84,22 +90,23 @@ function handleGet($pdo) {
             ");
             $stmt->execute();
             $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             echo json_encode(['success' => true, 'rooms' => $rooms]);
-            
+
         } else {
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
         }
-        
+
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
 }
 
-function handlePost($pdo, $input) {
+function handlePost($pdo, $input)
+{
     $action = $input['action'] ?? null;
-    
+
     if ($action === 'create_room') {
         createRoom($pdo, $input);
     } else {
@@ -108,9 +115,10 @@ function handlePost($pdo, $input) {
     }
 }
 
-function createRoom($pdo, $input) {
+function createRoom($pdo, $input)
+{
     $requiredFields = ['room_number', 'room_name', 'door_label'];
-    
+
     foreach ($requiredFields as $field) {
         if (!isset($input[$field]) || empty(trim($input[$field]))) {
             http_response_code(400);
@@ -118,23 +126,23 @@ function createRoom($pdo, $input) {
             return;
         }
     }
-    
+
     try {
         // Check if room number already exists
         $checkStmt = $pdo->prepare("SELECT id FROM room_settings WHERE room_number = ?");
         $checkStmt->execute([$input['room_number']]);
-        
+
         if ($checkStmt->fetch()) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Room number already exists']);
             return;
         }
-        
+
         $stmt = $pdo->prepare("
             INSERT INTO room_settings (room_number, room_name, door_label, description, display_order) 
             VALUES (?, ?, ?, ?, ?)
         ");
-        
+
         $stmt->execute([
             $input['room_number'],
             trim($input['room_name']),
@@ -142,24 +150,25 @@ function createRoom($pdo, $input) {
             $input['description'] ?? '',
             $input['display_order'] ?? 0
         ]);
-        
+
         $roomId = $pdo->lastInsertId();
-        
+
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Room created successfully',
             'room_id' => $roomId
         ]);
-        
+
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
 }
 
-function handlePut($pdo, $input) {
+function handlePut($pdo, $input)
+{
     $action = $input['action'] ?? null;
-    
+
     if ($action === 'update_room') {
         updateRoom($pdo, $input);
     } elseif ($action === 'update_display_order') {
@@ -170,9 +179,10 @@ function handlePut($pdo, $input) {
     }
 }
 
-function updateRoom($pdo, $input) {
+function updateRoom($pdo, $input)
+{
     $requiredFields = ['room_number', 'room_name', 'door_label'];
-    
+
     foreach ($requiredFields as $field) {
         if (!isset($input[$field]) || empty(trim($input[$field]))) {
             http_response_code(400);
@@ -180,14 +190,14 @@ function updateRoom($pdo, $input) {
             return;
         }
     }
-    
+
     try {
         $stmt = $pdo->prepare("
             UPDATE room_settings 
             SET room_name = ?, door_label = ?, description = ?, display_order = ?, show_search_bar = ?
             WHERE room_number = ?
         ");
-        
+
         $result = $stmt->execute([
             trim($input['room_name']),
             trim($input['door_label']),
@@ -196,40 +206,41 @@ function updateRoom($pdo, $input) {
             isset($input['show_search_bar']) ? (bool)$input['show_search_bar'] : true,
             $input['room_number']
         ]);
-        
+
         if ($result && $stmt->rowCount() > 0) {
             echo json_encode(['success' => true, 'message' => 'Room updated successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Room not found or no changes made']);
         }
-        
+
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
 }
 
-function updateDisplayOrder($pdo, $input) {
+function updateDisplayOrder($pdo, $input)
+{
     if (!isset($input['rooms']) || !is_array($input['rooms'])) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Invalid rooms data']);
         return;
     }
-    
+
     try {
         $pdo->beginTransaction();
-        
+
         $stmt = $pdo->prepare("UPDATE room_settings SET display_order = ? WHERE room_number = ?");
-        
+
         foreach ($input['rooms'] as $room) {
             if (isset($room['room_number']) && isset($room['display_order'])) {
                 $stmt->execute([$room['display_order'], $room['room_number']]);
             }
         }
-        
+
         $pdo->commit();
         echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
-        
+
     } catch (PDOException $e) {
         $pdo->rollBack();
         http_response_code(500);
@@ -237,15 +248,16 @@ function updateDisplayOrder($pdo, $input) {
     }
 }
 
-function handleDelete($pdo, $input) {
+function handleDelete($pdo, $input)
+{
     $roomNumber = $input['room_number'] ?? null;
-    
+
     if ($roomNumber === null) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Room number is required']);
         return;
     }
-    
+
     // Prevent deletion of core rooms (A, B, plus active product rooms)
     require_once __DIR__ . '/room_helpers.php';
     $coreRooms = getCoreRooms();
@@ -254,17 +266,17 @@ function handleDelete($pdo, $input) {
         echo json_encode(['success' => false, 'message' => 'Core rooms cannot be deleted']);
         return;
     }
-    
+
     try {
         $stmt = $pdo->prepare("UPDATE room_settings SET is_active = 0 WHERE room_number = ?");
         $result = $stmt->execute([$roomNumber]);
-        
+
         if ($result && $stmt->rowCount() > 0) {
             echo json_encode(['success' => true, 'message' => 'Room deactivated successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Room not found']);
         }
-        
+
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);

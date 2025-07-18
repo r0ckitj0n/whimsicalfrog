@@ -1,7 +1,7 @@
 <?php
 /**
  * AI Processing Modal Component
- * 
+ *
  * Shows real-time progress for AI image processing
  * Displays processing steps and status updates
  */

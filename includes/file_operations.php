@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog File Operation Functions
  * Centralized PHP functions to eliminate duplication
@@ -16,23 +17,24 @@ require_once __DIR__ . '/file_helper.php';
  * @param array $additionalData
  * @return mixed
  */
-function uploadFile($url, $filePath, $fieldName = 'file', $additionalData = []) {
+function uploadFile($url, $filePath, $fieldName = 'file', $additionalData = [])
+{
     if (!file_exists($filePath)) {
         throw new Exception("File not found: $filePath");
     }
 
     $data = $additionalData;
     $data[$fieldName] = new CURLFile($filePath);
-    
+
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    
+
     $result = curl_exec($ch);
     curl_close($ch);
-    
+
     return $result;
 }
 
@@ -42,7 +44,8 @@ function uploadFile($url, $filePath, $fieldName = 'file', $additionalData = []) 
  * @param string $savePath
  * @return mixed
  */
-function downloadFile($url, $savePath) {
+function downloadFile($url, $savePath)
+{
     $fp = fopen($savePath, 'w+');
     if (!$fp) {
         throw new Exception("Cannot open file for writing: $savePath");
@@ -52,19 +55,19 @@ function downloadFile($url, $savePath) {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    
+
     $result = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     fclose($fp);
-    
+
     if ($httpCode !== 200) {
         if (file_exists($savePath)) {
             unlink($savePath);
         }
         throw new Exception("Download failed with HTTP code: $httpCode");
     }
-    
+
     return $result;
 }
 
@@ -75,7 +78,8 @@ function downloadFile($url, $savePath) {
  * @param bool $overwrite
  * @return bool
  */
-function moveFile($source, $destination, $overwrite = false) {
+function moveFile($source, $destination, $overwrite = false)
+{
     if (!file_exists($source)) {
         throw new Exception("Source file not found: $source");
     }
@@ -106,7 +110,8 @@ function moveFile($source, $destination, $overwrite = false) {
  * @param bool $overwrite
  * @return bool
  */
-function copyFile($source, $destination, $overwrite = false) {
+function copyFile($source, $destination, $overwrite = false)
+{
     if (!file_exists($source)) {
         throw new Exception("Source file not found: $source");
     }
@@ -135,11 +140,12 @@ function copyFile($source, $destination, $overwrite = false) {
  * @param array $options
  * @return string
  */
-function createTempFile($options = []) {
+function createTempFile($options = [])
+{
     $prefix = $options['prefix'] ?? 'temp_';
     $suffix = $options['suffix'] ?? '.tmp';
     $dir = $options['dir'] ?? sys_get_temp_dir();
-    
+
     return tempnam($dir, $prefix) . $suffix;
 }
 
@@ -148,7 +154,8 @@ function createTempFile($options = []) {
  * @param string $filePath
  * @return bool
  */
-function removeFile($filePath) {
+function removeFile($filePath)
+{
     if (file_exists($filePath)) {
         return unlink($filePath);
     }
@@ -160,11 +167,10 @@ function removeFile($filePath) {
  * @param string $filePath
  * @return int
  */
-function getFileSize($filePath) {
+function getFileSize($filePath)
+{
     if (file_exists($filePath)) {
         return filesize($filePath);
     }
     return 0;
 }
-
-?>

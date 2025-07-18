@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog Email System Management
  * Centralized system functions to eliminate duplication
@@ -13,17 +14,18 @@ require_once __DIR__ . '/email_helper.php';
 /**
  * Send a test email using a specific template
  */
-function sendTestEmail($templateId, $testEmail, $pdo) {
+function sendTestEmail($templateId, $testEmail, $pdo)
+{
     try {
         // Get template
         $stmt = $pdo->prepare("SELECT * FROM email_templates WHERE id = ? AND is_active = 1");
         $stmt->execute([$templateId]);
         $template = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$template) {
             throw new Exception("Template not found or inactive");
         }
-        
+
         // Sample variables for testing
         $testVariables = [
             'customer_name' => 'John Doe',
@@ -42,13 +44,11 @@ function sendTestEmail($templateId, $testEmail, $pdo) {
             'reset_url' => 'https://whimsicalfrog.us/reset-password?token=test',
             'activation_url' => 'https://whimsicalfrog.us/activate?token=test'
         ];
-        
+
         return sendTemplatedEmail($template, $testEmail, $testVariables, 'test_email');
-        
+
     } catch (Exception $e) {
         error_log("Test email error: " . $e->getMessage());
         return false;
     }
 }
-
-?>

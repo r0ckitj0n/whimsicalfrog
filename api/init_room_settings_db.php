@@ -6,8 +6,13 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Create room_settings table
     $createTable = "
     CREATE TABLE IF NOT EXISTS room_settings (
@@ -24,15 +29,15 @@ try {
         INDEX idx_display_order (display_order),
         INDEX idx_is_active (is_active)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     $pdo->exec($createTable);
-        // Ensure background_display_type column exists
-        try {
-            $pdo->exec("ALTER TABLE room_settings ADD COLUMN background_display_type ENUM('fullscreen','modal') NOT NULL DEFAULT 'fullscreen'");
-        } catch (Exception $e) {
-            // Column already exists, skip
-        }
-    
+    // Ensure background_display_type column exists
+    try {
+        $pdo->exec("ALTER TABLE room_settings ADD COLUMN background_display_type ENUM('fullscreen','modal') NOT NULL DEFAULT 'fullscreen'");
+    } catch (Exception $e) {
+        // Column already exists, skip
+    }
+
     // Insert default room settings
     $defaultRooms = [
         [
@@ -85,18 +90,18 @@ try {
             'display_order' => 6
         ]
     ];
-    
+
     // Check if data already exists
     $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM room_settings");
     $checkStmt->execute();
     $count = $checkStmt->fetchColumn();
-    
+
     if ($count == 0) {
         $insertStmt = $pdo->prepare("
             INSERT INTO room_settings (room_number, room_name, door_label, description, display_order) 
             VALUES (?, ?, ?, ?, ?)
         ");
-        
+
         foreach ($defaultRooms as $room) {
             $insertStmt->execute([
                 $room['room_number'],
@@ -106,24 +111,24 @@ try {
                 $room['display_order']
             ]);
         }
-        
+
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Room settings table created and populated with default data',
             'rooms_created' => count($defaultRooms)
         ]);
     } else {
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => 'Room settings table already exists with data',
             'existing_rooms' => $count
         ]);
     }
-    
+
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([
-        'success' => false, 
+        'success' => false,
         'message' => 'Database error: ' . $e->getMessage()
     ]);
 }

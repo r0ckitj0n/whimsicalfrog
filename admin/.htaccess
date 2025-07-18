@@ -1,0 +1,33 @@
+# Security hardening for the /admin directory
+# -----------------------------------------------------------------------------
+# 1. Disable directory listing so visitors cannot browse file structure.
+Options -Indexes
+
+# 2. Protect this very file from outside access.
+<Files .htaccess>
+  Require all denied
+</Files>
+
+# 3. Block access to common sensitive file types (backups, configs, logs, etc.).
+<FilesMatch "\.(?:bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist|md|json|yml?|env)$">
+  Require all denied
+</FilesMatch>
+
+# 4. (Optional) Force HTTPS if the site is served over TLS in production.
+#    Safe because it is ignored on local dev without SSL.
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 5. Prevent direct access to PHP files except for explicitly allowed entry points.
+#    Comment this section if you prefer unrestricted script access in /admin.
+<FilesMatch "\.php$">
+  Require all denied
+</FilesMatch>
+
+#   Allowlist specific admin entry scripts you know should be publicly accessible.
+<FilesMatch "^(admin_login|admin_logout|admin_index|admin_.*|ajax_.*|process_.*)\.php$">
+  Require all granted
+</FilesMatch>
+
+# End /admin/.htaccess

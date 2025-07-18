@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog Database Operation Functions
  * Centralized PHP functions to eliminate duplication
@@ -14,20 +15,21 @@ require_once __DIR__ . '/database.php';
  * @param mixed $data
  * @return mixed
  */
-function makeDeleteRequest($url, $data = null) {
+function makeDeleteRequest($url, $data = null)
+{
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    
+
     if ($data !== null) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, is_string($data) ? $data : json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
     }
-    
+
     $result = curl_exec($ch);
     curl_close($ch);
-    
+
     return $result;
 }
 
@@ -37,7 +39,8 @@ function makeDeleteRequest($url, $data = null) {
  * @param array $params
  * @return PDOStatement
  */
-function executeQuery($sql, $params = []) {
+function executeQuery($sql, $params = [])
+{
     $pdo = Database::getInstance()->getConnection();
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
@@ -50,9 +53,8 @@ function executeQuery($sql, $params = []) {
  * @param array $params
  * @return int
  */
-function executeUpdate($sql, $params = []) {
+function executeUpdate($sql, $params = [])
+{
     $stmt = executeQuery($sql, $params);
     return $stmt->rowCount();
 }
-
-?>

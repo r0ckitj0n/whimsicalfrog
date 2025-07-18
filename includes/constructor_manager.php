@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog Constructor and Initialization Management
  * Centralized PHP functions to eliminate duplication
@@ -14,12 +15,13 @@ require_once __DIR__ . '/auth.php';
  * @param string $roomNumber
  * @return array
  */
-function initializeRoom($roomNumber = '2') {
+function initializeRoom($roomNumber = '2')
+{
     $roomType = "room{$roomNumber}";
-    
+
     // Initialize database connection
     $database = Database::getInstance();
-    
+
     return [
         'roomNumber' => $roomNumber,
         'roomType' => $roomType,
@@ -32,11 +34,10 @@ function initializeRoom($roomNumber = '2') {
  * @param array $config
  * @return void
  */
-function configureSystem($config) {
+function configureSystem($config)
+{
     if (!isset($GLOBALS['system_config'])) {
         $GLOBALS['system_config'] = [];
     }
     $GLOBALS['system_config'] = array_merge($GLOBALS['system_config'], $config);
 }
-
-?>

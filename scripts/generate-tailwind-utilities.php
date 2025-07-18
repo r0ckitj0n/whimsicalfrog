@@ -1,4 +1,5 @@
 <?php
+
 // Script to generate custom CSS utilities based on used Tailwind classes
 
 $inputFile = __DIR__ . '/tailwind-classes.txt';

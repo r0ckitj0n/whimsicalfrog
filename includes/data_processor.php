@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog Data Processing and Formatting
  * Centralized PHP functions to eliminate duplication
@@ -9,5 +10,3 @@
 require_once __DIR__ . '/database.php';
 
 // formatDate function moved to functions.php for centralization
-
-?>

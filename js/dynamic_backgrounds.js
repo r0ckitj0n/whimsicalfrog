@@ -13,8 +13,8 @@ async function loadRoomBackground(roomType) {
         }
         
         // Normal room background loading
-        const response = await fetch(`api/get_background.php?room_type=${roomType}`);
-        const data = await response.json();
+        const data = await apiGet(`get_background.php?room_type=${roomType}`);
+        
         
         if (data.success && data.background) {
             const background = data.background;
@@ -48,8 +48,7 @@ async function loadRoomBackground(roomType) {
 async function autoLoadRoomBackground() {
     try {
         // Get dynamic room data from API
-        const response = await fetch('/api/get_room_data.php');
-        const roomData = await response.json();
+        const roomData = await apiGet('get_room_data.php');
         
         if (!roomData.success) {
             console.error('Failed to get room data:', roomData.message);

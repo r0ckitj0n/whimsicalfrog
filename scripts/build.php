@@ -1,4 +1,5 @@
 <?php
+
 // scripts/build.php
 
 echo "Starting build process...\n\n";
@@ -12,5 +13,3 @@ echo "\n"; // Add a newline for better separation
 require_once 'bundle-js.php';
 
 echo "\nBuild process completed!\n";
-
-?>

@@ -4,46 +4,51 @@ require_once 'config.php';
 header('Content-Type: application/json');
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Get all tables
     $stmt = $pdo->query("SHOW TABLES");
     $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    
+
     // Get active tables (exclude backup tables)
-    $activeTables = array_filter($tables, function($table) {
+    $activeTables = array_filter($tables, function ($table) {
         return !preg_match('/backup|_backup_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}/', $table);
     });
-    
+
     // Get backup tables separately
-    $backupTables = array_filter($tables, function($table) {
+    $backupTables = array_filter($tables, function ($table) {
         return preg_match('/backup|_backup_\d{4}_\d{2}_\d{2}_\d{2}_\d{2}_\d{2}/', $table);
     });
-    
+
     // Dynamically categorize tables based on naming patterns and content analysis
     $organizedTables = [];
     $tableDetails = [];
-    
+
     foreach ($activeTables as $table) {
         $category = 'other'; // default category
-        
+
         // Get table structure for better categorization
         $structStmt = $pdo->prepare("DESCRIBE `$table`");
         $structStmt->execute();
         $structure = $structStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Get row count
         $countStmt = $pdo->prepare("SELECT COUNT(*) as count FROM `$table`");
         $countStmt->execute();
         $rowCount = $countStmt->fetch(PDO::FETCH_ASSOC)['count'];
-        
+
         // Store table details
         $tableDetails[$table] = [
             'structure' => $structure,
             'row_count' => $rowCount,
             'fields' => array_column($structure, 'Field')
         ];
-        
+
         // Enhanced categorization based on table name patterns and structure
         if (in_array($table, ['items', 'item_images', 'item_colors', 'orders', 'order_items'])) {
             $category = 'core_ecommerce';
@@ -70,7 +75,7 @@ try {
         } elseif (strpos($table, 'css_') === 0 || strpos($table, 'style') !== false) {
             $category = 'styling_theme';
         }
-        
+
         // Further categorization based on field names
         $fields = array_column($structure, 'Field');
         if (in_array('created_at', $fields) && in_array('updated_at', $fields)) {
@@ -81,24 +86,24 @@ try {
                 }
             }
         }
-        
+
         if (!isset($organizedTables[$category])) {
             $organizedTables[$category] = [];
         }
-        
+
         $organizedTables[$category][$table] = [
             'exists' => true,
             'row_count' => $rowCount,
             'field_count' => count($structure)
         ];
     }
-    
+
     // Sort categories and tables
     ksort($organizedTables);
     foreach ($organizedTables as $category => $tables) {
         ksort($organizedTables[$category]);
     }
-    
+
     $response = [
         'success' => true,
         'data' => [
@@ -112,9 +117,9 @@ try {
             'categories' => array_keys($organizedTables)
         ]
     ];
-    
+
     echo json_encode($response);
-    
+
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([

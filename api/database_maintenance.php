@@ -13,7 +13,8 @@ session_start();
 // Admin authentication check
 $isAdmin = false;
 if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
-    require_once __DIR__ . '/../includes/auth.php'; $isAdmin = isAdminWithToken();
+    require_once __DIR__ . '/../includes/auth.php';
+    $isAdmin = isAdminWithToken();
 }
 
 // Admin token fallback for API access (check both GET, POST, and JSON)
@@ -48,8 +49,8 @@ switch ($action) {
     case 'get_connection_stats':
         getConnectionStats();
         break;
-    
-    // New maintenance tool actions
+
+        // New maintenance tool actions
     case 'optimize_tables':
         optimizeTables();
         break;
@@ -77,8 +78,8 @@ switch ($action) {
     case 'export_tables':
         exportTables();
         break;
-    
-    // Database restore actions
+
+        // Database restore actions
     case 'list_backups':
         listBackups();
         break;
@@ -94,8 +95,8 @@ switch ($action) {
     case 'initialize_database':
         initializeDatabase();
         break;
-    
-    // Import actions
+
+        // Import actions
     case 'import_sql':
         importSQL();
         break;
@@ -105,14 +106,15 @@ switch ($action) {
     case 'import_json':
         importJSON();
         break;
-    
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
 }
 
-function getConfig() {
+function getConfig()
+{
     global $host, $db, $user, $pass;
-    
+
     // Return current config (mask password)
     echo json_encode([
         'success' => true,
@@ -127,21 +129,22 @@ function getConfig() {
     ]);
 }
 
-function testConnection() {
+function testConnection()
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $testHost = $input['host'] ?? '';
     $testDb = $input['database'] ?? '';
     $testUser = $input['username'] ?? '';
     $testPass = $input['password'] ?? '';
     $testSsl = $input['ssl_enabled'] ?? false;
     $testSslCert = $input['ssl_cert'] ?? '';
-    
+
     if (empty($testHost) || empty($testDb) || empty($testUser)) {
         echo json_encode(['success' => false, 'message' => 'Host, database, and username are required']);
         return;
     }
-    
+
     try {
         $testDsn = "mysql:host=$testHost;dbname=$testDb;charset=utf8mb4";
         $testOptions = [
@@ -150,23 +153,23 @@ function testConnection() {
             PDO::ATTR_EMULATE_PREPARES => false,
             PDO::ATTR_TIMEOUT => 10 // 10 second timeout
         ];
-        
+
         // Add SSL options if enabled
         if ($testSsl && !empty($testSslCert)) {
             $testOptions[PDO::MYSQL_ATTR_SSL_CA] = $testSslCert;
             $testOptions[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
         }
-        
+
         $testPdo = new PDO($testDsn, $testUser, $testPass, $testOptions);
-        
+
         // Test basic query
         $stmt = $testPdo->query("SELECT VERSION() as version, DATABASE() as current_db");
         $info = $stmt->fetch();
-        
+
         // Get table count
         $stmt = $testPdo->query("SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = '$testDb'");
         $tableInfo = $stmt->fetch();
-        
+
         echo json_encode([
             'success' => true,
             'message' => 'Connection successful',
@@ -178,7 +181,7 @@ function testConnection() {
                 'connection_time' => date('Y-m-d H:i:s')
             ]
         ]);
-        
+
     } catch (PDOException $e) {
         echo json_encode([
             'success' => false,
@@ -188,9 +191,10 @@ function testConnection() {
     }
 }
 
-function updateConfig() {
+function updateConfig()
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $newHost = $input['host'] ?? '';
     $newDb = $input['database'] ?? '';
     $newUser = $input['username'] ?? '';
@@ -198,21 +202,21 @@ function updateConfig() {
     $environment = $input['environment'] ?? 'auto';
     $sslEnabled = $input['ssl_enabled'] ?? false;
     $sslCert = $input['ssl_cert'] ?? '';
-    
+
     if (empty($newHost) || empty($newDb) || empty($newUser)) {
         echo json_encode(['success' => false, 'message' => 'Host, database, and username are required']);
         return;
     }
-    
+
     // Read current config file
     $configPath = __DIR__ . '/config.php';
     if (!file_exists($configPath)) {
         echo json_encode(['success' => false, 'message' => 'Config file not found']);
         return;
     }
-    
+
     $configContent = file_get_contents($configPath);
-    
+
     // Update the config based on environment
     if ($environment === 'local' || $environment === 'both') {
         // Update local credentials
@@ -239,7 +243,7 @@ function updateConfig() {
             );
         }
     }
-    
+
     if ($environment === 'production' || $environment === 'both') {
         // Update production credentials
         $configContent = preg_replace(
@@ -265,7 +269,7 @@ function updateConfig() {
             );
         }
     }
-    
+
     // Add SSL support if needed
     if ($sslEnabled && !empty($sslCert)) {
         // Add SSL options to the config
@@ -274,7 +278,7 @@ function updateConfig() {
         $sslConfig .= "    \$options[PDO::MYSQL_ATTR_SSL_CA] = '$sslCert';\n";
         $sslConfig .= "    \$options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;\n";
         $sslConfig .= "}\n";
-        
+
         // Add before the dsn line
         $configContent = str_replace(
             '$dsn = "mysql:host=$host;dbname=$db;charset=$charset";',
@@ -282,11 +286,11 @@ function updateConfig() {
             $configContent
         );
     }
-    
+
     // Create backup of current config
     $backupPath = __DIR__ . '/config_backup_' . date('Y-m-d_H-i-s') . '.php';
     copy($configPath, $backupPath);
-    
+
     // Write updated config
     if (file_put_contents($configPath, $configContent) !== false) {
         echo json_encode([
@@ -299,18 +303,19 @@ function updateConfig() {
     }
 }
 
-function getConnectionStats() {
+function getConnectionStats()
+{
     try {
         $pdo = Database::getInstance();
-        
+
         // Get current connections
         $stmt = $pdo->query("SHOW STATUS LIKE 'Threads_connected'");
         $connections = $stmt->fetch();
-        
+
         // Get max connections
         $stmt = $pdo->query("SHOW VARIABLES LIKE 'max_connections'");
         $maxConnections = $stmt->fetch();
-        
+
         // Get database size
         global $db;
         $stmt = $pdo->query("
@@ -320,7 +325,7 @@ function getConnectionStats() {
             WHERE table_schema = '$db'
         ");
         $sizeInfo = $stmt->fetch();
-        
+
         // Get table count
         $stmt = $pdo->query("
             SELECT COUNT(*) as table_count 
@@ -328,7 +333,7 @@ function getConnectionStats() {
             WHERE table_schema = '$db'
         ");
         $tableCount = $stmt->fetch();
-        
+
         echo json_encode([
             'success' => true,
             'stats' => [
@@ -339,7 +344,7 @@ function getConnectionStats() {
                 'last_updated' => date('Y-m-d H:i:s')
             ]
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -352,31 +357,32 @@ function getConnectionStats() {
 // NEW MAINTENANCE TOOL FUNCTIONS
 // ======================================
 
-function optimizeTables() {
+function optimizeTables()
+{
     try {
         $pdo = Database::getInstance();
         global $db;
-        
+
         // Get all tables in the database
         $stmt = $pdo->query("SHOW TABLES FROM `$db`");
         $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         $optimizedCount = 0;
         $details = [];
-        
+
         foreach ($tables as $table) {
             $stmt = $pdo->query("OPTIMIZE TABLE `$table`");
             $result = $stmt->fetch();
             $details[] = "$table: " . $result['Msg_text'];
             $optimizedCount++;
         }
-        
+
         echo json_encode([
             'success' => true,
             'tables_optimized' => $optimizedCount,
             'details' => implode('; ', $details)
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -385,11 +391,12 @@ function optimizeTables() {
     }
 }
 
-function analyzeIndexes() {
+function analyzeIndexes()
+{
     try {
         $pdo = Database::getInstance();
         global $db;
-        
+
         // Get index information
         $stmt = $pdo->query("
             SELECT 
@@ -402,10 +409,10 @@ function analyzeIndexes() {
             ORDER BY table_name, index_name
         ");
         $indexes = $stmt->fetchAll();
-        
+
         $indexCount = count($indexes);
         $recommendations = [];
-        
+
         // Simple analysis - check for tables without indexes
         $stmt = $pdo->query("
             SELECT table_name 
@@ -418,17 +425,17 @@ function analyzeIndexes() {
             )
         ");
         $noIndexTables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         if (!empty($noIndexTables)) {
             $recommendations[] = "Tables without indexes: " . implode(', ', $noIndexTables);
         }
-        
+
         echo json_encode([
             'success' => true,
             'indexes_analyzed' => $indexCount,
             'recommendations' => implode('; ', $recommendations) ?: 'All tables have appropriate indexes'
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -437,12 +444,13 @@ function analyzeIndexes() {
     }
 }
 
-function cleanupDatabase() {
+function cleanupDatabase()
+{
     try {
         $pdo = Database::getInstance();
         $orphanedRecords = 0;
         $tempFiles = 0;
-        
+
         // Example cleanup - remove orphaned order items
         $stmt = $pdo->prepare("
             DELETE oi FROM order_items oi 
@@ -451,7 +459,7 @@ function cleanupDatabase() {
         ");
         $stmt->execute();
         $orphanedRecords += $stmt->rowCount();
-        
+
         // Example cleanup - remove orphaned item images
         $stmt = $pdo->prepare("
             DELETE ii FROM item_images ii 
@@ -460,13 +468,13 @@ function cleanupDatabase() {
         ");
         $stmt->execute();
         $orphanedRecords += $stmt->rowCount();
-        
+
         echo json_encode([
             'success' => true,
             'orphaned_records' => $orphanedRecords,
             'temp_files' => $tempFiles
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -475,31 +483,32 @@ function cleanupDatabase() {
     }
 }
 
-function repairTables() {
+function repairTables()
+{
     try {
         $pdo = Database::getInstance();
         global $db;
-        
+
         // Get all tables in the database
         $stmt = $pdo->query("SHOW TABLES FROM `$db`");
         $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         $repairedCount = 0;
         $details = [];
-        
+
         foreach ($tables as $table) {
             $stmt = $pdo->query("REPAIR TABLE `$table`");
             $result = $stmt->fetch();
             $details[] = "$table: " . $result['Msg_text'];
             $repairedCount++;
         }
-        
+
         echo json_encode([
             'success' => true,
             'tables_repaired' => $repairedCount,
             'details' => implode('; ', $details)
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -508,11 +517,12 @@ function repairTables() {
     }
 }
 
-function analyzeDatabaseSize() {
+function analyzeDatabaseSize()
+{
     try {
         $pdo = Database::getInstance();
         global $db;
-        
+
         // Get database size information
         $stmt = $pdo->query("
             SELECT 
@@ -523,7 +533,7 @@ function analyzeDatabaseSize() {
             WHERE table_schema = '$db'
         ");
         $sizeInfo = $stmt->fetch();
-        
+
         // Get largest table
         $stmt = $pdo->query("
             SELECT 
@@ -535,7 +545,7 @@ function analyzeDatabaseSize() {
             LIMIT 1
         ");
         $largestTable = $stmt->fetch();
-        
+
         echo json_encode([
             'success' => true,
             'total_size' => $sizeInfo['total_size_mb'] . ' MB',
@@ -543,7 +553,7 @@ function analyzeDatabaseSize() {
             'index_size' => $sizeInfo['index_size_mb'] . ' MB',
             'largest_table' => $largestTable['table_name'] . ' (' . $largestTable['size_mb'] . ' MB)'
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -552,33 +562,34 @@ function analyzeDatabaseSize() {
     }
 }
 
-function performanceMonitor() {
+function performanceMonitor()
+{
     try {
         $pdo = Database::getInstance();
-        
+
         // Get connection count
         $stmt = $pdo->query("SHOW STATUS LIKE 'Threads_connected'");
         $connections = $stmt->fetch();
-        
+
         // Get slow query log status
         $stmt = $pdo->query("SHOW VARIABLES LIKE 'slow_query_log'");
         $slowLogStatus = $stmt->fetch();
-        
+
         // Get uptime
         $stmt = $pdo->query("SHOW STATUS LIKE 'Uptime'");
         $uptime = $stmt->fetch();
-        
+
         // Get query cache hit rate
         $stmt = $pdo->query("SHOW STATUS LIKE 'Qcache_hits'");
         $hits = $stmt->fetch();
         $stmt = $pdo->query("SHOW STATUS LIKE 'Com_select'");
         $selects = $stmt->fetch();
-        
+
         $hitRate = 'N/A';
         if ($hits && $selects && ($hits['Value'] + $selects['Value']) > 0) {
             $hitRate = round(($hits['Value'] / ($hits['Value'] + $selects['Value'])) * 100, 2) . '%';
         }
-        
+
         echo json_encode([
             'success' => true,
             'connections' => $connections['Value'],
@@ -586,7 +597,7 @@ function performanceMonitor() {
             'cache_hit_rate' => $hitRate,
             'avg_query_time' => 'N/A' // Would need more complex calculation
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -595,11 +606,12 @@ function performanceMonitor() {
     }
 }
 
-function checkForeignKeys() {
+function checkForeignKeys()
+{
     try {
         $pdo = Database::getInstance();
         global $db;
-        
+
         // Get all foreign key constraints
         $stmt = $pdo->query("
             SELECT 
@@ -613,18 +625,18 @@ function checkForeignKeys() {
             AND referenced_table_name IS NOT NULL
         ");
         $foreignKeys = $stmt->fetchAll();
-        
+
         $keysChecked = count($foreignKeys);
         $issuesFound = 0;
-        
+
         // Check each foreign key for orphaned records
         foreach ($foreignKeys as $fk) {
             // Check if all required keys exist to avoid PHP warnings
-            if (!isset($fk['table_name']) || !isset($fk['referenced_table_name']) || 
+            if (!isset($fk['table_name']) || !isset($fk['referenced_table_name']) ||
                 !isset($fk['column_name']) || !isset($fk['referenced_column_name'])) {
                 continue; // Skip this foreign key if required data is missing
             }
-            
+
             try {
                 $sql = "
                     SELECT COUNT(*) as orphaned_count
@@ -634,10 +646,10 @@ function checkForeignKeys() {
                     WHERE t1.`{$fk['column_name']}` IS NOT NULL 
                     AND t2.`{$fk['referenced_column_name']}` IS NULL
                 ";
-                
+
                 $stmt = $pdo->query($sql);
                 $result = $stmt->fetch();
-                
+
                 if ($result && isset($result['orphaned_count']) && $result['orphaned_count'] > 0) {
                     $issuesFound += $result['orphaned_count'];
                 }
@@ -646,13 +658,13 @@ function checkForeignKeys() {
                 continue;
             }
         }
-        
+
         echo json_encode([
             'success' => true,
             'keys_checked' => $keysChecked,
             'issues_found' => $issuesFound
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -661,11 +673,12 @@ function checkForeignKeys() {
     }
 }
 
-function getDatabaseSchema() {
+function getDatabaseSchema()
+{
     try {
         $pdo = Database::getInstance();
         global $db;
-        
+
         // Get table information with explicit column aliases to ensure case consistency
         $stmt = $pdo->query("
             SELECT 
@@ -677,19 +690,19 @@ function getDatabaseSchema() {
             ORDER BY table_name
         ");
         $tables = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         $schemaInfo = [];
         foreach ($tables as $table) {
             // Handle case sensitivity and null values
             $tableName = $table['table_name'] ?? $table['TABLE_NAME'] ?? 'Unknown';
             $tableRows = $table['table_rows'] ?? $table['TABLE_ROWS'] ?? 0;
             $tableSize = $table['size_mb'] ?? 0;
-            
+
             // Skip if table name is invalid
             if ($tableName === 'Unknown' || empty($tableName)) {
                 continue;
             }
-            
+
             // Get column information for each table
             $stmt = $pdo->query("
                 SELECT column_name 
@@ -699,7 +712,7 @@ function getDatabaseSchema() {
                 ORDER BY ordinal_position
             ");
             $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            
+
             $schemaInfo[] = [
                 'name' => $tableName,
                 'rows' => $tableRows !== null ? $tableRows : 0,
@@ -707,12 +720,12 @@ function getDatabaseSchema() {
                 'columns' => $columns ?: []
             ];
         }
-        
+
         echo json_encode([
             'success' => true,
             'tables' => $schemaInfo
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -721,65 +734,66 @@ function getDatabaseSchema() {
     }
 }
 
-function exportTables() {
+function exportTables()
+{
     try {
         $tables = $_GET['tables'] ?? '';
         if (empty($tables)) {
             throw new Exception('No tables specified for export');
         }
-        
+
         $tableList = explode(',', $tables);
         $pdo = Database::getInstance();
         global $db;
-        
+
         // Set headers for file download
         header('Content-Type: application/sql');
         header('Content-Disposition: attachment; filename="database_export_' . date('Y-m-d_H-i-s') . '.sql"');
         header('Pragma: no-cache');
         header('Expires: 0');
-        
+
         echo "- Database Export\n";
         echo "- Generated: " . date('Y-m-d H:i:s') . "\n";
         echo "- Database: $db\n";
         echo "- Tables: " . implode(', ', $tableList) . "\n\n";
-        
+
         foreach ($tableList as $table) {
             $table = trim($table);
-            
+
             // Export table structure
             $stmt = $pdo->query("SHOW CREATE TABLE `$table`");
             $createTable = $stmt->fetch();
-            
+
             echo "- Table structure for `$table`\n";
             echo "DROP TABLE IF EXISTS `$table`;\n";
             echo $createTable['Create Table'] . ";\n\n";
-            
+
             // Export table data
             $stmt = $pdo->query("SELECT * FROM `$table`");
             $rows = $stmt->fetchAll();
-            
+
             if (!empty($rows)) {
                 echo "- Data for table `$table`\n";
-                
+
                 $columns = array_keys($rows[0]);
                 $columnList = '`' . implode('`, `', $columns) . '`';
-                
+
                 echo "INSERT INTO `$table` ($columnList) VALUES\n";
-                
+
                 $values = [];
                 foreach ($rows as $row) {
-                    $escapedRow = array_map(function($value) use ($pdo) {
+                    $escapedRow = array_map(function ($value) use ($pdo) {
                         return $value === null ? 'NULL' : $pdo->quote($value);
                     }, $row);
                     $values[] = '(' . implode(', ', $escapedRow) . ')';
                 }
-                
+
                 echo implode(",\n", $values) . ";\n\n";
             }
         }
-        
+
         exit; // End output for download
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -789,24 +803,25 @@ function exportTables() {
 }
 
 // List available backup files on the server
-function listBackups() {
+function listBackups()
+{
     try {
         $backupDir = __DIR__ . '/../backups/';
         $backups = [];
-        
+
         // Create backup directory if it doesn't exist
         if (!is_dir($backupDir)) {
             mkdir($backupDir, 0755, true);
         }
-        
+
         $files = glob($backupDir . '*.sql');
-        
+
         foreach ($files as $file) {
             $filename = basename($file);
             $size = filesize($file);
             $created = date('Y-m-d H:i:s', filemtime($file));
             $age = time() - filemtime($file);
-            
+
             // Format age
             if ($age < 3600) {
                 $ageFormatted = round($age / 60) . ' minutes ago';
@@ -815,7 +830,7 @@ function listBackups() {
             } else {
                 $ageFormatted = round($age / 86400) . ' days ago';
             }
-            
+
             $backups[] = [
                 'filename' => $filename,
                 'path' => $file,
@@ -825,17 +840,17 @@ function listBackups() {
                 'timestamp' => filemtime($file)
             ];
         }
-        
+
         // Sort by newest first
-        usort($backups, function($a, $b) {
+        usort($backups, function ($a, $b) {
             return $b['timestamp'] - $a['timestamp'];
         });
-        
+
         echo json_encode([
             'success' => true,
             'backups' => $backups
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -845,64 +860,65 @@ function listBackups() {
 }
 
 // Create a backup of the current database
-function createBackup() {
+function createBackup()
+{
     try {
         $pdo = Database::getInstance();
         global $db;
-        
+
         $backupDir = __DIR__ . '/../backups/';
         if (!is_dir($backupDir)) {
             mkdir($backupDir, 0755, true);
         }
-        
+
         $filename = "backup_" . date('Y-m-d_H-i-s') . ".sql";
         $filePath = $backupDir . $filename;
-        
+
         // Get all tables
         $stmt = $pdo->query("SHOW TABLES");
         $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         $backup = "- Database Backup\n";
         $backup .= "- Generated: " . date('Y-m-d H:i:s') . "\n";
         $backup .= "- Database: $db\n\n";
-        
+
         foreach ($tables as $table) {
             // Get table structure
             $stmt = $pdo->query("SHOW CREATE TABLE `$table`");
             $createTable = $stmt->fetch();
-            
+
             $backup .= "- Table structure for `$table`\n";
             $backup .= "DROP TABLE IF EXISTS `$table`;\n";
             $backup .= $createTable['Create Table'] . ";\n\n";
-            
+
             // Get table data
             $stmt = $pdo->query("SELECT * FROM `$table`");
             $rows = $stmt->fetchAll();
-            
+
             if (!empty($rows)) {
                 $backup .= "- Data for table `$table`\n";
-                
+
                 $columns = array_keys($rows[0]);
                 $columnList = '`' . implode('`, `', $columns) . '`';
-                
+
                 $backup .= "INSERT INTO `$table` ($columnList) VALUES\n";
-                
+
                 $values = [];
                 foreach ($rows as $row) {
-                    $escapedRow = array_map(function($value) use ($pdo) {
+                    $escapedRow = array_map(function ($value) use ($pdo) {
                         return $value === null ? 'NULL' : $pdo->quote($value);
                     }, $row);
                     $values[] = '(' . implode(', ', $escapedRow) . ')';
                 }
-                
+
                 $backup .= implode(",\n", $values) . ";\n\n";
             }
         }
-        
+
         if (file_put_contents($filePath, $backup) === false) {
             throw new Exception('Failed to write backup file');
         }
-        
+
         echo json_encode([
             'success' => true,
             'filename' => $filename,
@@ -910,7 +926,7 @@ function createBackup() {
             'size' => formatBytes(filesize($filePath)),
             'tables' => count($tables)
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -920,33 +936,34 @@ function createBackup() {
 }
 
 // Drop all tables in the database
-function dropAllTables() {
+function dropAllTables()
+{
     try {
         $pdo = Database::getInstance();
-        
+
         // Disable foreign key checks
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
-        
+
         // Get all tables
         $stmt = $pdo->query("SHOW TABLES");
         $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         $droppedTables = [];
-        
+
         foreach ($tables as $table) {
             $pdo->exec("DROP TABLE IF EXISTS `$table`");
             $droppedTables[] = $table;
         }
-        
+
         // Re-enable foreign key checks
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
-        
+
         echo json_encode([
             'success' => true,
             'tables_dropped' => count($droppedTables),
             'tables' => $droppedTables
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -956,98 +973,99 @@ function dropAllTables() {
 }
 
 // Restore database from backup file
-function restoreDatabase() {
+function restoreDatabase()
+{
     try {
         $pdo = Database::getInstance();
         $ignoreErrors = isset($_POST['ignore_errors']) && $_POST['ignore_errors'] === '1';
-        
+
         $sqlContent = '';
-        
+
         // Handle uploaded file
         if (isset($_FILES['backup_file']) && $_FILES['backup_file']['error'] === UPLOAD_ERR_OK) {
             $uploadedFile = $_FILES['backup_file']['tmp_name'];
-            
+
             // Validate file type
             $filename = $_FILES['backup_file']['name'];
             if (!preg_match('/\.(sql|txt)$/i', $filename)) {
                 throw new Exception('Invalid file type. Only .sql and .txt files are allowed.');
             }
-            
+
             $sqlContent = file_get_contents($uploadedFile);
-            
+
         } elseif (isset($_POST['server_backup_path'])) {
             // Handle server backup file
             $backupPath = $_POST['server_backup_path'];
-            
+
             // Security check - ensure file is in backup directory
             $backupDir = realpath(__DIR__ . '/../backups/');
             $requestedPath = realpath($backupPath);
-            
+
             if (!$requestedPath || strpos($requestedPath, $backupDir) !== 0) {
                 throw new Exception('Invalid backup file path');
             }
-            
+
             if (!file_exists($backupPath)) {
                 throw new Exception('Backup file not found');
             }
-            
+
             $sqlContent = file_get_contents($backupPath);
-            
+
         } else {
             throw new Exception('No backup file provided');
         }
-        
+
         if (empty($sqlContent)) {
             throw new Exception('Backup file is empty or could not be read');
         }
-        
+
         $startTime = microtime(true);
-        
+
         // Disable foreign key checks during restore
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
         $pdo->exec("SET SQL_MODE = ''");
-        
+
         // Split SQL into individual statements
         $statements = preg_split('/;\s*\n/', $sqlContent);
         $executedStatements = 0;
         $errors = [];
         $tablesRestored = 0;
         $recordsRestored = 0;
-        
+
         foreach ($statements as $statement) {
             $statement = trim($statement);
-            
+
             // Skip empty statements and comments
             if (empty($statement) || substr($statement, 0, 2) === '-') {
                 continue;
             }
-            
+
             try {
                 $result = $pdo->exec($statement);
                 $executedStatements++;
-                
+
                 // Count tables and records
                 if (stripos($statement, 'CREATE TABLE') !== false) {
                     $tablesRestored++;
                 } elseif (stripos($statement, 'INSERT INTO') !== false) {
                     $recordsRestored += $result ?: 0;
                 }
-                
+
             } catch (PDOException $e) {
                 $error = "Error in statement: " . substr($statement, 0, 100) . "... - " . $e->getMessage();
                 $errors[] = $error;
-                
+
                 if (!$ignoreErrors) {
                     throw new Exception("SQL execution failed: " . $error);
                 }
             }
         }
-        
+
         // Re-enable foreign key checks
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
-        
+
         $executionTime = round((microtime(true) - $startTime), 2) . ' seconds';
-        
+
         $response = [
             'success' => true,
             'tables_restored' => $tablesRestored,
@@ -1055,14 +1073,14 @@ function restoreDatabase() {
             'statements_executed' => $executedStatements,
             'execution_time' => $executionTime
         ];
-        
+
         if (!empty($errors)) {
             $response['warnings'] = count($errors) . ' warnings/errors encountered';
             $response['error_details'] = $errors;
         }
-        
+
         echo json_encode($response);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -1072,28 +1090,32 @@ function restoreDatabase() {
 }
 
 // Helper function to format file sizes
-function formatBytes($size) {
-    if ($size == 0) return '0 B';
-    
+function formatBytes($size)
+{
+    if ($size == 0) {
+        return '0 B';
+    }
+
     $units = ['B', 'KB', 'MB', 'GB'];
     $base = log($size, 1024);
     $unit = floor($base);
-    
+
     return round(pow(1024, $base - $unit), 2) . ' ' . $units[$unit];
 }
 
 // Initialize database with all necessary tables and default data
-function initializeDatabase() {
+function initializeDatabase()
+{
     try {
         $startTime = microtime(true);
         $pdo = Database::getInstance();
-        
+
         $tablesCreated = 0;
         $tablesSkipped = 0;
         $defaultRecords = 0;
         $details = [];
         $warnings = [];
-        
+
         // Define all necessary tables with their SQL
         $tables = [
             'items' => "
@@ -1119,7 +1141,7 @@ function initializeDatabase() {
                     KEY `status` (`status`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'customers' => "
                 CREATE TABLE IF NOT EXISTS `customers` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1138,7 +1160,7 @@ function initializeDatabase() {
                     UNIQUE KEY `email` (`email`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'orders' => "
                 CREATE TABLE IF NOT EXISTS `orders` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1168,7 +1190,7 @@ function initializeDatabase() {
                     FOREIGN KEY (`customerId`) REFERENCES `customers` (`id`) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'order_items' => "
                 CREATE TABLE IF NOT EXISTS `order_items` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1185,7 +1207,7 @@ function initializeDatabase() {
                     FOREIGN KEY (`orderId`) REFERENCES `orders` (`id`) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'admin_users' => "
                 CREATE TABLE IF NOT EXISTS `admin_users` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1204,7 +1226,7 @@ function initializeDatabase() {
                     UNIQUE KEY `email` (`email`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'categories' => "
                 CREATE TABLE IF NOT EXISTS `categories` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1222,7 +1244,7 @@ function initializeDatabase() {
                     KEY `is_active` (`is_active`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'website_settings' => "
                 CREATE TABLE IF NOT EXISTS `website_settings` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1237,7 +1259,7 @@ function initializeDatabase() {
                     KEY `category` (`category`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'email_logs' => "
                 CREATE TABLE IF NOT EXISTS `email_logs` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1259,7 +1281,7 @@ function initializeDatabase() {
                     KEY `sent_at` (`sent_at`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'shipping_zones' => "
                 CREATE TABLE IF NOT EXISTS `shipping_zones` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1277,7 +1299,7 @@ function initializeDatabase() {
                     KEY `is_active` (`is_active`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'tax_rates' => "
                 CREATE TABLE IF NOT EXISTS `tax_rates` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1295,7 +1317,7 @@ function initializeDatabase() {
                     KEY `is_active` (`is_active`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'admin_activity_logs' => "
                 CREATE TABLE IF NOT EXISTS `admin_activity_logs` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1313,7 +1335,7 @@ function initializeDatabase() {
                     KEY `created_at` (`created_at`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             ",
-            
+
             'room_mappings' => "
                 CREATE TABLE IF NOT EXISTS `room_mappings` (
                     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1331,7 +1353,7 @@ function initializeDatabase() {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             "
         ];
-        
+
         // Create tables
         foreach ($tables as $tableName => $sql) {
             try {
@@ -1359,7 +1381,7 @@ function initializeDatabase() {
                 ];
             }
         }
-        
+
         // Insert default data
         $defaultData = [
             'admin_users' => [
@@ -1369,7 +1391,7 @@ function initializeDatabase() {
                 'data' => [password_hash('admin123', PASSWORD_DEFAULT)],
                 'description' => 'Default admin user (username: admin, password: admin123)'
             ],
-            
+
             'website_settings' => [
                 'multiple' => [
                     [
@@ -1404,7 +1426,7 @@ function initializeDatabase() {
                     ]
                 ]
             ],
-            
+
             'categories' => [
                 'multiple' => [
                     [
@@ -1421,14 +1443,14 @@ function initializeDatabase() {
                     ]
                 ]
             ],
-            
+
             'shipping_zones' => [
                 'check' => "SELECT COUNT(*) FROM shipping_zones WHERE name = 'United States'",
                 'insert' => "INSERT INTO shipping_zones (name, countries, base_rate, per_item_rate, free_shipping_threshold) 
                            VALUES ('United States', 'US', 9.99, 0.00, 75.00)",
                 'description' => 'Default US shipping zone'
             ],
-            
+
             'tax_rates' => [
                 'check' => "SELECT COUNT(*) FROM tax_rates WHERE name = 'Default Tax'",
                 'insert' => "INSERT INTO tax_rates (name, rate, country) 
@@ -1436,7 +1458,7 @@ function initializeDatabase() {
                 'description' => 'Default US tax rate (8.75%)'
             ]
         ];
-        
+
         // Insert default data
         foreach ($defaultData as $table => $config) {
             try {
@@ -1488,9 +1510,9 @@ function initializeDatabase() {
                 ];
             }
         }
-        
+
         $executionTime = round((microtime(true) - $startTime), 2) . ' seconds';
-        
+
         echo json_encode([
             'success' => true,
             'tables_created' => $tablesCreated,
@@ -1500,7 +1522,7 @@ function initializeDatabase() {
             'details' => $details,
             'warnings' => $warnings
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -1513,32 +1535,33 @@ function initializeDatabase() {
 // IMPORT FUNCTIONS
 // ======================================
 
-function importSQL() {
+function importSQL()
+{
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         $sqlContent = $input['sql_content'] ?? '';
-        
+
         if (empty($sqlContent)) {
             echo json_encode(['success' => false, 'message' => 'No SQL content provided']);
             return;
         }
-        
+
         $pdo = Database::getInstance();
-        
+
         // Split SQL content into individual statements
         $statements = explode(';', $sqlContent);
         $statementsExecuted = 0;
         $totalRowsAffected = 0;
         $warnings = [];
-        
+
         foreach ($statements as $statement) {
             $statement = trim($statement);
-            
+
             // Skip empty statements and comments
             if (empty($statement) || strpos($statement, '-') === 0 || strpos($statement, '/*') === 0) {
                 continue;
             }
-            
+
             try {
                 $stmt = $pdo->prepare($statement);
                 $stmt->execute();
@@ -1548,14 +1571,14 @@ function importSQL() {
                 $warnings[] = "Statement failed: " . $e->getMessage();
             }
         }
-        
+
         echo json_encode([
             'success' => true,
             'statements_executed' => $statementsExecuted,
             'rows_affected' => $totalRowsAffected,
             'warnings' => !empty($warnings) ? implode('; ', $warnings) : null
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -1564,37 +1587,38 @@ function importSQL() {
     }
 }
 
-function importCSV() {
+function importCSV()
+{
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         $tableName = $input['table_name'] ?? '';
         $csvContent = $input['csv_content'] ?? '';
         $hasHeaders = $input['has_headers'] ?? true;
         $replaceData = $input['replace_data'] ?? false;
-        
+
         if (empty($tableName) || empty($csvContent)) {
             echo json_encode(['success' => false, 'message' => 'Table name and CSV content are required']);
             return;
         }
-        
+
         $pdo = Database::getInstance();
-        
+
         // Validate table exists
         $stmt = $pdo->query("SHOW TABLES LIKE '$tableName'");
         if ($stmt->rowCount() == 0) {
             echo json_encode(['success' => false, 'message' => "Table '$tableName' does not exist"]);
             return;
         }
-        
+
         // Get table columns
         $stmt = $pdo->query("DESCRIBE $tableName");
         $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         // Parse CSV content
         $lines = str_getcsv($csvContent, "\n");
         $rowsImported = 0;
         $skippedRows = 0;
-        
+
         // Get headers from first row if specified
         $headers = null;
         if ($hasHeaders && count($lines) > 0) {
@@ -1602,7 +1626,7 @@ function importCSV() {
         } else {
             $headers = $columns; // Use table columns as headers
         }
-        
+
         // Map CSV headers to table columns
         $columnMapping = [];
         foreach ($headers as $i => $header) {
@@ -1610,35 +1634,37 @@ function importCSV() {
                 $columnMapping[$i] = $header;
             }
         }
-        
+
         if (empty($columnMapping)) {
             echo json_encode(['success' => false, 'message' => 'No matching columns found between CSV and table']);
             return;
         }
-        
+
         // Clear table if replace mode
         if ($replaceData) {
             $pdo->exec("DELETE FROM $tableName");
         }
-        
+
         // Prepare insert statement
         $mappedColumns = array_values($columnMapping);
         $placeholders = str_repeat('?,', count($mappedColumns) - 1) . '?';
         $insertSQL = "INSERT INTO $tableName (" . implode(',', $mappedColumns) . ") VALUES ($placeholders)";
         $insertStmt = $pdo->prepare($insertSQL);
-        
+
         // Process data rows
         foreach ($lines as $line) {
-            if (empty(trim($line))) continue;
-            
+            if (empty(trim($line))) {
+                continue;
+            }
+
             $row = str_getcsv($line);
             $values = [];
-            
+
             // Map values according to column mapping
             foreach ($columnMapping as $csvIndex => $dbColumn) {
                 $values[] = $row[$csvIndex] ?? null;
             }
-            
+
             try {
                 $insertStmt->execute($values);
                 $rowsImported++;
@@ -1646,14 +1672,14 @@ function importCSV() {
                 $skippedRows++;
             }
         }
-        
+
         echo json_encode([
             'success' => true,
             'rows_imported' => $rowsImported,
             'columns_mapped' => count($columnMapping),
             'skipped_rows' => $skippedRows > 0 ? $skippedRows : null
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
@@ -1662,57 +1688,58 @@ function importCSV() {
     }
 }
 
-function importJSON() {
+function importJSON()
+{
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         $tableName = $input['table_name'] ?? '';
         $jsonContent = $input['json_content'] ?? '';
-        
+
         if (empty($tableName) || empty($jsonContent)) {
             echo json_encode(['success' => false, 'message' => 'Table name and JSON content are required']);
             return;
         }
-        
+
         $pdo = Database::getInstance();
-        
+
         // Validate table exists
         $stmt = $pdo->query("SHOW TABLES LIKE '$tableName'");
         if ($stmt->rowCount() == 0) {
             echo json_encode(['success' => false, 'message' => "Table '$tableName' does not exist"]);
             return;
         }
-        
+
         // Get table columns
         $stmt = $pdo->query("DESCRIBE $tableName");
         $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         // Parse JSON content
         $jsonData = json_decode($jsonContent, true);
         if ($jsonData === null) {
             echo json_encode(['success' => false, 'message' => 'Invalid JSON format']);
             return;
         }
-        
+
         // Ensure it's an array of objects
         if (!is_array($jsonData)) {
             echo json_encode(['success' => false, 'message' => 'JSON must contain an array of objects']);
             return;
         }
-        
+
         $recordsImported = 0;
         $validationErrors = 0;
         $fieldsMapping = [];
-        
+
         foreach ($jsonData as $record) {
             if (!is_array($record)) {
                 $validationErrors++;
                 continue;
             }
-            
+
             // Map JSON fields to table columns
             $mappedFields = [];
             $values = [];
-            
+
             foreach ($record as $field => $value) {
                 if (in_array($field, $columns)) {
                     $mappedFields[] = $field;
@@ -1720,16 +1747,16 @@ function importJSON() {
                     $fieldsMapping[$field] = true;
                 }
             }
-            
+
             if (empty($mappedFields)) {
                 $validationErrors++;
                 continue;
             }
-            
+
             // Prepare and execute insert
             $placeholders = str_repeat('?,', count($mappedFields) - 1) . '?';
             $insertSQL = "INSERT INTO $tableName (" . implode(',', $mappedFields) . ") VALUES ($placeholders)";
-            
+
             try {
                 $stmt = $pdo->prepare($insertSQL);
                 $stmt->execute($values);
@@ -1738,14 +1765,14 @@ function importJSON() {
                 $validationErrors++;
             }
         }
-        
+
         echo json_encode([
             'success' => true,
             'records_imported' => $recordsImported,
             'fields_mapped' => count($fieldsMapping),
             'validation_errors' => $validationErrors > 0 ? $validationErrors : null
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,

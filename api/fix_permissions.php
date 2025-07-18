@@ -20,7 +20,7 @@ foreach ($extensions as $ext) {
             $fixed++;
         }
     }
-    
+
     // Root images directory
     $files = glob($documentRoot . '/images/*.' . $ext);
     foreach ($files as $file) {

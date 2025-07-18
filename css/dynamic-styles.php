@@ -1,4 +1,5 @@
 <?php
+
 // dynamic-styles.php: Serve dynamic CSS for room overlays
 header('Content-Type: text/css; charset=UTF-8');
 // Load DB and helper functions

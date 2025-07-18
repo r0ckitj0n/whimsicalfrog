@@ -15,35 +15,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
-    
+
     switch ($action) {
         case 'get_all_settings':
             getAllSettings($pdo);
             break;
-            
+
         case 'get_setting':
             getSetting($pdo);
             break;
-            
+
         case 'update_setting':
             updateSetting($pdo);
             break;
-            
+
         case 'update_multiple_settings':
             updateMultipleSettings($pdo);
             break;
-            
+
         case 'reset_to_defaults':
             resetToDefaults($pdo);
             break;
-            
+
         case 'get_by_category':
             getByCategory($pdo);
             break;
-            
+
         case 'get_sales_verbiage':
             try {
                 $stmt = $pdo->prepare("
@@ -54,7 +59,7 @@ try {
                 ");
                 $stmt->execute();
                 $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-                
+
                 Response::json([
                     'success' => true,
                     'verbiage' => $settings
@@ -66,22 +71,23 @@ try {
                 ], 500);
             }
             break;
-            
+
         default:
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
             break;
     }
-    
+
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 
-function getAllSettings($pdo) {
+function getAllSettings($pdo)
+{
     $stmt = $pdo->query("SELECT * FROM business_settings ORDER BY category, display_order, setting_key");
     $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode([
         'success' => true,
         'settings' => $settings,
@@ -89,18 +95,19 @@ function getAllSettings($pdo) {
     ]);
 }
 
-function getSetting($pdo) {
+function getSetting($pdo)
+{
     $key = $_GET['key'] ?? '';
-    
+
     if (empty($key)) {
         echo json_encode(['success' => false, 'message' => 'Setting key is required']);
         return;
     }
-    
+
     $stmt = $pdo->prepare("SELECT * FROM business_settings WHERE setting_key = ?");
     $stmt->execute([$key]);
     $setting = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($setting) {
         echo json_encode(['success' => true, 'setting' => $setting]);
     } else {
@@ -108,18 +115,19 @@ function getSetting($pdo) {
     }
 }
 
-function updateSetting($pdo) {
+function updateSetting($pdo)
+{
     $key = $_POST['key'] ?? '';
     $value = $_POST['value'] ?? '';
-    
+
     if (empty($key)) {
         echo json_encode(['success' => false, 'message' => 'Setting key is required']);
         return;
     }
-    
+
     $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
     $result = $stmt->execute([$value, $key]);
-    
+
     if ($result && $stmt->rowCount() > 0) {
         echo json_encode(['success' => true, 'message' => 'Setting updated successfully']);
     } else {
@@ -127,40 +135,41 @@ function updateSetting($pdo) {
     }
 }
 
-function updateMultipleSettings($pdo) {
+function updateMultipleSettings($pdo)
+{
     $settingsJson = $_POST['settings'] ?? '';
-    
+
     if (empty($settingsJson)) {
         echo json_encode(['success' => false, 'message' => 'Settings data is required']);
         return;
     }
-    
+
     $settings = json_decode($settingsJson, true);
     if (!$settings) {
         echo json_encode(['success' => false, 'message' => 'Invalid settings data']);
         return;
     }
-    
+
     $pdo->beginTransaction();
-    
+
     try {
         $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
         $updatedCount = 0;
-        
+
         foreach ($settings as $key => $value) {
             if ($stmt->execute([$value, $key])) {
                 $updatedCount++;
             }
         }
-        
+
         $pdo->commit();
-        
+
         echo json_encode([
-            'success' => true, 
+            'success' => true,
             'message' => "Updated {$updatedCount} settings successfully",
             'updated_count' => $updatedCount
         ]);
-        
+
     } catch (Exception $e) {
         $pdo->rollBack();
         echo json_encode(['success' => false, 'message' => 'Failed to update settings: ' . $e->getMessage()]);
@@ -168,18 +177,19 @@ function updateMultipleSettings($pdo) {
 }
 // resetToDefaults function moved to data_manager.php for centralization
 
-function getByCategory($pdo) {
+function getByCategory($pdo)
+{
     $category = $_GET['category'] ?? '';
-    
+
     if (empty($category)) {
         echo json_encode(['success' => false, 'message' => 'Category is required']);
         return;
     }
-    
+
     $stmt = $pdo->prepare("SELECT * FROM business_settings WHERE category = ? ORDER BY display_order, setting_key");
     $stmt->execute([$category]);
     $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode([
         'success' => true,
         'settings' => $settings,

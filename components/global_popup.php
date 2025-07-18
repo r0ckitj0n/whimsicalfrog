@@ -2,7 +2,8 @@
 // Global Popup Component
 // This component provides a unified popup system for all pages
 
-function renderGlobalPopup() {
+function renderGlobalPopup()
+{
     ob_start();
     ?>
     
@@ -57,7 +58,8 @@ function renderGlobalPopup() {
 }
 
 // Function to include global popup CSS
-function renderGlobalPopupCSS() {
+function renderGlobalPopupCSS()
+{
     ob_start();
     ?>
     

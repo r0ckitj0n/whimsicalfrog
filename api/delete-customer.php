@@ -1,4 +1,5 @@
 <?php
+
 // Include the configuration file
 require_once 'config.php';
 
@@ -24,37 +25,42 @@ if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'G
 try {
     // Get customer ID from URL parameter
     $customerId = $_GET['id'] ?? null;
-    
+
     // If no ID provided, check request body (for DELETE requests with body)
     if (!$customerId && $_SERVER['REQUEST_METHOD'] === 'DELETE') {
         $data = json_decode(file_get_contents('php://input'), true);
         $customerId = $data['id'] ?? null;
     }
-    
+
     // Validate customer ID
     if (!$customerId) {
         http_response_code(400);
         echo json_encode(['error' => 'Customer ID is required']);
         exit;
     }
-    
+
     // Create database connection using config
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // First check if the customer exists
     $checkStmt = $pdo->prepare('SELECT id FROM users WHERE id = ?');
     $checkStmt->execute([$customerId]);
-    
+
     if ($checkStmt->rowCount() === 0) {
         http_response_code(404);
         echo json_encode(['error' => 'Customer not found']);
         exit;
     }
-    
+
     // Delete the customer
     $deleteStmt = $pdo->prepare('DELETE FROM users WHERE id = ?');
     $deleteStmt->execute([$customerId]);
-    
+
     // Check if deletion was successful
     if ($deleteStmt->rowCount() > 0) {
         echo json_encode([
@@ -65,7 +71,7 @@ try {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to delete customer']);
     }
-    
+
 } catch (PDOException $e) {
     // Handle database errors
     http_response_code(500);

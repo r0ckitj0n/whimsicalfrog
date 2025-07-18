@@ -46,7 +46,7 @@
             } else {
                 // Fetch item data from API
                 console.log('🔧 Fetching item data from API for SKU:', sku);
-                const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
+                const response = await apiGet(`/api/get_item_details.php?sku=${sku}`);
                 console.log('🔧 Item details API response status:', response.status, response.statusText);
                 
                 if (!response.ok) {
@@ -75,24 +75,14 @@
 
             // Get the modal HTML from the API
             console.log('🔧 Fetching modal HTML from render API');
-            const modalResponse = await fetch('/api/render_detailed_modal.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    item: item,
-                    images: images
-                })
+            const modalHtml = await apiPost('render_detailed_modal.php', {
+                item: item,
+                images: images
             });
 
-            console.log('🔧 Modal render API response status:', modalResponse.status, modalResponse.statusText);
-
-            if (!modalResponse.ok) {
-                throw new Error(`Modal render API failed: ${modalResponse.status} ${modalResponse.statusText}`);
+            if (!modalHtml || typeof modalHtml !== 'string') {
+                throw new Error('Modal render API returned invalid HTML');
             }
-
-            const modalHtml = await modalResponse.text();
             console.log('🔧 Modal HTML received, length:', modalHtml.length);
             console.log('🔧 Modal HTML preview:', modalHtml.substring(0, 200) + '...');
             
@@ -114,7 +104,7 @@
             console.log('🔧 Current modal item stored');
             
             // Dynamically load and then execute the modal's specific JS
-            loadScript('js/detailed-item-modal.js', 'detailed-item-modal-script')
+            loadScript(`js/detailed-item-modal.js?v=${Date.now()}`, 'detailed-item-modal-script')
                 .then(() => {
                     console.log('🔧 Detailed item modal script loaded.');
                     // Wait a moment for scripts to execute, then show the modal
@@ -246,6 +236,7 @@
 
     // Legacy compatibility - these functions will call the new global system
     window.showItemDetails = showGlobalItemModal;
+    window.showItemDetailsModal = showGlobalItemModal; // Added alias for legacy support
     window.showDetailedModal = showGlobalItemModal;
     window.closeDetailedModal = closeGlobalItemModal;
     window.closeDetailedModalOnOverlay = closeDetailedModalOnOverlay;

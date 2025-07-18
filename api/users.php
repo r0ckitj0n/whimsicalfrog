@@ -1,4 +1,5 @@
 <?php
+
 // Include the configuration file
 require_once 'config.php';
 
@@ -23,23 +24,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     // Create database connection using config
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Check if specific user ID is requested
     $userId = $_GET['id'] ?? null;
-    
+
     if ($userId) {
         // Query for specific user
         $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
         $stmt->execute([$userId]);
         $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$userData) {
             http_response_code(404);
             echo json_encode(['error' => 'User not found']);
             exit;
         }
-        
+
         // Format single user data
         $formattedUser = [
             'id' => $userData['id'],
@@ -56,16 +62,16 @@ try {
             'state' => $userData['state'] ?? '',
             'zipCode' => $userData['zipCode'] ?? ''
         ];
-        
+
         // Return single user as JSON
         echo json_encode($formattedUser);
     } else {
         // Query for all users
         $stmt = $pdo->query('SELECT * FROM users');
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Map database fields to expected output format
-        $formattedUsers = array_map(function($user) {
+        $formattedUsers = array_map(function ($user) {
             return [
                 'id' => $user['id'],
                 'username' => $user['username'],
@@ -82,11 +88,11 @@ try {
                 'zipCode' => $user['zipCode'] ?? ''
             ];
         }, $users);
-        
+
         // Return users as JSON
         echo json_encode($formattedUsers);
     }
-    
+
 } catch (PDOException $e) {
     // Handle database errors
     http_response_code(500);

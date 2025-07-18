@@ -210,6 +210,53 @@ class RoomModalManager {
         }
 
         iframe.onload = () => {
+            // Expose global popup & modal functions into iframe context for seamless interaction
+            try {
+                const iWin = iframe.contentWindow;
+
+                // Inject main bundle into iframe if missing
+                if (!iWin.document.getElementById('wf-bundle')) {
+                    const script = iWin.document.createElement('script');
+                    script.id = 'wf-bundle';
+                    script.type = 'text/javascript';
+                    script.src = '/js/bundle.js?v=' + (window.WF_ASSET_VERSION || Date.now());
+                    iWin.document.head.appendChild(script);
+                    console.log('🚪 Injected bundle.js into iframe');
+                }
+
+                // Bridge critical global functions
+                const bridgeFns = [
+                    'showGlobalPopup',
+                    'hideGlobalPopup',
+                    'showItemDetailsModal',
+                    'showGlobalItemModal'
+                ];
+                bridgeFns.forEach(fnName => {
+                    if (typeof window[fnName] === 'function') {
+                        iWin[fnName] = window[fnName];
+                    }
+                });
+
+                // Copy popup state utilities if they exist
+                if (window.unifiedPopupSystem) {
+                    iWin.unifiedPopupSystem = window.unifiedPopupSystem;
+                }
+
+                // Ensure setupPopupEventsAfterPositioning exists in iframe, then run it
+                if (typeof iWin.setupPopupEventsAfterPositioning !== 'function') {
+                    if (typeof window.setupPopupEventsAfterPositioning === 'function') {
+                        iWin.setupPopupEventsAfterPositioning = window.setupPopupEventsAfterPositioning;
+                    }
+                }
+                if (typeof iWin.setupPopupEventsAfterPositioning === 'function') {
+                    iWin.setupPopupEventsAfterPositioning();
+                }
+                if (typeof iWin.attachDelegatedItemEvents === 'function') {
+                    iWin.attachDelegatedItemEvents();
+                }
+            } catch (bridgeErr) {
+                console.warn('⚠️ Unable to bridge popup functions into iframe:', bridgeErr);
+            }
             // When iframe content loaded, try to initialize coordinate system inside it
             try {
                 const iWin = iframe.contentWindow;
@@ -219,6 +266,10 @@ class RoomModalManager {
             } catch (coordErr) {
                 console.warn('⚠️ Unable to initialize coordinates in iframe:', coordErr);
             }
+            loadingSpinner.style.display = 'none';
+            iframe.style.opacity = '1';
+            console.log(`🚪 Room ${roomNumber} content loaded into iframe.`);
+        
             loadingSpinner.style.display = 'none';
             iframe.style.opacity = '1';
             console.log(`🚪 Room ${roomNumber} content loaded into iframe.`);
@@ -235,12 +286,14 @@ class RoomModalManager {
     async preloadRoomContent() {
         console.log('🚪 Preloading all room content...');
         try {
-            const response = await fetch('/api/get_room_data.php');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const roomData = await response.json();
+            const roomData = await apiGet('get_room_data.php');
 
             if (roomData.success && Array.isArray(roomData.data.productRooms)) {
-                const preloadPromises = roomData.data.productRooms.map(room => this.preloadSingleRoom(room.room_number));
+                const validRooms = roomData.data.productRooms.filter(r => {
+                    const num = parseInt(r && r.room_number, 10);
+                    return Number.isFinite(num) && num > 0;
+                });
+                const preloadPromises = validRooms.map(room => this.preloadSingleRoom(room.room_number));
                 await Promise.all(preloadPromises);
                 console.log('🚪 All rooms preloaded successfully.');
             } else {
@@ -252,14 +305,17 @@ class RoomModalManager {
     }
 
     async preloadSingleRoom(roomNumber) {
+        const num = parseInt(roomNumber, 10);
+        if (!Number.isFinite(num) || num <= 0) {
+            console.warn('🚪 Skipping preload for invalid room number:', roomNumber);
+            return null;
+        }
         if (this.roomCache.has(String(roomNumber))) {
             return this.roomCache.get(String(roomNumber));
         }
 
         try {
-            const response = await fetch(`/api/load_room_content.php?room_number=${roomNumber}&modal=1`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
+            const data = await apiGet(`load_room_content.php?room_number=${roomNumber}&modal=1`);
 
             if (data.success) {
                 this.roomCache.set(String(roomNumber), {

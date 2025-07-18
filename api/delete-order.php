@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
 
@@ -6,23 +7,24 @@ header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
-    $isAdmin = false;
-    
-    // Check session authentication first
-    require_once __DIR__ . '/../includes/auth.php'; if (isAdminWithToken()) {
-        $isAdmin = true;
-    }
-    
-    // Admin token fallback for API access
-    if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
-        $isAdmin = true;
-    }
-    
-    if (!$isAdmin) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Admin access required']);
-        exit;
-    }
+$isAdmin = false;
+
+// Check session authentication first
+require_once __DIR__ . '/../includes/auth.php';
+if (isAdminWithToken()) {
+    $isAdmin = true;
+}
+
+// Admin token fallback for API access
+if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
+    $isAdmin = true;
+}
+
+if (!$isAdmin) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Admin access required']);
+    exit;
+}
 
 // Check if the request method is DELETE
 if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
@@ -41,7 +43,12 @@ if (empty($orderId)) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
 
     // 1. Check if the order exists
     $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE id = ?");
@@ -56,22 +63,22 @@ try {
 
     // 2. Delete the order and related items within a transaction
     $pdo->beginTransaction();
-    
+
     try {
         // First delete order items (foreign key constraint)
         $stmtDeleteItems = $pdo->prepare("DELETE FROM order_items WHERE orderId = ?");
         $stmtDeleteItems->execute([$orderId]);
         $deletedItems = $stmtDeleteItems->rowCount();
-        
+
         // Then delete the order
         $stmtDeleteOrder = $pdo->prepare("DELETE FROM orders WHERE id = ?");
         $stmtDeleteOrder->execute([$orderId]);
         $deletedOrders = $stmtDeleteOrder->rowCount();
-        
+
         if ($deletedOrders > 0) {
             $pdo->commit();
             echo json_encode([
-                'success' => true, 
+                'success' => true,
                 'message' => "Order deleted successfully. Removed {$deletedItems} order items and 1 order."
             ]);
         } else {
@@ -92,4 +99,3 @@ try {
     http_response_code(500); // Internal Server Error
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
-?>

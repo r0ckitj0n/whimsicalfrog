@@ -1,3 +1,16 @@
+// Ensure apiGet helper exists
+if (typeof window.apiGet !== 'function') {
+  window.apiGet = async function(endpoint) {
+    // Prepend /api/ if not already present
+    const url = endpoint.startsWith('/') ? endpoint : `/api/${endpoint}`;
+    const res = await fetch(url, { credentials: 'same-origin' });
+    if (!res.ok) {
+      throw new Error(`Request failed (${res.status})`);
+    }
+    return res.json();
+  };
+}
+
 async function loadDynamicBackground() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -9,8 +22,7 @@ async function loadDynamicBackground() {
         // Generate dynamic page room mapping
         async function generatePageRoomMap() {
             try {
-                const response = await fetch('/api/get_room_data.php');
-                const data = await response.json();
+                const data = await apiGet('get_room_data.php');
                 
                 if (data.success) {
                     const pageRoomMap = {
@@ -50,15 +62,21 @@ async function loadDynamicBackground() {
         roomType = pageRoomMap[currentPage] || 'landing';
         
         // Fetch background from database
-        const response = await fetch(`/api/get_background.php?room_type=${roomType}`);
-        const data = await response.json();
+        const data = await apiGet(`get_background.php?room_type=${roomType}`);
         
         if (data.success && data.background) {
             const background = data.background;
             const supportsWebP = document.documentElement.classList.contains('webp');
-            const imageUrl = supportsWebP && background.webp_filename 
-                ? `images/${background.webp_filename}` 
-                : `images/${background.image_filename}`;
+            // Prefix with backgrounds/ subdirectory to match file structure
+            const filename = supportsWebP && background.webp_filename
+                ? background.webp_filename
+                : background.image_filename;
+            // Primary expected location
+            let imageUrl = `images/backgrounds/${filename}`;
+            // If the backgrounds directory is not used (legacy), fall back to images root
+            if (!imageUrl.includes('/backgrounds/') && !filename.startsWith('backgrounds/')) {
+                imageUrl = `images/${filename}`;
+            }
 
             // Find the correct container for the background
             let backgroundContainer = document.querySelector('.fullscreen-container') || document.getElementById('mainContent');

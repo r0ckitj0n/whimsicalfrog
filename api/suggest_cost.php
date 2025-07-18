@@ -7,8 +7,8 @@ header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
-    // Check admin authentication using centralized helper
-    AuthHelper::requireAdmin();
+// Check admin authentication using centralized helper
+AuthHelper::requireAdmin();
 
 // Suppress all output before JSON header
 ob_start();
@@ -49,8 +49,13 @@ if (empty($name)) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Initialize cost analysis using AI provider system
     try {
         $costData = generateAICostSuggestion($name, $description, $category);
@@ -59,12 +64,12 @@ try {
         error_log("AI Cost Provider failed, using Jon's AI fallback: " . $e->getMessage());
         $costData = analyzeCostStructure($name, $description, $category, $pdo);
     }
-    
+
     // Save cost suggestion to database (create table if needed)
     if (!empty($sku)) {
         try {
             // Enhanced cost_suggestions table already exists with proper structure
-            
+
             $stmt = $pdo->prepare("
                 INSERT INTO cost_suggestions (
                     sku, suggested_cost, reasoning, confidence, breakdown,
@@ -133,7 +138,7 @@ try {
             error_log("Error saving cost suggestion: " . $e->getMessage());
         }
     }
-    
+
     // Clear any buffered output and send clean JSON
     ob_clean();
     echo json_encode([
@@ -144,7 +149,7 @@ try {
         'breakdown' => $costData['breakdown'],
         'analysis' => $costData['analysis']
     ]);
-    
+
 } catch (Exception $e) {
     error_log("Error in suggest_cost.php: " . $e->getMessage());
     http_response_code(500);
@@ -152,55 +157,56 @@ try {
     echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
 }
 
-function analyzeCostStructure($name, $description, $category, $pdo) {
+function analyzeCostStructure($name, $description, $category, $pdo)
+{
     // Load AI settings from database
     $aiSettings = loadAISettings($pdo);
-    
+
     // Enhanced AI item analysis
     $analysis = analyzeItemEnhanced($name, $description, $category);
-    
+
     // Get category-specific base costs
     $baseCosts = getCategoryBaseCosts($category);
-    
+
     // Calculate costs with enhanced analysis
     $materialsCost = calculateMaterialsCostEnhanced($analysis, $baseCosts, $category);
     $laborCost = calculateLaborCostEnhanced($analysis, $baseCosts, $category);
     $energyCost = calculateEnergyCostEnhanced($analysis, $baseCosts, $category);
     $equipmentCost = calculateEquipmentCostEnhanced($analysis, $baseCosts, $category);
-    
+
     // Apply complexity multipliers
     $complexityMultiplier = getComplexityMultiplier($analysis);
-    
+
     // Apply AI settings adjustments
     $temperature = $aiSettings['ai_cost_temperature'];
     $conservativeMode = $aiSettings['ai_conservative_mode'];
     $baseMultiplier = $aiSettings['ai_cost_multiplier_base'];
-    
+
     // Apply base multiplier and temperature variations
     $adjustedMaterialsCost = $materialsCost * $baseMultiplier;
     $adjustedLaborCost = $laborCost * $baseMultiplier;
     $adjustedEnergyCost = $energyCost * $baseMultiplier;
     $adjustedEquipmentCost = $equipmentCost * $baseMultiplier;
-    
+
     // Apply temperature-based variation (lower temperature = less variation)
     if (!$conservativeMode && $temperature > 0.5) {
         $variation = ($temperature - 0.5) * 0.15; // Max 7.5% variation at temp 1.0
-        
+
         $adjustedMaterialsCost *= 1 + (mt_rand(-100, 100) / 1000) * $variation;
         $adjustedLaborCost *= 1 + (mt_rand(-100, 100) / 1000) * $variation;
         $adjustedEnergyCost *= 1 + (mt_rand(-100, 100) / 1000) * $variation;
         $adjustedEquipmentCost *= 1 + (mt_rand(-100, 100) / 1000) * $variation;
     }
-    
+
     // Calculate total cost with adjusted values
     $totalCost = ($adjustedMaterialsCost + $adjustedLaborCost + $adjustedEnergyCost + $adjustedEquipmentCost) * $complexityMultiplier;
-    
+
     // Determine confidence level
     $confidence = determineConfidence($analysis, $category);
-    
+
     // Generate enhanced reasoning
     $reasoning = generateEnhancedCostReasoning($materialsCost, $laborCost, $energyCost, $equipmentCost, $complexityMultiplier, $analysis);
-    
+
     // Create detailed breakdown using adjusted costs
     $breakdown = [
         'materials' => round($adjustedMaterialsCost * $complexityMultiplier, 2),
@@ -211,7 +217,7 @@ function analyzeCostStructure($name, $description, $category, $pdo) {
         'base_total' => round($adjustedMaterialsCost + $adjustedLaborCost + $adjustedEnergyCost + $adjustedEquipmentCost, 2),
         'final_total' => round($totalCost, 2)
     ];
-    
+
     // Enhanced analysis data
     $enhancedAnalysis = [
         'detected_materials' => $analysis['materials'],
@@ -231,7 +237,7 @@ function analyzeCostStructure($name, $description, $category, $pdo) {
         'energy_confidence' => $analysis['energy_confidence'],
         'equipment_confidence' => $analysis['equipment_confidence']
     ];
-    
+
     return [
         'cost' => round($totalCost, 2),
         'reasoning' => $reasoning,
@@ -242,9 +248,10 @@ function analyzeCostStructure($name, $description, $category, $pdo) {
 }
 // loadAISettings function moved to ai_manager.php for centralization
 
-function analyzeItem($name, $description) {
+function analyzeItem($name, $description)
+{
     $text = strtolower($name . ' ' . $description);
-    
+
     // Detect materials
     $materials = [];
     $materialKeywords = [
@@ -258,7 +265,7 @@ function analyzeItem($name, $description) {
         'wood' => ['wood', 'wooden', 'bamboo'],
         'paper' => ['paper', 'cardstock', 'photo paper']
     ];
-    
+
     foreach ($materialKeywords as $material => $keywords) {
         foreach ($keywords as $keyword) {
             if (strpos($text, $keyword) !== false) {
@@ -267,7 +274,7 @@ function analyzeItem($name, $description) {
             }
         }
     }
-    
+
     // Detect complexity features
     $features = [];
     $featureKeywords = [
@@ -282,7 +289,7 @@ function analyzeItem($name, $description) {
         'embroidered' => ['embroidered', 'embroidery', 'stitched'],
         'engraved' => ['engraved', 'engraving', 'etched', 'laser']
     ];
-    
+
     foreach ($featureKeywords as $feature => $keywords) {
         foreach ($keywords as $keyword) {
             if (strpos($text, $keyword) !== false) {
@@ -291,7 +298,7 @@ function analyzeItem($name, $description) {
             }
         }
     }
-    
+
     // Detect size indicators
     $size = 'standard';
     if (preg_match('/\b(small|mini|tiny)\b/i', $text)) {
@@ -301,7 +308,7 @@ function analyzeItem($name, $description) {
     } elseif (preg_match('/\b(xl|xxl|extra large)\b/i', $text)) {
         $size = 'extra_large';
     }
-    
+
     return [
         'materials' => $materials,
         'features' => $features,
@@ -311,7 +318,8 @@ function analyzeItem($name, $description) {
     ];
 }
 
-function getCategoryBaseCosts($category) {
+function getCategoryBaseCosts($category)
+{
     $baseCosts = [
         'T-Shirts' => [
             'materials' => 7.50,  // Blank shirt + basic vinyl
@@ -344,7 +352,7 @@ function getCategoryBaseCosts($category) {
             'equipment' => 2.00   // Equipment depreciation
         ]
     ];
-    
+
     // Default costs for unknown categories
     return $baseCosts[$category] ?? [
         'materials' => 10.00,
@@ -354,9 +362,10 @@ function getCategoryBaseCosts($category) {
     ];
 }
 
-function calculateMaterialsCost($analysis, $baseCosts, $category) {
+function calculateMaterialsCost($analysis, $baseCosts, $category)
+{
     $cost = $baseCosts['materials'];
-    
+
     // Material-specific adjustments
     foreach ($analysis['materials'] as $material) {
         switch ($material) {
@@ -377,7 +386,7 @@ function calculateMaterialsCost($analysis, $baseCosts, $category) {
                 break;
         }
     }
-    
+
     // Feature-based adjustments
     if (in_array('premium', $analysis['features'])) {
         $cost *= 1.4;
@@ -388,7 +397,7 @@ function calculateMaterialsCost($analysis, $baseCosts, $category) {
     if (in_array('custom', $analysis['features'])) {
         $cost *= 1.1; // Custom materials sourcing
     }
-    
+
     // Size adjustments
     switch ($analysis['size']) {
         case 'small':
@@ -401,13 +410,14 @@ function calculateMaterialsCost($analysis, $baseCosts, $category) {
             $cost *= 1.6;
             break;
     }
-    
+
     return $cost;
 }
 
-function calculateLaborCost($analysis, $baseCosts, $category) {
+function calculateLaborCost($analysis, $baseCosts, $category)
+{
     $cost = $baseCosts['labor'];
-    
+
     // Feature-based labor adjustments
     if (in_array('custom', $analysis['features'])) {
         $cost *= 1.5; // Custom work takes longer
@@ -427,7 +437,7 @@ function calculateLaborCost($analysis, $baseCosts, $category) {
     if (in_array('engraved', $analysis['features'])) {
         $cost *= 1.4; // Engraving setup and monitoring
     }
-    
+
     // Size affects labor time
     switch ($analysis['size']) {
         case 'small':
@@ -440,18 +450,19 @@ function calculateLaborCost($analysis, $baseCosts, $category) {
             $cost *= 1.4; // Significantly more handling
             break;
     }
-    
+
     // Description length indicates complexity
     if (isset($analysis['has_description']) && $analysis['has_description'] && $analysis['text_length'] > 200) {
         $cost *= 1.1; // Complex items need more planning
     }
-    
+
     return $cost;
 }
 
-function calculateEnergyCost($analysis, $baseCosts, $category) {
+function calculateEnergyCost($analysis, $baseCosts, $category)
+{
     $cost = $baseCosts['energy'];
-    
+
     // Feature-based energy adjustments
     if (in_array('sublimation', $analysis['features'])) {
         $cost *= 1.4; // Sublimation uses more energy
@@ -462,7 +473,7 @@ function calculateEnergyCost($analysis, $baseCosts, $category) {
     if (in_array('large_format', $analysis['features'])) {
         $cost *= 1.5; // Large format printing uses more energy
     }
-    
+
     // Size affects energy consumption
     switch ($analysis['size']) {
         case 'small':
@@ -475,13 +486,14 @@ function calculateEnergyCost($analysis, $baseCosts, $category) {
             $cost *= 1.6;
             break;
     }
-    
+
     return $cost;
 }
 
-function calculateEquipmentCost($analysis, $baseCosts, $category) {
+function calculateEquipmentCost($analysis, $baseCosts, $category)
+{
     $cost = $baseCosts['equipment'];
-    
+
     // Feature-based equipment wear adjustments
     if (in_array('premium', $analysis['features'])) {
         $cost *= 1.2; // Premium work uses equipment more intensively
@@ -492,7 +504,7 @@ function calculateEquipmentCost($analysis, $baseCosts, $category) {
     if (in_array('embroidered', $analysis['features'])) {
         $cost *= 1.3; // Embroidery machine wear
     }
-    
+
     // Size affects equipment usage
     switch ($analysis['size']) {
         case 'large':
@@ -502,121 +514,151 @@ function calculateEquipmentCost($analysis, $baseCosts, $category) {
             $cost *= 1.4;
             break;
     }
-    
+
     return $cost;
 }
 
-function getComplexityMultiplier($analysis) {
+function getComplexityMultiplier($analysis)
+{
     $multiplier = 1.0;
-    
+
     // Base complexity from feature count
     $featureCount = count($analysis['features']);
     if ($featureCount > 3) {
         $multiplier += 0.1 * ($featureCount - 3); // 10% per additional feature beyond 3
     }
-    
+
     // Specific high-complexity features
     $highComplexityFeatures = ['handmade', 'custom', 'detailed', 'small_batch'];
     $highComplexityCount = count(array_intersect($analysis['features'], $highComplexityFeatures));
     $multiplier += $highComplexityCount * 0.15; // 15% per high-complexity feature
-    
+
     // Material complexity
     $complexMaterials = ['ceramic', 'glass', 'stainless_steel'];
     $complexMaterialCount = count(array_intersect($analysis['materials'], $complexMaterials));
     $multiplier += $complexMaterialCount * 0.1; // 10% per complex material
-    
+
     // Cap the multiplier to prevent extreme values
     return min($multiplier, 2.5); // Max 250% of base cost
 }
 
-function determineConfidence($analysis, $category) {
+function determineConfidence($analysis, $category)
+{
     $confidence = 'medium';
-    
+
     // High confidence factors
     $highConfidenceFactors = 0;
-    if (!empty($category)) $highConfidenceFactors++;
-    if (count($analysis['materials']) > 0) $highConfidenceFactors++;
-    if (count($analysis['features']) > 1) $highConfidenceFactors++;
-    if (isset($analysis['has_description']) && $analysis['has_description']) $highConfidenceFactors++;
-    
+    if (!empty($category)) {
+        $highConfidenceFactors++;
+    }
+    if (count($analysis['materials']) > 0) {
+        $highConfidenceFactors++;
+    }
+    if (count($analysis['features']) > 1) {
+        $highConfidenceFactors++;
+    }
+    if (isset($analysis['has_description']) && $analysis['has_description']) {
+        $highConfidenceFactors++;
+    }
+
     // Low confidence factors
     $lowConfidenceFactors = 0;
-    if (empty($category)) $lowConfidenceFactors++;
-    if (count($analysis['materials']) == 0) $lowConfidenceFactors++;
-    if (!isset($analysis['has_description']) || !$analysis['has_description']) $lowConfidenceFactors++;
-    if (in_array('custom', $analysis['features'])) $lowConfidenceFactors++; // Custom items are harder to estimate
-    
+    if (empty($category)) {
+        $lowConfidenceFactors++;
+    }
+    if (count($analysis['materials']) == 0) {
+        $lowConfidenceFactors++;
+    }
+    if (!isset($analysis['has_description']) || !$analysis['has_description']) {
+        $lowConfidenceFactors++;
+    }
+    if (in_array('custom', $analysis['features'])) {
+        $lowConfidenceFactors++;
+    } // Custom items are harder to estimate
+
     if ($highConfidenceFactors >= 3 && $lowConfidenceFactors <= 1) {
         $confidence = 'high';
     } elseif ($lowConfidenceFactors >= 2 || $highConfidenceFactors <= 1) {
         $confidence = 'low';
     }
-    
+
     return $confidence;
 }
 
-function generateCostReasoning($materials, $labor, $energy, $equipment, $multiplier, $analysis) {
+function generateCostReasoning($materials, $labor, $energy, $equipment, $multiplier, $analysis)
+{
     $reasoning = "Base cost breakdown: ";
     $reasoning .= "Materials $" . number_format($materials, 2) . " • ";
     $reasoning .= "Labor $" . number_format($labor, 2) . " • ";
     $reasoning .= "Energy $" . number_format($energy, 2) . " • ";
     $reasoning .= "Equipment $" . number_format($equipment, 2);
-    
+
     if ($multiplier > 1.0) {
         $reasoning .= " • Complexity adjustment: +" . number_format(($multiplier - 1) * 100, 0) . "%";
-        
+
         $factors = [];
-        if (in_array('custom', $analysis['features'])) $factors[] = "custom work";
-        if (in_array('premium', $analysis['features'])) $factors[] = "premium quality";
-        if (in_array('handmade', $analysis['features'])) $factors[] = "handcrafted";
-        if (in_array('detailed', $analysis['features'])) $factors[] = "detailed work";
-        if (count($analysis['features']) > 3) $factors[] = "multiple features";
-        
+        if (in_array('custom', $analysis['features'])) {
+            $factors[] = "custom work";
+        }
+        if (in_array('premium', $analysis['features'])) {
+            $factors[] = "premium quality";
+        }
+        if (in_array('handmade', $analysis['features'])) {
+            $factors[] = "handcrafted";
+        }
+        if (in_array('detailed', $analysis['features'])) {
+            $factors[] = "detailed work";
+        }
+        if (count($analysis['features']) > 3) {
+            $factors[] = "multiple features";
+        }
+
         if (!empty($factors)) {
             $reasoning .= " (" . implode(", ", array_slice($factors, 0, 3)) . ")";
         }
     }
-    
+
     return $reasoning;
 }
 
 // Enhanced AI Analysis Functions
-function analyzeItemEnhanced($name, $description, $category) {
+function analyzeItemEnhanced($name, $description, $category)
+{
     $text = strtolower($name . ' ' . $description);
-    
+
     // Enhanced material detection
     $materials = detectMaterialsEnhanced($text);
-    
+
     // Enhanced feature detection
     $features = detectFeaturesEnhanced($text);
-    
+
     // Size and dimension analysis
     $sizeAnalysis = analyzeSizeAndDimensions($text, $category);
-    
+
     // Calculate complexity score
     $complexityScore = calculateComplexityScore($materials, $features, $sizeAnalysis, $category);
-    
+
     // Production time estimation (in minutes)
     $productionTime = estimateItemProductionTime($materials, $features, $complexityScore, $category);
-    
+
     // Skill level assessment
     $skillLevel = assessSkillLevel($features, $complexityScore, $category);
-    
+
     // Market positioning analysis
     $marketPositioning = analyzeMarketPositioning($text, $features, $category);
-    
+
     // Eco-friendly scoring (0.0 to 1.0)
     $ecoScore = calculateEcoFriendlyScore($materials, $features);
-    
+
     // Detailed cost factor analysis
     $materialFactors = analyzeMaterialCostFactors($materials, $features, $category);
     $laborFactors = analyzeLaborComplexityFactors($features, $complexityScore, $skillLevel);
     $energyFactors = analyzeEnergyUsageFactors($materials, $features, $productionTime);
     $equipmentFactors = analyzeEquipmentRequirements($materials, $features, $category);
-    
+
     // AI confidence metrics (0.0 to 1.0)
     $confidenceMetrics = calculateConfidenceMetrics($materials, $features, $sizeAnalysis, $category);
-    
+
     return [
         'materials' => $materials,
         'features' => $features,
@@ -637,9 +679,10 @@ function analyzeItemEnhanced($name, $description, $category) {
     ];
 }
 
-function detectMaterialsEnhanced($text) {
+function detectMaterialsEnhanced($text)
+{
     $materials = [];
-    
+
     $materialDatabase = [
         'cotton' => [
             'keywords' => ['cotton', 'organic cotton', '100% cotton', 'cotton blend'],
@@ -690,7 +733,7 @@ function detectMaterialsEnhanced($text) {
             'eco_score' => 0.8
         ]
     ];
-    
+
     foreach ($materialDatabase as $materialType => $data) {
         foreach ($data['keywords'] as $keyword) {
             if (strpos($text, $keyword) !== false) {
@@ -705,13 +748,14 @@ function detectMaterialsEnhanced($text) {
             }
         }
     }
-    
+
     return $materials;
 }
 
-function detectFeaturesEnhanced($text) {
+function detectFeaturesEnhanced($text)
+{
     $features = [];
-    
+
     $featureDatabase = [
         'custom_design' => [
             'keywords' => ['custom', 'personalized', 'customized', 'bespoke', 'made to order'],
@@ -756,7 +800,7 @@ function detectFeaturesEnhanced($text) {
             'skill_requirement' => 'intermediate'
         ]
     ];
-    
+
     foreach ($featureDatabase as $featureType => $data) {
         foreach ($data['keywords'] as $keyword) {
             if (strpos($text, $keyword) !== false) {
@@ -771,17 +815,18 @@ function detectFeaturesEnhanced($text) {
             }
         }
     }
-    
+
     return $features;
 }
 
-function analyzeSizeAndDimensions($text, $category) {
+function analyzeSizeAndDimensions($text, $category)
+{
     $sizeAnalysis = [
         'detected_size' => 'standard',
         'size_multiplier' => 1.0,
         'dimensions' => null
     ];
-    
+
     // Size detection patterns
     $sizePatterns = [
         'small' => ['small', 'mini', 'xs', 'extra small', '8oz', '11oz'],
@@ -789,24 +834,28 @@ function analyzeSizeAndDimensions($text, $category) {
         'large' => ['large', 'big', 'lg', 'xl', '24oz', '30oz'],
         'extra_large' => ['extra large', 'xxl', 'xxxl', 'jumbo', '40oz']
     ];
-    
+
     foreach ($sizePatterns as $size => $patterns) {
         foreach ($patterns as $pattern) {
             if (strpos($text, $pattern) !== false) {
                 $sizeAnalysis['detected_size'] = $size;
-                
+
                 // Size multipliers for cost calculation
                 switch ($size) {
-                    case 'small': $sizeAnalysis['size_multiplier'] = 0.8; break;
-                    case 'standard': $sizeAnalysis['size_multiplier'] = 1.0; break;
-                    case 'large': $sizeAnalysis['size_multiplier'] = 1.3; break;
-                    case 'extra_large': $sizeAnalysis['size_multiplier'] = 1.6; break;
+                    case 'small': $sizeAnalysis['size_multiplier'] = 0.8;
+                        break;
+                    case 'standard': $sizeAnalysis['size_multiplier'] = 1.0;
+                        break;
+                    case 'large': $sizeAnalysis['size_multiplier'] = 1.3;
+                        break;
+                    case 'extra_large': $sizeAnalysis['size_multiplier'] = 1.6;
+                        break;
                 }
                 break 2;
             }
         }
     }
-    
+
     // Dimension extraction (basic pattern matching)
     if (preg_match('/(\d+)\s*[x×]\s*(\d+)/', $text, $matches)) {
         $sizeAnalysis['dimensions'] = [
@@ -814,30 +863,31 @@ function analyzeSizeAndDimensions($text, $category) {
             'height' => intval($matches[2])
         ];
     }
-    
+
     return $sizeAnalysis;
 }
 
-function calculateComplexityScore($materials, $features, $sizeAnalysis, $category) {
+function calculateComplexityScore($materials, $features, $sizeAnalysis, $category)
+{
     $baseScore = 0.5; // Base complexity
-    
+
     // Material complexity
     foreach ($materials as $material) {
         if ($material['quality'] === 'premium') {
             $baseScore += 0.2;
         }
     }
-    
+
     // Feature complexity
     foreach ($features as $feature) {
         $baseScore += ($feature['complexity_impact'] - 1.0) * 0.3;
     }
-    
+
     // Size complexity
     if ($sizeAnalysis['size_multiplier'] > 1.2) {
         $baseScore += 0.1;
     }
-    
+
     // Category base complexity
     $categoryComplexity = [
         'T-Shirts' => 0.3,
@@ -846,13 +896,14 @@ function calculateComplexityScore($materials, $features, $sizeAnalysis, $categor
         'Sublimation' => 0.6,
         'Window Wraps' => 0.7
     ];
-    
+
     $baseScore += $categoryComplexity[$category] ?? 0.5;
-    
+
     return min(2.0, max(0.1, $baseScore));
 }
 
-function estimateItemProductionTime($materials, $features, $complexityScore, $category) {
+function estimateItemProductionTime($materials, $features, $complexityScore, $category)
+{
     // Base time by category (in minutes)
     $baseTimes = [
         'T-Shirts' => 15,
@@ -861,23 +912,24 @@ function estimateItemProductionTime($materials, $features, $complexityScore, $ca
         'Sublimation' => 25,
         'Window Wraps' => 35
     ];
-    
+
     $baseTime = $baseTimes[$category] ?? 20;
-    
+
     // Add feature time impacts
     foreach ($features as $feature) {
         $baseTime += $feature['time_impact'];
     }
-    
+
     // Apply complexity multiplier
     $totalTime = $baseTime * $complexityScore;
-    
+
     return round($totalTime);
 }
 
-function assessSkillLevel($features, $complexityScore, $category) {
+function assessSkillLevel($features, $complexityScore, $category)
+{
     $skillLevels = ['beginner', 'intermediate', 'advanced', 'expert'];
-    
+
     // Base skill by category
     $categorySkills = [
         'T-Shirts' => 'beginner',
@@ -886,10 +938,10 @@ function assessSkillLevel($features, $complexityScore, $category) {
         'Sublimation' => 'intermediate',
         'Window Wraps' => 'intermediate'
     ];
-    
+
     $baseSkill = $categorySkills[$category] ?? 'intermediate';
     $skillIndex = array_search($baseSkill, $skillLevels);
-    
+
     // Adjust based on features
     foreach ($features as $feature) {
         $featureSkillIndex = array_search($feature['skill_requirement'], $skillLevels);
@@ -897,41 +949,42 @@ function assessSkillLevel($features, $complexityScore, $category) {
             $skillIndex = $featureSkillIndex;
         }
     }
-    
+
     // Adjust based on complexity
     if ($complexityScore > 1.5) {
         $skillIndex = min(3, $skillIndex + 1);
     }
-    
+
     return $skillLevels[$skillIndex];
 }
 
-function analyzeMarketPositioning($text, $features, $category) {
+function analyzeMarketPositioning($text, $features, $category)
+{
     $premiumKeywords = ['luxury', 'premium', 'high-end', 'professional', 'artisan', 'custom', 'bespoke'];
     $budgetKeywords = ['basic', 'simple', 'standard', 'economy', 'budget'];
-    
+
     $premiumScore = 0;
     $budgetScore = 0;
-    
+
     foreach ($premiumKeywords as $keyword) {
         if (strpos($text, $keyword) !== false) {
             $premiumScore++;
         }
     }
-    
+
     foreach ($budgetKeywords as $keyword) {
         if (strpos($text, $keyword) !== false) {
             $budgetScore++;
         }
     }
-    
+
     // Check features for premium indicators
     foreach ($features as $feature) {
         if (in_array($feature['type'], ['custom_design', 'premium_finish', 'handmade', 'embroidery'])) {
             $premiumScore++;
         }
     }
-    
+
     if ($premiumScore > $budgetScore) {
         return 'premium';
     } elseif ($budgetScore > 0) {
@@ -941,32 +994,36 @@ function analyzeMarketPositioning($text, $features, $category) {
     }
 }
 
-function calculateEcoFriendlyScore($materials, $features) {
-    if (empty($materials)) return 0.5;
-    
+function calculateEcoFriendlyScore($materials, $features)
+{
+    if (empty($materials)) {
+        return 0.5;
+    }
+
     $totalScore = 0;
     $count = 0;
-    
+
     foreach ($materials as $material) {
         $totalScore += $material['eco_score'];
         $count++;
     }
-    
+
     $avgScore = $totalScore / $count;
-    
+
     // Bonus for eco-friendly features
     foreach ($features as $feature) {
         if ($feature['type'] === 'handmade') {
             $avgScore += 0.1;
         }
     }
-    
+
     return min(1.0, max(0.0, $avgScore));
 }
 
-function analyzeMaterialCostFactors($materials, $features, $category) {
+function analyzeMaterialCostFactors($materials, $features, $category)
+{
     $factors = [];
-    
+
     foreach ($materials as $material) {
         $factors[] = [
             'material' => $material['type'],
@@ -975,17 +1032,18 @@ function analyzeMaterialCostFactors($materials, $features, $category) {
             'reasoning' => "Material cost factor: {$material['cost_factor']}x"
         ];
     }
-    
+
     return $factors;
 }
 
-function analyzeLaborComplexityFactors($features, $complexityScore, $skillLevel) {
+function analyzeLaborComplexityFactors($features, $complexityScore, $skillLevel)
+{
     $factors = [
         'complexity_score' => $complexityScore,
         'skill_level' => $skillLevel,
         'feature_impacts' => []
     ];
-    
+
     foreach ($features as $feature) {
         $factors['feature_impacts'][] = [
             'feature' => $feature['type'],
@@ -993,17 +1051,18 @@ function analyzeLaborComplexityFactors($features, $complexityScore, $skillLevel)
             'complexity_impact' => $feature['complexity_impact']
         ];
     }
-    
+
     return $factors;
 }
 
-function analyzeEnergyUsageFactors($materials, $features, $productionTime) {
+function analyzeEnergyUsageFactors($materials, $features, $productionTime)
+{
     $energyFactors = [
         'production_time' => $productionTime,
         'energy_intensive_processes' => [],
         'estimated_kwh' => 0
     ];
-    
+
     // Check for energy-intensive processes
     foreach ($features as $feature) {
         if (in_array($feature['type'], ['sublimation', 'engraving'])) {
@@ -1011,16 +1070,17 @@ function analyzeEnergyUsageFactors($materials, $features, $productionTime) {
             $energyFactors['estimated_kwh'] += 0.5;
         }
     }
-    
+
     // Base energy consumption
     $energyFactors['estimated_kwh'] += ($productionTime / 60) * 0.2;
-    
+
     return $energyFactors;
 }
 
-function analyzeEquipmentRequirements($materials, $features, $category) {
+function analyzeEquipmentRequirements($materials, $features, $category)
+{
     $equipment = [];
-    
+
     // Category-specific base equipment
     $categoryEquipment = [
         'T-Shirts' => ['heat press', 'cutting machine'],
@@ -1029,9 +1089,9 @@ function analyzeEquipmentRequirements($materials, $features, $category) {
         'Sublimation' => ['sublimation printer', 'heat press'],
         'Window Wraps' => ['large format printer', 'laminator']
     ];
-    
+
     $equipment = $categoryEquipment[$category] ?? ['basic tools'];
-    
+
     // Feature-specific equipment
     foreach ($features as $feature) {
         switch ($feature['type']) {
@@ -1046,80 +1106,84 @@ function analyzeEquipmentRequirements($materials, $features, $category) {
                 break;
         }
     }
-    
+
     return array_unique($equipment);
 }
 
-function calculateConfidenceMetrics($materials, $features, $sizeAnalysis, $category) {
+function calculateConfidenceMetrics($materials, $features, $sizeAnalysis, $category)
+{
     $confidence = [
         'material' => 0.7,
         'labor' => 0.7,
         'energy' => 0.6,
         'equipment' => 0.8
     ];
-    
+
     // Higher confidence if we detected specific materials
     if (!empty($materials)) {
         $confidence['material'] = 0.9;
     }
-    
+
     // Higher confidence if we detected specific features
     if (!empty($features)) {
         $confidence['labor'] = 0.9;
         $confidence['energy'] = 0.8;
     }
-    
+
     // Category-specific confidence adjustments
     if (in_array($category, ['T-Shirts', 'Tumblers'])) {
         $confidence['equipment'] = 0.95;
     }
-    
+
     return $confidence;
 }
 
-function generateEnhancedCostReasoning($materials, $labor, $energy, $equipment, $multiplier, $analysis) {
+function generateEnhancedCostReasoning($materials, $labor, $energy, $equipment, $multiplier, $analysis)
+{
     $reasons = [];
-    
+
     // Base cost components with enhanced details
     $reasons[] = "Materials: $" . number_format($materials, 2) . " (based on " . count($analysis['materials']) . " detected materials)";
     $reasons[] = "Labor: $" . number_format($labor, 2) . " (" . $analysis['skill_level_required'] . " skill, " . $analysis['production_time_estimate'] . " min)";
     $reasons[] = "Energy: $" . number_format($energy, 2) . " (" . number_format($analysis['energy_usage_factors']['estimated_kwh'], 2) . " kWh)";
     $reasons[] = "Equipment: $" . number_format($equipment, 2) . " (" . count($analysis['equipment_requirements']) . " tools required)";
-    
+
     // Complexity factors
     if ($multiplier > 1.0) {
         $reasons[] = "Complexity: " . number_format($analysis['complexity_score'], 1) . "/2.0 (+" . round(($multiplier - 1) * 100, 1) . "%)";
     }
-    
+
     // Market positioning
     $reasons[] = "Positioning: " . ucfirst($analysis['market_positioning']);
-    
+
     // Eco-friendly score
     if ($analysis['eco_friendly_score'] > 0.7) {
         $reasons[] = "Eco-friendly materials detected";
     }
-    
+
     return implode(' • ', $reasons);
 }
 
 // Enhanced cost calculation functions
-function calculateMaterialsCostEnhanced($analysis, $baseCosts, $category) {
+function calculateMaterialsCostEnhanced($analysis, $baseCosts, $category)
+{
     $materialsCost = $baseCosts['materials'];
-    
+
     foreach ($analysis['materials'] as $material) {
         $materialsCost *= $material['cost_factor'];
     }
-    
+
     return $materialsCost * $analysis['size_analysis']['size_multiplier'];
 }
 
-function calculateLaborCostEnhanced($analysis, $baseCosts, $category) {
+function calculateLaborCostEnhanced($analysis, $baseCosts, $category)
+{
     $laborCost = $baseCosts['labor'];
-    
+
     // Time-based adjustment
     $timeMultiplier = $analysis['production_time_estimate'] / 20; // 20 min baseline
     $laborCost *= $timeMultiplier;
-    
+
     // Skill level adjustment
     $skillMultipliers = [
         'beginner' => 1.0,
@@ -1127,30 +1191,32 @@ function calculateLaborCostEnhanced($analysis, $baseCosts, $category) {
         'advanced' => 1.7,
         'expert' => 2.2
     ];
-    
+
     $laborCost *= $skillMultipliers[$analysis['skill_level_required']] ?? 1.3;
-    
+
     return $laborCost;
 }
 
-function calculateEnergyCostEnhanced($analysis, $baseCosts, $category) {
+function calculateEnergyCostEnhanced($analysis, $baseCosts, $category)
+{
     $energyCost = $baseCosts['energy'];
-    
+
     // kWh-based calculation
     $energyCost = $analysis['energy_usage_factors']['estimated_kwh'] * 0.12; // $0.12 per kWh
-    
+
     return max($baseCosts['energy'], $energyCost);
 }
 
-function calculateEquipmentCostEnhanced($analysis, $baseCosts, $category) {
+function calculateEquipmentCostEnhanced($analysis, $baseCosts, $category)
+{
     $equipmentCost = $baseCosts['equipment'];
-    
+
     // Equipment complexity multiplier
     $equipmentCount = count($analysis['equipment_requirements']);
     if ($equipmentCount > 2) {
         $equipmentCost *= (1 + ($equipmentCount - 2) * 0.2);
     }
-    
+
     return $equipmentCost;
 }
 ?> 

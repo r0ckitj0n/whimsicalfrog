@@ -1,4 +1,5 @@
 <?php
+
 // scripts/migrate-backup-inline-styles.php
 // Usage: php scripts/migrate-backup-inline-styles.php
 
@@ -18,8 +19,12 @@ $iterator = new RecursiveIteratorIterator(
 );
 
 foreach ($iterator as $file) {
-    if (!$file->isFile()) continue;
-    if (pathinfo($file->getFilename(), PATHINFO_EXTENSION) !== 'bak') continue;
+    if (!$file->isFile()) {
+        continue;
+    }
+    if (pathinfo($file->getFilename(), PATHINFO_EXTENSION) !== 'bak') {
+        continue;
+    }
     $path = $file->getPathname();
 
     foreach ($map as $pattern => $targetCss) {
@@ -29,7 +34,9 @@ foreach ($iterator as $file) {
                 foreach ($matches[1] as $css) {
                     $css = trim($css);
                     // Skip empty or PHP-containing blocks
-                    if ($css === '' || strpos($css, '<?') !== false) continue;
+                    if ($css === '' || strpos($css, '<?') !== false) {
+                        continue;
+                    }
                     file_put_contents(
                         $targetCss,
                         "\n/* Extracted from {$file->getFilename()} (backup) */\n" . $css . "\n",

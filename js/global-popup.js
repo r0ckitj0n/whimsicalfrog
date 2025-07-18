@@ -76,7 +76,7 @@ class UnifiedPopupSystem {
                     </div>
                     <div class="popup-footer">
                         <button id="popupAddBtn" class="popup-btn popup-btn-primary">Add to Cart</button>
-                        <button id="popupDetailsBtn" class="popup-btn popup-btn-secondary">View Details</button>
+
                     </div>
                 </div>
             </div>
@@ -133,21 +133,12 @@ class UnifiedPopupSystem {
         
         // Button event listeners
         const addBtn = popup.querySelector('#popupAddBtn');
-        const detailsBtn = popup.querySelector('#popupDetailsBtn');
         
         if (addBtn) {
             addBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 this.handleAddToCart();
-            });
-        }
-        
-        if (detailsBtn) {
-            detailsBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handleViewDetails();
             });
         }
     }
@@ -284,12 +275,13 @@ class UnifiedPopupSystem {
     // Load marketing data for badge and sales pitch line
     async loadMarketingData(sku, salesPitchElement, mainSalesPitchElement) {
         try {
-            const response = await fetch(`/api/get_marketing_data.php?sku=${sku}`);
-            const data = await response.json();
+            const data = await apiGet(`get_marketing_data.php?sku=${sku}`);
+            
             
             if (data.success && data.exists && data.marketing_data) {
                 const marketing = data.marketing_data;
-                // DISABLED: this.displayMarketingBadge(marketing); - Using unified badge system instead
+                // Display marketing badge and main sales pitch
+                this.displayMarketingBadge(marketing);
                 this.displayMainSalesPitch(marketing, mainSalesPitchElement);
             } else {
                 // Show generic marketing content as fallback
@@ -330,23 +322,28 @@ class UnifiedPopupSystem {
     
     // Display marketing badge (if available)
     displayMarketingBadge(marketing) {
-        // DISABLE OLD POPUP MARKETING BADGE SYSTEM
-        // This has been replaced by the unified badge scoring system
-        // to prevent conflicts between different badge systems
-        
-        console.log('🚫 Old popup marketing badge system disabled - using unified badge system instead');
-        
-        // Hide any existing popup marketing badges
         const popup = popupState.popupElement;
-        if (popup) {
-            const marketingBadge = popup.querySelector('#popupMarketingBadge');
-            if (marketingBadge) {
-                marketingBadge.classList.add('hidden');
-                marketingBadge.style.display = 'none';
-            }
+        if (!popup) return;
+        const marketingBadge = popup.querySelector('#popupMarketingBadge');
+        const marketingTextEl = popup.querySelector('#popupMarketingText');
+        if (!marketingBadge || !marketingTextEl) return;
+
+        // Determine badge text and optional type
+        let badgeText = '';
+        if (marketing.badges && marketing.badges.length > 0) {
+            badgeText = marketing.badges[0].text || marketing.badges[0];
+        } else if (marketing.primary_badge) {
+            badgeText = marketing.primary_badge;
         }
-        
-        return; // Exit early - no badge creation
+
+        if (badgeText) {
+            marketingTextEl.textContent = badgeText;
+            marketingBadge.classList.remove('hidden');
+            marketingBadge.style.display = 'block';
+        } else {
+            marketingBadge.classList.add('hidden');
+            marketingBadge.style.display = 'none';
+        }
     }
 
 
@@ -385,6 +382,14 @@ class UnifiedPopupSystem {
 
     // Hide popup immediately
     hideImmediate() {
+        // Remove overlay dimming reduction
+        try {
+            if (window.parent && window.parent !== window) {
+                const overlay = window.parent.document.querySelector('.room-modal-overlay');
+                if (overlay) overlay.classList.remove('popup-active');
+            }
+        } catch(e) {}
+
         this.clearHideTimeout();
         
         const popup = popupState.popupElement;
@@ -437,13 +442,24 @@ class UnifiedPopupSystem {
         this.hideImmediate();
         
         // Try to open item modal
-        if (typeof window.showGlobalItemModal === 'function') {
+        let modalFn = window.showGlobalItemModal;
+        if (typeof modalFn !== 'function' && window.parent && window.parent !== window) {
+            modalFn = window.parent.showGlobalItemModal;
+        }
+        // Extra fallback to unified global modal namespace
+        if (typeof modalFn !== 'function' && window.WhimsicalFrog && window.WhimsicalFrog.GlobalModal && typeof window.WhimsicalFrog.GlobalModal.show === 'function') {
+            modalFn = window.WhimsicalFrog.GlobalModal.show;
+        }
+        if (typeof modalFn !== 'function' && window.parent && window.parent.WhimsicalFrog && window.parent.WhimsicalFrog.GlobalModal && typeof window.parent.WhimsicalFrog.GlobalModal.show === 'function') {
+            modalFn = window.parent.WhimsicalFrog.GlobalModal.show;
+        }
+
+        if (typeof modalFn === 'function') {
             console.log('🔧 showGlobalItemModal function available, calling with SKU:', skuToOpen);
-            window.showGlobalItemModal(skuToOpen);
-            // Clear product state after successful modal open
+            modalFn(skuToOpen, productToUse);
             this.clearProductState();
         } else {
-            console.error('🔧 showGlobalItemModal function not available! Type:', typeof window.showGlobalItemModal);
+            console.error('🔧 showGlobalItemModal function not available in current or parent context!');
         }
     }
 
@@ -455,40 +471,75 @@ class UnifiedPopupSystem {
         this.hideImmediate();
 
         const functionPath = 'WhimsicalFrog.GlobalModal.show';
-        const isReady = await window.waitForFunction(functionPath, window);
 
+        // First try within the current window (iframe or main)
+        let isReady = await window.waitForFunction(functionPath, window);
         if (isReady) {
             window.WhimsicalFrog.GlobalModal.show(popupState.currentProduct.sku, popupState.currentProduct);
-        } else {
-            console.error(`🔧 ${functionPath} function not available for view details!`);
-            if (typeof window.showGlobalNotification === 'function') {
-                window.showGlobalNotification('Could not open item details. Please try again.', 'error');
+            return;
+        }
+
+        // Fallback: try parent window (when running inside iframe)
+        if (window.parent && window.parent !== window) {
+            isReady = await window.waitForFunction(functionPath, window.parent);
+            if (isReady) {
+                window.parent.WhimsicalFrog.GlobalModal.show(popupState.currentProduct.sku, popupState.currentProduct);
+                return;
             }
+        }
+
+        console.error(`🔧 ${functionPath} function not available in current or parent context!`);
+        if (typeof window.showGlobalNotification === 'function') {
+            window.showGlobalNotification('Could not open item details. Please try again.', 'error');
         }
     }
 
     // Position popup function with improved positioning logic
     positionPopup(element, popup) {
         console.log('Positioning popup...', element, popup);
+        // Detect and mark that we are inside a room-modal iframe (heuristic: parent has .room-modal-overlay)
+        try {
+            if (window.parent && window.parent !== window && window.parent.document.querySelector('.room-modal-overlay')) {
+                popupState.isInRoomModal = true;
+            }
+        } catch(e) { /* cross-origin safe guard */ }
         
         const rect = element.getBoundingClientRect();
         
         // Determine z-index from CSS variables: popups layer or just above room-modal overlay
         const isInRoomModal = popupState.isInRoomModal;
         const rootStyles = getComputedStyle(document.documentElement);
-        const popupDefaultZ = rootStyles.getPropertyValue('-z-popups').trim();
-        const roomModalZ = parseInt(rootStyles.getPropertyValue('-z-room-modals').trim(), 10) || 0;
-        const zIndex = isInRoomModal ? (roomModalZ + 1).toString() : popupDefaultZ;
-        // Ensure no override class is applied
-        popup.classList.remove('in-room-modal');
+        // Read CSS custom properties correctly (two leading dashes)
+        const popupDefaultZ = parseInt(rootStyles.getPropertyValue('--popup-z-index').trim() || '2600', 10);
+        const roomModalZ = parseInt(rootStyles.getPropertyValue('--z-room-modals').trim() || '2400', 10);
+        const zIndex = isInRoomModal ? roomModalZ + 1 : popupDefaultZ;
+        // Toggle class to leverage room-modal-specific CSS rules
+        if (isInRoomModal) {
+            popup.classList.add('in-room-modal');
+        } else {
+            popup.classList.remove('in-room-modal');
+        }
 
         // Show popup temporarily to get actual dimensions using CSS classes
+        // Ensure we never exceed configured max width
+        let cssMax = rootStyles.getPropertyValue('--popup-max-width').trim() || '450px';
+        if (isInRoomModal) {
+            // Allow natural content width for room-modal popups
+            cssMax = 'none';
+            popup.style.width = 'max-content';
+            popup.style.minWidth = '0';
+            popup.style.maxWidth = 'none';
+        } else {
+            popup.style.maxWidth = cssMax;
+        }
         popup.classList.remove('hidden');
         popup.classList.add('measuring');
-        popup.style.setProperty('--popup-z-index', zIndex);
+        // Ensure inline z-index override even if custom property previously set
+        popup.style.zIndex = zIndex;
+        popup.style.zIndex = zIndex;
         
         const popupRect = popup.getBoundingClientRect();
-        const popupWidth = popupRect.width;
+        const popupWidth = Math.min(popupRect.width, parseInt(cssMax));
         const popupHeight = popupRect.height;
         
         // Get viewport dimensions with safety margins

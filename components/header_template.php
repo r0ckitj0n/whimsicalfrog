@@ -2,12 +2,12 @@
 /**
  * Header Template Component
  * Comprehensive header with navigation, search, and user features
- * 
+ *
  * Usage Examples:
  * <?php include 'components/header_template.php'; ?>
- * 
+ *
  * Or with custom options:
- * <?php 
+ * <?php
  * $header_config = [
  *     'show_search' => true,
  *     'show_cart' => true,
@@ -18,7 +18,7 @@
  *         ['label' => 'About', 'url' => '/about', 'active' => false],
  *     ]
  * ];
- * include 'components/header_template.php'; 
+ * include 'components/header_template.php';
  * ?>
  */
 
@@ -108,7 +108,7 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
                 <!- Desktop Navigation ->
                 <nav class="nav-links" role="navigation" aria-label="Main navigation">
                     <?php foreach ($config['navigation_items'] as $item): ?>
-                        <?php 
+                        <?php
                         $is_active = $item['active'] ?? (rtrim($current_page, '/') === rtrim($item['url'], '/'));
                         ?>
                         <a href="<?php echo htmlspecialchars($item['url']); ?>" 
@@ -164,7 +164,7 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
         <div class="mobile-menu" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
             <div class="mobile-nav-links">
                 <?php foreach ($config['navigation_items'] as $item): ?>
-                    <?php 
+                    <?php
                     $is_active = $item['active'] ?? (rtrim($current_page, '/') === rtrim($item['url'], '/'));
                     ?>
                     <a href="<?php echo htmlspecialchars($item['url']); ?>" 

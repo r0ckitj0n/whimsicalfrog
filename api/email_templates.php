@@ -12,60 +12,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
-    
+
     // Admin check for modification actions
     if (in_array($action, ['create', 'update', 'delete', 'set_default'])) {
         requireAdmin(true);
     }
-    
+
     switch ($action) {
         case 'get_all':
             handleGetAllTemplates($pdo);
             break;
-            
+
         case 'get_template':
             handleGetTemplate($pdo);
             break;
-            
+
         case 'create':
             handleCreateTemplate($pdo);
             break;
-            
+
         case 'update':
             handleUpdateTemplate($pdo);
             break;
-            
+
         case 'delete':
             handleDeleteTemplate($pdo);
             break;
-            
+
         case 'get_types':
             handleGetTemplateTypes($pdo);
             break;
-            
+
         case 'get_assignments':
             handleGetTemplateAssignments($pdo);
             break;
-            
+
         case 'set_assignment':
             handleSetTemplateAssignment($pdo);
             break;
-            
+
         case 'preview':
             handlePreviewTemplate($pdo);
             break;
-            
+
         case 'send_test':
             handleSendTestEmail($pdo);
             break;
-            
+
         default:
             throw new Exception('Invalid action');
     }
-    
+
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
@@ -74,7 +79,8 @@ try {
     ]);
 }
 
-function handleGetAllTemplates($pdo) {
+function handleGetAllTemplates($pdo)
+{
     $query = "
         SELECT 
             et.*,
@@ -82,41 +88,43 @@ function handleGetAllTemplates($pdo) {
         FROM email_templates et 
         ORDER BY et.template_type, et.template_name
     ";
-    
+
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode([
         'success' => true,
         'templates' => $templates
     ]);
 }
 
-function handleGetTemplate($pdo) {
+function handleGetTemplate($pdo)
+{
     $templateId = $_GET['template_id'] ?? '';
-    
+
     if (empty($templateId)) {
         throw new Exception('Template ID is required');
     }
-    
+
     $stmt = $pdo->prepare("SELECT * FROM email_templates WHERE id = ?");
     $stmt->execute([$templateId]);
     $template = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$template) {
         throw new Exception('Template not found');
     }
-    
+
     echo json_encode([
         'success' => true,
         'template' => $template
     ]);
 }
 
-function handleCreateTemplate($pdo) {
+function handleCreateTemplate($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $templateName = trim($input['template_name'] ?? '');
     $templateType = trim($input['template_type'] ?? '');
     $subject = trim($input['subject'] ?? '');
@@ -124,23 +132,23 @@ function handleCreateTemplate($pdo) {
     $textContent = trim($input['text_content'] ?? '');
     $description = trim($input['description'] ?? '');
     $variables = $input['variables'] ?? [];
-    
+
     if (empty($templateName) || empty($templateType) || empty($subject) || empty($htmlContent)) {
         throw new Exception('Template name, type, subject, and HTML content are required');
     }
-    
+
     // Validate template type
     $validTypes = ['order_confirmation', 'admin_notification', 'welcome', 'password_reset', 'custom'];
     if (!in_array($templateType, $validTypes)) {
         throw new Exception('Invalid template type');
     }
-    
+
     $stmt = $pdo->prepare("
         INSERT INTO email_templates 
         (template_name, template_type, subject, html_content, text_content, description, variables, is_active, created_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())
     ");
-    
+
     $stmt->execute([
         $templateName,
         $templateType,
@@ -150,9 +158,9 @@ function handleCreateTemplate($pdo) {
         $description,
         json_encode($variables)
     ]);
-    
+
     $templateId = $pdo->lastInsertId();
-    
+
     echo json_encode([
         'success' => true,
         'message' => 'Email template created successfully',
@@ -160,9 +168,10 @@ function handleCreateTemplate($pdo) {
     ]);
 }
 
-function handleUpdateTemplate($pdo) {
+function handleUpdateTemplate($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $templateId = $input['template_id'] ?? '';
     $templateName = trim($input['template_name'] ?? '');
     $templateType = trim($input['template_type'] ?? '');
@@ -172,18 +181,18 @@ function handleUpdateTemplate($pdo) {
     $description = trim($input['description'] ?? '');
     $variables = $input['variables'] ?? [];
     $isActive = $input['is_active'] ?? 1;
-    
+
     if (empty($templateId) || empty($templateName) || empty($templateType) || empty($subject) || empty($htmlContent)) {
         throw new Exception('Template ID, name, type, subject, and HTML content are required');
     }
-    
+
     $stmt = $pdo->prepare("
         UPDATE email_templates 
         SET template_name = ?, template_type = ?, subject = ?, html_content = ?, 
             text_content = ?, description = ?, variables = ?, is_active = ?, updated_at = NOW()
         WHERE id = ?
     ");
-    
+
     $stmt->execute([
         $templateName,
         $templateType,
@@ -195,39 +204,41 @@ function handleUpdateTemplate($pdo) {
         $isActive,
         $templateId
     ]);
-    
+
     echo json_encode([
         'success' => true,
         'message' => 'Email template updated successfully'
     ]);
 }
 
-function handleDeleteTemplate($pdo) {
+function handleDeleteTemplate($pdo)
+{
     $templateId = $_POST['template_id'] ?? $_GET['template_id'] ?? '';
-    
+
     if (empty($templateId)) {
         throw new Exception('Template ID is required');
     }
-    
+
     // Check if template is assigned
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM email_template_assignments WHERE template_id = ?");
     $stmt->execute([$templateId]);
     $assignmentCount = $stmt->fetchColumn();
-    
+
     if ($assignmentCount > 0) {
         throw new Exception('Cannot delete template that is currently assigned to email types. Please reassign first.');
     }
-    
+
     $stmt = $pdo->prepare("DELETE FROM email_templates WHERE id = ?");
     $stmt->execute([$templateId]);
-    
+
     echo json_encode([
         'success' => true,
         'message' => 'Email template deleted successfully'
     ]);
 }
 
-function handleGetTemplateTypes($pdo) {
+function handleGetTemplateTypes($pdo)
+{
     $types = [
         'order_confirmation' => [
             'name' => 'Order Confirmation',
@@ -255,14 +266,15 @@ function handleGetTemplateTypes($pdo) {
             'default_variables' => []
         ]
     ];
-    
+
     echo json_encode([
         'success' => true,
         'types' => $types
     ]);
 }
 
-function handleGetTemplateAssignments($pdo) {
+function handleGetTemplateAssignments($pdo)
+{
     $query = "
         SELECT 
             eta.*,
@@ -272,34 +284,35 @@ function handleGetTemplateAssignments($pdo) {
         LEFT JOIN email_templates et ON eta.template_id = et.id
         ORDER BY eta.email_type
     ";
-    
+
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode([
         'success' => true,
         'assignments' => $assignments
     ]);
 }
 
-function handleSetTemplateAssignment($pdo) {
+function handleSetTemplateAssignment($pdo)
+{
     requireAdmin(true);
-    
+
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $emailType = trim($input['email_type'] ?? '');
     $templateId = $input['template_id'] ?? '';
-    
+
     if (empty($emailType) || empty($templateId)) {
         throw new Exception('Email type and template ID are required');
     }
-    
+
     // Check if assignment exists
     $stmt = $pdo->prepare("SELECT id FROM email_template_assignments WHERE email_type = ?");
     $stmt->execute([$emailType]);
     $existingAssignment = $stmt->fetch();
-    
+
     if ($existingAssignment) {
         // Update existing assignment
         $stmt = $pdo->prepare("UPDATE email_template_assignments SET template_id = ?, updated_at = NOW() WHERE email_type = ?");
@@ -309,28 +322,29 @@ function handleSetTemplateAssignment($pdo) {
         $stmt = $pdo->prepare("INSERT INTO email_template_assignments (email_type, template_id, created_at) VALUES (?, ?, NOW())");
         $stmt->execute([$emailType, $templateId]);
     }
-    
+
     echo json_encode([
         'success' => true,
         'message' => 'Template assignment updated successfully'
     ]);
 }
 
-function handlePreviewTemplate($pdo) {
+function handlePreviewTemplate($pdo)
+{
     $templateId = $_GET['template_id'] ?? '';
-    
+
     if (empty($templateId)) {
         throw new Exception('Template ID is required');
     }
-    
+
     $stmt = $pdo->prepare("SELECT * FROM email_templates WHERE id = ?");
     $stmt->execute([$templateId]);
     $template = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$template) {
         throw new Exception('Template not found');
     }
-    
+
     // Sample variables for preview
     $sampleVars = [
         'customer_name' => 'John Doe',
@@ -344,16 +358,16 @@ function handlePreviewTemplate($pdo) {
         'items' => '<li>Sample T-Shirt - $25.00</li><li>Custom Tumbler - $20.99</li>',
         'shipping_address' => '123 Main St, City, ST 12345'
     ];
-    
+
     $htmlContent = $template['html_content'];
     $subject = $template['subject'];
-    
+
     // Replace variables in content
     foreach ($sampleVars as $var => $value) {
         $htmlContent = str_replace('{' . $var . '}', $value, $htmlContent);
         $subject = str_replace('{' . $var . '}', $value, $subject);
     }
-    
+
     echo json_encode([
         'success' => true,
         'preview' => [
@@ -364,27 +378,28 @@ function handlePreviewTemplate($pdo) {
     ]);
 }
 
-function handleSendTestEmail($pdo) {
+function handleSendTestEmail($pdo)
+{
     requireAdmin(true);
-    
+
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $templateId = $input['template_id'] ?? '';
     $testEmail = trim($input['test_email'] ?? '');
-    
+
     if (empty($templateId) || empty($testEmail)) {
         throw new Exception('Template ID and test email address are required');
     }
-    
+
     if (!filter_var($testEmail, FILTER_VALIDATE_EMAIL)) {
         throw new Exception('Invalid email address');
     }
-    
+
     // Load email notification functions
     require_once __DIR__ . '/email_notifications.php';
-    
+
     $success = sendTestEmail($templateId, $testEmail, $pdo);
-    
+
     if ($success) {
         echo json_encode([
             'success' => true,

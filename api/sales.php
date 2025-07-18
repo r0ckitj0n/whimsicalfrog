@@ -19,13 +19,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Authentication check
-function checkAuth() {
+function checkAuth()
+{
     if (!isset($_SESSION['user']) || !is_array($_SESSION['user'])) {
         http_response_code(401);
         echo json_encode(['error' => 'Not authenticated']);
         exit();
     }
-    
+
     $userRole = strtolower($_SESSION['user']['role'] ?? '');
     if ($userRole !== 'admin') {
         http_response_code(403);
@@ -35,22 +36,27 @@ function checkAuth() {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Get action from query params, form data, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
-    
+
     // If no action found in GET/POST, check JSON input
     if (empty($action)) {
         $jsonInput = json_decode(file_get_contents('php://input'), true);
         $action = $jsonInput['action'] ?? '';
     }
-    
+
     switch ($action) {
-        
+
         case 'list':
             checkAuth();
-            
+
             $stmt = $pdo->prepare("
                 SELECT s.*, 
                        COUNT(si.item_sku) as item_count,
@@ -67,29 +73,29 @@ try {
             ");
             $stmt->execute();
             $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             echo json_encode(['success' => true, 'sales' => $sales]);
             break;
-            
+
         case 'get':
             checkAuth();
-            
+
             $saleId = $_GET['id'] ?? 0;
             if (!$saleId) {
                 echo json_encode(['error' => 'Sale ID required']);
                 break;
             }
-            
+
             // Get sale details
             $stmt = $pdo->prepare("SELECT * FROM sales WHERE id = ?");
             $stmt->execute([$saleId]);
             $sale = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$sale) {
                 echo json_encode(['error' => 'Sale not found']);
                 break;
             }
-            
+
             // Get sale items
             $stmt = $pdo->prepare("
                 SELECT si.item_sku, i.name as item_name, i.retailPrice as original_price
@@ -99,16 +105,16 @@ try {
             ");
             $stmt->execute([$saleId]);
             $saleItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             $sale['items'] = $saleItems;
             echo json_encode(['success' => true, 'sale' => $sale]);
             break;
-            
+
         case 'create':
             checkAuth();
-            
+
             $input = json_decode(file_get_contents('php://input'), true);
-            
+
             $name = $input['name'] ?? '';
             $description = $input['description'] ?? '';
             $discountPercentage = $input['discount_percentage'] ?? 0;
@@ -116,14 +122,14 @@ try {
             $endDate = $input['end_date'] ?? '';
             $isActive = $input['is_active'] ?? true;
             $items = $input['items'] ?? [];
-            
+
             if (!$name || !$discountPercentage || !$startDate || !$endDate) {
                 echo json_encode(['error' => 'Missing required fields']);
                 break;
             }
-            
+
             $pdo->beginTransaction();
-            
+
             try {
                 // Create sale
                 $stmt = $pdo->prepare("
@@ -132,7 +138,7 @@ try {
                 ");
                 $stmt->execute([$name, $description, $discountPercentage, $startDate, $endDate, $isActive]);
                 $saleId = $pdo->lastInsertId();
-                
+
                 // Add sale items
                 if (!empty($items)) {
                     $stmt = $pdo->prepare("INSERT INTO sale_items (sale_id, item_sku) VALUES (?, ?)");
@@ -140,21 +146,21 @@ try {
                         $stmt->execute([$saleId, $itemSku]);
                     }
                 }
-                
+
                 $pdo->commit();
                 echo json_encode(['success' => true, 'sale_id' => $saleId, 'message' => 'Sale created successfully']);
-                
+
             } catch (Exception $e) {
                 $pdo->rollBack();
                 echo json_encode(['error' => 'Failed to create sale: ' . $e->getMessage()]);
             }
             break;
-            
+
         case 'update':
             checkAuth();
-            
+
             $input = json_decode(file_get_contents('php://input'), true);
-            
+
             $saleId = $input['id'] ?? 0;
             $name = $input['name'] ?? '';
             $description = $input['description'] ?? '';
@@ -163,14 +169,14 @@ try {
             $endDate = $input['end_date'] ?? '';
             $isActive = $input['is_active'] ?? true;
             $items = $input['items'] ?? [];
-            
+
             if (!$saleId || !$name || !$discountPercentage || !$startDate || !$endDate) {
                 echo json_encode(['error' => 'Missing required fields']);
                 break;
             }
-            
+
             $pdo->beginTransaction();
-            
+
             try {
                 // Update sale
                 $stmt = $pdo->prepare("
@@ -179,11 +185,11 @@ try {
                     WHERE id = ?
                 ");
                 $stmt->execute([$name, $description, $discountPercentage, $startDate, $endDate, $isActive, $saleId]);
-                
+
                 // Remove existing sale items
                 $stmt = $pdo->prepare("DELETE FROM sale_items WHERE sale_id = ?");
                 $stmt->execute([$saleId]);
-                
+
                 // Add new sale items
                 if (!empty($items)) {
                     $stmt = $pdo->prepare("INSERT INTO sale_items (sale_id, item_sku) VALUES (?, ?)");
@@ -191,44 +197,44 @@ try {
                         $stmt->execute([$saleId, $itemSku]);
                     }
                 }
-                
+
                 $pdo->commit();
                 echo json_encode(['success' => true, 'message' => 'Sale updated successfully']);
-                
+
             } catch (Exception $e) {
                 $pdo->rollBack();
                 echo json_encode(['error' => 'Failed to update sale: ' . $e->getMessage()]);
             }
             break;
-            
+
         case 'delete':
             checkAuth();
-            
+
             $saleId = $_POST['id'] ?? $_GET['id'] ?? 0;
             if (!$saleId) {
                 echo json_encode(['error' => 'Sale ID required']);
                 break;
             }
-            
+
             $stmt = $pdo->prepare("DELETE FROM sales WHERE id = ?");
             $result = $stmt->execute([$saleId]);
-            
+
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Sale deleted successfully']);
             } else {
                 echo json_encode(['error' => 'Failed to delete sale']);
             }
             break;
-            
+
         case 'get_active_sales':
             // Get currently active sales for an item (public endpoint)
             $itemSku = $_GET['item_sku'] ?? '';
-            
+
             if (!$itemSku) {
                 echo json_encode(['success' => true, 'sales' => []]);
                 break;
             }
-            
+
             $stmt = $pdo->prepare("
                 SELECT s.*, si.item_sku
                 FROM sales s
@@ -241,45 +247,45 @@ try {
             ");
             $stmt->execute([$itemSku]);
             $activeSale = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             echo json_encode(['success' => true, 'sale' => $activeSale]);
             break;
-            
+
         case 'get_all_items':
             checkAuth();
-            
+
             // Get all items for sale assignment
             $stmt = $pdo->prepare("SELECT sku, name, retailPrice FROM items ORDER BY name");
             $stmt->execute();
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             echo json_encode(['success' => true, 'items' => $items]);
             break;
-            
+
         case 'toggle_active':
             checkAuth();
-            
+
             $saleId = $_POST['id'] ?? 0;
             if (!$saleId) {
                 echo json_encode(['error' => 'Sale ID required']);
                 break;
             }
-            
+
             $stmt = $pdo->prepare("UPDATE sales SET is_active = NOT is_active WHERE id = ?");
             $result = $stmt->execute([$saleId]);
-            
+
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Sale status updated']);
             } else {
                 echo json_encode(['error' => 'Failed to update sale status']);
             }
             break;
-            
+
         default:
             echo json_encode(['error' => 'Invalid action']);
             break;
     }
-    
+
 } catch (PDOException $e) {
     echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
     exit();

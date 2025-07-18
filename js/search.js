@@ -93,7 +93,7 @@ class SearchModal {
         this.open();
 
         try {
-            const response = await fetch(`/api/search_items.php?q=${encodeURIComponent(searchTerm)}`);
+            const response = await apiGet(`search_items.php?q=${encodeURIComponent(searchTerm)}`);
             const data = await response.json();
 
             if (data.success) {

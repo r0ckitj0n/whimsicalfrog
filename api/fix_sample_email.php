@@ -40,8 +40,13 @@ try {
 
 try {
     // Database connection
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Strategy 1: Update existing basic sample email
     $updateSql = "UPDATE email_logs SET 
         to_email = 'john.doe@example.com',
@@ -55,7 +60,7 @@ try {
         OR content LIKE '%successfully initialized%'
         OR subject LIKE '%Email System%'
         LIMIT 1";
-    
+
     $realisticContent = '
             <div class="email-container">
 <div class="email-header">
@@ -115,13 +120,13 @@ try {
                     <p>This is an automated email. Please do not reply to this email address.</p>
                 </div>
             </div>';
-    
+
     $stmt = $pdo->prepare($updateSql);
     $stmt->bindParam(':content', $realisticContent);
     $stmt->execute();
-    
+
     $updatedRows = $stmt->rowCount();
-    
+
     if ($updatedRows > 0) {
         echo json_encode([
             'success' => true,
@@ -133,15 +138,15 @@ try {
         ]);
         exit;
     }
-    
+
     // Strategy 2: Create new sample email if no basic one found
     $insertSql = "INSERT INTO email_logs (to_email, from_email, subject, content, email_type, status, sent_at, order_id, created_by) 
                   VALUES ('john.doe@example.com', 'orders@whimsicalfrog.us', 'Order Confirmation #01F14P23 - WhimsicalFrog', :content, 'order_confirmation', 'sent', NOW(), '01F14P23', 'system')";
-    
+
     $stmt = $pdo->prepare($insertSql);
     $stmt->bindParam(':content', $realisticContent);
     $stmt->execute();
-    
+
     echo json_encode([
         'success' => true,
         'message' => 'Sample email fixed: Created new sample email',

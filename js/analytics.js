@@ -320,14 +320,7 @@ class AnalyticsTracker {
     sendData(action, data) {
         if (!this.isTracking) return;
         
-        fetch('/api/analytics_tracker.php?action=' + action, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(data)
-        }).catch(error => {
+        apiPost(`analytics_tracker.php?action=${action}`, data).catch(error => {
             console.warn('Analytics tracking failed:', error);
         });
     }

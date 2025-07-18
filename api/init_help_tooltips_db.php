@@ -3,8 +3,13 @@
 require_once 'config.php';
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Create help_tooltips table
     $createTableSQL = "
     CREATE TABLE IF NOT EXISTS help_tooltips (
@@ -21,9 +26,9 @@ try {
         INDEX idx_page_context (page_context),
         INDEX idx_active (is_active)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     $pdo->exec($createTableSQL);
-    
+
     // Insert default tooltips for admin settings
     $defaultTooltips = [
         // Admin Settings Main Page
@@ -77,7 +82,7 @@ try {
             'content' => 'Create and manage hover tooltips for admin interface elements. Add helpful hints to guide users through complex features.',
             'position' => 'bottom'
         ],
-        
+
         // Inventory Management
         [
             'element_id' => 'add-new-item-btn',
@@ -107,7 +112,7 @@ try {
             'content' => 'AI analyzes your costs, market conditions, and competition to suggest optimal retail pricing.',
             'position' => 'top'
         ],
-        
+
         // Order Management
         [
             'element_id' => 'order-status-filter',
@@ -123,7 +128,7 @@ try {
             'content' => 'Perform actions on multiple orders at once. Update status, print labels, or send notifications.',
             'position' => 'bottom'
         ],
-        
+
         // Common Elements
         [
             'element_id' => 'save-btn',
@@ -140,13 +145,13 @@ try {
             'position' => 'top'
         ]
     ];
-    
+
     // Check if tooltips already exist and insert only new ones
     $insertStmt = $pdo->prepare("
         INSERT IGNORE INTO help_tooltips (element_id, page_context, title, content, position) 
         VALUES (?, ?, ?, ?, ?)
     ");
-    
+
     $insertedCount = 0;
     foreach ($defaultTooltips as $tooltip) {
         if ($insertStmt->execute([
@@ -161,14 +166,14 @@ try {
             }
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'message' => "Help tooltips table initialized successfully. Inserted $insertedCount new default tooltips.",
         'table_created' => true,
         'default_tooltips_added' => $insertedCount
     ]);
-    
+
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([

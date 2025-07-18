@@ -4,7 +4,12 @@ require_once __DIR__ . '/config.php';
 
 // Create PDO connection
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Database connection failed: ' . $e->getMessage()]);
@@ -36,24 +41,24 @@ try {
         case 'update_cell':
             // Handle POST request for updating cell data
             $input = json_decode(file_get_contents('php://input'), true);
-            
+
             if (!$input) {
                 throw new Exception('Invalid JSON input');
             }
-            
+
             $tableName = $input['table'] ?? '';
             $column = $input['column'] ?? '';
             $newValue = $input['new_value'] ?? '';
             $rowData = $input['row_data'] ?? [];
-            
+
             if (empty($tableName) || empty($column) || empty($rowData)) {
                 throw new Exception('Missing required parameters: table, column, or row_data');
             }
-            
+
             // Build WHERE clause from row data
             $whereConditions = [];
             $whereParams = [];
-            
+
             foreach ($rowData as $col => $val) {
                 if ($val === null || $val === '') {
                     $whereConditions[] = "(`$col` IS NULL OR `$col` = '')";
@@ -62,20 +67,20 @@ try {
                     $whereParams[] = $val;
                 }
             }
-            
+
             if (empty($whereConditions)) {
                 throw new Exception('No WHERE conditions could be built from row data');
             }
-            
+
             $whereClause = implode(' AND ', $whereConditions);
-            
+
             // Update the cell
             $sql = "UPDATE `$tableName` SET `$column` = ? WHERE $whereClause LIMIT 1";
             $params = array_merge([$newValue], $whereParams);
-            
+
             $stmt = $pdo->prepare($sql);
             $result = $stmt->execute($params);
-            
+
             if ($result) {
                 $affectedRows = $stmt->rowCount();
                 if ($affectedRows > 0) {
@@ -94,34 +99,34 @@ try {
                 throw new Exception('Failed to execute update query');
             }
             break;
-            
+
         case 'list_tables':
             $stmt = $pdo->query("SHOW TABLES");
             $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
             echo json_encode(['success' => true, 'tables' => $tables]);
             break;
-            
+
         case 'table_info':
             $tableName = $_GET['table'] ?? '';
             if (empty($tableName)) {
                 throw new Exception('Table name is required');
             }
-            
+
             // Get table structure
             $stmt = $pdo->prepare("DESCRIBE `$tableName`");
             $stmt->execute();
             $structure = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             // Get row count
             $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM `$tableName`");
             $stmt->execute();
             $rowCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-            
+
             // Get table status
             $stmt = $pdo->prepare("SHOW TABLE STATUS WHERE Name = ?");
             $stmt->execute([$tableName]);
             $status = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             echo json_encode([
                 'success' => true,
                 'structure' => $structure,
@@ -129,7 +134,7 @@ try {
                 'status' => $status
             ]);
             break;
-            
+
         case 'table_data':
             $tableName = $_GET['table'] ?? '';
             $limit = intval($_GET['limit'] ?? 50);
@@ -137,11 +142,11 @@ try {
             $orderBy = $_GET['order_by'] ?? '';
             $orderDir = $_GET['order_dir'] ?? 'ASC';
             $countTotal = $_GET['count_total'] ?? false;
-            
+
             if (empty($tableName)) {
                 throw new Exception('Table name is required');
             }
-            
+
             // Sanitize order by
             if (!empty($orderBy)) {
                 $stmt = $pdo->prepare("DESCRIBE `$tableName`");
@@ -151,16 +156,16 @@ try {
                     $orderBy = '';
                 }
             }
-            
+
             $response = ['success' => true];
-            
+
             // Get total count if requested
             if ($countTotal) {
                 $countStmt = $pdo->prepare("SELECT COUNT(*) as total FROM `$tableName`");
                 $countStmt->execute();
                 $response['total_count'] = intval($countStmt->fetch(PDO::FETCH_ASSOC)['total']);
             }
-            
+
             // Build query for data
             $sql = "SELECT * FROM `$tableName`";
             if (!empty($orderBy)) {
@@ -168,32 +173,32 @@ try {
                 $sql .= " ORDER BY `$orderBy` $orderDir";
             }
             $sql .= " LIMIT $limit OFFSET $offset";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             $response['data'] = $data;
             $response['returned_rows'] = count($data);
-            
+
             echo json_encode($response);
             break;
-            
+
         case 'execute_query':
             $query = $_POST['query'] ?? '';
             if (empty($query)) {
                 throw new Exception('Query is required');
             }
-            
+
             // Security check - only allow SELECT statements
             $trimmedQuery = trim(strtoupper($query));
             if (!preg_match('/^SELECT\s+/', $trimmedQuery)) {
                 throw new Exception('Only SELECT queries are allowed for security reasons');
             }
-            
+
             $stmt = $pdo->prepare($query);
             $stmt->execute();
-            
+
             if ($stmt->columnCount() > 0) {
                 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 echo json_encode([
@@ -209,22 +214,23 @@ try {
                 ]);
             }
             break;
-            
+
         case 'get_documentation':
             $documentation = getTableDocumentation();
             echo json_encode(['success' => true, 'documentation' => $documentation]);
             break;
-            
+
         default:
             throw new Exception('Invalid action');
     }
-    
+
 } catch (Exception $e) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 
-function getTableDocumentation() {
+function getTableDocumentation()
+{
     return [
         'items' => [
             'description' => 'Main inventory items table storing all products/items',

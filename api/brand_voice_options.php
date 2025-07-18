@@ -11,30 +11,36 @@ header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
-    $isAdmin = false;
-    
-    // Check session authentication first
-    require_once __DIR__ . '/../includes/auth.php'; if (isAdminWithToken()) {
-        $isAdmin = true;
-    }
-    
-    // Admin token fallback for API access
-    if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
-        $isAdmin = true;
-    }
-    
-    if (!$isAdmin) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Admin access required']);
-        exit;
-    }
+$isAdmin = false;
+
+// Check session authentication first
+require_once __DIR__ . '/../includes/auth.php';
+if (isAdminWithToken()) {
+    $isAdmin = true;
+}
+
+// Admin token fallback for API access
+if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
+    $isAdmin = true;
+}
+
+if (!$isAdmin) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Admin access required']);
+    exit;
+}
 
 // Authentication is handled by requireAdmin() above
 $userData = getCurrentUser();
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Create brand_voice_options table if it doesn't exist
     $createTableSQL = "
     CREATE TABLE IF NOT EXISTS brand_voice_options (
@@ -47,22 +53,22 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     $pdo->exec($createTableSQL);
-    
+
     // Update item_marketing_preferences table to include brand_voice if not exists
     $alterTableSQL = "
     ALTER TABLE item_marketing_preferences 
     ADD COLUMN IF NOT EXISTS brand_voice VARCHAR(50) AFTER sku";
-    
+
     try {
         $pdo->exec($alterTableSQL);
     } catch (PDOException $e) {
         // Column might already exist, ignore error
     }
-    
+
     $action = $_GET['action'] ?? '';
-    
+
     switch ($action) {
         case 'get_all':
             getAllBrandVoiceOptions($pdo);
@@ -95,47 +101,50 @@ try {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid action specified']);
     }
-    
+
 } catch (Exception $e) {
     error_log("Error in brand_voice_options.php: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['error' => 'Internal server error']);
 }
 
-function getAllBrandVoiceOptions($pdo) {
+function getAllBrandVoiceOptions($pdo)
+{
     $stmt = $pdo->prepare("SELECT * FROM brand_voice_options ORDER BY display_order, label");
     $stmt->execute();
     $options = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode(['success' => true, 'options' => $options]);
 }
 
-function getActiveBrandVoiceOptions($pdo) {
+function getActiveBrandVoiceOptions($pdo)
+{
     $stmt = $pdo->prepare("SELECT * FROM brand_voice_options WHERE is_active = 1 ORDER BY display_order, label");
     $stmt->execute();
     $options = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode(['success' => true, 'options' => $options]);
 }
 
-function addBrandVoiceOption($pdo) {
+function addBrandVoiceOption($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $value = trim($input['value'] ?? '');
     $label = trim($input['label'] ?? '');
     $description = trim($input['description'] ?? '');
     $displayOrder = (int)($input['display_order'] ?? 0);
-    
+
     if (empty($value) || empty($label)) {
         http_response_code(400);
         echo json_encode(['error' => 'Value and label are required']);
         return;
     }
-    
+
     try {
         $stmt = $pdo->prepare("INSERT INTO brand_voice_options (value, label, description, display_order) VALUES (?, ?, ?, ?)");
         $stmt->execute([$value, $label, $description, $displayOrder]);
-        
+
         echo json_encode(['success' => true, 'message' => 'Brand voice option added successfully']);
     } catch (PDOException $e) {
         if ($e->getCode() == 23000) { // Duplicate entry
@@ -147,25 +156,26 @@ function addBrandVoiceOption($pdo) {
     }
 }
 
-function updateBrandVoiceOption($pdo) {
+function updateBrandVoiceOption($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $id = (int)($input['id'] ?? 0);
     $value = trim($input['value'] ?? '');
     $label = trim($input['label'] ?? '');
     $description = trim($input['description'] ?? '');
     $isActive = isset($input['is_active']) ? (bool)$input['is_active'] : true;
     $displayOrder = (int)($input['display_order'] ?? 0);
-    
+
     if ($id <= 0 || empty($value) || empty($label)) {
         http_response_code(400);
         echo json_encode(['error' => 'ID, value and label are required']);
         return;
     }
-    
+
     $stmt = $pdo->prepare("UPDATE brand_voice_options SET value = ?, label = ?, description = ?, is_active = ?, display_order = ? WHERE id = ?");
     $stmt->execute([$value, $label, $description, $isActive, $displayOrder, $id]);
-    
+
     if ($stmt->rowCount() > 0) {
         echo json_encode(['success' => true, 'message' => 'Brand voice option updated successfully']);
     } else {
@@ -174,18 +184,19 @@ function updateBrandVoiceOption($pdo) {
     }
 }
 
-function deleteBrandVoiceOption($pdo) {
+function deleteBrandVoiceOption($pdo)
+{
     $id = (int)($_GET['id'] ?? 0);
-    
+
     if ($id <= 0) {
         http_response_code(400);
         echo json_encode(['error' => 'Valid ID is required']);
         return;
     }
-    
+
     $stmt = $pdo->prepare("DELETE FROM brand_voice_options WHERE id = ?");
     $stmt->execute([$id]);
-    
+
     if ($stmt->rowCount() > 0) {
         echo json_encode(['success' => true, 'message' => 'Brand voice option deleted successfully']);
     } else {
@@ -194,49 +205,51 @@ function deleteBrandVoiceOption($pdo) {
     }
 }
 
-function reorderBrandVoiceOptions($pdo) {
+function reorderBrandVoiceOptions($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
     $orders = $input['orders'] ?? [];
-    
+
     if (empty($orders)) {
         http_response_code(400);
         echo json_encode(['error' => 'Orders array is required']);
         return;
     }
-    
+
     $stmt = $pdo->prepare("UPDATE brand_voice_options SET display_order = ? WHERE id = ?");
-    
+
     foreach ($orders as $order) {
         $id = (int)($order['id'] ?? 0);
         $displayOrder = (int)($order['display_order'] ?? 0);
-        
+
         if ($id > 0) {
             $stmt->execute([$displayOrder, $id]);
         }
     }
-    
+
     echo json_encode(['success' => true, 'message' => 'Brand voice options reordered successfully']);
 }
 
-function getItemMarketingPreferences($pdo) {
+function getItemMarketingPreferences($pdo)
+{
     $sku = $_GET['sku'] ?? '';
-    
+
     if (empty($sku)) {
         http_response_code(400);
         echo json_encode(['error' => 'SKU is required']);
         return;
     }
-    
+
     $stmt = $pdo->prepare("SELECT * FROM item_marketing_preferences WHERE sku = ?");
     $stmt->execute([$sku]);
     $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     // If no preferences exist, get global defaults
     if (!$preferences) {
         $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE category = 'ai' AND setting_key IN ('ai_brand_voice', 'ai_content_tone')");
         $stmt->execute();
         $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-        
+
         $preferences = [
             'sku' => $sku,
             'brand_voice' => $settings['ai_brand_voice'] ?? '',
@@ -246,23 +259,24 @@ function getItemMarketingPreferences($pdo) {
     } else {
         $preferences['is_default'] = false;
     }
-    
+
     echo json_encode(['success' => true, 'preferences' => $preferences]);
 }
 
-function saveItemMarketingPreferences($pdo) {
+function saveItemMarketingPreferences($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $sku = trim($input['sku'] ?? '');
     $brandVoice = trim($input['brand_voice'] ?? '');
     $contentTone = trim($input['content_tone'] ?? '');
-    
+
     if (empty($sku)) {
         http_response_code(400);
         echo json_encode(['error' => 'SKU is required']);
         return;
     }
-    
+
     // Check if item exists
     $stmt = $pdo->prepare("SELECT sku FROM items WHERE sku = ?");
     $stmt->execute([$sku]);
@@ -271,7 +285,7 @@ function saveItemMarketingPreferences($pdo) {
         echo json_encode(['error' => 'Item not found']);
         return;
     }
-    
+
     // Insert or update preferences
     $stmt = $pdo->prepare("
         INSERT INTO item_marketing_preferences (sku, brand_voice, content_tone) 
@@ -281,13 +295,14 @@ function saveItemMarketingPreferences($pdo) {
         content_tone = VALUES(content_tone),
         updated_at = CURRENT_TIMESTAMP
     ");
-    
+
     $stmt->execute([$sku, $brandVoice, $contentTone]);
-    
+
     echo json_encode(['success' => true, 'message' => 'Marketing preferences saved successfully']);
 }
 
-function initializeDefaultOptions($pdo) {
+function initializeDefaultOptions($pdo)
+{
     $defaultOptions = [
         ['friendly_approachable', 'Friendly & Approachable', 'Warm, welcoming, and easy to connect with', 1],
         ['professional_trustworthy', 'Professional & Trustworthy', 'Business-focused, reliable, and credible', 2],
@@ -308,9 +323,9 @@ function initializeDefaultOptions($pdo) {
         ['bold_confident', 'Bold & Confident', 'Strong, assertive, and fearless', 17],
         ['nurturing_supportive', 'Nurturing & Supportive', 'Caring, helpful, and encouraging', 18]
     ];
-    
+
     $stmt = $pdo->prepare("INSERT IGNORE INTO brand_voice_options (value, label, description, display_order) VALUES (?, ?, ?, ?)");
-    
+
     $inserted = 0;
     foreach ($defaultOptions as $option) {
         $result = $stmt->execute($option);
@@ -318,9 +333,9 @@ function initializeDefaultOptions($pdo) {
             $inserted++;
         }
     }
-    
+
     echo json_encode([
-        'success' => true, 
+        'success' => true,
         'message' => "Initialized {$inserted} default brand voice options",
         'total_options' => count($defaultOptions)
     ]);

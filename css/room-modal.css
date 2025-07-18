@@ -60,6 +60,11 @@ body.modal-open #itemPopup.visible {
 }
 
 /* Room Modal Overlay */
+/* When a product popup is active, hide the dimming layer so only the popup is visible */
+.room-modal-overlay.popup-active {
+    background-image: none !important;
+    background: transparent !important;
+}
 .room-modal-overlay {
     position: fixed;
     top: 0;

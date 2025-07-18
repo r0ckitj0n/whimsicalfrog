@@ -1,4 +1,5 @@
 <?php
+
 // Email Configuration for WhimsicalFrog
 // This file handles email sending functionality for order confirmations and notifications
 
@@ -22,7 +23,8 @@ define('SMTP_ENCRYPTION', 'tls'); // 'tls' or 'ssl'
 /**
  * Send email using PHP mail() function or SMTP
  */
-function sendEmail($to, $subject, $htmlBody, $plainTextBody = '') {
+function sendEmail($to, $subject, $htmlBody, $plainTextBody = '')
+{
     $headers = [
         'From: ' . FROM_NAME . ' <' . FROM_EMAIL . '>',
         'Reply-To: ' . FROM_EMAIL,
@@ -30,14 +32,14 @@ function sendEmail($to, $subject, $htmlBody, $plainTextBody = '') {
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=UTF-8'
     ];
-    
+
     // Add BCC if configured
     if (defined('BCC_EMAIL') && BCC_EMAIL) {
         $headers[] = 'Bcc: ' . BCC_EMAIL;
     }
-    
+
     $headerString = implode("\r\n", $headers);
-    
+
     if (SMTP_ENABLED) {
         // Use PHPMailer or similar SMTP library
         // For now, we'll use PHP mail() function
@@ -52,24 +54,25 @@ function sendEmail($to, $subject, $htmlBody, $plainTextBody = '') {
 /**
  * Generate customer order confirmation email HTML
  */
-function generateCustomerConfirmationEmail($orderData, $customerData, $orderItems) {
+function generateCustomerConfirmationEmail($orderData, $customerData, $orderItems)
+{
     // Get brand colors from business settings
     $brandPrimary = BusinessSettings::getPrimaryColor();
     $brandSecondary = BusinessSettings::getSecondaryColor();
-    
+
     $orderId = htmlspecialchars($orderData['id']);
     $customerName = htmlspecialchars(trim(($customerData['first_name'] ?? '') . ' ' . ($customerData['last_name'] ?? '')));
     if (empty(trim($customerName))) {
         $customerName = htmlspecialchars($customerData['username'] ?? 'Valued Customer');
     }
-    
+
     $orderDate = date('F j, Y', strtotime($orderData['date'] ?? 'now'));
     $orderTotal = number_format((float)$orderData['total'], 2);
     $paymentMethod = htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified');
     $shippingMethod = htmlspecialchars($orderData['shippingMethod'] ?? 'Not specified');
     $orderStatus = htmlspecialchars($orderData['order_status'] ?? 'Processing');
     $paymentStatus = htmlspecialchars($orderData['paymentStatus'] ?? 'Pending');
-    
+
     // Build items list
     $itemsHtml = '';
     foreach ($orderItems as $item) {
@@ -77,7 +80,7 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
         $itemQuantity = (int)($item['quantity'] ?? 1);
         $itemPrice = number_format((float)($item['price'] ?? 0), 2);
         $itemTotal = number_format($itemQuantity * (float)($item['price'] ?? 0), 2);
-        
+
         $itemsHtml .= "
             <tr>
                 <td class='email-table-cell'>{$itemName}</td>
@@ -86,7 +89,7 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
                 <td class='email-table-cell email-table-cell-right'>\${$itemTotal}</td>
             </tr>";
     }
-    
+
     // Shipping address
     $shippingAddress = '';
     if (!empty($orderData['shippingAddress'])) {
@@ -106,7 +109,7 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
         }
         $shippingAddress = '<strong>Shipping Address:</strong><br>' . $address;
     }
-    
+
     $html = "
     <!DOCTYPE html>
     <html>
@@ -211,34 +214,35 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
         </div>
     </body>
     </html>";
-    
+
     return $html;
 }
 
 /**
  * Generate admin order notification email HTML
  */
-function generateAdminNotificationEmail($orderData, $customerData, $orderItems) {
+function generateAdminNotificationEmail($orderData, $customerData, $orderItems)
+{
     // Get brand colors from business settings
     $brandPrimary = BusinessSettings::getPrimaryColor();
     $brandSecondary = BusinessSettings::getSecondaryColor();
-    
+
     $orderId = htmlspecialchars($orderData['id']);
     $customerName = htmlspecialchars(trim(($customerData['first_name'] ?? '') . ' ' . ($customerData['last_name'] ?? '')));
     if (empty(trim($customerName))) {
         $customerName = htmlspecialchars($customerData['username'] ?? 'Unknown Customer');
     }
-    
+
     $customerEmail = htmlspecialchars($customerData['email'] ?? 'No email');
     $customerPhone = htmlspecialchars($customerData['phoneNumber'] ?? 'No phone');
-    
+
     $orderDate = date('F j, Y g:i A', strtotime($orderData['date'] ?? 'now'));
     $orderTotal = number_format((float)$orderData['total'], 2);
     $paymentMethod = htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified');
     $shippingMethod = htmlspecialchars($orderData['shippingMethod'] ?? 'Not specified');
     $orderStatus = htmlspecialchars($orderData['order_status'] ?? 'Processing');
     $paymentStatus = htmlspecialchars($orderData['paymentStatus'] ?? 'Pending');
-    
+
     // Build items list
     $itemsHtml = '';
     $totalQuantity = 0;
@@ -248,7 +252,7 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
         $itemPrice = number_format((float)($item['price'] ?? 0), 2);
         $itemTotal = number_format($itemQuantity * (float)($item['price'] ?? 0), 2);
         $totalQuantity += $itemQuantity;
-        
+
         $itemsHtml .= "
             <tr>
                 <td class='email-table-cell'>{$itemName}</td>
@@ -257,7 +261,7 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
                 <td class='email-table-cell email-table-cell-right'>\${$itemTotal}</td>
             </tr>";
     }
-    
+
     // Customer address
     $customerAddress = 'Not provided';
     if (!empty($customerData['addressLine1'])) {
@@ -275,13 +279,13 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
         }
         $customerAddress = $address;
     }
-    
+
     // Shipping address (if different)
     $shippingAddress = '';
     if (!empty($orderData['shippingAddress']) && $orderData['shippingAddress'] !== $customerAddress) {
         $shippingAddress = nl2br(htmlspecialchars($orderData['shippingAddress']));
     }
-    
+
     $html = "
     <!DOCTYPE html>
     <html>
@@ -391,9 +395,9 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems) 
         </div>
     </body>
     </html>";
-    
+
     return $html;
 }
 
 // Note: sendOrderConfirmationEmails function moved to email_notifications.php
-// to avoid function redeclaration conflicts 
+// to avoid function redeclaration conflicts

@@ -1,4 +1,5 @@
 <?php
+
 // Include the configuration file
 require_once __DIR__ . '/config.php';
 
@@ -24,20 +25,25 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     // Validate SKU field
     if (!isset($data['sku']) || empty($data['sku'])) {
         http_response_code(400);
         echo json_encode(['error' => 'Item SKU is required']);
         exit;
     }
-    
+
     // Extract SKU
     $sku = $data['sku'];
-    
+
     // Create database connection using config
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Check if item exists
     $checkStmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE sku = ?');
     $checkStmt->execute([$sku]);
@@ -46,11 +52,11 @@ try {
         echo json_encode(['error' => 'Item not found']);
         exit;
     }
-    
+
     // Delete item
     $stmt = $pdo->prepare('DELETE FROM items WHERE sku = ?');
     $result = $stmt->execute([$sku]);
-    
+
     if ($result) {
         // Return success response
         echo json_encode([
@@ -61,7 +67,7 @@ try {
     } else {
         throw new Exception('Failed to delete item');
     }
-    
+
 } catch (PDOException $e) {
     // Handle database errors
     http_response_code(500);

@@ -6,9 +6,10 @@ require_once __DIR__ . '/../includes/email_helper.php';
 /**
  * Send order confirmation and admin notification emails using templates
  */
-function sendOrderConfirmationEmails($orderId, $pdo) {
+function sendOrderConfirmationEmails($orderId, $pdo)
+{
     $results = ['customer' => false, 'admin' => false];
-    
+
     try {
         // Get order details
         $orderStmt = $pdo->prepare("
@@ -19,12 +20,12 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
         ");
         $orderStmt->execute([$orderId]);
         $order = $orderStmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$order) {
             error_log("Email notification: Order $orderId not found");
             return $results;
         }
-        
+
         // Get order items
         $itemsStmt = $pdo->prepare("
             SELECT oi.*, i.name, i.sku, oi.quantity, oi.price 
@@ -34,7 +35,7 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
         ");
         $itemsStmt->execute([$orderId]);
         $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Get email template assignments
         $assignmentsStmt = $pdo->prepare("
             SELECT eta.email_type, et.* 
@@ -44,21 +45,21 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
         ");
         $assignmentsStmt->execute();
         $assignments = $assignmentsStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         $templates = [];
         foreach ($assignments as $assignment) {
             $templates[$assignment['email_type']] = $assignment;
         }
-        
+
         // Prepare data for email templates
         $customerName = trim(($order['firstName'] ?? '') . ' ' . ($order['lastName'] ?? ''));
         if (empty($customerName)) {
             $customerName = $order['username'] ?? 'Valued Customer';
         }
-        
+
         $orderDate = date('F j, Y g:i A', strtotime($order['date'] ?? 'now'));
         $orderTotal = '$' . number_format((float)$order['total'], 2);
-        
+
         // Format shipping address
         $shippingAddress = 'Not specified';
         if (!empty($order['shippingAddress'])) {
@@ -76,7 +77,7 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
                 $shippingAddress = $order['shippingAddress'];
             }
         }
-        
+
         // Format order items for email
         $itemsListHtml = '';
         $itemsListText = '';
@@ -86,7 +87,7 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
             $itemQuantity = $item['quantity'] ?? 1;
             $itemPrice = '$' . number_format((float)($item['price'] ?? 0), 2);
             $itemTotal = '$' . number_format($itemQuantity * (float)($item['price'] ?? 0), 2);
-            
+
             $itemsListHtml .= "<li class='email-list-item'>";
             $itemsListHtml .= "<strong>{$itemName}</strong>";
             if ($itemSku) {
@@ -95,14 +96,14 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
             $itemsListHtml .= "<br>";
             $itemsListHtml .= "<span class='u-color-666'>Quantity: {$itemQuantity} × {$itemPrice} = {$itemTotal}</span>";
             $itemsListHtml .= "</li>";
-            
+
             $itemsListText .= "- {$itemName}";
             if ($itemSku) {
                 $itemsListText .= " ({$itemSku})";
             }
             $itemsListText .= " - Qty: {$itemQuantity} × {$itemPrice} = {$itemTotal}\n";
         }
-        
+
         // Common email variables
         $emailVariables = [
             'customer_name' => $customerName,
@@ -118,7 +119,7 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
             'order_status' => $order['status'] ?? 'Processing',
             'payment_status' => $order['paymentStatus'] ?? 'Pending'
         ];
-        
+
         // Send customer confirmation email
         if (isset($templates['order_confirmation']) && !empty($order['email'])) {
             $results['customer'] = sendTemplatedEmail(
@@ -128,12 +129,12 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
                 'order_confirmation'
             );
         }
-        
+
         // Send admin notification email
         if (isset($templates['admin_notification'])) {
             // Get admin email from config
             $adminEmail = defined('ADMIN_EMAIL') ? ADMIN_EMAIL : null;
-            
+
             // Also try to get from business settings
             if (!$adminEmail) {
                 try {
@@ -147,7 +148,7 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
                     error_log("Email notification: Could not get admin email from business settings: " . $e->getMessage());
                 }
             }
-            
+
             if ($adminEmail) {
                 $results['admin'] = sendTemplatedEmail(
                     $templates['admin_notification'],
@@ -159,18 +160,19 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
                 error_log("Email notification: No admin email configured for order $orderId");
             }
         }
-        
+
     } catch (Exception $e) {
         error_log("Email notification error for order $orderId: " . $e->getMessage());
     }
-    
+
     return $results;
 }
 
 /**
  * Send an email using a template
  */
-function sendTemplatedEmail($template, $toEmail, $variables, $emailType) {
+function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
+{
     try {
         // Replace variables in subject and content
         $subject = $template['subject'];
@@ -181,14 +183,14 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType) {
         $htmlContent = preg_replace('/<head>/', "<head>\n    <link rel='stylesheet' href='https://whimsicalfrog.us/css/email-styles.css'>", $htmlContent);
         $htmlContent = preg_replace('/<body([^>]*)>/', "<body$1 class='email-body' style=\"-brand-primary: {$brandPrimary}; -brand-secondary: {$brandSecondary};\">", $htmlContent);
         $textContent = $template['text_content'] ?? '';
-        
+
         foreach ($variables as $key => $value) {
             $placeholder = '{' . $key . '}';
             $subject = str_replace($placeholder, $value, $subject);
             $htmlContent = str_replace($placeholder, $value, $htmlContent);
             $textContent = str_replace($placeholder, $value, $textContent);
         }
-        
+
         // Configure EmailHelper
         EmailHelper::configure([
             'smtp_enabled' => defined('SMTP_ENABLED') ? SMTP_ENABLED : false,
@@ -201,17 +203,17 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType) {
             'from_name' => defined('FROM_NAME') ? FROM_NAME : 'WhimsicalFrog',
             'reply_to' => defined('FROM_EMAIL') ? FROM_EMAIL : '',
         ]);
-        
+
         // Send email
         $success = EmailHelper::send($toEmail, $subject, $htmlContent, [
             'is_html' => true
         ]);
-        
+
         // Log the email
         logEmailSend($toEmail, $subject, $emailType, $success ? 'sent' : 'failed', $template['id']);
-        
+
         return $success;
-        
+
     } catch (Exception $e) {
         error_log("Send templated email error: " . $e->getMessage());
         logEmailSend($toEmail, $template['subject'] ?? 'Email', $emailType, 'failed', $template['id'], $e->getMessage());
@@ -222,16 +224,17 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType) {
 /**
  * Log email sending attempts
  */
-function logEmailSend($toEmail, $subject, $emailType, $status, $templateId = null, $errorMessage = null) {
+function logEmailSend($toEmail, $subject, $emailType, $status, $templateId = null, $errorMessage = null)
+{
     try {
         $pdo = new PDO($GLOBALS['dsn'], $GLOBALS['user'], $GLOBALS['pass'], $GLOBALS['options']);
-        
+
         $stmt = $pdo->prepare("
             INSERT INTO email_logs 
             (to_email, subject, email_type, template_id, status, sent_at, error_message) 
             VALUES (?, ?, ?, ?, ?, NOW(), ?)
         ");
-        
+
         $stmt->execute([
             $toEmail,
             $subject,
@@ -240,7 +243,7 @@ function logEmailSend($toEmail, $subject, $emailType, $status, $templateId = nul
             $status,
             $errorMessage
         ]);
-        
+
     } catch (Exception $e) {
         error_log("Email logging error: " . $e->getMessage());
     }

@@ -1,14 +1,13 @@
 <?php
 session_start();
-// ob_start(); // Temporarily removed for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// ob_start(); // Output buffering can be re-enabled if needed
+// Error reporting & logging are configured centrally in api/config.php
 
 // Load centralized systems
 require_once __DIR__ . '/api/config.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/background_helpers.php';
 require_once __DIR__ . '/api/marketing_helper.php';
 
 // Get page parameter
@@ -36,7 +35,7 @@ $welcomeMessage = $isLoggedIn ? getUsername() : '';
 if ($page === 'cart' && !$isLoggedIn) {
     // Store the cart redirect intent
     $_SESSION['redirect_after_login'] = '/?page=cart';
-    
+
     // Redirect to login page
     header('Location: /?page=login');
     exit;
@@ -45,10 +44,10 @@ if ($page === 'cart' && !$isLoggedIn) {
 // Admin page access control - development-friendly
 if (strpos($page, 'admin') === 0 && !$isAdmin && !isAdminWithToken()) {
     // In development mode (localhost), allow admin access without strict authentication
-    $isDevelopment = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) || 
+    $isDevelopment = (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) ||
                      (strpos($_SERVER['SERVER_NAME'] ?? '', 'localhost') !== false) ||
                      ($_SERVER['SERVER_ADDR'] ?? '') === '127.0.0.1';
-    
+
     if (!$isDevelopment) {
         header('Location: /?page=login');
         exit;
@@ -87,13 +86,18 @@ $inventory = [];
 $showSearchBar = true;
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Fetch items data with comprehensive field mapping
     $stmt = $pdo->query('SELECT sku, sku AS inventoryId, name AS productName, stockLevel, retailPrice, description,
                                 category AS productType FROM items ORDER BY category, name');
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     if ($products && is_array($products)) {
         foreach ($products as $product) {
             if (!isset($product['productType'])) {
@@ -117,21 +121,22 @@ try {
             $categories[$category][] = $product;
         }
     }
-    
+
     // Get items for admin sections
     $stmt = $pdo->query('SELECT * FROM items ORDER BY category, name');
     $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Database-driven search bar visibility
-    function shouldShowSearchBar($pdo, $currentPage) {
+    function shouldShowSearchBar($pdo, $currentPage)
+    {
         $pageToRoomMap = [
             'landing' => 0, 'room_main' => 1
         ];
-        
+
         if (!isset($pageToRoomMap[$currentPage])) {
             return true;
         }
-        
+
         try {
             $stmt = $pdo->prepare("SELECT show_search_bar FROM room_settings WHERE room_number = ? AND is_active = 1");
             $stmt->execute([$pageToRoomMap[$currentPage]]);
@@ -141,7 +146,7 @@ try {
             return true;
         }
     }
-    
+
     $showSearchBar = shouldShowSearchBar($pdo, $page);
 
 } catch (PDOException $e) {
@@ -210,6 +215,7 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
     <meta name="twitter:title" content="<?= htmlspecialchars($seoData['title']) ?>">
     <meta name="twitter:description" content="<?= htmlspecialchars($seoData['description']) ?>">
     
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
     <!- External Dependencies ->
     
     
@@ -267,7 +273,7 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
             <!- Logo and Tagline ->
             <div class="header-left">
                 <a href="/?page=landing" class="logo-link">
-                    <?php echo getImageTag('images/logo_whimsicalfrog.png', 'Whimsical Frog', 'header-logo'); ?>
+                    <?php echo getImageTag('images/logos/logo_whimsicalfrog.png', 'Whimsical Frog', 'header-logo'); ?>
                     <span class="logo-text">Whimsical Frog</span>
                 </a>
                 <span class="logo-tagline">Discover unique custom crafts, made with love.</span>
@@ -323,29 +329,36 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
 <?php endif; ?>
 
 <!- Main Content Area ->
+<?php
+// Determine template file path (supports both new root-level files and legacy sections/ folder)
+$pageFile = "sections/{$page}.php";
+if (!file_exists($pageFile)) {
+    $pageFile = "{$page}.php"; // fallback to root-level template
+}
+?>
 <?php if ($isFullscreenPage): ?>
     <div class="fullscreen-container" <?php echo $backgroundStyle; ?>>
-        <?php include "sections/{$page}.php"; ?>
+        <?php include $pageFile; ?>
     </div>
 <?php else: ?>
     <main class="md:p-4 lg:p-6 cottage-bg" id="mainContent" <?php echo $backgroundStyle; ?>>
-        <?php 
-        $pageFile = 'sections/' . $page . '.php';
+        <?php
+        // Use resolved $pageFile unless admin routing overrides
 
         // Route all admin pages through the main admin handler for consistent navbar
         if (strpos($page, 'admin_') === 0) {
             // Direct admin_* pages map to a section under the main admin handler
             $_GET['section'] = substr($page, strlen('admin_'));
-            include 'sections/admin.php';
+            include 'admin/admin.php';
         } elseif ($page === 'admin') {
             // Main admin dashboard
-            include 'sections/admin.php';
+            include 'admin/admin.php';
         } elseif (file_exists($pageFile)) {
             include $pageFile;
         } else {
             echo '<div class="text-center"><h1 class="text-2xl font-bold text-red-600">Page not found</h1></div>';
         }
-        ?>
+    ?>
     </main>
 <?php endif; ?>
 
@@ -375,6 +388,7 @@ if ($debug_js) {
     // Load individual scripts for debugging
     $js_files = [
         'js/utils.js',
+        'js/api-client.js',
         'js/whimsical-frog-core.js',
         'js/central-functions.js',
         'js/wf-unified.js',

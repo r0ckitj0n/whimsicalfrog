@@ -1,12 +1,13 @@
 <?php
 /**
  * Image Carousel Component
- * 
+ *
  * A reusable carousel component for displaying multiple item images
  * that matches the WhimsicalFrog theme
  */
 
-function renderImageCarousel($itemId, $images = [], $options = []) {
+function renderImageCarousel($itemId, $images = [], $options = [])
+{
     $defaults = [
         'id' => 'carousel-' . $itemId,
         'height' => '300px',
@@ -16,10 +17,10 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
         'showControls' => true,
         'autoplay' => false
     ];
-    
+
     $opts = array_merge($defaults, $options);
     $carouselId = $opts['id'];
-    
+
     if (empty($images)) {
         // Show elegant CSS-only fallback instead of placeholder image
         return '
@@ -30,10 +31,10 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
             </div>
         </div>';
     }
-    
+
     $primaryImage = null;
     $otherImages = [];
-    
+
     foreach ($images as $image) {
         if ($image['is_primary']) {
             $primaryImage = $image;
@@ -41,16 +42,16 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
             $otherImages[] = $image;
         }
     }
-    
+
     // If no primary image, use first image as primary
     if (!$primaryImage && !empty($images)) {
         $primaryImage = $images[0];
         $otherImages = array_slice($images, 1);
     }
-    
+
     $allImages = $primaryImage ? array_merge([$primaryImage], $otherImages) : $images;
     $imageCount = count($allImages);
-    
+
     ob_start();
     ?>
     
@@ -189,15 +190,16 @@ function renderImageCarousel($itemId, $images = [], $options = []) {
     return ob_get_clean();
 }
 
-function displayImageCarousel($sku, $showPrimaryBadge = false, $extraClasses = '') {
+function displayImageCarousel($sku, $showPrimaryBadge = false, $extraClasses = '')
+{
     global $pdo;
-    
+
     try {
         // Get item images for this SKU
         $stmt = $pdo->prepare("SELECT * FROM item_images WHERE sku = ? ORDER BY is_primary DESC, id ASC");
         $stmt->execute([$sku]);
         $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         if (empty($images)) {
             // No images found, show elegant CSS-only fallback
             echo '<div class="width_100 product_image_placeholder display_flex flex_col align_center justify_center text_align_center bg_f8f9fa border_radius_normal color_6b7280 ' . $extraClasses . '">';

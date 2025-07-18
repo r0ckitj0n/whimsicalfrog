@@ -1,4 +1,5 @@
 <?php
+
 // Include the configuration file
 require_once 'config.php';
 
@@ -24,14 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     // Validate required fields
     if (!isset($data['orderId']) || empty($data['orderId'])) {
         http_response_code(400);
         echo json_encode(['error' => 'Order ID is required']);
         exit;
     }
-    
+
     $orderId = $data['orderId'];
 
     // Optional fields to update
@@ -101,32 +102,37 @@ try {
         echo json_encode(['error' => 'No valid fields supplied for update']);
         exit;
     }
-    
+
     // Create database connection using config
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Check if order exists
     $checkStmt = $pdo->prepare('SELECT id FROM orders WHERE id = ?');
     $checkStmt->execute([$orderId]);
-    
+
     if (!$checkStmt->fetch()) {
         http_response_code(404);
         echo json_encode(['error' => 'Order not found']);
         exit;
     }
-    
+
     // Build dynamic update query
     $sql = 'UPDATE orders SET ' . implode(', ', $updateMap) . ' WHERE id = :orderId';
     $stmt = $pdo->prepare($sql);
     $result = $stmt->execute($params);
-    
+
     if ($result) {
-        echo json_encode(['success'=>true,'message'=>'Order updated','orderId'=>$orderId]);
+        echo json_encode(['success' => true,'message' => 'Order updated','orderId' => $orderId]);
     } else {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to update order']);
     }
-    
+
 } catch (PDOException $e) {
     // Handle database errors
     http_response_code(500);

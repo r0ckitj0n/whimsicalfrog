@@ -4,7 +4,8 @@
  * Eliminates PHP code duplication across room files
  */
 
-class RoomHelper {
+class RoomHelper
+{
     private $pdo;
     private $roomNumber;
     private $roomType;
@@ -12,20 +13,22 @@ class RoomHelper {
     private $roomCategoryName = '';
     private $roomSettings = null;
     private $seoData = [];
-    
+
     /**
      * Constructor - Initialize room helper
      */
-    public function __construct($roomNumber) {
+    public function __construct($roomNumber)
+    {
         $this->roomNumber = $roomNumber;
         $this->roomType = "room{$roomNumber}";
         $this->initializeDatabase();
     }
-    
+
     /**
      * Initialize database connection
      */
-    private function initializeDatabase() {
+    private function initializeDatabase()
+    {
         try {
             // Use centralized Database class
             $this->pdo = Database::getInstance();
@@ -34,11 +37,12 @@ class RoomHelper {
             throw new Exception("Database connection failed");
         }
     }
-    
+
     /**
      * Load room data including items, settings, and SEO data
      */
-    public function loadRoomData($categories = []) {
+    public function loadRoomData($categories = [])
+    {
         try {
             $this->loadRoomCategory($categories);
             $this->loadRoomSettings();
@@ -50,11 +54,12 @@ class RoomHelper {
             return false;
         }
     }
-    
+
     /**
      * Load primary category for this room
      */
-    private function loadRoomCategory($categories) {
+    private function loadRoomCategory($categories)
+    {
         $stmt = $this->pdo->prepare("
             SELECT rca.*, c.name, c.description, c.id as category_id
             FROM room_category_assignments rca 
@@ -64,30 +69,32 @@ class RoomHelper {
         ");
         $stmt->execute([$this->roomNumber]);
         $primaryCategory = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($primaryCategory) {
             $this->roomCategoryName = $primaryCategory['name'];
-            
+
             // Get items for this category if it exists in loaded categories
             if (isset($categories[$this->roomCategoryName])) {
                 $this->roomItems = $categories[$this->roomCategoryName];
             }
         }
     }
-    
+
     /**
      * Load room settings from database
      */
-    private function loadRoomSettings() {
+    private function loadRoomSettings()
+    {
         $stmt = $this->pdo->prepare("SELECT * FROM room_settings WHERE room_number = ?");
         $stmt->execute([$this->roomNumber]);
         $this->roomSettings = $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    
+
     /**
      * Build SEO data for the room
      */
-    private function buildSeoData() {
+    private function buildSeoData()
+    {
         $this->seoData = [
             'title' => $this->roomSettings ? $this->roomSettings['room_name'] : "Shop {$this->roomCategoryName}",
             'description' => $this->roomSettings ? $this->roomSettings['description'] : "Browse our collection of {$this->roomCategoryName} at WhimsicalFrog",
@@ -97,23 +104,24 @@ class RoomHelper {
             'image' => "images/{$this->roomType}.webp"
         ];
     }
-    
+
     /**
      * Load fallback data when database fails
      */
-    private function loadFallbackData($categories) {
+    private function loadFallbackData($categories)
+    {
         $fallbackMap = [
             '2' => 'T-Shirts',
-            '3' => 'Tumblers', 
+            '3' => 'Tumblers',
             '4' => 'Artwork',
             '5' => 'Sublimation',
             '6' => 'Window Wraps'
         ];
-        
+
         if (isset($fallbackMap[$this->roomNumber]) && isset($categories[$fallbackMap[$this->roomNumber]])) {
             $this->roomCategoryName = $fallbackMap[$this->roomNumber];
             $this->roomItems = $categories[$fallbackMap[$this->roomNumber]];
-            
+
             // Build fallback SEO data
             $this->seoData = [
                 'title' => "Shop {$this->roomCategoryName} - WhimsicalFrog",
@@ -125,11 +133,12 @@ class RoomHelper {
             ];
         }
     }
-    
+
     /**
      * Generate structured data for SEO
      */
-    public function generateStructuredData() {
+    public function generateStructuredData()
+    {
         $structuredData = [
             "@context" => "https://schema.org",
             "@type" => "CollectionPage",
@@ -144,7 +153,7 @@ class RoomHelper {
                 "itemListElement" => []
             ]
         ];
-        
+
         // Add products to structured data
         foreach ($this->seoData['products'] as $index => $product) {
             $structuredData['mainEntity']['itemListElement'][] = [
@@ -164,20 +173,21 @@ class RoomHelper {
                 ]
             ];
         }
-        
+
         return json_encode($structuredData, JSON_UNESCAPED_SLASHES);
     }
-    
+
     /**
      * Render SEO meta tags
      */
-    public function renderSeoTags() {
+    public function renderSeoTags()
+    {
         $title = htmlspecialchars($this->seoData['title'] ?? '');
         $description = htmlspecialchars($this->seoData['description'] ?? '');
         $category = htmlspecialchars($this->seoData['category'] ?? '');
         $canonical = htmlspecialchars($this->seoData['canonical'] ?? '');
         $image = htmlspecialchars($this->seoData['image'] ?? '');
-        
+
         return "
         <!- SEO Meta Tags ->
         <title>{$title} | WhimsicalFrog</title>
@@ -203,20 +213,22 @@ class RoomHelper {
         {$this->generateStructuredData()}
         </script>";
     }
-    
+
     /**
      * Render required CSS links
      */
-    public function renderCssLinks() {
+    public function renderCssLinks()
+    {
         return "
         <!- All room styling now handled by database-driven CSS system ->
         ";
     }
-    
+
     /**
      * Render required JavaScript
      */
-    public function renderJavaScript() {
+    public function renderJavaScript()
+    {
         $coordinates = $this->getRoomCoordinates();
         return sprintf(
             '<script src="js/room-helper.js?v=%s" data-room-items=\'%s\' data-room-number="%s" data-room-type="%s" data-base-areas=\'%s\'></script>',
@@ -227,11 +239,12 @@ class RoomHelper {
             htmlspecialchars(json_encode($coordinates), ENT_QUOTES)
         );
     }
-    
+
     /**
      * Render room container with background
      */
-    public function renderRoomContainer($content = '') {
+    public function renderRoomContainer($content = '')
+    {
         $overlayCss = "";
         return $overlayCss . <<<HTML
 <div class="room-container">
@@ -243,14 +256,15 @@ class RoomHelper {
 </div>
 HTML;
     }
-    
+
     /**
      * Render room header with back button and title
      */
-    public function renderRoomHeader() {
+    public function renderRoomHeader()
+    {
         $roomName = $this->roomSettings['room_name'] ?? $this->roomCategoryName;
         $roomDescription = $this->roomSettings['description'] ?? '';
-        
+
         return "
         <div class=\"room-header-overlay\">
             <div class=\"back-button-container\">
@@ -269,31 +283,32 @@ HTML;
             </div>
         </div>";
     }
-    
+
     /**
      * Render product icons from room items
      */
-    public function renderProductIcons() {
+    public function renderProductIcons()
+    {
         $positionCss = '';
         $html = $positionCss . <<<HTML
 <div class="shelf-area" id="shelf-area">
 HTML;
-         foreach ($this->roomItems as $index => $item) {
-             $stockLevel = intval($item['stockLevel'] ?? 0);
-             $outOfStockClass = $stockLevel <= 0 ? ' out-of-stock' : '';
-             $outOfStockBadge = $stockLevel <= 0 ? '<div class="out-of-stock-badge">Out of Stock</div>' : '';
-            
+        foreach ($this->roomItems as $index => $item) {
+            $stockLevel = intval($item['stockLevel'] ?? 0);
+            $outOfStockClass = $stockLevel <= 0 ? ' out-of-stock' : '';
+            $outOfStockBadge = $stockLevel <= 0 ? '<div class="out-of-stock-badge">Out of Stock</div>' : '';
+
             // Get image path with fallbacks
             $imagePath = $this->getItemImagePath($item);
-            
+
             // Add image information to item data for popup
             $itemWithImage = $item;
             $itemWithImage['primaryImageUrl'] = $imagePath;
-            
+
             // Generate item icon with basic initial positioning to prevent stacking at 0,0
             // $initialTop = 50 + ($index * 80); // Spread items vertically initially
             // $initialLeft = 50 + ($index * 100); // Spread items horizontally initially
-            
+
             $itemWithImageJson = htmlspecialchars(json_encode($itemWithImage));
             $itemJson = htmlspecialchars(json_encode($item));
             $itemAlt = htmlspecialchars($item['name'] ?? $item['productName'] ?? 'Product');
@@ -311,20 +326,21 @@ HTML;
         {$outOfStockBadge}
     </div>
 HTML;
-         }
+        }
         $html .= '</div>';
         return $html;
     }
-    
+
     /**
      * Get room coordinates for positioning items
      */
-    private function getRoomCoordinates() {
+    private function getRoomCoordinates()
+    {
         try {
             $stmt = $this->pdo->prepare("SELECT coordinates FROM room_maps WHERE room_type = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1");
             $stmt->execute([$this->roomType]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($result && !empty($result['coordinates'])) {
                 $coordinates = json_decode($result['coordinates'], true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($coordinates)) {
@@ -334,14 +350,15 @@ HTML;
         } catch (Exception $e) {
             error_log("Error loading room coordinates: " . $e->getMessage());
         }
-        
+
         return [];
     }
-    
+
     /**
      * Get item image path with fallbacks
      */
-    private function getItemImagePath($item) {
+    private function getItemImagePath($item)
+    {
         // Try multiple image path options
         $imagePaths = [
             $item['image'] ?? null,
@@ -350,20 +367,21 @@ HTML;
             "images/items/{$item['sku']}A.png",
             "images/placeholder.png"
         ];
-        
+
         foreach ($imagePaths as $path) {
             if ($path && file_exists($path)) {
                 return $path;
             }
         }
-        
+
         return "images/placeholder.png";
     }
-    
+
     /**
      * Get room data
      */
-    public function getRoomData() {
+    public function getRoomData()
+    {
         return [
             'roomNumber' => $this->roomNumber,
             'roomType' => $this->roomType,
@@ -373,13 +391,31 @@ HTML;
             'seoData' => $this->seoData
         ];
     }
-    
+
     // Getters
-    public function getRoomNumber() { return $this->roomNumber; }
-    public function getRoomType() { return $this->roomType; }
-    public function getRoomItems() { return $this->roomItems; }
-    public function getRoomCategoryName() { return $this->roomCategoryName; }
-    public function getRoomSettings() { return $this->roomSettings; }
-    public function getSeoData() { return $this->seoData; }
+    public function getRoomNumber()
+    {
+        return $this->roomNumber;
+    }
+    public function getRoomType()
+    {
+        return $this->roomType;
+    }
+    public function getRoomItems()
+    {
+        return $this->roomItems;
+    }
+    public function getRoomCategoryName()
+    {
+        return $this->roomCategoryName;
+    }
+    public function getRoomSettings()
+    {
+        return $this->roomSettings;
+    }
+    public function getSeoData()
+    {
+        return $this->seoData;
+    }
 }
 ?> 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Room Helper Functions
- * 
+ *
  * Dynamic functions to get room data from database instead of hardcoded values
  */
 
@@ -11,7 +11,8 @@ require_once __DIR__ . '/config.php';
  * Get all active product rooms (excludes A and B)
  * @return array Array of room numbers
  */
-function getActiveProductRooms() {
+function getActiveProductRooms()
+{
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
@@ -33,7 +34,8 @@ function getActiveProductRooms() {
  * Get all valid room numbers (A, B, plus all product rooms)
  * @return array Array of valid room numbers
  */
-function getAllValidRooms() {
+function getAllValidRooms()
+{
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
@@ -59,7 +61,8 @@ function getAllValidRooms() {
  * Get core rooms that cannot be deleted
  * @return array Array of core room numbers
  */
-function getCoreRooms() {
+function getCoreRooms()
+{
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
@@ -80,7 +83,8 @@ function getCoreRooms() {
  * Get room data for main room doors
  * @return array Array of room data with room_number, room_name, door_label, etc.
  */
-function getRoomDoorsData() {
+function getRoomDoorsData()
+{
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
@@ -102,7 +106,8 @@ function getRoomDoorsData() {
  * Get room type mappings for backgrounds
  * @return array Associative array of room_number => room_type
  */
-function getRoomTypeMapping() {
+function getRoomTypeMapping()
+{
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
@@ -129,7 +134,8 @@ function getRoomTypeMapping() {
  * @param string $roomNumber Room number to validate
  * @return bool True if valid, false otherwise
  */
-function isValidRoom($roomNumber) {
+function isValidRoom($roomNumber)
+{
     $validRooms = getAllValidRooms();
     // If no valid rooms available, reject validation
     if (empty($validRooms)) {
@@ -143,7 +149,8 @@ function isValidRoom($roomNumber) {
  * @param string $roomNumber Room number to check
  * @return bool True if product room, false otherwise
  */
-function isProductRoom($roomNumber) {
+function isProductRoom($roomNumber)
+{
     return !in_array($roomNumber, ['A', 'B']) && isValidRoom($roomNumber);
 }
 
@@ -151,7 +158,8 @@ function isProductRoom($roomNumber) {
  * Get room data as JSON for JavaScript
  * @return string JSON string of room data
  */
-function getRoomDataAsJson() {
+function getRoomDataAsJson()
+{
     $roomData = [
         'validRooms' => getAllValidRooms(),
         'productRooms' => getActiveProductRooms(),
@@ -165,7 +173,8 @@ function getRoomDataAsJson() {
  * Get room display type mapping for backgrounds
  * @return array Associative array of room_number => display type ('fullscreen' or 'modal')
  */
-function getRoomDisplayTypeMapping() {
+function getRoomDisplayTypeMapping()
+{
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare(

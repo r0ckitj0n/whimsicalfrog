@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog System Cleanup and Maintenance
  * Centralized system functions to eliminate duplication
@@ -10,11 +11,12 @@ require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/file_helper.php';
 
 
-function cleanupStaleFiles() {
+function cleanupStaleFiles()
+{
     $unusedFiles = getUnusedFiles();
     $removed = [];
     $errors = [];
-    
+
     foreach ($unusedFiles as $file) {
         try {
             if (unlink($file['path'])) {
@@ -27,7 +29,7 @@ function cleanupStaleFiles() {
             ];
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'removed_files' => $removed,
@@ -37,21 +39,22 @@ function cleanupStaleFiles() {
 }
 
 
-function removeUnusedCode() {
+function removeUnusedCode()
+{
     $processed = [];
     $errors = [];
-    
+
     // Remove stale comments from files
     $staleComments = getStaleComments();
     $filesProcessed = [];
-    
+
     foreach ($staleComments as $comment) {
         $filePath = '../' . $comment['file'];
-        
+
         if (!in_array($filePath, $filesProcessed)) {
             try {
                 $content = file_get_contents($filePath);
-                
+
                 // Remove various types of stale comments
                 $patterns = [
                     '/\/\*\*?\s*TODO[^*]*\*\/\s*/',
@@ -63,18 +66,18 @@ function removeUnusedCode() {
                     '/\/\*\*?\s*OLD[^*]*\*\/\s*/',
                     '/\/\/\s*TEMP.*\n/'
                 ];
-                
+
                 $originalContent = $content;
                 foreach ($patterns as $pattern) {
                     $content = preg_replace($pattern, '', $content);
                 }
-                
+
                 if ($content !== $originalContent) {
                     file_put_contents($filePath, $content);
                     $filesProcessed[] = $filePath;
                     $processed[] = str_replace('../', '', $filePath);
                 }
-                
+
             } catch (Exception $e) {
                 $errors[] = [
                     'file' => $comment['file'],
@@ -83,7 +86,7 @@ function removeUnusedCode() {
             }
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'processed_files' => $processed,
@@ -93,20 +96,21 @@ function removeUnusedCode() {
 }
 
 
-function optimizeDatabase($pdo) {
+function optimizeDatabase($pdo)
+{
     $startTime = microtime(true);
     $optimized = [];
     $errors = [];
     $details = [];
-    
+
     try {
         // Get all tables with their sizes
         $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
         $totalTables = count($tables);
-        
+
         foreach ($tables as $index => $table) {
             $tableStartTime = microtime(true);
-            
+
             try {
                 // Get table info before optimization
                 $sizeQuery = "SELECT 
@@ -115,21 +119,21 @@ function optimizeDatabase($pdo) {
                     table_rows
                 FROM information_schema.TABLES 
                 WHERE table_schema = DATABASE() AND table_name = ?";
-                
+
                 $stmt = $pdo->prepare($sizeQuery);
                 $stmt->execute([$table]);
                 $beforeInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
                 // Optimize table
                 $optimizeResult = $pdo->query("OPTIMIZE TABLE `$table`")->fetch(PDO::FETCH_ASSOC);
-                
+
                 // Get table info after optimization
                 $stmt->execute([$table]);
                 $afterInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
                 $tableEndTime = microtime(true);
                 $tableTime = round(($tableEndTime - $tableStartTime), 3);
-                
+
                 $tableDetails = [
                     'table' => $table,
                     'status' => $optimizeResult['Msg_text'] ?? 'OK',
@@ -138,15 +142,15 @@ function optimizeDatabase($pdo) {
                     'time_seconds' => $tableTime,
                     'progress' => round((($index + 1) / $totalTables) * 100, 1)
                 ];
-                
+
                 if ($beforeInfo && $afterInfo) {
                     $sizeDiff = (float)$beforeInfo['size_mb'] - (float)$afterInfo['size_mb'];
                     $tableDetails['space_reclaimed_mb'] = round($sizeDiff, 3);
                 }
-                
+
                 $optimized[] = $table;
                 $details[] = $tableDetails;
-                
+
             } catch (Exception $e) {
                 $errors[] = [
                     'table' => $table,
@@ -155,10 +159,10 @@ function optimizeDatabase($pdo) {
                 ];
             }
         }
-        
+
         $totalTime = round((microtime(true) - $startTime), 3);
         $totalSpaceReclaimed = array_sum(array_column($details, 'space_reclaimed_mb'));
-        
+
         echo json_encode([
             'success' => true,
             'optimized_tables' => $optimized,
@@ -171,13 +175,11 @@ function optimizeDatabase($pdo) {
                 'total_time_seconds' => $totalTime,
                 'total_space_reclaimed_mb' => round($totalSpaceReclaimed, 3)
             ],
-            'message' => count($optimized) . " of $totalTables tables optimized successfully in {$totalTime}s" . 
+            'message' => count($optimized) . " of $totalTables tables optimized successfully in {$totalTime}s" .
                         ($totalSpaceReclaimed > 0 ? ", reclaimed {$totalSpaceReclaimed}MB" : "")
         ]);
-        
+
     } catch (Exception $e) {
         throw new Exception('Database optimization failed: ' . $e->getMessage());
     }
 }
-
-?>

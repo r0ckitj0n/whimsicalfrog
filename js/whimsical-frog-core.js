@@ -84,10 +84,9 @@
         
         WF_CORE.modules[name] = {
             ...moduleDef,
-            ...module,
             initialized: false,
-            dependencies: module.dependencies || [],
-            priority: module.priority || 0
+            dependencies: moduleDef.dependencies || [],
+            priority: moduleDef.priority || 0
         };
         
         log(`Module registered: ${name}`);

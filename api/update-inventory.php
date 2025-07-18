@@ -1,4 +1,5 @@
 <?php
+
 // Include the configuration file
 require_once __DIR__ . '/config.php';
 
@@ -24,16 +25,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     // Create database connection using config
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Handle field updates
     if (isset($data['sku']) && isset($data['field']) && isset($data['value'])) {
         $sku = $data['sku'];
         $field = $data['field'];
         $value = $data['value'];
-        
+
         // Validate field
         $allowedFields = ['name', 'category', 'stockLevel', 'reorderPoint', 'costPrice', 'retailPrice', 'description'];
         if (!in_array($field, $allowedFields)) {
@@ -41,11 +47,11 @@ try {
             echo json_encode(['error' => 'Invalid field']);
             exit;
         }
-        
+
         // Update the field
         $stmt = $pdo->prepare("UPDATE items SET `$field` = ? WHERE sku = ?");
         $result = $stmt->execute([$value, $sku]);
-        
+
         if ($result) {
             echo json_encode([
                 'success' => true,
@@ -64,7 +70,7 @@ try {
                 exit;
             }
         }
-        
+
         $sku = $data['sku'];
         $name = $data['name'];
         $category = $data['category'] ?? '';
@@ -73,11 +79,11 @@ try {
         $costPrice = floatval($data['costPrice'] ?? 0);
         $retailPrice = floatval($data['retailPrice'] ?? 0);
         $description = $data['description'] ?? '';
-        
+
         // Update the item
         $stmt = $pdo->prepare('UPDATE items SET name = ?, category = ?, stockLevel = ?, reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ? WHERE sku = ?');
         $result = $stmt->execute([$name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description, $sku]);
-        
+
         if ($result) {
             echo json_encode([
                 'success' => true,
@@ -87,7 +93,7 @@ try {
             throw new Exception('Failed to update item');
         }
     }
-    
+
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode([

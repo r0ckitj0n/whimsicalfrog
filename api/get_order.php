@@ -1,4 +1,5 @@
 <?php
+
 // Include the configuration file
 require_once 'config.php';
 
@@ -24,15 +25,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 try {
     // Create database connection
     $pdo = Database::getInstance();
-    
+
     // Get order ID
     $orderId = $_GET['id'] ?? '';
-    
+
     if (empty($orderId)) {
         echo json_encode(['success' => false, 'error' => 'Order ID is required']);
         exit;
     }
-    
+
     // Get order with user information
     $stmt = $pdo->prepare("SELECT o.*, u.username, u.email, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
                           FROM orders o 
@@ -40,12 +41,12 @@ try {
                           WHERE o.id = ?");
     $stmt->execute([$orderId]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$order) {
         echo json_encode(['success' => false, 'error' => 'Order not found']);
         exit;
     }
-    
+
     // Get order items
     $stmt = $pdo->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) as item_name, i.retailPrice 
                           FROM order_items oi 
@@ -53,14 +54,14 @@ try {
                           WHERE oi.orderId = ?");
     $stmt->execute([$orderId]);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Return the order details
     echo json_encode([
         'success' => true,
         'order' => $order,
         'items' => $items
     ]);
-    
+
 } catch (PDOException $e) {
     // Handle database errors
     http_response_code(500);
@@ -77,4 +78,4 @@ try {
         'error' => 'An unexpected error occurred',
         'details' => $e->getMessage()
     ]);
-} 
+}

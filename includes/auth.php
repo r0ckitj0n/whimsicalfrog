@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog User Authentication and Authorization
  * Centralized functions to eliminate duplication and improve maintainability
@@ -13,7 +14,8 @@ require_once __DIR__ . '/database.php';
  * Check if user is logged in
  * @return bool
  */
-function isLoggedIn() {
+function isLoggedIn()
+{
     return isset($_SESSION['user']) && !empty($_SESSION['user']);
 }
 
@@ -22,13 +24,14 @@ function isLoggedIn() {
  * Get current user data
  * @return array|null
  */
-function getCurrentUser() {
+function getCurrentUser()
+{
     if (!isLoggedIn()) {
         return null;
     }
-    
+
     $userData = $_SESSION['user'];
-    
+
     // Handle both string and array formats (normalize to array)
     if (is_string($userData)) {
         $decoded = json_decode($userData, true);
@@ -54,12 +57,13 @@ function getCurrentUser() {
  * Check if current user is admin
  * @return bool
  */
-function isAdmin() {
+function isAdmin()
+{
     $user = getCurrentUser();
     if (!$user) {
         return false;
     }
-    
+
     $role = strtolower($user['role'] ?? '');
     return $role === 'admin';
 }
@@ -69,7 +73,8 @@ function isAdmin() {
  * Get user role
  * @return string
  */
-function getUserRole() {
+function getUserRole()
+{
     $user = getCurrentUser();
     return $user['role'] ?? 'guest';
 }
@@ -79,7 +84,8 @@ function getUserRole() {
  * Get user ID
  * @return string|null
  */
-function getUserId() {
+function getUserId()
+{
     $user = getCurrentUser();
     return $user['userId'] ?? null;
 }
@@ -89,7 +95,8 @@ function getUserId() {
  * Get username
  * @return string|null
  */
-function getUsername() {
+function getUsername()
+{
     $user = getCurrentUser();
     return $user['username'] ?? null;
 }
@@ -99,7 +106,8 @@ function getUsername() {
  * Require authentication (redirect if not logged in)
  * @param string $redirectTo Where to redirect after login
  */
-function requireAuth($redirectTo = null) {
+function requireAuth($redirectTo = null)
+{
     if (!isLoggedIn()) {
         if ($redirectTo) {
             $_SESSION['redirect_after_login'] = $redirectTo;
@@ -114,7 +122,8 @@ function requireAuth($redirectTo = null) {
  * Require admin privileges
  * @param bool $apiResponse Whether to return JSON response instead of redirect
  */
-function requireAdmin($apiResponse = false) {
+function requireAdmin($apiResponse = false)
+{
     if (!isLoggedIn()) {
         if ($apiResponse) {
             http_response_code(401);
@@ -126,7 +135,7 @@ function requireAdmin($apiResponse = false) {
             exit;
         }
     }
-    
+
     if (!isAdmin()) {
         if ($apiResponse) {
             http_response_code(403);
@@ -146,21 +155,22 @@ function requireAdmin($apiResponse = false) {
  * @param string $validToken Optional admin token for fallback auth
  * @return bool
  */
-function isAdminWithToken($validToken = 'whimsical_admin_2024') {
+function isAdminWithToken($validToken = 'whimsical_admin_2024')
+{
     // First check session-based admin
     if (isAdmin()) {
         return true;
     }
-    
+
     // Check for admin token fallback in POST/GET
     $providedToken = $_POST['admin_token'] ?? $_GET['admin_token'] ?? '';
-    
+
     // Also check JSON body
     if (empty($providedToken)) {
         $jsonInput = json_decode(file_get_contents('php://input'), true);
         $providedToken = $jsonInput['admin_token'] ?? '';
     }
-    
+
     return $providedToken === $validToken;
 }
 
@@ -170,21 +180,22 @@ function isAdminWithToken($validToken = 'whimsical_admin_2024') {
  * @param bool $requireAdmin Whether admin privileges are required
  * @param string $adminToken Optional admin token for fallback
  */
-function checkApiAuth($requireAdmin = false, $adminToken = 'whimsical_admin_2024') {
+function checkApiAuth($requireAdmin = false, $adminToken = 'whimsical_admin_2024')
+{
     header('Content-Type: application/json');
-    
+
     if (!isLoggedIn()) {
         // Check for admin token fallback if admin is required
         if ($requireAdmin && $adminToken) {
             // Check POST, GET, and JSON body for admin token
             $providedToken = $_POST['admin_token'] ?? $_GET['admin_token'] ?? '';
-            
+
             // Also check JSON body
             if (empty($providedToken)) {
                 $jsonInput = json_decode(file_get_contents('php://input'), true);
                 $providedToken = $jsonInput['admin_token'] ?? '';
             }
-            
+
             if ($providedToken !== $adminToken) {
                 http_response_code(401);
                 echo json_encode(['error' => 'Authentication required']);
@@ -196,7 +207,7 @@ function checkApiAuth($requireAdmin = false, $adminToken = 'whimsical_admin_2024
             exit;
         }
     }
-    
+
     if ($requireAdmin && !isAdminWithToken($adminToken)) {
         http_response_code(403);
         echo json_encode(['error' => 'Admin privileges required']);
@@ -209,7 +220,8 @@ function checkApiAuth($requireAdmin = false, $adminToken = 'whimsical_admin_2024
  * Login user
  * @param array $userData User data from database
  */
-function loginUser($userData) {
+function loginUser($userData)
+{
     $_SESSION['user'] = [
         'userId' => $userData['id'] ?? $userData['userId'],
         'username' => $userData['username'],
@@ -224,7 +236,8 @@ function loginUser($userData) {
 /**
  * Logout user
  */
-function logoutUser() {
+function logoutUser()
+{
     // Ensure session is active
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
@@ -233,5 +246,3 @@ function logoutUser() {
     session_unset();
     session_destroy();
 }
-
-?>

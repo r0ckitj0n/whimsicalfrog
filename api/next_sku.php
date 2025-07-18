@@ -1,4 +1,5 @@
 <?php
+
 // Enhanced SKU endpoint that supports gender, size, and color attributes
 // Usage: /api/next_sku.php?cat=Tumblers&gender=Male&size=L&color=Black
 
@@ -7,23 +8,24 @@ require_once __DIR__ . '/../includes/functions.php';
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
-    $isAdmin = false;
-    
-    // Check session authentication first
-    require_once __DIR__ . '/../includes/auth.php'; if (isAdminWithToken()) {
-        $isAdmin = true;
-    }
-    
-    // Admin token fallback for API access
-    if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
-        $isAdmin = true;
-    }
-    
-    if (!$isAdmin) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Admin access required']);
-        exit;
-    }
+$isAdmin = false;
+
+// Check session authentication first
+require_once __DIR__ . '/../includes/auth.php';
+if (isAdminWithToken()) {
+    $isAdmin = true;
+}
+
+// Admin token fallback for API access
+if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
+    $isAdmin = true;
+}
+
+if (!$isAdmin) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Admin access required']);
+    exit;
+}
 
 try {
     // Validate required parameter
@@ -31,13 +33,13 @@ try {
     if (empty($category)) {
         Response::error('Category parameter is required');
     }
-    
+
     // Optional enhanced parameters
     $gender = $_GET['gender'] ?? '';
     $size = $_GET['size'] ?? '';
     $color = $_GET['color'] ?? '';
     $enhanced = $_GET['enhanced'] ?? 'false'; // Set to 'true' for enhanced SKUs
-    
+
     // Log the request for audit trail
     Logger::userAction('generate_sku', [
         'category' => $category,
@@ -46,20 +48,20 @@ try {
         'color' => $color,
         'enhanced' => $enhanced
     ]);
-    
+
     if ($enhanced === 'true' && (!empty($gender) || !empty($size) || !empty($color))) {
         $newSku = generateEnhancedSku($category, $gender, $size, $color);
     } else {
         $newSku = generateSkuForCategory($category);
     }
-    
+
     // Log successful generation
     Logger::info('SKU generated successfully', [
         'category' => $category,
         'sku' => $newSku,
         'enhanced' => $enhanced === 'true'
     ]);
-    
+
     Response::success([
         'sku' => $newSku,
         'category' => $category,
@@ -70,25 +72,26 @@ try {
             'color' => $color
         ]
     ]);
-    
+
 } catch (Exception $e) {
     Logger::exception($e, 'Failed to generate SKU');
     Response::serverError('Failed to generate SKU: ' . $e->getMessage());
 }
 
-function generateSkuForCategory($category) {
+function generateSkuForCategory($category)
+{
     // Get category code - first 2 letters of category, uppercase
     $categoryCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $category), 0, 2));
     if (strlen($categoryCode) < 2) {
         $categoryCode = 'GN'; // General fallback
     }
-    
+
     // Find the highest existing number for this category using centralized database
     $lastSku = Database::queryRow(
         "SELECT sku FROM items WHERE sku LIKE ? ORDER BY sku DESC LIMIT 1",
         ["WF-{$categoryCode}-%"]
     );
-    
+
     $nextNum = 1;
     if ($lastSku && $lastSku['sku']) {
         $parts = explode('-', $lastSku['sku']);
@@ -96,20 +99,21 @@ function generateSkuForCategory($category) {
             $nextNum = intval($parts[2]) + 1;
         }
     }
-    
+
     return sprintf('WF-%s-%03d', $categoryCode, $nextNum);
 }
 
-function generateEnhancedSku($category, $gender = '', $size = '', $color = '') {
+function generateEnhancedSku($category, $gender = '', $size = '', $color = '')
+{
     // Get category code - first 2 letters of category, uppercase
     $categoryCode = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $category), 0, 2));
     if (strlen($categoryCode) < 2) {
         $categoryCode = 'GN'; // General fallback
     }
-    
+
     // Build attribute parts
     $attributeParts = [];
-    
+
     // Add gender code
     if (!empty($gender)) {
         $genderCode = getGenderCode($gender);
@@ -117,7 +121,7 @@ function generateEnhancedSku($category, $gender = '', $size = '', $color = '') {
             $attributeParts[] = $genderCode;
         }
     }
-    
+
     // Add size code
     if (!empty($size)) {
         $sizeCode = getSizeCode($size);
@@ -125,7 +129,7 @@ function generateEnhancedSku($category, $gender = '', $size = '', $color = '') {
             $attributeParts[] = $sizeCode;
         }
     }
-    
+
     // Add color code
     if (!empty($color)) {
         $colorCode = getColorCode($color);
@@ -133,17 +137,17 @@ function generateEnhancedSku($category, $gender = '', $size = '', $color = '') {
             $attributeParts[] = $colorCode;
         }
     }
-    
+
     // Build the pattern for finding existing SKUs with attributes
     $attributeString = !empty($attributeParts) ? '-' . implode('-', $attributeParts) : '';
     $searchPattern = "WF-{$categoryCode}{$attributeString}-%";
-    
+
     // Find the highest existing number for this category/attribute combination
     $lastSku = Database::queryRow(
         "SELECT sku FROM items WHERE sku LIKE ? ORDER BY sku DESC LIMIT 1",
         [$searchPattern]
     );
-    
+
     $nextNum = 1;
     if ($lastSku && $lastSku['sku']) {
         // Extract the number from the end of the SKU
@@ -153,17 +157,18 @@ function generateEnhancedSku($category, $gender = '', $size = '', $color = '') {
             $nextNum = intval($lastPart) + 1;
         }
     }
-    
+
     // Build final SKU: WF-TS-M-L-BLK-001
     if (!empty($attributeParts)) {
         return sprintf('WF-%s-%s-%03d', $categoryCode, implode('-', $attributeParts), $nextNum);
     }
-    
+
     // Fallback to basic SKU if no attributes
     return sprintf('WF-%s-%03d', $categoryCode, $nextNum);
 }
 
-function getGenderCode($gender) {
+function getGenderCode($gender)
+{
     $genderMap = [
         'Male' => 'M',
         'Female' => 'F',
@@ -175,11 +180,12 @@ function getGenderCode($gender) {
         'Boys' => 'B',
         'Girls' => 'G'
     ];
-    
+
     return $genderMap[ucfirst(strtolower($gender))] ?? strtoupper(substr($gender, 0, 1));
 }
 
-function getSizeCode($size) {
+function getSizeCode($size)
+{
     // Handle standard size codes
     $sizeMap = [
         'Extra Small' => 'XS',
@@ -190,17 +196,18 @@ function getSizeCode($size) {
         'Double XL' => 'XXL',
         'Triple XL' => 'XXXL'
     ];
-    
+
     // Check if it's already a code
     if (strlen($size) <= 4 && ctype_alpha($size)) {
         return strtoupper($size);
     }
-    
+
     // Try to find in map
     return $sizeMap[ucfirst($size)] ?? strtoupper(substr($size, 0, 2));
 }
 
-function getColorCode($color) {
+function getColorCode($color)
+{
     $colorMap = [
         'Black' => 'BLK',
         'White' => 'WHT',
@@ -234,19 +241,19 @@ function getColorCode($color) {
         'Tan' => 'TAN',
         'Cream' => 'CRM'
     ];
-    
+
     // Check if it's already a 3-letter code
     if (strlen($color) === 3 && ctype_alpha($color)) {
         return strtoupper($color);
     }
-    
+
     // Try to find in map
     $mapped = $colorMap[ucfirst($color)] ?? null;
     if ($mapped) {
         return $mapped;
     }
-    
+
     // Generate 3-letter code from color name
     $clean = preg_replace('/[^a-zA-Z]/', '', $color);
     return strtoupper(substr($clean, 0, 3));
-} 
+}

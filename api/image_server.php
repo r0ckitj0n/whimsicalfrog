@@ -1,7 +1,7 @@
 <?php
 /**
  * Smart Image Server - Dual Format Support
- * 
+ *
  * Automatically serves WebP to modern browsers and PNG to older browsers
  * for maximum compatibility while maintaining optimal performance.
  */
@@ -19,7 +19,8 @@ if (empty($imagePath)) {
 $imagePath = str_replace(['../', '../', '..\\', '..\\\\'], '', $imagePath);
 
 // Determine if browser supports WebP
-function supportsWebP() {
+function supportsWebP()
+{
     $acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? '';
     return strpos($acceptHeader, 'image/webp') !== false;
 }

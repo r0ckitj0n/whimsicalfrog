@@ -5,9 +5,14 @@ header('Content-Type: application/json');
 
 try {
     // Create PDO connection
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
     $reasoningText = $_GET['text'] ?? '';
-    
+
     if (empty($reasoningText)) {
         echo json_encode([
             'success' => false,
@@ -15,10 +20,10 @@ try {
         ]);
         exit;
     }
-    
+
     // Convert reasoning text to lowercase for matching
     $text = strtolower($reasoningText);
-    
+
     // Define keyword mapping for better matching
     $keywordMap = [
         'market research' => 'market_research',
@@ -40,7 +45,7 @@ try {
         'skimming' => 'skimming_pricing',
         'bundle' => 'bundle_pricing'
     ];
-    
+
     // Find matching keyword
     $matchedKeyword = null;
     foreach ($keywordMap as $phrase => $keyword) {
@@ -49,7 +54,7 @@ try {
             break;
         }
     }
-    
+
     // Default to generic AI analysis if no specific match
     if (!$matchedKeyword) {
         echo json_encode([
@@ -59,12 +64,12 @@ try {
         ]);
         exit;
     }
-    
+
     // Get explanation from database
     $stmt = $pdo->prepare("SELECT title, explanation FROM pricing_explanations WHERE keyword = ?");
     $stmt->execute([$matchedKeyword]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($result) {
         echo json_encode([
             'success' => true,
@@ -78,7 +83,7 @@ try {
             'explanation' => 'Advanced algorithmic analysis considering multiple market factors and pricing strategies.'
         ]);
     }
-    
+
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,

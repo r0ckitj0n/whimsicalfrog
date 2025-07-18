@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../api/config.php';
 
 echo "Connecting to the database...\n";
@@ -14,19 +15,19 @@ try {
 
     foreach ($updates as $update) {
         echo "Updating entry for page: {$update['page']}...\n";
-        
+
         $stmt = $pdo->prepare(
             'UPDATE backgrounds SET image_filename = :new_png, webp_filename = :new_webp WHERE image_filename = :old_png'
         );
-        
+
         $stmt->execute([
             ':new_png' => $update['new_png'],
             ':new_webp' => $update['new_webp'],
             ':old_png' => $update['old_png']
         ]);
-        
+
         $rowCount = $stmt->rowCount();
-        
+
         if ($rowCount > 0) {
             echo "Success: Updated $rowCount row(s) for {$update['page']}. ('{$update['old_png']}' -> '{$update['new_png']}').\n";
         } else {

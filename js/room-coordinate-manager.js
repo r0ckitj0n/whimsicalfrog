@@ -6,6 +6,18 @@
 
 console.log('Loading room-coordinate-manager.js...');
 
+// Ensure apiGet helper exists inside iframe context
+if (typeof window.apiGet !== 'function') {
+  window.apiGet = async function(endpoint) {
+    const url = endpoint.startsWith('/') ? endpoint : `/api/${endpoint}`;
+    const res = await fetch(url, { credentials: 'same-origin' });
+    if (!res.ok) {
+      throw new Error(`Request failed (${res.status})`);
+    }
+    return res.json();
+  };
+}
+
 // Room coordinate management system
 window.RoomCoordinates = window.RoomCoordinates || {};
 
@@ -74,18 +86,17 @@ function updateAreaCoordinates() {
     });
     
     console.log(`Updated ${window.baseAreas.length} room areas for ${window.ROOM_TYPE}`);
+    // Re-bind item hover/click events now that areas are placed
+    if (typeof window.setupPopupEventsAfterPositioning === 'function') {
+        window.setupPopupEventsAfterPositioning();
+    }
 }
 
 async function loadRoomCoordinatesFromDatabase() {
     try {
-        const response = await fetch(`api/get_room_coordinates.php?room_type=${window.ROOM_TYPE}`);
+        const data = await apiGet(`get_room_coordinates.php?room_type=${window.ROOM_TYPE}`);
         
-        // Check if the response is ok (not 500 error)
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: Database not available`);
-        }
         
-        const data = await response.json();
         
         if (data.success && data.coordinates && data.coordinates.length > 0) {
             window.baseAreas = data.coordinates;
@@ -138,8 +149,10 @@ function waitForWrapperAndUpdate(retries = 10) {
 
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Add a small delay to ensure room helper variables are set
-    setTimeout(initializeRoomCoordinates, 100);
+    if (window.ROOM_TYPE) {
+        // Add a small delay to ensure room helper variables are set
+        setTimeout(initializeRoomCoordinates, 100);
+    }
 });
 
 console.log('room-coordinate-manager.js loaded successfully');

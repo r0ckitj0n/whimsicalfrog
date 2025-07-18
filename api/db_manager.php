@@ -29,11 +29,16 @@ if (!isAdminWithToken()) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     $action = $_POST['action'] ?? $_GET['action'] ?? $input['action'] ?? 'status';
     $result = ['success' => false, 'message' => '', 'data' => null];
-    
+
     switch ($action) {
         case 'status':
             // Get database status and basic info
@@ -50,7 +55,7 @@ try {
                 ]
             ];
             break;
-            
+
         case 'query':
             // Execute a custom SQL query
             $sql = $_POST['sql'] ?? $input['sql'] ?? '';
@@ -58,16 +63,16 @@ try {
                 $result = ['success' => false, 'error' => 'No SQL query provided'];
                 break;
             }
-            
+
             // Security: Only allow SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP
             $allowedOperations = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'ALTER', 'DROP', 'SHOW', 'DESCRIBE'];
             $firstWord = strtoupper(trim(explode(' ', trim($sql))[0]));
-            
+
             if (!in_array($firstWord, $allowedOperations)) {
                 $result = ['success' => false, 'error' => 'SQL operation not allowed: ' . $firstWord];
                 break;
             }
-            
+
             try {
                 if (in_array($firstWord, ['SELECT', 'SHOW', 'DESCRIBE'])) {
                     // Read operations
@@ -93,34 +98,34 @@ try {
                 $result = ['success' => false, 'error' => 'SQL Error: ' . $e->getMessage()];
             }
             break;
-            
+
         case 'email_logs':
             // Get email logs with optional filters
             $limit = $_POST['limit'] ?? 10;
             $offset = $_POST['offset'] ?? 0;
             $type_filter = $_POST['type_filter'] ?? '';
-            
+
             $sql = "SELECT * FROM email_logs";
             $params = [];
-            
+
             if (!empty($type_filter)) {
                 $sql .= " WHERE email_type = :type";
                 $params[':type'] = $type_filter;
             }
-            
+
             $sql .= " ORDER BY sent_at DESC LIMIT :limit OFFSET :offset";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-            
+
             foreach ($params as $key => $value) {
                 $stmt->bindValue($key, $value);
             }
-            
+
             $stmt->execute();
             $emails = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             $result = [
                 'success' => true,
                 'message' => 'Email logs retrieved',
@@ -128,7 +133,7 @@ try {
                 'count' => count($emails)
             ];
             break;
-            
+
         case 'fix_sample_email':
             // Direct sample email fix without separate script
             $sampleEmailContent = '
@@ -185,16 +190,18 @@ try {
                     <p>This is an automated email. Please do not reply to this email address.</p>
                 </div>
             </div>';
-            
+
             // Try multiple strategies to update sample email
             $updated = false;
             $updateMessage = "";
-            
+
             // Strategy 1: Update by subject patterns
             $patterns = ['%Email System Initialized%', '%Email Logging System%', '%initialized%'];
             foreach ($patterns as $pattern) {
-                if ($updated) break;
-                
+                if ($updated) {
+                    break;
+                }
+
                 $stmt = $pdo->prepare("
                     UPDATE email_logs 
                     SET to_email = 'john.doe@example.com',
@@ -204,7 +211,7 @@ try {
                         order_id = '01F14P23'
                     WHERE subject LIKE :pattern LIMIT 1
                 ");
-                
+
                 $executed = $stmt->execute([':content' => $sampleEmailContent, ':pattern' => $pattern]);
                 if ($executed && $stmt->rowCount() > 0) {
                     $updated = true;
@@ -212,7 +219,7 @@ try {
                     break;
                 }
             }
-            
+
             // Strategy 2: Update by created_by = 'system'
             if (!$updated) {
                 $stmt = $pdo->prepare("
@@ -224,14 +231,14 @@ try {
                         order_id = '01F14P23'
                     WHERE created_by = 'system' LIMIT 1
                 ");
-                
+
                 $executed = $stmt->execute([':content' => $sampleEmailContent]);
                 if ($executed && $stmt->rowCount() > 0) {
                     $updated = true;
                     $updateMessage = "Updated email by created_by = 'system'";
                 }
             }
-            
+
             // Strategy 3: Create new if nothing to update
             if (!$updated) {
                 $stmt = $pdo->prepare("
@@ -239,28 +246,28 @@ try {
                     VALUES ('john.doe@example.com', 'orders@whimsicalfrog.us', 'Order Confirmation #01F14P23 - WhimsicalFrog', 
                             :content, 'order_confirmation', 'sent', NOW(), '01F14P23', 'system')
                 ");
-                
+
                 $executed = $stmt->execute([':content' => $sampleEmailContent]);
                 if ($executed) {
                     $updated = true;
                     $updateMessage = "Created new sample email";
                 }
             }
-            
+
             $result = [
                 'success' => $updated,
                 'message' => $updated ? "Sample email fixed: $updateMessage" : 'Failed to fix sample email',
                 'data' => ['strategy_used' => $updateMessage]
             ];
             break;
-            
+
         default:
             $result = ['success' => false, 'error' => 'Unknown action: ' . $action];
     }
-    
+
     header('Content-Type: application/json');
     echo json_encode($result, JSON_PRETTY_PRINT);
-    
+
 } catch (Exception $e) {
     header('Content-Type: application/json');
     echo json_encode([

@@ -1,7 +1,7 @@
 <?php
 /**
  * Get Item Images API
- * 
+ *
  * Returns all images for a specific item with primary designation and sort order
  */
 
@@ -10,15 +10,15 @@ header('Content-Type: application/json');
 
 try {
     $sku = $_GET['sku'] ?? '';
-    
+
     if (empty($sku)) {
         echo json_encode(['success' => false, 'error' => 'SKU is required']);
         exit;
     }
-    
+
     // Use the helper function which has fallback support
     $images = getItemImages($sku);
-    
+
     // Add additional file information
     foreach ($images as &$image) {
         if ($image['file_exists']) {
@@ -34,7 +34,7 @@ try {
             }
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'sku' => $sku,
@@ -42,7 +42,7 @@ try {
         'totalImages' => count($images),
         'primaryImage' => !empty($images) ? $images[0] : null
     ]);
-    
+
 } catch (PDOException $e) {
     error_log("Error in get_item_images: " . $e->getMessage());
     echo json_encode(['success' => false, 'error' => 'Failed to retrieve images']);

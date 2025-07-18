@@ -6,6 +6,17 @@
 (function() {
     'use strict';
 
+    // Duplicate WhimsicalFrog Core detection guard
+    if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
+        // Restore legacy shims
+        if (!window.WF) window.WF = window.WhimsicalFrog;
+        if (typeof window.WF.log !== 'function') {
+            window.WF.log = window.WhimsicalFrog.log || ((...args) => console.log('[WF-Legacy]', ...args));
+        }
+        console.warn('[Main.js] WhimsicalFrog Core already loaded – skipping duplicate initialization defined in main.js');
+        return;
+    }
+
     // Core system state
     const WF_CORE = {
         version: '1.0.0',
@@ -543,7 +554,7 @@
                 errorMessage.classList.add('hidden');
 
                 try {
-                    const data = await this.WF.api.post('/process_login.php', { username, password });
+                    const data = await this.WF.api.post('/functions/process_login.php', { username, password });
                     
                     sessionStorage.setItem('user', JSON.stringify(data.user || data));
 

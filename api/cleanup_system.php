@@ -31,44 +31,50 @@ if (!isAdminWithToken()) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
-    
+
     switch ($action) {
         case 'analyze':
             analyzeSystem($pdo);
             break;
-            
+
         case 'cleanup_stale_files':
             cleanupStaleFiles();
             break;
-            
+
         case 'remove_unused_code':
             removeUnusedCode();
             break;
-            
+
         case 'optimize_database':
             optimizeDatabase($pdo);
             break;
-            
+
         default:
             throw new Exception('Invalid action specified');
     }
-    
+
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
 
-function analyzeSystem($pdo) {
+function analyzeSystem($pdo)
+{
     $analysis = [
         'unused_files' => getUnusedFiles(),
         'stale_comments' => getStaleComments(),
         'redundant_code' => getRedundantCode(),
         'optimization_opportunities' => getOptimizationOpportunities($pdo)
     ];
-    
+
     echo json_encode([
         'success' => true,
         'analysis' => $analysis,
@@ -76,25 +82,26 @@ function analyzeSystem($pdo) {
     ]);
 }
 
-function getEmptyTables($pdo) {
+function getEmptyTables($pdo)
+{
     $tables = [];
     $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-    
+
     // Tables that are safe to remove if empty (not core functionality)
     $removableTables = [
         'area_mappings',
-        'item_marketing_preferences', 
+        'item_marketing_preferences',
         'optimization_suggestions',
         'sale_items',
         'square_settings',
         'square_sync_log'
     ];
-    
+
     foreach ($allTables as $table) {
         if (in_array($table, $removableTables)) {
             $stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
             $count = $stmt->fetchColumn();
-            
+
             if ($count == 0) {
                 // Check if table is referenced in code
                 $references = checkTableReferences($table);
@@ -107,14 +114,15 @@ function getEmptyTables($pdo) {
             }
         }
     }
-    
+
     return $tables;
 }
 
-function checkTableReferences($tableName) {
+function checkTableReferences($tableName)
+{
     $references = [];
     $phpFiles = glob('../**/*.php', GLOB_BRACE);
-    
+
     foreach ($phpFiles as $file) {
         $content = file_get_contents($file);
         if (strpos($content, $tableName) !== false) {
@@ -124,13 +132,14 @@ function checkTableReferences($tableName) {
             }
         }
     }
-    
+
     return $references;
 }
 
-function getUnusedFiles() {
+function getUnusedFiles()
+{
     $unusedFiles = [];
-    
+
     // Known stale files that can be removed
     $staleFiles = [
         '../api/email_config_backup_2025-06-16_15-14-32.php',
@@ -141,7 +150,7 @@ function getUnusedFiles() {
         '../new_cron.txt',
         '../test_cart_options.html'
     ];
-    
+
     foreach ($staleFiles as $file) {
         if (file_exists($file)) {
             $unusedFiles[] = [
@@ -152,11 +161,12 @@ function getUnusedFiles() {
             ];
         }
     }
-    
+
     return $unusedFiles;
 }
 
-function getStaleComments() {
+function getStaleComments()
+{
     $staleComments = [];
     $patterns = [
         '/\/\*\*?\s*TODO[^*]*\*\//',
@@ -168,13 +178,13 @@ function getStaleComments() {
         '/\/\*\*?\s*OLD[^*]*\*\//',
         '/\/\/\s*TEMP.*/'
     ];
-    
+
     $phpFiles = glob('../{api,sections,includes}/*.php', GLOB_BRACE);
-    
+
     foreach ($phpFiles as $file) {
         $content = file_get_contents($file);
         $lines = explode("\n", $content);
-        
+
         foreach ($lines as $lineNum => $line) {
             foreach ($patterns as $pattern) {
                 if (preg_match($pattern, $line)) {
@@ -188,38 +198,39 @@ function getStaleComments() {
             }
         }
     }
-    
+
     return $staleComments;
 }
 
-function getRedundantCode() {
+function getRedundantCode()
+{
     $redundantCode = [];
-    
+
     // Check for duplicate function definitions
     $functions = [];
     $phpFiles = glob('../{api,sections,includes}/*.php', GLOB_BRACE);
-    
+
     foreach ($phpFiles as $file) {
         $content = file_get_contents($file);
-        
+
         // Find function definitions
         preg_match_all('/function\s+(\w+)\s*\(/', $content, $matches, PREG_OFFSET_CAPTURE);
-        
+
         foreach ($matches[1] as $match) {
             $functionName = $match[0];
             $offset = $match[1];
-            
+
             if (!isset($functions[$functionName])) {
                 $functions[$functionName] = [];
             }
-            
+
             $functions[$functionName][] = [
                 'file' => str_replace('../', '', $file),
                 'line' => substr_count(substr($content, 0, $offset), "\n") + 1
             ];
         }
     }
-    
+
     // Find duplicates
     foreach ($functions as $functionName => $locations) {
         if (count($locations) > 1) {
@@ -230,23 +241,24 @@ function getRedundantCode() {
             ];
         }
     }
-    
+
     return $redundantCode;
 }
 
-function getOptimizationOpportunities($pdo) {
+function getOptimizationOpportunities($pdo)
+{
     $opportunities = [];
-    
+
     // Check for tables without indexes
     $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-    
+
     foreach ($tables as $table) {
         $indexes = $pdo->query("SHOW INDEX FROM `$table`")->fetchAll(PDO::FETCH_ASSOC);
-        
+
         if (count($indexes) <= 1) { // Only PRIMARY key
             $stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
             $rowCount = $stmt->fetchColumn();
-            
+
             if ($rowCount > 100) {
                 $opportunities[] = [
                     'type' => 'missing_indexes',
@@ -257,12 +269,12 @@ function getOptimizationOpportunities($pdo) {
             }
         }
     }
-    
+
     // Check for large tables that might benefit from optimization
     foreach ($tables as $table) {
         $stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
         $rowCount = $stmt->fetchColumn();
-        
+
         if ($rowCount > 10000) {
             $opportunities[] = [
                 'type' => 'large_table',
@@ -272,13 +284,14 @@ function getOptimizationOpportunities($pdo) {
             ];
         }
     }
-    
+
     return $opportunities;
 }
 
-function generateRecommendations($analysis) {
+function generateRecommendations($analysis)
+{
     $recommendations = [];
-    
+
     // Unused files recommendations
     foreach ($analysis['unused_files'] as $file) {
         $recommendations[] = [
@@ -290,7 +303,7 @@ function generateRecommendations($analysis) {
             'effort' => 'very_low'
         ];
     }
-    
+
     // Stale comments recommendations
     if (count($analysis['stale_comments']) > 10) {
         $recommendations[] = [
@@ -302,7 +315,7 @@ function generateRecommendations($analysis) {
             'effort' => 'medium'
         ];
     }
-    
+
     // Optimization recommendations
     foreach ($analysis['optimization_opportunities'] as $opportunity) {
         $priority = $opportunity['type'] === 'large_table' ? 'high' : 'medium';
@@ -315,15 +328,16 @@ function generateRecommendations($analysis) {
             'effort' => 'medium'
         ];
     }
-    
+
     return $recommendations;
 }
 
-function removeEmptyTables($pdo) {
+function removeEmptyTables($pdo)
+{
     $emptyTables = getEmptyTables($pdo);
     $removed = [];
     $errors = [];
-    
+
     foreach ($emptyTables as $table) {
         if ($table['safe_to_remove']) {
             try {
@@ -337,7 +351,7 @@ function removeEmptyTables($pdo) {
             }
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'removed_tables' => $removed,
@@ -347,21 +361,22 @@ function removeEmptyTables($pdo) {
 }
 // cleanupStaleFiles function moved to system_cleanup.php for centralization
 
-function removeUnusedCode() {
+function removeUnusedCode()
+{
     $processed = [];
     $errors = [];
-    
+
     // Remove stale comments from files
     $staleComments = getStaleComments();
     $filesProcessed = [];
-    
+
     foreach ($staleComments as $comment) {
         $filePath = '../' . $comment['file'];
-        
+
         if (!in_array($filePath, $filesProcessed)) {
             try {
                 $content = file_get_contents($filePath);
-                
+
                 // Remove various types of stale comments
                 $patterns = [
                     '/\/\*\*?\s*TODO[^*]*\*\/\s*/',
@@ -373,18 +388,18 @@ function removeUnusedCode() {
                     '/\/\*\*?\s*OLD[^*]*\*\/\s*/',
                     '/\/\/\s*TEMP.*\n/'
                 ];
-                
+
                 $originalContent = $content;
                 foreach ($patterns as $pattern) {
                     $content = preg_replace($pattern, '', $content);
                 }
-                
+
                 if ($content !== $originalContent) {
                     file_put_contents($filePath, $content);
                     $filesProcessed[] = $filePath;
                     $processed[] = str_replace('../', '', $filePath);
                 }
-                
+
             } catch (Exception $e) {
                 $errors[] = [
                     'file' => $comment['file'],
@@ -393,7 +408,7 @@ function removeUnusedCode() {
             }
         }
     }
-    
+
     echo json_encode([
         'success' => true,
         'processed_files' => $processed,
@@ -402,20 +417,21 @@ function removeUnusedCode() {
     ]);
 }
 
-function optimizeDatabase($pdo) {
+function optimizeDatabase($pdo)
+{
     $startTime = microtime(true);
     $optimized = [];
     $errors = [];
     $details = [];
-    
+
     try {
         // Get all tables with their sizes
         $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
         $totalTables = count($tables);
-        
+
         foreach ($tables as $index => $table) {
             $tableStartTime = microtime(true);
-            
+
             try {
                 // Get table info before optimization
                 $sizeQuery = "SELECT 
@@ -424,21 +440,21 @@ function optimizeDatabase($pdo) {
                     table_rows
                 FROM information_schema.TABLES 
                 WHERE table_schema = DATABASE() AND table_name = ?";
-                
+
                 $stmt = $pdo->prepare($sizeQuery);
                 $stmt->execute([$table]);
                 $beforeInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
                 // Optimize table
                 $optimizeResult = $pdo->query("OPTIMIZE TABLE `$table`")->fetch(PDO::FETCH_ASSOC);
-                
+
                 // Get table info after optimization
                 $stmt->execute([$table]);
                 $afterInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
                 $tableEndTime = microtime(true);
                 $tableTime = round(($tableEndTime - $tableStartTime), 3);
-                
+
                 $tableDetails = [
                     'table' => $table,
                     'status' => $optimizeResult['Msg_text'] ?? 'OK',
@@ -447,15 +463,15 @@ function optimizeDatabase($pdo) {
                     'time_seconds' => $tableTime,
                     'progress' => round((($index + 1) / $totalTables) * 100, 1)
                 ];
-                
+
                 if ($beforeInfo && $afterInfo) {
                     $sizeDiff = (float)$beforeInfo['size_mb'] - (float)$afterInfo['size_mb'];
                     $tableDetails['space_reclaimed_mb'] = round($sizeDiff, 3);
                 }
-                
+
                 $optimized[] = $table;
                 $details[] = $tableDetails;
-                
+
             } catch (Exception $e) {
                 $errors[] = [
                     'table' => $table,
@@ -464,10 +480,10 @@ function optimizeDatabase($pdo) {
                 ];
             }
         }
-        
+
         $totalTime = round((microtime(true) - $startTime), 3);
         $totalSpaceReclaimed = array_sum(array_column($details, 'space_reclaimed_mb'));
-        
+
         echo json_encode([
             'success' => true,
             'optimized_tables' => $optimized,
@@ -480,10 +496,10 @@ function optimizeDatabase($pdo) {
                 'total_time_seconds' => $totalTime,
                 'total_space_reclaimed_mb' => round($totalSpaceReclaimed, 3)
             ],
-            'message' => count($optimized) . " of $totalTables tables optimized successfully in {$totalTime}s" . 
+            'message' => count($optimized) . " of $totalTables tables optimized successfully in {$totalTime}s" .
                         ($totalSpaceReclaimed > 0 ? ", reclaimed {$totalSpaceReclaimed}MB" : "")
         ]);
-        
+
     } catch (Exception $e) {
         throw new Exception('Database optimization failed: ' . $e->getMessage());
     }

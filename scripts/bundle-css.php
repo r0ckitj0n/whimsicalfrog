@@ -1,4 +1,5 @@
 <?php
+
 // scripts/bundle-css.php
 
 // Define the base path relative to this script's location
@@ -38,7 +39,7 @@ $priorityFiles = [
     'css/room-main.css',
     'css/room-styles.css',
     'css/room-iframe.css',
-    
+
     // Miscellaneous and overrides
     'css/backgrounds.css',
     'css/email-styles.css',
@@ -80,18 +81,16 @@ $bundledCss = '';
 foreach ($filesToBundle as $file) {
     $filePath = $basePath . '/' . $file;
     if (file_exists($filePath) && is_file($filePath)) {
-        
+
         // Add a comment to indicate the start of a file's content
         $bundledCss .= "/* --- Start of " . $file . " --- */\n\n";
         $bundledCss .= file_get_contents($filePath) . "\n\n";
         // Add a comment to indicate the end of a file's content
         $bundledCss .= "/* --- End of " . $file . " --- */\n\n";
     } else {
-        
+
     }
 }
 
 // Write the bundled content to the output file
 file_put_contents($outputFile, $bundledCss);
-
-?>

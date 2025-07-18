@@ -16,20 +16,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 try {
     // Create database connection using config
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     $items = [];
-    
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Get specific items by SKUs
         $input = json_decode(file_get_contents('php://input'), true);
-        
+
         if (isset($input['item_ids']) && is_array($input['item_ids']) && !empty($input['item_ids'])) {
             $skus = $input['item_ids'];  // Now expecting SKUs instead of IDs
-            
+
             // Create placeholders for the IN clause
             $placeholders = str_repeat('?,', count($skus) - 1) . '?';
-            
+
             // Query to get specific items by SKU with primary image from item_images table
             $sql = "SELECT 
                         i.sku,
@@ -44,18 +49,18 @@ try {
                     FROM items i 
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.sku IN ($placeholders)";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute($skus);
             $items = $stmt->fetchAll();
-            
+
             // Format the data
             foreach ($items as &$item) {
                 // Use retailPrice as the main price field
                 if (isset($item['retailPrice'])) {
                     $item['price'] = floatval($item['retailPrice']);
                 }
-                
+
                 // Set the image path - use primary image from item_images table
                 if (!empty($item['imageUrl'])) {
                     $item['image'] = $item['imageUrl'];
@@ -80,7 +85,7 @@ try {
                     FROM items i
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.category = ?";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$_GET['category']]);
         } else {
@@ -97,20 +102,20 @@ try {
                         COALESCE(img.image_path, i.imageUrl) as imageUrl
                     FROM items i
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
         }
-        
+
         $items = $stmt->fetchAll();
-        
+
         // Format the data
         foreach ($items as &$item) {
             // Use retailPrice as the main price field
             if (isset($item['retailPrice'])) {
                 $item['price'] = floatval($item['retailPrice']);
             }
-            
+
             // Set the image path - use primary image from item_images table
             if (!empty($item['imageUrl'])) {
                 $item['image'] = $item['imageUrl'];
@@ -119,10 +124,10 @@ try {
             }
         }
     }
-    
+
     // Return items as JSON
     echo json_encode($items);
-    
+
 } catch (PDOException $e) {
     // Handle database errors
     http_response_code(500);

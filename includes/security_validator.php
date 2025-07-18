@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog Security Validation and Sanitization
  * Centralized PHP functions to eliminate duplication
@@ -15,7 +16,8 @@ require_once __DIR__ . '/auth.php';
  * @param mixed $data
  * @return mixed
  */
-function sanitizeInput($data) {
+function sanitizeInput($data)
+{
     if (is_array($data)) {
         return array_map('sanitizeInput', $data);
     }
@@ -26,12 +28,11 @@ function sanitizeInput($data) {
 /**
  * Sanitize filename for safe storage
  */
-function sanitizeFilename($filename) {
+function sanitizeFilename($filename)
+{
     // Remove or replace unsafe characters
     $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $filename);
     $filename = preg_replace('/_+/', '_', $filename); // Remove multiple underscores
     $filename = trim($filename, '_'); // Remove leading/trailing underscores
     return $filename;
 }
-
-?>

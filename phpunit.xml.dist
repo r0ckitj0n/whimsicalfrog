@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php"
+         colors="true"
+         verbose="true">
+    <testsuites>
+        <testsuite name="WhimsicalFrog Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <!-- Fail tests if running longer than this (in seconds) -->
+    <php>
+        <ini name="max_execution_time" value="120"/>
+        <server name="WHIMSICALFROG_TESTING" value="1"/>
+    </php>
+</phpunit>

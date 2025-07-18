@@ -1,7 +1,7 @@
 <?php
 /**
  * Load Room Content API
- * 
+ *
  * Loads room content for display in modal overlay
  * Returns HTML content for rooms 2-6 based on room_template.php
  */
@@ -43,13 +43,13 @@ if (!isValidRoom($roomNumber)) {
 try {
     // Get database connection
     $pdo = Database::getInstance();
-    
+
     // Generate room content HTML
     $roomContent = generateRoomContent($roomNumber, $pdo, $isModal);
-    
+
     // Also get room metadata for the modal
     $roomMetadata = getRoomMetadata($roomNumber, $pdo);
-    
+
     echo json_encode([
         'success' => true,
         'content' => $roomContent,
@@ -69,15 +69,16 @@ try {
 /**
  * Generate room content HTML
  */
-function generateRoomContent($roomNumber, $pdo, $isModal = false) {
+function generateRoomContent($roomNumber, $pdo, $isModal = false)
+{
     $roomType = "room{$roomNumber}";
-    
+
     // Get room-specific items from categories
     $roomItems = [];
     $roomCategoryName = '';
     $roomSettings = null;
     $seoData = [];
-    
+
     try {
         // Get the primary category for this room
         $stmt = $pdo->prepare("
@@ -89,10 +90,10 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false) {
         ");
         $stmt->execute([$roomNumber]);
         $primaryCategory = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($primaryCategory) {
             $roomCategoryName = $primaryCategory['name'];
-            
+
             // Get items for this category
             $stmt = $pdo->prepare("
                 SELECT i.*, 
@@ -107,19 +108,19 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false) {
             $stmt->execute([$roomCategoryName]);
             $roomItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
+
         // Get room settings
         $stmt = $pdo->prepare("SELECT * FROM room_settings WHERE room_number = ?");
         $stmt->execute([$roomNumber]);
         $roomSettings = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         // Build SEO data
         $seoData = [
             'title' => $roomSettings['room_name'] ?? "Room {$roomNumber}",
             'description' => $roomSettings['description'] ?? '',
             'category' => $roomCategoryName
         ];
-        
+
     } catch (Exception $e) {
         error_log("Error getting room data: " . $e->getMessage());
         // Use fallback data
@@ -129,10 +130,10 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false) {
             'category' => ''
         ];
     }
-    
+
     // Load room coordinate data
     $coordinateData = loadRoomCoordinates($roomType, $pdo);
-    
+
     // Generate the room HTML content
     ob_start();
     ?>
@@ -147,7 +148,7 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false) {
                 <!- Product Icons - Positioned Dynamically ->
                 <?php if (!empty($roomItems) && !empty($coordinateData)): ?>
                     <?php foreach ($roomItems as $index => $item): ?>
-                        <?php 
+                        <?php
                         $iconIndex = $index + 1;
                         $coordinate = $coordinateData['coordinates'][$index] ?? null;
                         ?>
@@ -388,7 +389,8 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false) {
 /**
  * Load room coordinates from database
  */
-function loadRoomCoordinates($roomType, $pdo) {
+function loadRoomCoordinates($roomType, $pdo)
+{
     try {
         $stmt = $pdo->prepare("
             SELECT * FROM room_maps 
@@ -398,7 +400,7 @@ function loadRoomCoordinates($roomType, $pdo) {
         ");
         $stmt->execute([$roomType]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($result) {
             return [
                 'coordinates' => json_decode($result['coordinates'], true),
@@ -409,7 +411,7 @@ function loadRoomCoordinates($roomType, $pdo) {
     } catch (Exception $e) {
         error_log("Error loading room coordinates: " . $e->getMessage());
     }
-    
+
     // Return empty coordinates if no data found
     return [
         'coordinates' => [],
@@ -421,13 +423,14 @@ function loadRoomCoordinates($roomType, $pdo) {
 /**
  * Get room metadata for modal display
  */
-function getRoomMetadata($roomNumber, $pdo) {
+function getRoomMetadata($roomNumber, $pdo)
+{
     try {
         // Get room settings
         $stmt = $pdo->prepare("SELECT * FROM room_settings WHERE room_number = ?");
         $stmt->execute([$roomNumber]);
         $roomSettings = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         // Get primary category
         $stmt = $pdo->prepare("
             SELECT c.name as category_name, c.description as category_description
@@ -438,7 +441,7 @@ function getRoomMetadata($roomNumber, $pdo) {
         ");
         $stmt->execute([$roomNumber]);
         $primaryCategory = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         return [
             'room_name' => $roomSettings['room_name'] ?? "Room {$roomNumber}",
             'description' => $roomSettings['description'] ?? '',
@@ -446,7 +449,7 @@ function getRoomMetadata($roomNumber, $pdo) {
             'category_name' => $primaryCategory['category_name'] ?? '',
             'category_description' => $primaryCategory['category_description'] ?? ''
         ];
-        
+
     } catch (Exception $e) {
         error_log("Error getting room metadata: " . $e->getMessage());
         return [
@@ -462,16 +465,17 @@ function getRoomMetadata($roomNumber, $pdo) {
 /**
  * Helper function to get image URL with fallback
  */
-function getImageUrl($imagePath, $directory, $extension = 'webp') {
+function getImageUrl($imagePath, $directory, $extension = 'webp')
+{
     if (empty($imagePath)) {
         return "/images/{$directory}/placeholder.{$extension}";
     }
-    
+
     // If path already includes directory, use as-is
     if (strpos($imagePath, "/{$directory}/") !== false) {
         return $imagePath;
     }
-    
+
     // Add directory prefix
     return "/images/{$directory}/" . $imagePath;
 }

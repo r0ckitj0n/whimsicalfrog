@@ -21,8 +21,13 @@ if (!isset($_GET['sku']) || empty($_GET['sku'])) {
 $sku = trim($_GET['sku']);
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Get basic marketing data for this SKU (public-safe fields only)
     $stmt = $pdo->prepare("
         SELECT 
@@ -43,20 +48,20 @@ try {
     ");
     $stmt->execute([$sku]);
     $suggestion = $stmt->fetch();
-    
+
     if ($suggestion) {
         // Decode JSON fields
         $jsonFields = [
             'selling_points', 'competitive_advantages', 'call_to_action_suggestions',
             'urgency_factors', 'customer_benefits', 'unique_selling_points', 'value_propositions'
         ];
-        
+
         foreach ($jsonFields as $field) {
             if (isset($suggestion[$field])) {
                 $suggestion[$field] = json_decode($suggestion[$field], true);
             }
         }
-        
+
         echo json_encode([
             'success' => true,
             'exists' => true,
@@ -69,7 +74,7 @@ try {
             'message' => 'No marketing data found for this SKU.'
         ]);
     }
-    
+
 } catch (PDOException $e) {
     error_log("Database error in get_marketing_data.php: " . $e->getMessage());
     http_response_code(500);

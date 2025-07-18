@@ -23,24 +23,25 @@ if ($action === 'test') {
     echo json_encode(['success' => false, 'error' => 'Invalid action']);
 }
 
-function handleTestEmail() {
+function handleTestEmail()
+{
     $testEmail = $_POST['testEmail'] ?? '';
     if (!$testEmail || !filter_var($testEmail, FILTER_VALIDATE_EMAIL)) {
         echo json_encode(['success' => false, 'error' => 'Invalid test email address']);
         return;
     }
-    
+
     // Create test email configuration from form data
     $fromEmail = $_POST['fromEmail'] ?? 'orders@whimsicalfrog.us';
     $fromName = $_POST['fromName'] ?? 'WhimsicalFrog';
     $smtpEnabled = isset($_POST['smtpEnabled']);
-    
+
     $subject = "Test Email from WhimsicalFrog";
     $html = createTestEmailHtml($fromEmail, $fromName, $smtpEnabled);
-    
+
     $success = false;
     $errorMessage = '';
-    
+
     try {
         if ($smtpEnabled) {
             // Always use our custom SMTP implementation for better error handling
@@ -54,11 +55,11 @@ function handleTestEmail() {
                 'MIME-Version: 1.0',
                 'Content-Type: text/html; charset=UTF-8'
             ];
-            
+
             if (!empty($_POST['bccEmail'])) {
                 $headers[] = 'Bcc: ' . $_POST['bccEmail'];
             }
-            
+
             $headerString = implode("\r\n", $headers);
             $success = mail($testEmail, $subject, $html, $headerString);
         }
@@ -66,13 +67,13 @@ function handleTestEmail() {
         $errorMessage = $e->getMessage();
         error_log("Test email error: " . $errorMessage);
     }
-    
+
     // Log the test email
     try {
         require_once 'email_logger.php';
         session_start();
         $createdBy = $_SESSION['user']['userId'] ?? $_SESSION['user']['username'] ?? 'admin';
-        
+
         if ($success) {
             logTestEmail($testEmail, $fromEmail, $subject, $html, 'sent', null, $createdBy);
         } else {
@@ -83,10 +84,10 @@ function handleTestEmail() {
         // Log the logging error but don't fail the response
         error_log("Email logging error: " . $e->getMessage());
     }
-    
+
     // Clean any buffered output and send JSON response
     ob_clean();
-    
+
     if ($success) {
         echo json_encode(['success' => true, 'message' => 'Test email sent successfully!']);
     } else {
@@ -95,41 +96,47 @@ function handleTestEmail() {
     }
 }
 
-function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
+function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config)
+{
     $host = $config['smtpHost'] ?? 'smtp.ionos.com';
     $port = intval($config['smtpPort'] ?? 587);
     $username = $config['smtpUsername'] ?? $fromEmail;
     $password = $config['smtpPassword'] ?? '';
     $encryption = $config['smtpEncryption'] ?? 'tls';
-    
+
     // For IONOS, we need to handle TLS differently
     // Connect without encryption first, then upgrade to TLS
     $socket = stream_socket_client(
         $host . ':' . $port,
-        $errno, $errstr, 30, STREAM_CLIENT_CONNECT
+        $errno,
+        $errstr,
+        30,
+        STREAM_CLIENT_CONNECT
     );
-    
+
     if (!$socket) {
         throw new Exception("Failed to connect to SMTP server $host:$port - $errstr ($errno)");
     }
-    
+
     // Function to read SMTP response
-    $readResponse = function() use ($socket) {
+    $readResponse = function () use ($socket) {
         $response = '';
         while (($line = fgets($socket, 515)) !== false) {
             $response .= $line;
-            if (isset($line[3]) && $line[3] == ' ') break; // End of multi-line response
+            if (isset($line[3]) && $line[3] == ' ') {
+                break;
+            } // End of multi-line response
         }
         return trim($response);
     };
-    
+
     // Initial server greeting
     $response = $readResponse();
     if (substr($response, 0, 3) != '220') {
         fclose($socket);
         throw new Exception("SMTP server not ready: $response");
     }
-    
+
     // EHLO to identify client
     fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
     $response = $readResponse();
@@ -137,18 +144,18 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
         fclose($socket);
         throw new Exception("EHLO failed: $response");
     }
-    
+
     // Start TLS if requested
     if ($encryption === 'tls') {
         fputs($socket, "STARTTLS\r\n");
         $response = $readResponse();
         $responseCode = substr($response, 0, 3);
-        
+
         if ($responseCode != '220') {
             fclose($socket);
             throw new Exception("STARTTLS not supported or failed: $response");
         }
-        
+
         // Create TLS context
         $context = stream_context_create([
             'ssl' => [
@@ -158,13 +165,13 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
                 'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT
             ]
         ]);
-        
+
         // Enable TLS encryption
         if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
             fclose($socket);
             throw new Exception("Failed to enable TLS encryption");
         }
-        
+
         // EHLO again after TLS
         fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
         $response = $readResponse();
@@ -173,7 +180,7 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
             throw new Exception("EHLO after TLS failed: $response");
         }
     }
-    
+
     // Authentication
     fputs($socket, "AUTH LOGIN\r\n");
     $response = $readResponse();
@@ -181,7 +188,7 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
         fclose($socket);
         throw new Exception("AUTH LOGIN not supported: $response");
     }
-    
+
     // Send username
     fputs($socket, base64_encode($username) . "\r\n");
     $response = $readResponse();
@@ -189,7 +196,7 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
         fclose($socket);
         throw new Exception("Username rejected: $response");
     }
-    
+
     // Send password
     fputs($socket, base64_encode($password) . "\r\n");
     $response = $readResponse();
@@ -197,7 +204,7 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
         fclose($socket);
         throw new Exception("Authentication failed - check username/password: $response");
     }
-    
+
     // MAIL FROM
     fputs($socket, "MAIL FROM: <$fromEmail>\r\n");
     $response = $readResponse();
@@ -205,7 +212,7 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
         fclose($socket);
         throw new Exception("MAIL FROM rejected: $response");
     }
-    
+
     // RCPT TO
     fputs($socket, "RCPT TO: <$to>\r\n");
     $response = $readResponse();
@@ -213,7 +220,7 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
         fclose($socket);
         throw new Exception("RCPT TO rejected: $response");
     }
-    
+
     // DATA
     fputs($socket, "DATA\r\n");
     $response = $readResponse();
@@ -221,7 +228,7 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
         fclose($socket);
         throw new Exception("DATA command rejected: $response");
     }
-    
+
     // Send email headers and body
     $email = "From: $fromName <$fromEmail>\r\n";
     $email .= "To: <$to>\r\n";
@@ -231,23 +238,24 @@ function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config) {
     $email .= "\r\n";
     $email .= $html . "\r\n";
     $email .= ".\r\n"; // End data marker
-    
+
     fputs($socket, $email);
     $response = $readResponse();
     if (substr($response, 0, 3) != '250') {
         fclose($socket);
         throw new Exception("Email delivery failed: $response");
     }
-    
+
     // Close connection gracefully
     fputs($socket, "QUIT\r\n");
     $readResponse(); // Read the response but don't check it
     fclose($socket);
-    
+
     return true;
 }
 
-function handleSaveConfig() {
+function handleSaveConfig()
+{
     try {
         // Validate required fields
         $requiredFields = ['fromEmail', 'fromName', 'adminEmail'];
@@ -256,44 +264,45 @@ function handleSaveConfig() {
                 throw new Exception("$field is required");
             }
         }
-        
+
         // Validate email addresses
         $emailFields = ['fromEmail', 'adminEmail'];
         if (!empty($_POST['bccEmail'])) {
             $emailFields[] = 'bccEmail';
         }
-        
+
         foreach ($emailFields as $field) {
             if (!filter_var($_POST[$field], FILTER_VALIDATE_EMAIL)) {
                 throw new Exception("Invalid email address for $field");
             }
         }
-        
+
         // Create new configuration content
         $configContent = generateConfigContent();
-        
+
         // Write to file
         $configFile = __DIR__ . '/email_config.php';
         $backupFile = __DIR__ . '/email_config_backup_' . date('Y-m-d_H-i-s') . '.php';
-        
+
         // Create backup of existing file
         if (file_exists($configFile)) {
             copy($configFile, $backupFile);
         }
-        
+
         // Write new configuration
         if (file_put_contents($configFile, $configContent) === false) {
             throw new Exception('Failed to write configuration file');
         }
-        
+
         echo json_encode(['success' => true, 'message' => 'Email configuration saved successfully!']);
-        
+
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
 }
 
-function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled) {
+function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled)
+{
     require_once __DIR__ . '/../includes/business_settings_helper.php';
     $brandPrimary = BusinessSettings::getPrimaryColor();
     $brandSecondary = BusinessSettings::getSecondaryColor();
@@ -334,7 +343,8 @@ function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled) {
     ";
 }
 
-function generateConfigContent() {
+function generateConfigContent()
+{
     $smtpEnabled = isset($_POST['smtpEnabled']) ? 'true' : 'false';
     $fromEmail = addslashes($_POST['fromEmail']);
     $fromName = addslashes($_POST['fromName']);
@@ -345,13 +355,13 @@ function generateConfigContent() {
     $smtpUsername = addslashes($_POST['smtpUsername'] ?? '');
     $smtpPassword = addslashes($_POST['smtpPassword'] ?? '');
     $smtpEncryption = addslashes($_POST['smtpEncryption'] ?? 'tls');
-    
+
     $configFile = __DIR__ . '/email_config.php';
-    
+
     // Read existing content
     if (file_exists($configFile)) {
         $content = file_get_contents($configFile);
-        
+
         // Update the define statements
         $patterns = [
             "/define\('SMTP_ENABLED',\s*[^)]+\);/" => "define('SMTP_ENABLED', $smtpEnabled);",
@@ -365,14 +375,14 @@ function generateConfigContent() {
             "/define\('SMTP_PASSWORD',\s*[^)]+\);/" => "define('SMTP_PASSWORD', '$smtpPassword');",
             "/define\('SMTP_ENCRYPTION',\s*[^)]+\);/" => "define('SMTP_ENCRYPTION', '$smtpEncryption');"
         ];
-        
+
         foreach ($patterns as $pattern => $replacement) {
             $content = preg_replace($pattern, $replacement, $content);
         }
-        
+
         return $content;
     }
-    
+
     // If file doesn't exist, create a basic one
     return "<?php
 // Email Configuration for WhimsicalFrog

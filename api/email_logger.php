@@ -6,12 +6,18 @@
 
 require_once 'config.php';
 
-function initializeEmailLogsTable() {
+function initializeEmailLogsTable()
+{
     global $dsn, $user, $pass, $options;
-    
+
     try {
-        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-        
+        try {
+            $pdo = Database::getInstance();
+        } catch (Exception $e) {
+            error_log("Database connection failed: " . $e->getMessage());
+            throw $e;
+        }
+
         $createTableSQL = "
             CREATE TABLE IF NOT EXISTS email_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -31,7 +37,7 @@ function initializeEmailLogsTable() {
                 INDEX idx_to_email (to_email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ";
-        
+
         $pdo->exec($createTableSQL);
         return true;
     } catch (Exception $e) {
@@ -40,18 +46,24 @@ function initializeEmailLogsTable() {
     }
 }
 
-function logEmail($toEmail, $fromEmail, $subject, $content, $emailType, $status = 'sent', $errorMessage = null, $orderId = null, $createdBy = null) {
+function logEmail($toEmail, $fromEmail, $subject, $content, $emailType, $status = 'sent', $errorMessage = null, $orderId = null, $createdBy = null)
+{
     global $dsn, $user, $pass, $options;
-    
+
     try {
         // Initialize table if needed
         initializeEmailLogsTable();
-        
-        try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-        
+
+        try {
+            $pdo = Database::getInstance();
+        } catch (Exception $e) {
+            error_log("Database connection failed: " . $e->getMessage());
+            throw $e;
+        }
+
         $sql = "INSERT INTO email_logs (to_email, from_email, subject, content, email_type, status, error_message, order_id, created_by) 
                 VALUES (:to_email, :from_email, :subject, :content, :email_type, :status, :error_message, :order_id, :created_by)";
-        
+
         $stmt = $pdo->prepare($sql);
         $result = $stmt->execute([
             ':to_email' => $toEmail,
@@ -64,11 +76,11 @@ function logEmail($toEmail, $fromEmail, $subject, $content, $emailType, $status 
             ':order_id' => $orderId,
             ':created_by' => $createdBy
         ]);
-        
+
         if ($result) {
             return $pdo->lastInsertId();
         }
-        
+
         return false;
     } catch (Exception $e) {
         error_log("Failed to log email: " . $e->getMessage());
@@ -76,19 +88,23 @@ function logEmail($toEmail, $fromEmail, $subject, $content, $emailType, $status 
     }
 }
 
-function logOrderConfirmationEmail($toEmail, $fromEmail, $subject, $content, $orderId, $status = 'sent', $errorMessage = null) {
+function logOrderConfirmationEmail($toEmail, $fromEmail, $subject, $content, $orderId, $status = 'sent', $errorMessage = null)
+{
     return logEmail($toEmail, $fromEmail, $subject, $content, 'order_confirmation', $status, $errorMessage, $orderId);
 }
 
-function logAdminNotificationEmail($toEmail, $fromEmail, $subject, $content, $orderId = null, $status = 'sent', $errorMessage = null, $createdBy = null) {
+function logAdminNotificationEmail($toEmail, $fromEmail, $subject, $content, $orderId = null, $status = 'sent', $errorMessage = null, $createdBy = null)
+{
     return logEmail($toEmail, $fromEmail, $subject, $content, 'admin_notification', $status, $errorMessage, $orderId, $createdBy);
 }
 
-function logTestEmail($toEmail, $fromEmail, $subject, $content, $status = 'sent', $errorMessage = null, $createdBy = null) {
+function logTestEmail($toEmail, $fromEmail, $subject, $content, $status = 'sent', $errorMessage = null, $createdBy = null)
+{
     return logEmail($toEmail, $fromEmail, $subject, $content, 'test_email', $status, $errorMessage, null, $createdBy);
 }
 
-function logManualResendEmail($toEmail, $fromEmail, $subject, $content, $status = 'sent', $errorMessage = null, $createdBy = null) {
+function logManualResendEmail($toEmail, $fromEmail, $subject, $content, $status = 'sent', $errorMessage = null, $createdBy = null)
+{
     return logEmail($toEmail, $fromEmail, $subject, $content, 'manual_resend', $status, $errorMessage, null, $createdBy);
 }
 ?> 

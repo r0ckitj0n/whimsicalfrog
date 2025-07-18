@@ -1,10 +1,12 @@
 <?php
+
 /**
  * Centralized Session Management
  * Handles session initialization, validation, and security
  */
 
-class SessionManager {
+class SessionManager
+{
     private static $initialized = false;
     private static $config = [
         // Use default PHP session name so API uses the same session cookie
@@ -20,7 +22,8 @@ class SessionManager {
     /**
      * Initialize session with security settings
      */
-    public static function init($config = []) {
+    public static function init($config = [])
+    {
         if (self::$initialized) {
             return true;
         }
@@ -46,7 +49,7 @@ class SessionManager {
 
         // Initialize session security
         self::initializeSecurity();
-        
+
         self::$initialized = true;
         return true;
     }
@@ -54,7 +57,8 @@ class SessionManager {
     /**
      * Initialize session security measures
      */
-    private static function initializeSecurity() {
+    private static function initializeSecurity()
+    {
         // Regenerate session ID periodically
         if (!isset($_SESSION['_session_created'])) {
             $_SESSION['_session_created'] = time();
@@ -79,18 +83,20 @@ class SessionManager {
     /**
      * Generate session fingerprint for security
      */
-    private static function generateFingerprint() {
+    private static function generateFingerprint()
+    {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
         $acceptEncoding = $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
-        
+
         return hash('sha256', $userAgent . $acceptLanguage . $acceptEncoding);
     }
 
     /**
      * Check if session is valid and not expired
      */
-    public static function isValid() {
+    public static function isValid()
+    {
         if (!self::$initialized) {
             return false;
         }
@@ -114,7 +120,8 @@ class SessionManager {
     /**
      * Set session variable
      */
-    public static function set($key, $value) {
+    public static function set($key, $value)
+    {
         self::init();
         $_SESSION[$key] = $value;
     }
@@ -122,7 +129,8 @@ class SessionManager {
     /**
      * Get session variable
      */
-    public static function get($key, $default = null) {
+    public static function get($key, $default = null)
+    {
         self::init();
         return $_SESSION[$key] ?? $default;
     }
@@ -130,16 +138,18 @@ class SessionManager {
     /**
      * Check if session variable exists
      */
-    public static function has($key) {
+    public static function has($key)
+    {
         self::init();
         return isset($_SESSION[$key]);
     }
-// remove function moved to file_operations.php for centralization
+    // remove function moved to file_operations.php for centralization
 
     /**
      * Get all session data
      */
-    public static function all() {
+    public static function all()
+    {
         self::init();
         return $_SESSION;
     }
@@ -147,7 +157,8 @@ class SessionManager {
     /**
      * Clear all session data except system variables
      */
-    public static function clear() {
+    public static function clear()
+    {
         self::init();
         $systemKeys = ['_session_created', '_session_fingerprint', '_last_activity'];
         foreach ($_SESSION as $key => $value) {
@@ -160,29 +171,34 @@ class SessionManager {
     /**
      * Destroy session completely
      */
-    public static function destroy() {
+    public static function destroy()
+    {
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_unset();
             session_destroy();
         }
-        
+
         // Clear session cookie
         if (isset($_COOKIE[session_name()])) {
-            setcookie(session_name(), '', time() - 3600, 
-                self::$config['path'], 
-                self::$config['domain'], 
-                self::$config['secure'], 
+            setcookie(
+                session_name(),
+                '',
+                time() - 3600,
+                self::$config['path'],
+                self::$config['domain'],
+                self::$config['secure'],
                 self::$config['httponly']
             );
         }
-        
+
         self::$initialized = false;
     }
 
     /**
      * Regenerate session ID
      */
-    public static function regenerate($deleteOld = true) {
+    public static function regenerate($deleteOld = true)
+    {
         self::init();
         session_regenerate_id($deleteOld);
         $_SESSION['_session_created'] = time();
@@ -192,9 +208,10 @@ class SessionManager {
     /**
      * Flash message functionality
      */
-    public static function flash($key, $value = null) {
+    public static function flash($key, $value = null)
+    {
         self::init();
-        
+
         if ($value === null) {
             // Get flash message
             $message = $_SESSION['_flash'][$key] ?? null;
@@ -209,7 +226,8 @@ class SessionManager {
     /**
      * Get session ID
      */
-    public static function getId() {
+    public static function getId()
+    {
         self::init();
         return session_id();
     }
@@ -217,7 +235,8 @@ class SessionManager {
     /**
      * Get session status information
      */
-    public static function getStatus() {
+    public static function getStatus()
+    {
         return [
             'active' => session_status() === PHP_SESSION_ACTIVE,
             'id' => self::getId(),
@@ -230,34 +249,42 @@ class SessionManager {
 }
 
 // Convenience functions
-function session_init($config = []) {
+function session_init($config = [])
+{
     return SessionManager::init($config);
 }
 
-function session_set($key, $value) {
+function session_set($key, $value)
+{
     return SessionManager::set($key, $value);
 }
 
-function session_get($key, $default = null) {
+function session_get($key, $default = null)
+{
     return SessionManager::get($key, $default);
 }
 
-function session_has($key) {
+function session_has($key)
+{
     return SessionManager::has($key);
 }
 
-function session_remove($key) {
+function session_remove($key)
+{
     return SessionManager::remove($key);
 }
 
-function session_flash($key, $value = null) {
+function session_flash($key, $value = null)
+{
     return SessionManager::flash($key, $value);
 }
 
-function session_destroy_custom() {
+function session_destroy_custom()
+{
     return SessionManager::destroy();
 }
 
-function session_regenerate($deleteOld = true) {
+function session_regenerate($deleteOld = true)
+{
     return SessionManager::regenerate($deleteOld);
-} 
+}

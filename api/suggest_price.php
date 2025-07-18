@@ -7,8 +7,8 @@ header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
-    // Check admin authentication using centralized helper
-    AuthHelper::requireAdmin();
+// Check admin authentication using centralized helper
+AuthHelper::requireAdmin();
 
 // Suppress all output before JSON header
 ob_start();
@@ -44,8 +44,13 @@ if (empty($input['name'])) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Extract item data
     $name = trim($input['name']);
     $description = trim($input['description'] ?? '');
@@ -53,7 +58,7 @@ try {
     $costPrice = floatval($input['costPrice'] ?? 0);
     $sku = trim($input['sku'] ?? '');
     $useImages = $input['useImages'] ?? false;
-    
+
     // Get item images if using image support
     $images = [];
     if ($useImages && !empty($sku)) {
@@ -61,7 +66,7 @@ try {
             $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? ORDER BY display_order ASC LIMIT 3");
             $stmt->execute([$sku]);
             $imageRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             foreach ($imageRows as $row) {
                 $imagePath = __DIR__ . '/../' . $row['image_path'];
                 if (file_exists($imagePath)) {
@@ -72,7 +77,7 @@ try {
             error_log("Failed to load images for pricing: " . $e->getMessage());
         }
     }
-    
+
     // Initialize pricing analysis using AI provider system
     $pricingData = null;
     try {
@@ -98,18 +103,18 @@ try {
             throw new Exception("Both AI provider and Jon's AI fallback failed");
         }
     }
-    
+
     // Validate that we have pricing data
     if (!$pricingData || !isset($pricingData['price']) || $pricingData['price'] === null) {
         error_log("No valid pricing data received. PricingData: " . json_encode($pricingData));
         throw new Exception("Failed to generate price suggestion");
     }
-    
+
     // Save enhanced price suggestion to database (create table if needed)
     if (!empty($sku)) {
         try {
             // Enhanced price_suggestions table already exists with proper structure
-            
+
             $stmt = $pdo->prepare("
                 INSERT INTO price_suggestions (
                     sku, suggested_price, reasoning, confidence, factors, components,
@@ -192,7 +197,7 @@ try {
             error_log("Error saving price suggestion: " . $e->getMessage());
         }
     }
-    
+
     // Clear any buffered output and send clean JSON
     ob_clean();
     echo json_encode([
@@ -204,7 +209,7 @@ try {
         'components' => $pricingData['components'],
         'analysis' => $pricingData['analysis']
     ]);
-    
+
 } catch (Exception $e) {
     error_log("Error in suggest_price.php: " . $e->getMessage());
     http_response_code(500);
@@ -212,43 +217,44 @@ try {
     echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
 }
 
-function analyzePricing($name, $description, $category, $costPrice, $pdo) {
+function analyzePricing($name, $description, $category, $costPrice, $pdo)
+{
     // Load AI settings from database
     $aiSettings = loadAISettings($pdo);
-    
+
     // Enhanced AI item analysis (reuse cost analysis functions)
     $itemAnalysis = analyzeItemForPricing($name, $description, $category);
-    
+
     $factors = [];
     $reasoning = [];
     $confidence = 'medium';
-    
+
     // Enhanced pricing strategy analysis with AI settings
     $pricingStrategies = analyzePricingStrategies($name, $description, $category, $costPrice, $itemAnalysis, $pdo);
-    
+
     // Create individual pricing components with dollar amounts
     $pricingComponents = [];
-    
+
     // Apply AI temperature and conservative mode adjustments
     $temperature = $aiSettings['ai_price_temperature'];
     $conservativeMode = $aiSettings['ai_conservative_mode'];
     $baseMultiplier = $aiSettings['ai_price_multiplier_base'];
-    
+
     // Get AI weights for pricing strategies
     $costPlusWeight = $aiSettings['ai_cost_plus_weight'];
     $marketWeight = $aiSettings['ai_market_research_weight'];
     $valueWeight = $aiSettings['ai_value_based_weight'];
-    
+
     // 1. Cost-Plus Pricing (Foundation)
     $costPlusPrice = $pricingStrategies['cost_plus_price'] * $baseMultiplier;
-    
+
     // Apply temperature-based variation (lower temperature = less variation)
     if (!$conservativeMode && $temperature > 0.5) {
         $variation = ($temperature - 0.5) * 0.2; // Max 10% variation at temp 1.0
         $randomFactor = 1 + (mt_rand(-100, 100) / 1000) * $variation;
         $costPlusPrice *= $randomFactor;
     }
-    
+
     $basePrice = $costPlusPrice;
     $factors['cost_plus'] = $costPlusPrice;
     $pricingComponents['cost_plus'] = [
@@ -256,7 +262,7 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
         'label' => 'Cost-plus pricing',
         'explanation' => 'Base pricing using cost multiplier analysis'
     ];
-    
+
     // 2. Market Research Pricing
     $marketPrice = $pricingStrategies['market_research_price'] * $baseMultiplier;
     if ($marketPrice > 0) {
@@ -266,19 +272,19 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
             $randomFactor = 1 + (mt_rand(-100, 100) / 1000) * $variation;
             $marketPrice *= $randomFactor;
         }
-        
+
         $factors['market_research'] = $marketPrice;
         $pricingComponents['market_research'] = [
             'amount' => $marketPrice,
             'label' => 'Market research analysis',
             'explanation' => 'Competitive market analysis and pricing research'
         ];
-        
+
         // Use AI-configured weights instead of hardcoded values
         $basePrice = ($basePrice * (1 - $marketWeight)) + ($marketPrice * $marketWeight);
         $confidence = 'high';
     }
-    
+
     // 3. Competitive Analysis
     $competitivePrice = $pricingStrategies['competitive_price'];
     if ($competitivePrice > 0) {
@@ -291,7 +297,7 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
         $basePrice = ($basePrice * 0.7) + ($competitivePrice * 0.3);
         $confidence = 'high';
     }
-    
+
     // 4. Value-Based Pricing
     $valuePrice = $pricingStrategies['value_based_price'] * $baseMultiplier;
     if ($valuePrice > 0) {
@@ -301,18 +307,18 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
             $randomFactor = 1 + (mt_rand(-100, 100) / 1000) * $variation;
             $valuePrice *= $randomFactor;
         }
-        
+
         $factors['value_based'] = $valuePrice;
         $pricingComponents['value_based'] = [
             'amount' => $valuePrice,
             'label' => 'Value-based pricing',
             'explanation' => 'Pricing based on perceived customer value and benefits'
         ];
-        
+
         // Use AI-configured weight instead of hardcoded value
         $basePrice = ($basePrice * (1 - $valueWeight)) + ($valuePrice * $valueWeight);
     }
-    
+
     // 5. Brand Premium Analysis
     $brandPremium = $pricingStrategies['brand_premium_factor'] ?? 1.0;
     if ($brandPremium > 1.0) {
@@ -324,7 +330,7 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
         ];
         $basePrice = $basePrice * $brandPremium;
     }
-    
+
     // 6. Psychological Pricing
     $psychPrice = applyPsychologicalPricing($basePrice);
     if ($psychPrice != $basePrice) {
@@ -335,16 +341,16 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
         ];
         $basePrice = $psychPrice;
     }
-    
+
     // Build reasoning array from components
     foreach ($pricingComponents as $key => $component) {
         $reasoning[] = $component['label'] . ': $' . number_format($component['amount'], 2);
     }
-    
+
     // Validate final price
     $finalPrice = validatePriceRange($basePrice, $costPrice);
     $factors['final'] = $finalPrice;
-    
+
     // Convert pricingComponents to the format expected by frontend
     $components = [];
     foreach ($pricingComponents as $key => $component) {
@@ -355,7 +361,7 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
             'explanation' => $component['explanation']
         ];
     }
-    
+
     // Enhanced analysis data with individual components
     $enhancedAnalysis = [
         'detected_materials' => $itemAnalysis['materials'] ?? [],
@@ -384,7 +390,7 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
         'pricing_elasticity_notes' => $pricingStrategies['pricing_elasticity_notes'] ?? '',
         'pricing_components' => $pricingComponents  // Add individual components for frontend
     ];
-    
+
     return [
         'price' => $finalPrice,
         'reasoning' => implode(' • ', $reasoning),
@@ -396,22 +402,24 @@ function analyzePricing($name, $description, $category, $costPrice, $pdo) {
 }
 
 // Helper function to determine primary pricing strategy
-function determinePrimaryStrategy($strategies) {
+function determinePrimaryStrategy($strategies)
+{
     $maxPrice = 0;
     $primaryStrategy = 'cost_plus';
-    
+
     foreach ($strategies as $key => $value) {
         if (strpos($key, '_price') !== false && $value > $maxPrice) {
             $maxPrice = $value;
             $primaryStrategy = str_replace('_price', '', $key);
         }
     }
-    
+
     return $primaryStrategy;
 }
 
 // Helper function to determine pricing tier
-function determinePricingTier($price, $category) {
+function determinePricingTier($price, $category)
+{
     $categoryTiers = [
         'T-Shirts' => ['budget' => 15, 'standard' => 25, 'premium' => 40],
         'Tumblers' => ['budget' => 20, 'standard' => 35, 'premium' => 50],
@@ -419,24 +427,29 @@ function determinePricingTier($price, $category) {
         'Sublimation' => ['budget' => 25, 'standard' => 45, 'premium' => 75],
         'Window Wraps' => ['budget' => 40, 'standard' => 80, 'premium' => 150]
     ];
-    
+
     $tiers = $categoryTiers[$category] ?? ['budget' => 20, 'standard' => 35, 'premium' => 60];
-    
-    if ($price <= $tiers['budget']) return 'budget';
-    if ($price <= $tiers['standard']) return 'standard';
+
+    if ($price <= $tiers['budget']) {
+        return 'budget';
+    }
+    if ($price <= $tiers['standard']) {
+        return 'standard';
+    }
     return 'premium';
 }
 
 // Helper function to calculate profit margin analysis
-function calculateProfitMarginAnalysis($retailPrice, $costPrice) {
+function calculateProfitMarginAnalysis($retailPrice, $costPrice)
+{
     if ($costPrice <= 0) {
         return 'Cost price not available for margin calculation';
     }
-    
+
     $profit = $retailPrice - $costPrice;
     $marginPercent = ($profit / $retailPrice) * 100;
     $markupPercent = ($profit / $costPrice) * 100;
-    
+
     return sprintf(
         'Profit: $%.2f (%.1f%% margin, %.1f%% markup)',
         $profit,
@@ -446,7 +459,8 @@ function calculateProfitMarginAnalysis($retailPrice, $costPrice) {
 }
 // loadAISettings function moved to ai_manager.php for centralization
 
-function getCategoryMarkup($category) {
+function getCategoryMarkup($category)
+{
     $markups = [
         'T-Shirts' => 2.5,
         'Tumblers' => 2.8,
@@ -455,13 +469,14 @@ function getCategoryMarkup($category) {
         'Window Wraps' => 3.5,
         'default' => 2.5
     ];
-    
+
     return $markups[$category] ?? $markups['default'];
 }
 
-function estimateBasePriceFromName($name, $category) {
+function estimateBasePriceFromName($name, $category)
+{
     $name = strtolower($name);
-    
+
     // Category base prices
     $basePrices = [
         'T-Shirts' => 15.00,
@@ -471,23 +486,24 @@ function estimateBasePriceFromName($name, $category) {
         'Window Wraps' => 35.00,
         'default' => 18.00
     ];
-    
+
     $basePrice = $basePrices[$category] ?? $basePrices['default'];
-    
+
     // Size adjustments
     if (preg_match('/\b(xl|xxl|large|big)\b/i', $name)) {
         $basePrice *= 1.2;
     } elseif (preg_match('/\b(small|mini|xs)\b/i', $name)) {
         $basePrice *= 0.8;
     }
-    
+
     return $basePrice;
 }
 
-function simulateMarketResearch($name, $description, $category) {
+function simulateMarketResearch($name, $description, $category)
+{
     // Simulate market research based on item characteristics
     $keywords = extractKeywords($name . ' ' . $description);
-    
+
     // Market price ranges by category and keywords
     $marketRanges = [
         'T-Shirts' => ['min' => 12, 'max' => 35],
@@ -497,62 +513,76 @@ function simulateMarketResearch($name, $description, $category) {
         'Window Wraps' => ['min' => 25, 'max' => 80],
         'default' => ['min' => 10, 'max' => 40]
     ];
-    
+
     $range = $marketRanges[$category] ?? $marketRanges['default'];
-    
+
     // Adjust based on keywords
     $priceModifier = 1.0;
     $premiumKeywords = ['custom', 'personalized', 'premium', 'deluxe', 'professional', 'vintage', 'artisan'];
     $budgetKeywords = ['basic', 'simple', 'standard', 'economy'];
-    
+
     foreach ($premiumKeywords as $keyword) {
         if (stripos($name . ' ' . $description, $keyword) !== false) {
             $priceModifier += 0.3;
             break;
         }
     }
-    
+
     foreach ($budgetKeywords as $keyword) {
         if (stripos($name . ' ' . $description, $keyword) !== false) {
             $priceModifier -= 0.2;
             break;
         }
     }
-    
+
     $estimatedPrice = ($range['min'] + $range['max']) / 2 * $priceModifier;
-    
+
     return [
         'found' => true,
         'price' => max($range['min'], min($range['max'], $estimatedPrice))
     ];
 }
 
-function getCategoryAdjustment($category, $name) {
+function getCategoryAdjustment($category, $name)
+{
     $name = strtolower($name);
-    
+
     // Category-specific adjustments
     switch ($category) {
         case 'Artwork':
-            if (strpos($name, 'canvas') !== false) return 1.3;
-            if (strpos($name, 'print') !== false) return 0.9;
+            if (strpos($name, 'canvas') !== false) {
+                return 1.3;
+            }
+            if (strpos($name, 'print') !== false) {
+                return 0.9;
+            }
             break;
         case 'T-Shirts':
-            if (strpos($name, 'organic') !== false || strpos($name, 'eco') !== false) return 1.4;
-            if (strpos($name, 'cotton') !== false) return 1.1;
+            if (strpos($name, 'organic') !== false || strpos($name, 'eco') !== false) {
+                return 1.4;
+            }
+            if (strpos($name, 'cotton') !== false) {
+                return 1.1;
+            }
             break;
         case 'Tumblers':
-            if (strpos($name, 'insulated') !== false || strpos($name, 'thermal') !== false) return 1.3;
-            if (strpos($name, 'stainless') !== false) return 1.2;
+            if (strpos($name, 'insulated') !== false || strpos($name, 'thermal') !== false) {
+                return 1.3;
+            }
+            if (strpos($name, 'stainless') !== false) {
+                return 1.2;
+            }
             break;
     }
-    
+
     return 1.0;
 }
 
-function detectPremiumFeatures($name, $description) {
+function detectPremiumFeatures($name, $description)
+{
     $text = strtolower($name . ' ' . $description);
     $multiplier = 1.0;
-    
+
     $premiumFeatures = [
         'handmade' => 1.4,
         'custom' => 1.3,
@@ -565,17 +595,18 @@ function detectPremiumFeatures($name, $description) {
         'vintage' => 1.3,
         'exclusive' => 1.4
     ];
-    
+
     foreach ($premiumFeatures as $feature => $factor) {
         if (strpos($text, $feature) !== false) {
             $multiplier = max($multiplier, $factor);
         }
     }
-    
+
     return $multiplier;
 }
 
-function getCompetitiveAnalysis($name, $category, $pdo) {
+function getCompetitiveAnalysis($name, $category, $pdo)
+{
     try {
         // Get similar items from database
         $stmt = $pdo->prepare("
@@ -588,7 +619,7 @@ function getCompetitiveAnalysis($name, $category, $pdo) {
         ");
         $stmt->execute([$category, $name]);
         $prices = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         if (count($prices) > 0) {
             return [
                 'count' => count($prices),
@@ -601,11 +632,12 @@ function getCompetitiveAnalysis($name, $category, $pdo) {
     } catch (Exception $e) {
         error_log("Error in competitive analysis: " . $e->getMessage());
     }
-    
+
     return ['count' => 0];
 }
 
-function applyPsychologicalPricing($price) {
+function applyPsychologicalPricing($price)
+{
     // Apply psychological pricing (ending in .99, .95, etc.)
     if ($price >= 20) {
         // For higher prices, use .99
@@ -623,35 +655,38 @@ function applyPsychologicalPricing($price) {
     }
 }
 
-function validatePriceRange($price, $costPrice) {
+function validatePriceRange($price, $costPrice)
+{
     // Ensure minimum markup if cost price is known
     if ($costPrice > 0) {
         $minPrice = $costPrice * 1.5; // Minimum 50% markup
         $maxPrice = $costPrice * 8.0; // Maximum 800% markup
-        
+
         $price = max($minPrice, min($maxPrice, $price));
     }
-    
+
     // Ensure reasonable absolute minimums
     $price = max(1.00, $price);
-    
+
     return $price;
 }
 
-function extractKeywords($text) {
+function extractKeywords($text)
+{
     $text = strtolower($text);
     $commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];
     $words = preg_split('/\s+/', $text);
-    
-    return array_filter($words, function($word) use ($commonWords) {
+
+    return array_filter($words, function ($word) use ($commonWords) {
         return strlen($word) > 2 && !in_array($word, $commonWords);
     });
 }
 
 // Enhanced Pricing Analysis Functions
-function analyzeItemForPricing($name, $description, $category) {
+function analyzeItemForPricing($name, $description, $category)
+{
     $text = strtolower($name . ' ' . $description);
-    
+
     return [
         'materials' => detectMaterialsForPricing($text),
         'features' => detectFeaturesForPricing($text),
@@ -671,23 +706,24 @@ function analyzeItemForPricing($name, $description, $category) {
     ];
 }
 
-function analyzePricingStrategies($name, $description, $category, $costPrice, $itemAnalysis, $pdo) {
+function analyzePricingStrategies($name, $description, $category, $costPrice, $itemAnalysis, $pdo)
+{
     // Cost-plus pricing
     $costPlusPrice = calculateCostPlusPrice($costPrice, $category, $itemAnalysis);
-    
+
     // Market Research Pricing
     $marketResearchPrice = calculateMarketResearchPrice($name, $description, $category, $itemAnalysis);
-    
+
     // Competitive Pricing
     $competitiveData = getEnhancedCompetitiveAnalysis($name, $category, $itemAnalysis, $pdo);
     $competitivePrice = $competitiveData['suggested_price'];
-    
+
     // Value-Based Pricing
     $valueBasedPrice = calculateValueBasedPrice($itemAnalysis, $category);
-    
+
     // Confidence metrics
     $confidenceMetrics = calculatePricingConfidenceMetrics($costPrice, $marketResearchPrice, $competitivePrice, $valueBasedPrice);
-    
+
     return [
         'cost_plus_price' => $costPlusPrice,
         'market_research_price' => $marketResearchPrice,
@@ -701,10 +737,11 @@ function analyzePricingStrategies($name, $description, $category, $costPrice, $i
     ];
 }
 
-function detectMaterialsForPricing($text) {
+function detectMaterialsForPricing($text)
+{
     // Reuse material detection but focus on pricing impact
     $materials = [];
-    
+
     $materialPricingDatabase = [
         'organic_cotton' => ['price_premium' => 1.4, 'market_appeal' => 'high'],
         'cotton' => ['price_premium' => 1.0, 'market_appeal' => 'standard'],
@@ -715,7 +752,7 @@ function detectMaterialsForPricing($text) {
         'ceramic' => ['price_premium' => 1.2, 'market_appeal' => 'standard'],
         'glass' => ['price_premium' => 1.5, 'market_appeal' => 'premium']
     ];
-    
+
     foreach ($materialPricingDatabase as $material => $data) {
         if (strpos($text, str_replace('_', ' ', $material)) !== false) {
             $materials[] = [
@@ -725,14 +762,15 @@ function detectMaterialsForPricing($text) {
             ];
         }
     }
-    
+
     return $materials;
 }
 
-function detectFeaturesForPricing($text) {
+function detectFeaturesForPricing($text)
+{
     // Focus on features that impact pricing
     $features = [];
-    
+
     $featurePricingDatabase = [
         'custom_design' => ['price_impact' => 1.5, 'market_demand' => 'high'],
         'personalized' => ['price_impact' => 1.4, 'market_demand' => 'high'],
@@ -743,7 +781,7 @@ function detectFeaturesForPricing($text) {
         'eco_friendly' => ['price_impact' => 1.3, 'market_demand' => 'growing'],
         'vintage' => ['price_impact' => 1.4, 'market_demand' => 'niche']
     ];
-    
+
     foreach ($featurePricingDatabase as $feature => $data) {
         $keywords = explode('_', $feature);
         foreach ($keywords as $keyword) {
@@ -757,25 +795,26 @@ function detectFeaturesForPricing($text) {
             }
         }
     }
-    
+
     return $features;
 }
 
-function analyzeSizeForPricing($text, $category) {
+function analyzeSizeForPricing($text, $category)
+{
     // Size analysis with pricing focus
     $sizeAnalysis = [
         'detected_size' => 'standard',
         'price_multiplier' => 1.0,
         'market_segment' => 'mainstream'
     ];
-    
+
     $sizePricingPatterns = [
         'small' => ['multiplier' => 0.8, 'segment' => 'budget'],
         'standard' => ['multiplier' => 1.0, 'segment' => 'mainstream'],
         'large' => ['multiplier' => 1.3, 'segment' => 'premium'],
         'extra_large' => ['multiplier' => 1.6, 'segment' => 'premium']
     ];
-    
+
     foreach ($sizePricingPatterns as $size => $data) {
         if (strpos($text, $size) !== false || strpos($text, str_replace('_', ' ', $size)) !== false) {
             $sizeAnalysis['detected_size'] = $size;
@@ -784,20 +823,21 @@ function analyzeSizeForPricing($text, $category) {
             break;
         }
     }
-    
+
     return $sizeAnalysis;
 }
 
-function calculatePricingComplexity($materials, $features, $sizeAnalysis, $category) {
+function calculatePricingComplexity($materials, $features, $sizeAnalysis, $category)
+{
     $complexity = 0.5;
-    
+
     // Material complexity
     foreach ($materials as $material) {
         if ($material['market_appeal'] === 'premium') {
             $complexity += 0.2;
         }
     }
-    
+
     // Feature complexity
     foreach ($features as $feature) {
         if ($feature['market_demand'] === 'premium') {
@@ -806,7 +846,7 @@ function calculatePricingComplexity($materials, $features, $sizeAnalysis, $categ
             $complexity += 0.2;
         }
     }
-    
+
     // Category base complexity
     $categoryComplexity = [
         'T-Shirts' => 0.3,
@@ -815,15 +855,16 @@ function calculatePricingComplexity($materials, $features, $sizeAnalysis, $categ
         'Sublimation' => 0.6,
         'Window Wraps' => 0.7
     ];
-    
+
     $complexity += $categoryComplexity[$category] ?? 0.5;
-    
+
     return min(2.0, max(0.1, $complexity));
 }
 
-function analyzeTargetAudience($text, $category, $features) {
+function analyzeTargetAudience($text, $category, $features)
+{
     $audiences = [];
-    
+
     // Category-based audience
     $categoryAudiences = [
         'T-Shirts' => ['casual_wear', 'fashion_conscious'],
@@ -832,9 +873,9 @@ function analyzeTargetAudience($text, $category, $features) {
         'Sublimation' => ['gift_buyers', 'personalization_seekers'],
         'Window Wraps' => ['business_owners', 'advertisers']
     ];
-    
+
     $audiences = $categoryAudiences[$category] ?? ['general_consumers'];
-    
+
     // Feature-based audience refinement
     foreach ($features as $feature) {
         switch ($feature['type']) {
@@ -849,14 +890,15 @@ function analyzeTargetAudience($text, $category, $features) {
                 break;
         }
     }
-    
+
     return array_unique($audiences);
 }
 
-function calculateSeasonalityFactor($text, $category) {
+function calculateSeasonalityFactor($text, $category)
+{
     $currentMonth = date('n'); // 1-12
     $seasonalityFactor = 1.0;
-    
+
     // Seasonal keywords
     $seasonalKeywords = [
         'christmas' => ['months' => [11, 12], 'factor' => 1.3],
@@ -867,20 +909,21 @@ function calculateSeasonalityFactor($text, $category) {
         'graduation' => ['months' => [5, 6], 'factor' => 1.2],
         'back to school' => ['months' => [8, 9], 'factor' => 1.1]
     ];
-    
+
     foreach ($seasonalKeywords as $keyword => $data) {
         if (strpos($text, $keyword) !== false && in_array($currentMonth, $data['months'])) {
             $seasonalityFactor = $data['factor'];
             break;
         }
     }
-    
+
     return $seasonalityFactor;
 }
 
-function calculateBrandPremium($text, $features, $marketPositioning) {
+function calculateBrandPremium($text, $features, $marketPositioning)
+{
     $brandPremium = 1.0;
-    
+
     // Market positioning impact
     switch ($marketPositioning) {
         case 'luxury':
@@ -895,7 +938,7 @@ function calculateBrandPremium($text, $features, $marketPositioning) {
         default:
             $brandPremium = 1.0;
     }
-    
+
     // Feature-based brand premium
     foreach ($features as $feature) {
         if ($feature['type'] === 'luxury') {
@@ -904,17 +947,18 @@ function calculateBrandPremium($text, $features, $marketPositioning) {
             $brandPremium = max($brandPremium, 1.4);
         }
     }
-    
+
     return $brandPremium;
 }
 
-function analyzeDemandIndicators($text, $category) {
+function analyzeDemandIndicators($text, $category)
+{
     $indicators = [
         'trend_alignment' => 'neutral',
         'market_saturation' => 'medium',
         'uniqueness_score' => 0.5
     ];
-    
+
     // Trend keywords
     $trendKeywords = ['trending', 'popular', 'viral', 'hot', 'new', 'latest'];
     foreach ($trendKeywords as $keyword) {
@@ -923,7 +967,7 @@ function analyzeDemandIndicators($text, $category) {
             break;
         }
     }
-    
+
     // Uniqueness indicators
     $uniqueKeywords = ['custom', 'unique', 'one-of-a-kind', 'exclusive', 'limited'];
     $uniqueCount = 0;
@@ -933,11 +977,12 @@ function analyzeDemandIndicators($text, $category) {
         }
     }
     $indicators['uniqueness_score'] = min(1.0, $uniqueCount * 0.3);
-    
+
     return $indicators;
 }
 
-function estimatePricingElasticity($category, $features, $marketPositioning) {
+function estimatePricingElasticity($category, $features, $marketPositioning)
+{
     // Base elasticity by category (lower = less price sensitive)
     $categoryElasticity = [
         'T-Shirts' => 0.8,
@@ -946,9 +991,9 @@ function estimatePricingElasticity($category, $features, $marketPositioning) {
         'Sublimation' => 0.7,
         'Window Wraps' => 0.5
     ];
-    
+
     $elasticity = $categoryElasticity[$category] ?? 0.6;
-    
+
     // Adjust based on market positioning
     switch ($marketPositioning) {
         case 'luxury':
@@ -958,18 +1003,19 @@ function estimatePricingElasticity($category, $features, $marketPositioning) {
             $elasticity *= 1.5; // Budget buyers more price sensitive
             break;
     }
-    
+
     // Feature adjustments
     foreach ($features as $feature) {
         if ($feature['type'] === 'custom_design') {
             $elasticity *= 0.7; // Custom items less price sensitive
         }
     }
-    
+
     return min(2.0, max(0.1, $elasticity));
 }
 
-function calculateCostPlusPrice($costPrice, $category, $itemAnalysis) {
+function calculateCostPlusPrice($costPrice, $category, $itemAnalysis)
+{
     if ($costPrice <= 0) {
         // Estimate cost based on category
         $estimatedCosts = [
@@ -981,47 +1027,49 @@ function calculateCostPlusPrice($costPrice, $category, $itemAnalysis) {
         ];
         $costPrice = $estimatedCosts[$category] ?? 7.00;
     }
-    
+
     $markup = getCategoryMarkup($category);
-    
+
     // Adjust markup based on complexity and features
     $complexity = $itemAnalysis['complexity_score'] ?? 0.5;
     $markup *= (1 + ($complexity - 0.5) * 0.5);
-    
+
     return $costPrice * $markup;
 }
 
-function calculateMarketResearchPrice($name, $description, $category, $itemAnalysis) {
+function calculateMarketResearchPrice($name, $description, $category, $itemAnalysis)
+{
     $basePrice = simulateMarketResearch($name, $description, $category);
-    
+
     if (!$basePrice['found']) {
         return 0;
     }
-    
+
     $price = $basePrice['price'];
-    
-            // Adjust based on item analysis
+
+    // Adjust based on item analysis
     foreach ($itemAnalysis['materials'] as $material) {
         $price *= $material['price_premium'];
     }
-    
+
     foreach ($itemAnalysis['features'] as $feature) {
         $price *= $feature['price_impact'];
     }
-    
+
     return $price;
 }
 
-function getEnhancedCompetitiveAnalysis($name, $category, $itemAnalysis, $pdo) {
+function getEnhancedCompetitiveAnalysis($name, $category, $itemAnalysis, $pdo)
+{
     $basicAnalysis = getCompetitiveAnalysis($name, $category, $pdo);
-    
+
     $analysis = [
         'competitor_count' => $basicAnalysis['count'],
         'price_range' => [],
         'positioning_gap' => 'none',
         'suggested_price' => 0
     ];
-    
+
     if ($basicAnalysis['count'] > 0) {
         $analysis['price_range'] = [
             'min' => $basicAnalysis['min'],
@@ -1029,10 +1077,10 @@ function getEnhancedCompetitiveAnalysis($name, $category, $itemAnalysis, $pdo) {
             'average' => $basicAnalysis['average'],
             'median' => $basicAnalysis['median']
         ];
-        
+
         // Determine positioning strategy
         $avgPrice = $basicAnalysis['average'];
-        
+
         if ($itemAnalysis['market_positioning'] === 'premium') {
             $analysis['suggested_price'] = $avgPrice * 1.3; // Price above average
             $analysis['positioning_gap'] = 'premium_opportunity';
@@ -1044,14 +1092,15 @@ function getEnhancedCompetitiveAnalysis($name, $category, $itemAnalysis, $pdo) {
             $analysis['positioning_gap'] = 'competitive_parity';
         }
     }
-    
+
     return [
         'analysis' => $analysis,
         'suggested_price' => $analysis['suggested_price']
     ];
 }
 
-function calculateValueBasedPrice($itemAnalysis, $category) {
+function calculateValueBasedPrice($itemAnalysis, $category)
+{
     // Base value by category
     $categoryValues = [
         'T-Shirts' => 20.00,
@@ -1060,9 +1109,9 @@ function calculateValueBasedPrice($itemAnalysis, $category) {
         'Sublimation' => 25.00,
         'Window Wraps' => 50.00
     ];
-    
+
     $baseValue = $categoryValues[$category] ?? 25.00;
-    
+
     // Adjust based on features
     foreach ($itemAnalysis['features'] as $feature) {
         if ($feature['market_demand'] === 'high') {
@@ -1071,71 +1120,73 @@ function calculateValueBasedPrice($itemAnalysis, $category) {
             $baseValue *= 1.5;
         }
     }
-    
+
     // Adjust based on uniqueness
     $uniquenessScore = $itemAnalysis['demand_indicators']['uniqueness_score'];
     $baseValue *= (1 + $uniquenessScore);
-    
+
     return $baseValue;
 }
 
-function calculatePricingConfidenceMetrics($costPrice, $marketPrice, $competitivePrice, $valuePrice) {
+function calculatePricingConfidenceMetrics($costPrice, $marketPrice, $competitivePrice, $valuePrice)
+{
     $confidence = [
         'market' => 0.6,
         'competitive' => 0.5,
         'value' => 0.5,
         'pricing' => 0.6
     ];
-    
+
     // Higher confidence if we have cost price
     if ($costPrice > 0) {
         $confidence['pricing'] = 0.9;
     }
-    
+
     // Higher confidence if we have market data
     if ($marketPrice > 0) {
         $confidence['market'] = 0.9;
     }
-    
+
     // Higher confidence if we have competitive data
     if ($competitivePrice > 0) {
         $confidence['competitive'] = 0.9;
     }
-    
+
     // Higher confidence if value price is reasonable
     if ($valuePrice > 0 && $valuePrice < 1000) {
         $confidence['value'] = 0.8;
     }
-    
+
     return $confidence;
 }
 
-function analyzeMarketPositioning($text, $features, $category) {
+function analyzeMarketPositioning($text, $features, $category)
+{
     $premiumKeywords = ['luxury', 'premium', 'high-end', 'professional', 'artisan', 'custom', 'bespoke'];
     $budgetKeywords = ['basic', 'simple', 'standard', 'economy', 'budget'];
-    
+
     $premiumScore = 0;
     $budgetScore = 0;
-    
+
     foreach ($premiumKeywords as $keyword) {
         if (strpos($text, $keyword) !== false) {
             $premiumScore++;
         }
     }
-    
+
     foreach ($budgetKeywords as $keyword) {
         if (strpos($text, $keyword) !== false) {
             $budgetScore++;
         }
     }
-    
+
     // Check features for premium indicators
     foreach ($features as $feature) {
         if (in_array($feature['type'], ['custom_design', 'premium_finish', 'handmade', 'embroidery', 'luxury'])) {
             $premiumScore++;
         }
     }
-    
+
     if ($premiumScore > $budgetScore) {
         return 'premium';
     } elseif ($budgetScore > 0) {

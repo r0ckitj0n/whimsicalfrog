@@ -1,4 +1,5 @@
 <?php
+
 // Include centralized database class
 require_once __DIR__ . '/../includes/database.php';
 
@@ -6,21 +7,27 @@ require_once __DIR__ . '/../includes/database.php';
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Always log errors to file so production issues are captured without exposing details
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/php_error.log');
+
 // For API endpoints, don't display HTML errors - only log them
 if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
     ini_set('display_errors', 0);
     ini_set('html_errors', 0);
 } else {
-    ini_set('display_errors', 1);
+    // Only display errors in the browser while in local development
+    ini_set('display_errors', $isLocalhost ? 1 : 0);
 }
 
 // Helper function to detect if this is an AJAX request
-function isAjaxRequest() {
-    return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+function isAjaxRequest()
+{
+    return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
-           (isset($_SERVER['CONTENT_TYPE']) && 
+           (isset($_SERVER['CONTENT_TYPE']) &&
             strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) ||
-           (isset($_SERVER['HTTP_ACCEPT']) && 
+           (isset($_SERVER['HTTP_ACCEPT']) &&
             strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
 }
 
@@ -34,7 +41,7 @@ if (PHP_SAPI === 'cli') {
 
 // Check 2: Check HTTP_HOST for localhost indicators
 if (isset($_SERVER['HTTP_HOST'])) {
-    if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
+    if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
         strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false) {
         $isLocalhost = true;
     }
@@ -42,7 +49,7 @@ if (isset($_SERVER['HTTP_HOST'])) {
 
 // Check 3: Check SERVER_NAME for localhost indicators
 if (isset($_SERVER['SERVER_NAME'])) {
-    if (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || 
+    if (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false ||
         strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false) {
         $isLocalhost = true;
     }

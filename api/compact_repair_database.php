@@ -27,33 +27,33 @@ if (!isAdminWithToken()) {
 try {
     // Create database connection using centralized Database class
     $pdo = Database::getInstance();
-    
+
     // Get list of all tables
     $stmt = $pdo->query("SHOW TABLES");
     $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    
+
     $results = [];
     $processed_count = 0;
     $errors = [];
-    
+
     foreach ($tables as $table) {
         try {
             // Run OPTIMIZE TABLE
             $stmt = $pdo->query("OPTIMIZE TABLE `$table`");
             $optimize_result = $stmt->fetch();
-            
+
             // Run REPAIR TABLE
             $stmt = $pdo->query("REPAIR TABLE `$table`");
             $repair_result = $stmt->fetch();
-            
+
             $results[$table] = [
                 'optimize' => $optimize_result,
                 'repair' => $repair_result,
                 'status' => 'success'
             ];
-            
+
             $processed_count++;
-            
+
         } catch (Exception $e) {
             $results[$table] = [
                 'status' => 'error',
@@ -62,14 +62,14 @@ try {
             $errors[] = "Table $table: " . $e->getMessage();
         }
     }
-    
+
     // Calculate statistics
-    $success_count = count(array_filter($results, function($result) {
+    $success_count = count(array_filter($results, function ($result) {
         return $result['status'] === 'success';
     }));
-    
+
     $error_count = count($errors);
-    
+
     echo json_encode([
         'success' => true,
         'tables_processed' => $processed_count,
@@ -78,10 +78,10 @@ try {
         'error_count' => $error_count,
         'results' => $results,
         'errors' => $errors,
-        'message' => "Database optimization complete. $success_count tables optimized successfully" . 
+        'message' => "Database optimization complete. $success_count tables optimized successfully" .
                     ($error_count > 0 ? ", $error_count errors encountered" : "")
     ]);
-    
+
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([

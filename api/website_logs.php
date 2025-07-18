@@ -41,9 +41,10 @@ try {
     echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
 }
 
-function listAvailableLogs($pdo) {
+function listAvailableLogs($pdo)
+{
     $logs = [];
-    
+
     // Database-based logs only
     $databaseLogs = [
         'analytics_logs' => [
@@ -103,25 +104,25 @@ function listAvailableLogs($pdo) {
             'message_field' => 'email_subject'
         ]
     ];
-    
+
     // Check database logs and create tables if needed
     foreach ($databaseLogs as $type => $info) {
         $tableName = $info['table'];
-        
+
         // Check if table exists
         $stmt = $pdo->query("SHOW TABLES LIKE '$tableName'");
         $tableExists = $stmt->rowCount() > 0;
-        
+
         if (!$tableExists) {
             // Create table based on type
             createLogTable($pdo, $tableName, $type);
         }
-        
+
         // Count entries
         try {
             $stmt = $pdo->query("SELECT COUNT(*) as count FROM $tableName");
             $count = $stmt->fetch()['count'];
-            
+
             // Get last entry timestamp
             $lastEntryTime = null;
             $timestampField = $info['timestamp_field'];
@@ -134,7 +135,7 @@ function listAvailableLogs($pdo) {
             $count = 0;
             $lastEntryTime = null;
         }
-        
+
         $logs[] = [
             'type' => $type,
             'name' => $info['name'],
@@ -148,13 +149,14 @@ function listAvailableLogs($pdo) {
             'log_source' => 'database'
         ];
     }
-    
+
     echo json_encode(['success' => true, 'logs' => $logs]);
 }
 
-function createLogTable($pdo, $tableName, $type) {
+function createLogTable($pdo, $tableName, $type)
+{
     $sql = '';
-    
+
     switch ($type) {
         case 'analytics_logs':
             $sql = "CREATE TABLE $tableName (
@@ -172,7 +174,7 @@ function createLogTable($pdo, $tableName, $type) {
                 INDEX idx_event_type (event_type)
             )";
             break;
-            
+
         case 'error_logs':
             $sql = "CREATE TABLE $tableName (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -190,7 +192,7 @@ function createLogTable($pdo, $tableName, $type) {
                 INDEX idx_file_path (file_path)
             )";
             break;
-            
+
         case 'user_activity_logs':
             $sql = "CREATE TABLE $tableName (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -208,7 +210,7 @@ function createLogTable($pdo, $tableName, $type) {
                 INDEX idx_activity_type (activity_type)
             )";
             break;
-            
+
         case 'admin_activity_logs':
             $sql = "CREATE TABLE $tableName (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -224,7 +226,7 @@ function createLogTable($pdo, $tableName, $type) {
                 INDEX idx_action_type (action_type)
             )";
             break;
-            
+
         case 'order_logs':
             $sql = "CREATE TABLE $tableName (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -241,7 +243,7 @@ function createLogTable($pdo, $tableName, $type) {
                 INDEX idx_action (action)
             )";
             break;
-            
+
         case 'inventory_logs':
             $sql = "CREATE TABLE $tableName (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -259,7 +261,7 @@ function createLogTable($pdo, $tableName, $type) {
                 INDEX idx_action_type (action_type)
             )";
             break;
-            
+
         case 'email_logs':
             $sql = "CREATE TABLE $tableName (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -276,7 +278,7 @@ function createLogTable($pdo, $tableName, $type) {
             )";
             break;
     }
-    
+
     if ($sql) {
         try {
             $pdo->exec($sql);
@@ -286,21 +288,23 @@ function createLogTable($pdo, $tableName, $type) {
     }
 }
 
-function getLogContent($pdo) {
+function getLogContent($pdo)
+{
     $type = $_GET['type'] ?? '';
     $page = (int)($_GET['page'] ?? 1);
     $limit = (int)($_GET['limit'] ?? 50);
     $offset = ($page - 1) * $limit;
-    
+
     if (empty($type)) {
         echo json_encode(['success' => false, 'error' => 'Log type required']);
         return;
     }
-    
+
     getDatabaseLogContent($pdo, $type, $page, $limit, $offset);
 }
 
-function getDatabaseLogContent($pdo, $type, $page, $limit, $offset) {
+function getDatabaseLogContent($pdo, $type, $page, $limit, $offset)
+{
     // Map log types to table configurations
     $logConfigs = [
         'analytics_logs' => [
@@ -339,23 +343,23 @@ function getDatabaseLogContent($pdo, $type, $page, $limit, $offset) {
             'fields' => 'id, to_email, from_email, email_subject, email_type, status, error_message, sent_at'
         ]
     ];
-    
+
     if (!isset($logConfigs[$type])) {
         echo json_encode(['success' => false, 'error' => 'Unknown log type']);
         return;
     }
-    
+
     $config = $logConfigs[$type];
     $table = $config['table'];
     $timestampField = $config['timestamp_field'];
     $fields = $config['fields'];
-    
+
     try {
         // Get total count
         $countStmt = $pdo->prepare("SELECT COUNT(*) as total FROM $table");
         $countStmt->execute();
         $totalCount = $countStmt->fetch()['total'];
-        
+
         // Get log entries
         $stmt = $pdo->prepare("
             SELECT $fields 
@@ -365,7 +369,7 @@ function getDatabaseLogContent($pdo, $type, $page, $limit, $offset) {
         ");
         $stmt->execute([$limit, $offset]);
         $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         echo json_encode([
             'success' => true,
             'type' => $type,
@@ -375,27 +379,29 @@ function getDatabaseLogContent($pdo, $type, $page, $limit, $offset) {
             'limit' => $limit,
             'total_pages' => ceil($totalCount / $limit)
         ]);
-        
+
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
     }
 }
 
-function searchLogs($pdo) {
+function searchLogs($pdo)
+{
     $query = $_GET['query'] ?? '';
     $type = $_GET['type'] ?? '';
-    
+
     if (empty($query)) {
         echo json_encode(['success' => false, 'error' => 'Search query required']);
         return;
     }
-    
+
     searchDatabaseLogs($pdo, $query, $type);
 }
 
-function searchDatabaseLogs($pdo, $query, $type = '') {
+function searchDatabaseLogs($pdo, $query, $type = '')
+{
     $results = [];
-    
+
     // Define searchable tables and their key fields
     $searchTables = [
         'analytics_logs' => ['page_url', 'event_type', 'event_data'],
@@ -406,70 +412,72 @@ function searchDatabaseLogs($pdo, $query, $type = '') {
         'inventory_logs' => ['item_sku', 'change_description'],
         'email_logs' => ['to_email', 'email_subject', 'email_type']
     ];
-    
+
     // If specific type requested, only search that table
     if (!empty($type) && isset($searchTables[$type])) {
         $searchTables = [$type => $searchTables[$type]];
     }
-    
+
     foreach ($searchTables as $table => $fields) {
         try {
             $whereConditions = [];
             $params = [];
-            
+
             foreach ($fields as $field) {
                 $whereConditions[] = "$field LIKE ?";
                 $params[] = "%$query%";
             }
-            
+
             // Get timestamp field for ordering
-            $timestampField = ($table === 'error_logs') ? 'created_at' : 
-                             (($table === 'order_logs' || $table === 'email_logs') ? 
+            $timestampField = ($table === 'error_logs') ? 'created_at' :
+                             (($table === 'order_logs' || $table === 'email_logs') ?
                               ($table === 'email_logs' ? 'sent_at' : 'created_at') : 'timestamp');
-            
+
             $sql = "SELECT *, '$table' as source_table FROM $table WHERE " . implode(' OR ', $whereConditions) . " ORDER BY $timestampField DESC LIMIT 20";
-            
+
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $tableResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             $results = array_merge($results, $tableResults);
-            
+
         } catch (Exception $e) {
             // Table might not exist, continue with others
             continue;
         }
     }
-    
+
     echo json_encode(['success' => true, 'results' => $results, 'query' => $query]);
 }
 
-function clearLog($pdo) {
+function clearLog($pdo)
+{
     $type = $_POST['type'] ?? '';
-    
+
     if (empty($type)) {
         echo json_encode(['success' => false, 'error' => 'Log type required']);
         return;
     }
-    
+
     clearDatabaseLog($pdo, $type);
 }
 
-function clearDatabaseLog($pdo, $type) {
+function clearDatabaseLog($pdo, $type)
+{
     $validTables = [
-        'analytics_logs', 'error_logs', 'user_activity_logs', 
+        'analytics_logs', 'error_logs', 'user_activity_logs',
         'admin_activity_logs', 'order_logs', 'inventory_logs', 'email_logs'
     ];
-    
+
     if (!in_array($type, $validTables)) {
         echo json_encode(['success' => false, 'error' => 'Invalid log type']);
         return;
     }
-    
+
     try {
         $stmt = $pdo->prepare("DELETE FROM $type");
         $result = $stmt->execute();
-        
+
         if ($result) {
             // Reset auto-increment
             $pdo->exec("ALTER TABLE $type AUTO_INCREMENT = 1");
@@ -482,66 +490,69 @@ function clearDatabaseLog($pdo, $type) {
     }
 }
 
-function downloadLog($pdo) {
+function downloadLog($pdo)
+{
     $type = $_GET['type'] ?? '';
-    
+
     if (empty($type)) {
         echo json_encode(['success' => false, 'error' => 'Log type required']);
         return;
     }
-    
+
     downloadDatabaseLog($pdo, $type);
 }
 
-function downloadDatabaseLog($pdo, $type) {
+function downloadDatabaseLog($pdo, $type)
+{
     $validTables = [
-        'analytics_logs', 'error_logs', 'user_activity_logs', 
+        'analytics_logs', 'error_logs', 'user_activity_logs',
         'admin_activity_logs', 'order_logs', 'inventory_logs', 'email_logs'
     ];
-    
+
     if (!in_array($type, $validTables)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'Invalid log type']);
         return;
     }
-    
+
     try {
         $stmt = $pdo->prepare("SELECT * FROM $type ORDER BY id DESC");
         $stmt->execute();
         $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Set headers for file download
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="' . $type . '_' . date('Y-m-d_H-i-s') . '.csv"');
         header('Pragma: no-cache');
         header('Expires: 0');
-        
+
         // Output CSV
         $output = fopen('php://output', 'w');
-        
+
         if (!empty($entries)) {
             // Write header row
             fputcsv($output, array_keys($entries[0]));
-            
+
             // Write data rows
             foreach ($entries as $entry) {
                 fputcsv($output, $entry);
             }
         }
-        
+
         fclose($output);
         exit;
-        
+
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
     }
 }
 
-function cleanupOldLogs($pdo) {
+function cleanupOldLogs($pdo)
+{
     $cutoffDate = date('Y-m-d H:i:s', strtotime('-30 days'));
     $results = [];
-    
+
     $logTables = [
         'analytics_logs' => 'timestamp',
         'error_logs' => 'created_at',
@@ -551,19 +562,19 @@ function cleanupOldLogs($pdo) {
         'inventory_logs' => 'timestamp',
         'email_logs' => 'sent_at'
     ];
-    
+
     foreach ($logTables as $table => $timestampField) {
         try {
             // Count old entries first
             $countStmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE $timestampField < ?");
             $countStmt->execute([$cutoffDate]);
             $oldCount = $countStmt->fetch()['count'];
-            
+
             if ($oldCount > 0) {
                 // Delete old entries
                 $deleteStmt = $pdo->prepare("DELETE FROM $table WHERE $timestampField < ?");
                 $deleted = $deleteStmt->execute([$cutoffDate]);
-                
+
                 if ($deleted) {
                     $results[$table] = [
                         'deleted' => $oldCount,
@@ -590,7 +601,7 @@ function cleanupOldLogs($pdo) {
             ];
         }
     }
-    
+
     return $results;
 }
 ?> 

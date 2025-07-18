@@ -6,23 +6,24 @@ header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
-    $isAdmin = false;
-    
-    // Check session authentication first
-    require_once __DIR__ . '/../includes/auth.php'; if (isAdminWithToken()) {
-        $isAdmin = true;
-    }
-    
-    // Admin token fallback for API access
-    if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
-        $isAdmin = true;
-    }
-    
-    if (!$isAdmin) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Admin access required']);
-        exit;
-    }
+$isAdmin = false;
+
+// Check session authentication first
+require_once __DIR__ . '/../includes/auth.php';
+if (isAdminWithToken()) {
+    $isAdmin = true;
+}
+
+// Admin token fallback for API access
+if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
+    $isAdmin = true;
+}
+
+if (!$isAdmin) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Admin access required']);
+    exit;
+}
 
 // Check if the request method is GET
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -41,8 +42,13 @@ if (empty($sku)) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Get the most recent price suggestion for this SKU
     $stmt = $pdo->prepare("
         SELECT 
@@ -84,15 +90,15 @@ try {
     ");
     $stmt->execute([$sku]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($result) {
         // Get components from database first, fallback to parsing if not available
         $storedComponents = json_decode($result['components'] ?? '[]', true);
         $reasoningText = $result['reasoning'] ?? '';
-        
+
         // Use stored components if available, otherwise parse from reasoning text
         $components = !empty($storedComponents) ? $storedComponents : parseReasoningIntoComponents($reasoningText, $result);
-        
+
         echo json_encode([
             'success' => true,
             'suggestedPrice' => floatval($result['suggested_price']),
@@ -135,36 +141,39 @@ try {
             'error' => 'No price suggestion found for this SKU'
         ]);
     }
-    
+
 } catch (Exception $e) {
     error_log("Error in get_price_suggestion.php: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
 }
 
-function parseReasoningIntoComponents($reasoningText, $dbData) {
+function parseReasoningIntoComponents($reasoningText, $dbData)
+{
     $components = [];
-    
+
     if (empty($reasoningText)) {
         return $components;
     }
-    
+
     // Split reasoning by bullet points or similar separators
     $reasoningItems = preg_split('/[•·]|\s+•\s+/', $reasoningText);
-    
+
     $foundComponents = false;
     foreach ($reasoningItems as $item) {
         $item = trim($item);
-        if (empty($item)) continue;
-        
+        if (empty($item)) {
+            continue;
+        }
+
         // Extract dollar amount and label
         if (preg_match('/^(.+?):\s*\$(\d+(?:\.\d{2})?)/', $item, $matches)) {
             $label = trim($matches[1]);
             $amount = floatval($matches[2]);
-            
+
             // Determine component type and explanation based on label
             $componentData = determineComponentTypeAndExplanation($label, $amount, $dbData);
-            
+
             $components[] = [
                 'label' => $label,
                 'amount' => $amount,
@@ -174,7 +183,7 @@ function parseReasoningIntoComponents($reasoningText, $dbData) {
             $foundComponents = true;
         }
     }
-    
+
     // If no structured components found, create a single component from the full reasoning
     if (!$foundComponents && !empty($reasoningText)) {
         $suggestedPrice = floatval($dbData['suggested_price'] ?? 0);
@@ -185,13 +194,14 @@ function parseReasoningIntoComponents($reasoningText, $dbData) {
             'explanation' => $reasoningText
         ];
     }
-    
+
     return $components;
 }
 
-function determineComponentTypeAndExplanation($label, $amount, $dbData) {
+function determineComponentTypeAndExplanation($label, $amount, $dbData)
+{
     $labelLower = strtolower($label);
-    
+
     // Map label patterns to component types and explanations
     if (strpos($labelLower, 'cost-plus') !== false || strpos($labelLower, 'cost plus') !== false) {
         return [
@@ -199,49 +209,49 @@ function determineComponentTypeAndExplanation($label, $amount, $dbData) {
             'explanation' => 'Base pricing using cost multiplier analysis. This method adds a standard markup to the production cost to ensure profitability while remaining competitive.'
         ];
     }
-    
+
     if (strpos($labelLower, 'market research') !== false) {
         return [
             'type' => 'market_research',
             'explanation' => 'Competitive market analysis and pricing research. Based on analysis of similar products in the market, competitor pricing, and industry benchmarks.'
         ];
     }
-    
+
     if (strpos($labelLower, 'competitive') !== false) {
         return [
             'type' => 'competitive_analysis',
             'explanation' => 'Analysis of competitor pricing and market positioning. Considers direct competitors, market share, and competitive advantages to optimize pricing strategy.'
         ];
     }
-    
+
     if (strpos($labelLower, 'value-based') !== false || strpos($labelLower, 'value based') !== false) {
         return [
             'type' => 'value_based',
             'explanation' => 'Pricing based on perceived customer value and benefits. Considers the unique value proposition, customer benefits, and willingness to pay for specific features.'
         ];
     }
-    
+
     if (strpos($labelLower, 'brand premium') !== false) {
         return [
             'type' => 'brand_premium',
             'explanation' => 'Premium pricing based on brand positioning and market perception. Reflects the additional value customers place on brand reputation, quality, and exclusivity.'
         ];
     }
-    
+
     if (strpos($labelLower, 'psychological') !== false) {
         return [
             'type' => 'psychological_pricing',
             'explanation' => 'Price optimization using psychological pricing principles. Techniques like charm pricing ($19.99 vs $20.00) to make prices more appealing to customers.'
         ];
     }
-    
+
     if (strpos($labelLower, 'seasonal') !== false) {
         return [
             'type' => 'seasonality',
             'explanation' => 'Seasonal pricing adjustments based on demand patterns. Considers seasonal trends, holiday demand, and market timing to optimize pricing.'
         ];
     }
-    
+
     // Handle comprehensive analysis type
     if ($labelLower === 'ai pricing analysis' || $labelLower === 'comprehensive analysis') {
         return [
@@ -249,7 +259,7 @@ function determineComponentTypeAndExplanation($label, $amount, $dbData) {
             'explanation' => 'Comprehensive AI pricing analysis considering multiple market factors, competitive positioning, and strategic pricing approaches to determine optimal pricing.'
         ];
     }
-    
+
     // Default for unrecognized patterns
     return [
         'type' => 'analysis',

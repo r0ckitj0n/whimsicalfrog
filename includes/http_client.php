@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Centralized HTTP Client
  * Handles cURL operations, API calls, and HTTP requests
@@ -6,7 +7,8 @@
 
 
 require_once __DIR__ . '/file_operations.php';
-class HttpClient {
+class HttpClient
+{
     private $defaultOptions = [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 30,
@@ -20,12 +22,13 @@ class HttpClient {
 
     private $headers = [];
     private $options = [];
-// __construct function moved to constructor_manager.php for centralization
+    // __construct function moved to constructor_manager.php for centralization
 
     /**
      * Set default headers
      */
-    public function setHeaders(array $headers) {
+    public function setHeaders(array $headers)
+    {
         $this->headers = array_merge($this->headers, $headers);
         return $this;
     }
@@ -33,7 +36,8 @@ class HttpClient {
     /**
      * Set a single header
      */
-    public function setHeader($key, $value) {
+    public function setHeader($key, $value)
+    {
         $this->headers[$key] = $value;
         return $this;
     }
@@ -41,7 +45,8 @@ class HttpClient {
     /**
      * Set cURL options
      */
-    public function setOptions(array $options) {
+    public function setOptions(array $options)
+    {
         $this->options = array_merge($this->options, $options);
         return $this;
     }
@@ -49,7 +54,8 @@ class HttpClient {
     /**
      * Set authentication
      */
-    public function setAuth($username, $password = null, $type = CURLAUTH_BASIC) {
+    public function setAuth($username, $password = null, $type = CURLAUTH_BASIC)
+    {
         if ($password === null) {
             // Bearer token
             $this->setHeader('Authorization', 'Bearer ' . $username);
@@ -64,20 +70,22 @@ class HttpClient {
     /**
      * Make GET request
      */
-    public function get($url, $params = []) {
+    public function get($url, $params = [])
+    {
         if (!empty($params)) {
             $url .= '?' . http_build_query($params);
         }
-        
+
         return $this->makeRequest($url, 'GET');
     }
 
     /**
      * Make POST request
      */
-    public function post($url, $data = null, $contentType = 'application/json') {
+    public function post($url, $data = null, $contentType = 'application/json')
+    {
         $options = [CURLOPT_POST => true];
-        
+
         if ($data !== null) {
             if ($contentType === 'application/json') {
                 $options[CURLOPT_POSTFIELDS] = is_string($data) ? $data : json_encode($data);
@@ -90,16 +98,17 @@ class HttpClient {
                 $this->setHeader('Content-Type', $contentType);
             }
         }
-        
+
         return $this->makeRequest($url, 'POST', $options);
     }
 
     /**
      * Make PUT request
      */
-    public function put($url, $data = null, $contentType = 'application/json') {
+    public function put($url, $data = null, $contentType = 'application/json')
+    {
         $options = [CURLOPT_CUSTOMREQUEST => 'PUT'];
-        
+
         if ($data !== null) {
             if ($contentType === 'application/json') {
                 $options[CURLOPT_POSTFIELDS] = is_string($data) ? $data : json_encode($data);
@@ -109,55 +118,58 @@ class HttpClient {
                 $this->setHeader('Content-Type', $contentType);
             }
         }
-        
+
         return $this->makeRequest($url, 'PUT', $options);
     }
-// delete function moved to database_operations.php for centralization
+    // delete function moved to database_operations.php for centralization
 
     /**
      * Make PATCH request
      */
-    public function patch($url, $data = null) {
+    public function patch($url, $data = null)
+    {
         $options = [
             CURLOPT_CUSTOMREQUEST => 'PATCH',
             CURLOPT_POSTFIELDS => is_string($data) ? $data : json_encode($data)
         ];
-        
+
         $this->setHeader('Content-Type', 'application/json');
-        
+
         return $this->makeRequest($url, 'PATCH', $options);
     }
 
     /**
      * Upload file
      */
-    public function upload($url, $filePath, $fieldName = 'file', $additionalData = []) {
+    public function upload($url, $filePath, $fieldName = 'file', $additionalData = [])
+    {
         if (!file_exists($filePath)) {
             throw new Exception("File not found: $filePath");
         }
 
         $data = $additionalData;
         $data[$fieldName] = new CURLFile($filePath);
-        
+
         $options = [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $data
         ];
-        
+
         return $this->makeRequest($url, 'POST', $options);
     }
 
     /**
      * Download file
      */
-    public function download($url, $savePath) {
+    public function download($url, $savePath)
+    {
         $fp = fopen($savePath, 'w+');
         if (!$fp) {
             throw new Exception("Cannot open file for writing: $savePath");
         }
 
         $options = [CURLOPT_FILE => $fp];
-        
+
         try {
             $response = $this->makeRequest($url, 'GET', $options);
             fclose($fp);
@@ -174,13 +186,14 @@ class HttpClient {
     /**
      * Make the actual cURL request
      */
-    private function makeRequest($url, $method, $additionalOptions = []) {
+    private function makeRequest($url, $method, $additionalOptions = [])
+    {
         $ch = curl_init();
-        
+
         // Merge all options
         $options = array_merge($this->options, $additionalOptions);
         $options[CURLOPT_URL] = $url;
-        
+
         // Set headers
         if (!empty($this->headers)) {
             $headerStrings = [];
@@ -189,46 +202,51 @@ class HttpClient {
             }
             $options[CURLOPT_HTTPHEADER] = $headerStrings;
         }
-        
+
         curl_setopt_array($ch, $options);
-        
+
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         $info = curl_getinfo($ch);
-        
+
         curl_close($ch);
-        
+
         if ($response === false) {
             throw new Exception("cURL Error: $error");
         }
-        
+
         return new HttpResponse($response, $httpCode, $info);
     }
 
     /**
      * Create a new instance with specific configuration
      */
-    public static function create($options = []) {
+    public static function create($options = [])
+    {
         return new self($options);
     }
 
     /**
      * Quick static methods for common operations
      */
-    public static function quickGet($url, $headers = []) {
+    public static function quickGet($url, $headers = [])
+    {
         return self::create()->setHeaders($headers)->get($url);
     }
 
-    public static function quickPost($url, $data = null, $headers = []) {
+    public static function quickPost($url, $data = null, $headers = [])
+    {
         return self::create()->setHeaders($headers)->post($url, $data);
     }
 
-    public static function quickPut($url, $data = null, $headers = []) {
+    public static function quickPut($url, $data = null, $headers = [])
+    {
         return self::create()->setHeaders($headers)->put($url, $data);
     }
 
-    public static function quickDelete($url, $headers = []) {
+    public static function quickDelete($url, $headers = [])
+    {
         return self::create()->setHeaders($headers)->delete($url);
     }
 }
@@ -236,51 +254,58 @@ class HttpClient {
 /**
  * HTTP Response wrapper
  */
-class HttpResponse {
+class HttpResponse
+{
     private $body;
     private $httpCode;
     private $info;
-// __construct function moved to constructor_manager.php for centralization
+    // __construct function moved to constructor_manager.php for centralization
 
     /**
      * Get response body
      */
-    public function getBody() {
+    public function getBody()
+    {
         return $this->body;
     }
 
     /**
      * Get response as JSON
      */
-    public function json() {
+    public function json()
+    {
         return json_decode($this->body, true);
     }
 
     /**
      * Get HTTP status code
      */
-    public function getStatusCode() {
+    public function getStatusCode()
+    {
         return $this->httpCode;
     }
 
     /**
      * Check if request was successful
      */
-    public function isSuccess() {
+    public function isSuccess()
+    {
         return $this->httpCode >= 200 && $this->httpCode < 300;
     }
 
     /**
      * Check if request failed
      */
-    public function isError() {
+    public function isError()
+    {
         return !$this->isSuccess();
     }
 
     /**
      * Get cURL info
      */
-    public function getInfo($key = null) {
+    public function getInfo($key = null)
+    {
         if ($key === null) {
             return $this->info;
         }
@@ -290,35 +315,40 @@ class HttpResponse {
     /**
      * Get response headers
      */
-    public function getHeaders() {
+    public function getHeaders()
+    {
         return $this->getInfo('response_headers') ?? [];
     }
 
     /**
      * Get content type
      */
-    public function getContentType() {
+    public function getContentType()
+    {
         return $this->getInfo('content_type');
     }
 
     /**
      * Get response size
      */
-    public function getSize() {
+    public function getSize()
+    {
         return $this->getInfo('size_download');
     }
 
     /**
      * Get total time
      */
-    public function getTotalTime() {
+    public function getTotalTime()
+    {
         return $this->getInfo('total_time');
     }
 
     /**
      * Throw exception if request failed
      */
-    public function throwIfError($message = null) {
+    public function throwIfError($message = null)
+    {
         if ($this->isError()) {
             $errorMessage = $message ?? "HTTP Error {$this->httpCode}";
             if ($this->body) {
@@ -332,28 +362,34 @@ class HttpResponse {
     /**
      * Convert to string
      */
-    public function __toString() {
+    public function __toString()
+    {
         return $this->body;
     }
 }
 
 // Convenience functions
-function http_get($url, $headers = []) {
+function http_get($url, $headers = [])
+{
     return HttpClient::quickGet($url, $headers);
 }
 
-function http_post($url, $data = null, $headers = []) {
+function http_post($url, $data = null, $headers = [])
+{
     return HttpClient::quickPost($url, $data, $headers);
 }
 
-function http_put($url, $data = null, $headers = []) {
+function http_put($url, $data = null, $headers = [])
+{
     return HttpClient::quickPut($url, $data, $headers);
 }
 
-function http_delete($url, $headers = []) {
+function http_delete($url, $headers = [])
+{
     return HttpClient::quickDelete($url, $headers);
 }
 
-function http_client($options = []) {
+function http_client($options = [])
+{
     return HttpClient::create($options);
-} 
+}

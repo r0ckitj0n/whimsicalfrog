@@ -104,7 +104,7 @@
   });
 
   document.addEventListener('whimsicalfrog:ready', function() {
-    if (typeof initializeRoomCoordinates === 'function') {
+    if (window.ROOM_TYPE && typeof initializeRoomCoordinates === 'function') {
       initializeRoomCoordinates();
     }
   });

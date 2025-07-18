@@ -36,48 +36,53 @@ if (!$isLoggedIn || !$isAdmin) {
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     switch ($action) {
         case 'get_settings':
             $settings = getAISettings();
             echo json_encode(['success' => true, 'settings' => $settings]);
             break;
-            
+
         case 'get_providers':
             $providers = getAIProviders()->getAvailableProviders();
             echo json_encode(['success' => true, 'providers' => $providers]);
             break;
-            
+
         case 'update_settings':
             $input = json_decode(file_get_contents('php://input'), true);
             if (!$input) {
                 throw new Exception('Invalid JSON input');
             }
-            
+
             $result = updateAISettings($input, $pdo);
             echo json_encode(['success' => true, 'message' => 'AI settings updated successfully']);
             break;
-            
+
         case 'test_provider':
             $provider = $_POST['provider'] ?? $_GET['provider'] ?? '';
             if (empty($provider)) {
                 throw new Exception('Provider not specified');
             }
-            
+
             $result = getAIProviders()->testProvider($provider);
             echo json_encode($result);
             break;
-            
+
         case 'init_ai_settings':
             $result = initializeAISettings($pdo);
             echo json_encode(['success' => true, 'message' => 'AI settings initialized', 'inserted' => $result]);
             break;
-            
+
         default:
             throw new Exception('Invalid action');
     }
-    
+
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['error' => $e->getMessage()]);
@@ -86,10 +91,16 @@ try {
 /**
  * Get current AI settings
  */
-function getAISettings() {
+function getAISettings()
+{
     global $dsn, $user, $pass, $options;
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     $defaults = [
         'ai_provider' => 'jons_ai',
         'openai_api_key' => '',
@@ -114,16 +125,16 @@ function getAISettings() {
         'ai_cost_plus_weight' => 0.4,
         'ai_value_based_weight' => 0.3
     ];
-    
+
     try {
         $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
         $stmt->execute();
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         foreach ($results as $row) {
             $key = $row['setting_key'];
             $value = $row['setting_value'];
-            
+
             // Convert string values to appropriate types
             if (in_array($key, ['ai_temperature', 'ai_cost_temperature', 'ai_price_temperature', 'ai_cost_multiplier_base', 'ai_price_multiplier_base', 'ai_market_research_weight', 'ai_cost_plus_weight', 'ai_value_based_weight'])) {
                 $defaults[$key] = (float)$value;
@@ -138,16 +149,17 @@ function getAISettings() {
     } catch (Exception $e) {
         error_log("Error loading AI settings: " . $e->getMessage());
     }
-    
+
     return $defaults;
 }
 
 /**
  * Update AI settings
  */
-function updateAISettings($settings, $pdo) {
+function updateAISettings($settings, $pdo)
+{
     $validSettings = [
-        'ai_provider', 'openai_api_key', 'openai_model', 
+        'ai_provider', 'openai_api_key', 'openai_model',
         'anthropic_api_key', 'anthropic_model',
         'google_api_key', 'google_model',
         'ai_temperature', 'ai_max_tokens', 'ai_timeout',
@@ -158,18 +170,18 @@ function updateAISettings($settings, $pdo) {
         'ai_conservative_mode', 'ai_market_research_weight',
         'ai_cost_plus_weight', 'ai_value_based_weight'
     ];
-    
+
     $stmt = $pdo->prepare("
         INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
         VALUES ('ai', ?, ?, ?, ?, ?) 
         ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)
     ");
-    
+
     foreach ($settings as $key => $value) {
         if (!in_array($key, $validSettings)) {
             continue;
         }
-        
+
         // Convert values to strings for storage
         if (is_bool($value)) {
             $value = $value ? '1' : '0';
@@ -179,7 +191,7 @@ function updateAISettings($settings, $pdo) {
         } else {
             $settingType = 'text';
         }
-        
+
         // Set descriptions and display names
         $descriptions = [
             'ai_provider' => 'Selected AI provider (jons_ai, openai, anthropic, google)',
@@ -205,7 +217,7 @@ function updateAISettings($settings, $pdo) {
             'ai_cost_plus_weight' => 'Weight given to cost-plus pricing (0.0-1.0)',
             'ai_value_based_weight' => 'Weight given to value-based pricing (0.0-1.0)'
         ];
-        
+
         $displayNames = [
             'ai_provider' => 'AI Provider',
             'openai_api_key' => 'OpenAI API Key',
@@ -230,20 +242,21 @@ function updateAISettings($settings, $pdo) {
             'ai_cost_plus_weight' => 'Cost-Plus Weight',
             'ai_value_based_weight' => 'Value-Based Weight'
         ];
-        
+
         $description = $descriptions[$key] ?? '';
         $displayName = $displayNames[$key] ?? ucwords(str_replace('_', ' ', $key));
-        
+
         $stmt->execute([$key, $value, $description, $settingType, $displayName]);
     }
-    
+
     return true;
 }
 
 /**
  * Initialize AI settings with defaults
  */
-function initializeAISettings($pdo) {
+function initializeAISettings($pdo)
+{
     $defaultSettings = [
         'ai_provider' => ['jons_ai', 'Selected AI provider (jons_ai, openai, anthropic, google)', 'text', 'AI Provider'],
         'openai_api_key' => ['', 'OpenAI API key for ChatGPT access', 'text', 'OpenAI API Key'],
@@ -268,12 +281,12 @@ function initializeAISettings($pdo) {
         'ai_cost_plus_weight' => ['0.4', 'Weight given to cost-plus pricing (0.0-1.0)', 'number', 'Cost-Plus Weight'],
         'ai_value_based_weight' => ['0.3', 'Weight given to value-based pricing (0.0-1.0)', 'number', 'Value-Based Weight']
     ];
-    
+
     $stmt = $pdo->prepare("
         INSERT IGNORE INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
         VALUES ('ai', ?, ?, ?, ?, ?)
     ");
-    
+
     $inserted = 0;
     foreach ($defaultSettings as $key => $data) {
         $result = $stmt->execute([$key, $data[0], $data[1], $data[2], $data[3]]);
@@ -281,7 +294,7 @@ function initializeAISettings($pdo) {
             $inserted++;
         }
     }
-    
+
     return $inserted;
 }
 

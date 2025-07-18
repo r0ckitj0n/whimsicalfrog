@@ -2,12 +2,12 @@
 /**
  * Button Template Component
  * Comprehensive button system with multiple variants and configurations
- * 
+ *
  * Usage Examples:
- * 
+ *
  * Basic button:
  * <?php echo render_button(['text' => 'Click Me']); ?>
- * 
+ *
  * Primary button with icon:
  * <?php echo render_button([
  *     'text' => 'Save Changes',
@@ -15,7 +15,7 @@
  *     'icon' => 'save',
  *     'size' => 'lg'
  * ]); ?>
- * 
+ *
  * Button group:
  * <?php echo render_button_group([
  *     ['text' => 'Edit', 'type' => 'secondary'],
@@ -26,7 +26,8 @@
 /**
  * Render a single button
  */
-function render_button($config = []) {
+function render_button($config = [])
+{
     // Default configuration
     $defaults = [
         'text' => 'Button',
@@ -49,12 +50,12 @@ function render_button($config = []) {
         'aria_label' => null,
         'tooltip' => null
     ];
-    
+
     $config = array_merge($defaults, $config);
-    
+
     // Build CSS classes
     $classes = ['btn'];
-    
+
     // Variant and Type classes
     if ($config['variant'] === 'outline') {
         $classes[] = 'btn-outline';
@@ -66,81 +67,81 @@ function render_button($config = []) {
     } else { // solid
         $classes[] = 'btn-' . $config['type'];
     }
-    
+
     // Size classes
     if ($config['size'] !== 'md') {
         $classes[] = 'btn-' . $config['size'];
     }
-    
+
     // Special classes
     if ($config['full_width']) {
         $classes[] = 'btn-block';
     }
-    
+
     if ($config['loading']) {
         $classes[] = 'btn-loading';
     }
-    
+
     if ($config['icon'] && $config['icon_position'] === 'only') {
         $classes[] = 'btn-icon-only';
     }
-    
+
     // Add custom classes
     $classes = array_merge($classes, $config['classes']);
-    
+
     // Build attributes
     $attributes = [];
-    
+
     if ($config['id']) {
         $attributes['id'] = $config['id'];
     }
-    
+
     if ($config['disabled']) {
         $attributes['disabled'] = 'disabled';
         $attributes['aria-disabled'] = 'true';
     }
-    
+
     if ($config['aria_label']) {
         $attributes['aria-label'] = $config['aria_label'];
     }
-    
+
     if ($config['tooltip']) {
         $attributes['title'] = $config['tooltip'];
     }
-    
+
     if ($config['onclick']) {
         $attributes['onclick'] = $config['onclick'];
     }
-    
+
     // Merge custom attributes
     $attributes = array_merge($attributes, $config['attributes']);
-    
+
     // Build the button content
     $content = '';
-    
+
     if ($config['loading']) {
         $content .= '<span class="btn-text">';
     }
-    
+
     // Add icon (left or only)
     if ($config['icon'] && in_array($config['icon_position'], ['left', 'only'])) {
         $content .= render_icon($config['icon']);
     }
-    
+
     // Add text (unless icon-only)
     if ($config['icon_position'] !== 'only') {
         $content .= htmlspecialchars($config['text']);
     }
-    
+
     // Add icon (right)
     if ($config['icon'] && $config['icon_position'] === 'right') {
         $content .= render_icon($config['icon']);
     }
-    
+
     if ($config['loading']) {
         $content .= '</span>';
     }
-    
+
     // Render as link or button
     if ($config['href']) {
         $attributes['href'] = $config['href'];
@@ -156,54 +157,56 @@ function render_button($config = []) {
             $attributes['form'] = $config['form'];
         }
     }
-    
+
     // Build attribute string
     $attr_string = '';
     foreach ($attributes as $key => $value) {
         $attr_string .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars($value) . '"';
     }
-    
+
     return "<{$tag} class=\"" . implode(' ', $classes) . "\"{$attr_string}>{$content}</{$tag}>";
 }
 
 /**
  * Render a button group
  */
-function render_button_group($buttons, $config = []) {
+function render_button_group($buttons, $config = [])
+{
     $defaults = [
         'vertical' => false,
         'classes' => [],
         'attributes' => []
     ];
-    
+
     $config = array_merge($defaults, $config);
-    
+
     $classes = ['btn-group'];
     if ($config['vertical']) {
         $classes[] = 'btn-group-vertical';
     }
     $classes = array_merge($classes, $config['classes']);
-    
+
     $attr_string = '';
     foreach ($config['attributes'] as $key => $value) {
         $attr_string .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars($value) . '"';
     }
-    
+
     $html = "<div class=\"" . implode(' ', $classes) . "\"{$attr_string} role=\"group\">";
-    
+
     foreach ($buttons as $button_config) {
         $html .= render_button($button_config);
     }
-    
+
     $html .= "</div>";
-    
+
     return $html;
 }
 
 /**
  * Render common button combinations
  */
-function render_form_buttons($config = []) {
+function render_form_buttons($config = [])
+{
     $defaults = [
         'submit_text' => 'Save',
         'cancel_text' => 'Cancel',
@@ -212,11 +215,11 @@ function render_form_buttons($config = []) {
         'submit_loading' => false,
         'submit_disabled' => false
     ];
-    
+
     $config = array_merge($defaults, $config);
-    
+
     $buttons = [];
-    
+
     if ($config['show_cancel']) {
         $buttons[] = [
             'text' => $config['cancel_text'],
@@ -224,7 +227,7 @@ function render_form_buttons($config = []) {
             'href' => $config['cancel_href']
         ];
     }
-    
+
     $buttons[] = [
         'text' => $config['submit_text'],
         'type' => 'primary',
@@ -232,11 +235,12 @@ function render_form_buttons($config = []) {
         'loading' => $config['submit_loading'],
         'disabled' => $config['submit_disabled']
     ];
-    
+
     return render_button_group($buttons, ['classes' => ['form-buttons']]);
 }
 
-function render_crud_buttons($config = []) {
+function render_crud_buttons($config = [])
+{
     $defaults = [
         'show_edit' => true,
         'show_delete' => true,
@@ -246,11 +250,11 @@ function render_crud_buttons($config = []) {
         'view_href' => '#',
         'delete_confirm' => true
     ];
-    
+
     $config = array_merge($defaults, $config);
-    
+
     $buttons = [];
-    
+
     if ($config['show_view']) {
         $buttons[] = [
             'text' => 'View',
@@ -260,7 +264,7 @@ function render_crud_buttons($config = []) {
             'icon' => 'eye'
         ];
     }
-    
+
     if ($config['show_edit']) {
         $buttons[] = [
             'text' => 'Edit',
@@ -270,12 +274,12 @@ function render_crud_buttons($config = []) {
             'icon' => 'edit'
         ];
     }
-    
+
     if ($config['show_delete']) {
-        $onclick = $config['delete_confirm'] 
-            ? "return confirm('Are you sure you want to delete this item?')" 
+        $onclick = $config['delete_confirm']
+            ? "return confirm('Are you sure you want to delete this item?')"
             : null;
-            
+
         $buttons[] = [
             'text' => 'Delete',
             'type' => 'danger',
@@ -285,14 +289,15 @@ function render_crud_buttons($config = []) {
             'onclick' => $onclick
         ];
     }
-    
+
     return render_button_group($buttons, ['classes' => ['crud-buttons']]);
 }
 
 /**
  * Render icon (simple icon system)
  */
-function render_icon($icon) {
+function render_icon($icon)
+{
     // Common icons as SVG
     $icons = [
         'save' => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/></svg>',
@@ -307,22 +312,23 @@ function render_icon($icon) {
         'download' => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>',
         'upload' => '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>',
     ];
-    
+
     if (isset($icons[$icon])) {
         return $icons[$icon];
     }
-    
+
     // If icon starts with <svg, assume it's custom SVG
     if (strpos($icon, '<svg') === 0) {
         return $icon;
     }
-    
+
     // Otherwise, return empty string
     return '';
 }
 
 // Example usage functions for common scenarios
-function add_button($href = '#', $text = 'Add New') {
+function add_button($href = '#', $text = 'Add New')
+{
     return render_button([
         'text' => $text,
         'type' => 'primary',
@@ -331,7 +337,8 @@ function add_button($href = '#', $text = 'Add New') {
     ]);
 }
 
-function save_button($loading = false, $disabled = false) {
+function save_button($loading = false, $disabled = false)
+{
     return render_button([
         'text' => 'Save Changes',
         'type' => 'primary',
@@ -342,7 +349,8 @@ function save_button($loading = false, $disabled = false) {
     ]);
 }
 
-function cancel_button($href = null) {
+function cancel_button($href = null)
+{
     return render_button([
         'text' => 'Cancel',
         'type' => 'secondary',
@@ -350,7 +358,8 @@ function cancel_button($href = null) {
     ]);
 }
 
-function delete_button($href = '#', $confirm = true) {
+function delete_button($href = '#', $confirm = true)
+{
     return render_button([
         'text' => 'Delete',
         'type' => 'danger',

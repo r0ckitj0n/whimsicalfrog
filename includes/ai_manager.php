@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WhimsicalFrog AI Management and Configuration
  * Centralized system functions to eliminate duplication
@@ -13,7 +14,8 @@ require_once __DIR__ . '/../api/ai_providers.php';
  * Load AI settings from database
  * @return array
  */
-function loadAISettings() {
+function loadAISettings()
+{
     $defaults = [
         'ai_provider' => 'jons_ai',
         'openai_api_key' => '',
@@ -29,13 +31,13 @@ function loadAISettings() {
         'ai_timeout' => 30,
         'fallback_to_local' => true
     ];
-    
+
     try {
         $pdo = Database::getInstance()->getConnection();
         $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
         $stmt->execute();
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         foreach ($results as $row) {
             $defaults[$row['setting_key']] = $row['setting_value'];
         }
@@ -43,7 +45,7 @@ function loadAISettings() {
         error_log("Error loading AI settings: " . $e->getMessage());
         // Return defaults if database is not available
     }
-    
+
     return $defaults;
 }
 
@@ -51,8 +53,7 @@ function loadAISettings() {
  * Get AI providers list
  * @return array
  */
-function getAIProviders() {
+function getAIProviders()
+{
     return $GLOBALS['aiProviders'] ?? [];
 }
-
-?>

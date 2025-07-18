@@ -1,4 +1,5 @@
 <?php
+
 // scripts/bundle-js.php
 
 // Define the base path relative to this script's location
@@ -8,10 +9,10 @@ $basePath = dirname(__DIR__); // This will be /Users/jongraves/Documents/Website
 // This prevents issues with dependency loading and ensures a consistent build.
 $filesToBundle = [
     // --- Core Systems & Utilities ---
-    'js/whimsical-frog-core.js',
+    'js/whimsical-frog-core.js', // Core must be loaded before other modules
     'js/utils.js',
+    'js/api-client.js',
     'js/central-functions.js',
-    // 'js/wf-unified.js', // Excluded from production bundle to prevent duplicate loader
 
     // --- Global UI Components ---
     'js/ui-manager.js',
@@ -40,8 +41,8 @@ $filesToBundle = [
     'js/room-modal-manager.js', // The main modal manager
 
     // --- Main Application Logic & Cart ---
-    'js/modules/cart-system.js',
-    'js/main.js', // The main application that ties everything together
+    'js/cart-system.js',
+    'js/main-application.js'
 ];
 
 // The output file for the bundled JS
@@ -55,18 +56,16 @@ $bundledJs = '';
 foreach ($filesToBundle as $file) {
     $filePath = $basePath . '/' . $file;
     if (file_exists($filePath) && is_file($filePath)) {
-        
+
         // Add a comment to indicate the start of a file's content
         $bundledJs .= "// --- Start of " . $file . " --- \n\n";
         $bundledJs .= file_get_contents($filePath) . "\n\n";
         // Add a comment to indicate the end of a file's content
         $bundledJs .= "// --- End of " . $file . " --- \n\n";
     } else {
-        
+
     }
 }
 
 // Write the bundled content to the output file
 file_put_contents($outputFile, $bundledJs);
-
-?>

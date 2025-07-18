@@ -16,36 +16,42 @@ $password = 'Palz2516';
 /**
  * Generate dynamic fallback backgrounds based on room data
  */
-function generateDynamicFallbacks() {
+function generateDynamicFallbacks()
+{
     $fallbacks = [
         'landing' => ['png' => 'background_home.png', 'webp' => 'background_home.webp'],
         'room_main' => ['png' => 'background_room_main.png', 'webp' => 'background_room_main.webp']
     ];
-    
+
     // Get all valid rooms from database
     $validRooms = getAllValidRooms();
-    
+
     foreach ($validRooms as $roomNumber) {
         if (!in_array($roomNumber, ['A', 'B'])) {
             // Generate default filenames for product rooms
             $fallbacks["room{$roomNumber}"] = [
-                'png' => "background_room{$roomNumber}.png", 
+                'png' => "background_room{$roomNumber}.png",
                 'webp' => "background_room{$roomNumber}.webp"
             ];
         }
     }
-    
+
     return $fallbacks;
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     // Return dynamic fallback backgrounds if database fails
     $roomType = $_GET['room_type'] ?? '';
     $fallbacks = generateDynamicFallbacks();
-    
+
     if (isset($fallbacks[$roomType])) {
         echo json_encode([
             'success' => true,
@@ -57,7 +63,7 @@ try {
         ]);
     } else {
         echo json_encode([
-            'success' => false, 
+            'success' => false,
             'message' => 'Room type not found and database unavailable'
         ]);
     }
@@ -82,13 +88,13 @@ try {
     ");
     $stmt->execute([$roomType]);
     $background = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($background) {
         echo json_encode(['success' => true, 'background' => $background]);
     } else {
         // Return dynamic fallback if no active background found
         $fallbacks = generateDynamicFallbacks();
-        
+
         if (isset($fallbacks[$roomType])) {
             echo json_encode([
                 'success' => true,
@@ -100,7 +106,7 @@ try {
             ]);
         } else {
             echo json_encode([
-                'success' => false, 
+                'success' => false,
                 'message' => 'No background found for this room type'
             ]);
         }

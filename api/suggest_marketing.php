@@ -10,8 +10,8 @@ header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
-    // Check admin authentication using centralized helper
-    AuthHelper::requireAdmin();
+// Check admin authentication using centralized helper
+AuthHelper::requireAdmin();
 
 // Turn off error display for this API to prevent HTML in JSON response
 ini_set('display_errors', 0);
@@ -68,8 +68,13 @@ if (empty($name)) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Create marketing_suggestions table if it doesn't exist
     $createTableSql = "CREATE TABLE IF NOT EXISTS marketing_suggestions (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -111,9 +116,9 @@ try {
         INDEX idx_sku (sku),
         INDEX idx_created_at (created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     $pdo->exec($createTableSql);
-    
+
     // Get existing marketing data to incorporate into new generation
     $existingMarketingData = null;
     if (!empty($sku)) {
@@ -128,7 +133,7 @@ try {
             error_log("Failed to load existing marketing data: " . $e->getMessage());
         }
     }
-    
+
     // Get item images if using image support
     $images = [];
     if ($useImages && !empty($sku)) {
@@ -136,7 +141,7 @@ try {
             $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? ORDER BY display_order ASC LIMIT 3");
             $stmt->execute([$sku]);
             $imageRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             foreach ($imageRows as $row) {
                 $imagePath = __DIR__ . '/../' . $row['image_path'];
                 if (file_exists($imagePath)) {
@@ -147,11 +152,11 @@ try {
             error_log("Failed to load images for marketing: " . $e->getMessage());
         }
     }
-    
+
     // Generate comprehensive marketing intelligence using sequential AI analysis
     try {
         $aiProviders = new AIProviders();
-        
+
         // Step 1: Analyze images first (if available)
         $imageAnalysisData = [];
         $imageInsights = '';
@@ -167,43 +172,43 @@ try {
                 $imageInsights = '';
             }
         }
-        
+
         // Step 2: Generate enhanced marketing content using image insights
         error_log("Step 2: Generating marketing content with image insights");
         error_log("AI Parameters - Name: '$name', Category: '$category', Voice: '$preferredBrandVoice', Tone: '$preferredContentTone', Request ID: $requestId");
-        
+
         // Set a shorter timeout for the main AI call to allow fallback
         set_time_limit(90);
-        
+
         $marketingData = $aiProviders->generateEnhancedMarketingContent(
-            $name, 
-            $description, 
-            $category, 
-            $imageInsights, 
-            $preferredBrandVoice, 
+            $name,
+            $description,
+            $category,
+            $imageInsights,
+            $preferredBrandVoice,
             $preferredContentTone,
             $existingMarketingData
         );
-        
+
         error_log("AI Response received for Request ID: $requestId - Title: '" . substr($marketingData['title'], 0, 50) . "...'");
-        
+
     } catch (Exception $e) {
         // Fallback to Jon's AI if external API fails
         error_log("External AI Provider failed, using Jon's AI fallback: " . $e->getMessage());
-        
+
         // Restore execution time for local processing
         set_time_limit(60);
-        
+
         $marketingData = generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice, $preferredContentTone, $existingMarketingData);
-        
+
         // Generate basic image analysis for fallback
         if (!empty($images) && $useImages) {
             $imageAnalysisData = generateFallbackAltText($images, $name, $category);
         }
-        
+
         error_log("Local fallback completed for Request ID: $requestId");
     }
-    
+
     // Save marketing suggestion to database
     if (!empty($sku)) {
         try {
@@ -254,7 +259,7 @@ try {
                 recommendation_reasoning = VALUES(recommendation_reasoning),
                 updated_at = CURRENT_TIMESTAMP
             ");
-            
+
             $stmt->execute([
                 $sku,
                 $marketingData['title'],
@@ -294,10 +299,10 @@ try {
             error_log("Error saving marketing suggestion: " . $e->getMessage());
         }
     }
-    
+
     // Image analysis is now integrated into the sequential AI process above
     $imageAnalysis = $imageAnalysisData;
-    
+
     // Clear any buffered output and send clean JSON
     ob_clean();
     echo json_encode([
@@ -311,22 +316,22 @@ try {
             // Target Audience data
             'demographic_targeting' => $marketingData['demographic_targeting'],
             'psychographic_profile' => $marketingData['psychographic_profile'],
-            
-            // SEO & Keywords data  
+
+            // SEO & Keywords data
             'seo_keywords' => $marketingData['seo_keywords'],
             'search_intent' => $marketingData['search_intent'],
             'seasonal_relevance' => $marketingData['seasonal_relevance'],
-            
+
             // Selling Points data
             'selling_points' => $marketingData['selling_points'],
             'competitive_advantages' => $marketingData['competitive_advantages'],
             'customer_benefits' => $marketingData['customer_benefits'],
-            
+
             // Conversion data
             'call_to_action_suggestions' => $marketingData['call_to_action_suggestions'],
             'urgency_factors' => $marketingData['urgency_factors'],
             'conversion_triggers' => $marketingData['conversion_triggers'],
-            
+
             // Legacy fields for compatibility
             'emotional_triggers' => $marketingData['emotional_triggers'],
             'marketing_channels' => $marketingData['marketing_channels']
@@ -334,7 +339,7 @@ try {
         'confidence' => $marketingData['confidence_score'],
         'reasoning' => $marketingData['recommendation_reasoning']
     ]);
-    
+
 } catch (Exception $e) {
     error_log("Error in suggest_marketing.php: " . $e->getMessage());
     http_response_code(500);
@@ -342,33 +347,34 @@ try {
     echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
 }
 
-function generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice = '', $preferredContentTone = '', $existingMarketingData = null) {
-            // Debug: Log the voice and tone values in Jon's AI
-        error_log("Jon's AI - Preferred Brand Voice: '$preferredBrandVoice', Preferred Content Tone: '$preferredContentTone'");
-        
-        // Log existing data incorporation
-        if ($existingMarketingData) {
-            error_log("Jon's AI - Incorporating existing marketing data into generation");
-        }
-    
+function generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice = '', $preferredContentTone = '', $existingMarketingData = null)
+{
+    // Debug: Log the voice and tone values in Jon's AI
+    error_log("Jon's AI - Preferred Brand Voice: '$preferredBrandVoice', Preferred Content Tone: '$preferredContentTone'");
+
+    // Log existing data incorporation
+    if ($existingMarketingData) {
+        error_log("Jon's AI - Incorporating existing marketing data into generation");
+    }
+
     // Comprehensive item analysis
     $analysis = analyzeItemForMarketing($name, $description, $category);
-    
+
     // Use preferred brand voice and content tone, or determine from analysis
     $brandVoice = !empty($preferredBrandVoice) ? $preferredBrandVoice : determineBrandVoice($category, $analysis);
     $contentTone = !empty($preferredContentTone) ? $preferredContentTone : determineContentTone($category, $analysis);
-    
+
     // Debug: Log the final voice and tone values
-            error_log("Jon's AI - Final Brand Voice: '$brandVoice', Final Content Tone: '$contentTone'");
-    
+    error_log("Jon's AI - Final Brand Voice: '$brandVoice', Final Content Tone: '$contentTone'");
+
     // Generate enhanced title with brand voice influence - incorporate existing data if admin has provided content
     $currentTitle = !empty($name) ? $name : ($existingMarketingData['suggested_title'] ?? '');
     $title = generateEnhancedTitle($currentTitle, $category, $analysis, $brandVoice, $existingMarketingData);
-    
-    // Generate compelling description with brand voice and tone influence - incorporate existing data if admin has provided content  
+
+    // Generate compelling description with brand voice and tone influence - incorporate existing data if admin has provided content
     $currentDescription = !empty($description) ? $description : ($existingMarketingData['suggested_description'] ?? '');
     $enhancedDescription = generateCompellingDescription($currentTitle, $currentDescription, $category, $analysis, $brandVoice, $contentTone, $existingMarketingData);
-    
+
     // Generate comprehensive marketing data
     return [
         'title' => $title,
@@ -406,9 +412,10 @@ function generateMarketingIntelligence($name, $description, $category, $pdo, $pr
     ];
 }
 
-function analyzeItemForMarketing($name, $description, $category) {
+function analyzeItemForMarketing($name, $description, $category)
+{
     $text = strtolower($name . ' ' . $description);
-    
+
     return [
         'materials' => detectMaterials($text),
         'features' => detectFeatures($text),
@@ -426,9 +433,10 @@ function analyzeItemForMarketing($name, $description, $category) {
     ];
 }
 
-function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '', $existingMarketingData = null) {
+function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '', $existingMarketingData = null)
+{
     $enhancers = [];
-    
+
     // Brand voice influences title style
     $voiceEnhancers = [
         'friendly' => ['Amazing', 'Wonderful', 'Perfect'],
@@ -437,19 +445,19 @@ function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '', $e
         'luxurious' => ['Premium', 'Luxury', 'Elite'],
         'casual' => ['Easy', 'Simple', 'Everyday']
     ];
-    
+
     // Add brand voice enhancer if specified
     if (!empty($brandVoice) && isset($voiceEnhancers[strtolower($brandVoice)])) {
         $enhancers[] = $voiceEnhancers[strtolower($brandVoice)][0];
     }
-    
+
     // Add quality indicators
     if (!empty($analysis['premium_indicators'])) {
         $enhancers[] = 'Premium';
     } elseif (!empty($analysis['quality_indicators'])) {
         $enhancers[] = 'Quality';
     }
-    
+
     // Add material highlights
     if (!empty($analysis['materials'])) {
         $material = ucfirst($analysis['materials'][0]);
@@ -457,7 +465,7 @@ function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '', $e
             $enhancers[] = $material;
         }
     }
-    
+
     // Add feature highlights
     if (in_array('custom', $analysis['features'])) {
         $enhancers[] = 'Custom';
@@ -465,7 +473,7 @@ function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '', $e
     if (in_array('handmade', $analysis['features'])) {
         $enhancers[] = 'Handcrafted';
     }
-    
+
     // Category-specific enhancers
     $categoryEnhancers = [
         'T-Shirts' => ['Comfortable', 'Stylish', 'Soft'],
@@ -474,15 +482,15 @@ function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '', $e
         'Sublimation' => ['Custom', 'Vibrant', 'Personalized'],
         'Window Wraps' => ['Professional', 'Weather-Resistant', 'Eye-Catching']
     ];
-    
+
     if (isset($categoryEnhancers[$category])) {
         $enhancers = array_merge($enhancers, array_slice($categoryEnhancers[$category], 0, 2));
     }
-    
+
     // Combine enhancers with name
     $enhancers = array_unique($enhancers);
     $enhancers = array_slice($enhancers, 0, 3);
-    
+
     // If admin has provided a title, enhance it rather than replace it
     if (!empty($name) && $existingMarketingData && !empty($existingMarketingData['suggested_title'])) {
         // Admin has content - enhance existing title while preserving admin intent
@@ -501,24 +509,25 @@ function generateEnhancedTitle($name, $category, $analysis, $brandVoice = '', $e
         }
         return $baseName;
     }
-    
+
     // Standard enhancement for new content
     if (!empty($enhancers)) {
         return implode(' ', $enhancers) . ' ' . $name;
     }
-    
+
     return $name;
 }
 
-function generateCompellingDescription($name, $currentDescription, $category, $analysis, $brandVoice = '', $contentTone = '', $existingMarketingData = null) {
+function generateCompellingDescription($name, $currentDescription, $category, $analysis, $brandVoice = '', $contentTone = '', $existingMarketingData = null)
+{
     $hooks = generateDescriptionHooks($category, $analysis, $brandVoice);
     $benefits = generateBenefitStatements($category, $analysis, $contentTone);
     $features = generateFeatureHighlights($analysis);
     $closing = generateDescriptionClosing($category, $analysis, $brandVoice, $contentTone);
-    
+
     // Build compelling description with brand voice and tone
     $description = '';
-    
+
     // Opening varies by brand voice
     if (!empty($brandVoice)) {
         $voiceOpeners = [
@@ -531,43 +540,44 @@ function generateCompellingDescription($name, $currentDescription, $category, $a
         $opener = $voiceOpeners[strtolower($brandVoice)] ?? 'Discover';
         $description = $opener . ' ';
     }
-    
+
     $description .= $hooks[0] . ' ';
-    
+
     if (!empty($features)) {
         $connector = ($contentTone === 'conversational') ? 'It features' : 'Featuring';
         $description .= $connector . ' ' . implode(', ', array_slice($features, 0, 3)) . '. ';
     }
-    
+
     if (!empty($benefits)) {
         $description .= $benefits[0] . ' ';
     }
-    
+
     $description .= $closing;
-    
+
     // If admin has provided description content, incorporate it intelligently
     if (!empty($currentDescription) && $existingMarketingData && !empty($existingMarketingData['suggested_description'])) {
         // Admin has content - enhance rather than replace
         $adminDescription = $currentDescription;
-        
+
         // If admin description is very short, expand it with AI enhancements
         if (strlen($adminDescription) < 100) {
             return $adminDescription . ' ' . $description;
         }
-        
+
         // If admin description is substantial, use it as the base and add key benefits
         if (!empty($benefits)) {
             return $adminDescription . ' ' . $benefits[0];
         }
-        
+
         return $adminDescription;
     }
-    
+
     return $description;
 }
 
 // Additional helper functions for comprehensive analysis
-function detectMaterials($text) {
+function detectMaterials($text)
+{
     $materials = [];
     $materialMap = [
         'cotton' => ['cotton', '100% cotton', 'organic cotton'],
@@ -578,7 +588,7 @@ function detectMaterials($text) {
         'wood' => ['wood', 'wooden', 'bamboo'],
         'glass' => ['glass', 'tempered']
     ];
-    
+
     foreach ($materialMap as $material => $keywords) {
         foreach ($keywords as $keyword) {
             if (strpos($text, $keyword) !== false) {
@@ -587,11 +597,12 @@ function detectMaterials($text) {
             }
         }
     }
-    
+
     return array_unique($materials);
 }
 
-function detectFeatures($text) {
+function detectFeatures($text)
+{
     $features = [];
     $featureMap = [
         'insulated' => ['insulated', 'thermal', 'keeps hot', 'keeps cold'],
@@ -603,7 +614,7 @@ function detectFeatures($text) {
         'durable' => ['durable', 'long lasting', 'sturdy'],
         'lightweight' => ['lightweight', 'portable']
     ];
-    
+
     foreach ($featureMap as $feature => $keywords) {
         foreach ($keywords as $keyword) {
             if (strpos($text, $keyword) !== false) {
@@ -612,13 +623,14 @@ function detectFeatures($text) {
             }
         }
     }
-    
+
     return array_unique($features);
 }
 
-function generateSEOKeywords($name, $category, $analysis) {
+function generateSEOKeywords($name, $category, $analysis)
+{
     $keywords = [];
-    
+
     // Category base keywords
     $categoryKeywords = [
         'T-Shirts' => ['t-shirt', 'tee', 'shirt', 'apparel', 'clothing'],
@@ -627,29 +639,30 @@ function generateSEOKeywords($name, $category, $analysis) {
         'Sublimation' => ['sublimation', 'custom print', 'personalized'],
         'Window Wraps' => ['decal', 'vinyl', 'window wrap', 'sticker']
     ];
-    
+
     $keywords = array_merge($keywords, $categoryKeywords[$category] ?? []);
-    
+
     // Add material keywords
     foreach ($analysis['materials'] as $material) {
         $keywords[] = $material;
         $keywords[] = $material . ' ' . strtolower($category);
     }
-    
+
     // Add feature keywords
     foreach ($analysis['features'] as $feature) {
         $keywords[] = str_replace('_', ' ', $feature);
     }
-    
+
     // Add style keywords
     foreach ($analysis['style'] as $style) {
         $keywords[] = $style;
     }
-    
+
     return array_unique(array_slice($keywords, 0, 15));
 }
 
-function identifyTargetAudience($category, $analysis) {
+function identifyTargetAudience($category, $analysis)
+{
     $audienceMap = [
         'T-Shirts' => 'Fashion-conscious individuals, casual wear enthusiasts, gift buyers',
         'Tumblers' => 'Busy professionals, coffee lovers, eco-conscious consumers, travelers',
@@ -657,23 +670,24 @@ function identifyTargetAudience($category, $analysis) {
         'Sublimation' => 'Personalization seekers, gift buyers, event planners',
         'Window Wraps' => 'Business owners, car enthusiasts, advertisers, decorators'
     ];
-    
+
     $baseAudience = $audienceMap[$category] ?? 'General consumers';
-    
+
     // Enhance based on analysis
     if (in_array('premium', $analysis['premium_indicators'])) {
         $baseAudience = 'Affluent ' . strtolower($baseAudience);
     }
-    
+
     if (in_array('eco-friendly', $analysis['features'])) {
         $baseAudience .= ', environmentally conscious buyers';
     }
-    
+
     return $baseAudience;
 }
 
 // Continue with more helper functions...
-function generateDescriptionHooks($category, $analysis, $brandVoice = '') {
+function generateDescriptionHooks($category, $analysis, $brandVoice = '')
+{
     $baseHooks = [
         'T-Shirts' => [
             'Experience unmatched comfort and style with this premium t-shirt.',
@@ -701,9 +715,9 @@ function generateDescriptionHooks($category, $analysis, $brandVoice = '') {
             'Create eye-catching displays that stand out from the competition.'
         ]
     ];
-    
+
     $hooks = $baseHooks[$category] ?? ['Discover something special with this unique item.'];
-    
+
     // Modify hooks based on brand voice
     if (!empty($brandVoice)) {
         switch (strtolower($brandVoice)) {
@@ -718,11 +732,12 @@ function generateDescriptionHooks($category, $analysis, $brandVoice = '') {
                 break;
         }
     }
-    
+
     return $hooks;
 }
 
-function generateBenefitStatements($category, $analysis, $contentTone = '') {
+function generateBenefitStatements($category, $analysis, $contentTone = '')
+{
     $benefits = [
         'T-Shirts' => [
             'Soft, breathable fabric ensures all-day comfort.',
@@ -750,13 +765,14 @@ function generateBenefitStatements($category, $analysis, $contentTone = '') {
             'Removable without damage when you\'re ready for a change.'
         ]
     ];
-    
+
     return $benefits[$category] ?? ['Quality construction ensures lasting satisfaction.'];
 }
 
-function generateFeatureHighlights($analysis) {
+function generateFeatureHighlights($analysis)
+{
     $highlights = [];
-    
+
     foreach ($analysis['features'] as $feature) {
         $featureMap = [
             'insulated' => 'advanced insulation technology',
@@ -768,20 +784,21 @@ function generateFeatureHighlights($analysis) {
             'durable' => 'long-lasting durability',
             'lightweight' => 'lightweight portability'
         ];
-        
+
         if (isset($featureMap[$feature])) {
             $highlights[] = $featureMap[$feature];
         }
     }
-    
+
     return $highlights;
 }
 
-function generateDescriptionClosing($category, $analysis, $brandVoice = '', $contentTone = '') {
+function generateDescriptionClosing($category, $analysis, $brandVoice = '', $contentTone = '')
+{
     if (!empty($analysis['gift_potential'])) {
         return 'Perfect as a thoughtful gift or a special treat for yourself.';
     }
-    
+
     $closings = [
         'T-Shirts' => 'Elevate your wardrobe with this must-have addition.',
         'Tumblers' => 'Upgrade your daily routine with this essential companion.',
@@ -789,57 +806,82 @@ function generateDescriptionClosing($category, $analysis, $brandVoice = '', $con
         'Sublimation' => 'Create something uniquely yours that tells your story.',
         'Window Wraps' => 'Make your mark with professional-quality results.'
     ];
-    
+
     return $closings[$category] ?? 'Experience the difference quality makes.';
 }
 
 // Additional analysis functions would continue here...
-function calculateMarketingConfidence($analysis, $category) {
+function calculateMarketingConfidence($analysis, $category)
+{
     $confidence = 0.7; // Base confidence
-    
+
     // Increase confidence based on available data
-    if (!empty($analysis['materials'])) $confidence += 0.1;
-    if (!empty($analysis['features'])) $confidence += 0.1;
-    if (!empty($analysis['quality_indicators'])) $confidence += 0.05;
-    if (!empty($analysis['use_cases'])) $confidence += 0.05;
-    
+    if (!empty($analysis['materials'])) {
+        $confidence += 0.1;
+    }
+    if (!empty($analysis['features'])) {
+        $confidence += 0.1;
+    }
+    if (!empty($analysis['quality_indicators'])) {
+        $confidence += 0.05;
+    }
+    if (!empty($analysis['use_cases'])) {
+        $confidence += 0.05;
+    }
+
     return min(0.99, $confidence);
 }
 
-function generateMarketingReasoning($name, $category, $analysis, $brandVoice = '', $contentTone = '') {
+function generateMarketingReasoning($name, $category, $analysis, $brandVoice = '', $contentTone = '')
+{
     $reasoning = "Generated marketing copy based on comprehensive analysis of '{$name}' in the {$category} category. ";
-    
+
     if (!empty($analysis['materials'])) {
         $reasoning .= "Detected materials: " . implode(', ', $analysis['materials']) . ". ";
     }
-    
+
     if (!empty($analysis['features'])) {
         $reasoning .= "Key features identified: " . implode(', ', $analysis['features']) . ". ";
     }
-    
+
     $reasoning .= "Marketing strategy optimized for target audience and conversion potential.";
-    
+
     return $reasoning;
 }
 
 // Placeholder functions for comprehensive analysis (would be expanded)
-function detectStyle($text) { 
+function detectStyle($text)
+{
     $styles = [];
-    if (strpos($text, 'modern') !== false) $styles[] = 'modern';
-    if (strpos($text, 'classic') !== false) $styles[] = 'classic';
-    if (strpos($text, 'vintage') !== false) $styles[] = 'vintage';
+    if (strpos($text, 'modern') !== false) {
+        $styles[] = 'modern';
+    }
+    if (strpos($text, 'classic') !== false) {
+        $styles[] = 'classic';
+    }
+    if (strpos($text, 'vintage') !== false) {
+        $styles[] = 'vintage';
+    }
     return $styles;
 }
 
-function detectQualityIndicators($text) { 
+function detectQualityIndicators($text)
+{
     $indicators = [];
-    if (strpos($text, 'premium') !== false) $indicators[] = 'premium';
-    if (strpos($text, 'quality') !== false) $indicators[] = 'high-quality';
-    if (strpos($text, 'durable') !== false) $indicators[] = 'durable';
+    if (strpos($text, 'premium') !== false) {
+        $indicators[] = 'premium';
+    }
+    if (strpos($text, 'quality') !== false) {
+        $indicators[] = 'high-quality';
+    }
+    if (strpos($text, 'durable') !== false) {
+        $indicators[] = 'durable';
+    }
     return $indicators;
 }
 
-function detectUseCases($text, $category) { 
+function detectUseCases($text, $category)
+{
     $useCases = [];
     switch ($category) {
         case 'T-Shirts':
@@ -861,59 +903,103 @@ function detectUseCases($text, $category) {
     return $useCases;
 }
 
-function detectTargetDemographics($text) { 
+function detectTargetDemographics($text)
+{
     $demographics = [];
-    if (strpos($text, 'professional') !== false) $demographics[] = 'professionals';
-    if (strpos($text, 'business') !== false) $demographics[] = 'business owners';
-    if (strpos($text, 'custom') !== false) $demographics[] = 'gift buyers';
+    if (strpos($text, 'professional') !== false) {
+        $demographics[] = 'professionals';
+    }
+    if (strpos($text, 'business') !== false) {
+        $demographics[] = 'business owners';
+    }
+    if (strpos($text, 'custom') !== false) {
+        $demographics[] = 'gift buyers';
+    }
     return $demographics;
 }
 
-function detectEmotionalAppeals($text) { 
+function detectEmotionalAppeals($text)
+{
     $appeals = [];
-    if (strpos($text, 'unique') !== false) $appeals[] = 'uniqueness';
-    if (strpos($text, 'personal') !== false) $appeals[] = 'personalization';
-    if (strpos($text, 'quality') !== false) $appeals[] = 'pride';
+    if (strpos($text, 'unique') !== false) {
+        $appeals[] = 'uniqueness';
+    }
+    if (strpos($text, 'personal') !== false) {
+        $appeals[] = 'personalization';
+    }
+    if (strpos($text, 'quality') !== false) {
+        $appeals[] = 'pride';
+    }
     return $appeals;
 }
 
-function detectPremiumIndicators($text) { 
+function detectPremiumIndicators($text)
+{
     $indicators = [];
-    if (strpos($text, 'premium') !== false) $indicators[] = 'premium materials';
-    if (strpos($text, 'luxury') !== false) $indicators[] = 'luxury finish';
-    if (strpos($text, 'professional') !== false) $indicators[] = 'professional grade';
+    if (strpos($text, 'premium') !== false) {
+        $indicators[] = 'premium materials';
+    }
+    if (strpos($text, 'luxury') !== false) {
+        $indicators[] = 'luxury finish';
+    }
+    if (strpos($text, 'professional') !== false) {
+        $indicators[] = 'professional grade';
+    }
     return $indicators;
 }
 
-function detectCustomizationOptions($text) { 
+function detectCustomizationOptions($text)
+{
     $options = [];
-    if (strpos($text, 'custom') !== false) $options[] = 'custom design';
-    if (strpos($text, 'personalized') !== false) $options[] = 'personalization';
-    if (strpos($text, 'color') !== false) $options[] = 'color options';
+    if (strpos($text, 'custom') !== false) {
+        $options[] = 'custom design';
+    }
+    if (strpos($text, 'personalized') !== false) {
+        $options[] = 'personalization';
+    }
+    if (strpos($text, 'color') !== false) {
+        $options[] = 'color options';
+    }
     return $options;
 }
 
-function detectSeasonalRelevance($text) { 
+function detectSeasonalRelevance($text)
+{
     $seasonal = [];
-    if (strpos($text, 'holiday') !== false) $seasonal[] = 'holiday season';
-    if (strpos($text, 'gift') !== false) $seasonal[] = 'gift season';
-    if (strpos($text, 'summer') !== false) $seasonal[] = 'summer';
+    if (strpos($text, 'holiday') !== false) {
+        $seasonal[] = 'holiday season';
+    }
+    if (strpos($text, 'gift') !== false) {
+        $seasonal[] = 'gift season';
+    }
+    if (strpos($text, 'summer') !== false) {
+        $seasonal[] = 'summer';
+    }
     return $seasonal;
 }
 
-function assessGiftPotential($text, $category) { 
+function assessGiftPotential($text, $category)
+{
     return in_array($category, ['T-Shirts', 'Tumblers', 'Artwork']) || strpos($text, 'gift') !== false;
 }
 
-function detectDurabilityIndicators($text) { 
+function detectDurabilityIndicators($text)
+{
     $indicators = [];
-    if (strpos($text, 'durable') !== false) $indicators[] = 'long-lasting';
-    if (strpos($text, 'quality') !== false) $indicators[] = 'quality construction';
-    if (strpos($text, 'professional') !== false) $indicators[] = 'professional grade';
+    if (strpos($text, 'durable') !== false) {
+        $indicators[] = 'long-lasting';
+    }
+    if (strpos($text, 'quality') !== false) {
+        $indicators[] = 'quality construction';
+    }
+    if (strpos($text, 'professional') !== false) {
+        $indicators[] = 'professional grade';
+    }
     return $indicators;
 }
 
-function detectConvenienceFactors($text, $category) { 
+function detectConvenienceFactors($text, $category)
+{
     $factors = [];
     switch ($category) {
         case 'Tumblers':
@@ -929,7 +1015,8 @@ function detectConvenienceFactors($text, $category) {
     return $factors;
 }
 
-function identifyEmotionalTriggers($category, $analysis) { 
+function identifyEmotionalTriggers($category, $analysis)
+{
     $triggers = ['pride in ownership', 'personal expression'];
     if (!empty($analysis['customization_options'])) {
         $triggers[] = 'uniqueness';
@@ -939,7 +1026,8 @@ function identifyEmotionalTriggers($category, $analysis) {
     }
     return $triggers;
 }
-function generateSellingPoints($name, $category, $analysis, $brandVoice = '') {
+function generateSellingPoints($name, $category, $analysis, $brandVoice = '')
+{
     $categoryPoints = [
         'T-Shirts' => ['Comfortable 100% cotton blend', 'Durable screen printing', 'Perfect fit for all body types', 'Machine washable'],
         'Tumblers' => ['Double-wall insulation keeps drinks hot/cold', 'Spill-proof lid design', 'Fits most cup holders', 'BPA-free materials'],
@@ -947,9 +1035,9 @@ function generateSellingPoints($name, $category, $analysis, $brandVoice = '') {
         'Sublimation' => ['Vibrant, long-lasting colors', 'Scratch and fade resistant', 'Dishwasher safe coating', 'Custom personalization available'],
         'Window Wraps' => ['Weather-resistant vinyl', 'Easy installation process', 'Professional-grade adhesive', 'UV-protected colors']
     ];
-    
+
     $points = $categoryPoints[$category] ?? ['High quality materials', 'Expert craftsmanship', 'Satisfaction guaranteed'];
-    
+
     // Add custom features if detected
     if (in_array('custom', $analysis['features'])) {
         array_unshift($points, 'Fully customizable design');
@@ -957,11 +1045,12 @@ function generateSellingPoints($name, $category, $analysis, $brandVoice = '') {
     if (in_array('handmade', $analysis['features'])) {
         array_unshift($points, 'Handcrafted with attention to detail');
     }
-    
+
     return array_slice($points, 0, 4);
 }
 
-function identifyCompetitiveAdvantages($category, $analysis) {
+function identifyCompetitiveAdvantages($category, $analysis)
+{
     $categoryAdvantages = [
         'T-Shirts' => ['Local small business support', 'Faster turnaround than big retailers', 'Personal customer service'],
         'Tumblers' => ['Local customization available', 'Supporting small business', 'Unique designs not found elsewhere'],
@@ -969,21 +1058,23 @@ function identifyCompetitiveAdvantages($category, $analysis) {
         'Sublimation' => ['Unlimited customization options', 'Local production means faster delivery', 'Personal design consultation'],
         'Window Wraps' => ['Local installation support', 'Custom sizing available', 'Direct communication with designer']
     ];
-    
+
     return $categoryAdvantages[$category] ?? ['Personalized service', 'Local business support', 'Unique items'];
 }
 
-function generateUrgencyFactors($category, $analysis, $contentTone = '') {
+function generateUrgencyFactors($category, $analysis, $contentTone = '')
+{
     $factors = ['Limited quantity available', 'Custom orders take 3-5 business days', 'Popular design - order soon'];
-    
+
     if ($contentTone === 'urgent') {
         $factors = ['Only few left in stock!', 'Order today for fastest delivery', 'This design is selling fast'];
     }
-    
+
     return $factors;
 }
 
-function generateCTASuggestions($category, $analysis, $brandVoice = '', $contentTone = '') {
+function generateCTASuggestions($category, $analysis, $brandVoice = '', $contentTone = '')
+{
     $voiceCTAs = [
         'friendly' => ['Get Yours Today!', 'Order Now & Smile!', 'Make It Yours!'],
         'professional' => ['Order Now', 'Purchase Today', 'Add to Cart'],
@@ -991,11 +1082,12 @@ function generateCTASuggestions($category, $analysis, $brandVoice = '', $content
         'luxurious' => ['Secure Your Premium Item', 'Invest in Quality', 'Claim Your Exclusive Piece'],
         'casual' => ['Pick One Up', 'Get One Now', 'Add to Cart']
     ];
-    
+
     return $voiceCTAs[$brandVoice] ?? ['Order Now', 'Add to Cart', 'Buy Today'];
 }
 
-function identifyConversionTriggers($category, $analysis, $contentTone = '') {
+function identifyConversionTriggers($category, $analysis, $contentTone = '')
+{
     return [
         'Free local pickup available',
         '100% satisfaction guarantee',
@@ -1005,7 +1097,8 @@ function identifyConversionTriggers($category, $analysis, $contentTone = '') {
     ];
 }
 
-function generateAdvancedSEOKeywords($name, $category, $analysis) {
+function generateAdvancedSEOKeywords($name, $category, $analysis)
+{
     $baseKeywords = [];
     $categoryKeywords = [
         'T-Shirts' => ['custom t-shirts', 'personalized shirts', 'local printing', 'screen printed tees'],
@@ -1014,21 +1107,23 @@ function generateAdvancedSEOKeywords($name, $category, $analysis) {
         'Sublimation' => ['sublimation printing', 'custom sublimated items', 'personalized gifts'],
         'Window Wraps' => ['window graphics', 'vehicle wraps', 'custom decals', 'storefront graphics']
     ];
-    
+
     $baseKeywords = $categoryKeywords[$category] ?? ['custom items', 'personalized items'];
-    
+
     // Add location keywords
     $locationKeywords = ['local', 'custom', 'personalized', 'handmade', 'small business'];
-    
+
     return array_merge($baseKeywords, $locationKeywords);
 }
 
-function analyzeSearchIntent($name, $category, $analysis) {
+function analyzeSearchIntent($name, $category, $analysis)
+{
     // Most custom items have transactional intent
     return 'transactional';
 }
 
-function identifyCustomerBenefits($category, $analysis) {
+function identifyCustomerBenefits($category, $analysis)
+{
     $categoryBenefits = [
         'T-Shirts' => ['Express your personality', 'Comfortable all-day wear', 'Conversation starter', 'Perfect gift option'],
         'Tumblers' => ['Keep drinks at perfect temperature', 'Reduce single-use cups', 'Show your style', 'Convenient for travel'],
@@ -1036,11 +1131,12 @@ function identifyCustomerBenefits($category, $analysis) {
         'Sublimation' => ['Create lasting memories', 'Perfect personalized gifts', 'Durable keepsakes', 'Express creativity'],
         'Window Wraps' => ['Increase business visibility', 'Professional appearance', 'Weather protection', 'Brand recognition']
     ];
-    
+
     return $categoryBenefits[$category] ?? ['High quality item', 'Great value', 'Customer satisfaction'];
 }
 
-function generatePsychographicProfile($category, $analysis) {
+function generatePsychographicProfile($category, $analysis)
+{
     $profiles = [
         'T-Shirts' => 'Creative individuals who value self-expression and comfort. They appreciate unique designs and supporting local businesses.',
         'Tumblers' => 'Environmentally conscious people who are always on-the-go. They value practicality and sustainability.',
@@ -1048,11 +1144,12 @@ function generatePsychographicProfile($category, $analysis) {
         'Sublimation' => 'Gift-givers and memory-makers who value personalization and creating lasting keepsakes.',
         'Window Wraps' => 'Business owners and professionals who understand the importance of visual marketing and brand presence.'
     ];
-    
+
     return $profiles[$category] ?? 'Quality-conscious consumers who appreciate personalized items and local craftsmanship.';
 }
 
-function generateDemographicTargeting($category, $analysis) {
+function generateDemographicTargeting($category, $analysis)
+{
     $demographics = [
         'T-Shirts' => 'Ages 16-65, all genders, middle-income households, students, professionals, gift-buyers',
         'Tumblers' => 'Ages 25-55, health-conscious individuals, commuters, office workers, outdoor enthusiasts',
@@ -1060,13 +1157,14 @@ function generateDemographicTargeting($category, $analysis) {
         'Sublimation' => 'Ages 25-60, parents, grandparents, event planners, gift-givers, memorial keepsake buyers',
         'Window Wraps' => 'Business owners, marketing managers, retail store owners, service providers'
     ];
-    
+
     return $demographics[$category] ?? 'Ages 25-55, middle to upper-middle income, quality-conscious consumers';
 }
 
-function analyzeSeasonalRelevance($name, $category, $analysis) {
+function analyzeSeasonalRelevance($name, $category, $analysis)
+{
     $text = strtolower($name);
-    
+
     if (strpos($text, 'christmas') !== false || strpos($text, 'holiday') !== false) {
         return 'Peak demand October-December, especially November-December for Christmas gifts';
     }
@@ -1079,24 +1177,58 @@ function analyzeSeasonalRelevance($name, $category, $analysis) {
     if (strpos($text, 'valentine') !== false || strpos($text, 'love') !== false) {
         return 'Peak demand January-February for Valentine\'s Day gifts';
     }
-    
+
     return 'Year-round appeal with potential seasonal customization opportunities';
 }
 
 // Stub functions for compatibility
-function determineMarketPositioning($category, $analysis) { return 'Standard'; }
-function determineBrandVoice($category, $analysis) { return 'Friendly'; }
-function determineContentTone($category, $analysis) { return 'Professional'; }
-function recommendMarketingChannels($category, $analysis) { return []; }
-function analyzePricingPsychology($category, $analysis) { return 'Value-based'; }
-function generateSocialProofElements($category, $analysis) { return []; }
-function generateObjectionHandlers($category, $analysis, $brandVoice = '') { return []; }
-function generateContentThemes($category, $analysis) { return []; }
-function identifyPainPoints($category, $analysis) { return []; }
-function analyzeLifestyleAlignment($category, $analysis) { return []; }
-function analyzeMarketTrends($category, $analysis) { return []; }
+function determineMarketPositioning($category, $analysis)
+{
+    return 'Standard';
+}
+function determineBrandVoice($category, $analysis)
+{
+    return 'Friendly';
+}
+function determineContentTone($category, $analysis)
+{
+    return 'Professional';
+}
+function recommendMarketingChannels($category, $analysis)
+{
+    return [];
+}
+function analyzePricingPsychology($category, $analysis)
+{
+    return 'Value-based';
+}
+function generateSocialProofElements($category, $analysis)
+{
+    return [];
+}
+function generateObjectionHandlers($category, $analysis, $brandVoice = '')
+{
+    return [];
+}
+function generateContentThemes($category, $analysis)
+{
+    return [];
+}
+function identifyPainPoints($category, $analysis)
+{
+    return [];
+}
+function analyzeLifestyleAlignment($category, $analysis)
+{
+    return [];
+}
+function analyzeMarketTrends($category, $analysis)
+{
+    return [];
+}
 
-function generateFallbackAltText($images, $name, $category) {
+function generateFallbackAltText($images, $name, $category)
+{
     $altTexts = [];
     foreach ($images as $index => $imagePath) {
         $filename = basename($imagePath);

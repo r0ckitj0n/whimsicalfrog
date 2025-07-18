@@ -8,14 +8,19 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 try {
-    try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
-    
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        error_log("Database connection failed: " . $e->getMessage());
+        throw $e;
+    }
+
     // Initialize analytics tables
     initializeAnalyticsTables($pdo);
-    
+
     // Handle different actions
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
-    
+
     switch ($action) {
         case 'track_visit':
             trackVisit($pdo);
@@ -46,7 +51,7 @@ try {
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid action specified.']);
     }
-    
+
 } catch (PDOException $e) {
     error_log("Analytics tracker PDO error: " . $e->getMessage());
     // Don't fail completely - just return success to prevent breaking the site
@@ -57,7 +62,8 @@ try {
     echo json_encode(['success' => true, 'note' => 'Analytics temporarily unavailable']);
 }
 
-function initializeAnalyticsTables($pdo) {
+function initializeAnalyticsTables($pdo)
+{
     // User sessions table
     $sessionsTable = "CREATE TABLE IF NOT EXISTS user_sessions (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -81,7 +87,7 @@ function initializeAnalyticsTables($pdo) {
         INDEX idx_session_id (session_id),
         INDEX idx_started_at (started_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     // Page views table
     $pageViewsTable = "CREATE TABLE IF NOT EXISTS page_views (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -99,7 +105,7 @@ function initializeAnalyticsTables($pdo) {
         INDEX idx_item_sku (item_sku),
         INDEX idx_viewed_at (viewed_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     // User interactions table
     $interactionsTable = "CREATE TABLE IF NOT EXISTS user_interactions (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -117,7 +123,7 @@ function initializeAnalyticsTables($pdo) {
         INDEX idx_item_sku (item_sku),
         INDEX idx_timestamp (timestamp)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     // Item analytics table
     $itemAnalyticsTable = "CREATE TABLE IF NOT EXISTS item_analytics (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -134,7 +140,7 @@ function initializeAnalyticsTables($pdo) {
         last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         UNIQUE KEY unique_sku (item_sku)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     // Conversion funnels table
     $conversionFunnelsTable = "CREATE TABLE IF NOT EXISTS conversion_funnels (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -149,7 +155,7 @@ function initializeAnalyticsTables($pdo) {
         INDEX idx_funnel_step (funnel_step),
         INDEX idx_step_timestamp (step_timestamp)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     // Optimization suggestions table
     $optimizationTable = "CREATE TABLE IF NOT EXISTS optimization_suggestions (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -169,7 +175,7 @@ function initializeAnalyticsTables($pdo) {
         INDEX idx_priority (priority),
         INDEX idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    
+
     $pdo->exec($sessionsTable);
     $pdo->exec($pageViewsTable);
     $pdo->exec($interactionsTable);
@@ -178,22 +184,23 @@ function initializeAnalyticsTables($pdo) {
     $pdo->exec($optimizationTable);
 }
 
-function trackVisit($pdo) {
+function trackVisit($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $sessionId = session_id();
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
     $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
     $referrer = $_SERVER['HTTP_REFERER'] ?? '';
     $landingPage = $input['landing_page'] ?? '';
-    
+
     // Parse user agent for device/browser info
     $deviceInfo = parseUserAgent($userAgent);
-    
+
     // Check if session already exists
     $stmt = $pdo->prepare("SELECT id FROM user_sessions WHERE session_id = ?");
     $stmt->execute([$sessionId]);
-    
+
     if (!$stmt->fetch()) {
         // Create new session
         $stmt = $pdo->prepare("
@@ -211,13 +218,14 @@ function trackVisit($pdo) {
             $deviceInfo['os']
         ]);
     }
-    
+
     echo json_encode(['success' => true, 'session_id' => $sessionId]);
 }
 
-function trackPageView($pdo) {
+function trackPageView($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $sessionId = session_id();
     $pageUrl = $input['page_url'] ?? '';
     $pageTitle = $input['page_title'] ?? '';
@@ -225,14 +233,14 @@ function trackPageView($pdo) {
     $itemSku = $input['item_sku'] ?? $input['product_sku'] ?? null; // Support both for backward compatibility
     $timeOnPage = $input['time_on_page'] ?? 0;
     $scrollDepth = $input['scroll_depth'] ?? 0;
-    
+
     // Insert page view
     $stmt = $pdo->prepare("
         INSERT INTO page_views (session_id, page_url, page_title, page_type, item_sku, time_on_page, scroll_depth) 
         VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([$sessionId, $pageUrl, $pageTitle, $pageType, $itemSku, $timeOnPage, $scrollDepth]);
-    
+
     // Update session stats
     $stmt = $pdo->prepare("
         UPDATE user_sessions 
@@ -242,18 +250,19 @@ function trackPageView($pdo) {
         WHERE session_id = ?
     ");
     $stmt->execute([$sessionId]);
-    
+
     // Track conversion funnel
     if ($pageType === 'item' || $pageType === 'product' || $pageType === 'shop') {
         trackFunnelStep($pdo, $sessionId, 'item_view', $pageUrl, $itemSku);
     }
-    
+
     echo json_encode(['success' => true]);
 }
 
-function trackInteraction($pdo) {
+function trackInteraction($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $sessionId = session_id();
     $pageUrl = $input['page_url'] ?? '';
     $interactionType = $input['interaction_type'] ?? '';
@@ -262,14 +271,14 @@ function trackInteraction($pdo) {
     $elementText = $input['element_text'] ?? '';
     $itemSku = $input['item_sku'] ?? $input['product_sku'] ?? null; // Support both for backward compatibility
     $interactionData = json_encode($input['interaction_data'] ?? []);
-    
+
     // Insert interaction
     $stmt = $pdo->prepare("
         INSERT INTO user_interactions (session_id, page_url, interaction_type, element_type, element_id, element_text, item_sku, interaction_data) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([$sessionId, $pageUrl, $interactionType, $elementType, $elementId, $elementText, $itemSku, $interactionData]);
-    
+
     // Track specific funnel steps
     if ($interactionType === 'cart_add') {
         trackFunnelStep($pdo, $sessionId, 'cart_add', $pageUrl, $itemSku);
@@ -277,16 +286,17 @@ function trackInteraction($pdo) {
         trackFunnelStep($pdo, $sessionId, 'checkout_start', $pageUrl, $itemSku);
     } elseif ($interactionType === 'checkout_complete') {
         trackFunnelStep($pdo, $sessionId, 'checkout_complete', $pageUrl, $itemSku);
-        
+
         // Mark session as converted
         $stmt = $pdo->prepare("UPDATE user_sessions SET converted = TRUE WHERE session_id = ?");
         $stmt->execute([$sessionId]);
     }
-    
+
     echo json_encode(['success' => true]);
 }
 
-function trackFunnelStep($pdo, $sessionId, $step, $pageUrl, $itemSku) {
+function trackFunnelStep($pdo, $sessionId, $step, $pageUrl, $itemSku)
+{
     $stmt = $pdo->prepare("
         INSERT INTO conversion_funnels (session_id, funnel_step, page_url, item_sku) 
         VALUES (?, ?, ?, ?)
@@ -294,16 +304,17 @@ function trackFunnelStep($pdo, $sessionId, $step, $pageUrl, $itemSku) {
     $stmt->execute([$sessionId, $step, $pageUrl, $itemSku]);
 }
 
-function trackItemView($pdo) {
+function trackItemView($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
     $itemSku = $input['item_sku'] ?? $input['product_sku'] ?? ''; // Support both for backward compatibility
     $timeOnPage = $input['time_on_page'] ?? 0;
-    
+
     if (!$itemSku) {
         echo json_encode(['success' => false, 'error' => 'Item SKU required']);
         return;
     }
-    
+
     // Update or insert item analytics
     $stmt = $pdo->prepare("
         INSERT INTO item_analytics (item_sku, views_count, unique_views_count, avg_time_on_page) 
@@ -313,36 +324,38 @@ function trackItemView($pdo) {
             avg_time_on_page = (avg_time_on_page * (views_count - 1) + ?) / views_count
     ");
     $stmt->execute([$itemSku, $timeOnPage, $timeOnPage]);
-    
+
     echo json_encode(['success' => true]);
 }
 
-function trackCartAction($pdo) {
+function trackCartAction($pdo)
+{
     $input = json_decode(file_get_contents('php://input'), true);
     $itemSku = $input['item_sku'] ?? $input['product_sku'] ?? ''; // Support both for backward compatibility
     $action = $input['action'] ?? ''; // 'add' or 'remove'
-    
+
     if (!$itemSku || !$action) {
         echo json_encode(['success' => false, 'error' => 'Item SKU and action required']);
         return;
     }
-    
+
     $field = $action === 'add' ? 'cart_adds_count' : 'cart_removes_count';
-    
+
     $stmt = $pdo->prepare("
         INSERT INTO item_analytics (item_sku, {$field}) 
         VALUES (?, 1) 
         ON DUPLICATE KEY UPDATE {$field} = {$field} + 1
     ");
     $stmt->execute([$itemSku]);
-    
+
     echo json_encode(['success' => true]);
 }
 
-function getAnalyticsReport($pdo) {
+function getAnalyticsReport($pdo)
+{
     $timeframe = $_GET['timeframe'] ?? '7d';
     $dateFilter = getDateFilter($timeframe);
-    
+
     // Overall stats
     $stmt = $pdo->prepare("
         SELECT 
@@ -356,7 +369,7 @@ function getAnalyticsReport($pdo) {
     ");
     $stmt->execute([$dateFilter]);
     $overallStats = $stmt->fetch();
-    
+
     // Top pages
     $stmt = $pdo->prepare("
         SELECT page_url, page_type, COUNT(*) as views, AVG(time_on_page) as avg_time
@@ -368,7 +381,7 @@ function getAnalyticsReport($pdo) {
     ");
     $stmt->execute([$dateFilter]);
     $topPages = $stmt->fetchAll();
-    
+
     // Item performance
     $stmt = $pdo->prepare("
         SELECT 
@@ -386,7 +399,7 @@ function getAnalyticsReport($pdo) {
     ");
     $stmt->execute();
     $itemPerformance = $stmt->fetchAll();
-    
+
     // Conversion funnel
     $stmt = $pdo->prepare("
         SELECT 
@@ -399,7 +412,7 @@ function getAnalyticsReport($pdo) {
     ");
     $stmt->execute([$dateFilter]);
     $conversionFunnel = $stmt->fetchAll();
-    
+
     echo json_encode([
         'success' => true,
         'data' => [
@@ -412,10 +425,11 @@ function getAnalyticsReport($pdo) {
     ]);
 }
 
-function getOptimizationSuggestions($pdo) {
+function getOptimizationSuggestions($pdo)
+{
     // Generate AI-powered optimization suggestions based on data
     $suggestions = [];
-    
+
     // Analyze bounce rate
     $stmt = $pdo->prepare("
         SELECT 
@@ -433,7 +447,7 @@ function getOptimizationSuggestions($pdo) {
     ");
     $stmt->execute();
     $highBouncePagesPages = $stmt->fetchAll();
-    
+
     foreach ($highBouncePagesPages as $page) {
         $suggestions[] = [
             'type' => 'conversion',
@@ -445,7 +459,7 @@ function getOptimizationSuggestions($pdo) {
             'potential_impact' => 'high'
         ];
     }
-    
+
     // Analyze cart abandonment
     $stmt = $pdo->prepare("
         SELECT COUNT(*) as cart_adds, 
@@ -457,10 +471,10 @@ function getOptimizationSuggestions($pdo) {
     ");
     $stmt->execute();
     $cartData = $stmt->fetch();
-    
+
     if ($cartData['cart_adds'] > 0) {
         $abandonment_rate = (($cartData['cart_adds'] - $cartData['completions']) / $cartData['cart_adds']) * 100;
-        
+
         if ($abandonment_rate > 70) {
             $suggestions[] = [
                 'type' => 'conversion',
@@ -473,7 +487,7 @@ function getOptimizationSuggestions($pdo) {
             ];
         }
     }
-    
+
     // Analyze slow-loading pages
     $stmt = $pdo->prepare("
         SELECT page_url, AVG(time_on_page) as avg_time, COUNT(*) as views
@@ -486,7 +500,7 @@ function getOptimizationSuggestions($pdo) {
     ");
     $stmt->execute();
     $quickExitPages = $stmt->fetchAll();
-    
+
     foreach ($quickExitPages as $page) {
         $suggestions[] = [
             'type' => 'ui_ux',
@@ -498,7 +512,7 @@ function getOptimizationSuggestions($pdo) {
             'potential_impact' => 'medium'
         ];
     }
-    
+
     // Analyze item performance
     $stmt = $pdo->prepare("
         SELECT item_sku, views_count, cart_adds_count, 
@@ -511,7 +525,7 @@ function getOptimizationSuggestions($pdo) {
     ");
     $stmt->execute();
     $poorPerformingItems = $stmt->fetchAll();
-    
+
     foreach ($poorPerformingItems as $item) {
         $suggestions[] = [
             'type' => 'item',
@@ -523,7 +537,7 @@ function getOptimizationSuggestions($pdo) {
             'potential_impact' => 'medium'
         ];
     }
-    
+
     // Save suggestions to database
     foreach ($suggestions as $suggestion) {
         $stmt = $pdo->prepare("
@@ -541,33 +555,45 @@ function getOptimizationSuggestions($pdo) {
             $suggestion['potential_impact']
         ]);
     }
-    
+
     echo json_encode(['success' => true, 'suggestions' => $suggestions]);
 }
 
-function parseUserAgent($userAgent) {
+function parseUserAgent($userAgent)
+{
     $deviceType = 'desktop';
     $browser = 'Unknown';
     $os = 'Unknown';
-    
+
     // Device detection
     if (preg_match('/Mobile|Android|iPhone|iPad/', $userAgent)) {
         $deviceType = preg_match('/iPad/', $userAgent) ? 'tablet' : 'mobile';
     }
-    
+
     // Browser detection
-    if (preg_match('/Chrome/', $userAgent)) $browser = 'Chrome';
-    elseif (preg_match('/Firefox/', $userAgent)) $browser = 'Firefox';
-    elseif (preg_match('/Safari/', $userAgent)) $browser = 'Safari';
-    elseif (preg_match('/Edge/', $userAgent)) $browser = 'Edge';
-    
+    if (preg_match('/Chrome/', $userAgent)) {
+        $browser = 'Chrome';
+    } elseif (preg_match('/Firefox/', $userAgent)) {
+        $browser = 'Firefox';
+    } elseif (preg_match('/Safari/', $userAgent)) {
+        $browser = 'Safari';
+    } elseif (preg_match('/Edge/', $userAgent)) {
+        $browser = 'Edge';
+    }
+
     // OS detection
-    if (preg_match('/Windows/', $userAgent)) $os = 'Windows';
-    elseif (preg_match('/Macintosh/', $userAgent)) $os = 'macOS';
-    elseif (preg_match('/Linux/', $userAgent)) $os = 'Linux';
-    elseif (preg_match('/Android/', $userAgent)) $os = 'Android';
-    elseif (preg_match('/iOS/', $userAgent)) $os = 'iOS';
-    
+    if (preg_match('/Windows/', $userAgent)) {
+        $os = 'Windows';
+    } elseif (preg_match('/Macintosh/', $userAgent)) {
+        $os = 'macOS';
+    } elseif (preg_match('/Linux/', $userAgent)) {
+        $os = 'Linux';
+    } elseif (preg_match('/Android/', $userAgent)) {
+        $os = 'Android';
+    } elseif (preg_match('/iOS/', $userAgent)) {
+        $os = 'iOS';
+    }
+
     return [
         'device_type' => $deviceType,
         'browser' => $browser,
@@ -575,7 +601,8 @@ function parseUserAgent($userAgent) {
     ];
 }
 
-function getDateFilter($timeframe) {
+function getDateFilter($timeframe)
+{
     switch ($timeframe) {
         case '1d': return date('Y-m-d H:i:s', strtotime('-1 day'));
         case '7d': return date('Y-m-d H:i:s', strtotime('-7 days'));

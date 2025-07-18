@@ -19,14 +19,6 @@
             window.WhimsicalFrog.addModule = window.WhimsicalFrog.registerModule;
         }
         return;
-        // Supply missing legacy helper if absent
-        if (!window.WhimsicalFrog.addModule && typeof window.WhimsicalFrog.registerModule === 'function') {
-            window.WhimsicalFrog.addModule = window.WhimsicalFrog.registerModule;
-        }
-        // Ensure legacy aliases still exist
-        if (!window.WF) window.WF = window.WhimsicalFrog;
-        if (!window.wf) window.wf = window.WhimsicalFrog;
-        return; // Abort second load
     }
     'use strict';
 
@@ -94,10 +86,9 @@
         
         WF_CORE.modules[name] = {
             ...moduleDef,
-            ...module,
             initialized: false,
-            dependencies: module.dependencies || [],
-            priority: module.priority || 0
+            dependencies: moduleDef.dependencies || [],
+            priority: moduleDef.priority || 0
         };
         
         log(`Module registered: ${name}`);
@@ -759,6 +750,104 @@ if (window.location.hostname === 'localhost' || window.location.hostname.include
 
 // --- End of js/utils.js --- 
 
+// --- Start of js/api-client.js --- 
+
+/*
+ * Centralized API client wrapper for WhimsicalFrog
+ * Provides apiGet() and apiPost() helpers and encourages consistent error handling.
+ */
+(function (global) {
+    'use strict';
+
+    const API_BASE = '/api/';
+
+    // Preserve original fetch for internal use / fallback
+    const nativeFetch = global.fetch.bind(global);
+
+    function buildUrl(path) {
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path; // absolute URL
+        }
+        if (path.startsWith('/')) {
+            return path; // already root-relative (e.g. /api/foo.php)
+        }
+        // Relative path like 'get_data.php'
+        return API_BASE + path.replace(/^\/?/, '');
+    }
+
+    async function apiRequest(method, path, data = null, options = {}) {
+        const url = buildUrl(path);
+        const config = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(options.headers || {})
+            },
+            credentials: 'same-origin',
+            ...options
+        };
+
+        if (method !== 'GET' && data !== null) {
+            config.body = JSON.stringify(data);
+        }
+
+        const response = await nativeFetch(url, config);
+
+        // Attempt to parse JSON; fall back to text
+        const contentType = response.headers.get('content-type') || '';
+        const parseBody = contentType.includes('application/json')
+            ? response.json.bind(response)
+            : response.text.bind(response);
+
+        if (!response.ok) {
+            const body = await parseBody();
+            const message = typeof body === 'string' ? body : JSON.stringify(body);
+            throw new Error(`API error ${response.status}: ${message}`);
+        }
+
+        return parseBody();
+    }
+
+    function apiGet(path, options = {}) {
+        return apiRequest('GET', path, null, options);
+    }
+
+    function apiPost(path, data = null, options = {}) {
+        return apiRequest('POST', path, data, options);
+    }
+
+    // For FormData or sendBeacon payloads
+    function apiPostForm(path, formData, options = {}) {
+        const url = buildUrl(path);
+        const config = {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin',
+            ...options
+        };
+        return nativeFetch(url, config).then(r => r.ok ? r.text() : Promise.reject(new Error(`API error ${r.status}`)));
+    }
+
+    // Expose helpers globally
+    global.apiGet = apiGet;
+    global.apiPost = apiPost;
+    global.apiPostForm = apiPostForm;
+
+    // Monkey-patch fetch to warn about direct API calls.
+    global.fetch = function (input, init = {}) {
+        let url = typeof input === 'string' ? input : input.url;
+        if (/\/api\//.test(url)) {
+            console.warn('⚠️  Consider using apiGet/apiPost instead of direct fetch for API calls:', url);
+        }
+        return nativeFetch(input, init);
+    };
+
+    console.log('[api-client] Initialized');
+})(window);
+
+
+// --- End of js/api-client.js --- 
+
 // --- Start of js/central-functions.js --- 
 
 /**
@@ -842,6 +931,16 @@ window.setupImageErrorHandling = function(img, sku = null) {
 })();
 
 console.log('Central functions loaded successfully');
+
+// Register as WF Core module (no init needed)
+if (window.WhimsicalFrog && typeof window.WhimsicalFrog.registerModule === 'function') {
+    window.WhimsicalFrog.registerModule('CentralFunctions', {
+        name: 'CentralFunctions',
+        init: function() {
+            console.log('[CentralFunctions] Module loaded');
+        }
+    });
+}
 
 // Centralized modal overlay click-to-close behavior
 // Closes static modal overlays when clicking outside modal content
@@ -2012,7 +2111,7 @@ class UnifiedPopupSystem {
                     </div>
                     <div class="popup-footer">
                         <button id="popupAddBtn" class="popup-btn popup-btn-primary">Add to Cart</button>
-                        <button id="popupDetailsBtn" class="popup-btn popup-btn-secondary">View Details</button>
+
                     </div>
                 </div>
             </div>
@@ -2069,21 +2168,12 @@ class UnifiedPopupSystem {
         
         // Button event listeners
         const addBtn = popup.querySelector('#popupAddBtn');
-        const detailsBtn = popup.querySelector('#popupDetailsBtn');
         
         if (addBtn) {
             addBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 this.handleAddToCart();
-            });
-        }
-        
-        if (detailsBtn) {
-            detailsBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handleViewDetails();
             });
         }
     }
@@ -2220,12 +2310,13 @@ class UnifiedPopupSystem {
     // Load marketing data for badge and sales pitch line
     async loadMarketingData(sku, salesPitchElement, mainSalesPitchElement) {
         try {
-            const response = await fetch(`/api/get_marketing_data.php?sku=${sku}`);
-            const data = await response.json();
+            const data = await apiGet(`get_marketing_data.php?sku=${sku}`);
+            
             
             if (data.success && data.exists && data.marketing_data) {
                 const marketing = data.marketing_data;
-                // DISABLED: this.displayMarketingBadge(marketing); - Using unified badge system instead
+                // Display marketing badge and main sales pitch
+                this.displayMarketingBadge(marketing);
                 this.displayMainSalesPitch(marketing, mainSalesPitchElement);
             } else {
                 // Show generic marketing content as fallback
@@ -2266,23 +2357,28 @@ class UnifiedPopupSystem {
     
     // Display marketing badge (if available)
     displayMarketingBadge(marketing) {
-        // DISABLE OLD POPUP MARKETING BADGE SYSTEM
-        // This has been replaced by the unified badge scoring system
-        // to prevent conflicts between different badge systems
-        
-        console.log('🚫 Old popup marketing badge system disabled - using unified badge system instead');
-        
-        // Hide any existing popup marketing badges
         const popup = popupState.popupElement;
-        if (popup) {
-            const marketingBadge = popup.querySelector('#popupMarketingBadge');
-            if (marketingBadge) {
-                marketingBadge.classList.add('hidden');
-                marketingBadge.style.display = 'none';
-            }
+        if (!popup) return;
+        const marketingBadge = popup.querySelector('#popupMarketingBadge');
+        const marketingTextEl = popup.querySelector('#popupMarketingText');
+        if (!marketingBadge || !marketingTextEl) return;
+
+        // Determine badge text and optional type
+        let badgeText = '';
+        if (marketing.badges && marketing.badges.length > 0) {
+            badgeText = marketing.badges[0].text || marketing.badges[0];
+        } else if (marketing.primary_badge) {
+            badgeText = marketing.primary_badge;
         }
-        
-        return; // Exit early - no badge creation
+
+        if (badgeText) {
+            marketingTextEl.textContent = badgeText;
+            marketingBadge.classList.remove('hidden');
+            marketingBadge.style.display = 'block';
+        } else {
+            marketingBadge.classList.add('hidden');
+            marketingBadge.style.display = 'none';
+        }
     }
 
 
@@ -2321,6 +2417,14 @@ class UnifiedPopupSystem {
 
     // Hide popup immediately
     hideImmediate() {
+        // Remove overlay dimming reduction
+        try {
+            if (window.parent && window.parent !== window) {
+                const overlay = window.parent.document.querySelector('.room-modal-overlay');
+                if (overlay) overlay.classList.remove('popup-active');
+            }
+        } catch(e) {}
+
         this.clearHideTimeout();
         
         const popup = popupState.popupElement;
@@ -2358,7 +2462,7 @@ class UnifiedPopupSystem {
         console.log('🔧 handleAddToCart called, currentProduct:', popupState.currentProduct);
         
         // First check if we have currentProduct, if not try to get it from global state
-        let productToUse = popupState.currentProduct || window.currentItem;
+        const productToUse = popupState.currentProduct || window.currentItem;
         
         if (!productToUse) {
             console.error('🔧 No current product in popup state or global state!');
@@ -2373,13 +2477,24 @@ class UnifiedPopupSystem {
         this.hideImmediate();
         
         // Try to open item modal
-        if (typeof window.showGlobalItemModal === 'function') {
+        let modalFn = window.showGlobalItemModal;
+        if (typeof modalFn !== 'function' && window.parent && window.parent !== window) {
+            modalFn = window.parent.showGlobalItemModal;
+        }
+        // Extra fallback to unified global modal namespace
+        if (typeof modalFn !== 'function' && window.WhimsicalFrog && window.WhimsicalFrog.GlobalModal && typeof window.WhimsicalFrog.GlobalModal.show === 'function') {
+            modalFn = window.WhimsicalFrog.GlobalModal.show;
+        }
+        if (typeof modalFn !== 'function' && window.parent && window.parent.WhimsicalFrog && window.parent.WhimsicalFrog.GlobalModal && typeof window.parent.WhimsicalFrog.GlobalModal.show === 'function') {
+            modalFn = window.parent.WhimsicalFrog.GlobalModal.show;
+        }
+
+        if (typeof modalFn === 'function') {
             console.log('🔧 showGlobalItemModal function available, calling with SKU:', skuToOpen);
-            window.showGlobalItemModal(skuToOpen);
-            // Clear product state after successful modal open
+            modalFn(skuToOpen, productToUse);
             this.clearProductState();
         } else {
-            console.error('🔧 showGlobalItemModal function not available! Type:', typeof window.showGlobalItemModal);
+            console.error('🔧 showGlobalItemModal function not available in current or parent context!');
         }
     }
 
@@ -2391,40 +2506,75 @@ class UnifiedPopupSystem {
         this.hideImmediate();
 
         const functionPath = 'WhimsicalFrog.GlobalModal.show';
-        const isReady = await window.waitForFunction(functionPath, window);
 
+        // First try within the current window (iframe or main)
+        let isReady = await window.waitForFunction(functionPath, window);
         if (isReady) {
             window.WhimsicalFrog.GlobalModal.show(popupState.currentProduct.sku, popupState.currentProduct);
-        } else {
-            console.error(`🔧 ${functionPath} function not available for view details!`);
-            if (typeof window.showGlobalNotification === 'function') {
-                window.showGlobalNotification('Could not open item details. Please try again.', 'error');
+            return;
+        }
+
+        // Fallback: try parent window (when running inside iframe)
+        if (window.parent && window.parent !== window) {
+            isReady = await window.waitForFunction(functionPath, window.parent);
+            if (isReady) {
+                window.parent.WhimsicalFrog.GlobalModal.show(popupState.currentProduct.sku, popupState.currentProduct);
+                return;
             }
+        }
+
+        console.error(`🔧 ${functionPath} function not available in current or parent context!`);
+        if (typeof window.showGlobalNotification === 'function') {
+            window.showGlobalNotification('Could not open item details. Please try again.', 'error');
         }
     }
 
     // Position popup function with improved positioning logic
     positionPopup(element, popup) {
         console.log('Positioning popup...', element, popup);
+        // Detect and mark that we are inside a room-modal iframe (heuristic: parent has .room-modal-overlay)
+        try {
+            if (window.parent && window.parent !== window && window.parent.document.querySelector('.room-modal-overlay')) {
+                popupState.isInRoomModal = true;
+            }
+        } catch(e) { /* cross-origin safe guard */ }
         
         const rect = element.getBoundingClientRect();
         
         // Determine z-index from CSS variables: popups layer or just above room-modal overlay
         const isInRoomModal = popupState.isInRoomModal;
         const rootStyles = getComputedStyle(document.documentElement);
-        const popupDefaultZ = rootStyles.getPropertyValue('-z-popups').trim();
-        const roomModalZ = parseInt(rootStyles.getPropertyValue('-z-room-modals').trim(), 10) || 0;
-        const zIndex = isInRoomModal ? (roomModalZ + 1).toString() : popupDefaultZ;
-        // Ensure no override class is applied
-        popup.classList.remove('in-room-modal');
+        // Read CSS custom properties correctly (two leading dashes)
+        const popupDefaultZ = parseInt(rootStyles.getPropertyValue('--popup-z-index').trim() || '2600', 10);
+        const roomModalZ = parseInt(rootStyles.getPropertyValue('--z-room-modals').trim() || '2400', 10);
+        const zIndex = isInRoomModal ? roomModalZ + 1 : popupDefaultZ;
+        // Toggle class to leverage room-modal-specific CSS rules
+        if (isInRoomModal) {
+            popup.classList.add('in-room-modal');
+        } else {
+            popup.classList.remove('in-room-modal');
+        }
 
         // Show popup temporarily to get actual dimensions using CSS classes
+        // Ensure we never exceed configured max width
+        let cssMax = rootStyles.getPropertyValue('--popup-max-width').trim() || '450px';
+        if (isInRoomModal) {
+            // Allow natural content width for room-modal popups
+            cssMax = 'none';
+            popup.style.width = 'max-content';
+            popup.style.minWidth = '0';
+            popup.style.maxWidth = 'none';
+        } else {
+            popup.style.maxWidth = cssMax;
+        }
         popup.classList.remove('hidden');
         popup.classList.add('measuring');
-        popup.style.setProperty('--popup-z-index', zIndex);
+        // Ensure inline z-index override even if custom property previously set
+        popup.style.zIndex = zIndex;
+        popup.style.zIndex = zIndex;
         
         const popupRect = popup.getBoundingClientRect();
-        const popupWidth = popupRect.width;
+        const popupWidth = Math.min(popupRect.width, parseInt(cssMax));
         const popupHeight = popupRect.height;
         
         // Get viewport dimensions with safety margins
@@ -2952,7 +3102,6 @@ class AnalyticsTracker {
     }
     
     getPageType() {
-        const url = window.location.href;
         const params = new URLSearchParams(window.location.search);
         const page = params.get('page') || 'landing';
         
@@ -3217,14 +3366,7 @@ class AnalyticsTracker {
     sendData(action, data) {
         if (!this.isTracking) return;
         
-        fetch('/api/analytics_tracker.php?action=' + action, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(data)
-        }).catch(error => {
+        apiPost(`analytics_tracker.php?action=${action}`, data).catch(error => {
             console.warn('Analytics tracking failed:', error);
         });
     }
@@ -3319,7 +3461,7 @@ window.optInToAnalytics = function() {
 // Sales checking functions
 async function checkItemSale(itemSku) {
     try {
-        const response = await fetch(`/api/sales.php?action=get_active_sales&item_sku=${itemSku}`);
+        const response = await apiGet(`sales.php?action=get_active_sales&item_sku=${itemSku}`);
         const data = await response.json();
         
         if (data.success && data.sale) {
@@ -3684,10 +3826,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Keep popup visible when hovering over it
-function keepPopupVisible() {
-    clearTimeout(hideTimeout);
-}
 
 // Setup hover listeners for room pages
 function setupRoomHover() {
@@ -3808,7 +3946,7 @@ class SearchModal {
         this.open();
 
         try {
-            const response = await fetch(`/api/search_items.php?q=${encodeURIComponent(searchTerm)}`);
+            const response = await apiGet(`search_items.php?q=${encodeURIComponent(searchTerm)}`);
             const data = await response.json();
 
             if (data.success) {
@@ -4100,6 +4238,18 @@ console.log('room-css-manager.js loaded successfully');
 
 console.log('Loading room-coordinate-manager.js...');
 
+// Ensure apiGet helper exists inside iframe context
+if (typeof window.apiGet !== 'function') {
+  window.apiGet = async function(endpoint) {
+    const url = endpoint.startsWith('/') ? endpoint : `/api/${endpoint}`;
+    const res = await fetch(url, { credentials: 'same-origin' });
+    if (!res.ok) {
+      throw new Error(`Request failed (${res.status})`);
+    }
+    return res.json();
+  };
+}
+
 // Room coordinate management system
 window.RoomCoordinates = window.RoomCoordinates || {};
 
@@ -4168,18 +4318,17 @@ function updateAreaCoordinates() {
     });
     
     console.log(`Updated ${window.baseAreas.length} room areas for ${window.ROOM_TYPE}`);
+    // Re-bind item hover/click events now that areas are placed
+    if (typeof window.setupPopupEventsAfterPositioning === 'function') {
+        window.setupPopupEventsAfterPositioning();
+    }
 }
 
 async function loadRoomCoordinatesFromDatabase() {
     try {
-        const response = await fetch(`api/get_room_coordinates.php?room_type=${window.ROOM_TYPE}`);
+        const data = await apiGet(`get_room_coordinates.php?room_type=${window.ROOM_TYPE}`);
         
-        // Check if the response is ok (not 500 error)
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: Database not available`);
-        }
         
-        const data = await response.json();
         
         if (data.success && data.coordinates && data.coordinates.length > 0) {
             window.baseAreas = data.coordinates;
@@ -4232,8 +4381,10 @@ function waitForWrapperAndUpdate(retries = 10) {
 
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Add a small delay to ensure room helper variables are set
-    setTimeout(initializeRoomCoordinates, 100);
+    if (window.ROOM_TYPE) {
+        // Add a small delay to ensure room helper variables are set
+        setTimeout(initializeRoomCoordinates, 100);
+    }
 });
 
 console.log('room-coordinate-manager.js loaded successfully');
@@ -4256,8 +4407,9 @@ window.RoomEvents = window.RoomEvents || {};
 
     
     // Function to setup popup events after positioning
-    function setupPopupEventsAfterPositioning() {// Get all product icons
-        const productIcons = document.querySelectorAll('.item-icon');productIcons.forEach((icon, index) => {
+    function setupPopupEventsAfterPositioning() { // Get all product icons
+        // Accept both legacy .item-icon and new .room-product-icon
+    const productIcons = document.querySelectorAll('.item-icon, .room-product-icon');productIcons.forEach((icon, index) => {
             // Make sure the element is interactive
             icon.classList.add('clickable-icon');
             
@@ -4276,9 +4428,9 @@ window.RoomEvents = window.RoomEvents || {};
                         
                         // Add fresh event listeners
                         newIcon.addEventListener('mouseenter', function(e) {
-                            try {if (typeof window.showGlobalPopup === 'function') {window.showGlobalPopup(this, productData);
+                            try {if (typeof (window.showGlobalPopup || (parent && parent.showGlobalPopup)) === 'function') {(window.showGlobalPopup || (parent && parent.showGlobalPopup))(this, productData);
                                 } else {
-                                    console.error('showGlobalPopup function not available. Type:', typeof window.showGlobalPopup);
+                                    console.error('showGlobalPopup function not available. Type:', typeof (window.showGlobalPopup || (parent && parent.showGlobalPopup)));
                                 }
                             } catch (error) {
                                 console.error('Error in mouseenter event:', error);
@@ -4286,7 +4438,7 @@ window.RoomEvents = window.RoomEvents || {};
                         });
                         
                         newIcon.addEventListener('mouseleave', function(e) {
-                            try {if (typeof window.hideGlobalPopup === 'function') {window.hideGlobalPopup();
+                            try {if (typeof (window.hideGlobalPopup || (parent && parent.hideGlobalPopup)) === 'function') {(window.hideGlobalPopup || (parent && parent.hideGlobalPopup))();
                                 } else {
                                     console.error('hideGlobalPopup function not available');
                                 }
@@ -4295,7 +4447,7 @@ window.RoomEvents = window.RoomEvents || {};
                             }
                         });
                         
-                        newIcon.addEventListener('click', function(e) {if (typeof window.showItemDetailsModal === 'function') {window.showItemDetailsModal(productData.sku);
+                        newIcon.addEventListener('click', function(e) {if (typeof (window.showItemDetailsModal || (parent && parent.showItemDetailsModal)) === 'function') {(window.showItemDetailsModal || (parent && parent.showItemDetailsModal))(productData.sku);
                             } else {
                                 console.error('showItemDetailsModal function not available on click');
                             }
@@ -4308,6 +4460,95 @@ window.RoomEvents = window.RoomEvents || {};
             }
         });
     }
+
+// Expose globally for other modules
+window.setupPopupEventsAfterPositioning = setupPopupEventsAfterPositioning;
+
+// -------------------- NEW CENTRALIZED DELEGATED LISTENERS --------------------
+// Ensure events still fire even if per-icon listeners were not attached (fallback)
+function attachDelegatedItemEvents(){
+    if (document.body.hasAttribute('data-wf-room-delegated-listeners')) return;
+    document.body.setAttribute('data-wf-room-delegated-listeners','true');
+
+    // Utility to parse product data from inline attribute or dataset
+    function extractProductData(icon){
+        // 1) Try full JSON from data-product
+        if (icon.dataset.product){
+            try{
+                return JSON.parse(icon.dataset.product);
+            }catch(e){
+                console.warn('[extractProductData] Invalid JSON in data-product:', e);
+            }
+        }
+
+        // 2) Try to assemble from individual data-* attributes (preferred over legacy inline attr)
+        if (icon.dataset.sku){
+            return {
+                sku: icon.dataset.sku,
+                name: icon.dataset.name || '',
+                price: parseFloat(icon.dataset.price || icon.dataset.cost || '0'),
+                description: icon.dataset.description || '',
+                stock: parseInt(icon.dataset.stock || '0',10),
+                category: icon.dataset.category || ''
+            };
+        }
+
+        // 3) Fallback – parse legacy onmouseenter inline attribute
+        const attr = icon.getAttribute('onmouseenter');
+        if (attr){
+            const match = attr.match(/showGlobalPopup\(this,\s*(.+)\)/);
+            if (match){
+                try{
+                    const jsonString = match[1]
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#039;/g, "'");
+                    return JSON.parse(jsonString);
+                }catch(e){
+                    console.warn('[extractProductData] Failed to parse inline JSON:', e);
+                }
+            }
+        }
+
+        // If we reach here, no valid product data
+        return null;
+    }
+
+    // Hover events
+    document.addEventListener('mouseover', function(e){
+        const icon = e.target.closest('.item-icon, .room-product-icon');
+        if(!icon) return;
+        const productData = extractProductData(icon);
+        const popupFn = window.showGlobalPopup || (parent && parent.showGlobalPopup);
+        if (typeof popupFn === 'function' && productData){
+            popupFn(icon, productData);
+        }
+    });
+    document.addEventListener('mouseout', function(e){
+        const icon = e.target.closest('.item-icon, .room-product-icon');
+        if(!icon) return;
+        const hideFn = window.hideGlobalPopup || (parent && parent.hideGlobalPopup);
+        console.log('[DelegatedHover] mouseout from', icon);
+        if (typeof hideFn === 'function') hideFn();
+    });
+
+    // Click events
+    document.addEventListener('click', function(e){
+        const icon = e.target.closest('.item-icon, .room-product-icon');
+        if(!icon) return;
+        e.preventDefault();
+        const productData = extractProductData(icon);
+        const detailsFn = (parent && parent.showGlobalItemModal) || window.showGlobalItemModal || window.showItemDetailsModal || window.showItemDetails || (parent && (parent.showItemDetailsModal || parent.showItemDetails));
+        if (typeof detailsFn === 'function' && productData){
+            detailsFn(productData.sku, productData);
+        }
+    });
+}
+
+// Immediately attach in current document
+attachDelegatedItemEvents();
+
+// Expose for iframes
+window.attachDelegatedItemEvents = attachDelegatedItemEvents;
 
 console.log('room-event-manager.js loaded successfully');
 
@@ -4610,7 +4851,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   document.addEventListener('whimsicalfrog:ready', function() {
-    if (typeof initializeRoomCoordinates === 'function') {
+    if (window.ROOM_TYPE && typeof initializeRoomCoordinates === 'function') {
       initializeRoomCoordinates();
     }
   });
@@ -4698,7 +4939,7 @@ document.body.addEventListener('click', function(e) {
             } else {
                 // Fetch item data from API
                 console.log('🔧 Fetching item data from API for SKU:', sku);
-                const response = await fetch(`/api/get_item_details.php?sku=${sku}`);
+                const response = await apiGet(`/api/get_item_details.php?sku=${sku}`);
                 console.log('🔧 Item details API response status:', response.status, response.statusText);
                 
                 if (!response.ok) {
@@ -4727,24 +4968,14 @@ document.body.addEventListener('click', function(e) {
 
             // Get the modal HTML from the API
             console.log('🔧 Fetching modal HTML from render API');
-            const modalResponse = await fetch('/api/render_detailed_modal.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    item: item,
-                    images: images
-                })
+            const modalHtml = await apiPost('render_detailed_modal.php', {
+                item: item,
+                images: images
             });
 
-            console.log('🔧 Modal render API response status:', modalResponse.status, modalResponse.statusText);
-
-            if (!modalResponse.ok) {
-                throw new Error(`Modal render API failed: ${modalResponse.status} ${modalResponse.statusText}`);
+            if (!modalHtml || typeof modalHtml !== 'string') {
+                throw new Error('Modal render API returned invalid HTML');
             }
-
-            const modalHtml = await modalResponse.text();
             console.log('🔧 Modal HTML received, length:', modalHtml.length);
             console.log('🔧 Modal HTML preview:', modalHtml.substring(0, 200) + '...');
             
@@ -4766,7 +4997,7 @@ document.body.addEventListener('click', function(e) {
             console.log('🔧 Current modal item stored');
             
             // Dynamically load and then execute the modal's specific JS
-            loadScript('js/detailed-item-modal.js', 'detailed-item-modal-script')
+            loadScript(`js/detailed-item-modal.js?v=${Date.now()}`, 'detailed-item-modal-script')
                 .then(() => {
                     console.log('🔧 Detailed item modal script loaded.');
                     // Wait a moment for scripts to execute, then show the modal
@@ -4898,6 +5129,7 @@ document.body.addEventListener('click', function(e) {
 
     // Legacy compatibility - these functions will call the new global system
     window.showItemDetails = showGlobalItemModal;
+    window.showItemDetailsModal = showGlobalItemModal; // Added alias for legacy support
     window.showDetailedModal = showGlobalItemModal;
     window.closeDetailedModal = closeGlobalItemModal;
     window.closeDetailedModalOnOverlay = closeDetailedModalOnOverlay;
@@ -4982,8 +5214,8 @@ document.body.addEventListener('click', function(e) {
         badgeContainer.innerHTML = '';
 
         try {
-            const response = await fetch(`/api/get_badge_scores.php?sku=${sku}`);
-            const data = await response.json();
+            const data = await apiGet(`get_badge_scores.php?sku=${sku}`);
+            
 
             if (data.success && data.badges) {
                 const badges = data.badges;
@@ -5017,8 +5249,46 @@ document.body.addEventListener('click', function(e) {
         return badgeSpan;
     }
     
+    // -- Show & hide modal helpers --
+    function showDetailedModalComponent(sku, itemData = {}) {
+        const modal = document.getElementById('detailedItemModal');
+        if (!modal) return;
+
+        // Make sure the provided item data is stored for other helpers.
+        window.currentDetailedItem = itemData;
+
+        // Remove hidden/display styles applied by server template
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+
+        // Ensure modal is on top of any overlays
+        modal.style.zIndex = 3000;
+
+        // Close modal when clicking overlay (attribute set in template)
+        modal.addEventListener('click', (e) => {
+            if (e.target.dataset.action === 'closeDetailedModalOnOverlay') {
+                closeDetailedModalComponent();
+            }
+        });
+
+        // Optionally run content initializer
+        if (typeof initializeEnhancedModalContent === 'function') {
+            initializeEnhancedModalContent();
+        }
+    }
+
+    function closeDetailedModalComponent() {
+        const modal = document.getElementById('detailedItemModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+    }
+
     // -- Expose necessary functions to the global scope --
     window.initializeEnhancedModalContent = initializeEnhancedModalContent;
+    window.showDetailedModalComponent = showDetailedModalComponent;
+    window.closeDetailedModalComponent = closeDetailedModalComponent;
 
 })();
 
@@ -5238,6 +5508,53 @@ class RoomModalManager {
         }
 
         iframe.onload = () => {
+            // Expose global popup & modal functions into iframe context for seamless interaction
+            try {
+                const iWin = iframe.contentWindow;
+
+                // Inject main bundle into iframe if missing
+                if (!iWin.document.getElementById('wf-bundle')) {
+                    const script = iWin.document.createElement('script');
+                    script.id = 'wf-bundle';
+                    script.type = 'text/javascript';
+                    script.src = '/js/bundle.js?v=' + (window.WF_ASSET_VERSION || Date.now());
+                    iWin.document.head.appendChild(script);
+                    console.log('🚪 Injected bundle.js into iframe');
+                }
+
+                // Bridge critical global functions
+                const bridgeFns = [
+                    'showGlobalPopup',
+                    'hideGlobalPopup',
+                    'showItemDetailsModal',
+                    'showGlobalItemModal'
+                ];
+                bridgeFns.forEach(fnName => {
+                    if (typeof window[fnName] === 'function') {
+                        iWin[fnName] = window[fnName];
+                    }
+                });
+
+                // Copy popup state utilities if they exist
+                if (window.unifiedPopupSystem) {
+                    iWin.unifiedPopupSystem = window.unifiedPopupSystem;
+                }
+
+                // Ensure setupPopupEventsAfterPositioning exists in iframe, then run it
+                if (typeof iWin.setupPopupEventsAfterPositioning !== 'function') {
+                    if (typeof window.setupPopupEventsAfterPositioning === 'function') {
+                        iWin.setupPopupEventsAfterPositioning = window.setupPopupEventsAfterPositioning;
+                    }
+                }
+                if (typeof iWin.setupPopupEventsAfterPositioning === 'function') {
+                    iWin.setupPopupEventsAfterPositioning();
+                }
+                if (typeof iWin.attachDelegatedItemEvents === 'function') {
+                    iWin.attachDelegatedItemEvents();
+                }
+            } catch (bridgeErr) {
+                console.warn('⚠️ Unable to bridge popup functions into iframe:', bridgeErr);
+            }
             // When iframe content loaded, try to initialize coordinate system inside it
             try {
                 const iWin = iframe.contentWindow;
@@ -5247,6 +5564,10 @@ class RoomModalManager {
             } catch (coordErr) {
                 console.warn('⚠️ Unable to initialize coordinates in iframe:', coordErr);
             }
+            loadingSpinner.style.display = 'none';
+            iframe.style.opacity = '1';
+            console.log(`🚪 Room ${roomNumber} content loaded into iframe.`);
+        
             loadingSpinner.style.display = 'none';
             iframe.style.opacity = '1';
             console.log(`🚪 Room ${roomNumber} content loaded into iframe.`);
@@ -5263,12 +5584,14 @@ class RoomModalManager {
     async preloadRoomContent() {
         console.log('🚪 Preloading all room content...');
         try {
-            const response = await fetch('/api/get_room_data.php');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const roomData = await response.json();
+            const roomData = await apiGet('get_room_data.php');
 
             if (roomData.success && Array.isArray(roomData.data.productRooms)) {
-                const preloadPromises = roomData.data.productRooms.map(room => this.preloadSingleRoom(room.room_number));
+                const validRooms = roomData.data.productRooms.filter(r => {
+                    const num = parseInt(r && r.room_number, 10);
+                    return Number.isFinite(num) && num > 0;
+                });
+                const preloadPromises = validRooms.map(room => this.preloadSingleRoom(room.room_number));
                 await Promise.all(preloadPromises);
                 console.log('🚪 All rooms preloaded successfully.');
             } else {
@@ -5280,14 +5603,17 @@ class RoomModalManager {
     }
 
     async preloadSingleRoom(roomNumber) {
+        const num = parseInt(roomNumber, 10);
+        if (!Number.isFinite(num) || num <= 0) {
+            console.warn('🚪 Skipping preload for invalid room number:', roomNumber);
+            return null;
+        }
         if (this.roomCache.has(String(roomNumber))) {
             return this.roomCache.get(String(roomNumber));
         }
 
         try {
-            const response = await fetch(`/api/load_room_content.php?room_number=${roomNumber}&modal=1`);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
+            const data = await apiGet(`load_room_content.php?room_number=${roomNumber}&modal=1`);
 
             if (data.success) {
                 this.roomCache.set(String(roomNumber), {
@@ -5325,7 +5651,7 @@ WhimsicalFrog.ready(wf => {
 
 // --- End of js/room-modal-manager.js --- 
 
-// --- Start of js/modules/cart-system.js --- 
+// --- Start of js/cart-system.js --- 
 
 /**
  * WhimsicalFrog Cart System Module
@@ -5381,7 +5707,7 @@ WhimsicalFrog.ready(wf => {
         // Add item to cart
         addItem(item) {
             const existingIndex = cartState.items.findIndex(i => i.sku === item.sku);
-            let addedQuantity = item.quantity || 1;
+            const addedQuantity = item.quantity || 1;
             let finalQuantity = addedQuantity;
             let isNewItem = false;
             
@@ -5421,7 +5747,7 @@ WhimsicalFrog.ready(wf => {
             try {
                 // Build comprehensive notification message for what was added
                 let displayName = item.name;
-                let detailParts = [];
+                const detailParts = [];
                 
                 if (item.gender) detailParts.push(item.gender);
                 if (item.color) detailParts.push(item.color);
@@ -5766,11 +6092,7 @@ WhimsicalFrog.ready(wf => {
                 
                 // Store cart redirect intent in PHP session via AJAX
                 try {
-                    await fetch('/api/set_redirect.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ redirectUrl: '/?page=cart' })
-                    });
+                    await apiPost('set_redirect.php', { redirectUrl: '/?page=cart' });
                 } catch (e) {
                     console.warn('Could not set server-side redirect');
                 }
@@ -6038,13 +6360,7 @@ WhimsicalFrog.ready(wf => {
                 console.log('Cart items:', cartState.items);
                 console.log('Cart total:', this.getTotal());
 
-                const response = await fetch('/api/add-order.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(orderData)
-                });
+                const response = await apiPost('add-order.php', orderData);
 
                 if (!response.ok) {
                     console.error('Server error:', response.status, response.statusText);
@@ -6092,8 +6408,8 @@ WhimsicalFrog.ready(wf => {
                 if (!user) return;
 
                 // Fetch user profile data
-                const response = await fetch(`/api/users.php?id=${user.userId}`);
-                const userData = await response.json();
+                const userData = await apiGet(`users.php?id=${user.userId}`);
+                
                 
                 if (userData && !userData.error) {
                     const addressParts = [];
@@ -6323,578 +6639,123 @@ WhimsicalFrog.ready(wf => {
 
 })(); 
 
-// --- End of js/modules/cart-system.js --- 
+// --- End of js/cart-system.js --- 
 
-// --- Start of js/main.js --- 
-
-/**
- * WhimsicalFrog Core JavaScript System
- * Unified dependency management and initialization
- */
-
-(function() {
-    'use strict';
-
-    // Core system state
-    const WF_CORE = {
-        version: '1.0.0',
-        initialized: false,
-        debug: true,
-        modules: {},
-        config: {
-            brand: {
-                primary: '#87ac3a',
-                primaryDark: '#6b8e23',
-                primaryLight: '#a3cc4a'
-            },
-            api: {
-                baseUrl: '/api/',
-                timeout: 30000
-            },
-            ui: {
-                animationDuration: 300,
-                notificationTimeout: 5000,
-                popupDelay: 250
-            }
-        },
-        state: {
-            currentPage: null,
-            currentRoom: null,
-            modalsOpen: 0,
-            popupOpen: false,
-            cartCount: 0
-        }
-    };
-
-    // Logging utility
-    function log(message, level = 'info') {
-        if (!WF_CORE.debug && level === 'debug') return;
-        const timestamp = new Date().toISOString().slice(11, 23);
-        const prefix = `[WF-Core ${timestamp}]`;
-        
-        switch (level) {
-            case 'error':
-                console.error(prefix, message);
-                break;
-            case 'warn':
-                console.warn(prefix, message);
-                break;
-            case 'debug':
-                console.debug(prefix, message);
-                break;
-            default:
-                console.log(prefix, message);
-        }
-    }
-
-    // Module registration system
-    function registerModule(name, module) {
-        if (WF_CORE.modules[name]) {
-            log(`Module ${name} already registered, overwriting`, 'warn');
-        }
-        
-        WF_CORE.modules[name] = {
-            ...module,
-            initialized: false,
-            dependencies: module.dependencies || [],
-            priority: module.priority || 0
-        };
-        
-        log(`Module registered: ${name}`);
-    }
-
-    // Dependency resolver
-    function resolveDependencies() {
-        const moduleNames = Object.keys(WF_CORE.modules);
-        const resolved = [];
-        const resolving = [];
-
-        function resolve(name) {
-            if (resolved.includes(name)) return;
-            if (resolving.includes(name)) {
-                throw new Error(`Circular dependency detected: ${name}`);
-            }
-
-            resolving.push(name);
-            const module = WF_CORE.modules[name];
-            
-            if (module.dependencies) {
-                module.dependencies.forEach(dep => {
-                    if (!WF_CORE.modules[dep]) {
-                        throw new Error(`Missing dependency: ${dep} for module ${name}`);
-                    }
-                    resolve(dep);
-                });
-            }
-
-            resolving.splice(resolving.indexOf(name), 1);
-            resolved.push(name);
-        }
-
-        moduleNames.forEach(resolve);
-        return resolved;
-    }
-
-    // Module initialization
-    async function initializeModules() {
-        try {
-            const initOrder = resolveDependencies();
-            log(`Initializing modules in order: ${initOrder.join(', ')}`);
-
-            for (const moduleName of initOrder) {
-                const module = WF_CORE.modules[moduleName];
-                
-                if (module.init && typeof module.init === 'function') {
-                    log(`Initializing module: ${moduleName}`);
-                    await module.init(WF_CORE);
-                    module.initialized = true;
-                    log(`Module initialized: ${moduleName}`);
-                } else {
-                    log(`Module ${moduleName} has no init function`, 'warn');
-                }
-            }
-            
-            log('All modules initialized successfully');
-            return true;
-        } catch (error) {
-            log(`Module initialization failed: ${error.message}`, 'error');
-            throw error;
-        }
-    }
-
-    // Global event system
-    const eventBus = {
-        events: {},
-        
-        on(event, callback) {
-            if (!this.events[event]) {
-                this.events[event] = [];
-            }
-            this.events[event].push(callback);
-        },
-        
-        emit(event, data) {
-            if (this.events[event]) {
-                this.events[event].forEach(callback => {
-                    try {
-                        callback(data);
-                    } catch (error) {
-                        log(`Event callback error for ${event}: ${error.message}`, 'error');
-                    }
-                });
-            }
-        },
-        
-        off(event, callback) {
-            if (this.events[event]) {
-                this.events[event] = this.events[event].filter(cb => cb !== callback);
-            }
-        }
-    };
-
-    // Utility functions
-    const utils = {
-        // Debounce function
-        debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        },
-
-        // Format currency
-        formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            }).format(amount);
-        },
-
-        // Escape HTML
-        escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        },
-
-        // Generate unique ID
-        generateId() {
-            return 'wf-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        },
-
-        // Deep merge objects
-        deepMerge(target, source) {
-            const result = { ...target };
-            for (const key in source) {
-                if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-                    result[key] = this.deepMerge(result[key] || {}, source[key]);
-                } else {
-                    result[key] = source[key];
-                }
-            }
-            return result;
-        }
-    };
-
-    // API client
-    const api = {
-        async request(url, options = {}) {
-            const config = {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin',
-                ...options
-            };
-
-            try {
-                const response = await fetch(url, config);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.success === false) {
-                    throw new Error(data.error || 'API request failed');
-                }
-                
-                return data;
-            } catch (error) {
-                log(`API request failed: ${error.message}`, 'error');
-                throw error;
-            }
-        },
-
-        get(url, options = {}) {
-            return this.request(url, { ...options, method: 'GET' });
-        },
-
-        post(url, data = null, options = {}) {
-            return this.request(url, {
-                ...options,
-                method: 'POST',
-                body: data ? JSON.stringify(data) : null
-            });
-        },
-
-        put(url, data = null, options = {}) {
-            return this.request(url, {
-                ...options,
-                method: 'PUT',
-                body: data ? JSON.stringify(data) : null
-            });
-        },
-
-        delete(url, options = {}) {
-            return this.request(url, { ...options, method: 'DELETE' });
-        }
-    };
-
-    // Core initialization
-    async function init() {
-        if (WF_CORE.initialized) {
-            log('Core already initialized', 'warn');
-            return;
-        }
-
-        log('Starting WhimsicalFrog Core initialization...');
-        
-        // Set current page
-        const urlParams = new URLSearchParams(window.location.search);
-        WF_CORE.state.currentPage = urlParams.get('page') || 'landing';
-        
-        // Initialize modules
-        await initializeModules();
-        
-        // All modules loaded successfully
-        log('All modules initialized successfully');
-        
-        WF_CORE.initialized = true;
-        
-        // Emit initialization complete event
-        eventBus.emit('core:initialized', WF_CORE);
-        
-        log('WhimsicalFrog Core initialization complete');
-    }
-
-    // Expose core system globally
-    window.WhimsicalFrog = {
-        Core: WF_CORE,
-        registerModule,
-        init,
-        log,
-        utils,
-        api,
-        eventBus,
-        
-        // State accessors
-        getState: () => WF_CORE.state,
-        getConfig: () => WF_CORE.config,
-        getModule: (name) => WF_CORE.modules[name],
-        
-        // Convenience functions
-        ready: (callback) => {
-            if (WF_CORE.initialized) {
-                callback(WF_CORE);
-            } else {
-                eventBus.on('core:initialized', callback);
-            }
-        }
-    };
-
-    // Auto-initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        // DOM is already loaded, initialize immediately
-        setTimeout(init, 0);
-    }
-
-    log('WhimsicalFrog Core loaded');
-})();
-
-/**
- * WhimsicalFrog Cart System Module
- * Unified cart management with notifications
- */
-(function() {
-    'use strict';
-
-    if (!window.WhimsicalFrog) {
-        console.error('WhimsicalFrog Core not found. Cart module cannot be registered.');
-        return;
-    }
-
-    const cartModule = {
-        name: 'CartSystem',
-        dependencies: [],
-        state: {
-            items: [],
-            total: 0,
-            count: 0,
-            notifications: true
-        },
-
-        init: function(WF) {
-            this.WF = WF;
-            this.loadCart();
-            // Expose a global cart object for backward compatibility and easy access
-            window.cart = {
-                addItem: this.addItem.bind(this),
-                removeItem: this.removeItem.bind(this),
-                updateQuantity: this.updateQuantity.bind(this),
-                getItems: () => this.state.items,
-                getTotal: () => this.state.total,
-                getCount: () => this.state.count,
-                clearCart: this.clearCart.bind(this)
-            };
-            WF.log('CartSystem initialized.');
-        },
-
-        loadCart: function() {
-            try {
-                const saved = localStorage.getItem('whimsical_frog_cart');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    this.state.items = data.items || [];
-                    this.recalculateTotal();
-                }
-            } catch (error) {
-                this.WF.log(`Error loading cart: ${error.message}`, 'error');
-                this.state.items = [];
-            }
-        },
-
-        saveCart: function() {
-            try {
-                const data = {
-                    items: this.state.items,
-                    total: this.state.total,
-                    count: this.state.count,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('whimsical_frog_cart', JSON.stringify(data));
-            } catch (error) {
-                this.WF.log(`Error saving cart: ${error.message}`, 'error');
-            }
-        },
-
-        recalculateTotal: function() {
-            this.state.count = this.state.items.reduce((sum, item) => sum + item.quantity, 0);
-            this.state.total = this.state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            this.WF.eventBus.emit('cartUpdated', { ...this.state });
-        },
-
-        addItem: function(item) {
-            const existingItem = this.state.items.find(i => i.id === item.id);
-            if (existingItem) {
-                existingItem.quantity += item.quantity;
-            } else {
-                this.state.items.push(item);
-            }
-            this.recalculateTotal();
-            this.saveCart();
-        },
-
-        removeItem: function(itemId) {
-            this.state.items = this.state.items.filter(i => i.id !== itemId);
-            this.recalculateTotal();
-            this.saveCart();
-        },
-
-        updateQuantity: function(itemId, quantity) {
-            const item = this.state.items.find(i => i.id === itemId);
-            if (item) {
-                item.quantity = Math.max(0, quantity);
-                if (item.quantity === 0) {
-                    this.removeItem(itemId);
-                } else {
-                    this.recalculateTotal();
-                    this.saveCart();
-                }
-            }
-        },
-
-        clearCart: function() {
-            this.state.items = [];
-            this.recalculateTotal();
-            this.saveCart();
-        }
-    };
-
-    window.WhimsicalFrog.registerModule(cartModule.name, cartModule);
-})();
+// --- Start of js/main-application.js --- 
 
 /**
  * WhimsicalFrog Main Application Module
- * Handles core UI logic like navigation, login, and cart display.
+ * Lightweight wrapper that depends on CartSystem and handles page-level UI.
  */
-(function() {
-    'use strict';
+(function () {
+  'use strict';
 
-    if (!window.WhimsicalFrog) {
-        console.error('WhimsicalFrog Core not found. Main App module cannot be registered.');
-        return;
+  if (!window.WhimsicalFrog || typeof window.WhimsicalFrog.registerModule !== 'function') {
+    console.error('[MainApplication] WhimsicalFrog Core not found.');
+    return;
+  }
+
+  const mainAppModule = {
+  name: 'MainApplication',
+  dependencies: [],
+
+  init(WF) {
+    this.WF = WF;
+    this.ensureSingleNavigation();
+    this.updateMainCartCounter();
+    this.setupEventListeners();
+    this.handleLoginForm();
+    this.WF.log('Main Application module initialized.');
+  },
+
+  ensureSingleNavigation() {
+    const navs = document.querySelectorAll('nav.main-nav');
+    if (navs.length > 1) {
+      this.WF.log(`Found ${navs.length} navigation elements, removing duplicates...`);
+      navs.forEach((el, idx) => { if (idx > 0) el.remove(); });
     }
+  },
 
-    const mainAppModule = {
-        name: 'MainApplication',
-        dependencies: ['CartSystem'],
-        
-        init: function(WF) {
-            this.WF = WF;
-            this.ensureSingleNavigation();
-            this.setupEventListeners();
-            this.handleLoginForm();
-            this.WF.log('Main Application module initialized.');
-        },
+  updateMainCartCounter() {
+    const el = document.getElementById('cartCount');
+    if (window.cart && el) {
+      el.textContent = `${window.cart.getCount()} items`;
+    }
+  },
 
-        ensureSingleNavigation: function() {
-            const navElements = document.querySelectorAll('nav.main-nav');
-            if (navElements.length > 1) {
-                this.WF.log(`Found ${navElements.length} navigation elements, removing duplicates...`);
-                for (let i = 1; i < navElements.length; i++) {
-                    navElements[i].remove();
-                }
-            }
-        },
+  setupEventListeners() {
+    this.WF.eventBus.on('cartUpdated', () => this.updateMainCartCounter());
+    if (this.WF.ready) this.WF.ready(() => this.updateMainCartCounter());
+  },
 
-        updateMainCartCounter: function() {
-            const cartCountEl = document.getElementById('cartCount');
-            if (window.cart && cartCountEl) {
-                const count = window.cart.getCount();
-                cartCountEl.textContent = count + ' items';
-            }
-        },
-
-        setupEventListeners: function() {
-            this.WF.eventBus.on('cartUpdated', () => this.updateMainCartCounter());
-            
-            // Initial cart count update
-            this.WF.ready(() => {
-                 this.updateMainCartCounter();
-            });
-        },
-
-        loadModalBackground: async function(roomType) {
-            if (!roomType) {
-                this.WF.log('No roomType provided for modal background.', 'warn');
-                return;
-            }
-            try {
-                const response = await this.WF.api.get(`/api/get_background.php?room_type=${roomType}`);
-                if (response.success && response.background) {
-                    const background = response.background;
-                    const supportsWebP = document.documentElement.classList.contains('webp');
-                    const imageUrl = supportsWebP && background.webp_filename ?
-                        `images/${background.webp_filename}` :
-                        `images/${background.image_filename}`;
-
-                    const modalOverlay = document.querySelector('.room-modal-overlay');
-                    if (modalOverlay) {
-                        modalOverlay.style.setProperty('--dynamic-bg-url', `url('${imageUrl}')`);
-                        this.WF.log(`Modal background loaded for: ${roomType}`);
-                    } else {
-                        this.WF.log('Room modal overlay not found.', 'warn');
-                    }
-                }
-            } catch (error) {
-                this.WF.log(`Error loading modal background for ${roomType}: ${error.message}`, 'error');
-            }
-        },
-
-        resetToPageBackground: function() {
-            const modalOverlay = document.querySelector('.room-modal-overlay');
-            if (modalOverlay) {
-                modalOverlay.style.removeProperty('--dynamic-bg-url');
-            }
-            this.WF.log('Modal background reset.');
-        },
-
-        handleLoginForm: function() {
-            const loginForm = document.getElementById('loginForm');
-            if (!loginForm) return;
-
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const errorMessage = document.getElementById('errorMessage');
-                errorMessage.classList.add('hidden');
-
-                try {
-                    const data = await this.WF.api.post('/process_login.php', { username, password });
-                    
-                    sessionStorage.setItem('user', JSON.stringify(data.user || data));
-
-                    if (data.redirectUrl) {
-                        window.location.href = data.redirectUrl;
-                    } else if (localStorage.getItem('pendingCheckout') === 'true') {
-                        localStorage.removeItem('pendingCheckout');
-                        window.location.href = '/?page=cart';
-                    } else {
-                        window.location.href = data.role === 'Admin' ? '/?page=admin' : '/?page=room_main';
-                    }
-                } catch (error) {
-                    errorMessage.textContent = error.message;
-                    errorMessage.classList.remove('hidden');
-                }
-            });
+  handleLoginForm() {
+    const form = document.getElementById('loginForm');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errorMessage = document.getElementById('errorMessage');
+      if (errorMessage) errorMessage.classList.add('hidden');
+      try {
+        const data = await this.WF.api.post('/functions/process_login.php', { username, password });
+        sessionStorage.setItem('user', JSON.stringify(data.user || data));
+        if (data.redirectUrl) {
+          window.location.href = data.redirectUrl;
+        } else if (localStorage.getItem('pendingCheckout') === 'true') {
+          localStorage.removeItem('pendingCheckout');
+          window.location.href = '/?page=cart';
+        } else {
+          window.location.href = data.role === 'Admin' ? '/?page=admin' : '/?page=room_main';
         }
-    };
+      } catch (err) {
+        if (errorMessage) {
+          errorMessage.textContent = err.message;
+          errorMessage.classList.remove('hidden');
+        }
+      }
+    });
+  },
 
-    window.WhimsicalFrog.registerModule(mainAppModule.name, mainAppModule);
+  async loadModalBackground(roomType) {
+    if (!roomType) {
+      this.WF.log('[MainApplication] No roomType provided for modal background.', 'warn');
+      return;
+    }
+    try {
+      const data = await this.WF.api.get(`/api/get_background.php?room_type=${roomType}`);
+      if (data && data.success && data.background) {
+        const bg = data.background;
+        const supportsWebP = document.documentElement.classList.contains('webp');
+        let filename = supportsWebP && bg.webp_filename ? bg.webp_filename : bg.image_filename;
+        // Ensure filename does not already include the backgrounds/ prefix
+        if (!filename.startsWith('backgrounds/')) {
+          filename = `backgrounds/${filename}`;
+        }
+        const imageUrl = `/images/${filename}`;
+        const overlay = document.querySelector('.room-modal-overlay');
+        if (overlay) {
+          overlay.style.setProperty('--dynamic-bg-url', `url('${imageUrl}')`);
+          this.WF.log(`[MainApplication] Modal background loaded for ${roomType}`);
+        }
+      }
+    } catch (err) {
+      this.WF.log(`[MainApplication] Error loading modal background for ${roomType}: ${err.message}`, 'error');
+    }
+  },
 
+  resetToPageBackground() {
+    const overlay = document.querySelector('.room-modal-overlay');
+    if (overlay) {
+      overlay.style.removeProperty('--dynamic-bg-url');
+      this.WF.log('[MainApplication] Modal background reset to page background.');
+    }
+  }
+};
+
+  // Register module once
+  window.WhimsicalFrog.registerModule(mainAppModule.name, mainAppModule);
 })();
 
-// --- End of js/main.js --- 
+// --- End of js/main-application.js --- 
 

@@ -6,29 +6,37 @@
 
 require_once 'config.php';
 
-class AIProviders {
+class AIProviders
+{
     private $pdo;
     private $settings;
-// __construct function moved to constructor_manager.php for centralization
-    
+    // __construct function moved to constructor_manager.php for centralization
+
     /**
      * Get PDO connection (lazy loading)
      */
-    private function getPDO() {
+    private function getPDO()
+    {
         if ($this->pdo === null) {
             global $dsn, $user, $pass, $options;
-            try { $this->pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
+            try {
+                $this->pdo = Database::getInstance();
+            } catch (Exception $e) {
+                error_log("Database connection failed: " . $e->getMessage());
+                throw $e;
+            }
         }
         return $this->pdo;
     }
-// loadAISettings function moved to ai_manager.php for centralization
-    
+    // loadAISettings function moved to ai_manager.php for centralization
+
     /**
      * Analyze images for alt text generation
      */
-    public function analyzeImagesForAltText($images, $name, $description, $category) {
+    public function analyzeImagesForAltText($images, $name, $description, $category)
+    {
         $provider = $this->settings['ai_provider'];
-        
+
         try {
             switch ($provider) {
                 case 'openai':
@@ -50,37 +58,39 @@ class AIProviders {
     /**
      * Extract marketing insights from image analysis data
      */
-    public function extractMarketingInsightsFromImages($imageAnalysisData, $name, $category) {
+    public function extractMarketingInsightsFromImages($imageAnalysisData, $name, $category)
+    {
         if (empty($imageAnalysisData) || !is_array($imageAnalysisData)) {
             return '';
         }
-        
+
         $insights = [];
         foreach ($imageAnalysisData as $imageData) {
             if (isset($imageData['description'])) {
                 $insights[] = $imageData['description'];
             }
         }
-        
+
         if (empty($insights)) {
             return '';
         }
-        
+
         // Combine insights into a comprehensive description
         $combinedInsights = "Visual analysis reveals: " . implode(" Additionally, ", $insights);
-        
+
         // Add context about the item
         $contextualInsights = "Based on the item images for '{$name}' in the {$category} category: {$combinedInsights}";
-        
+
         return $contextualInsights;
     }
 
     /**
      * Generate enhanced marketing content using image insights
      */
-    public function generateEnhancedMarketingContent($name, $description, $category, $imageInsights = '', $brandVoice = '', $contentTone = '') {
+    public function generateEnhancedMarketingContent($name, $description, $category, $imageInsights = '', $brandVoice = '', $contentTone = '')
+    {
         $provider = $this->settings['ai_provider'];
-        
+
         try {
             switch ($provider) {
                 case 'openai':
@@ -97,13 +107,13 @@ class AIProviders {
             }
         } catch (Exception $e) {
             error_log("Enhanced AI Provider Error ($provider): " . $e->getMessage());
-            
+
             // Fallback to local if enabled
             if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
                 error_log("Falling back to Jon's AI for enhanced content");
                 return $this->generateEnhancedWithLocal($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
             }
-            
+
             throw $e;
         }
     }
@@ -111,9 +121,10 @@ class AIProviders {
     /**
      * Generate marketing content using selected AI provider
      */
-    public function generateMarketingContent($name, $description, $category, $brandVoice = '', $contentTone = '') {
+    public function generateMarketingContent($name, $description, $category, $brandVoice = '', $contentTone = '')
+    {
         $provider = $this->settings['ai_provider'];
-        
+
         try {
             switch ($provider) {
                 case 'openai':
@@ -130,23 +141,24 @@ class AIProviders {
             }
         } catch (Exception $e) {
             error_log("AI Provider Error ($provider): " . $e->getMessage());
-            
+
             // Fallback to local if enabled
             if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
                 error_log("Falling back to Jon's AI");
                 return $this->generateWithLocal($name, $description, $category, $brandVoice, $contentTone);
             }
-            
+
             throw $e;
         }
     }
-    
+
     /**
      * Generate cost suggestions using selected AI provider
      */
-    public function generateCostSuggestion($name, $description, $category) {
+    public function generateCostSuggestion($name, $description, $category)
+    {
         $provider = $this->settings['ai_provider'];
-        
+
         try {
             switch ($provider) {
                 case 'openai':
@@ -163,13 +175,13 @@ class AIProviders {
             }
         } catch (Exception $e) {
             error_log("AI Cost Provider Error ($provider): " . $e->getMessage());
-            
+
             // Fallback to local if enabled
             if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
                 error_log("Falling back to Jon's AI cost analysis");
                 return $this->generateCostWithLocal($name, $description, $category);
             }
-            
+
             throw $e;
         }
     }
@@ -177,9 +189,10 @@ class AIProviders {
     /**
      * Generate pricing suggestions using selected AI provider
      */
-    public function generatePricingSuggestion($name, $description, $category, $costPrice) {
+    public function generatePricingSuggestion($name, $description, $category, $costPrice)
+    {
         $provider = $this->settings['ai_provider'];
-        
+
         try {
             switch ($provider) {
                 case 'openai':
@@ -196,29 +209,30 @@ class AIProviders {
             }
         } catch (Exception $e) {
             error_log("AI Pricing Provider Error ($provider): " . $e->getMessage());
-            
+
             // Fallback to local if enabled
             if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
                 error_log("Falling back to Jon's AI pricing analysis");
                 return $this->generatePricingWithLocal($name, $description, $category, $costPrice);
             }
-            
+
             throw $e;
         }
     }
-    
+
     /**
      * Generate marketing content with image support
      */
-    public function generateMarketingContentWithImages($name, $description, $category, $images = [], $brandVoice = '', $contentTone = '') {
+    public function generateMarketingContentWithImages($name, $description, $category, $images = [], $brandVoice = '', $contentTone = '')
+    {
         $provider = $this->settings['ai_provider'];
-        
+
         // Check if current model supports images
         if (!empty($images) && !$this->currentModelSupportsImages()) {
             // Fall back to text-only generation
             return $this->generateMarketingContent($name, $description, $category, $brandVoice, $contentTone);
         }
-        
+
         try {
             switch ($provider) {
                 case 'openai':
@@ -235,24 +249,25 @@ class AIProviders {
             }
         } catch (Exception $e) {
             error_log("AI Provider Error with Images ($provider): " . $e->getMessage());
-            
+
             // Fallback to text-only if image processing fails
             return $this->generateMarketingContent($name, $description, $category, $brandVoice, $contentTone);
         }
     }
-    
+
     /**
      * Generate pricing suggestions with image support
      */
-    public function generatePricingSuggestionWithImages($name, $description, $category, $costPrice, $images = []) {
+    public function generatePricingSuggestionWithImages($name, $description, $category, $costPrice, $images = [])
+    {
         $provider = $this->settings['ai_provider'];
-        
+
         // Check if current model supports images
         if (!empty($images) && !$this->currentModelSupportsImages()) {
             // Fall back to text-only generation
             return $this->generatePricingSuggestion($name, $description, $category, $costPrice);
         }
-        
+
         try {
             switch ($provider) {
                 case 'openai':
@@ -269,22 +284,23 @@ class AIProviders {
             }
         } catch (Exception $e) {
             error_log("AI Pricing Provider Error with Images ($provider): " . $e->getMessage());
-            
+
             // Fallback to text-only if image processing fails
             return $this->generatePricingSuggestion($name, $description, $category, $costPrice);
         }
     }
-    
+
     /**
      * Check if current model supports images
      */
-    public function currentModelSupportsImages() {
+    public function currentModelSupportsImages()
+    {
         try {
             $pdo = $this->getPDO();
             $provider = $this->settings['ai_provider'];
             $modelKey = $provider . '_model';
             $modelId = $this->settings[$modelKey] ?? 'local-basic';
-            
+
             $stmt = $pdo->prepare("SELECT supports_images FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1");
             $stmt->execute([$provider, $modelId]);
             return (bool)$stmt->fetchColumn();
@@ -293,49 +309,52 @@ class AIProviders {
             return false;
         }
     }
-    
+
     /**
      * Get AI settings
      */
-    public function getSettings() {
+    public function getSettings()
+    {
         return $this->settings;
     }
-    
+
     /**
      * Convert image file to base64 for API calls
      */
-    private function imageToBase64($imagePath) {
+    private function imageToBase64($imagePath)
+    {
         if (!file_exists($imagePath)) {
             throw new Exception("Image file not found: " . $imagePath);
         }
-        
+
         $imageData = file_get_contents($imagePath);
         if ($imageData === false) {
             throw new Exception("Failed to read image file: " . $imagePath);
         }
-        
+
         $mimeType = mime_content_type($imagePath);
         if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'])) {
             throw new Exception("Unsupported image type: " . $mimeType);
         }
-        
+
         return [
             'data' => base64_encode($imageData),
             'mime_type' => $mimeType
         ];
     }
-    
+
     /**
      * OpenAI Integration
      */
-    private function generateWithOpenAI($name, $description, $category, $brandVoice, $contentTone) {
+    private function generateWithOpenAI($name, $description, $category, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
         }
-        
+
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
-        
+
         $data = [
             'model' => $this->settings['openai_model'],
             'messages' => [
@@ -351,7 +370,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.openai.com/v1/chat/completions',
             $data,
@@ -360,25 +379,26 @@ class AIProviders {
                 'Content-Type: application/json'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid OpenAI response");
         }
-        
+
         return $this->parseAIResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * Anthropic Integration
      */
-    private function generateWithAnthropic($name, $description, $category, $brandVoice, $contentTone) {
+    private function generateWithAnthropic($name, $description, $category, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['anthropic_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Anthropic API key not configured");
         }
-        
+
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
-        
+
         $data = [
             'model' => $this->settings['anthropic_model'],
             'max_tokens' => (int)$this->settings['ai_max_tokens'],
@@ -390,7 +410,7 @@ class AIProviders {
                 ]
             ]
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.anthropic.com/v1/messages',
             $data,
@@ -400,11 +420,11 @@ class AIProviders {
                 'anthropic-version: 2023-06-01'
             ]
         );
-        
+
         if (!$response) {
             throw new Exception("No response from Anthropic API");
         }
-        
+
         // Handle error responses
         if (isset($response['error'])) {
             $errorMsg = $response['error']['message'] ?? 'Unknown Anthropic API error';
@@ -413,25 +433,26 @@ class AIProviders {
             }
             throw new Exception("Anthropic API Error: " . $errorMsg);
         }
-        
+
         if (!isset($response['content'][0]['text'])) {
             throw new Exception("Invalid Anthropic response format");
         }
-        
+
         return $this->parseAIResponse($response['content'][0]['text']);
     }
-    
+
     /**
      * Google AI Integration
      */
-    private function generateWithGoogle($name, $description, $category, $brandVoice, $contentTone) {
+    private function generateWithGoogle($name, $description, $category, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Google API key not configured");
         }
-        
+
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
-        
+
         $data = [
             'contents' => [
                 [
@@ -445,30 +466,31 @@ class AIProviders {
                 'maxOutputTokens' => (int)$this->settings['ai_max_tokens']
             ]
         ];
-        
+
         $model = $this->settings['google_model'];
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-        
+
         $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
-        
+
         if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
             throw new Exception("Invalid Google AI response");
         }
-        
+
         return $this->parseAIResponse($response['candidates'][0]['content']['parts'][0]['text']);
     }
-    
+
     /**
      * Meta (Llama) Integration via OpenRouter
      */
-    private function generateWithMeta($name, $description, $category, $brandVoice, $contentTone) {
+    private function generateWithMeta($name, $description, $category, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['meta_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Meta API key not configured");
         }
-        
+
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
-        
+
         $data = [
             'model' => $this->settings['meta_model'],
             'messages' => [
@@ -484,7 +506,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://openrouter.ai/api/v1/chat/completions',
             $data,
@@ -495,18 +517,19 @@ class AIProviders {
                 'X-Title: WhimsicalFrog AI Assistant'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid Meta response");
         }
-        
+
         return $this->parseAIResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * Local AI Integration (existing system)
      */
-    private function generateWithLocal($name, $description, $category, $brandVoice, $contentTone) {
+    private function generateWithLocal($name, $description, $category, $brandVoice, $contentTone)
+    {
         // Use existing local AI functions
         require_once 'suggest_marketing.php';
         return generateMarketingIntelligence($name, $description, $category, $this->pdo, $brandVoice, $contentTone);
@@ -515,9 +538,10 @@ class AIProviders {
     /**
      * Generate receipt message using selected AI provider
      */
-    public function generateReceiptMessage($prompt, $aiSettings = null) {
+    public function generateReceiptMessage($prompt, $aiSettings = null)
+    {
         $provider = $this->settings['ai_provider'];
-        
+
         try {
             switch ($provider) {
                 case 'openai':
@@ -534,23 +558,24 @@ class AIProviders {
             }
         } catch (Exception $e) {
             error_log("Receipt AI Provider Error ($provider): " . $e->getMessage());
-            
+
             // Fallback to local if enabled
             if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
                 error_log("Falling back to Jon's AI for receipt message");
                 return $this->generateReceiptWithLocal($prompt, $aiSettings);
             }
-            
+
             throw $e;
         }
     }
 
-    private function generateReceiptWithOpenAI($prompt) {
+    private function generateReceiptWithOpenAI($prompt)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
         }
-        
+
         $data = [
             'model' => $this->settings['openai_model'],
             'messages' => [
@@ -566,7 +591,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => 200
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.openai.com/v1/chat/completions',
             $data,
@@ -575,20 +600,21 @@ class AIProviders {
                 'Content-Type: application/json'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid OpenAI response");
         }
-        
+
         return $this->parseReceiptResponse($response['choices'][0]['message']['content']);
     }
 
-    private function generateReceiptWithAnthropic($prompt) {
+    private function generateReceiptWithAnthropic($prompt)
+    {
         $apiKey = $this->settings['anthropic_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Anthropic API key not configured");
         }
-        
+
         $data = [
             'model' => $this->settings['anthropic_model'],
             'max_tokens' => 200,
@@ -600,7 +626,7 @@ class AIProviders {
                 ]
             ]
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.anthropic.com/v1/messages',
             $data,
@@ -610,20 +636,21 @@ class AIProviders {
                 'anthropic-version: 2023-06-01'
             ]
         );
-        
+
         if (!$response || !isset($response['content'][0]['text'])) {
             throw new Exception("Invalid Anthropic response");
         }
-        
+
         return $this->parseReceiptResponse($response['content'][0]['text']);
     }
 
-    private function generateReceiptWithGoogle($prompt) {
+    private function generateReceiptWithGoogle($prompt)
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Google API key not configured");
         }
-        
+
         $data = [
             'contents' => [
                 [
@@ -637,25 +664,26 @@ class AIProviders {
                 'maxOutputTokens' => 200
             ]
         ];
-        
+
         $model = $this->settings['google_model'];
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-        
+
         $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
-        
+
         if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
             throw new Exception("Invalid Google AI response");
         }
-        
+
         return $this->parseReceiptResponse($response['candidates'][0]['content']['parts'][0]['text']);
     }
 
-    private function generateReceiptWithMeta($prompt) {
+    private function generateReceiptWithMeta($prompt)
+    {
         $apiKey = $this->settings['meta_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Meta API key not configured");
         }
-        
+
         $data = [
             'model' => $this->settings['meta_model'],
             'messages' => [
@@ -671,7 +699,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => 200
         ];
-        
+
         $response = $this->makeAPICall(
             'https://openrouter.ai/api/v1/chat/completions',
             $data,
@@ -682,19 +710,20 @@ class AIProviders {
                 'X-Title: WhimsicalFrog AI Assistant'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid Meta response");
         }
-        
+
         return $this->parseReceiptResponse($response['choices'][0]['message']['content']);
     }
 
-    private function generateReceiptWithLocal($prompt, $aiSettings) {
+    private function generateReceiptWithLocal($prompt, $aiSettings)
+    {
         // Parse the prompt to extract context
         $brandVoice = $aiSettings['ai_brand_voice'] ?? 'friendly';
         $contentTone = $aiSettings['ai_content_tone'] ?? 'professional';
-        
+
         // Simple local generation based on tone
         $toneModifiers = [
             'professional' => ['formal', 'business-focused', 'courteous'],
@@ -703,9 +732,9 @@ class AIProviders {
             'energetic' => ['enthusiastic', 'exciting', 'dynamic'],
             'playful' => ['fun', 'lighthearted', 'cheerful']
         ];
-        
+
         $modifiers = $toneModifiers[$contentTone] ?? $toneModifiers['professional'];
-        
+
         // Generate based on context in prompt
         if (strpos($prompt, 'Customer Pickup') !== false) {
             return [
@@ -723,7 +752,7 @@ class AIProviders {
                 'content' => "Your custom items are being prepared for shipment. You'll receive tracking information once your package is on its way to you."
             ];
         }
-        
+
         // Default message
         return [
             'title' => 'Order Confirmed',
@@ -731,28 +760,29 @@ class AIProviders {
         ];
     }
 
-    private function parseReceiptResponse($content) {
+    private function parseReceiptResponse($content)
+    {
         // Try to parse JSON
         $decoded = json_decode($content, true);
-        
+
         if ($decoded && isset($decoded['title']) && isset($decoded['content'])) {
             return $decoded;
         }
-        
+
         // Fallback parsing if not proper JSON
         $title = 'Order Confirmed';
         $contentText = $content;
-        
+
         // Look for title patterns
         if (preg_match('/title["\']?\s*:\s*["\']([^"\']+)["\']?/i', $content, $matches)) {
             $title = $matches[1];
         }
-        
+
         // Look for content patterns
         if (preg_match('/content["\']?\s*:\s*["\']([^"\']+)["\']?/i', $content, $matches)) {
             $contentText = $matches[1];
         }
-        
+
         return [
             'title' => $title,
             'content' => $contentText
@@ -762,14 +792,15 @@ class AIProviders {
     /**
      * Enhanced Generation Methods (with image insights)
      */
-    private function generateEnhancedWithOpenAI($name, $description, $category, $imageInsights, $brandVoice, $contentTone) {
+    private function generateEnhancedWithOpenAI($name, $description, $category, $imageInsights, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
         }
-        
+
         $prompt = $this->buildEnhancedMarketingPrompt($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
-        
+
         $data = [
             'model' => $this->settings['openai_model'],
             'messages' => [
@@ -785,7 +816,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.openai.com/v1/chat/completions',
             $data,
@@ -794,22 +825,23 @@ class AIProviders {
                 'Content-Type: application/json'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid OpenAI response");
         }
-        
+
         return $this->parseAIResponse($response['choices'][0]['message']['content']);
     }
 
-    private function generateEnhancedWithAnthropic($name, $description, $category, $imageInsights, $brandVoice, $contentTone) {
+    private function generateEnhancedWithAnthropic($name, $description, $category, $imageInsights, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['anthropic_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Anthropic API key not configured");
         }
-        
+
         $prompt = $this->buildEnhancedMarketingPrompt($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
-        
+
         $data = [
             'model' => $this->settings['anthropic_model'],
             'max_tokens' => (int)$this->settings['ai_max_tokens'],
@@ -821,7 +853,7 @@ class AIProviders {
                 ]
             ]
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.anthropic.com/v1/messages',
             $data,
@@ -831,11 +863,11 @@ class AIProviders {
                 'anthropic-version: 2023-06-01'
             ]
         );
-        
+
         if (!$response) {
             throw new Exception("No response from Anthropic API");
         }
-        
+
         if (isset($response['error'])) {
             $errorMsg = $response['error']['message'] ?? 'Unknown Anthropic API error';
             if (strpos($errorMsg, 'credit balance') !== false) {
@@ -843,22 +875,23 @@ class AIProviders {
             }
             throw new Exception("Anthropic API Error: " . $errorMsg);
         }
-        
+
         if (!isset($response['content'][0]['text'])) {
             throw new Exception("Invalid Anthropic response format");
         }
-        
+
         return $this->parseAIResponse($response['content'][0]['text']);
     }
 
-    private function generateEnhancedWithGoogle($name, $description, $category, $imageInsights, $brandVoice, $contentTone) {
+    private function generateEnhancedWithGoogle($name, $description, $category, $imageInsights, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Google API key not configured");
         }
-        
+
         $prompt = $this->buildEnhancedMarketingPrompt($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
-        
+
         $data = [
             'contents' => [
                 [
@@ -872,27 +905,28 @@ class AIProviders {
                 'maxOutputTokens' => (int)$this->settings['ai_max_tokens']
             ]
         ];
-        
+
         $model = $this->settings['google_model'];
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-        
+
         $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
-        
+
         if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
             throw new Exception("Invalid Google AI response");
         }
-        
+
         return $this->parseAIResponse($response['candidates'][0]['content']['parts'][0]['text']);
     }
 
-    private function generateEnhancedWithMeta($name, $description, $category, $imageInsights, $brandVoice, $contentTone) {
+    private function generateEnhancedWithMeta($name, $description, $category, $imageInsights, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['meta_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Meta API key not configured");
         }
-        
+
         $prompt = $this->buildEnhancedMarketingPrompt($name, $description, $category, $imageInsights, $brandVoice, $contentTone);
-        
+
         $data = [
             'model' => $this->settings['meta_model'],
             'messages' => [
@@ -908,7 +942,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://openrouter.ai/api/v1/chat/completions',
             $data,
@@ -919,34 +953,36 @@ class AIProviders {
                 'X-Title: WhimsicalFrog AI Assistant'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid Meta response");
         }
-        
+
         return $this->parseAIResponse($response['choices'][0]['message']['content']);
     }
 
-    private function generateEnhancedWithLocal($name, $description, $category, $imageInsights, $brandVoice, $contentTone) {
+    private function generateEnhancedWithLocal($name, $description, $category, $imageInsights, $brandVoice, $contentTone)
+    {
         // Use existing local AI functions with enhanced description
         require_once 'suggest_marketing.php';
-        
+
         // Enhance the description with image insights
         $enhancedDescription = $description;
         if (!empty($imageInsights)) {
             $enhancedDescription .= "\n\nVisual Analysis: " . $imageInsights;
         }
-        
+
         return generateMarketingIntelligence($name, $enhancedDescription, $category, $this->pdo, $brandVoice, $contentTone);
     }
-    
+
     /**
      * Local pricing with existing system
      */
-    private function generatePricingWithLocal($name, $description, $category, $costPrice) {
+    private function generatePricingWithLocal($name, $description, $category, $costPrice)
+    {
         // Simple local pricing algorithm to avoid circular dependency
         $basePrice = $this->calculateBasePrice($name, $description, $category, $costPrice);
-        
+
         return [
             'price' => $basePrice,
             'reasoning' => "Local pricing algorithm based on category markup and item analysis",
@@ -974,11 +1010,12 @@ class AIProviders {
             ]
         ];
     }
-    
+
     /**
      * Calculate base price using simple algorithm
      */
-    private function calculateBasePrice($name, $description, $category, $costPrice) {
+    private function calculateBasePrice($name, $description, $category, $costPrice)
+    {
         // Category base prices
         $basePrices = [
             'T-Shirts' => 19.99,
@@ -988,9 +1025,9 @@ class AIProviders {
             'Window Wraps' => 39.99,
             'default' => 19.99
         ];
-        
+
         $basePrice = $basePrices[$category] ?? $basePrices['default'];
-        
+
         // If we have a cost price, use cost-plus pricing
         if ($costPrice > 0) {
             $markup = 2.5; // 150% markup
@@ -998,28 +1035,29 @@ class AIProviders {
             // Use the higher of base price or calculated price
             $basePrice = max($basePrice, $calculatedPrice);
         }
-        
+
         // Adjust for premium keywords
         $text = strtolower($name . ' ' . $description);
         if (strpos($text, 'premium') !== false || strpos($text, 'deluxe') !== false || strpos($text, 'custom') !== false) {
             $basePrice *= 1.3;
         }
-        
+
         // Round to .99 pricing
         return floor($basePrice) + 0.99;
     }
-    
+
     /**
      * OpenAI Pricing Integration
      */
-    private function generatePricingWithOpenAI($name, $description, $category, $costPrice) {
+    private function generatePricingWithOpenAI($name, $description, $category, $costPrice)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
         }
-        
+
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
-        
+
         $data = [
             'model' => $this->settings['openai_model'],
             'messages' => [
@@ -1035,7 +1073,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.openai.com/v1/chat/completions',
             $data,
@@ -1044,25 +1082,26 @@ class AIProviders {
                 'Content-Type: application/json'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid OpenAI pricing response");
         }
-        
+
         return $this->parsePricingResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * Anthropic Pricing Integration
      */
-    private function generatePricingWithAnthropic($name, $description, $category, $costPrice) {
+    private function generatePricingWithAnthropic($name, $description, $category, $costPrice)
+    {
         $apiKey = $this->settings['anthropic_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Anthropic API key not configured");
         }
-        
+
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
-        
+
         $data = [
             'model' => $this->settings['anthropic_model'],
             'max_tokens' => (int)$this->settings['ai_max_tokens'],
@@ -1075,7 +1114,7 @@ class AIProviders {
                 ]
             ]
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.anthropic.com/v1/messages',
             $data,
@@ -1085,11 +1124,11 @@ class AIProviders {
                 'anthropic-version: 2023-06-01'
             ]
         );
-        
+
         if (!$response) {
             throw new Exception("No response from Anthropic pricing API");
         }
-        
+
         // Handle error responses
         if (isset($response['error'])) {
             $errorMsg = $response['error']['message'] ?? 'Unknown Anthropic API error';
@@ -1098,28 +1137,29 @@ class AIProviders {
             }
             throw new Exception("Anthropic Pricing API Error: " . $errorMsg);
         }
-        
+
         if (!isset($response['content'][0]['text'])) {
             throw new Exception("Invalid Anthropic pricing response format");
         }
-        
+
         return $this->parsePricingResponse($response['content'][0]['text']);
     }
-    
+
     /**
      * Google Pricing Integration
      */
-    private function generatePricingWithGoogle($name, $description, $category, $costPrice) {
+    private function generatePricingWithGoogle($name, $description, $category, $costPrice)
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Google API key not configured");
         }
-        
+
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
-        
+
         // Add system instruction for Google
         $enhancedPrompt = "You are a pricing expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed, specific reasoning and comprehensive component breakdowns for pricing analysis.\n\n" . $prompt;
-        
+
         $data = [
             'contents' => [
                 [
@@ -1133,30 +1173,31 @@ class AIProviders {
                 'maxOutputTokens' => (int)$this->settings['ai_max_tokens']
             ]
         ];
-        
+
         $model = $this->settings['google_model'];
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-        
+
         $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
-        
+
         if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
             throw new Exception("Invalid Google pricing response");
         }
-        
+
         return $this->parsePricingResponse($response['candidates'][0]['content']['parts'][0]['text']);
     }
-    
+
     /**
      * Meta Pricing Integration
      */
-    private function generatePricingWithMeta($name, $description, $category, $costPrice) {
+    private function generatePricingWithMeta($name, $description, $category, $costPrice)
+    {
         $apiKey = $this->settings['meta_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Meta API key not configured");
         }
-        
+
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
-        
+
         $data = [
             'model' => $this->settings['meta_model'],
             'messages' => [
@@ -1172,7 +1213,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://openrouter.ai/api/v1/chat/completions',
             $data,
@@ -1183,37 +1224,39 @@ class AIProviders {
                 'X-Title: WhimsicalFrog AI Assistant'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid Meta pricing response");
         }
-        
+
         return $this->parsePricingResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * Cost Suggestion AI Integration Methods
      */
-    
+
     /**
      * Local Cost Integration
      */
-    private function generateCostWithLocal($name, $description, $category) {
+    private function generateCostWithLocal($name, $description, $category)
+    {
         // Use the existing local cost analysis from suggest_cost.php
         return analyzeCostStructure($name, $description, $category, $this->pdo);
     }
-    
+
     /**
      * OpenAI Cost Integration
      */
-    private function generateCostWithOpenAI($name, $description, $category) {
+    private function generateCostWithOpenAI($name, $description, $category)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
         }
-        
+
         $prompt = $this->buildCostPrompt($name, $description, $category);
-        
+
         $data = [
             'model' => $this->settings['openai_model'],
             'messages' => [
@@ -1229,7 +1272,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.openai.com/v1/chat/completions',
             $data,
@@ -1238,25 +1281,26 @@ class AIProviders {
                 'Content-Type: application/json'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid OpenAI cost response");
         }
-        
+
         return $this->parseCostResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * Anthropic Cost Integration
      */
-    private function generateCostWithAnthropic($name, $description, $category) {
+    private function generateCostWithAnthropic($name, $description, $category)
+    {
         $apiKey = $this->settings['anthropic_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Anthropic API key not configured");
         }
-        
+
         $prompt = $this->buildCostPrompt($name, $description, $category);
-        
+
         $data = [
             'model' => $this->settings['anthropic_model'],
             'max_tokens' => (int)$this->settings['ai_max_tokens'],
@@ -1269,7 +1313,7 @@ class AIProviders {
                 ]
             ]
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.anthropic.com/v1/messages',
             $data,
@@ -1279,37 +1323,38 @@ class AIProviders {
                 'anthropic-version: 2023-06-01'
             ]
         );
-        
+
         if (!$response) {
             throw new Exception("No response from Anthropic cost API");
         }
-        
+
         if (isset($response['error'])) {
             $errorMsg = $response['error']['message'] ?? 'Unknown Anthropic API error';
             throw new Exception("Anthropic Cost API Error: " . $errorMsg);
         }
-        
+
         if (!isset($response['content'][0]['text'])) {
             throw new Exception("Invalid Anthropic cost response format");
         }
-        
+
         return $this->parseCostResponse($response['content'][0]['text']);
     }
-    
+
     /**
      * Google Cost Integration
      */
-    private function generateCostWithGoogle($name, $description, $category) {
+    private function generateCostWithGoogle($name, $description, $category)
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Google API key not configured");
         }
-        
+
         $prompt = $this->buildCostPrompt($name, $description, $category);
-        
+
         // Add system instruction for Google
         $enhancedPrompt = "You are a cost analysis expert for custom crafts and handmade items. You must respond with ONLY valid JSON in the exact format requested. Do not include any additional text, explanations, or markdown formatting outside of the JSON structure. Focus on providing detailed cost breakdowns for materials, labor, energy, and equipment.\n\n" . $prompt;
-        
+
         $data = [
             'contents' => [
                 [
@@ -1323,30 +1368,31 @@ class AIProviders {
                 'maxOutputTokens' => (int)$this->settings['ai_max_tokens']
             ]
         ];
-        
+
         $model = $this->settings['google_model'];
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-        
+
         $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
-        
+
         if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
             throw new Exception("Invalid Google cost response");
         }
-        
+
         return $this->parseCostResponse($response['candidates'][0]['content']['parts'][0]['text']);
     }
-    
+
     /**
      * Meta Cost Integration
      */
-    private function generateCostWithMeta($name, $description, $category) {
+    private function generateCostWithMeta($name, $description, $category)
+    {
         $apiKey = $this->settings['meta_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Meta API key not configured");
         }
-        
+
         $prompt = $this->buildCostPrompt($name, $description, $category);
-        
+
         $data = [
             'model' => $this->settings['meta_model'],
             'messages' => [
@@ -1362,7 +1408,7 @@ class AIProviders {
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://openrouter.ai/api/v1/chat/completions',
             $data,
@@ -1373,25 +1419,26 @@ class AIProviders {
                 'X-Title: WhimsicalFrog AI Assistant'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid Meta cost response");
         }
-        
+
         return $this->parseCostResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * OpenAI Integration with Images
      */
-    private function generateWithOpenAIImages($name, $description, $category, $images, $brandVoice, $contentTone) {
+    private function generateWithOpenAIImages($name, $description, $category, $images, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
         }
-        
+
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
-        
+
         $messages = [
             [
                 'role' => 'system',
@@ -1402,10 +1449,10 @@ class AIProviders {
                 'content' => []
             ]
         ];
-        
+
         // Add text content
         $messages[1]['content'][] = ['type' => 'text', 'text' => $prompt];
-        
+
         // Add images
         foreach ($images as $imagePath) {
             try {
@@ -1420,14 +1467,14 @@ class AIProviders {
                 error_log("Failed to process image for OpenAI: " . $e->getMessage());
             }
         }
-        
+
         $data = [
             'model' => $this->settings['openai_model'],
             'messages' => $messages,
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.openai.com/v1/chat/completions',
             $data,
@@ -1436,30 +1483,31 @@ class AIProviders {
                 'Content-Type: application/json'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid OpenAI response");
         }
-        
+
         return $this->parseAIResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * Anthropic Integration with Images
      */
-    private function generateWithAnthropicImages($name, $description, $category, $images, $brandVoice, $contentTone) {
+    private function generateWithAnthropicImages($name, $description, $category, $images, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['anthropic_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Anthropic API key not configured");
         }
-        
+
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
-        
+
         $content = [];
-        
+
         // Add text content
         $content[] = ['type' => 'text', 'text' => $prompt];
-        
+
         // Add images
         foreach ($images as $imagePath) {
             try {
@@ -1476,7 +1524,7 @@ class AIProviders {
                 error_log("Failed to process image for Anthropic: " . $e->getMessage());
             }
         }
-        
+
         $data = [
             'model' => $this->settings['anthropic_model'],
             'max_tokens' => (int)$this->settings['ai_max_tokens'],
@@ -1488,7 +1536,7 @@ class AIProviders {
                 ]
             ]
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.anthropic.com/v1/messages',
             $data,
@@ -1498,30 +1546,31 @@ class AIProviders {
                 'anthropic-version: 2023-06-01'
             ]
         );
-        
+
         if (!$response || !isset($response['content'][0]['text'])) {
             throw new Exception("Invalid Anthropic response");
         }
-        
+
         return $this->parseAIResponse($response['content'][0]['text']);
     }
-    
+
     /**
      * Google Integration with Images
      */
-    private function generateWithGoogleImages($name, $description, $category, $images, $brandVoice, $contentTone) {
+    private function generateWithGoogleImages($name, $description, $category, $images, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Google API key not configured");
         }
-        
+
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
-        
+
         $parts = [];
-        
+
         // Add text content
         $parts[] = ['text' => $prompt];
-        
+
         // Add images
         foreach ($images as $imagePath) {
             try {
@@ -1536,7 +1585,7 @@ class AIProviders {
                 error_log("Failed to process image for Google: " . $e->getMessage());
             }
         }
-        
+
         $data = [
             'contents' => [
                 [
@@ -1548,30 +1597,31 @@ class AIProviders {
                 'maxOutputTokens' => (int)$this->settings['ai_max_tokens']
             ]
         ];
-        
+
         $model = $this->settings['google_model'];
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-        
+
         $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
-        
+
         if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
             throw new Exception("Invalid Google AI response");
         }
-        
+
         return $this->parseAIResponse($response['candidates'][0]['content']['parts'][0]['text']);
     }
-    
+
     /**
      * Meta Integration with Images
      */
-    private function generateWithMetaImages($name, $description, $category, $images, $brandVoice, $contentTone) {
+    private function generateWithMetaImages($name, $description, $category, $images, $brandVoice, $contentTone)
+    {
         $apiKey = $this->settings['meta_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Meta API key not configured");
         }
-        
+
         $prompt = $this->buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone);
-        
+
         $messages = [
             [
                 'role' => 'system',
@@ -1582,10 +1632,10 @@ class AIProviders {
                 'content' => []
             ]
         ];
-        
+
         // Add text content
         $messages[1]['content'][] = ['type' => 'text', 'text' => $prompt];
-        
+
         // Add images
         foreach ($images as $imagePath) {
             try {
@@ -1600,14 +1650,14 @@ class AIProviders {
                 error_log("Failed to process image for Meta: " . $e->getMessage());
             }
         }
-        
+
         $data = [
             'model' => $this->settings['meta_model'],
             'messages' => $messages,
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://openrouter.ai/api/v1/chat/completions',
             $data,
@@ -1618,25 +1668,26 @@ class AIProviders {
                 'X-Title: WhimsicalFrog AI Assistant'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid Meta response");
         }
-        
+
         return $this->parseAIResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * OpenAI Pricing with Images
      */
-    private function generatePricingWithOpenAIImages($name, $description, $category, $costPrice, $images) {
+    private function generatePricingWithOpenAIImages($name, $description, $category, $costPrice, $images)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
         }
-        
+
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
-        
+
         $messages = [
             [
                 'role' => 'system',
@@ -1647,10 +1698,10 @@ class AIProviders {
                 'content' => []
             ]
         ];
-        
+
         // Add text content
         $messages[1]['content'][] = ['type' => 'text', 'text' => $prompt];
-        
+
         // Add images
         foreach ($images as $imagePath) {
             try {
@@ -1665,14 +1716,14 @@ class AIProviders {
                 error_log("Failed to process image for OpenAI pricing: " . $e->getMessage());
             }
         }
-        
+
         $data = [
             'model' => $this->settings['openai_model'],
             'messages' => $messages,
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.openai.com/v1/chat/completions',
             $data,
@@ -1681,30 +1732,31 @@ class AIProviders {
                 'Content-Type: application/json'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid OpenAI pricing response");
         }
-        
+
         return $this->parsePricingResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * Anthropic Pricing with Images
      */
-    private function generatePricingWithAnthropicImages($name, $description, $category, $costPrice, $images) {
+    private function generatePricingWithAnthropicImages($name, $description, $category, $costPrice, $images)
+    {
         $apiKey = $this->settings['anthropic_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Anthropic API key not configured");
         }
-        
+
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
-        
+
         $content = [];
-        
+
         // Add text content
         $content[] = ['type' => 'text', 'text' => $prompt];
-        
+
         // Add images
         foreach ($images as $imagePath) {
             try {
@@ -1721,7 +1773,7 @@ class AIProviders {
                 error_log("Failed to process image for Anthropic pricing: " . $e->getMessage());
             }
         }
-        
+
         $data = [
             'model' => $this->settings['anthropic_model'],
             'max_tokens' => (int)$this->settings['ai_max_tokens'],
@@ -1733,7 +1785,7 @@ class AIProviders {
                 ]
             ]
         ];
-        
+
         $response = $this->makeAPICall(
             'https://api.anthropic.com/v1/messages',
             $data,
@@ -1743,30 +1795,31 @@ class AIProviders {
                 'anthropic-version: 2023-06-01'
             ]
         );
-        
+
         if (!$response || !isset($response['content'][0]['text'])) {
             throw new Exception("Invalid Anthropic pricing response");
         }
-        
+
         return $this->parsePricingResponse($response['content'][0]['text']);
     }
-    
+
     /**
      * Google Pricing with Images
      */
-    private function generatePricingWithGoogleImages($name, $description, $category, $costPrice, $images) {
+    private function generatePricingWithGoogleImages($name, $description, $category, $costPrice, $images)
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Google API key not configured");
         }
-        
+
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
-        
+
         $parts = [];
-        
+
         // Add text content
         $parts[] = ['text' => $prompt];
-        
+
         // Add images
         foreach ($images as $imagePath) {
             try {
@@ -1781,7 +1834,7 @@ class AIProviders {
                 error_log("Failed to process image for Google pricing: " . $e->getMessage());
             }
         }
-        
+
         $data = [
             'contents' => [
                 [
@@ -1793,30 +1846,31 @@ class AIProviders {
                 'maxOutputTokens' => (int)$this->settings['ai_max_tokens']
             ]
         ];
-        
+
         $model = $this->settings['google_model'];
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-        
+
         $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
-        
+
         if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
             throw new Exception("Invalid Google pricing response");
         }
-        
+
         return $this->parsePricingResponse($response['candidates'][0]['content']['parts'][0]['text']);
     }
-    
+
     /**
      * Meta Pricing with Images
      */
-    private function generatePricingWithMetaImages($name, $description, $category, $costPrice, $images) {
+    private function generatePricingWithMetaImages($name, $description, $category, $costPrice, $images)
+    {
         $apiKey = $this->settings['meta_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Meta API key not configured");
         }
-        
+
         $prompt = $this->buildPricingPrompt($name, $description, $category, $costPrice);
-        
+
         $messages = [
             [
                 'role' => 'system',
@@ -1827,10 +1881,10 @@ class AIProviders {
                 'content' => []
             ]
         ];
-        
+
         // Add text content
         $messages[1]['content'][] = ['type' => 'text', 'text' => $prompt];
-        
+
         // Add images
         foreach ($images as $imagePath) {
             try {
@@ -1845,14 +1899,14 @@ class AIProviders {
                 error_log("Failed to process image for Meta pricing: " . $e->getMessage());
             }
         }
-        
+
         $data = [
             'model' => $this->settings['meta_model'],
             'messages' => $messages,
             'temperature' => (float)$this->settings['ai_temperature'],
             'max_tokens' => (int)$this->settings['ai_max_tokens']
         ];
-        
+
         $response = $this->makeAPICall(
             'https://openrouter.ai/api/v1/chat/completions',
             $data,
@@ -1863,37 +1917,38 @@ class AIProviders {
                 'X-Title: WhimsicalFrog AI Assistant'
             ]
         );
-        
+
         if (!$response || !isset($response['choices'][0]['message']['content'])) {
             throw new Exception("Invalid Meta pricing response");
         }
-        
+
         return $this->parsePricingResponse($response['choices'][0]['message']['content']);
     }
-    
+
     /**
      * Build enhanced marketing prompt with image insights
      */
-    private function buildEnhancedMarketingPrompt($name, $description, $category, $imageInsights, $brandVoice, $contentTone) {
+    private function buildEnhancedMarketingPrompt($name, $description, $category, $imageInsights, $brandVoice, $contentTone)
+    {
         $voiceText = !empty($brandVoice) ? "Brand Voice: {$brandVoice}" : "Brand Voice: Professional";
         $toneText = !empty($contentTone) ? "Content Tone: {$contentTone}" : "Content Tone: Informative";
-        
+
         // Enhanced voice/tone instructions with stronger emphasis
         $voiceInstruction = !empty($brandVoice) ? "\n\nCRITICAL REQUIREMENT: You MUST use a distinctly {$brandVoice} brand voice throughout ALL content. This voice should dramatically influence the title, description, and all marketing copy. Make the {$brandVoice} personality clearly evident in every sentence." : "";
         $toneInstruction = !empty($contentTone) ? "\n\nCRITICAL REQUIREMENT: You MUST maintain a distinctly {$contentTone} content tone in ALL writing. Every piece of text should strongly reflect this {$contentTone} tone. Be bold and obvious with the tone - don't be subtle." : "";
-        
+
         // Add creativity instruction to force variation
         $creativityBoost = "\n\nIMPORTANT: Create fresh, unique content that stands out. Avoid generic phrases. Be creative and distinctive in your approach. Use unexpected angles and compelling language that captures attention.";
-        
+
         // Add timestamp for uniqueness
         $timestamp = time();
         $uniquenessPrompt = "\n\nGeneration ID: {$timestamp} - Ensure this content is unique and different from previous generations.";
-        
+
         $imageSection = '';
         if (!empty($imageInsights)) {
             $imageSection = "\n\nIMAGE ANALYSIS:\n{$imageInsights}\n\nPlease use this visual information to create more accurate and compelling marketing content that reflects what customers will actually see in the product images.";
         }
-        
+
         return "Generate comprehensive marketing content for a custom craft item using the provided visual analysis. Return ONLY valid JSON with this exact structure:
 
 {
@@ -1929,18 +1984,19 @@ Focus on custom crafts, personalized items, and handmade quality. Use the visual
     /**
      * Build marketing prompt for AI
      */
-    private function buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone) {
+    private function buildMarketingPrompt($name, $description, $category, $brandVoice, $contentTone)
+    {
         // Enhanced voice/tone instructions with stronger emphasis
         $voiceInstruction = !empty($brandVoice) ? "\n\nCRITICAL REQUIREMENT: You MUST use a distinctly {$brandVoice} brand voice throughout ALL content. This voice should dramatically influence the title, description, and all marketing copy. Make the {$brandVoice} personality clearly evident in every sentence. Be bold and obvious with this voice - don't be subtle." : "";
         $toneInstruction = !empty($contentTone) ? "\n\nCRITICAL REQUIREMENT: You MUST maintain a distinctly {$contentTone} content tone in ALL writing. Every piece of text should strongly reflect this {$contentTone} tone. The tone should be immediately recognizable and consistent throughout." : "";
-        
+
         // Add creativity instruction to force variation
         $creativityBoost = "\n\nIMPORTANT: Create fresh, unique content that stands out. Avoid generic phrases. Be creative and distinctive in your approach. Use unexpected angles and compelling language that captures attention. Make it memorable and engaging.";
-        
+
         // Add timestamp for uniqueness
         $timestamp = time();
         $uniquenessPrompt = "\n\nGeneration ID: {$timestamp} - Ensure this content is unique and different from previous generations. Bring a fresh perspective.";
-        
+
         return "Generate comprehensive marketing content for a custom craft item. Return ONLY valid JSON with this exact structure:
 
 {
@@ -1972,11 +2028,12 @@ Product Details:
 
 Focus on custom crafts, personalized items, and handmade quality. Make it compelling for potential customers.";
     }
-    
+
     /**
      * Build pricing prompt for AI
      */
-    private function buildPricingPrompt($name, $description, $category, $costPrice) {
+    private function buildPricingPrompt($name, $description, $category, $costPrice)
+    {
         return "You are a pricing expert for custom crafts and handmade items. Analyze the pricing for this item and provide comprehensive reasoning with detailed breakdown components.
 
 Return ONLY valid JSON with this EXACT structure (no additional text):
@@ -2056,11 +2113,12 @@ Analyze this as a custom craft item considering:
 
 Provide detailed, specific reasoning for each pricing component based on the actual product details provided.";
     }
-    
+
     /**
      * Build cost prompt for AI
      */
-    private function buildCostPrompt($name, $description, $category) {
+    private function buildCostPrompt($name, $description, $category)
+    {
         return "You are a cost analysis expert for custom crafts and handmade items. Analyze the cost structure for this item and provide comprehensive breakdown with detailed components.
 
 Return ONLY valid JSON with this EXACT structure (no additional text):
@@ -2119,11 +2177,12 @@ Analyze this as a custom craft item considering:
 
 Provide detailed, specific cost breakdown based on the actual product details provided.";
     }
-    
+
     /**
      * Make API call to external service
      */
-    private function makeAPICall($url, $data, $headers, $method = 'POST') {
+    private function makeAPICall($url, $data, $headers, $method = 'POST')
+    {
         $ch = curl_init();
         $curlOptions = [
             CURLOPT_URL => $url,
@@ -2132,50 +2191,51 @@ Provide detailed, specific cost breakdown based on the actual product details pr
             CURLOPT_TIMEOUT => (int)$this->settings['ai_timeout'],
             CURLOPT_SSL_VERIFYPEER => true
         ];
-        
+
         if ($method === 'POST' && $data) {
             $curlOptions[CURLOPT_POST] = true;
             $curlOptions[CURLOPT_POSTFIELDS] = json_encode($data);
         } elseif ($method === 'GET') {
             $curlOptions[CURLOPT_HTTPGET] = true;
         }
-        
+
         curl_setopt_array($ch, $curlOptions);
-        
+
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         curl_close($ch);
-        
+
         if ($error) {
             throw new Exception("cURL Error: " . $error);
         }
-        
+
         if ($httpCode !== 200) {
             throw new Exception("API Error: HTTP {$httpCode} - " . $response);
         }
-        
+
         $decoded = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Invalid JSON response: " . json_last_error_msg());
         }
-        
+
         return $decoded;
     }
-    
+
     /**
      * Parse AI marketing response
      */
-    private function parseAIResponse($content) {
+    private function parseAIResponse($content)
+    {
         // Clean up response (remove markdown formatting if present)
         $content = preg_replace('/```json\s*|\s*```/', '', $content);
         $content = trim($content);
-        
+
         $data = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Failed to parse AI response as JSON: " . json_last_error_msg());
         }
-        
+
         // Ensure required fields exist with defaults
         $defaults = [
             'title' => 'Enhanced Product',
@@ -2196,23 +2256,24 @@ Provide detailed, specific cost breakdown based on the actual product details pr
             'confidence_score' => 0.7,
             'reasoning' => 'AI-generated marketing content'
         ];
-        
+
         return array_merge($defaults, $data);
     }
-    
+
     /**
      * Parse AI pricing response
      */
-    private function parsePricingResponse($content) {
+    private function parsePricingResponse($content)
+    {
         // Clean up response
         $content = preg_replace('/```json\s*|\s*```/', '', $content);
         $content = trim($content);
-        
+
         $data = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Failed to parse pricing response as JSON: " . json_last_error_msg());
         }
-        
+
         // Ensure required fields exist with defaults
         $defaults = [
             'price' => 25.00,
@@ -2228,9 +2289,9 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                 'psychological_pricing_notes' => ''
             ]
         ];
-        
+
         $result = array_merge($defaults, $data);
-        
+
         // If no components were provided but we have reasoning, create a fallback component
         if (empty($result['components']) && !empty($result['reasoning'])) {
             $result['components'] = [
@@ -2242,23 +2303,24 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                 ]
             ];
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Parse AI cost response
      */
-    private function parseCostResponse($content) {
+    private function parseCostResponse($content)
+    {
         // Clean up response
         $content = preg_replace('/```json\s*|\s*```/', '', $content);
         $content = trim($content);
-        
+
         $data = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new Exception("Failed to parse cost response as JSON: " . json_last_error_msg());
         }
-        
+
         // Ensure required fields exist with defaults
         $defaults = [
             'cost' => 10.00,
@@ -2289,30 +2351,31 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                 'equipment_confidence' => 0.7
             ]
         ];
-        
+
         $result = array_merge($defaults, $data);
-        
+
         // Ensure breakdown is properly structured
         if (!is_array($result['breakdown'])) {
             $result['breakdown'] = $defaults['breakdown'];
         } else {
             $result['breakdown'] = array_merge($defaults['breakdown'], $result['breakdown']);
         }
-        
+
         // Ensure analysis is properly structured
         if (!is_array($result['analysis'])) {
             $result['analysis'] = $defaults['analysis'];
         } else {
             $result['analysis'] = array_merge($defaults['analysis'], $result['analysis']);
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Get available models for a specific provider
      */
-    public function getAvailableModels($provider) {
+    public function getAvailableModels($provider)
+    {
         try {
             switch ($provider) {
                 case 'openai':
@@ -2335,16 +2398,17 @@ Provide detailed, specific cost breakdown based on the actual product details pr
             return $this->getFallbackModels($provider);
         }
     }
-    
+
     /**
      * Get OpenAI available models
      */
-    private function getOpenAIModels() {
+    private function getOpenAIModels()
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             return $this->getFallbackModels('openai');
         }
-        
+
         try {
             $response = $this->makeAPICall(
                 'https://api.openai.com/v1/models',
@@ -2355,15 +2419,15 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                 ],
                 'GET'
             );
-            
+
             if (!$response || !isset($response['data'])) {
                 return $this->getFallbackModels('openai');
             }
-            
+
             $models = [];
             foreach ($response['data'] as $model) {
                 // Only include chat models that are suitable for our use case
-                if (strpos($model['id'], 'gpt-') === 0 && 
+                if (strpos($model['id'], 'gpt-') === 0 &&
                     (strpos($model['id'], 'turbo') !== false || strpos($model['id'], 'gpt-4') === 0)) {
                     $models[] = [
                         'id' => $model['id'],
@@ -2372,29 +2436,34 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                     ];
                 }
             }
-            
+
             // Sort by preference
-            usort($models, function($a, $b) {
+            usort($models, function ($a, $b) {
                 $order = ['gpt-4o', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
                 $aPos = array_search($a['id'], $order);
                 $bPos = array_search($b['id'], $order);
-                if ($aPos === false) $aPos = 999;
-                if ($bPos === false) $bPos = 999;
+                if ($aPos === false) {
+                    $aPos = 999;
+                }
+                if ($bPos === false) {
+                    $bPos = 999;
+                }
                 return $aPos - $bPos;
             });
-            
+
             return count($models) > 0 ? $models : $this->getFallbackModels('openai');
-            
+
         } catch (Exception $e) {
             error_log("OpenAI models API error: " . $e->getMessage());
             return $this->getFallbackModels('openai');
         }
     }
-    
+
     /**
      * Get Anthropic available models
      */
-    private function getAnthropicModels() {
+    private function getAnthropicModels()
+    {
         // Anthropic doesn't have a public models API, so we return known models
         // These are updated as of 2024 and should be current
         return [
@@ -2425,16 +2494,17 @@ Provide detailed, specific cost breakdown based on the actual product details pr
             ]
         ];
     }
-    
+
     /**
      * Get Google AI available models
      */
-    private function getGoogleModels() {
+    private function getGoogleModels()
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             return $this->getFallbackModels('google');
         }
-        
+
         try {
             $response = $this->makeAPICall(
                 'https://generativelanguage.googleapis.com/v1/models?key=' . $apiKey,
@@ -2442,15 +2512,15 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                 ['Content-Type: application/json'],
                 'GET'
             );
-            
+
             if (!$response || !isset($response['models'])) {
                 return $this->getFallbackModels('google');
             }
-            
+
             $models = [];
             foreach ($response['models'] as $model) {
                 // Only include models that support text generation
-                if (isset($model['supportedGenerationMethods']) && 
+                if (isset($model['supportedGenerationMethods']) &&
                     in_array('generateContent', $model['supportedGenerationMethods'])) {
                     $modelId = str_replace('models/', '', $model['name']);
                     $models[] = [
@@ -2460,19 +2530,20 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                     ];
                 }
             }
-            
+
             return count($models) > 0 ? $models : $this->getFallbackModels('google');
-            
+
         } catch (Exception $e) {
             error_log("Google AI models API error: " . $e->getMessage());
             return $this->getFallbackModels('google');
         }
     }
-    
+
     /**
      * Get Meta (Llama) available models via OpenRouter
      */
-    private function getMetaModels() {
+    private function getMetaModels()
+    {
         // Return popular Meta/Llama models available on OpenRouter
         return [
             [
@@ -2502,11 +2573,12 @@ Provide detailed, specific cost breakdown based on the actual product details pr
             ]
         ];
     }
-    
+
     /**
      * Get fallback models when API is unavailable
      */
-    private function getFallbackModels($provider) {
+    private function getFallbackModels($provider)
+    {
         switch ($provider) {
             case 'openai':
                 return [
@@ -2530,11 +2602,12 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                 return [];
         }
     }
-    
+
     /**
      * Format model name for display
      */
-    private function formatModelName($modelId) {
+    private function formatModelName($modelId)
+    {
         $names = [
             'gpt-4o' => 'GPT-4o',
             'gpt-4-turbo' => 'GPT-4 Turbo',
@@ -2555,14 +2628,15 @@ Provide detailed, specific cost breakdown based on the actual product details pr
             'meta-llama/llama-3-70b-instruct' => 'Llama 3 70B Instruct',
             'meta-llama/llama-3-8b-instruct' => 'Llama 3 8B Instruct'
         ];
-        
+
         return $names[$modelId] ?? ucwords(str_replace(['-', '_'], ' ', $modelId));
     }
-    
+
     /**
      * Get model description
      */
-    private function getModelDescription($modelId) {
+    private function getModelDescription($modelId)
+    {
         $descriptions = [
             'gpt-4o' => 'Latest and most capable model',
             'gpt-4-turbo' => 'Fast and capable with large context',
@@ -2583,14 +2657,15 @@ Provide detailed, specific cost breakdown based on the actual product details pr
             'meta-llama/llama-3-70b-instruct' => 'Previous generation, reliable performance',
             'meta-llama/llama-3-8b-instruct' => 'Lightweight and efficient'
         ];
-        
+
         return $descriptions[$modelId] ?? 'AI model';
     }
 
     /**
      * Test AI provider connection
      */
-    public function testProvider($provider) {
+    public function testProvider($provider)
+    {
         try {
             switch ($provider) {
                 case 'openai':
@@ -2599,45 +2674,46 @@ Provide detailed, specific cost breakdown based on the actual product details pr
                     }
                     $result = $this->generateWithOpenAI('Test Product', 'Test description', 'T-Shirts', '', '');
                     break;
-                    
+
                 case 'anthropic':
                     if (empty($this->settings['anthropic_api_key'])) {
                         return ['success' => false, 'message' => 'Anthropic API key not configured'];
                     }
                     $result = $this->generateWithAnthropic('Test Product', 'Test description', 'T-Shirts', '', '');
                     break;
-                    
+
                 case 'google':
                     if (empty($this->settings['google_api_key'])) {
                         return ['success' => false, 'message' => 'Google API key not configured'];
                     }
                     $result = $this->generateWithGoogle('Test Product', 'Test description', 'T-Shirts', '', '');
                     break;
-                    
+
                 case 'meta':
                     if (empty($this->settings['meta_api_key'])) {
                         return ['success' => false, 'message' => 'Meta API key not configured'];
                     }
                     $result = $this->generateWithMeta('Test Product', 'Test description', 'T-Shirts', '', '');
                     break;
-                    
+
                 case 'local':
                 default:
                     $result = $this->generateWithLocal('Test Product', 'Test description', 'T-Shirts', '', '');
                     break;
             }
-            
+
             return ['success' => true, 'message' => 'Provider test successful', 'data' => $result];
-            
+
         } catch (Exception $e) {
             return ['success' => false, 'message' => 'Provider test failed: ' . $e->getMessage()];
         }
     }
-    
+
     /**
      * Get available AI providers
      */
-    public function getAvailableProviders() {
+    public function getAvailableProviders()
+    {
         return [
             'jons_ai' => [
                 'name' => "Jon's AI (Algorithm-based)",
@@ -2684,7 +2760,8 @@ Provide detailed, specific cost breakdown based on the actual product details pr
     /**
      * Image Analysis Methods
      */
-    private function analyzeImagesWithOpenAI($images, $name, $description, $category) {
+    private function analyzeImagesWithOpenAI($images, $name, $description, $category)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
@@ -2753,7 +2830,8 @@ Respond with JSON in this format:
         return $altTexts;
     }
 
-    private function analyzeImagesWithAnthropic($images, $name, $description, $category) {
+    private function analyzeImagesWithAnthropic($images, $name, $description, $category)
+    {
         $apiKey = $this->settings['anthropic_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Anthropic API key not configured");
@@ -2823,7 +2901,8 @@ Respond with JSON in this format:
         return $altTexts;
     }
 
-    private function analyzeImagesWithGoogle($images, $name, $description, $category) {
+    private function analyzeImagesWithGoogle($images, $name, $description, $category)
+    {
         $apiKey = $this->settings['google_api_key'];
         if (empty($apiKey)) {
             throw new Exception("Google API key not configured");
@@ -2887,7 +2966,8 @@ Respond with JSON in this format:
         return $altTexts;
     }
 
-    private function generateBasicAltText($images, $name, $category) {
+    private function generateBasicAltText($images, $name, $category)
+    {
         $altTexts = [];
         foreach ($images as $index => $imagePath) {
             $altTexts[] = $this->generateBasicAltTextForImage($imagePath, $name, $category, $index);
@@ -2895,7 +2975,8 @@ Respond with JSON in this format:
         return $altTexts;
     }
 
-    private function generateBasicAltTextForImage($imagePath, $name, $category, $index) {
+    private function generateBasicAltTextForImage($imagePath, $name, $category, $index)
+    {
         return [
             'image_path' => str_replace(__DIR__ . '/../', '', $imagePath),
             'alt_text' => "Custom {$category} - {$name}" . ($index > 0 ? " (View " . ($index + 1) . ")" : ""),
@@ -2906,13 +2987,14 @@ Respond with JSON in this format:
     /**
      * Analyze an uploaded item image and generate category, title, and description
      */
-    public function analyzeItemImage($imagePath, $existingCategories = []) {
+    public function analyzeItemImage($imagePath, $existingCategories = [])
+    {
         if (!file_exists($imagePath)) {
             throw new Exception("Image file not found: $imagePath");
         }
-        
+
         $provider = $this->settings['default_provider'] ?? 'openai';
-        
+
         switch ($provider) {
             case 'openai':
                 return $this->analyzeItemImageWithOpenAI($imagePath, $existingCategories);
@@ -2924,21 +3006,22 @@ Respond with JSON in this format:
                 throw new Exception("Unsupported AI provider for image analysis: $provider");
         }
     }
-    
-    private function analyzeItemImageWithOpenAI($imagePath, $existingCategories) {
+
+    private function analyzeItemImageWithOpenAI($imagePath, $existingCategories)
+    {
         $apiKey = $this->settings['openai_api_key'];
         if (empty($apiKey)) {
             throw new Exception("OpenAI API key not configured");
         }
-        
+
         // Encode image to base64
         $imageData = file_get_contents($imagePath);
         $imageBase64 = base64_encode($imageData);
         $imageExtension = pathinfo($imagePath, PATHINFO_EXTENSION);
         $mimeType = "image/" . ($imageExtension === 'jpg' ? 'jpeg' : $imageExtension);
-        
+
         $categoriesText = empty($existingCategories) ? "any appropriate category" : implode(", ", $existingCategories);
-        
+
         $prompt = "Analyze this product image and provide item details for an e-commerce inventory system.
 
 Existing categories: {$categoriesText}
@@ -3008,7 +3091,7 @@ Focus on:
         }
 
         $content = $result['choices'][0]['message']['content'];
-        
+
         // Extract JSON from response
         if (preg_match('/\{.*\}/s', $content, $matches)) {
             $jsonData = json_decode($matches[0], true);
@@ -3016,7 +3099,7 @@ Focus on:
                 return $jsonData;
             }
         }
-        
+
         // Fallback parsing if JSON extraction fails
         return [
             'category' => 'General',
@@ -3026,13 +3109,15 @@ Focus on:
             'reasoning' => 'JSON parsing failed: ' . $content
         ];
     }
-    
-    private function analyzeItemImageWithAnthropic($imagePath, $existingCategories) {
+
+    private function analyzeItemImageWithAnthropic($imagePath, $existingCategories)
+    {
         // Similar implementation for Anthropic Claude
         throw new Exception("Anthropic image analysis not yet implemented");
     }
-    
-    private function analyzeItemImageWithGoogle($imagePath, $existingCategories) {
+
+    private function analyzeItemImageWithGoogle($imagePath, $existingCategories)
+    {
         // Similar implementation for Google Gemini
         throw new Exception("Google image analysis not yet implemented");
     }
@@ -3042,19 +3127,23 @@ Focus on:
 $GLOBALS['aiProviders'] = new AIProviders();
 
 // Helper functions
-function getAIProviders() {
+function getAIProviders()
+{
     return $GLOBALS['aiProviders'];
 }
 
-function generateAIMarketingContent($name, $description, $category, $brandVoice = '', $contentTone = '') {
+function generateAIMarketingContent($name, $description, $category, $brandVoice = '', $contentTone = '')
+{
     return $GLOBALS['aiProviders']->generateMarketingContent($name, $description, $category, $brandVoice, $contentTone);
 }
 
-function generateAIPricingSuggestion($name, $description, $category, $costPrice) {
+function generateAIPricingSuggestion($name, $description, $category, $costPrice)
+{
     return $GLOBALS['aiProviders']->generatePricingSuggestion($name, $description, $category, $costPrice);
 }
 
-function generateAICostSuggestion($name, $description, $category) {
+function generateAICostSuggestion($name, $description, $category)
+{
     return $GLOBALS['aiProviders']->generateCostSuggestion($name, $description, $category);
 }
 

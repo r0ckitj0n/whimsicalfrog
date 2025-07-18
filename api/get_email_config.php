@@ -18,12 +18,12 @@ try {
         'smtpPassword' => defined('SMTP_PASSWORD') ? SMTP_PASSWORD : '',
         'smtpEncryption' => defined('SMTP_ENCRYPTION') ? SMTP_ENCRYPTION : 'tls'
     ];
-    
+
     echo json_encode([
         'success' => true,
         'config' => $config
     ]);
-    
+
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,

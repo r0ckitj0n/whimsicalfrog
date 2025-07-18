@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../api/config.php';
 
 echo "--- Fetching current entries from 'backgrounds' table ---\n\n";

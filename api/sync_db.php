@@ -1,4 +1,5 @@
 <?php
+
 // Simple secured DB import endpoint
 $requiredToken = 'whfdeploytoken';
 if (!isset($_GET['token']) || $_GET['token'] !== $requiredToken) {
@@ -6,4 +7,4 @@ if (!isset($_GET['token']) || $_GET['token'] !== $requiredToken) {
     exit('Forbidden');
 }
 
-require_once __DIR__ . '/../db_import_sql.php'; 
+require_once __DIR__ . '/../db_import_sql.php';

@@ -41,7 +41,7 @@ if [ -n "$MONITOR_PID" ]; then
 else
   echo -e "\n${YELLOW}Starting server monitor daemon...${NC}"
   # Start the monitor daemon in the background
-  ./Scripts/server_monitor.sh daemon > monitor.log 2>&1 &
+  ./Scripts/server_monitor.sh daemon > logs/monitor.log 2>&1 &
   DAEMON_PID=$!
   sleep 2
   
@@ -59,7 +59,7 @@ echo -e "${GREEN}You can now access your website at:${NC} http://localhost:8000"
 echo -e "\n${BLUE}Active Monitoring:${NC}"
 echo -e "  • Server monitor daemon is running in the background"
 echo -e "  • Your server will automatically restart if it crashes"
-echo -e "  • Monitor logs are saved to monitor.log"
+echo -e "  • Monitor logs are saved to logs/monitor.log"
 echo -e "\n${YELLOW}To stop the servers and monitor, run:${NC}"
 echo -e "  ./Scripts/server_monitor.sh stop && pkill -f 'Scripts/server_monitor.sh daemon'"
 echo -e "\n${YELLOW}To restart the servers, run:${NC}"

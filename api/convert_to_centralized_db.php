@@ -1,7 +1,7 @@
 <?php
 /**
  * Centralized Database Migration Script
- * 
+ *
  * This script automatically converts all files from direct PDO connections
  * to use the centralized Database class for improved security and maintainability.
  */
@@ -15,7 +15,8 @@ if (!isset($_SESSION)) {
 
 $isAdmin = false;
 if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
-    require_once __DIR__ . '/../includes/auth.php'; $isAdmin = isAdminWithToken();
+    require_once __DIR__ . '/../includes/auth.php';
+    $isAdmin = isAdminWithToken();
 }
 
 // Allow admin token for CLI/API access
@@ -36,22 +37,22 @@ $projectRoot = dirname(__DIR__);
 $patterns = [
     // Direct PDO instantiation with variables
     '/\$pdo = new PDO\(\$dsn, \$user, \$pass, \$options\);/' => 'try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
-    
+
     // PDO with different variable names
     '/\$tempPdo = new PDO\(\$dsn, \$user, \$pass, \$options\);/' => 'try { $tempPdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
-    
+
     // PDO with direct connection string (common pattern)
     '/\$pdo = new PDO\("mysql:host=\$host;dbname=\$dbname;charset=utf8mb4", \$username, \$password\);/' => 'try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
-    
+
     // Other PDO instantiation patterns with arrays
     '/\$pdo = new PDO\(\$dsn, \$user, \$pass, \[[\s\S]*?\]\);/' => 'try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
-    
+
     // Generic PDO pattern (more flexible)
     '/\$\w+ = new PDO\([^;]+\);/' => 'try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
-    
+
     // Self PDO assignment in classes
     '/self::\$pdo = new PDO\(\$dsn, \$user, \$pass, \$options\);/' => 'try { self::$pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
-    
+
     // This PDO assignment in classes
     '/\$this->pdo = new PDO\(\$dsn, \$user, \$pass, \$options\);/' => 'try { $this->pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }',
 ];
@@ -68,40 +69,43 @@ $excludeFiles = [
 /**
  * Scan directory for PHP files
  */
-function scanForPHPFiles($directory) {
+function scanForPHPFiles($directory)
+{
     $files = [];
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($directory),
         RecursiveIteratorIterator::LEAVES_ONLY
     );
-    
+
     foreach ($iterator as $file) {
         if ($file->isFile() && $file->getExtension() === 'php') {
             $files[] = $file->getPathname();
         }
     }
-    
+
     return $files;
 }
 
 /**
  * Check if file contains direct PDO connections
  */
-function containsDirectPDO($filePath) {
+function containsDirectPDO($filePath)
+{
     $content = file_get_contents($filePath);
-    return preg_match('/new PDO\(\$dsn/', $content) || 
+    return preg_match('/new PDO\(\$dsn/', $content) ||
            preg_match('/new PDO\("mysql:/', $content);
 }
 
 /**
  * Add Database include if not present
  */
-function ensureDatabaseInclude($content, $filePath) {
+function ensureDatabaseInclude($content, $filePath)
+{
     // Check if Database class is already included
-    if (strpos($content, 'Database::') !== false && 
+    if (strpos($content, 'Database::') !== false &&
         strpos($content, 'require_once') === false &&
         strpos($content, 'include') === false) {
-        
+
         // Add include at the top after <?php
         $content = preg_replace(
             '/(<\?php\s*(?:\/\*[\s\S]*?\*\/)?\s*)/',
@@ -110,42 +114,43 @@ function ensureDatabaseInclude($content, $filePath) {
             1
         );
     }
-    
+
     return $content;
 }
 
 /**
  * Convert file to use centralized database
  */
-function convertFile($filePath, $patterns) {
+function convertFile($filePath, $patterns)
+{
     global $excludeFiles, $projectRoot;
-    
+
     // Check if file should be excluded
     $relativePath = str_replace($projectRoot . '/', '', $filePath);
     if (in_array($relativePath, $excludeFiles)) {
         return ['success' => false, 'message' => 'File excluded from conversion'];
     }
-    
+
     // Read file content
     $content = file_get_contents($filePath);
     if ($content === false) {
         return ['success' => false, 'message' => 'Could not read file'];
     }
-    
+
     // Check if file needs conversion
     if (!containsDirectPDO($filePath)) {
         return ['success' => false, 'message' => 'No direct PDO connections found'];
     }
-    
+
     // Create backup
     $backupPath = $filePath . '.backup.' . date('Y-m-d_H-i-s');
     if (!copy($filePath, $backupPath)) {
         return ['success' => false, 'message' => 'Could not create backup'];
     }
-    
+
     $originalContent = $content;
     $changes = 0;
-    
+
     // Apply pattern replacements
     foreach ($patterns as $pattern => $replacement) {
         $newContent = preg_replace($pattern, $replacement, $content);
@@ -154,11 +159,11 @@ function convertFile($filePath, $patterns) {
             $changes++;
         }
     }
-    
+
     // Ensure Database include is present if needed
     if ($changes > 0) {
         $content = ensureDatabaseInclude($content, $filePath);
-        
+
         // Write converted content
         if (file_put_contents($filePath, $content) === false) {
             // Restore from backup if write fails
@@ -166,7 +171,7 @@ function convertFile($filePath, $patterns) {
             unlink($backupPath);
             return ['success' => false, 'message' => 'Could not write converted file'];
         }
-        
+
         return [
             'success' => true,
             'message' => "Converted with $changes changes",
@@ -174,7 +179,7 @@ function convertFile($filePath, $patterns) {
             'changes' => $changes
         ];
     }
-    
+
     // Remove backup if no changes were made
     unlink($backupPath);
     return ['success' => false, 'message' => 'No patterns matched for conversion'];
@@ -183,20 +188,20 @@ function convertFile($filePath, $patterns) {
 // Main execution
 if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
     $action = PHP_SAPI === 'cli' ? ($argv[1] ?? 'scan') : ($_GET['action'] ?? 'scan');
-    
+
     switch ($action) {
         case 'scan':
             // Scan for files that need conversion
             $phpFiles = scanForPHPFiles($projectRoot);
             $needsConversion = [];
-            
+
             foreach ($phpFiles as $file) {
                 $relativePath = str_replace($projectRoot . '/', '', $file);
                 if (!in_array($relativePath, $excludeFiles) && containsDirectPDO($file)) {
                     $needsConversion[] = $relativePath;
                 }
             }
-            
+
             if (isset($_GET['format']) && $_GET['format'] === 'json') {
                 header('Content-Type: application/json');
                 echo json_encode([
@@ -210,7 +215,7 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
                 echo "================================\n\n";
                 echo "Total PHP files scanned: " . count($phpFiles) . "\n";
                 echo "Files needing conversion: " . count($needsConversion) . "\n\n";
-                
+
                 if (!empty($needsConversion)) {
                     echo "Files with direct PDO connections:\n";
                     foreach ($needsConversion as $file) {
@@ -222,18 +227,18 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
                 }
             }
             break;
-            
+
         case 'convert':
             // Convert all files
             $phpFiles = scanForPHPFiles($projectRoot);
             $results = [];
             $converted = 0;
             $failed = 0;
-            
+
             foreach ($phpFiles as $file) {
                 $relativePath = str_replace($projectRoot . '/', '', $file);
                 $result = convertFile($file, $patterns);
-                
+
                 if ($result['success']) {
                     $converted++;
                     $results[] = [
@@ -243,7 +248,7 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
                         'backup' => str_replace($projectRoot . '/', '', $result['backup'])
                     ];
                 } else {
-                    if ($result['message'] !== 'No direct PDO connections found' && 
+                    if ($result['message'] !== 'No direct PDO connections found' &&
                         $result['message'] !== 'File excluded from conversion') {
                         $failed++;
                         $results[] = [
@@ -254,7 +259,7 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
                     }
                 }
             }
-            
+
             if (isset($_GET['format']) && $_GET['format'] === 'json') {
                 header('Content-Type: application/json');
                 echo json_encode([
@@ -268,7 +273,7 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
                 echo "===========================\n\n";
                 echo "Files converted: $converted\n";
                 echo "Conversion failures: $failed\n\n";
-                
+
                 foreach ($results as $result) {
                     if ($result['status'] === 'converted') {
                         echo "✅ {$result['file']} - {$result['changes']} changes (backup: {$result['backup']})\n";
@@ -276,7 +281,7 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
                         echo "❌ {$result['file']} - {$result['error']}\n";
                     }
                 }
-                
+
                 if ($converted > 0) {
                     echo "\n🎉 Conversion completed! All files now use centralized Database class.\n";
                     echo "💾 Backups were created for all modified files.\n";
@@ -284,14 +289,14 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
                 }
             }
             break;
-            
+
         case 'test':
             // Test centralized database connection
             try {
                 $pdo = Database::getInstance();
                 $stmt = $pdo->query("SELECT 1 as test");
                 $result = $stmt->fetch();
-                
+
                 if ($result && $result['test'] == 1) {
                     if (isset($_GET['format']) && $_GET['format'] === 'json') {
                         header('Content-Type: application/json');
@@ -317,7 +322,7 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
                 }
             }
             break;
-            
+
         default:
             echo "Invalid action. Use: scan, convert, or test\n";
     }

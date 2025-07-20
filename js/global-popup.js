@@ -31,8 +31,7 @@ class UnifiedPopupSystem {
         // Setup enhanced event listeners
         this.setupEventListeners();
         
-        // Register global functions
-        this.registerGlobalFunctions();
+        // Register global functions will be invoked after instantiation to ensure method availability
         
         popupState.initialized = true;
         console.log('✅ WhimsicalFrog Unified Popup System initialized');
@@ -144,6 +143,11 @@ class UnifiedPopupSystem {
     }
 
     // Main popup display function  
+    /**
+     * Show popup for given DOM element and product item
+     * If element lives inside a room-modal iframe we re-parent the popup so its
+     * coordinates and fixed positioning are scoped to that iframe document.
+     */
     show(element, item) {
         console.log('Showing popup for:', element, item);
         
@@ -177,7 +181,39 @@ class UnifiedPopupSystem {
         window.popupOpen = true;
         window.currentItem = item;
         
-        // Update popup content
+        // If the hovered element is inside an iframe (room modal) then we want
+        // the popup to be rendered inside that iframe's document so that
+        // position:fixed is relative to the iframe viewport instead of the main
+        // window. This prevents the popup from sticking to the top-left of the
+        // main page.
+        const targetDoc = element?.ownerDocument || document;
+        const currentlyInIframe = targetDoc !== document;
+
+        if (currentlyInIframe) {
+            // Mark state so positionPopup() knows we are operating in modal
+            popupState.inIframeDoc = true;
+            // Create a dedicated root container once per iframe doc
+            const popupRootId = 'popup-root';
+            let popupRoot = targetDoc.getElementById(popupRootId);
+            if (!popupRoot) {
+                popupRoot = targetDoc.createElement('div');
+                popupRoot.id = popupRootId;
+                targetDoc.body.appendChild(popupRoot);
+            }
+            // Append the shared popup element into that iframe's root (it will
+            // be moved back to top document automatically when another popup is
+            // shown outside iframe)
+            popupRoot.appendChild(popup);
+            popup.classList.add('in-room-modal');
+        } else {
+            popupState.inIframeDoc = false;
+            if (popup.parentNode !== document.body) {
+                document.body.appendChild(popup);
+                popup.classList.remove('in-room-modal');
+            }
+        }
+
+        // Prepare popup content
         this.updateContent(item);
         
         // Position and show popup
@@ -382,6 +418,9 @@ class UnifiedPopupSystem {
 
     // Hide popup immediately
     hideImmediate() {
+        // Remove overlay active shade when hiding popup
+        const overlay = document.querySelector('.room-modal-overlay.popup-active');
+        if (overlay) overlay.classList.remove('popup-active');
         // Remove overlay dimming reduction
         try {
             if (window.parent && window.parent !== window) {
@@ -494,146 +533,137 @@ class UnifiedPopupSystem {
         }
     }
 
-    // Position popup function with improved positioning logic
+    // Position popup relative to hovered element (clean implementation)
     positionPopup(element, popup) {
-        console.log('Positioning popup...', element, popup);
-        // Detect and mark that we are inside a room-modal iframe (heuristic: parent has .room-modal-overlay)
+        // Detect if we are inside a room modal (parent has .room-modal-overlay)
         try {
             if (window.parent && window.parent !== window && window.parent.document.querySelector('.room-modal-overlay')) {
                 popupState.isInRoomModal = true;
             }
-        } catch(e) { /* cross-origin safe guard */ }
-        
-        const rect = element.getBoundingClientRect();
-        
-        // Determine z-index from CSS variables: popups layer or just above room-modal overlay
-        const isInRoomModal = popupState.isInRoomModal;
-        const rootStyles = getComputedStyle(document.documentElement);
-        // Read CSS custom properties correctly (two leading dashes)
+        } catch (e) { /* cross-origin safeguard */ }
+
+        // Basic geometry and environment info
+        const rect           = element.getBoundingClientRect();
+        const viewportWidth  = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const rootStyles     = getComputedStyle(document.documentElement);
+        const isInRoomModal  = popupState.isInRoomModal;
+        const modalOverlay   = document.querySelector('.room-modal-overlay');
+
+        // z-index selection
         const popupDefaultZ = parseInt(rootStyles.getPropertyValue('--popup-z-index').trim() || '2600', 10);
-        const roomModalZ = parseInt(rootStyles.getPropertyValue('--z-room-modals').trim() || '2400', 10);
-        const zIndex = isInRoomModal ? roomModalZ + 1 : popupDefaultZ;
-        // Toggle class to leverage room-modal-specific CSS rules
+        const roomModalZ    = parseInt(rootStyles.getPropertyValue('--z-room-modals').trim()   || '2400', 10);
+        const zIndex        = isInRoomModal ? roomModalZ + 1 : popupDefaultZ;
+
+        // Toggle modal-specific classes
         if (isInRoomModal) {
             popup.classList.add('in-room-modal');
+            modalOverlay?.classList.add('popup-active');
         } else {
             popup.classList.remove('in-room-modal');
+            modalOverlay?.classList.remove('popup-active');
         }
 
-        // Show popup temporarily to get actual dimensions using CSS classes
-        // Ensure we never exceed configured max width
-        let cssMax = rootStyles.getPropertyValue('--popup-max-width').trim() || '450px';
+        // Width constraints & temporary measure
+        const margin = 10;
+        let cssMaxRaw = rootStyles.getPropertyValue('--popup-max-width').trim() || '450px';
+
         if (isInRoomModal) {
-            // Allow natural content width for room-modal popups
-            cssMax = 'none';
-            popup.style.width = 'max-content';
+            let containerWidth = viewportWidth;
+            try {
+                const modalRect = window.parent?.document.querySelector('.room-modal-container')?.getBoundingClientRect();
+                if (modalRect) containerWidth = modalRect.width;
+            } catch { /* ignore */ }
+
+            const maxWidth = Math.max(200, containerWidth - margin * 2);
+            popup.style.maxWidth = `${maxWidth}px`;
+            popup.style.width    = 'auto';
             popup.style.minWidth = '0';
-            popup.style.maxWidth = 'none';
         } else {
-            popup.style.maxWidth = cssMax;
+            popup.style.maxWidth = cssMaxRaw;
         }
+
+        // Reveal to measure
         popup.classList.remove('hidden');
         popup.classList.add('measuring');
-        // Ensure inline z-index override even if custom property previously set
         popup.style.zIndex = zIndex;
-        popup.style.zIndex = zIndex;
-        
-        const popupRect = popup.getBoundingClientRect();
-        const popupWidth = Math.min(popupRect.width, parseInt(cssMax));
+
+        const popupRect   = popup.getBoundingClientRect();
+        const popupWidth  = Math.min(popupRect.width, parseInt(cssMaxRaw) || popupRect.width);
         const popupHeight = popupRect.height;
-        
-        // Get viewport dimensions with safety margins
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        const margin = 10; // Safety margin from edges
-        
-        // Calculate preferred position - try to center popup on element horizontally
-        let left = rect.left + (rect.width / 2) - (popupWidth / 2);
-        let top = rect.top - popupHeight - margin; // Above element by default
-        
-        // Horizontal positioning logic
-        // Ensure popup doesn't go off left edge
-        if (left < margin) {
-            left = margin;
+
+        // Determine container bounds (viewport by default)
+        let containerRect = { left: 0, top: 0, width: viewportWidth, height: viewportHeight };
+        if (isInRoomModal) {
+            try {
+                const cont = window.parent?.document.querySelector('.room-modal-container');
+                if (cont) {
+                    const r = cont.getBoundingClientRect();
+                    containerRect = { left: r.left, top: r.top, width: r.width, height: r.height };
+                }
+            } catch { /* ignore */ }
         }
-        
-        // Ensure popup doesn't go off right edge
-        if (left + popupWidth + margin > viewportWidth) {
-            left = viewportWidth - popupWidth - margin;
+
+        // Preferred coordinates (above element; fallback below)
+        let left = rect.left - containerRect.left + rect.width / 2 - popupWidth / 2;
+        let top  = rect.top  - containerRect.top  - popupHeight - margin;
+        if (top < margin) top = rect.bottom - containerRect.top + margin;
+
+        // Clamp inside container
+        left = Math.max(margin, Math.min(left, containerRect.width  - popupWidth  - margin));
+        top  = Math.max(margin, Math.min(top,  containerRect.height - popupHeight - margin));
+
+        // Debug: log coordinates when inside room modal
+        if (isInRoomModal) {
+            console.log('[PopupDebug] rect:', rect, 'containerRect:', containerRect, 'left(before clamp):', left, 'top(before clamp):', top, 'popupSize:', popupWidth, popupHeight);
         }
-        
-        // Vertical positioning logic
-        // If popup would go off top of screen, position below element
-        if (top < margin) {
-            top = rect.bottom + margin;
+
+        // Convert coordinates back to viewport only if not already in room modal iframe
+        if (!isInRoomModal) {
+            left += containerRect.left;
+            top  += containerRect.top;
         }
-        
-        // If popup would go off bottom of screen, move it up
-        if (top + popupHeight + margin > viewportHeight) {
-            top = viewportHeight - popupHeight - margin;
-            
-            // If still doesn't fit (popup is taller than viewport), position at top with margin
-            if (top < margin) {
-                top = margin;
-            }
-        }
-        
-        // Final positioning - ensure we don't go negative
-        left = Math.max(margin, left);
-        top = Math.max(margin, top);
-        
-        // Ensure we don't exceed viewport bounds
-        left = Math.min(left, viewportWidth - popupWidth - margin);
-        top = Math.min(top, viewportHeight - popupHeight - margin);
-        
-        // Set final position using custom properties and classes
-        popup.style.setProperty('--popup-left', left + 'px');
-        popup.style.setProperty('--popup-top', top + 'px');
-        
-        // Clear any conflicting inline styles that might override CSS classes
-        popup.style.removeProperty('display');
-        popup.style.removeProperty('visibility');
-        popup.style.removeProperty('opacity');
-        popup.style.removeProperty('pointer-events');
-        popup.style.removeProperty('transform');
-        
+        popup.style.setProperty('--popup-left', `${left}px`);
+        popup.style.setProperty('--popup-top',  `${top}px`);
+
+        // Finalize styles
         popup.classList.remove('measuring');
         popup.classList.add('positioned', 'visible', 'show');
-        
-        console.log('Popup positioned at:', { left, top }, 'Element rect:', rect, 'Popup size:', { width: popupWidth, height: popupHeight });
+        console.log('Popup positioned', { left, top });
+
     }
 
-    // Register global functions for backward compatibility
-    registerGlobalFunctions() {
-        // Main popup functions
-        window.showGlobalPopup = (element, item) => this.show(element, item);
-        window.hideGlobalPopup = (delay = 250) => this.hide(delay);
-        window.hideGlobalPopupImmediate = () => this.hideImmediate();
-        
-        // Additional utility functions
-        window.clearPopupTimeout = () => this.clearHideTimeout();
-        
-        // Legacy compatibility aliases
-        window.showPopup = window.showGlobalPopup;
-        window.hidePopup = window.hideGlobalPopup;
-        window.hidePopupImmediate = window.hideGlobalPopupImmediate;
-        
-        console.log('✅ Global popup functions registered');
-    }
+        // Get current popup state
+        // Register functions globally for legacy compatibility
+        registerGlobalFunctions() {
+            window.showGlobalPopup = (product, element) => this.show(product, element);
+            window.hideGlobalPopup = (delay = 250) => this.hide(delay);
+            window.hideGlobalPopupImmediate = () => this.hideImmediate();
+            window.clearPopupTimeout = () => this.clearHideTimeout();
+            // Legacy aliases
+            window.showPopup = window.showGlobalPopup;
+            window.hidePopup = window.hideGlobalPopup;
+            window.hidePopupImmediate = window.hideGlobalPopupImmediate;
+            console.log('✅ Global popup functions registered');
+        }
 
-    // Get current popup state
-    getState() {
-        return {
-            isVisible: popupState.isVisible,
-            currentProduct: popupState.currentProduct,
-            isInRoomModal: popupState.isInRoomModal,
-            initialized: popupState.initialized
-        };
-    }
+        getState() {
+            return {
+                isVisible: popupState.isVisible,
+                currentProduct: popupState.currentProduct,
+                isInRoomModal: popupState.isInRoomModal,
+                initialized: popupState.initialized
+            };
+        }
 }
 
 // Initialize unified popup system
 const unifiedPopupSystem = new UnifiedPopupSystem();
+
+// Once constructed, safely register global functions
+if (typeof unifiedPopupSystem.registerGlobalFunctions === 'function') {
+    unifiedPopupSystem.registerGlobalFunctions();
+}
 
 // Initialize global variables for backward compatibility
 window.globalPopupTimeout = null;

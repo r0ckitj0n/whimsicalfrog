@@ -57,10 +57,10 @@
 .item-popup,
 .item-popup-legacy {
     position: absolute;
-    background: var(--popup-bg-color);
+    background: transparent; /* permanently remove shaded backdrop */
     border-radius: var(--popup-border-radius);
     padding: var(--popup-padding);
-    box-shadow: var(--popup-shadow);
+    box-shadow: none; /* no shadow around standard popup */
     /* Provide fallbacks for browsers/contexts where CSS variables might be unset */
     min-width: var(--popup-min-width, 280px);
     max-width: var(--popup-max-width, 450px);
@@ -85,18 +85,27 @@
 .item-popup.positioned {
     position: fixed;
     z-index: var(--popup-z-index, var(--z-popups));
-    left: var(--popup-left, 0);
-    top: var(--popup-top, 0);
-    max-width: var(--popup-max-width, 450px); /* ensure stays constrained in positioned state */
+    /* Use inline styles set by JS; CSS vars only if provided */
+    left: var(--popup-left, auto);
+    top: var(--popup-top, auto);
+    max-width: var(--popup-max-width, 450px);
 }
 
 /* Popup visibility and positioning states */
+
+/* Special styling when popup is inside room modal iframe */
+.item-popup.in-room-modal {
+    max-height: calc(100% - 2rem);
+    max-width: 450px;
+    overflow: auto;
+}
 .item-popup.measuring {
     display: block;
     visibility: hidden;
     opacity: 0;
     position: fixed;
     z-index: var(--popup-z-index, var(--z-popups));
+    pointer-events: none; /* prevent invisible overlay intercepting clicks */
 }
 
 .item-popup.visible {
@@ -111,12 +120,13 @@
     display: none;
     visibility: hidden;
     opacity: 0;
+    pointer-events: none;
 }
 
 /* Dynamic positioning - uses CSS custom properties set by JavaScript */
 .item-popup.positioned {
-    left: var(--popup-left, 0);
-    top: var(--popup-top, 0);
+    left: var(--popup-left, auto);
+    top: var(--popup-top, auto);
     position: fixed;
     z-index: var(--popup-z-index, var(--z-popups));
 }

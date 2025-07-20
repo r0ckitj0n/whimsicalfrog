@@ -11,6 +11,26 @@ error_reporting(E_ALL);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/../logs/php_error.log');
 
+// Detect environment early so it can be referenced below without warnings
+$isLocalhost = false;
+
+// Check 1: CLI implies local
+if (PHP_SAPI === 'cli') {
+    $isLocalhost = true;
+}
+// Check 2: host headers contain localhost/127.0.0.1
+if (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
+    $isLocalhost = true;
+}
+// Check 3: server name header
+if (isset($_SERVER['SERVER_NAME']) && (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false)) {
+    $isLocalhost = true;
+}
+// Environment variable overrides
+if (isset($_SERVER['WHF_ENV'])) {
+    $isLocalhost = $_SERVER['WHF_ENV'] === 'local' ? true : ($_SERVER['WHF_ENV'] === 'prod' ? false : $isLocalhost);
+}
+
 // For API endpoints, don't display HTML errors - only log them
 if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
     ini_set('display_errors', 0);

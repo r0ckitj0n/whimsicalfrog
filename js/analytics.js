@@ -320,7 +320,7 @@ class AnalyticsTracker {
     sendData(action, data) {
         if (!this.isTracking) return;
         
-        apiPost(`analytics_tracker.php?action=${action}`, data).catch(error => {
+        apiPost(`/api/analytics_tracker.php?action=${action}`, data).catch(error => {
             console.warn('Analytics tracking failed:', error);
         });
     }
@@ -332,7 +332,7 @@ class AnalyticsTracker {
         formData.append('data', JSON.stringify(data));
         
         if (navigator.sendBeacon) {
-            navigator.sendBeacon('/api/analytics_tracker.php', formData);
+            navigator.sendBeacon(`/api/analytics_tracker.php?action=${action}`, formData);
         } else {
             // Fallback for older browsers
             this.sendData(action, data);

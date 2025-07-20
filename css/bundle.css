@@ -55,9 +55,9 @@
 
 /* Header Layout */
 .header-content {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
 }
 
@@ -96,6 +96,7 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
+    margin-left: auto; /* push to right edge */
     padding-right: 0;
 }
 
@@ -12674,6 +12675,13 @@ body.modal-open #itemPopup.visible {
 }
 
 /* Popup visibility and positioning states */
+
+/* Special styling when popup is inside room modal iframe */
+.item-popup.in-room-modal {
+    max-height: calc(100% - 2rem);
+    max-width: 450px;
+    overflow: auto;
+}
 .item-popup.measuring {
     display: block;
     visibility: hidden;

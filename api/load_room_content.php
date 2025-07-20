@@ -194,6 +194,8 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
             data-room-type="<?php echo htmlspecialchars($roomType, ENT_QUOTES, 'UTF-8'); ?>"
             data-base-areas='<?php echo $coordsJson; ?>' defer></script>
     <script src="/js/room-coordinate-manager.js" defer></script>
+    <!-- Attach hover/click listeners inside iframe -->
+    <script src="/js/room/iframe-event-bridge.js" defer></script>
     
     <!- Link to Centralized CSS ->
     <link rel="stylesheet" href="/css/room-iframe.css">

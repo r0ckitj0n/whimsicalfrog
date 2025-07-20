@@ -15,4 +15,22 @@ Quick links:
 * [Contribution Guide](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md#11-contribution-guide)
 * [Local Development Setup](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md#4-local-development)
 
+## Front-end Quick Start (Vite)
+
+```bash
+# Install JS dependencies
+npm install
+
+# Start Vite dev server
+npm run dev
+```
+
+The dev server runs on [http://localhost:5173](http://localhost:5173) and hot-reloads whenever you edit files under `src/` or `css/`.
+
+To generate the production bundle used in `dist/`, run:
+
+```bash
+npm run build
+```
+
 Enjoy coding! 🐸

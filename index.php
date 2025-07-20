@@ -227,7 +227,12 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
     <!- Z-Index Hierarchy CSS ->
     
     
-    <!-- Core CSS Bundle -->
+    <!-- Vite CSS build -->
+<?php if (file_exists('dist/assets/app.css')): ?>
+    <link href="dist/assets/app.css?v=<?php echo filemtime('dist/assets/app.css'); ?>" rel="stylesheet">
+<?php endif; ?>
+
+<!-- Core CSS Bundle -->
     <link href="css/bundle.css?v=<?php echo filemtime('css/bundle.css'); ?>" rel="stylesheet">
     
     <!- Static CSS Rules + Essential Styles ->
@@ -249,6 +254,8 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
         // Global CSS variables loaded from js/css-initializer.js
         // Tooltip CSS loaded from static CSS files
         console.log('Using static CSS system');
+        // Vite dev server tag will be appended below
+
     </script>
     
     <!- Core Layout Styles ->
@@ -263,6 +270,9 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
 <?php endif; ?>
 
     
+<?php if (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false): ?>
+    <script type="module" src="http://localhost:5173/src/main.js"></script>
+<?php endif; ?>
 </head>
 <body class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>">
 <!- Main Navigation ->
@@ -385,44 +395,13 @@ echo renderGlobalPopup();
 $debug_js = isset($_GET['debug_js']);
 
 if ($debug_js) {
-    // Load individual scripts for debugging
-    $js_files = [
-        'js/utils.js',
-        'js/api-client.js',
-        'js/whimsical-frog-core.js',
-        'js/central-functions.js',
-        'js/wf-unified.js',
-        'js/ui-manager.js',
-        'js/image-viewer.js',
-        'js/global-notifications.js',
-        'js/notification-messages.js',
-        'js/global-popup.js',
-        'js/global-modals.js',
-        'js/modal-functions.js',
-        'js/modal-close-positioning.js',
-        'js/analytics.js',
-        'js/sales-checker.js',
-        'js/search.js',
-        'js/room-css-manager.js',
-        'js/room-coordinate-manager.js',
-        'js/room-event-manager.js',
-        'js/room-functions.js',
-        'js/room-helper.js',
-        'js/global-item-modal.js',
-        'js/detailed-item-modal.js',
-        'js/room-modal-manager.js',
-        'js/modules/cart-system.js',
-        'js/main.js',
-    ];
-
-    foreach ($js_files as $file) {
-        echo "<script src='{$file}?v=" . filemtime($file) . "'></script>\n";
-    }
+    // In debug mode, load Vite dev server directly; individual legacy scripts are no longer necessary
+    echo "<script type='module' src='http://localhost:5173/src/main.js'></script>\n";
 } else {
-    // Load the bundled script for production
-    // Set global flag so wf-unified.js skips dynamic loading inside the bundle
-    echo "<script>window.WF_BUNDLE_LOADED = true;</script>\n";
-    echo "<script src='js/bundle.js?v=" . filemtime('js/bundle.js') . "'></script>\n";
+    // Production mode: load global popup plus built bundle
+    // Ensure popup system is available before iframe bridges call it
+    echo "<script type='module' src='src/ui/globalPopup.js?v=" . filemtime('src/ui/globalPopup.js') . "'></script>\n";
+    echo "<script type='module' src='dist/app.js?v=" . filemtime('dist/app.js') . "'></script>\n";
 }
 ?>
 
@@ -470,9 +449,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!- Dynamic Background Loading ->
-<script src="js/dynamic-background-loader.js?v=<?php echo filemtime('js/dynamic-background-loader.js'); ?>"></script>
+<!-- dynamic-background-loader.js now replaced by Vite ES module (src/core/dynamicBackground.js) -->
 
 <!- Main Application Script ->
-<script src="js/main-app.js?v=<?php echo filemtime('js/main-app.js'); ?>"></script>
+
 </body>
 </html>

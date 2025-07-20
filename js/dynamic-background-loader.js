@@ -1,15 +1,3 @@
-// Ensure apiGet helper exists
-if (typeof window.apiGet !== 'function') {
-  window.apiGet = async function(endpoint) {
-    // Prepend /api/ if not already present
-    const url = endpoint.startsWith('/') ? endpoint : `/api/${endpoint}`;
-    const res = await fetch(url, { credentials: 'same-origin' });
-    if (!res.ok) {
-      throw new Error(`Request failed (${res.status})`);
-    }
-    return res.json();
-  };
-}
 
 async function loadDynamicBackground() {
     try {
@@ -22,7 +10,7 @@ async function loadDynamicBackground() {
         // Generate dynamic page room mapping
         async function generatePageRoomMap() {
             try {
-                const data = await apiGet('get_room_data.php');
+                const data = await apiGet('/api/get_room_data.php');
                 
                 if (data.success) {
                     const pageRoomMap = {
@@ -62,7 +50,7 @@ async function loadDynamicBackground() {
         roomType = pageRoomMap[currentPage] || 'landing';
         
         // Fetch background from database
-        const data = await apiGet(`get_background.php?room_type=${roomType}`);
+        const data = await apiGet(`/api/get_background.php?room_type=${roomType}`);
         
         if (data.success && data.background) {
             const background = data.background;

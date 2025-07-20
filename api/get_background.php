@@ -1,11 +1,10 @@
 <?php
+require_once __DIR__ . '/api_bootstrap.php';
 
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/room_helpers.php';
 
 // Get active background for a room
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
 
 // Database connection
 $host = 'localhost';

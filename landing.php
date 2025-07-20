@@ -6,16 +6,16 @@
 <section id="landingPage" class="relative">
                     <a href="/?page=room_main" class="clickable-area area-1" title="Enter the Main Room" onclick="event.preventDefault(); window.location.href = '/?page=room_main';">
         <picture>
-            <source srcset="images/sign_welcome.webp" type="image/webp">
-            <source srcset="images/sign_welcome.png" type="image/png">
-            <img src="images/sign_welcome.png" alt="Welcome - Click to Enter">
+            <source srcset="images/signs/sign_welcome.webp" type="image/webp">
+            <source srcset="images/signs/sign_welcome.png" type="image/png">
+            <img src="images/signs/sign_welcome.png" alt="Welcome - Click to Enter">
         </picture>
     </a>
 </section>
 
 <?php
 try {
-    $stmt = Database::getInstance()->prepare("SELECT coordinates FROM room_maps WHERE room_type = 'landing' AND is_active = 1 ORDER BY updated_at DESC LIMIT 1");
+    $stmt = Database::getInstance()->prepare("SELECT coordinates FROM room_maps WHERE room_type = 'landing' AND is_active = 1 ORDER BY created_at DESC LIMIT 1");
     $stmt->execute();
     $map = $stmt->fetch(PDO::FETCH_ASSOC);
     $landingCoordsJson = $map ? $map['coordinates'] : '[]';
@@ -26,6 +26,8 @@ try {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Ensure fullscreen styling applies
+    document.body.classList.add('mode-fullscreen');
     console.log('🎯 Landing page positioning script loaded');
     console.log('🎯 Window width:', window.innerWidth);
     
@@ -40,13 +42,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load server-side coordinates
     const rawAreaCoords = <?php echo $landingCoordsJson; ?>;
-    const areaCoordinates = rawAreaCoords.map(area => ({
-        selector: '.' + area.selector,
-        top: area.top,
-        left: area.left,
-        width: area.width,
-        height: area.height
-    }));
+    const areaCoordinates = rawAreaCoords.map(area => {
+        // Ensure selector has exactly one leading dot
+        let sel = area.selector || '';
+        const selector = sel.startsWith('.') ? sel : '.' + sel;
+        return {
+            selector,
+            top: area.top,
+            left: area.left,
+            width: area.width,
+            height: area.height
+        };
+    });
 
     function positionAreas() { // positions using current areaCoordinates
         console.log('🎯 positionAreas() called');

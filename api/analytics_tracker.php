@@ -1,5 +1,6 @@
 <?php
-header('Content-Type: application/json');
+require_once __DIR__ . '/api_bootstrap.php';
+
 require_once 'config.php';
 
 // Start session if not already started

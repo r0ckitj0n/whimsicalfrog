@@ -11,9 +11,9 @@ try {
         throw $e;
     }
 
-    // Get categories from items table
-    $stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
-    $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    // Get all categories from categories table
+    $stmt = $pdo->query("SELECT id, name FROM categories ORDER BY id");
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!is_array($categories)) {
         $categories = [];

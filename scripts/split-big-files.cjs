@@ -78,30 +78,68 @@ function getSelectorPrefix(selector) {
   return prefix || 'misc';
 }
 
+const CSS_WHITELIST_RE = /\b(room-|global-|popup)/;
 function splitCSS(file) {
-  const css = fs.readFileSync(file, 'utf8');
-  if (Buffer.byteLength(css) < JS_THRESHOLD) return;
+  const base = path.basename(file);
+  const size = fs.statSync(file).size;
+  if (!CSS_WHITELIST_RE.test(base)) return;
+  if (base.includes('bundle') || size > 200 * 1024) return;
 
   console.log('\n[CSS] Splitting', path.relative(PROJECT_ROOT, file));
   backupFile(file);
 
-  const root = postcss.parse(css);
-  const buckets = {};
-  root.each(node => {
+  const css = fs.readFileSync(file, 'utf8');
+  // Naïve split: break on comment header lines like /* === section === */
+  const parts = css.split(/\n\s*\/\*/g).filter(Boolean);
+  if (parts.length <= 1) return console.log('  (no split markers found)');
+
+  const featureDir = path.join(CSS_DIR, base.replace('.css', ''));
+  ensureDir(featureDir);
+
+  parts.forEach((part, idx) => {
+    const cleaned = part.trim();
+    if (!cleaned) return;
+    const headerMatch = cleaned.match(/^[^*]*\*([^*]+)/);
+    let name = headerMatch ? headerMatch[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'chunk-' + idx;
+    if (!name) name = 'chunk-' + idx;
+    const outFile = path.join(featureDir, `${name}.css`);
+    fs.writeFileSync(outFile, '/* auto-split chunk */\n/*' + part);
+  });
+
+  // replace original with imports for each chunk
+  const importLines = parts.map((_, i) => `@import './${base.replace('.css','')}/chunk-${i}.css';`);
+  fs.writeFileSync(file, `/* Auto-generated imports after split */\n${importLines.join('\n')}\n`);
+}
+
+  const size = fs.statSync(file).size;
+
+
+    console.log('\n[CSS] Skipping build bundle', path.relative(PROJECT_ROOT, file));
+    return;
+  }
+  const css = fs.readFileSync(file, 'utf8');
+
+
+  console.log('\n[CSS] Splitting', path.relative(PROJECT_ROOT, file));
+  backupFile(file);
+
+
+
+
     if (node.type !== 'rule') return;
     const sel = node.selector.split(',')[0].trim();
     const prefix = getSelectorPrefix(sel);
     (buckets[prefix] = buckets[prefix] || []).push(node.toString());
   });
 
-  const baseName = path.basename(file, '.css');
-  const featureDir = path.join(CSS_DIR, baseName);
+
+
   ensureDir(featureDir);
 
-  Object.entries(buckets).forEach(([prefix, rules]) => {
-    fs.writeFileSync(path.join(featureDir, `${prefix}.css`), rules.join('\n') + '\n');
+
+
   });
-  fs.writeFileSync(file, `/* Auto-generated imports after split */\n${Object.keys(buckets).map(p => `@import './${baseName}/${p}.css';`).join('\n')}\n`);
+
 }
 
 function walk(dir, ext, cb) {

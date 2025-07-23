@@ -1,4 +1,12 @@
 <?php
+// CORS headers for development
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 require_once __DIR__ . '/api_bootstrap.php';
 
 require_once __DIR__ . '/../includes/functions.php';
@@ -111,7 +119,20 @@ try {
         }
     }
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    // On missing table or DB error, return fallback backgrounds
+    $fallbacks = generateDynamicFallbacks();
+    if (isset($fallbacks[$roomType])) {
+        echo json_encode([
+            'success'    => true,
+            'background' => [
+                'image_filename'    => $fallbacks[$roomType]['png'],
+                'webp_filename'     => $fallbacks[$roomType]['webp'],
+                'background_name'   => 'Original (Fallback)'
+            ]
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
 }
 ?> 

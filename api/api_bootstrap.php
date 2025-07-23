@@ -3,6 +3,10 @@
 // Include this file at the top of every API script *before* any output.
 
 header('Content-Type: application/json; charset=utf-8');
+// Enable CORS for local development previews
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 // Clear any stray output generated before this point
 if (ob_get_length()) {
     ob_clean();

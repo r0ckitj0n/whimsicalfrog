@@ -1,90 +1,104 @@
-
-async function loadDynamicBackground() {
+// Dynamic Background Loading for Room Pages
+console.log('🚪 [DBG] dynamic-background-loader.js loaded');
+async function loadRoomBackground(roomType) {
+    
     try {
+        // Check if we're coming from main room - if so, use main room background
         const urlParams = new URLSearchParams(window.location.search);
-        const currentPage = urlParams.get('page') || 'landing';
         const fromMain = urlParams.get('from') === 'main';
         
-        let roomType = 'landing';
-        
-        // Generate dynamic page room mapping
-        async function generatePageRoomMap() {
-            try {
-                const data = await apiGet('/api/get_room_data.php');
-                
-                if (data.success) {
-                    const pageRoomMap = {
-                        'room_main': 'room_main',
-                        'shop': 'room_main', 
-                        'cart': 'room_main', 
-                        'login': 'room_main', 
-                        'admin': 'room_main'
-                    };
-                    
-                    // Add dynamic room mappings
-                    data.data.roomDoors.forEach(room => {
-                        const roomPageName = `room${room.room_number}`;
-                        pageRoomMap[roomPageName] = roomPageName;
-                    });
-                    
-                    return pageRoomMap;
-                }
-            } catch (error) {
-                console.error('Error generating page room map:', error);
-            }
-            
-            // Fallback to basic mapping if API fails
-            return {
-                'room_main': 'room_main',
-                'shop': 'room_main', 
-                'cart': 'room_main', 
-                'login': 'room_main', 
-                'admin': 'room_main'
-            };
+        if (fromMain) {
+            // When coming from main room, let CSS handle room-specific content 
+            // and let main site background system handle the main room background
+            console.log('Coming from main room - using CSS room background with main room body background');
+            return;
         }
         
-        // Room pages no longer exist as standalone pages - they're handled by modals
-        // No special handling needed for deleted room pages
-        
-        const pageRoomMap = await generatePageRoomMap();
-        roomType = pageRoomMap[currentPage] || 'landing';
-        
-        // Fetch background from database
+        // Normal room background loading
         const data = await apiGet(`/api/get_background.php?room_type=${roomType}`);
+        
         
         if (data.success && data.background) {
             const background = data.background;
-            const supportsWebP = document.documentElement.classList.contains('webp');
-            // Prefix with backgrounds/ subdirectory to match file structure
-            const filename = supportsWebP && background.webp_filename
-                ? background.webp_filename
-                : background.image_filename;
-            // Primary expected location
-            let imageUrl = `images/backgrounds/${filename}`;
-            // If the backgrounds directory is not used (legacy), fall back to images root
-            if (!imageUrl.includes('/backgrounds/') && !filename.startsWith('backgrounds/')) {
-                imageUrl = `images/${filename}`;
-            }
-
-            // Find the correct container for the background
-            let backgroundContainer = document.querySelector('.fullscreen-container') || document.getElementById('mainContent');
-            if (!backgroundContainer) {
-                console.warn('Background container not found, falling back to body.');
-                backgroundContainer = document.body;
-            }
-
-            // Set the CSS variable for the background URL on the container
-            backgroundContainer.style.setProperty('--dynamic-bg-url', `url('${imageUrl}')`);
-
-            // Add the necessary classes to the container
-            backgroundContainer.classList.add('bg-container', 'mode-fullscreen', 'dynamic-bg-loaded');
+            // Select the appropriate wrapper for modal or main page
+                const filename = (background.webp_filename || background.image_filename);
+                const prefixedFilename = filename.startsWith('background_') ? filename : `background_${filename}`;
+                const imageUrl = window.location.origin + `/images/backgrounds/${prefixedFilename}?v=${Date.now()}`;
+                const roomWrapper = document.getElementById('modalRoomPage')
+    ? document.querySelector('.room-modal-iframe-container')
+    : document.getElementById('mainRoomPage');
             
-            // Also add a class to the body to indicate a dynamic background is active
-            document.body.classList.add('dynamic-bg-active');
+            if (roomWrapper) {
+                // Apply computed background image URL
+                roomWrapper.style.backgroundImage = `url('${imageUrl}')`;
+                roomWrapper.classList.add('dynamic-room-bg-loaded');
+                
+                console.log(`Dynamic room background loaded: ${background.background_name} (${imageUrl})`);
+            } else {
+                console.log('Room wrapper not found, using fallback background');
+            }
+        } else {
+            console.log('Using fallback room background - no dynamic background found');
         }
     } catch (error) {
-        console.error('Error loading dynamic background:', error);
+        console.error('Error loading dynamic room background:', error);
+        console.log('Using fallback room background due to error');
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadDynamicBackground);
+// Auto-detect room type and load background
+async function autoLoadRoomBackground() {
+    try {
+        // Get dynamic room data from API
+        const roomData = await apiGet('/api/get_room_data.php');
+        
+        if (!roomData.success) {
+            console.error('Failed to get room data:', roomData.message);
+            console.log('Background system will operate in degraded mode');
+            return;
+        }
+        
+        if (!roomData.data.roomDoors || roomData.data.roomDoors.length === 0) {
+            console.log('No room doors found - background system will use default');
+            return;
+        }
+        
+        const roomTypeMapping = roomData.data.roomTypeMapping;
+        const roomDoors = roomData.data.roomDoors;
+        
+        // Try to detect room type from the page element or URL
+        const roomContainer = document.querySelector('[data-room-name]');
+        if (roomContainer) {
+            const roomName = roomContainer.getAttribute('data-room-name');
+            let roomType = '';
+            
+            // Find matching room by name
+            const matchingRoom = roomDoors.find(room => 
+                room.room_name.toLowerCase() === roomName.toLowerCase() ||
+                room.door_label.toLowerCase() === roomName.toLowerCase()
+            );
+            
+            if (matchingRoom) {
+                roomType = roomTypeMapping[matchingRoom.room_number];
+            } else {
+                // Try to detect from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentPage = urlParams.get('page') || '';
+                
+                // Check if currentPage matches any room type
+                if (roomTypeMapping[currentPage.replace('room', '')]) {
+                    roomType = currentPage;
+                }
+            }
+            
+            if (roomType) {
+                loadRoomBackground(roomType);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading dynamic room background:', error);
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', autoLoadRoomBackground);

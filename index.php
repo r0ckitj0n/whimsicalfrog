@@ -197,7 +197,11 @@ if ($page === 'room_main' || $page === 'shop' || $page === 'cart' || $page === '
 }
 
 // Get background style
-$backgroundUrl = get_active_background($backgroundRoomType);
+if ($backgroundRoomType === 'landing' && function_exists('get_landing_background_path')) {
+    $backgroundUrl = get_landing_background_path();
+} else {
+    $backgroundUrl = get_active_background($backgroundRoomType);
+}
 $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$backgroundUrl}');\"" : '';
 ?>
 <!DOCTYPE html>
@@ -234,6 +238,8 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
 
 <!-- Core CSS Bundle -->
     <link href="css/bundle.css?v=<?php echo filemtime('css/bundle.css'); ?>" rel="stylesheet">
+    <link href="css/room-iframe.css?v=<?php echo filemtime(__DIR__ . '/css/room-iframe.css'); ?>" rel="stylesheet">
+    <!-- Room iframe backgrounds CSS -->
     
     <!- Static CSS Rules + Essential Styles ->
     
@@ -265,16 +271,17 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
     
 
     
-<?php if ($page === 'landing'): ?>
+<?php if ($page === 'landing' && file_exists('css/landing.css')): ?>
     <link href="css/landing.css?v=<?php echo filemtime('css/landing.css'); ?>" rel="stylesheet">
 <?php endif; ?>
 
-    
-<?php if (strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false): ?>
-    <script type="module" src="http://localhost:5173/src/main.js"></script>
-<?php endif; ?>
+    <!- Main Application Script ->
+    <script src="js/main-app.js?v=<?php echo filemtime('js/main-app.js'); ?>"></script>
+    <!-- Room Modal Manager -->
+    <script src="js/room-modal-manager.js?v=<?php echo filemtime('js/room-modal-manager.js'); ?>"></script>
+
 </head>
-<body class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>">
+<body <?php echo $backgroundStyle; ?> class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>">
 <!- Main Navigation ->
 <?php if ($page !== 'landing'): ?>
 <nav class="main-nav site-header">
@@ -449,9 +456,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!- Dynamic Background Loading ->
-<!-- dynamic-background-loader.js now replaced by Vite ES module (src/core/dynamicBackground.js) -->
-
-<!- Main Application Script ->
-
+        <script>window.WF_BUNDLE_LOADED = true;</script>
+    <script src="js/bundle.js?v=<?php echo filemtime('js/bundle.js'); ?>"></script>
+    <!-- Dynamic Background Loader -->
+    <script src="js/dynamic-background-loader.js?v=<?php echo filemtime('js/dynamic-background-loader.js'); ?>"></script>
 </body>
 </html>

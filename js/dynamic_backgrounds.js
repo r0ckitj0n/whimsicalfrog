@@ -13,25 +13,29 @@ async function loadRoomBackground(roomType) {
         }
         
         // Normal room background loading
-        const data = await apiGet(`get_background.php?room_type=${roomType}`);
+        const data = await apiGet(`/api/get_background.php?room_type=${roomType}`);
         
         
         if (data.success && data.background) {
             const background = data.background;
-            const roomWrapper = document.querySelector('.room-overlay-wrapper');
+                console.log('🚪 [DBG] loadRoomBackground called for', roomType);
+                // Compute absolute image URL
+                const supportsWebP = document.documentElement.classList.contains('webp');
+                const imageUrl = supportsWebP && background.webp_filename
+                    ? `/images/backgrounds/${background.webp_filename}`
+                    : `/images/backgrounds/${background.image_filename}`;
+            // Select appropriate wrapper: modal iframe container or main page section
+                    const roomWrapper = document.getElementById('modalRoomPage')
+                        ? document.querySelector('.room-modal-iframe-container')
+                        : document.getElementById('mainRoomPage');
             
             if (roomWrapper) {
-                // Determine if WebP is supported
-                const supportsWebP = document.documentElement.classList.contains('webp');
-                const imageUrl = supportsWebP && background.webp_filename ? 
-                    `images/${background.webp_filename}` : 
-                    `images/${background.image_filename}`;
-                
-                // Apply the background to the room wrapper using CSS custom property
-                roomWrapper.style.setProperty('-dynamic-room-bg-url', `url('${imageUrl}?v=${Date.now()}')`);
+                // Apply inline background-image
+                roomWrapper.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
                 roomWrapper.classList.add('dynamic-room-bg-loaded');
                 
                 console.log(`Dynamic room background loaded: ${background.background_name} (${imageUrl})`);
+                console.log('Loader execution confirmed'); // Added debug log
             } else {
                 console.log('Room wrapper not found, using fallback background');
             }
@@ -47,6 +51,14 @@ async function loadRoomBackground(roomType) {
 // Auto-detect room type and load background
 async function autoLoadRoomBackground() {
     try {
+        // If we're inside a modal iframe, detect #modalRoomPage and load its background
+        const modalPage = document.getElementById('modalRoomPage');
+        if (modalPage) {
+            const roomNumber = modalPage.getAttribute('data-room');
+            const roomType = `room${roomNumber}`;
+            await loadRoomBackground(roomType);
+            return;
+        }
         // Get dynamic room data from API
         const roomData = await apiGet('/api/get_room_data.php');
         
@@ -99,4 +111,9 @@ async function autoLoadRoomBackground() {
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', autoLoadRoomBackground); 
+// Initialize when DOM is ready or immediately if already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoLoadRoomBackground);
+} else {
+    autoLoadRoomBackground();
+} 

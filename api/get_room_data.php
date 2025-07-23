@@ -4,6 +4,10 @@
  */
 
 header('Content-Type: application/json; charset=utf-8');
+// CORS for local dev previews
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 // Suppress PHP warnings/notices from leaking into output and breaking JSON
 ini_set('display_errors', 0);
 set_error_handler(function ($severity, $message, $file, $line) {

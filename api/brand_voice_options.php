@@ -16,7 +16,7 @@ $isAdmin = false;
 // Check session authentication first
 require_once __DIR__ . '/../includes/auth.php';
 if (isAdminWithToken()) {
-    $isAdmin = true;
+    $isAdm  = true;
 }
 
 // Admin token fallback for API access

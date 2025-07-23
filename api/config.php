@@ -1,4 +1,13 @@
 <?php
+// Enable CORS for all API requests (development only)
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+// Handle OPTIONS preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 // Include centralized database class
 require_once __DIR__ . '/../includes/database.php';
@@ -90,11 +99,40 @@ if (isset($_SERVER['WHF_ENV']) && $_SERVER['WHF_ENV'] === 'local') {
 
 // Database configuration based on environment
 if ($isLocalhost) {
-    // Local database credentials
-    $host = 'localhost';
-    $db   = 'whimsicalfrog';
-    $user = 'root';
-    $pass = 'Palz2516';
+    // Load local credentials from config/my.cnf
+    $host   = 'localhost';
+    $db     = 'whimsicalfrog';
+    $user   = 'admin';
+    $pass   = 'Palz2516!';
+    $port   = null;
+    $socket = null;
+    $iniPath = __DIR__ . '/../config/my.cnf';
+    if (file_exists($iniPath)) {
+        $inClient = false;
+        foreach (file($iniPath) as $line) {
+            $line = trim($line);
+            if (preg_match('/^\[client\]/i', $line)) {
+                $inClient = true;
+                continue;
+            }
+            if ($inClient) {
+                // stop at next section
+                if (preg_match('/^\[.*\]/', $line)) {
+                    break;
+                }
+                if (strpos($line, '=') !== false) {
+                    list($k, $v) = array_map('trim', explode('=', $line, 2));
+                    switch (strtolower($k)) {
+                        case 'user': $user = $v; break;
+                        case 'password': $pass = $v; break;
+                        case 'host': $host = $v; break;
+                        case 'port': $port = $v; break;
+                        case 'socket': $socket = $v; break;
+                    }
+                }
+            }
+        }
+    }
 } else {
     // Production database credentials - updated with actual IONOS values
     $host = 'db5017975223.hosting-data.io'; // Real IONOS database host
@@ -106,6 +144,12 @@ if ($isLocalhost) {
 // Common database settings
 $charset = 'utf8mb4';
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+if (!empty($port)) {
+    $dsn .= ";port={$port}";
+}
+if (!empty($socket)) {
+    $dsn .= ";unix_socket={$socket}";
+}
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

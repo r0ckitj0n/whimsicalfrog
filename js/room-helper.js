@@ -7,6 +7,7 @@
   window.originalImageWidth = 1280;
   window.originalImageHeight = 896;
   window.baseAreas = script.dataset.baseAreas ? JSON.parse(script.dataset.baseAreas) : [];
+  console.log('⚙️ room-helper initialized. roomItems:', window.roomItems, 'baseAreas:', window.baseAreas);
   window.roomOverlayWrapper = null;
 
   function updateItemPositions() {
@@ -88,7 +89,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    window.roomOverlayWrapper = document.querySelector('.room-overlay-wrapper');
+    window.roomOverlayWrapper = document.querySelector('.room-modal-content-wrapper');
     if (window.roomOverlayWrapper && window.baseAreas && window.baseAreas.length > 0) {
       updateItemPositions();
       let resizeTimeout;

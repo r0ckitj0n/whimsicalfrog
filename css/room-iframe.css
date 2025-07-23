@@ -1,7 +1,9 @@
 /* Room Background Classes - Centralized */
 .room-bg-main {
-
-    background-size: contain;
+    --bg-webp: url('/images/backgrounds/background_room_main.webp');
+    --bg-png: url('/images/backgrounds/background_room_main.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -10,7 +12,7 @@
     --bg-webp: url('/images/backgrounds/background_room1.webp');
     --bg-png: url('/images/backgrounds/background_room1.png');
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -22,7 +24,7 @@
     --bg-webp: url('/images/backgrounds/background_room2.webp');
     --bg-png: url('/images/backgrounds/background_room2.png');
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -38,7 +40,7 @@
     --bg-webp: url('/images/backgrounds/background_room3.webp');
     --bg-png: url('/images/backgrounds/background_room3.png');
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -51,7 +53,7 @@
     --bg-webp: url('/images/backgrounds/background_room4.webp');
     --bg-png: url('/images/backgrounds/background_room4.png');
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -59,8 +61,8 @@
 .room-bg-room5 {
     --bg-webp: url('/images/backgrounds/background_room5.webp');
     --bg-png: url('/images/backgrounds/background_room5.png');
-
-    background-size: contain;
+    background-image: var(--bg-webp);
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -68,11 +70,12 @@
 .room-bg-room6 {
     --bg-webp: url('/images/backgrounds/background_room6.webp');
     --bg-png: url('/images/backgrounds/background_room6.png');
-
-    background-size: contain;
+    background-image: var(--bg-webp);
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }
+
 
 /* Fallback PNG images for browsers without WebP support */
 
@@ -88,6 +91,10 @@
 
 
 
+
+.no-webp .room-bg-room5 { background-image: var(--bg-png); }
+.no-webp .room-bg-room6 { background-image: var(--bg-png); }
+.no-webp .room-bg-main { background-image: var(--bg-png); }
 
 /* Modal Room Styles - Maintain exact aspect ratio */
 .modal-room-page {
@@ -106,7 +113,7 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 

@@ -69,6 +69,7 @@ mirror --reverse --delete --verbose \
   --exclude-glob fix_clown_frog_image.sql \
   --exclude-glob images/.htaccess \
   --exclude-glob images/items/.htaccess \
+  --exclude-glob config/my.cnf \
   --include-glob credentials.json \
   . $REMOTE_PATH
 bye

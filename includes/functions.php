@@ -322,12 +322,16 @@ function get_active_background($roomType)
         if ($background) {
             // Prioritize WebP if a filename is present
             $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
+            // Ensure filename is prefixed with 'background_'
+            if (strpos($imageFile, 'background_') !== 0) {
+                $imageFile = 'background_' . $imageFile;
+            }
             // Determine subdirectory prefix based on project structure
-            $prefix = 'images/';
+            $prefix = '/images/';
 
             // If backgrounds are organized into a backgrounds subfolder, prefer that path
             if (file_exists(__DIR__ . '/../images/backgrounds/' . $imageFile)) {
-                $prefix = 'images/backgrounds/';
+                $prefix = '/images/backgrounds/';
             }
 
             return $prefix . $imageFile;

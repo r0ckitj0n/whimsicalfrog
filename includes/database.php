@@ -49,11 +49,13 @@ class Database
 
             // Database configuration based on environment
             if ($isLocalhost) {
-                // Local database credentials
-                $host = 'localhost';
-                $db   = 'whimsicalfrog';
-                $user = 'root';
-                $pass = 'Palz2516';
+                // Local dev: connect via TCP as root with no password
+                $host   = '127.0.0.1';
+                $db     = 'whimsicalfrog';
+                $user   = 'root';
+                $pass   = '';
+                $port   = 3306;
+                $socket = null;
             } else {
                 // Production database credentials - IONOS values
                 $host = 'db5017975223.hosting-data.io';
@@ -64,7 +66,7 @@ class Database
 
             // Create DSN and options
             $charset = 'utf8mb4';
-            $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+            $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -141,8 +143,21 @@ class Database
         if ($isLocalhost) {
             $host = 'localhost';
             $db   = 'whimsicalfrog';
-            $user = 'root';
-            $pass = 'Palz2516';
+            $iniPath = __DIR__ . '/../config/my.cnf';
+            if (file_exists($iniPath)) {
+                $configs = parse_ini_file($iniPath, true, INI_SCANNER_TYPED);
+                $client = $configs['client'] ?? [];
+                $user    = $client['user']     ?? 'admin';
+                $pass    = $client['password'] ?? 'Palz2516!';
+                $host    = $client['host']     ?? $host;
+                $port    = $client['port']     ?? null;
+                $socket  = $client['socket']   ?? null;
+            } else {
+                $user   = 'admin';
+                $pass   = 'Palz2516!';
+                $port   = null;
+                $socket = null;
+            }
         } else {
             $host = 'db5017975223.hosting-data.io';
             $db   = 'dbs14295502';

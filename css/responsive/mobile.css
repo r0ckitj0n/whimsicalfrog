@@ -1,0 +1,57 @@
+ (width <= 480px) {
+    .header-logo {
+        height: calc(var(--header-logo-height) * 0.8);
+    }
+ (width <= 768px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+ (width <= 480px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+ (width <= 768px) {
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+ (width <= 768px) {
+  /* ==========================================================================
+     BUTTON RESPONSIVE STYLES
+     ========================================================================== */
+  
+  /* .back-to-main-button styles managed in css/components/buttons.css */
+  
+  .btn-sm {
+    height: 28px;
+    padding: 6px 10px;
+    font-size: var(--text-xs);
+  }
+ (width <= 640px) {
+  /* .back-to-main-button mobile styles managed in css/components/buttons.css */
+  
+  .modal-room-page {
+    transform: scale(0.5);
+    transform-origin: center;
+  }
+ (width <= 768px) {
+    .popup-content {
+        max-width: 90%;
+        padding: 16px;
+    }
+ (width <= 768px) {
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+ (width <= 480px) {
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+ (width <= 768px) {
+    .footer-grid-4,
+    .footer-grid-3,
+    .footer-grid-2 {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }

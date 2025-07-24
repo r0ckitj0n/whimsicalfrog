@@ -14,15 +14,14 @@ class RoomModalManager {
         this.currentRoomNumber = null;
         this.roomCache = new Map();
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.init());
-        } else {
-            this.init();
-        }
+        // Always initialize immediately
+        this.init();
     }
 
     init() {
         console.log('🚪 RoomModalManager initializing...');
+        // Expose manager globally for click handlers
+        window.roomModalManager = this;
         this.createModalStructure();
         this.setupEventListeners();
         this.preloadRoomContent();
@@ -33,31 +32,32 @@ class RoomModalManager {
             console.log('🚪 Using existing modal overlay found in DOM.');
             this.overlay = document.getElementById('roomModalOverlay');
             this.content = this.overlay.querySelector('.room-modal-container');
+            this.overlay.classList.add('z-room-modals');
             return;
         }
 
         console.log('🚪 Creating new modal overlay structure.');
         this.overlay = document.createElement('div');
         this.overlay.id = 'roomModalOverlay';
-        this.overlay.className = 'room-modal-overlay';
+        this.overlay.className = 'room-modal-overlay z-room-modals';
 
         this.content = document.createElement('div');
         this.content.className = 'room-modal-container';
 
         const header = document.createElement('div');
-        header.className = 'room-modal-header';
+        header.className = 'room-modal-header z-room-modal-header';
 
         const backButtonContainer = document.createElement('div');
         backButtonContainer.className = 'back-button-container';
 
         const backButton = document.createElement('button');
-        backButton.className = 'room-modal-button';
+        backButton.className = 'room-modal-button z-room-buttons';
         backButton.innerHTML = '← Back';
         backButton.onclick = () => this.hide();
         backButtonContainer.appendChild(backButton);
 
         const titleOverlay = document.createElement('div');
-        titleOverlay.className = 'room-title-overlay';
+        titleOverlay.className = 'room-title-overlay z-room-modal-header';
         titleOverlay.id = 'roomTitleOverlay';
 
         const roomTitle = document.createElement('h1');
@@ -108,13 +108,14 @@ class RoomModalManager {
             }
         });
 
-        if (this.overlay) {
-            this.overlay.addEventListener('click', (event) => {
-                if (event.target === this.overlay) {
-                    this.hide();
-                }
-            });
-        }
+        // Debug: disable overlay click hiding
+        // if (this.overlay) {
+        //     this.overlay.addEventListener('click', (event) => {
+        //         if (event.target === this.overlay) {
+        //             this.hide();
+        //         }
+        //     });
+        // }
     }
 
     show(roomNumber) {
@@ -153,6 +154,8 @@ class RoomModalManager {
 
         console.log('🚪 Hiding room modal.');
         this.overlay.classList.remove('show');
+        // Hide overlay completely to allow underlying interactions
+        this.overlay.style.display = 'none';
         document.body.classList.remove('modal-open', 'room-modal-open');
         this.restoreLegacyModalElements();
 
@@ -354,6 +357,13 @@ iframe.srcdoc = htmlDoc;
 }
 
 // Initialize the modal manager
-WhimsicalFrog.ready(wf => {
-    wf.addModule('RoomModalManager', new RoomModalManager());
-});
+// Instantiate RoomModalManager to set up modal overlay and event listeners
+const roomModalManager = new RoomModalManager();
+// Expose globally for direct access
+window.roomModalManager = roomModalManager;
+// Optionally register with WhimsicalFrog for module system
+if (window.WhimsicalFrog && typeof WhimsicalFrog.registerModule === 'function' && typeof WhimsicalFrog.ready === 'function') {
+    WhimsicalFrog.ready(wf => {
+        wf.addModule('RoomModalManager', roomModalManager);
+    });
+}

@@ -119,7 +119,7 @@ function openImageViewer(imagePath, productName, allImages = null) {
     viewerModal.style.display = 'flex';
     
     // Force z-index as backup while we debug the CSS class system
-    viewerModal.style.zIndex = '2700';
+    viewerModal.classList.add('z-image-viewer');
     
     // Add CSS class to body to manage z-index hierarchy
     document.body.classList.add('modal-open', 'image-viewer-open');
@@ -128,7 +128,7 @@ function openImageViewer(imagePath, productName, allImages = null) {
     // Debug logging
     console.log('🖼️ Image viewer opened. Classes added:', {
         bodyClasses: document.body.className,
-        viewerModalZIndex: viewerModal.style.zIndex,
+        viewerModalZIndex: getComputedStyle(viewerModal).zIndex,
         viewerModalClasses: viewerModal.className
     });
     

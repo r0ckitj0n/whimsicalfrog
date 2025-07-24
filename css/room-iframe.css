@@ -92,6 +92,7 @@
 
 
 
+.no-webp .room-bg-room4 { background-image: var(--bg-png); }
 .no-webp .room-bg-room5 { background-image: var(--bg-png); }
 .no-webp .room-bg-room6 { background-image: var(--bg-png); }
 .no-webp .room-bg-main { background-image: var(--bg-png); }
@@ -101,11 +102,13 @@
     width: 100%;
     height: 100%;
     position: relative;
-    overflow: hidden;
+    overflow: visible; /* Allow background overflow */
     background: transparent;
+    z-index: var(--z-base); /* Background layer */
+    transform-origin: top center;
 
-    /* Use exact aspect ratio */
-    aspect-ratio: 1280 / 896;
+    /* Aspect ratio managed by parent container */
+    /* aspect-ratio: 1280 / 896; */
 }
 
 .room-modal-iframe-container {
@@ -113,12 +116,13 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-    background-size: cover;
+    background-size: cover; /* Fully fill container */
     background-position: center;
     background-repeat: no-repeat;
+    z-index: var(--z-base); /* Background layer */
 
-    /* Maintain exact aspect ratio */
-    aspect-ratio: 1280 / 896;
+    /* Aspect ratio managed by parent container */
+    /* aspect-ratio: 1280 / 896; */
 }
 
 .room-modal-content-wrapper {
@@ -130,7 +134,7 @@
     z-index: var(--z-content-overlay);
 
     /* Ensure this also maintains aspect ratio */
-    aspect-ratio: 1280 / 896;
+    /* aspect-ratio: 1280 / 896; removed to prevent clipping */
 }
 
 /* Ensure body and html have proper dimensions */
@@ -139,10 +143,10 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    overflow: visible; /* Allow content overflow */
 
-    /* Maintain aspect ratio at root level */
-    aspect-ratio: 1280 / 896;
+    /* Root aspect ratio removed to prevent clipping */
+    /* aspect-ratio: 1280 / 896; */
 }
 
 /* Room Product Icon Styles - Centralized */

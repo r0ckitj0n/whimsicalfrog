@@ -2329,10 +2329,13 @@ body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; paddin
 .log-level-badge {
     display: inline-flex;
     align-items: center;
-    px-2 py-1;
-    rounded-full;
-    text-xs;
-    font-medium;
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 500;
 }
 
 .level-error, .level-fatal, .level-critical {
@@ -5862,7 +5865,7 @@ mark {
   background-color: #9C27B0;
   color: white;
 }
-}/* ==========================================================================
+/* ==========================================================================
    MASTER BUTTON COMPONENT SYSTEM
    ========================================================================== */
 
@@ -8808,17 +8811,17 @@ body.modal-open #itemPopup.visible {
     border: 2px solid rgb(255 255 255 / 10%);
     overflow: hidden;
     
-    /* Maintain exact 1280:896 aspect ratio */
+    /* Enforce aspect ratio for modal container */
     aspect-ratio: 1280 / 896;
     width: min(95vw, min(95vh * 1.43, 1280px));
-    height: auto; /* Let aspect-ratio control height */
+    height: auto;
     
     /* Fallback for browsers without aspect-ratio support */
     max-width: 1280px;
     max-height: 896px;
     
     /* Ensure proper scaling */
-    transform: scale(0.9);
+    transform: none; /* Disable initial scaling */
     margin-bottom: 20px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }

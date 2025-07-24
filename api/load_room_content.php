@@ -91,7 +91,13 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
 
     ob_start(); ?>
     <div id="modalRoomPage" class="modal-room-page" data-room="<?php echo $roomNumber; ?>">
-      <div class="room-modal-iframe-container room-bg-<?php echo $roomType; ?>">
+        <?php
+            $bgFileName = "background_{$roomType}.webp";
+            $bgPath = file_exists(__DIR__ . '/../images/backgrounds/' . $bgFileName)
+                ? '/images/backgrounds/' . $bgFileName
+                : '/images/backgrounds/background_home.webp';
+      ?>
+      <div class="room-modal-iframe-container" style="background-image: url('<?php echo htmlspecialchars($bgPath, ENT_QUOTES, 'UTF-8'); ?>'); background-size: cover; background-position: center;">
         <div class="room-overlay-wrapper room-modal-content-wrapper">
           <div id="debug-items-count">Items: <?php echo count($items); ?></div>
           <?php foreach ($items as $i => $it):
@@ -158,11 +164,14 @@ function getRoomMetadata($roomNumber, $pdo)
  */
 function getImageUrl($path, $dir, $ext = 'webp')
 {
-    if (empty($path)) return '';
-    $base = trim('/'.trim($dir, '/').'/'.ltrim($path, '/'), '/');
-    if ($ext === 'png') {
-        return preg_replace('/\.[^.]+$/', '.png', '/'.$base);
+    if (empty($path)) {
+        return '';
     }
-    return preg_replace('/\.[^.]+$/', '.webp', '/'.$base);
+    // Build path within images directory
+    $cleanPath = ltrim($path, '/');
+    $extension = ($ext === 'png') ? 'png' : 'webp';
+    $fileName = preg_replace('/\.[^\.]+$/', '.' . $extension, $cleanPath);
+    $imageDir = rtrim('/images/' . trim($dir, '/'), '/');
+    return $imageDir . '/' . $fileName;
 }
 ?>

@@ -1,57 +1,65 @@
- (width <= 480px) {
-    .header-logo {
-        height: calc(var(--header-logo-height) * 0.8);
-    }
- (width <= 768px) {
-    .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
- (width <= 480px) {
-    .product-grid {
-        grid-template-columns: 1fr;
-    }
- (width <= 768px) {
-  .grid-2,
-  .grid-3,
-  .grid-4 {
+/* Responsive styles for WhimsicalFrog */
+
+/* Small devices (mobile, up to 480px) */
+@media (max-width: 480px) {
+  .header-logo {
+    height: calc(var(--header-logo-height) * 0.8);
+  }
+  .product-grid {
     grid-template-columns: 1fr;
   }
- (width <= 768px) {
-  /* ==========================================================================
-     BUTTON RESPONSIVE STYLES
-     ========================================================================== */
-  
-  /* .back-to-main-button styles managed in css/components/buttons.css */
-  
+}
+
+/* Medium devices (mobile landscape, up to 640px) */
+@media (max-width: 640px) {
   .btn-sm {
     height: 28px;
     padding: 6px 10px;
     font-size: var(--text-xs);
   }
- (width <= 640px) {
-  /* .back-to-main-button mobile styles managed in css/components/buttons.css */
-  
   .modal-room-page {
     transform: scale(0.5);
     transform-origin: center;
   }
- (width <= 768px) {
-    .popup-content {
-        max-width: 90%;
-        padding: 16px;
-    }
- (width <= 768px) {
-    .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
- (width <= 480px) {
-    .product-grid {
-        grid-template-columns: 1fr;
-    }
- (width <= 768px) {
-    .footer-grid-4,
-    .footer-grid-3,
-    .footer-grid-2 {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
+}
+
+/* Tablet devices (up to 768px) */
+@media (max-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+  .popup-content {
+    max-width: 90%;
+    padding: 16px;
+  }
+  /* Responsive Footer */
+  .footer-container {
+    padding: 0 15px;
+  }
+  .footer-social {
+    gap: 10px;
+  }
+  .footer-social-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+  .footer-newsletter-form {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .footer-nav-horizontal {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  .footer-copyright-links {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

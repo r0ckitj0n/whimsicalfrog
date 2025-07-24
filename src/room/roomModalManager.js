@@ -174,7 +174,7 @@ export class RoomModalManager {
     try {
       const roomData = await apiGet('/api/get_room_data.php');
       if (!roomData.success || !Array.isArray(roomData.data.productRooms)) return;
-      const tasks = roomData.data.productRooms.map(r => this.preloadSingleRoom(typeof r === 'object' ? r.room_number : r));
+      const tasks = roomData.data.productRooms.map(room => this.preloadSingleRoom(room.room_number ?? room));
       await Promise.all(tasks);
     } catch (err) {
       console.warn('[RoomModalManager] preload failed:', err);

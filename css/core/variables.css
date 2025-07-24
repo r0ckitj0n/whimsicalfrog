@@ -96,6 +96,11 @@
   --z-notification: 500;
   --z-tooltip: 600;
   --z-debug: 9999;
+  --z-popup: 2600;
+  --z-image-viewer: 2700;
+  --z-room-modals: 2400;
+  --z-room-modal-header: 2450;
+  --z-room-buttons: 55;
 
   /* Layout Breakpoints (for JS usage) */
   --breakpoint-sm: 640px;

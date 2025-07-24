@@ -261,7 +261,7 @@ function openImageViewer(imagePath, productName, allImages = null) {
     viewerModal.style.display = 'flex';
     
     // Force z-index as backup while we debug the CSS class system
-    viewerModal.style.zIndex = '2700';
+    viewerModal.classList.add('z-image-viewer');
     
     // Add CSS class to body to manage z-index hierarchy
     document.body.classList.add('modal-open', 'image-viewer-open');
@@ -270,7 +270,7 @@ function openImageViewer(imagePath, productName, allImages = null) {
     // Debug logging
     console.log('🖼️ Image viewer opened. Classes added:', {
         bodyClasses: document.body.className,
-        viewerModalZIndex: viewerModal.style.zIndex,
+        viewerModalZIndex: getComputedStyle(viewerModal).zIndex,
         viewerModalClasses: viewerModal.className
     });
     
@@ -1769,8 +1769,8 @@ console.log('Loading room-coordinate-manager.js...');
 // Ensure apiGet helper exists inside iframe context
 if (typeof window.apiGet !== 'function') {
   window.apiGet = async function(endpoint) {
-    const url = endpoint.startsWith('/') ? endpoint : `/api/${endpoint}`;
-    const res = await fetch(url, { credentials: 'same-origin' });
+    const url = window.location.origin + (endpoint.startsWith('/') ? endpoint : `/api/${endpoint}`);
+    const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`Request failed (${res.status})`);
     }
@@ -2119,6 +2119,7 @@ document.addEventListener('DOMContentLoaded', function() {
   window.originalImageWidth = 1280;
   window.originalImageHeight = 896;
   window.baseAreas = script.dataset.baseAreas ? JSON.parse(script.dataset.baseAreas) : [];
+  console.log('⚙️ room-helper initialized. roomItems:', window.roomItems, 'baseAreas:', window.baseAreas);
   window.roomOverlayWrapper = null;
 
   function updateItemPositions() {
@@ -2627,7 +2628,7 @@ document.body.addEventListener('click', function(e) {
         modal.style.display = 'flex';
 
         // Ensure modal is on top of any overlays
-        modal.style.zIndex = 3000;
+        modal.classList.add('z-popup');
 
         // Close modal when clicking overlay (attribute set in template)
         modal.addEventListener('click', (e) => {
@@ -2861,7 +2862,18 @@ class RoomModalManager {
                 console.log(`🚪 Loading room ${roomNumber} from cache.`);
                 roomTitleEl.textContent = cachedData.metadata.room_name || 'Room';
                 roomDescriptionEl.textContent = cachedData.metadata.room_description || '';
-                iframe.srcdoc = cachedData.content;
+                const htmlDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <base href="${window.location.origin}">
+  <link rel="stylesheet" href="/css/bundle.css?v=${window.WF_ASSET_VERSION || Date.now()}">
+  <link rel="stylesheet" href="/css/room-iframe.css?v=${window.WF_ASSET_VERSION || Date.now()}">
+</head>
+<body>
+${cachedData.content}
+</body>
+</html>`;
+iframe.srcdoc = htmlDoc;
             } else {
                 throw new Error('Room content not available in cache.');
             }
@@ -2949,23 +2961,20 @@ class RoomModalManager {
     async preloadRoomContent() {
         console.log('🚪 Preloading all room content...');
         try {
-            const roomData = await apiGet('get_room_data.php');
+            const rooms = await apiGet('/api/get_rooms.php');
 
-            if (roomData.success && Array.isArray(roomData.data.productRooms)) {
-                const validRooms = roomData.data.productRooms.filter(r => {
-                    const num = parseInt(r && r.room_number, 10);
-                    return Number.isFinite(num) && num > 0;
-                });
-                const preloadPromises = validRooms.map(room => this.preloadSingleRoom(room.room_number));
+            if (Array.isArray(rooms)) {
+                const preloadPromises = rooms.map(room => this.preloadSingleRoom(room.id));
                 await Promise.all(preloadPromises);
                 console.log('🚪 All rooms preloaded successfully.');
             } else {
-                console.error('🚪 Failed to get room data or invalid format:', roomData.message);
+                console.error('🚪 Failed to fetch rooms list or invalid format:', rooms);
             }
         } catch (error) {
             console.error('🚪 Error preloading rooms:', error);
         }
     }
+
 
     async preloadSingleRoom(roomNumber) {
         const num = parseInt(roomNumber, 10);
@@ -2978,7 +2987,7 @@ class RoomModalManager {
         }
 
         try {
-            const data = await apiGet(`load_room_content.php?room_number=${roomNumber}&modal=1`);
+            const data = await apiGet(`/api/load_room_content.php?room_number=${roomNumber}&modal=1`);
 
             if (data.success) {
                 this.roomCache.set(String(roomNumber), {

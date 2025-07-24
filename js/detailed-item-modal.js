@@ -118,7 +118,7 @@
         modal.style.display = 'flex';
 
         // Ensure modal is on top of any overlays
-        modal.style.zIndex = 3000;
+        modal.classList.add('z-popup');
 
         // Close modal when clicking overlay (attribute set in template)
         modal.addEventListener('click', (e) => {

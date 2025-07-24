@@ -276,9 +276,7 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
 <?php endif; ?>
 
     <!- Main Application Script ->
-    <script src="js/main-app.js?v=<?php echo filemtime('js/main-app.js'); ?>"></script>
-    <!-- Room Modal Manager -->
-    <script src="js/room-modal-manager.js?v=<?php echo filemtime('js/room-modal-manager.js'); ?>"></script>
+    
 
 </head>
 <body <?php echo $backgroundStyle; ?> class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>">
@@ -408,7 +406,8 @@ if ($debug_js) {
     // Production mode: load global popup plus built bundle
     // Ensure popup system is available before iframe bridges call it
     echo "<script type='module' src='src/ui/globalPopup.js?v=" . filemtime('src/ui/globalPopup.js') . "'></script>\n";
-    echo "<script type='module' src='dist/app.js?v=" . filemtime('dist/app.js') . "'></script>\n";
+    
+
 }
 ?>
 
@@ -457,7 +456,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!- Dynamic Background Loading ->
         <script>window.WF_BUNDLE_LOADED = true;</script>
+<script src="js/api-client.js?v=<?php echo filemtime('js/api-client.js'); ?>"></script>
     <script src="js/bundle.js?v=<?php echo filemtime('js/bundle.js'); ?>"></script>
+    <script src="js/main-app.js?v=<?php echo filemtime('js/main-app.js'); ?>"></script>
+    <script src="js/room-modal-manager.js?v=<?php echo filemtime('js/room-modal-manager.js'); ?>"></script>
     <!-- Dynamic Background Loader -->
     <script src="js/dynamic-background-loader.js?v=<?php echo filemtime('js/dynamic-background-loader.js'); ?>"></script>
 </body>

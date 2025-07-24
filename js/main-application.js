@@ -90,7 +90,8 @@
         const imageUrl = `/images/${filename}`;
         const overlay = document.querySelector('.room-modal-overlay');
         if (overlay) {
-          overlay.style.setProperty('--dynamic-bg-url', `url('${imageUrl}')`);
+          // Set overlay background image directly with gradient overlay
+          overlay.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${imageUrl}')`;
           this.WF.log(`[MainApplication] Modal background loaded for ${roomType}`);
         }
       }

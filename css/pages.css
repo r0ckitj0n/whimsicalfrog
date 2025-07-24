@@ -75,7 +75,6 @@
     width: 100%;
 }
 
-}
 
 /* Each section alignment within grid */
 .header-left {
@@ -454,19 +453,6 @@ html body .site-header .header-container .header-content .header-center .search-
 
 /* Mobile styles moved to css/responsive/mobile.css */
 
-@media.logo-text {
-        font-size: 1.25rem;
-    }
-    
-    .cart-count {
-        font-size: 0.75rem;
-    }
-    
-    .cart-icon {
-        width: 1rem;
-        height: 1rem;
-    }
-}
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
@@ -842,21 +828,7 @@ body {
 }
 
 /* Responsive styles */
-@media.cart-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .cart-item-image {
-        margin-bottom: 10px;
-    }
-    
-    .cart-item-quantity {
-        margin: 10px 0;
-    }
-}
 
-@media}
 
 /* Admin panel styles */
 .admin-panel {
@@ -1418,7 +1390,7 @@ body {
    END OF backgrounds.css CONTENT
    ============================================= */
 
-@media} 
+ 
 
 /* ==========================================================================
    SHOP PAGE STYLES
@@ -1448,7 +1420,7 @@ button.category_btn_color.active,
    MOBILE RESPONSIVE STYLES (max-width: 768px)
    ========================================================================== */
 
-@media.btn-md {
+.btn-md {
     height: 36px;
     padding: 8px 12px;
     font-size: var(--text-sm);
@@ -1977,14 +1949,12 @@ button.category_btn_color.active,
   .mobile-margin-md {
     margin: var(--space-4);
   }
-  
-}
 
 /* ==========================================================================
    SMALL MOBILE STYLES (max-width: 640px)
    ========================================================================== */
 
-@media.room-modal-header {
+.room-modal-header {
     top: 10px;
     left: 10px;
     right: 10px;
@@ -2033,7 +2003,7 @@ button.category_btn_color.active,
     padding: 6px 0;
   }
   
-} /* Room Background Classes - Centralized */
+/* Room Background Classes - Centralized */
 .room-bg-main {
 
     background-size: contain;
@@ -2286,7 +2256,7 @@ html, body {
 }
 
 /* Responsive Design for Room Modal Iframe */
-@media.popup-body {
+.popup-body {
         flex-direction: column;
         gap: 16px;
     }
@@ -2312,7 +2282,7 @@ html, body {
     .room-title-overlay .room-description {
         font-size: 0.8rem;
     }
-} /* Room Main Page Styles - WhimsicalFrog */
+/* Room Main Page Styles - WhimsicalFrog */
 
 /* Fullscreen main room with proper z-index hierarchy */
 
@@ -3526,21 +3496,7 @@ body {
 }
 
 /* Responsive styles */
-@media.cart-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .cart-item-image {
-        margin-bottom: 10px;
-    }
-    
-    .cart-item-quantity {
-        margin: 10px 0;
-    }
-}
 
-@media}
 
 /* Admin panel styles */
 .admin-panel {
@@ -4475,7 +4431,7 @@ button.brand-button * {
 }
 
 /* Responsive Footer */
-@media.footer-container {
+.footer-container {
         padding: 0 15px;
     }
     

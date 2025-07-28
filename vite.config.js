@@ -1,26 +1,30 @@
 import { resolve } from 'path';
+import { glob } from 'glob';
+import fullReload from 'vite-plugin-full-reload';
+
+// Find all top-level JS files in the js/ directory
+const entryPoints = glob.sync('js/*.js').reduce((acc, path) => {
+    const name = path.split('/').pop().replace('.js', '');
+    acc[name] = resolve(__dirname, path);
+    return acc;
+}, {});
 
 export default {
-  build: {
-    cssCodeSplit: false,
-    outDir: 'dist',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        app: resolve(__dirname, 'src/main.js')
-      },
-      output: {
-        assetFileNames: 'app.css',
-        entryFileNames: 'app.js',
-        format: 'iife',
-        globals: {
-          // Keep window global scope
+    plugins: [
+        fullReload(['includes/**/*', 'sections/**/*', '*.php'])
+    ],
+    root: __dirname,
+    build: {
+        outDir: 'dist',
+        emptyOutDir: true,
+        manifest: true,
+        rollupOptions: {
+            input: entryPoints
         }
-      }
+    },
+    server: {
+        port: 5173,
+        open: false,
+        strictPort: true,
     }
-  },
-  server: {
-    port: 5173,
-    open: false
-  }
 };

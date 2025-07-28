@@ -7,7 +7,7 @@ require_once 'api/config.php';
 
 $orderId = $_GET['orderId'] ?? '';
 if ($orderId === '') {
-    echo '<div class="text-center"><h1 class="text-2xl font-bold text-red-600">Invalid order ID</h1></div>';
+    echo '<div class="text-center"><h1 class="text-brand-primary">Invalid order ID</h1></div>';
     return;
 }
 
@@ -50,7 +50,7 @@ try {
     $salesVerbiage = getSalesVerbiage($pdo);
 
 } catch (Exception $e) {
-    echo '<div class="text-center"><h1 class="text-2xl font-bold text-red-600">Error loading order</h1><p>'.htmlspecialchars($e->getMessage()).'</p></div>';
+    echo '<div class="text-center"><h1 class="text-brand-primary">Error loading order</h1><p>'.htmlspecialchars($e->getMessage()).'</p></div>';
     return;
 }
 
@@ -201,36 +201,35 @@ $pending = ($order['paymentStatus'] === 'Pending');
 
 
 <!- Simple Receipt Header with Company Info ->
-<div class="receipt-container max-w-2xl bg-white shadow-md rounded">
+<div class="receipt-container card-standard">
     <!- Company Header ->
-    <div class="text-center border-b">
+    <div class="text-center">
         <div class="flex justify-center items-center">
-            <img src="images/logos/logo_whimsicalfrog.webp" alt="Whimsical Frog Crafts Logo" class="h-16 w-auto" 
-                 onerror="this.src='images/logos/logo_whimsicalfrog.png'">
+            <img src="images/logos/logo_whimsicalfrog.webp" alt="Whimsical Frog Crafts Logo" class="header-logo" 
+                 onerror="this.onerror=null; this.src='images/logos/logo_whimsicalfrog.png';">
             <div>
-                <h1 class="text-2xl font-bold text-[#87ac3a]">Whimsical Frog Crafts</h1>
-                <p class="text-base text-gray-600 italic">Custom Crafts & Personalized Gifts</p>
+                <h1 class="text-brand-primary">Whimsical Frog Crafts</h1>
+                <p class="text-brand-secondary">Custom Crafts & Personalized Gifts</p>
             </div>
         </div>
-        <div class="text-sm text-gray-600">
-            <p><strong>Lisa Lemley</strong></p>
-            <p>1524 Red Oak Flats Rd</p>
-            <p>Dahlonega, GA 30533</p>
-            <p class="text-[#87ac3a] font-medium">whimsicalfrog.us</p>
+        <div class="text-sm text-brand-secondary">
+            <p>123 Crafty Lane, Artisan Valley, CA 90210</p>
+            <p>(555) 123-4567 | whimsicalfrog.us</p>
+            <p class="text-brand-primary">whimsicalfrog.us</p>
         </div>
     </div>
 
-    <!- Order Information ->
+    <!- Order Info ->
     <div class="text-center">
-        <h2 class="text-lg font-semibold text-gray-800">Order Receipt</h2>
-        <p class="text-sm text-gray-600">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong></p>
-        <p class="text-sm text-gray-600">Date: <?= date('M d, Y', strtotime($order['date'] ?? 'now')) ?></p>
+        <h2 class="text-brand-primary">Order Receipt</h2>
+        <p class="text-sm text-brand-secondary">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong></p>
+        <p class="text-sm text-brand-secondary">Date: <?= date('M d, Y', strtotime($order['date'] ?? 'now')) ?></p>
     </div>
 
-    <!- Order Items Table ->
+    <!- Items Table ->
     <table class="w-full text-sm">
         <thead>
-            <tr class="bg-gray-100">
+            <tr class="bg-brand-light">
                 <th class="text-left">Item ID</th>
                 <th class="text-left">Item</th>
                 <th class="text-center">Qty</th>
@@ -239,9 +238,9 @@ $pending = ($order['paymentStatus'] === 'Pending');
         </thead>
         <tbody>
             <?php foreach ($orderItems as $it): ?>
-                <tr class="border-b">
+                <tr>
                     <td class="font-mono text-xs"><?= htmlspecialchars($it['sku'] ?? '') ?></td>
-                    <td class=""><?= htmlspecialchars($it['itemName'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($it['itemName'] ?? $it['sku'] ?? '') ?></td>
                     <td class="text-center"><?= $it['quantity'] ?? 0 ?></td>
                     <td class="text-right">$<?= number_format($it['price'] ?? 0, 2) ?></td>
                 </tr>
@@ -261,7 +260,7 @@ $pending = ($order['paymentStatus'] === 'Pending');
             <p class="">Please include your order&nbsp;ID on the memo line. As soon as we record your payment we'll send a confirmation e-mail and get your items on their way.</p>
         </div>
     <?php else: ?>
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 text-sm" role="alert">
+        <div class="card-standard text-brand-secondary text-sm" role="alert">
             <p class="font-bold"><?= htmlspecialchars($receiptMessage['title']) ?></p>
             <p><?= htmlspecialchars($receiptMessage['content']) ?></p>
         </div>
@@ -271,32 +270,32 @@ $pending = ($order['paymentStatus'] === 'Pending');
     <?php if (!empty($salesVerbiage)): ?>
         <div class="border-t space-y-3">
             <?php if (!empty($salesVerbiage['receipt_thank_you_message'])): ?>
-                <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg text-center">
-                    <p class="font-semibold">💚 <?= htmlspecialchars($salesVerbiage['receipt_thank_you_message']) ?></p>
+                <div class="card-standard text-center">
+                    <p class="text-sm text-brand-primary">🎉 <?= htmlspecialchars($salesVerbiage['receipt_thank_you']) ?></p>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($salesVerbiage['receipt_next_steps'])): ?>
-                <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg">
-                    <p class="text-sm">📋 <?= htmlspecialchars($salesVerbiage['receipt_next_steps']) ?></p>
+                <div class="card-standard">
+                    <p class="text-sm text-brand-primary">📋 <?= htmlspecialchars($salesVerbiage['receipt_next_steps']) ?></p>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($salesVerbiage['receipt_social_sharing'])): ?>
-                <div class="bg-purple-50 border border-purple-200 text-purple-800 rounded-lg text-center">
-                    <p class="text-sm font-medium">📱 <?= htmlspecialchars($salesVerbiage['receipt_social_sharing']) ?></p>
+                <div class="card-standard text-center">
+                    <p class="text-sm text-brand-primary">📱 <?= htmlspecialchars($salesVerbiage['receipt_social_sharing']) ?></p>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($salesVerbiage['receipt_return_customer'])): ?>
-                <div class="bg-orange-50 border border-orange-200 text-orange-800 rounded-lg text-center">
-                    <p class="text-sm">🎨 <?= htmlspecialchars($salesVerbiage['receipt_return_customer']) ?></p>
+                <div class="card-standard text-center">
+                    <p class="text-sm text-brand-primary">🎨 <?= htmlspecialchars($salesVerbiage['receipt_return_customer']) ?></p>
                 </div>
             <?php endif; ?>
         </div>
     <?php endif; ?>
 
     <div class="text-center">
-        <button id="printBtn" onclick="window.print();" class="bg-[#87ac3a] hover:bg-[#a3cc4a] text-white rounded">Print Receipt</button>
+        <button id="printBtn" onclick="window.print();" class="btn-brand">Print Receipt</button>
     </div>
 </div> 

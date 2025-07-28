@@ -614,9 +614,9 @@ function generateSystemConfigHTML(data) {
                         <p><strong>Format:</strong> [MonthLetter][Day][SequenceNumber]</p>
                         ${data.id_formats.recent_customers.length > 0 ? 
                             `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_customers.map(c => 
-                                `<code class="bg-orange-100 py-0.5 rounded">${c.id}</code> (${c.username || 'No username'})`
+                                `<code class="bg-orange-100 py-0\.5 rounded">${c.id}</code> (${c.username || 'No username'})`
                             ).join(', ')}</p>` : 
-                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0.5 rounded">F14004</code></p>`
+                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0\.5 rounded">F14004</code></p>`
                         }
                         <div class="text-xs text-orange-500">
                             <p>• <strong>F</strong> = June (A=Jan, B=Feb, C=Mar, D=Apr, E=May, F=Jun, G=Jul, H=Aug, I=Sep, J=Oct, K=Nov, L=Dec)</p>
@@ -638,9 +638,9 @@ function generateSystemConfigHTML(data) {
                         <p><strong>Format:</strong> [CustomerNum][MonthLetter][Day][ShippingCode][SequenceNum]</p>
                         ${data.id_formats.recent_orders.length > 0 ? 
                             `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_orders.map(o => 
-                                `<code class="bg-orange-100 py-0.5 rounded">${o}</code>`
+                                `<code class="bg-orange-100 py-0\.5 rounded">${o}</code>`
                             ).join(', ')}</p>` : 
-                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0.5 rounded">01F30P75</code></p>`
+                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0\.5 rounded">01F30P75</code></p>`
                         }
                         <div class="text-xs text-orange-500">
                             <p>• <strong>01</strong> = Last 2 digits of customer number</p>
@@ -679,16 +679,16 @@ function generateSystemConfigHTML(data) {
                         <p><strong>Primary Format:</strong> ${data.system_info.sku_format}</p>
                         ${data.sample_skus.length > 0 ? 
                             `<p><strong>Current Examples:</strong> ${data.sample_skus.slice(0, 5).map(sku => 
-                                `<code class="bg-orange-100 py-0.5 rounded">${sku}</code>`
+                                `<code class="bg-orange-100 py-0\.5 rounded">${sku}</code>`
                             ).join(', ')}</p>` : 
-                            `<p><strong>Examples:</strong> <code class="bg-orange-100 py-0.5 rounded">WF-TS-001</code>, <code class="bg-orange-100 py-0.5 rounded">WF-TU-002</code></p>`
+                            `<p><strong>Examples:</strong> <code class="bg-orange-100 py-0\.5 rounded">WF-TS-001</code>, <code class="bg-orange-100 py-0\.5 rounded">WF-TU-002</code></p>`
                         }
                         
                         <!-- Enhanced SKU Format -->
                         <div class="bg-orange-50 rounded">
                             <p class="font-medium text-orange-700">Enhanced SKU Format (Optional):</p>
                             <p><strong>WF-[CATEGORY]-[GENDER]-[SIZE]-[COLOR]-[NUMBER]</strong></p>
-                            <p class="text-xs">Example: <code class="bg-orange-100 py-0.5 rounded">WF-TS-M-L-BLK-001</code> = WhimsicalFrog T-Shirt, Men's Large, Black, #001</p>
+                            <p class="text-xs">Example: <code class="bg-orange-100 py-0\.5 rounded">WF-TS-M-L-BLK-001</code> = WhimsicalFrog T-Shirt, Men's Large, Black, #001</p>
                         </div>
                         
                         <!-- Category Codes -->
@@ -730,9 +730,9 @@ function generateSystemConfigHTML(data) {
                         <p><strong>Format:</strong> OI[SequentialNumber]</p>
                         ${data.id_formats.recent_order_items.length > 0 ? 
                             `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_order_items.map(oi => 
-                                `<code class="bg-orange-100 py-0.5 rounded">${oi}</code>`
+                                `<code class="bg-orange-100 py-0\.5 rounded">${oi}</code>`
                             ).join(', ')}</p>` : 
-                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0.5 rounded">OI001</code></p>`
+                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0\.5 rounded">OI001</code></p>`
                         }
                         <div class="text-xs text-orange-500">
                             <p>• <strong>OI</strong> = Order Item prefix</p>
@@ -849,8 +849,8 @@ function generateDatabaseMaintenanceHTML(data) {
                                 ${Object.entries(tables).map(([table, info]) => 
                                     `<li>
                                         <button onclick="viewTable('${table}')" 
-                                                class="text-left w-full hover:bg-purple-100 rounded py-0.5 transition-colors">
-                                            <code class="bg-transparent border border-purple-200 py-0.5 rounded text-xs">${table}</code> 
+                                                class="text-left w-full hover:bg-purple-100 rounded py-0\.5 transition-colors">
+                                            <code class="bg-transparent border border-purple-200 py-0\.5 rounded text-xs">${table}</code> 
                                             <span class="text-xs text-gray-500">(${info.row_count} rows, ${info.field_count} fields)</span>
                                         </button>
                                     </li>`
@@ -871,8 +871,8 @@ function generateDatabaseMaintenanceHTML(data) {
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                         ${data.backup_tables.map(table => 
                             `<button onclick="viewTable('${table}')" 
-                                     class="text-left hover:bg-gray-200 rounded py-0.5 transition-colors">
-                                <code class="bg-gray-200 py-0.5 rounded">${table}</code>
+                                     class="text-left hover:bg-gray-200 rounded py-0\.5 transition-colors">
+                                <code class="bg-gray-200 py-0\.5 rounded">${table}</code>
                             </button>`
                         ).join('')}
                     </div>
@@ -3811,7 +3811,7 @@ async function loadRoomCategorySummary() {
                     <div class="text-xs text-gray-600">
                         <div class="flex justify-between items-center">
                             <span class="font-medium">Categories:</span>
-                            <span class="bg-blue-100 text-blue-800 py-0.5 rounded-full">${room.total_categories}</span>
+                            <span class="bg-blue-100 text-blue-800 py-0\.5 rounded-full">${room.total_categories}</span>
                         </div>
                         <div class="text-xs text-gray-500" title="${room.all_categories || 'None'}">
                             ${room.all_categories || 'None'}
@@ -9108,7 +9108,7 @@ function showRoomSettingsSuccess(message) {
                     <!-- Warning -->
                     <div class="bg-red-50 border border-red-200 rounded-lg">
                         <div class="flex items-start space-x-2">
-                            <svg class="w-5 h-5 text-red-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-red-500 mt-0\.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                             </svg>
                             <div class="text-sm">
@@ -9211,7 +9211,7 @@ function showRoomSettingsSuccess(message) {
                     <!-- Info Box -->
                     <div class="bg-blue-50 border border-blue-200 rounded-lg">
                         <div class="flex items-start space-x-2">
-                            <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-blue-500 mt-0\.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                             </svg>
                             <div class="text-sm">
@@ -9224,7 +9224,7 @@ function showRoomSettingsSuccess(message) {
                     <!-- Warning for no selection -->
                     <div id="backupWarning" class="modal-error hidden">
                         <div class="flex items-start space-x-2">
-                            <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-red-500 mt-0\.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                             </svg>
                             <div class="text-sm">
@@ -9363,7 +9363,7 @@ function showRoomSettingsSuccess(message) {
                     <!-- Info Box -->
                     <div class="bg-purple-50 border border-purple-200 rounded-lg">
                         <div class="flex items-start space-x-2">
-                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-purple-500 mt-0\.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                             </svg>
                             <div class="text-sm">
@@ -9376,7 +9376,7 @@ function showRoomSettingsSuccess(message) {
                     <!-- Warning for no selection -->
                     <div id="dbBackupWarning" class="modal-error hidden">
                         <div class="flex items-start space-x-2">
-                            <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 text-red-500 mt-0\.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                             </svg>
                             <div class="text-sm">
@@ -18869,7 +18869,7 @@ async function toggleGlobalTooltips() {
         <div class="bg-blue-50 border-b border-blue-200">
             <div class="flex items-start space-x-3">
                 <div class="flex-shrink-0">
-                    <svg class="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-blue-500 mt-0\.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>

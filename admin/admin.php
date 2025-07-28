@@ -65,7 +65,7 @@ $tabs = [
 ?>
     <?php if ($section !== 'pos'): ?>
     <div class="admin-tab-navigation">
-        <div class="flex flex-wrap gap-2">
+        <div class="u-display-flex u-flex-wrap-wrap u-gap-2">
             <?php foreach ($tabs as $key => [$label, $cssClass]): ?>
                 <?php
             // Map tab keys to tooltip IDs

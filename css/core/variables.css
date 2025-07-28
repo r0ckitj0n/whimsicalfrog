@@ -34,6 +34,7 @@
   --header-nav-bg-mid: rgba(0,0,0,0.55);
   --header-nav-bg-end: rgba(0,0,0,0.01);
   --header-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  --header-height: 80px;
 
   /* Typography */
   --font-primary: 'Merienda', cursive;
@@ -231,7 +232,7 @@
     --popup-min-width: 280px;
     --popup-max-width: 450px;
     /* Popup should appear above room modal overlay (z-index ~2400) */
-    --popup-z-index: 2600;
+
     
     /* Popup Text Variables */
     --popup-title-color: #556B2F;

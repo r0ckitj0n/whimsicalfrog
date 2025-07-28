@@ -165,11 +165,6 @@ if ($page === 'landing') {
     }
 }
 
-$isFullscreenPage = in_array($page, ['landing', 'room_main']);
-if ($isFullscreenPage) {
-    $bodyClass .= ' body-fullscreen-layout';
-}
-
 // Cart handling
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -196,13 +191,67 @@ if ($page === 'room_main' || $page === 'shop' || $page === 'cart' || $page === '
     $backgroundRoomType = 'landing';
 }
 
-// Get background style
-if ($backgroundRoomType === 'landing' && function_exists('get_landing_background_path')) {
-    $backgroundUrl = get_landing_background_path();
-} else {
-    $backgroundUrl = get_active_background($backgroundRoomType);
+// Set body classes for fullscreen pages
+$isFullscreenPage = in_array($page, ['landing', 'room_main', 'shop']);
+if ($isFullscreenPage) {
+    $bodyClass .= ' body-fullscreen-layout';
+    // Add background classes to body instead of inline styles
+    if ($backgroundRoomType === 'room_main') {
+        $bodyClass .= ' room-bg-main';
+    } elseif ($backgroundRoomType === 'landing') {
+        $bodyClass .= ' room-bg-landing';
+    }
 }
-$backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$backgroundUrl}');\"" : '';
+
+// Vite Asset Helper for PHP
+// Handles both development and production modes.
+function vite(string $entry): string
+{
+    static $manifest = null;
+    static $isDev = null;
+
+    $viteDevServer = 'http://localhost:5173'; // As defined in vite.config.js
+
+    if ($isDev === null) {
+        // Check if the Vite dev server is running by trying to open a connection
+        $handle = @fopen($viteDevServer, 'r');
+        if ($handle !== false) {
+            $isDev = true;
+            fclose($handle);
+        } else {
+            $isDev = false;
+        }
+    }
+
+    if ($isDev) {
+        return '<script type="module" src="' . $viteDevServer . '/@vite/client"></script>' .
+               '<script type="module" src="' . $viteDevServer . '/' . $entry . '"></script>';
+    }
+
+    // Production mode: load assets from the manifest
+    if ($manifest === null) {
+        $manifestPath = __DIR__ . '/dist/.vite/manifest.json';
+        if (!file_exists($manifestPath)) {
+            return ''; // or throw an exception
+        }
+        $manifest = json_decode(file_get_contents($manifestPath), true);
+    }
+
+    $html = '';
+    if (isset($manifest[$entry])) {
+        // Add CSS links
+        if (!empty($manifest[$entry]['css'])) {
+            foreach ($manifest[$entry]['css'] as $cssFile) {
+                $html .= '<link rel="stylesheet" href="/dist/' . $cssFile . '">';
+            }
+        }
+        // Add the main JS script
+        $html .= '<script type="module" src="/dist/' . $manifest[$entry]['file'] . '"></script>';
+    }
+
+    return $html;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -225,91 +274,14 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
     
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
     
-    <!- Dynamic CSS Placeholders ->
-    <!- Database CSS style elements removed - using static CSS files only ->
-    
-    <!- Z-Index Hierarchy CSS ->
-    
-    
-    <!-- Vite CSS build -->
-<?php if (file_exists('dist/assets/app.css')): ?>
-    <link href="dist/assets/app.css?v=<?php echo filemtime('dist/assets/app.css'); ?>" rel="stylesheet">
-<?php endif; ?>
-
-<!-- Core CSS Bundle -->
-    <link href="css/bundle.css?v=<?php echo filemtime('css/bundle.css'); ?>" rel="stylesheet">
-    <link href="css/room-iframe.css?v=<?php echo filemtime(__DIR__ . '/css/room-iframe.css'); ?>" rel="stylesheet">
-    <!-- Room iframe backgrounds CSS -->
-    
-    <!- Static CSS Rules + Essential Styles ->
-    
-    <!- Search Input Styling ->
-    
-    
-
-    <!- All styling now handled by static CSS system ->
-    
-    <!- Static Global CSS Variables ->
-    
-    
-    <!- Static Tooltip CSS ->
-    
-    
-    <script>
-        // Static CSS system - no database dependencies
-        // Global CSS variables loaded from js/css-initializer.js
-        // Tooltip CSS loaded from static CSS files
-        console.log('Using static CSS system');
-        // Vite dev server tag will be appended below
-
-    </script>
-    
-    <!- Core Layout Styles ->
-    
-    
-    <!- Database CSS loading removed - using static CSS files only ->
-    
-
-    
-<?php if ($page === 'landing' && file_exists('css/landing.css')): ?>
-    <link href="css/landing.css?v=<?php echo filemtime('css/landing.css'); ?>" rel="stylesheet">
-<?php endif; ?>
+    <?= vite('js/main.js') ?>
 
     <!- Main Application Script ->
 
-    <?php if ($page === 'shop'): ?>
-    <!-- PURE INLINE CSS FOR SHOP PAGE SCROLLBAR -->
-    <style>
-        body.shop-page::-webkit-scrollbar {
-            width: 16px !important;
-            background: rgba(135, 172, 58, 0.1) !important;
-        }
 
-        body.shop-page::-webkit-scrollbar-thumb {
-            background: #87ac3a !important;
-            border-radius: 8px !important;
-            transition: background-color 0.3s ease !important;
-        }
-
-        body.shop-page::-webkit-scrollbar-thumb:hover {
-            background: #6b8e23 !important;
-        }
-
-        body.shop-page::-webkit-scrollbar-track {
-            background: rgba(135, 172, 58, 0.1) !important;
-            border-radius: 8px !important;
-        }
-    </style>
-    <?php endif; ?>
 
 </head>
-<body <?php echo $backgroundStyle; ?> class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>"
-    <?php if ($page === 'shop'): ?>
-        style="
-            scrollbar-width: thin !important;
-            scrollbar-color: #87ac3a rgba(135, 172, 58, 0.3) !important;
-        "
-    <?php endif; ?>>
+<body class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>">
 <!-- Universal Page Header -->
 <?php if ($page !== 'landing'): ?>
 <?php
@@ -363,38 +335,11 @@ if (!file_exists($pageFile)) {
 }
 ?>
 <?php if ($isFullscreenPage): ?>
-    <div class="fullscreen-container" <?php echo $backgroundStyle; ?>>
+    <div class="fullscreen-container">
         <?php include $pageFile; ?>
     </div>
 <?php else: ?>
-    <main class="md:p-4 lg:p-6 cottage-bg page-content" id="mainContent"
-    <?php if ($page === 'shop'): ?>
-        style="
-            padding: 0 !important;
-            margin: 0 !important;
-            margin-top: calc(80px + 10px) !important;
-            background-size: cover !important;
-            background-repeat: no-repeat !important;
-            background-position: center center !important;
-            background-attachment: fixed !important;
-            min-height: calc(100vh - 90px) !important;
-            width: 100% !important;
-            max-width: none !important;
-            box-sizing: border-box !important;
-            <?php
-            // Get the background image from the existing background style
-            if (isset($backgroundStyle) && !empty($backgroundStyle)) {
-                // Extract background-image from $backgroundStyle
-                preg_match('/background-image:\s*url\([^)]+\)/', $backgroundStyle, $matches);
-                if (!empty($matches[0])) {
-                    echo $matches[0] . ' !important; ';
-                }
-            }
-            ?>
-        "
-    <?php else: ?>
-        <?php echo $backgroundStyle; ?>
-    <?php endif; ?>>
+    <main class="md:p-4 lg:p-6 cottage-bg page-content" id="mainContent">
         <?php
         // Use resolved $pageFile unless admin routing overrides
 
@@ -440,14 +385,16 @@ echo renderGlobalPopup();
 $debug_js = isset($_GET['debug_js']);
 
 if ($debug_js) {
-    // In debug mode, load Vite dev server directly; individual legacy scripts are no longer necessary
+    // In debug mode, load Vite dev server directly
     echo "<script type='module' src='http://localhost:5173/src/main.js'></script>\n";
 } else {
-    // Production mode: load global popup plus built bundle
-    // Ensure popup system is available before iframe bridges call it
-    echo "<script type='module' src='src/ui/globalPopup.js?v=" . filemtime('src/ui/globalPopup.js') . "'></script>\n";
-    
-
+    // Production mode: load the built JS from Vite manifest
+    if (!empty($viteAssets['js'])) {
+        echo $viteAssets['js'];
+    } else {
+        // Fallback for development or if manifest is missing
+        echo '<script type="module" src="/js/bundle.js?v=' . filemtime(__DIR__ . '/js/bundle.js') . '"></script>';
+    }
 }
 ?>
 
@@ -494,13 +441,6 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
 </script>
 
-<!- Dynamic Background Loading ->
-        <script>window.WF_BUNDLE_LOADED = true;</script>
-<script src="js/api-client.js?v=<?php echo filemtime('js/api-client.js'); ?>"></script>
-    <script src="js/bundle.js?v=<?php echo filemtime('js/bundle.js'); ?>"></script>
-    <script src="js/main-application.js?v=<?php echo filemtime('js/main-application.js'); ?>"></script>
-    <script src="js/room-modal-manager.js?v=<?php echo filemtime('js/room-modal-manager.js'); ?>"></script>
-    <!-- Dynamic Background Loader -->
-    <script src="js/dynamic-background-loader.js?v=<?php echo filemtime('js/dynamic-background-loader.js'); ?>"></script>
+<!-- All legacy scripts removed. JavaScript is now exclusively handled by the Vite build process. -->
 </body>
 </html>

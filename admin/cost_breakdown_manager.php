@@ -55,24 +55,24 @@ if (!empty($selectedItemId)) {
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     
 </head>
-<body class="bg-gray-100">
+<body>
     <!- Toast Notification ->
     <div id="toast" class="toast-notification"></div>
     
     <div class="">
         <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-green-700">Cost Breakdown Manager</h1>
-            <a href="?page=admin&section=inventory" class="bg-blue-600 hover:bg-blue-700 text-white rounded">
+            <h1 class="text-brand-primary">Cost Breakdown Manager</h1>
+            <a href="?page=admin&section=inventory" class="btn-brand">
                 Back to Inventory
             </a>
         </div>
         
         <!- Item Selection ->
-        <div class="bg-white rounded-lg shadow-md">
-            <h2 class="text-lg font-semibold text-gray-700">Select Inventory Item</h2>
+        <div class="card-standard">
+            <h2 class="text-brand-primary">Select Inventory Item</h2>
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
-                    <select id="itemSelector" class="w-full border border-gray-300 rounded">
+                    <select id="itemSelector" class="w-full border border-gray-300 rounded-brand">
                         <option value="">- Select an item -</option>
                         <?php foreach ($inventoryItems as $item): ?>
                         <option value="<?php echo $item['id']; ?>" <?php echo ($selectedItemId === $item['id']) ? 'selected' : ''; ?>>
@@ -82,7 +82,7 @@ if (!empty($selectedItemId)) {
                     </select>
                 </div>
                 <div>
-                    <button id="loadItemBtn" class="bg-green-600 hover:bg-green-700 text-white rounded">
+                    <button id="loadItemBtn" class="btn-brand">
                         Load Item
                     </button>
                 </div>
@@ -92,34 +92,28 @@ if (!empty($selectedItemId)) {
         <!- Cost Breakdown Display ->
         <div id="costBreakdownContainer" class="<?php echo empty($selectedItemId) ? 'hidden' : ''; ?>">
             <!- Item Details ->
-            <div class="bg-white rounded-lg shadow-md">
+            <div class="card-standard">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-semibold text-gray-700" id="itemNameDisplay">
-                        <?php echo isset($selectedItem) ? htmlspecialchars($selectedItem['name']) : ''; ?>
+                    <h2 class="text-brand-primary" id="itemNameDisplay">
+                        <?php echo htmlspecialchars($selectedItem['name'] ?? 'No Item Selected'); ?>
                     </h2>
-                    <span class="bg-gray-200 text-gray-700 rounded-full text-sm" id="itemIdDisplay">
-                        <?php echo isset($selectedItem) ? $selectedItem['id'] : ''; ?>
+                    <span class="bg-gray-200 text-gray-700 rounded-brand text-sm" id="itemIdDisplay">
+                        ID: <?php echo htmlspecialchars($selectedItem['id'] ?? 'N/A'); ?>
                     </span>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <span class="text-gray-600 text-sm">Category:</span>
-                        <p id="itemCategoryDisplay" class="font-medium">
-                            <?php echo isset($selectedItem) ? htmlspecialchars($selectedItem['category']) : ''; ?>
-                        </p>
+                        <div class="font-medium"><?php echo htmlspecialchars($selectedItem['category'] ?? 'N/A'); ?></div>
                     </div>
                     <div>
                         <span class="text-gray-600 text-sm">Current Cost Price:</span>
-                        <p id="itemCostDisplay" class="font-medium">
-                            $<?php echo isset($selectedItem) ? number_format(floatval($selectedItem['costPrice']), 2) : '0.00'; ?>
-                        </p>
+                        <div class="font-medium">$<?php echo number_format($selectedItem['costPrice'] ?? 0, 2); ?></div>
                     </div>
                     <div>
                         <span class="text-gray-600 text-sm">Retail Price:</span>
-                        <p id="itemRetailDisplay" class="font-medium">
-                            $<?php echo isset($selectedItem) ? number_format(floatval($selectedItem['retailPrice']), 2) : '0.00'; ?>
-                        </p>
+                        <div class="font-medium">$<?php echo number_format($selectedItem['retailPrice'] ?? 0, 2); ?></div>
                     </div>
                 </div>
             </div>
@@ -129,15 +123,15 @@ if (!empty($selectedItemId)) {
                 <!- Left Column: Materials and Labor ->
                 <div>
                     <!- Materials Section ->
-                    <div class="bg-white rounded-lg shadow-md">
+                    <div class="card-standard">
                         <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-semibold text-gray-700">Materials</h3>
-                            <button id="addMaterialBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
-                                Add Material
+                            <h3 class="text-brand-primary">Materials</h3>
+                            <button id="addMaterialBtn" class="btn-brand text-sm">
+                                + Add Material
                             </button>
                         </div>
                         
-                        <div id="materialsList" class="divide-y divide-gray-200">
+                        <div id="materialsList" class="mt-4 space-y-2">
                             <!- Materials will be loaded here via JavaScript ->
                             <div class="text-center text-gray-500 italic" id="noMaterialsMsg">
                                 No materials added yet
@@ -146,8 +140,11 @@ if (!empty($selectedItemId)) {
                     </div>
                     
                     <!- Labor Section ->
-                    <div class="bg-white rounded-lg shadow-md">
+                    <div class="card-standard">
                         <div class="flex justify-between items-center">
+                            <h3 class="text-brand-primary">Labor</h3>
+                            <button id="addLaborBtn" class="btn-brand text-sm">
+                                + Add Labor
                             <h3 class="text-lg font-semibold text-gray-700">Labor</h3>
                             <button id="addLaborBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
                                 Add Labor
@@ -182,34 +179,34 @@ if (!empty($selectedItemId)) {
                         </div>
                     </div>
                     
-                    <!- Totals Section ->
-                    <div class="bg-white rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold text-gray-700">Cost Summary</h3>
-                        
-                        <div class="cost-totals">
-                            <div class="cost-total-row">
-                                <span class="cost-label">Materials Total:</span>
+                    <!- Cost Summary ->
+                    <div class="card-standard">
+                        <h3 class="text-brand-primary">Cost Summary</h3>
+                        <div class="space-y-2 mt-4">
+                            <div class="flex justify-between">
+                                <span>Materials Total:</span>
                                 <span id="materialsTotalDisplay" class="cost-item-value">$0.00</span>
                             </div>
-                            <div class="cost-total-row">
-                                <span class="cost-label">Labor Total:</span>
+                            <div class="flex justify-between">
+                                <span>Labor Total:</span>
                                 <span id="laborTotalDisplay" class="cost-item-value">$0.00</span>
                             </div>
-                            <div class="cost-total-row">
-                                <span class="cost-label">Energy Total:</span>
+                            <div class="flex justify-between">
+                                <span>Energy Total:</span>
                                 <span id="energyTotalDisplay" class="cost-item-value">$0.00</span>
                             </div>
-                            <div class="cost-total-row border-t border-gray-300">
-                                <span class="font-semibold">Suggested Cost:</span>
-                                <span id="suggestedCostDisplay" class="font-bold text-purple-700">$0.00</span>
+                            <div class="flex justify-between font-bold border-t border-gray-300">
+                                <span>Suggested Cost Price:</span>
+                                <span id="suggestedCostDisplay" class="font-bold text-brand-primary">$0.00</span>
                             </div>
-                            
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <span class="text-sm text-gray-600">Current Cost Price:</span>
+                            <div class="mt-2 pt-2 border-t border-gray-200">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Current Cost Price:</span>
                                     <span id="currentCostDisplay" class="font-medium">$0.00</span>
                                 </div>
-                                <button id="updateCostBtn" class="bg-purple-600 hover:bg-purple-700 text-white rounded text-sm">
+                            </div>
+                            <div class="mt-3">
+                                <button id="updateCostBtn" class="btn-brand text-sm">
                                     Update Cost Price
                                 </button>
                             </div>

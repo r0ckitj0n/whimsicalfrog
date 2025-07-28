@@ -8,6 +8,15 @@
     background-repeat: no-repeat;
 }
 
+.room-bg-landing {
+    --bg-webp: url('../images/backgrounds/background_home.webp');
+    --bg-png: url('../images/backgrounds/background_home.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 .room-bg-room1 {
     --bg-webp: url('/images/backgrounds/background_room1.webp');
     --bg-png: url('/images/backgrounds/background_room1.png');
@@ -67,14 +76,6 @@
     background-repeat: no-repeat;
 }
 
-.room-bg-room6 {
-    --bg-webp: url('/images/backgrounds/background_room6.webp');
-    --bg-png: url('/images/backgrounds/background_room6.png');
-    background-image: var(--bg-webp);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
 
 
 /* Fallback PNG images for browsers without WebP support */
@@ -97,45 +98,21 @@
 .no-webp .room-bg-room6 { background-image: var(--bg-png); }
 .no-webp .room-bg-main { background-image: var(--bg-png); }
 
-/* Modal Room Styles - Maintain exact aspect ratio */
-.modal-room-page {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: visible; /* Allow background overflow */
-    background: transparent;
-    z-index: var(--z-base); /* Background layer */
-    transform-origin: top center;
-
-    /* Aspect ratio managed by parent container */
-    /* aspect-ratio: 1280 / 896; */
-}
-
-.room-modal-iframe-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    background-size: cover; /* Fully fill container */
+/* Fullscreen Container Background Styles */
+body.room-bg-main .fullscreen-container,
+body.room-bg-landing .fullscreen-container {
+    background-image: var(--bg-webp);
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    z-index: var(--z-base); /* Background layer */
-
-    /* Aspect ratio managed by parent container */
-    /* aspect-ratio: 1280 / 896; */
 }
 
-.room-modal-content-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: var(--z-content-overlay);
-
-    /* Ensure this also maintains aspect ratio */
-    /* aspect-ratio: 1280 / 896; removed to prevent clipping */
+.no-webp body.room-bg-main .fullscreen-container,
+.no-webp body.room-bg-landing .fullscreen-container {
+    background-image: var(--bg-png);
 }
+
+
 
 /* Ensure body and html have proper dimensions */
 html, body {
@@ -213,111 +190,7 @@ html, body {
     display: block;
 }
 
-/* Item Popup Styles - Centralized */
-.item-popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgb(0 0 0 / 80%);
-    z-index: var(--z-modal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
 
-.popup-content {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    max-width: 500px;
-    width: 100%;
-    position: relative;
-    box-shadow: 0 20px 40px rgb(0 0 0 / 30%);
-}
-
-.popup-close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-    line-height: 1;
-    padding: 4px;
-}
-
-.popup-close:hover {
-    color: #000;
-}
-
-.popup-body {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-}
-
-.popup-image {
-    width: 150px;
-    height: 150px;
-    object-fit: contain;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
-
-.popup-details {
-    flex: 1;
-}
-
-.popup-title {
-    font-size: 1.25rem;
-    font-weight: bold;
-    margin: 0 0 8px;
-    color: #333;
-}
-
-.popup-description {
-    font-size: 0.9rem;
-    color: #666;
-    margin: 0 0 12px;
-    line-height: 1.4;
-}
-
-.popup-price {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: var(--brand-primary, #87ac3a);
-    margin: 0 0 16px;
-}
-
-.popup-add-to-cart-btn {
-    background: var(--brand-primary, #87ac3a);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-}
-
-.popup-add-to-cart-btn:hover {
-    background: var(--brand-primary-hover, #6b8e23);
-    transform: translateY(-1px);
-}
-
-.popup-add-to-cart-btn:active {
-    transform: translateY(0);
-}
-
-.hidden {
-    display: none;
-}
 
 /* Room Title/Description Overlay Styles - Centralized */
 .room-title-overlay {
@@ -355,33 +228,6 @@ html, body {
     margin: 0;
     font-size: 0.9rem;
     color: white;
-    line-height: 1.4;
-    font-weight: 500;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
-}
-
-/* Responsive Design for Room Modal Iframe */
-@media (width <= 768px) {
-    .popup-content {
-        max-width: 90%;
-        padding: 16px;
-    }
-    
-    .popup-body {
-        flex-direction: column;
-        gap: 16px;
-    }
-    
-    .popup-image {
-        width: 100%;
-        height: 200px;
-    }
-    
-    .room-title-overlay {
-        top: 0.5rem;
-        right: 0.5rem;
-        max-width: 250px;
-        padding: 12px;
         font-size: 0.9rem;
     }
     
@@ -393,7 +239,7 @@ html, body {
     .room-title-overlay .room-description {
         font-size: 0.8rem;
     }
-}
+
 
 /* Direct Content Area Styles (alternative to iframe) */
 .room-modal-content-area {

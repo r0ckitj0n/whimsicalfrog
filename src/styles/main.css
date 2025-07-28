@@ -1,0 +1,32 @@
+/* Whimsical Frog - Main CSS Entry Point for Vite */
+
+/* 
+  This file replaces the legacy bundle-css.php script.
+  It imports all necessary CSS files in the correct priority order.
+  Vite will process this file to create the single, unified stylesheet for the site.
+*/
+
+/* 1. Core & Variables */
+@import './z-index.css'; /* Z-Index is foundational */
+@import '../../css/core/variables.css';
+
+/* 2. Utilities & Standard Classes */
+@import '../../css/core/utilities.css'; /* Core utilities */
+@import '../../css/utilities.css'; /* Main, larger utilities file */
+@import '../../css/standard-classes.css';
+
+/* 3. Base Components & Layout */
+@import '../../css/components.css';
+
+/* 4. Page-Specific & Feature Styles */
+@import '../../css/backgrounds.css'; /* CRITICAL: For background images */
+@import '../../css/pages.css';
+@import '../../css/modals.css'; /* CRITICAL: For modal styles */
+@import '../../css/room-iframe.css';
+
+/* 5. Generated & Overrides */
+@import '../../css/generated_css_live.css';
+
+/* 6. Responsive Styles (should come last) */
+@import '../../css/responsive/mobile.css';
+

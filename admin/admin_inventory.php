@@ -919,10 +919,10 @@ $messageType = $_GET['type'] ?? '';
                 <input type="number" id="costItemCost" name="cost" step="0.01" min="0" class="block w-full border border-gray-300 rounded" required>
             </div>
             <div class="flex justify-between items-center">
-                <button type="button" id="deleteCostItem" class="py-1.5 bg-red-500 text-white rounded hover:bg-red-600 text-sm hidden">Delete</button>
+                <button type="button" id="deleteCostItem" class="py-1\.5 bg-red-500 text-white rounded hover:bg-red-600 text-sm hidden">Delete</button>
                 <div class="flex space-x-2">
-                    <button type="button" class="py-1.5 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm" onclick="closeCostModal()">Cancel</button>
-                    <button type="submit" class="brand-button py-1.5 rounded text-sm">Save</button>
+                    <button type="button" class="py-1\.5 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm" onclick="closeCostModal()">Cancel</button>
+                    <button type="submit" class="brand-button py-1\.5 rounded text-sm">Save</button>
                 </div>
             </div>
         </form>
@@ -934,8 +934,8 @@ $messageType = $_GET['type'] ?? '';
         <h2 class="text-md font-bold text-gray-800">Confirm Delete</h2>
         <p class="text-sm text-gray-600">Are you sure you want to delete this item? This action cannot be undone.</p>
         <div class="flex justify-end space-x-2">
-            <button type="button" class="py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm close-modal-button">Cancel</button>
-            <button type="button" id="confirmDeleteBtn" class="py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Delete</button>
+            <button type="button" class="py-1\.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm close-modal-button">Cancel</button>
+            <button type="button" id="confirmDeleteBtn" class="py-1\.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Delete</button>
         </div>
     </div>
 </div>
@@ -1081,8 +1081,8 @@ $messageType = $_GET['type'] ?? '';
         <h2 class="text-md font-bold text-red-600">Delete Cost Item</h2>
         <p class="text-sm text-gray-600" id="deleteCostConfirmText">Are you sure you want to delete this cost item? This action cannot be undone.</p>
         <div class="flex justify-end space-x-2">
-            <button type="button" class="py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" onclick="closeCostDeleteModal()">Cancel</button>
-            <button type="button" id="confirmCostDeleteBtn" class="py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+            <button type="button" class="py-1\.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" onclick="closeCostDeleteModal()">Cancel</button>
+            <button type="button" id="confirmCostDeleteBtn" class="py-1\.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
                 <span class="button-text">Delete</span>
                 <span class="loading-spinner hidden">⏳</span>
             </button>
@@ -4868,8 +4868,8 @@ function displayCurrentImages(images, isViewModal = false) {
         imageDiv.style.marginRight = '15px';// Action buttons only for edit modal
         const actionButtons = isViewModal ? '' : `
             <div class="flex gap-1 flex-wrap">
-                        ${!image.is_primary ? `<button type="button" data-action="set-primary" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
-                                  <button type="button" data-action="delete-image" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
+                        ${!image.is_primary ? `<button type="button" data-action="set-primary" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs py-0\.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
+                                  <button type="button" data-action="delete-image" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs py-0\.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
             </div>
         `;
         
@@ -6910,7 +6910,7 @@ function addAIContentBadges(tabNames) {
         const tabButton = document.getElementById(tabName + 'Tab');
         if (tabButton && !tabButton.querySelector('.ai-badge')) {
             const badge = document.createElement('span');
-            badge.className = 'ai-badge ml-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded';
+            badge.className = 'ai-badge ml-1 bg-green-500 text-white text-xs px-1 py-0\.5 rounded';
             badge.textContent = 'AI';
             badge.title = 'Contains AI-generated content';
             tabButton.appendChild(badge);

@@ -1,3 +1,11 @@
+// Import all necessary stylesheets for Vite
+import '../css/components.css';
+import '../css/pages.css';
+import '../css/utilities.css';
+import '../css/backgrounds.css';
+import '../css/modals.css';
+import '../css/standard-classes.css';
+
 /**
  * WhimsicalFrog Core System
  * Provides module management and initialization

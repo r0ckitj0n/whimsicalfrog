@@ -1,0 +1,72 @@
+/* Room Background Classes - Centralized */
+.room-bg-main {
+    --bg-webp: url('../images/backgrounds/background_room_main.webp');
+    --bg-png: url('../images/backgrounds/background_room_main.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-landing {
+    --bg-webp: url('../images/backgrounds/background_home.webp');
+    --bg-png: url('../images/backgrounds/background_home.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room1 {
+    --bg-webp: url('../images/backgrounds/background_room1.webp');
+    --bg-png: url('../images/backgrounds/background_room1.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room2 {
+    --bg-webp: url('../images/backgrounds/background_room2.webp');
+    --bg-png: url('../images/backgrounds/background_room2.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room3 {
+    --bg-webp: url('../images/backgrounds/background_room3.webp');
+    --bg-png: url('../images/backgrounds/background_room3.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room4 {
+    --bg-webp: url('../images/backgrounds/background_room4.webp');
+    --bg-png: url('../images/backgrounds/background_room4.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room5 {
+    --bg-webp: url('../images/backgrounds/background_room5.webp');
+    --bg-png: url('../images/backgrounds/background_room5.png');
+    background-image: var(--bg-webp);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Fallback PNG images for browsers without WebP support */
+.no-webp .room-bg-main { background-image: var(--bg-png); }
+.no-webp .room-bg-landing { background-image: var(--bg-png); }
+.no-webp .room-bg-room1 { background-image: var(--bg-png); }
+.no-webp .room-bg-room2 { background-image: var(--bg-png); }
+.no-webp .room-bg-room3 { background-image: var(--bg-png); }
+.no-webp .room-bg-room4 { background-image: var(--bg-png); }
+.no-webp .room-bg-room5 { background-image: var(--bg-png); }

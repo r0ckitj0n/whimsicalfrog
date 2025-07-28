@@ -9,6 +9,10 @@ error_reporting(E_ALL);
 
 // Include database configuration
 require_once 'api/config.php'; // Corrected path for root directory file
+require_once 'includes/auth_helper.php';
+
+// Require admin authentication for email campaign management
+AuthHelper::requireAdmin();
 
 // Default response
 $response = ['success' => false, 'message' => 'An unknown error occurred.'];

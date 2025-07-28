@@ -4,155 +4,133 @@
  * Generated: 2025-07-01 23:22:19
  */
 
-console.log('Loading room-coordinate-manager.js...');
+// Simple and Direct Room Coordinate System
+// No complex scaling, just direct pixel positioning
 
-// Ensure apiGet helper exists inside iframe context
-if (typeof window.apiGet !== 'function') {
-  window.apiGet = async function(endpoint) {
-    const url = window.location.origin + (endpoint.startsWith('/') ? endpoint : `/api/${endpoint}`);
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Request failed (${res.status})`);
+console.log('🎯 Loading Simple Room Coordinate System...');
+
+// Simple coordinate system that just scales from database size to display size
+function simpleCoordinateSystem(roomType) {
+    console.log(`🎯 Initializing simple coordinate system for ${roomType}...`);
+    
+    // Get room overlay wrapper
+    const roomWrapper = document.querySelector('.room-overlay-wrapper');
+    if (!roomWrapper) {
+        console.error('❌ Room overlay wrapper not found');
+        return;
     }
-    return res.json();
-  };
+    
+    console.log('✅ Room overlay wrapper found:', roomWrapper);
+    
+    // Fetch coordinates from database
+    console.log(`📡 Fetching coordinates from /api/get_room_coordinates.php?room_type=${roomType}`);
+    fetch(`/api/get_room_coordinates.php?room_type=${roomType}`)
+        .then(response => {
+            console.log('📡 Response received:', response.status, response.statusText);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📡 Data received:', data);
+            if (data.success && data.coordinates) {
+                console.log('✅ Coordinates loaded:', data.coordinates);
+                applySimpleCoordinates(data.coordinates);
+            } else {
+                console.error('❌ Failed to load coordinates:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error loading coordinates:', error);
+        });
 }
 
-// Room coordinate management system
-window.RoomCoordinates = window.RoomCoordinates || {};
-
-// Initialize room coordinates system
-function initializeRoomCoordinates() {
-    // Only initialize if we have the necessary window variables
-    if (!window.ROOM_TYPE || !window.originalImageWidth || !window.originalImageHeight) {
-        console.warn('Room coordinate system not initialized - missing required variables');
-        return;
-    }
+// Apply coordinates with simple scaling
+function applySimpleCoordinates(coordinates) {
+    console.log('🎯 Applying simple coordinates...');
     
-    // Set up DOM references
-    window.roomOverlayWrapper = document.querySelector('.room-overlay-wrapper');
+    // Get current screen size to determine scale
+    const screenWidth = window.innerWidth;
+    let scaleFactor;
     
-    if (!window.roomOverlayWrapper) {
-        console.warn('Room overlay wrapper not found');
-        return;
-    }
-    
-    // Load coordinates from database
-    loadRoomCoordinatesFromDatabase();
-}
-
-function updateAreaCoordinates() {
-    if (!window.roomOverlayWrapper) {
-        console.error('Room overlay wrapper not found for scaling.');
-        return;
-    }
-    
-    if (!window.baseAreas || !window.baseAreas.length) {
-        console.log('No base areas to position');
-        return;
-    }
-
-    const wrapperWidth = window.roomOverlayWrapper.offsetWidth;
-    const wrapperHeight = window.roomOverlayWrapper.offsetHeight;
-
-    const wrapperAspectRatio = wrapperWidth / wrapperHeight;
-    const imageAspectRatio = window.originalImageWidth / window.originalImageHeight;
-
-    let renderedImageWidth, renderedImageHeight;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    if (wrapperAspectRatio > imageAspectRatio) {
-        renderedImageHeight = wrapperHeight;
-        renderedImageWidth = renderedImageHeight * imageAspectRatio;
-        offsetX = (wrapperWidth - renderedImageWidth) / 2;
+    if (screenWidth <= 480) {
+        scaleFactor = 400 / 1280; // Mobile: 0.3125
+    } else if (screenWidth <= 768) {
+        scaleFactor = 800 / 1280; // Tablet: 0.625
     } else {
-        renderedImageWidth = wrapperWidth;
-        renderedImageHeight = renderedImageWidth / imageAspectRatio;
-        offsetY = (wrapperHeight - renderedImageHeight) / 2;
+        scaleFactor = 1600 / 1280; // Desktop: 1.25
     }
-
-    const scaleX = renderedImageWidth / window.originalImageWidth;
-    const scaleY = renderedImageHeight / window.originalImageHeight;
-
-    window.baseAreas.forEach(areaData => {
-        const areaElement = window.roomOverlayWrapper.querySelector(areaData.selector);
-        if (areaElement) {
-            areaElement.style.top = (areaData.top * scaleY + offsetY) + 'px';
-            areaElement.style.left = (areaData.left * scaleX + offsetX) + 'px';
-            areaElement.style.width = (areaData.width * scaleX) + 'px';
-            areaElement.style.height = (areaData.height * scaleY) + 'px';
+    
+    console.log(`📐 Screen width: ${screenWidth}px, Scale factor: ${scaleFactor}`);
+    
+    // Apply to each item
+    coordinates.forEach((coord, index) => {
+        const item = document.getElementById(`item-icon-${index}`);
+        if (item) {
+            const top = Math.round(coord.top * scaleFactor);
+            const left = Math.round(coord.left * scaleFactor);
+            const width = Math.round(coord.width * scaleFactor);
+            const height = Math.round(coord.height * scaleFactor);
+            
+            item.style.position = 'absolute';
+            item.style.top = `${top}px`;
+            item.style.left = `${left}px`;
+            item.style.width = `${width}px`;
+            item.style.height = `${height}px`;
+            
+            console.log(`✅ Item ${index}: positioned at ${left},${top} (${width}x${height})`);
+        } else {
+            console.warn(`⚠️ Item ${index} not found`);
         }
     });
-    
-    console.log(`Updated ${window.baseAreas.length} room areas for ${window.ROOM_TYPE}`);
-    // Re-bind item hover/click events now that areas are placed
-    if (typeof window.setupPopupEventsAfterPositioning === 'function') {
-        window.setupPopupEventsAfterPositioning();
-    }
 }
 
-async function loadRoomCoordinatesFromDatabase() {
-    try {
-        const data = await apiGet(`/api/get_room_coordinates.php?room_type=${window.ROOM_TYPE}`);
-        
-        
-        
-        if (data.success && data.coordinates && data.coordinates.length > 0) {
-            window.baseAreas = data.coordinates;
-            console.log(`Loaded ${data.coordinates.length} coordinates from database for ${window.ROOM_TYPE}`);
-            
-            // Initialize coordinates after loading
-            updateAreaCoordinates();
-            
-            // Set up resize handler
-            let resizeTimeout;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(updateAreaCoordinates, 100);
-            });
-        } else {
-            console.error(`No active room map found in database for ${window.ROOM_TYPE}`);
-            // Fallback to any existing baseAreas set by room helper
-            if (window.baseAreas && window.baseAreas.length > 0) {
-                console.log(`Using fallback coordinates for ${window.ROOM_TYPE}`);
-                updateAreaCoordinates();
-            }
-        }
-    } catch (error) {
-        console.error(`Error loading ${window.ROOM_TYPE} coordinates from database:`, error);
-        // Fallback to any existing baseAreas set by room helper
-        if (window.baseAreas && window.baseAreas.length > 0) {
-            console.log(`Using fallback coordinates for ${window.ROOM_TYPE} due to database error`);
-            updateAreaCoordinates();
-        }
-    }
-}
+// Make it globally available
+window.simpleCoordinateSystem = simpleCoordinateSystem;
 
-// Make functions available globally
-window.updateAreaCoordinates = updateAreaCoordinates;
-window.loadRoomCoordinatesFromDatabase = loadRoomCoordinatesFromDatabase;
-window.initializeRoomCoordinates = initializeRoomCoordinates;
-
-function waitForWrapperAndUpdate(retries = 10) {
-    if (!window.roomOverlayWrapper) {
-        window.roomOverlayWrapper = document.querySelector('.room-overlay-wrapper');
-    }
-    if (window.roomOverlayWrapper && window.roomOverlayWrapper.offsetWidth > 0 && window.roomOverlayWrapper.offsetHeight > 0) {
-        updateAreaCoordinates();
-    } else if (retries > 0) {
-        setTimeout(() => waitForWrapperAndUpdate(retries - 1), 200);
-    } else {
-        console.warn('Room overlay wrapper size not ready after retries.');
-    }
-}
-
-// Auto-initialize when DOM is ready
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 DOM loaded, checking for room type...');
+    console.log('🎯 Available window variables:', {
+        ROOM_TYPE: window.ROOM_TYPE,
+        roomType: window.roomType,
+        roomNumber: window.roomNumber
+    });
+    
+    // Check if room type is set
     if (window.ROOM_TYPE) {
-        // Add a small delay to ensure room helper variables are set
-        setTimeout(initializeRoomCoordinates, 100);
+        console.log(`🎯 Room type found: ${window.ROOM_TYPE}`);
+        simpleCoordinateSystem(window.ROOM_TYPE);
+    } else if (window.roomType) {
+        console.log(`🎯 Room type found (fallback): ${window.roomType}`);
+        simpleCoordinateSystem(window.roomType);
+    } else {
+        console.log('⚠️ No room type found, waiting...');
+        // Try again after delay
+        setTimeout(() => {
+            console.log('🎯 Retrying after delay...');
+            console.log('🎯 Available window variables after delay:', {
+                ROOM_TYPE: window.ROOM_TYPE,
+                roomType: window.roomType,
+                roomNumber: window.roomNumber
+            });
+            if (window.ROOM_TYPE) {
+                console.log(`🎯 Room type found after delay: ${window.ROOM_TYPE}`);
+                simpleCoordinateSystem(window.ROOM_TYPE);
+            } else if (window.roomType) {
+                console.log(`🎯 Room type found after delay (fallback): ${window.roomType}`);
+                simpleCoordinateSystem(window.roomType);
+            } else {
+                console.error('❌ Still no room type found');
+            }
+        }, 500);
     }
 });
 
-console.log('room-coordinate-manager.js loaded successfully');
+// Handle window resize
+window.addEventListener('resize', function() {
+    console.log('🎯 Window resized, reapplying coordinates...');
+    if (window.ROOM_TYPE) {
+        simpleCoordinateSystem(window.ROOM_TYPE);
+    } else if (window.roomType) {
+        simpleCoordinateSystem(window.roomType);
+    }
+});

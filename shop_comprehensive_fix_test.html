@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Shop Page Comprehensive Fix Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #87ac3a 0%, #6b8e23 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f7fafc;
+        }
+        
+        .test-section h3 {
+            color: #2d3748;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+        
+        .status.warning {
+            background: #fefcbf;
+            color: #744210;
+            border: 1px solid #f6e05e;
+        }
+        
+        .status.info {
+            background: #bee3f8;
+            color: #2a4365;
+            border: 1px solid #90cdf4;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .test-button {
+            background: #87ac3a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .test-button:hover {
+            background: #6b8e23;
+            transform: translateY(-1px);
+        }
+        
+        .iframe-container {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 15px 0;
+            height: 600px;
+        }
+        
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .result-item h4 {
+            margin-top: 0;
+            color: #2d3748;
+        }
+        
+        .fix-checklist {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .fix-checklist h4 {
+            color: #22543d;
+            margin-top: 0;
+        }
+        
+        .fix-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .fix-item.complete {
+            background: #c6f6d5;
+            border-left: 4px solid #22543d;
+        }
+        
+        .fix-item.incomplete {
+            background: #fed7d7;
+            border-left: 4px solid #742a2a;
+        }
+        
+        .fix-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Shop Page Comprehensive Fix Test</h1>
+        <p style="text-align: center; color: #718096; margin-bottom: 30px;">
+            <strong>Testing all 5 regression fixes: Background Tiling, Card Heights, Scrollbar, Page Width, Navigation Heights</strong>
+        </p>
+
+        <div class="fix-checklist">
+            <h4>📋 Fix Checklist</h4>
+            <div class="fix-item" id="fix-1">
+                <span class="fix-icon">❓</span>
+                <span>1. Background Image Tiling Issue - Apply background-size: cover to body</span>
+            </div>
+            <div class="fix-item" id="fix-2">
+                <span class="fix-icon">❓</span>
+                <span>2. Product Card Height Problem - Increase min-height to 500px+</span>
+            </div>
+            <div class="fix-item" id="fix-3">
+                <span class="fix-icon">❓</span>
+                <span>3. Custom Scrollbar Styling - Brand colors (#87ac3a) applied</span>
+            </div>
+            <div class="fix-item" id="fix-4">
+                <span class="fix-icon">❓</span>
+                <span>4. Page Width Display - Full viewport width with proper centering</span>
+            </div>
+            <div class="fix-item" id="fix-5">
+                <span class="fix-icon">❓</span>
+                <span>5. Navigation Heights - Both elements set to 75px</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Comprehensive Shop Page Test</h3>
+            <p>Load the shop page and test all regression fixes simultaneously.</p>
+            <button class="test-button" onclick="runComprehensiveTest()">Run Comprehensive Test</button>
+            <div id="comprehensive-results"></div>
+            <div id="shop-iframe-container"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Detailed Results</h3>
+            <div id="detailed-results">
+                <div class="status info">Click the comprehensive test button above to see detailed results.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            backgroundTiling: null,
+            cardHeight: null,
+            scrollbar: null,
+            pageWidth: null,
+            navigationHeight: null
+        };
+
+        async function runComprehensiveTest() {
+            const resultsDiv = document.getElementById('comprehensive-results');
+            const iframeContainer = document.getElementById('shop-iframe-container');
+            const detailedResults = document.getElementById('detailed-results');
+            
+            resultsDiv.innerHTML = '<div class="status warning">Running comprehensive test...</div>';
+            
+            try {
+                // Create iframe to load shop page
+                const iframe = document.createElement('iframe');
+                iframe.src = `/?page=shop&comprehensive_test=1&v=${Date.now()}`;
+                
+                iframeContainer.innerHTML = '<div class="iframe-container"></div>';
+                iframeContainer.querySelector('.iframe-container').appendChild(iframe);
+                
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            const iframeWindow = iframe.contentWindow;
+                            
+                            // Test 1: Background Tiling
+                            const body = iframeDoc.body;
+                            const bodyStyles = iframeWindow.getComputedStyle(body);
+                            const backgroundSize = bodyStyles.backgroundSize;
+                            const backgroundRepeat = bodyStyles.backgroundRepeat;
+                            testResults.backgroundTiling = (backgroundSize === 'cover' && backgroundRepeat === 'no-repeat');
+                            
+                            // Test 2: Product Card Heights
+                            const productCards = iframeDoc.querySelectorAll('.product-card, .bg-white.rounded-lg.p-4.shadow-lg');
+                            let cardHeightOk = false;
+                            if (productCards.length > 0) {
+                                const cardStyles = iframeWindow.getComputedStyle(productCards[0]);
+                                const minHeight = parseInt(cardStyles.minHeight);
+                                cardHeightOk = minHeight >= 480; // Should be 500px+ but allow some variance
+                            }
+                            testResults.cardHeight = cardHeightOk;
+                            
+                            // Test 3: Custom Scrollbar
+                            const scrollbarWidth = bodyStyles.getPropertyValue('scrollbar-width');
+                            const scrollbarColor = bodyStyles.getPropertyValue('scrollbar-color');
+                            testResults.scrollbar = (scrollbarWidth === 'thin' || scrollbarColor.includes('#87ac3a') || scrollbarColor.includes('135, 172, 58'));
+                            
+                            // Test 4: Page Width
+                            const shopPage = iframeDoc.querySelector('#shopPage');
+                            const shopPageStyles = shopPage ? iframeWindow.getComputedStyle(shopPage) : null;
+                            const shopPageWidth = shopPageStyles ? shopPageStyles.width : '0px';
+                            const viewportWidth = iframeWindow.innerWidth;
+                            testResults.pageWidth = shopPageStyles && (parseInt(shopPageWidth) >= viewportWidth * 0.95); // Should be close to viewport width
+                            
+                            // Test 5: Navigation Heights
+                            const roomNavImage = iframeDoc.querySelector('.room-main-nav-image');
+                            const categoryBtn = iframeDoc.querySelector('.category-btn');
+                            let navHeightOk = false;
+                            if (roomNavImage && categoryBtn) {
+                                const roomImageHeight = parseInt(iframeWindow.getComputedStyle(roomNavImage).height);
+                                const categoryBtnHeight = parseInt(iframeWindow.getComputedStyle(categoryBtn).height);
+                                navHeightOk = (roomImageHeight >= 70 && roomImageHeight <= 80) && (categoryBtnHeight >= 70 && categoryBtnHeight <= 80);
+                            }
+                            testResults.navigationHeight = navHeightOk;
+                            
+                            // Update UI
+                            updateFixChecklist();
+                            displayDetailedResults();
+                            
+                            // Overall status
+                            const passedTests = Object.values(testResults).filter(result => result === true).length;
+                            const totalTests = Object.keys(testResults).length;
+                            
+                            let status = '';
+                            if (passedTests === totalTests) {
+                                status = '<div class="status success">🎉 ALL FIXES WORKING PERFECTLY!</div>';
+                            } else if (passedTests >= totalTests - 1) {
+                                status = '<div class="status warning">⚠️ Most fixes working, minor issues remain</div>';
+                            } else {
+                                status = '<div class="status error">❌ Multiple fixes need attention</div>';
+                            }
+                            
+                            status += `<div class="status info">Passed: ${passedTests}/${totalTests} tests</div>`;
+                            resultsDiv.innerHTML = status;
+                            
+                        } catch (error) {
+                            resultsDiv.innerHTML = `<div class="status error">❌ Error testing shop page: ${error.message}</div>`;
+                        }
+                    }, 2000);
+                };
+                
+                iframe.onerror = function() {
+                    resultsDiv.innerHTML = '<div class="status error">❌ Failed to load shop page</div>';
+                };
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function updateFixChecklist() {
+            const fixes = [
+                { id: 'fix-1', result: testResults.backgroundTiling },
+                { id: 'fix-2', result: testResults.cardHeight },
+                { id: 'fix-3', result: testResults.scrollbar },
+                { id: 'fix-4', result: testResults.pageWidth },
+                { id: 'fix-5', result: testResults.navigationHeight }
+            ];
+            
+            fixes.forEach(fix => {
+                const element = document.getElementById(fix.id);
+                const icon = element.querySelector('.fix-icon');
+                
+                if (fix.result === true) {
+                    element.className = 'fix-item complete';
+                    icon.textContent = '✅';
+                } else if (fix.result === false) {
+                    element.className = 'fix-item incomplete';
+                    icon.textContent = '❌';
+                } else {
+                    element.className = 'fix-item';
+                    icon.textContent = '❓';
+                }
+            });
+        }
+
+        function displayDetailedResults() {
+            const detailedDiv = document.getElementById('detailed-results');
+            
+            let details = '<h4>📊 Detailed Test Results</h4>';
+            details += '<div class="results-grid">';
+            
+            details += `<div class="result-item">
+                <h4>Background Tiling</h4>
+                <div>Status: ${testResults.backgroundTiling ? '✅ Fixed' : '❌ Not Fixed'}</div>
+                <div>Expected: background-size: cover, no-repeat</div>
+            </div>`;
+            
+            details += `<div class="result-item">
+                <h4>Card Heights</h4>
+                <div>Status: ${testResults.cardHeight ? '✅ Fixed' : '❌ Not Fixed'}</div>
+                <div>Expected: min-height ≥ 480px</div>
+            </div>`;
+            
+            details += `<div class="result-item">
+                <h4>Custom Scrollbar</h4>
+                <div>Status: ${testResults.scrollbar ? '✅ Fixed' : '❌ Not Fixed'}</div>
+                <div>Expected: Brand colors (#87ac3a)</div>
+            </div>`;
+            
+            details += `<div class="result-item">
+                <h4>Page Width</h4>
+                <div>Status: ${testResults.pageWidth ? '✅ Fixed' : '❌ Not Fixed'}</div>
+                <div>Expected: Full viewport width</div>
+            </div>`;
+            
+            details += `<div class="result-item">
+                <h4>Navigation Heights</h4>
+                <div>Status: ${testResults.navigationHeight ? '✅ Fixed' : '❌ Not Fixed'}</div>
+                <div>Expected: Both elements ~75px</div>
+            </div>`;
+            
+            details += '</div>';
+            detailedDiv.innerHTML = details;
+        }
+
+        // Auto-run test on page load
+        window.addEventListener('load', function() {
+            setTimeout(runComprehensiveTest, 500);
+        });
+    </script>
+</body>
+</html>

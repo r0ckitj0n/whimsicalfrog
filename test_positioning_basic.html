@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Basic Positioning Test</title>
+    <link rel="stylesheet" href="/css/bundle.css">
+    <link rel="stylesheet" href="/css/room-iframe.css">
+    <style>
+        body { margin: 0; padding: 20px; }
+        .test-container {
+            width: 1280px;
+            height: 896px;
+            border: 2px solid #000;
+            position: relative;
+            background: #f0f0f0;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Basic Positioning Test</h1>
+    <p>This tests if the CSS positioning works at all with the current styles.</p>
+    
+    <div class="test-container">
+        <!-- Manually create product icons with the exact same structure as the API -->
+        <div class="room-product-icon area-1"
+             style="position: absolute !important; top: 332px !important; left: 104px !important; width: 121px !important; height: 137px !important; border: 3px solid red !important; background: rgba(255,255,0,0.7) !important; z-index: 1000 !important;"
+             data-debug-position="top:332 left:104 w:121 h:137">
+            <div style="padding: 10px; text-align: center; font-weight: bold;">ICON 1</div>
+        </div>
+        
+        <div class="room-product-icon area-2"
+             style="position: absolute !important; top: 345px !important; left: 289px !important; width: 92px !important; height: 122px !important; border: 3px solid red !important; background: rgba(255,255,0,0.7) !important; z-index: 1000 !important;"
+             data-debug-position="top:345 left:289 w:92 h:122">
+            <div style="padding: 10px; text-align: center; font-weight: bold;">ICON 2</div>
+        </div>
+        
+        <div class="room-product-icon area-3"
+             style="position: absolute !important; top: 347px !important; left: 385px !important; width: 83px !important; height: 122px !important; border: 3px solid red !important; background: rgba(255,255,0,0.7) !important; z-index: 1000 !important;"
+             data-debug-position="top:347 left:385 w:83 h:122">
+            <div style="padding: 10px; text-align: center; font-weight: bold;">ICON 3</div>
+        </div>
+        
+        <div class="room-product-icon area-4"
+             style="position: absolute !important; top: 344px !important; left: 474px !important; width: 90px !important; height: 125px !important; border: 3px solid red !important; background: rgba(255,255,0,0.7) !important; z-index: 1000 !important;"
+             data-debug-position="top:344 left:474 w:90 h:125">
+            <div style="padding: 10px; text-align: center; font-weight: bold;">ICON 4</div>
+        </div>
+        
+        <!-- Debug banner like the API generates -->
+        <div id="debug-items-count" style="position: absolute !important; top: 10px !important; left: 10px !important; background: blue !important; color: white !important; padding: 10px !important; z-index: 2000 !important; font-size: 16px !important; border: 2px solid white !important;">
+            MANUAL TEST - Items: 4 - DEBUG MODE
+        </div>
+    </div>
+    
+    <div style="margin: 20px auto; max-width: 1280px; background: white; padding: 20px; border: 1px solid #ccc;">
+        <h3>Expected Result:</h3>
+        <p>You should see:</p>
+        <ul>
+            <li>Blue debug banner at top-left (10px, 10px)</li>
+            <li>4 yellow boxes with red borders at different positions</li>
+            <li>ICON 1 at position (104px, 332px)</li>
+            <li>ICON 2 at position (289px, 345px)</li>
+            <li>ICON 3 at position (385px, 347px)</li>
+            <li>ICON 4 at position (474px, 344px)</li>
+        </ul>
+        
+        <button onclick="analyzePositions()">Analyze Current Positions</button>
+        <div id="analysis"></div>
+    </div>
+
+    <script>
+        function analyzePositions() {
+            const icons = document.querySelectorAll('.room-product-icon');
+            const debugBanner = document.getElementById('debug-items-count');
+            const analysis = document.getElementById('analysis');
+            
+            let result = '<h4>Position Analysis:</h4>';
+            
+            // Check debug banner
+            if (debugBanner) {
+                const rect = debugBanner.getBoundingClientRect();
+                result += `<p><strong>Debug Banner:</strong> ${rect.left.toFixed(1)}, ${rect.top.toFixed(1)}</p>`;
+            }
+            
+            // Check each icon
+            icons.forEach((icon, index) => {
+                const rect = icon.getBoundingClientRect();
+                const computedStyle = getComputedStyle(icon);
+                const expectedPos = icon.dataset.debugPosition;
+                
+                result += `
+                    <div style="border: 1px solid #ddd; padding: 5px; margin: 5px 0;">
+                        <strong>Icon ${index + 1}:</strong><br>
+                        Expected: ${expectedPos}<br>
+                        Computed CSS: top: ${computedStyle.top}, left: ${computedStyle.left}<br>
+                        Actual position: ${rect.left.toFixed(1)}, ${rect.top.toFixed(1)}<br>
+                        Size: ${rect.width.toFixed(1)} x ${rect.height.toFixed(1)}
+                    </div>
+                `;
+            });
+            
+            // Check for overlapping
+            let overlapping = false;
+            for (let i = 0; i < icons.length; i++) {
+                for (let j = i + 1; j < icons.length; j++) {
+                    const rect1 = icons[i].getBoundingClientRect();
+                    const rect2 = icons[j].getBoundingClientRect();
+                    
+                    if (Math.abs(rect1.top - rect2.top) < 10 && Math.abs(rect1.left - rect2.left) < 10) {
+                        overlapping = true;
+                        result += `<p style="color: red;"><strong>❌ Icons ${i+1} and ${j+1} are overlapping!</strong></p>`;
+                    }
+                }
+            }
+            
+            if (!overlapping) {
+                result += '<p style="color: green;"><strong>✅ No overlapping detected</strong></p>';
+            }
+            
+            analysis.innerHTML = result;
+        }
+        
+        // Auto-analyze on load
+        window.addEventListener('load', () => {
+            setTimeout(analyzePositions, 500);
+        });
+    </script>
+</body>
+</html>

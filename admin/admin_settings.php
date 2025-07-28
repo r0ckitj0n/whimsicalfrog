@@ -48,6 +48,20 @@ window.addEventListener('DOMContentLoaded', function () {
 .settings-section{background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:1rem;display:flex;flex-direction:column;height:100%;}
 .settings-section .section-content{display:flex;flex-direction:column;gap:.5rem;margin-top:1rem;}
 .admin-settings-button{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;font-size:.875rem;}
+
+/* Logging Status Modal Styles */
+.logging-status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:20px;}
+.status-section{background:#f8f9fa;border-radius:8px;padding:15px;border:1px solid #e9ecef;}
+.status-section h3{margin:0 0 15px 0;color:#495057;font-size:1.1rem;font-weight:600;}
+.status-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e9ecef;}
+.status-item:last-child{border-bottom:none;}
+.status-label{font-weight:500;color:#6c757d;}
+.status-value{font-weight:600;}
+.status-enabled{color:#28a745;}
+.status-disabled{color:#dc3545;}
+.modal-actions{display:flex;gap:10px;justify-content:center;padding-top:20px;border-top:1px solid #e9ecef;}
+.loading-spinner{text-align:center;padding:20px;color:#666;}
+.error-message{color:#dc3545;text-align:center;padding:20px;}
 </style>
 <div class="settings-page">
     <div class="settings-grid">
@@ -213,6 +227,13 @@ window.addEventListener('DOMContentLoaded', function () {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
           </svg>
           <span class="button-text">Fix Sample Email</span>
+        </button>
+
+        <button onclick="openLoggingStatusModal()" class="btn btn-primary btn-block admin-settings-button" id="loggingStatusBtn">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          <span class="button-text">Logging Status</span>
         </button>
         
         <button id="receiptSettingsBtn" onclick="openReceiptSettingsModal()" class="btn btn-primary btn-block admin-settings-button">
@@ -7135,6 +7156,191 @@ function loadEmailHistoryPage(direction) {
     } else if (direction === 'next') {
         loadEmailHistory(currentEmailHistoryPage + 1);
     }
+}
+
+// Logging Status Modal Functions
+window.openLoggingStatusModal = function openLoggingStatusModal() {
+    console.log('Opening logging status modal...');
+
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('loggingStatusModal');
+    if (!modal) {
+        createLoggingStatusModal();
+        modal = document.getElementById('loggingStatusModal');
+    }
+
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('show');
+
+    // Load logging status data
+    loadLoggingStatus();
+};
+
+function createLoggingStatusModal() {
+    const modalHtml = `
+        <div id="loggingStatusModal" class="admin-modal-overlay hidden" onclick="closeLoggingStatusModal()">
+            <div class="admin-modal-content technical-section" onclick="event.stopPropagation()">
+                <div class="admin-modal-header section-header">
+                    <h2 class="modal-title">📊 Logging System Status</h2>
+                    <button onclick="closeLoggingStatusModal()" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="loggingStatusContent">
+                        <div class="loading-spinner">Loading logging status...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeLoggingStatusModal() {
+    const modal = document.getElementById('loggingStatusModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.classList.add('hidden');
+    }
+}
+
+function loadLoggingStatus() {
+    const contentDiv = document.getElementById('loggingStatusContent');
+    if (!contentDiv) return;
+
+    contentDiv.innerHTML = '<div class="loading-spinner">Loading logging status...</div>';
+
+    fetch('/api/website_logs.php?action=get_status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayLoggingStatus(data.status);
+            } else {
+                contentDiv.innerHTML = '<div class="error-message">Failed to load logging status: ' + (data.error || 'Unknown error') + '</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading logging status:', error);
+            contentDiv.innerHTML = '<div class="error-message">Error loading logging status: ' + error.message + '</div>';
+        });
+}
+
+function displayLoggingStatus(status) {
+    const contentDiv = document.getElementById('loggingStatusContent');
+    if (!contentDiv) return;
+
+    const html = `
+        <div class="logging-status-grid">
+            <div class="status-section">
+                <h3>📁 File Logging</h3>
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span class="status-value ${status.file_logging.enabled ? 'status-enabled' : 'status-disabled'}">
+                        ${status.file_logging.enabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Directory:</span>
+                    <span class="status-value">${status.file_logging.directory || 'Not configured'}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Total Size:</span>
+                    <span class="status-value">${status.file_logging.total_size || '0 MB'}</span>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <h3>🗄️ Database Logging</h3>
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span class="status-value ${status.database_logging.enabled ? 'status-enabled' : 'status-disabled'}">
+                        ${status.database_logging.enabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Primary Method:</span>
+                    <span class="status-value ${status.database_logging.primary ? 'status-enabled' : 'status-disabled'}">
+                        ${status.database_logging.primary ? 'Yes' : 'No'}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Error Logs:</span>
+                    <span class="status-value">${status.database_logging.error_logs || 0} records</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Analytics Logs:</span>
+                    <span class="status-value">${status.database_logging.analytics_logs || 0} records</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Admin Activity:</span>
+                    <span class="status-value">${status.database_logging.admin_activity_logs || 0} records</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Email Logs:</span>
+                    <span class="status-value">${status.database_logging.email_logs || 0} records</span>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <h3>⚙️ Configuration</h3>
+                <div class="status-item">
+                    <span class="status-label">SEO Logging:</span>
+                    <span class="status-value ${status.seo_logging ? 'status-enabled' : 'status-disabled'}">
+                        ${status.seo_logging ? 'Enabled' : 'Disabled'}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Admin Logging:</span>
+                    <span class="status-value ${status.admin_logging ? 'status-enabled' : 'status-disabled'}">
+                        ${status.admin_logging ? 'Enabled' : 'Disabled'}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Security Logging:</span>
+                    <span class="status-value ${status.security_logging ? 'status-enabled' : 'status-disabled'}">
+                        ${status.security_logging ? 'Enabled' : 'Disabled'}
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Retention Period:</span>
+                    <span class="status-value">${status.retention_days || 90} days</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button onclick="runLogCleanup()" class="btn btn-secondary">
+                🧹 Run Log Cleanup
+            </button>
+            <button onclick="downloadLogs()" class="btn btn-secondary">
+                📥 Download Logs
+            </button>
+        </div>
+    `;
+
+    contentDiv.innerHTML = html;
+}
+
+function runLogCleanup() {
+    if (!confirm('Are you sure you want to run log cleanup? This will remove old log files and database records.')) {
+        return;
+    }
+
+    fetch('/scripts/cleanup-logs.php', { method: 'POST' })
+        .then(response => response.text())
+        .then(result => {
+            alert('Log cleanup completed successfully!');
+            loadLoggingStatus(); // Refresh the status
+        })
+        .catch(error => {
+            console.error('Error running log cleanup:', error);
+            alert('Error running log cleanup: ' + error.message);
+        });
+}
+
+function downloadLogs() {
+    window.open('/api/website_logs.php?action=download', '_blank');
 }
 
 window.fixSampleEmail = function fixSampleEmail() {
@@ -19683,8 +19889,12 @@ function openGlobalColorSizeModal() {
     if (!modal) {
         createGlobalColorSizeModal();
     }
-    document.getElementById('globalColorSizeModal').style.display = 'block';
-    
+
+    // Use standardized modal system
+    const modalElement = document.getElementById('globalColorSizeModal');
+    modalElement.classList.remove('hidden');
+    modalElement.classList.add('show');
+
     // Ensure genders tab is active by default
     switchGlobalTab('genders');
     loadGlobalColorSizeData();
@@ -19692,11 +19902,11 @@ function openGlobalColorSizeModal() {
 
 function createGlobalColorSizeModal() {
     const modalHtml = `
-        <div id="globalColorSizeModal" class="modal" class="hidden">
-            <div class="modal-content" >
-                <div class="modal-header" >
-                    <h2 >👥 Gender, Size & Color Management</h2>
-                    <span class="close" onclick="closeGlobalColorSizeModal()" >&times;</span>
+        <div id="globalColorSizeModal" class="admin-modal-overlay hidden" onclick="closeGlobalColorSizeModal()">
+            <div class="admin-modal-content" onclick="event.stopPropagation()">
+                <div class="admin-modal-header section-header">
+                    <h2 class="modal-title">👥 Gender, Size & Color Management</h2>
+                    <button onclick="closeGlobalColorSizeModal()" class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="tabs-container">
@@ -19851,7 +20061,12 @@ function createGlobalColorSizeModal() {
 }
 
 function closeGlobalColorSizeModal() {
-    document.getElementById('globalColorSizeModal').style.display = 'none';
+    // Use standardized modal system
+    const modal = document.getElementById('globalColorSizeModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.classList.add('hidden');
+    }
 }
 
 function switchGlobalTab(tab) {

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Page Debug Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            border-bottom: 3px solid #87ac3a;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #f7fafc;
+        }
+        
+        .test-section h2 {
+            color: #2d3748;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.warning {
+            background-color: #fef5e7;
+            color: #744210;
+            border: 1px solid #f6e05e;
+        }
+        
+        .status.error {
+            background-color: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .fix-summary {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .test-link {
+            display: inline-block;
+            background-color: #87ac3a;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            margin: 10px 10px 10px 0;
+            transition: background-color 0.3s ease;
+        }
+        
+        .test-link:hover {
+            background-color: #6d8a2e;
+        }
+        
+        .debug-steps {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .debug-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .debug-steps li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 Shop Page Debug Test</h1>
+        <p><strong>Debugging CSS conflicts and verifying fixes for centering and header button issues.</strong></p>
+
+        <!-- Problem Identification -->
+        <div class="test-section">
+            <h2>🚨 Problem Identified: CSS Rule Conflicts</h2>
+            <div class="status error">
+                <strong>ROOT CAUSE:</strong> Multiple conflicting #productsGrid CSS rules in bundle.css
+            </div>
+            
+            <div class="fix-summary">
+                <strong>Conflicting Rules Found:</strong>
+                <div class="code-block">
+/* CONFLICT 1: Lines 23488-23535 - OLD CSS GRID RULES */
+#productsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    max-width: 1360px; /* This was preventing centering! */
+}
+
+/* CONFLICT 2: Lines 23578+ - NEW FLEXBOX RULES */
+#productsGrid {
+    display: flex !important;
+    justify-content: center !important;
+    max-width: none !important;
+}
+                </div>
+                
+                <strong>The Problem:</strong>
+                <ul>
+                    <li>Old CSS Grid rules were appearing BEFORE new Flexbox rules</li>
+                    <li>Max-width constraints were preventing proper centering</li>
+                    <li>CSS specificity conflicts despite !important declarations</li>
+                    <li>Browser was applying both sets of rules inconsistently</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Solution Implemented -->
+        <div class="test-section">
+            <h2>✅ Solution: Remove Conflicting Rules</h2>
+            <div class="status success">
+                <strong>FIXED:</strong> Removed all conflicting CSS Grid rules from bundle.css
+            </div>
+            
+            <div class="fix-summary">
+                <strong>Changes Made:</strong>
+                <div class="code-block">
+/* REMOVED: Lines 23488-23535 - Old CSS Grid rules */
+/* REMOVED: Lines 810-813 - Mobile CSS Grid rules */
+/* REMOVED: Lines 818-821 - Small mobile CSS Grid rules */
+
+/* KEPT: Clean Flexbox implementation */
+#productsGrid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 1.5rem !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    max-width: none !important;
+}
+                </div>
+                
+                <strong>Why This Fixes The Problem:</strong>
+                <ul>
+                    <li>✅ No more conflicting CSS Grid vs Flexbox rules</li>
+                    <li>✅ No max-width constraints preventing centering</li>
+                    <li>✅ Clean, single set of layout rules</li>
+                    <li>✅ justify-content: center can work properly</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Header Button Fix -->
+        <div class="test-section">
+            <h2>🔧 Header Button Styling Fix</h2>
+            <div class="status success">
+                <strong>FIXED:</strong> Replaced overly broad button CSS rule with targeted selectors
+            </div>
+            
+            <div class="fix-summary">
+                <strong>Button Rule Fix:</strong>
+                <div class="code-block">
+/* BEFORE: Too broad, affected header buttons */
+button, input[type="button"], .button, [class*="btn"] {
+  border: none !important;
+}
+
+/* AFTER: Specific targeting only */
+.product-card button, 
+.add-to-cart-btn, 
+.category-btn,
+.room-modal-button,
+.back-to-main-button,
+input[type="submit"].form-button,
+.modal button:not(.header-nav-button) {
+  border: none !important;
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Busting -->
+        <div class="test-section">
+            <h2>🔄 Cache Busting Applied</h2>
+            <div class="status warning">
+                <strong>IMPORTANT:</strong> CSS file timestamp updated to force browser refresh
+            </div>
+            
+            <div class="debug-steps">
+                <strong>If changes still don't appear, try these steps:</strong>
+                <ol>
+                    <li><strong>Hard Refresh:</strong> Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)</li>
+                    <li><strong>Clear Browser Cache:</strong> Open DevTools → Network tab → Disable cache</li>
+                    <li><strong>Incognito Mode:</strong> Test in a private/incognito browser window</li>
+                    <li><strong>Force CSS Reload:</strong> Add ?v=timestamp to CSS URL in HTML</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Verification Steps -->
+        <div class="test-section">
+            <h2>🧪 Verification Checklist</h2>
+            <div class="status warning">
+                <strong>TEST:</strong> Follow these steps to verify the fixes
+            </div>
+            
+            <div class="fix-summary">
+                <strong>Step-by-Step Verification:</strong>
+                <ol>
+                    <li><strong>Open Shop Page:</strong> Navigate to shop.php</li>
+                    <li><strong>Check Grid Centering:</strong> Product cards should be centered across full viewport width</li>
+                    <li><strong>Test Responsive:</strong> Resize browser window - cards should stay centered</li>
+                    <li><strong>Check Header Button:</strong> "main_room" button should have clean styling</li>
+                    <li><strong>Inspect CSS:</strong> Open DevTools → Elements → Check #productsGrid styles</li>
+                    <li><strong>Verify Flexbox:</strong> Should show "display: flex" and "justify-content: center"</li>
+                </ol>
+                
+                <div class="debug-steps">
+                    <strong>DevTools Debugging:</strong>
+                    <ol>
+                        <li>Right-click on product grid → Inspect Element</li>
+                        <li>Look for #productsGrid in Elements panel</li>
+                        <li>Check Computed styles - should show "display: flex"</li>
+                        <li>Verify "justify-content: center" is applied</li>
+                        <li>Check for any overridden styles (crossed out)</li>
+                    </ol>
+                </div>
+                
+                <a href="/shop.php" class="test-link">🛍️ Test Shop Page Now</a>
+                <a href="/shop.php" class="test-link" target="_blank">🔍 Open in New Tab</a>
+            </div>
+        </div>
+
+        <!-- Expected Results -->
+        <div class="test-section">
+            <h2>🎯 Expected Results</h2>
+            <div class="status success">
+                <strong>SUCCESS CRITERIA:</strong> Both issues should now be resolved
+            </div>
+            
+            <div class="fix-summary">
+                <strong>What You Should See:</strong>
+                <ul>
+                    <li>✅ Product cards perfectly centered across full browser width</li>
+                    <li>✅ No more left-side bunching or alignment issues</li>
+                    <li>✅ Cards maintain centering when browser is resized</li>
+                    <li>✅ Header "main_room" button has clean, original styling</li>
+                    <li>✅ No unwanted backgrounds or borders on header buttons</li>
+                    <li>✅ Card internal padding preserved (1rem inside cards)</li>
+                    <li>✅ Responsive layout works on all device sizes</li>
+                </ul>
+                
+                <strong>If Issues Persist:</strong>
+                <ul>
+                    <li>🔍 Check browser DevTools for CSS conflicts</li>
+                    <li>🔄 Try hard refresh or incognito mode</li>
+                    <li>📱 Test on different screen sizes</li>
+                    <li>🛠️ Verify bundle.css is being loaded correctly</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

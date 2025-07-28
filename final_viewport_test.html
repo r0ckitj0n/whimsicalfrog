@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Viewport Width Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .measurement {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Final Viewport Width Test</h1>
+    
+    <div class="test-container">
+        <h2>Shop Page Viewport Utilization Test</h2>
+        <div id="results">
+            <div class="info">Loading shop page and testing viewport width utilization...</div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Live Shop Page</h2>
+        <iframe id="shopFrame" src="http://localhost:8000/?page=shop"></iframe>
+    </div>
+
+    <script>
+        function runFinalTest() {
+            const iframe = document.getElementById('shopFrame');
+            const resultsDiv = document.getElementById('results');
+            
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const mainElement = iframeDoc.getElementById('mainContent');
+                    const shopPage = iframeDoc.getElementById('shopPage');
+                    const productsGrid = iframeDoc.getElementById('productsGrid');
+                    
+                    if (!mainElement || !shopPage || !productsGrid) {
+                        resultsDiv.innerHTML = `
+                            <div class="error">
+                                <strong>❌ ERROR:</strong> Required elements not found.
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // Get viewport and element measurements
+                    const viewportWidth = iframe.contentWindow.innerWidth;
+                    const mainWidth = mainElement.offsetWidth;
+                    const shopPageWidth = shopPage.offsetWidth;
+                    const gridWidth = productsGrid.offsetWidth;
+                    
+                    // Get computed styles
+                    const mainStyles = iframe.contentWindow.getComputedStyle(mainElement);
+                    const shopStyles = iframe.contentWindow.getComputedStyle(shopPage);
+                    const gridStyles = iframe.contentWindow.getComputedStyle(productsGrid);
+                    
+                    // Check key properties
+                    const mainPadding = mainStyles.padding;
+                    const mainPaddingLeft = parseFloat(mainStyles.paddingLeft) || 0;
+                    const mainPaddingRight = parseFloat(mainStyles.paddingRight) || 0;
+                    const totalMainPadding = mainPaddingLeft + mainPaddingRight;
+                    
+                    const gridMaxWidth = gridStyles.maxWidth;
+                    const hasMaxWidthConstraint = gridMaxWidth !== 'none' && !gridMaxWidth.includes('100%');
+                    
+                    // Calculate utilization
+                    const mainUtilization = (mainWidth / viewportWidth) * 100;
+                    const shopUtilization = (shopPageWidth / viewportWidth) * 100;
+                    const gridUtilization = (gridWidth / viewportWidth) * 100;
+                    
+                    // Determine success criteria
+                    const isMainFullWidth = mainUtilization >= 95;
+                    const isGridFullWidth = gridUtilization >= 85; // Allow some padding
+                    const hasNoPaddingConstraint = totalMainPadding <= 10; // Allow minimal padding
+                    const hasNoMaxWidthConstraint = !hasMaxWidthConstraint;
+                    
+                    const overallSuccess = isMainFullWidth && isGridFullWidth && hasNoPaddingConstraint && hasNoMaxWidthConstraint;
+                    
+                    let statusHTML = '';
+                    if (overallSuccess) {
+                        statusHTML = `
+                            <div class="success">
+                                <strong>🎉 SUCCESS:</strong> Viewport width fix is working! Shop page is using full viewport width.
+                            </div>
+                        `;
+                    } else {
+                        statusHTML = `
+                            <div class="error">
+                                <strong>❌ ISSUE PERSISTS:</strong> Shop page is still not using full viewport width.
+                            </div>
+                        `;
+                    }
+                    
+                    resultsDiv.innerHTML = statusHTML + `
+                        <h3>Detailed Analysis:</h3>
+                        <div class="measurement">🖥️ Viewport Width: ${viewportWidth}px</div>
+                        <div class="measurement">📦 Main Container Width: ${mainWidth}px (${mainUtilization.toFixed(1)}% of viewport)</div>
+                        <div class="measurement">🏪 Shop Page Width: ${shopPageWidth}px (${shopUtilization.toFixed(1)}% of viewport)</div>
+                        <div class="measurement">🎯 Products Grid Width: ${gridWidth}px (${gridUtilization.toFixed(1)}% of viewport)</div>
+                        
+                        <h3>Constraint Analysis:</h3>
+                        <div class="measurement">
+                            ${hasNoPaddingConstraint ? '✅' : '❌'} Main Padding: ${mainPadding} (Total: ${totalMainPadding}px)
+                        </div>
+                        <div class="measurement">
+                            ${hasNoMaxWidthConstraint ? '✅' : '❌'} Grid Max-Width: ${gridMaxWidth}
+                        </div>
+                        <div class="measurement">
+                            ${isMainFullWidth ? '✅' : '❌'} Main Container Full Width: ${isMainFullWidth ? 'YES' : 'NO'}
+                        </div>
+                        <div class="measurement">
+                            ${isGridFullWidth ? '✅' : '❌'} Products Grid Full Width: ${isGridFullWidth ? 'YES' : 'NO'}
+                        </div>
+                        
+                        <h3>CSS Properties:</h3>
+                        <div class="measurement">Main Position: ${mainStyles.position}</div>
+                        <div class="measurement">Main Box-Sizing: ${mainStyles.boxSizing}</div>
+                        <div class="measurement">Shop Position: ${shopStyles.position}</div>
+                        <div class="measurement">Shop Left: ${shopStyles.left}</div>
+                        <div class="measurement">Shop Margin-Left: ${shopStyles.marginLeft}</div>
+                        <div class="measurement">Grid Display: ${gridStyles.display}</div>
+                        <div class="measurement">Grid Grid-Template-Columns: ${gridStyles.gridTemplateColumns}</div>
+                    `;
+                    
+                } catch (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            <strong>❌ ERROR:</strong> Could not access iframe content. ${error.message}
+                        </div>
+                    `;
+                }
+            };
+        }
+
+        // Run test when page loads
+        runFinalTest();
+        
+        // Re-run test every 3 seconds to catch any dynamic changes
+        setInterval(runFinalTest, 3000);
+    </script>
+</body>
+</html>

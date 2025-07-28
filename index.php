@@ -93,9 +93,9 @@ try {
         throw $e;
     }
 
-    // Fetch items data with comprehensive field mapping
+    // Fetch items data with comprehensive field mapping including custom button text (live items only)
     $stmt = $pdo->query('SELECT sku, sku AS inventoryId, name AS productName, stockLevel, retailPrice, description,
-                                category AS productType FROM items ORDER BY category, name');
+                                category AS productType, custom_button_text FROM items WHERE status = "live" ORDER BY category, name');
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($products && is_array($products)) {
@@ -165,7 +165,7 @@ if ($page === 'landing') {
     }
 }
 
-$isFullscreenPage = in_array($page, ['landing']);
+$isFullscreenPage = in_array($page, ['landing', 'room_main']);
 if ($isFullscreenPage) {
     $bodyClass .= ' body-fullscreen-layout';
 }
@@ -276,72 +276,83 @@ $backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$ba
 <?php endif; ?>
 
     <!- Main Application Script ->
-    
+
+    <?php if ($page === 'shop'): ?>
+    <!-- PURE INLINE CSS FOR SHOP PAGE SCROLLBAR -->
+    <style>
+        body.shop-page::-webkit-scrollbar {
+            width: 16px !important;
+            background: rgba(135, 172, 58, 0.1) !important;
+        }
+
+        body.shop-page::-webkit-scrollbar-thumb {
+            background: #87ac3a !important;
+            border-radius: 8px !important;
+            transition: background-color 0.3s ease !important;
+        }
+
+        body.shop-page::-webkit-scrollbar-thumb:hover {
+            background: #6b8e23 !important;
+        }
+
+        body.shop-page::-webkit-scrollbar-track {
+            background: rgba(135, 172, 58, 0.1) !important;
+            border-radius: 8px !important;
+        }
+    </style>
+    <?php endif; ?>
 
 </head>
-<body <?php echo $backgroundStyle; ?> class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>">
-<!- Main Navigation ->
+<body <?php echo $backgroundStyle; ?> class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>"
+    <?php if ($page === 'shop'): ?>
+        style="
+            scrollbar-width: thin !important;
+            scrollbar-color: #87ac3a rgba(135, 172, 58, 0.3) !important;
+        "
+    <?php endif; ?>>
+<!-- Universal Page Header -->
 <?php if ($page !== 'landing'): ?>
-<nav class="main-nav site-header">
-    <div class="header-container">
-        <div class="header-content">
-            <!- Logo and Tagline ->
-            <div class="header-left">
-                <a href="/?page=landing" class="logo-link">
-                    <?php echo getImageTag('images/logos/logo_whimsicalfrog.png', 'Whimsical Frog', 'header-logo'); ?>
-                    <span class="logo-text">Whimsical Frog</span>
-                </a>
-                <span class="logo-tagline">Discover unique custom crafts, made with love.</span>
-            </div>
-            
-            <!- Search Bar ->
-            <?php if ($showSearchBar): ?>
-            <div class="header-center">
-                <div class="search-container">
-        <div class="search-input-container">
-                    <input type="text" id="headerSearchInput" placeholder="Search products..." 
-                           class="search-bar"
-                           data-focus-action="handleFormFocus"
-                           data-blur-action="handleFormBlur">
-                    <div class="search-icon">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-            <?php else: ?>
-                <div class="header-center"></div>
-            <?php endif; ?>
-            
-            <!- Navigation Links ->
-            <div class="header-right">
-                    <?php if ($isAdmin): ?>
-                        <a href="/?page=admin" class="nav-link">Manage</a>
-                    <?php endif; ?>
-                    <a href="/?page=shop" class="nav-link">Shop</a>
-                    <?php if ($isLoggedIn): ?>
-                        <span class="welcome-message">
-                            <a href="/?page=account_settings" class="nav-link"><?php echo htmlspecialchars($welcomeMessage); ?></a>
-                        </span>
-                        <a href="/logout.php" class="nav-link">Logout</a>
-                    <?php else: ?>
-                        <a href="/?page=login" class="nav-link">Login</a>
-                    <?php endif; ?>
-                    <a href="/?page=cart" class="nav-link cart-link">
-                        <div class="flex items-center space-x-1 md:space-x-2">
-                            <span id="cartCount" class="text-sm font-medium whitespace-nowrap"><?php echo $cartCount; ?> items</span>
-                            <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <span id="cartTotal" class="text-sm font-medium whitespace-nowrap hidden md:inline"><?php echo $formattedCartTotal; ?></span>
-                        </div>
-                    </a>
-                </div>
-        </div>
-    </div>
-</nav>
-<?php endif; ?>
+<?php
+// Configure header for current page
+$header_config = [
+    'show_search' => $showSearchBar,
+    'show_cart' => true,
+    'show_user_menu' => true,
+    'show_logo' => true,
+    'logo_text' => 'Whimsical Frog',
+    'logo_tagline' => ($page === 'room_main') ? 'Discover unique custom crafts, made with love.' : 'Enchanted Treasures',
+    'logo_image' => 'images/logos/logo_whimsicalfrog.png',
+    'navigation_items' => [
+        ['label' => 'Shop', 'url' => '/?page=shop', 'active' => ($page === 'shop')],
+    ],
+    'search_placeholder' => ($page === 'room_main') ? 'Search products...' : 'Search magical items...'
+];
+
+// Room main image link moved to individual page content areas instead of header
+// This was causing background styling conflicts in the header navigation
+/*
+// Add Rooms image link for non-room_main pages
+if ($page !== 'room_main') {
+    $header_config['navigation_items'][] = [
+        'label' => '<picture><source srcset="images/signs/sign_main.webp" type="image/webp"><img src="images/signs/sign_main.png" alt="Rooms" class="nav-rooms-image"></picture>',
+        'url' => '/?page=room_main',
+        'active' => false,
+        'is_image' => true
+    ];
+}
+*/
+
+// Add admin link for admin users
+if (function_exists('isAdmin') && isAdmin()) {
+    array_unshift($header_config['navigation_items'], [
+        'label' => 'Manage',
+        'url' => '/?page=admin',
+        'active' => (strpos($page, 'admin') === 0)
+    ]);
+}
+
+include 'components/header_template.php';
+endif; ?>
 
 <!- Main Content Area ->
 <?php
@@ -356,7 +367,34 @@ if (!file_exists($pageFile)) {
         <?php include $pageFile; ?>
     </div>
 <?php else: ?>
-    <main class="md:p-4 lg:p-6 cottage-bg" id="mainContent" <?php echo $backgroundStyle; ?>>
+    <main class="md:p-4 lg:p-6 cottage-bg page-content" id="mainContent"
+    <?php if ($page === 'shop'): ?>
+        style="
+            padding: 0 !important;
+            margin: 0 !important;
+            margin-top: calc(80px + 10px) !important;
+            background-size: cover !important;
+            background-repeat: no-repeat !important;
+            background-position: center center !important;
+            background-attachment: fixed !important;
+            min-height: calc(100vh - 90px) !important;
+            width: 100% !important;
+            max-width: none !important;
+            box-sizing: border-box !important;
+            <?php
+            // Get the background image from the existing background style
+            if (isset($backgroundStyle) && !empty($backgroundStyle)) {
+                // Extract background-image from $backgroundStyle
+                preg_match('/background-image:\s*url\([^)]+\)/', $backgroundStyle, $matches);
+                if (!empty($matches[0])) {
+                    echo $matches[0] . ' !important; ';
+                }
+            }
+            ?>
+        "
+    <?php else: ?>
+        <?php echo $backgroundStyle; ?>
+    <?php endif; ?>>
         <?php
         // Use resolved $pageFile unless admin routing overrides
 
@@ -376,6 +414,8 @@ if (!file_exists($pageFile)) {
     ?>
     </main>
 <?php endif; ?>
+
+
 
 <!- Product Modal ->
 <div id="productModal" class="modal">
@@ -458,7 +498,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <script>window.WF_BUNDLE_LOADED = true;</script>
 <script src="js/api-client.js?v=<?php echo filemtime('js/api-client.js'); ?>"></script>
     <script src="js/bundle.js?v=<?php echo filemtime('js/bundle.js'); ?>"></script>
-    <script src="js/main-app.js?v=<?php echo filemtime('js/main-app.js'); ?>"></script>
+    <script src="js/main-application.js?v=<?php echo filemtime('js/main-application.js'); ?>"></script>
     <script src="js/room-modal-manager.js?v=<?php echo filemtime('js/room-modal-manager.js'); ?>"></script>
     <!-- Dynamic Background Loader -->
     <script src="js/dynamic-background-loader.js?v=<?php echo filemtime('js/dynamic-background-loader.js'); ?>"></script>

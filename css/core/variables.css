@@ -26,6 +26,15 @@
   --error: #ef4444;
   --info: #3b82f6;
   
+  /* Header Colors - Based on backup styling */
+  --header-bg-light: #f8fafc;
+  --header-bg-accent: #e6f4d7;
+  --header-text-primary: #87ac3a;
+  --header-nav-bg-start: rgba(0,0,0,0.85);
+  --header-nav-bg-mid: rgba(0,0,0,0.55);
+  --header-nav-bg-end: rgba(0,0,0,0.01);
+  --header-shadow: 0 2px 8px rgba(0,0,0,0.04);
+
   /* Typography */
   --font-primary: 'Merienda', cursive;
   --font-secondary: 'Inter', sans-serif;
@@ -91,6 +100,7 @@
   --z-content-overlay: 10;
   --z-dropdown: 100;
   --z-navigation: 200;
+  --z-header: 1000;
   --z-modal-backdrop: 300;
   --z-modal: 400;
   --z-notification: 500;
@@ -101,6 +111,7 @@
   --z-room-modals: 2400;
   --z-room-modal-header: 2450;
   --z-room-buttons: 55;
+  --z-door-areas: 50;
 
   /* Layout Breakpoints (for JS usage) */
   --breakpoint-sm: 640px;

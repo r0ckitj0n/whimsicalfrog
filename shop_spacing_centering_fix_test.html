@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Page Spacing & Centering Fix Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            border-bottom: 3px solid #87ac3a;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #f7fafc;
+        }
+        
+        .test-section h2 {
+            color: #2d3748;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.info {
+            background-color: #bee3f8;
+            color: #2a4365;
+            border: 1px solid #90cdf4;
+        }
+        
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        .fix-summary {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .before, .after {
+            padding: 15px;
+            border-radius: 6px;
+            border: 2px solid;
+        }
+        
+        .before {
+            background-color: #fed7d7;
+            border-color: #fc8181;
+        }
+        
+        .after {
+            background-color: #c6f6d5;
+            border-color: #68d391;
+        }
+        
+        .test-link {
+            display: inline-block;
+            background-color: #87ac3a;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            margin: 10px 10px 10px 0;
+            transition: background-color 0.3s ease;
+        }
+        
+        .test-link:hover {
+            background-color: #6d8a2e;
+        }
+        
+        @media (max-width: 768px) {
+            .before-after {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Shop Page Spacing & Centering Fix</h1>
+        <p><strong>Testing the fixes for product card internal padding and grid centering issues.</strong></p>
+
+        <!-- Card Spacing Fixes -->
+        <div class="test-section">
+            <h2>📦 Product Card Internal Spacing Fixes</h2>
+            <div class="status success">
+                <strong>FIXED:</strong> Added proper padding and spacing inside product cards
+            </div>
+            
+            <div class="fix-summary">
+                <strong>Card Padding Implementation:</strong>
+                <div class="code-block">
+/* Fix missing padding inside product cards */
+#shopPage .product-card .flex.flex-col {
+    padding: 1rem !important; /* Add comfortable padding around all card content */
+}
+
+/* Ensure proper spacing for card content elements */
+#shopPage .product-card .flex.flex-col > * {
+    margin-bottom: 0.75rem; /* Add consistent spacing between elements */
+}
+
+/* Specific spacing adjustments for better readability */
+#shopPage .product-card h3 {
+    margin-bottom: 0.5rem !important; /* Title spacing */
+}
+
+#shopPage .product-card .text-xs.text-gray-500 {
+    margin-bottom: 0.5rem !important; /* Category spacing */
+}
+
+#shopPage .product-card p.text-gray-600 {
+    margin-bottom: 0.75rem !important; /* Description spacing */
+}
+                </div>
+                
+                <div class="before-after">
+                    <div class="before">
+                        <strong>❌ BEFORE:</strong><br>
+                        • Text and images touching card borders<br>
+                        • No breathing room around content<br>
+                        • Poor readability due to cramped layout<br>
+                        • Elements bunched together
+                    </div>
+                    <div class="after">
+                        <strong>✅ AFTER:</strong><br>
+                        • Comfortable 1rem padding around all content<br>
+                        • Proper spacing between title, description, price<br>
+                        • Better readability with breathing room<br>
+                        • Professional card layout
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Centering Fixes -->
+        <div class="test-section">
+            <h2>🎯 Grid Centering Enhancement</h2>
+            <div class="status success">
+                <strong>FIXED:</strong> Removed max-width constraints preventing proper centering
+            </div>
+            
+            <div class="fix-summary">
+                <strong>Centering Implementation:</strong>
+                <div class="code-block">
+/* Remove max-width constraints that may be preventing proper centering */
+#productsGrid {
+    width: 100% !important; /* Use full width of parent container */
+    margin: 0 auto !important; /* Center the grid */
+    justify-items: center !important; /* Center individual cards */
+    max-width: none !important; /* Remove max-width to allow full container utilization */
+}
+
+/* Override responsive max-width constraints for better centering */
+@media (min-width: 1024px) {
+    #productsGrid {
+        max-width: none !important; /* Remove width constraint for full centering */
+    }
+}
+                </div>
+                
+                <div class="before-after">
+                    <div class="before">
+                        <strong>❌ BEFORE:</strong><br>
+                        • Cards bunched toward left side<br>
+                        • Max-width constraints limiting centering<br>
+                        • Poor space utilization on wide screens<br>
+                        • Unbalanced layout appearance
+                    </div>
+                    <div class="after">
+                        <strong>✅ AFTER:</strong><br>
+                        • Grid perfectly centered across viewport<br>
+                        • Full container width utilization<br>
+                        • Balanced layout on all screen sizes<br>
+                        • Professional space distribution
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Implementation -->
+        <div class="test-section">
+            <h2>🔧 Technical Implementation Details</h2>
+            <div class="status info">
+                <strong>APPROACH:</strong> Targeted CSS fixes with !important declarations to override existing styles
+            </div>
+            
+            <div class="fix-summary">
+                <strong>Key Implementation Points:</strong>
+                <ul>
+                    <li><strong>Card Padding:</strong> Added 1rem padding to the inner flex container that holds all card content</li>
+                    <li><strong>Element Spacing:</strong> Consistent 0.75rem margin-bottom between card elements</li>
+                    <li><strong>Specific Adjustments:</strong> Fine-tuned spacing for titles, categories, descriptions, and stock info</li>
+                    <li><strong>Grid Centering:</strong> Removed max-width constraints that were preventing full-width centering</li>
+                    <li><strong>Responsive Override:</strong> Applied centering fixes across all breakpoints</li>
+                    <li><strong>!important Usage:</strong> Necessary to override existing Tailwind and component styles</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Testing Instructions -->
+        <div class="test-section">
+            <h2>🧪 Testing Instructions</h2>
+            <div class="status info">
+                <strong>VERIFICATION:</strong> Test the shop page across different screen sizes
+            </div>
+            
+            <div class="fix-summary">
+                <strong>What to Check:</strong>
+                <ol>
+                    <li><strong>Card Padding:</strong> Verify text and images have comfortable spacing from card edges</li>
+                    <li><strong>Content Readability:</strong> Check that titles, descriptions, and prices are easy to read</li>
+                    <li><strong>Grid Centering:</strong> Confirm the product grid is centered across the full viewport width</li>
+                    <li><strong>Wide Screen Test:</strong> Test on screens 1400px+ to ensure balanced layout</li>
+                    <li><strong>Responsive Behavior:</strong> Verify centering works on tablet and mobile sizes</li>
+                </ol>
+                
+                <a href="/shop.php" class="test-link">🛍️ Test Shop Page</a>
+                <a href="/shop.php" class="test-link" target="_blank">🔍 Open in New Tab</a>
+            </div>
+        </div>
+
+        <!-- Expected Results -->
+        <div class="test-section">
+            <h2>🎯 Expected Results</h2>
+            <div class="status success">
+                <strong>SUCCESS CRITERIA:</strong> Both spacing and centering issues resolved
+            </div>
+            
+            <div class="fix-summary">
+                <strong>Visual Improvements:</strong>
+                <ul>
+                    <li>✅ Product cards have comfortable internal padding around all content</li>
+                    <li>✅ Text and images no longer touch card borders</li>
+                    <li>✅ Consistent spacing between card elements (title, category, description, price)</li>
+                    <li>✅ Product grid is perfectly centered across the full viewport width</li>
+                    <li>✅ No more left-side crowding or bunching of cards</li>
+                    <li>✅ Balanced layout that utilizes screen space effectively</li>
+                    <li>✅ Professional appearance with proper visual hierarchy</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

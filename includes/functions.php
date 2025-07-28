@@ -21,11 +21,33 @@ require_once __DIR__ . '/file_helper.php';
 require_once __DIR__ . '/email_helper.php';
 require_once __DIR__ . '/stock_manager.php';
 require_once __DIR__ . '/auth_helper.php';
+require_once __DIR__ . '/admin_logger.php';
+require_once __DIR__ . '/logging_config.php';
 
-// Initialize database logging system
+// Initialize comprehensive logging system
 try {
+    // Initialize logging configuration
+    $loggingConfig = LoggingConfig::initializeLogging();
+    $fileConfig = $loggingConfig['file_logging'];
+
+    // Initialize Logger with application log file and comprehensive levels
+    Logger::init($fileConfig['files']['application'], $fileConfig['levels']);
+
+    // Initialize database logging (primary logging method)
     DatabaseLogger::init();
-    ErrorLogger::init(); // Re-enabled after fixing underlying issues
+    ErrorLogger::init();
+    AdminLogger::init();
+
+    // Log system initialization
+    Logger::info('Comprehensive logging system initialized', [
+        'file_logging' => $fileConfig['enabled'],
+        'database_logging' => $loggingConfig['database_logging']['primary'],
+        'admin_logging' => $loggingConfig['retail_admin_logging']['enabled'],
+        'seo_logging' => $loggingConfig['seo_logging']['enabled'],
+        'security_logging' => $loggingConfig['security_logging']['enabled'],
+        'logs_directory' => $fileConfig['directory']
+    ]);
+
 } catch (Exception $e) {
     error_log("Failed to initialize logging system: " . $e->getMessage());
 }

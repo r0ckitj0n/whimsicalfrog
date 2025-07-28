@@ -359,18 +359,32 @@ HTML;
      */
     private function getItemImagePath($item)
     {
-        // Try multiple image path options
+        // Use the centralized image helper function if available
+        if (function_exists('getPrimaryItemImage')) {
+            $primaryImage = getPrimaryItemImage($item['sku'] ?? '');
+            if ($primaryImage && !empty($primaryImage['image_path'])) {
+                return $primaryImage['image_path'];
+            }
+        }
+
+        // Fallback to manual checking with proper file paths
         $imagePaths = [
             $item['image'] ?? null,
             $item['imageUrl'] ?? null,
             "images/items/{$item['sku']}A.webp",
             "images/items/{$item['sku']}A.png",
+            "images/items/{$item['sku']}.webp",
+            "images/items/{$item['sku']}.png",
             "images/placeholder.png"
         ];
 
         foreach ($imagePaths as $path) {
-            if ($path && file_exists($path)) {
-                return $path;
+            if ($path) {
+                // Check if path is absolute or relative
+                $fullPath = (strpos($path, '/') === 0) ? __DIR__ . '/..' . $path : __DIR__ . '/../' . $path;
+                if (file_exists($fullPath)) {
+                    return $path;
+                }
             }
         }
 

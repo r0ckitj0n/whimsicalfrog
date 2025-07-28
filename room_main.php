@@ -4,17 +4,62 @@
  * Now fullscreen with modal-based room navigation
  */
 
+// Redirect to index.php if accessed directly
+if (!defined('INCLUDED_FROM_INDEX')) {
+    header('Location: /?page=room_main');
+    exit;
+}
+
 // Include centralized functions
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/background_helpers.php';
+require_once __DIR__ . '/includes/auth.php';
+
+// Add debug mode flag
+$debugMode = isset($_GET['debug']) && $_GET['debug'] === '1';
+
+// Get user authentication status for header
+$isLoggedIn = isLoggedIn();
+$isAdmin = isAdmin();
+$userData = getCurrentUser() ?? [];
+$welcomeMessage = $isLoggedIn ? getUsername() : '';
+
+// Get cart information for header
+$cartCount = 0;
+$cartTotal = 0;
+if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+    foreach ($_SESSION['cart'] as $item) {
+        $cartCount += $item['quantity'] ?? 0;
+        $cartTotal += ($item['price'] ?? 0) * ($item['quantity'] ?? 0);
+    }
+}
+$formattedCartTotal = '$' . number_format($cartTotal, 2);
+
+// Database-driven search bar visibility for room_main (room_number = 1)
+$showSearchBar = true;
+try {
+    $pdo = Database::getInstance();
+    $stmt = $pdo->prepare("SELECT show_search_bar FROM room_settings WHERE room_number = 1 AND is_active = 1");
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $showSearchBar = $result ? (bool)$result['show_search_bar'] : true;
+} catch (PDOException $e) {
+    $showSearchBar = true; // Default to showing search bar on error
+}
+
+// Header configuration is handled by index.php
+// This file only provides the room_main specific data
+
 // Compute main room background URL via PHP
 $backgroundMain = get_active_background('room_main') ?: '/images/backgrounds/background_room_main.webp';
 
 ?>
 
+
+
 <!- Room main styles now managed by global CSS system (css/room-main.css) ->
 
-<section id="mainRoomPage" class="main-room-section" style="background-image: url('<?php echo htmlspecialchars($backgroundMain, ENT_QUOTES, 'UTF-8'); ?>') !important; background-size: cover;">
+<section id="mainRoomPage" class="main-room-section" data-bg-url="<?php echo htmlspecialchars($backgroundMain, ENT_QUOTES, 'UTF-8'); ?>">
 
 
 
@@ -55,60 +100,5 @@ try {
 ?>
 </section>
 
-<!- Room modal functionality handled by unified js/room-modal-manager.js ->
+<!-- Room modal system loaded globally in index.php -->
 
-<!- Main room functionality loaded by unified system ->
-
-<script>
-// Enhanced main room configuration for modal system
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🐸 Room Main: Initializing fullscreen mode');
-    
-    // Check door elements
-    const doorElements = document.querySelectorAll('.door-area');
-    console.log(`🚪 Found ${doorElements.length} door elements`);
-    
-    // Check main room background
-    const mainRoomSection = document.getElementById('mainRoomPage');
-    if (mainRoomSection) {
-        console.log('🖼️ Main room background loaded');
-    }
-    
-    // Configure main navigation
-    const mainNav = document.querySelector('nav.main-nav');
-    if (mainNav) {
-        mainNav.classList.add('site-header');
-        console.log('🧭 Navigation configured for room overlay');
-    }
-    
-    // CSS positioning handles all door positioning
-    // No JavaScript positioning needed - prevents repositioning swaps
-    console.log('🚪 Using CSS-only positioning to prevent door swapping');
-    
-    // Handle window resize - CSS positioning is responsive and doesn't need JavaScript
-    console.log('🚪 Door positioning is handled by CSS - no resize handling needed');
-    
-    // Set body to prevent scrolling
-    document.body.style.overflow = 'hidden';
-    
-    console.log('🐸 Room Main: Initialization complete');
-});
-
-// Clean up when leaving main room
-window.addEventListener('beforeunload', function() {
-    document.body.style.overflow = '';
-});
-</script> 
-<script>
-// Auto-open modal if URL specifies a room
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const modalRoom = urlParams.get('modal_room');
-    
-    if (modalRoom && window.roomModalManager) {
-        setTimeout(() => {
-            window.roomModalManager.show(modalRoom, false);
-        }, 500);
-    }
-});
-</script>

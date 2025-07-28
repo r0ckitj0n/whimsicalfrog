@@ -45,7 +45,7 @@ if (empty($adminName)) {
 $adminRole = $userData['role'] ?? 'Administrator';
 ?>
 
-<div class="admin-dashboard">
+<div class="admin-dashboard page-content">
 
 
 

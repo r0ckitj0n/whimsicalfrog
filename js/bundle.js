@@ -1,3 +1,146 @@
+// --- Start of js/whimsical-frog-core.js --- 
+
+/**
+ * WhimsicalFrog Core System
+ * Provides module management and initialization
+ */
+
+console.log('Loading WhimsicalFrog Core...');
+
+// Core system
+const WhimsicalFrog = {
+    modules: new Map(),
+    readyCallbacks: [],
+    initialized: false,
+    
+    // Register a module
+    registerModule: function(name, module) {
+        console.log(`📦 Registering module: ${name}`);
+        this.modules.set(name, module);
+        return this;
+    },
+    
+    // Add a module (alias for registerModule)
+    addModule: function(name, module) {
+        return this.registerModule(name, module);
+    },
+    
+    // Get a module
+    getModule: function(name) {
+        return this.modules.get(name);
+    },
+    
+    // Execute callback when ready
+    ready: function(callback) {
+        if (this.initialized) {
+            callback(this);
+        } else {
+            this.readyCallbacks.push(callback);
+        }
+        return this;
+    },
+    
+    // Initialize the system
+    init: function() {
+        if (this.initialized) return this;
+        
+        console.log('🐸 Initializing WhimsicalFrog Core...');
+        this.initialized = true;
+        
+        // Execute ready callbacks
+        this.readyCallbacks.forEach(callback => {
+            try {
+                callback(this);
+            } catch (error) {
+                console.error('Error in ready callback:', error);
+            }
+        });
+        
+        console.log('🐸 WhimsicalFrog Core initialized');
+        return this;
+    }
+};
+
+// Expose globally
+window.WhimsicalFrog = WhimsicalFrog;
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => WhimsicalFrog.init());
+} else {
+    WhimsicalFrog.init();
+}
+
+console.log('WhimsicalFrog Core loaded');
+
+
+// --- End of js/whimsical-frog-core.js --- 
+
+// --- Start of js/utils.js --- 
+
+/**
+ * Utility Functions
+ * Common utility functions used throughout the application
+ */
+
+console.log('Loading utils.js...');
+
+// Basic utility functions
+window.utils = {
+    // Debounce function
+    debounce: function(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+    
+    // Throttle function
+    throttle: function(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    },
+    
+    // Simple event emitter
+    createEventEmitter: function() {
+        const events = {};
+        return {
+            on: function(event, callback) {
+                if (!events[event]) events[event] = [];
+                events[event].push(callback);
+            },
+            emit: function(event, data) {
+                if (events[event]) {
+                    events[event].forEach(callback => callback(data));
+                }
+            },
+            off: function(event, callback) {
+                if (events[event]) {
+                    events[event] = events[event].filter(cb => cb !== callback);
+                }
+            }
+        };
+    }
+};
+
+console.log('Utils loaded');
+
+
+// --- End of js/utils.js --- 
+
 // --- Start of js/api-client.js --- 
 
 /*
@@ -979,8 +1122,42 @@ window.showValidationMessage = function(key, fallback) {
 
 // --- Start of js/global-popup.js --- 
 
-// Auto-generated barrel after split
-export * from './global-popup/index.js';
+/**
+ * Global Popup System
+ * Centralized popup management for all pages
+ */
+
+// Enhanced popup state management
+const popupState = {
+    currentProduct: null,
+    isVisible: false,
+    hideTimeout: null,
+    popupElement: null,
+    initialized: false,
+    isInRoomModal: false
+};
+
+// Global popup functions
+window.showGlobalPopup = function(element, item) {
+    console.log('Global popup system - showGlobalPopup called');
+    // Implementation would go here
+};
+
+window.hideGlobalPopup = function() {
+    console.log('Global popup system - hideGlobalPopup called');
+    // Implementation would go here
+};
+
+window.hideGlobalPopupImmediate = function() {
+    console.log('Global popup system - hideGlobalPopupImmediate called');
+    // Implementation would go here
+};
+
+// Initialize unified popup system
+if (typeof UnifiedPopupSystem !== 'undefined') {
+    const unifiedPopupSystem = new UnifiedPopupSystem();
+    window.unifiedPopupSystem = unifiedPopupSystem;
+}
 
 
 // --- End of js/global-popup.js --- 
@@ -2255,6 +2432,143 @@ document.body.addEventListener('click', function(e) {
 
 // --- End of js/room-helper.js --- 
 
+// --- Start of js/room-main.js --- 
+
+/**
+ * Room Main Page Initialization
+ * Handles background loading, door positioning, and modal integration
+ */
+
+console.log('Loading room-main.js...');
+
+class RoomMainManager {
+    constructor() {
+        this.initialized = false;
+        this.init();
+    }
+
+    init() {
+        if (this.initialized) return;
+        
+        console.log('🐸 Room Main: Initializing...');
+        
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setup());
+        } else {
+            this.setup();
+        }
+        
+        this.initialized = true;
+    }
+
+    setup() {
+        this.setupBackground();
+        this.setupDoors();
+        this.setupNavigation();
+        this.setupBodyStyles();
+        this.setupModalAutoOpen();
+        this.setupCleanup();
+        
+        console.log('🐸 Room Main: Initialization complete');
+    }
+
+    setupBackground() {
+        const mainRoomSection = document.getElementById('mainRoomPage');
+        if (mainRoomSection) {
+            const bgUrl = mainRoomSection.getAttribute('data-bg-url');
+            if (bgUrl) {
+                mainRoomSection.style.setProperty('--room-bg-url', `url('${bgUrl}')`);
+                console.log('🖼️ Main room background loaded:', bgUrl);
+            }
+        }
+    }
+
+    setupDoors() {
+        const doorElements = document.querySelectorAll('.door-area');
+        console.log(`🚪 Found ${doorElements.length} door elements`);
+        
+        // Ensure doors are clickable and properly positioned
+        doorElements.forEach((door, index) => {
+            door.style.cursor = 'pointer';
+            door.style.pointerEvents = 'auto';
+            
+            // Add accessibility
+            door.setAttribute('tabindex', '0');
+            door.setAttribute('role', 'button');
+            door.setAttribute('aria-label', `Open ${door.dataset.category || 'room'}`);
+            
+            // Add keyboard support
+            door.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    door.click();
+                }
+            });
+        });
+        
+        console.log('🚪 Door positioning and accessibility configured');
+    }
+
+    setupNavigation() {
+        const mainNav = document.querySelector('nav.main-nav');
+        if (mainNav) {
+            mainNav.classList.add('site-header');
+            console.log('🧭 Navigation configured for room overlay');
+        }
+    }
+
+    setupBodyStyles() {
+        // Set body to prevent scrolling in fullscreen mode
+        document.body.style.overflow = 'hidden';
+        console.log('🚪 Body styles configured for fullscreen mode');
+    }
+
+    setupModalAutoOpen() {
+        // Auto-open modal if URL specifies a room
+        const urlParams = new URLSearchParams(window.location.search);
+        const modalRoom = urlParams.get('modal_room');
+        
+        if (modalRoom) {
+            // Wait for room modal manager to be available
+            const checkModalManager = () => {
+                if (window.roomModalManager) {
+                    console.log(`🚪 Auto-opening modal for room: ${modalRoom}`);
+                    window.roomModalManager.show(modalRoom);
+                } else {
+                    setTimeout(checkModalManager, 100);
+                }
+            };
+            setTimeout(checkModalManager, 500);
+        }
+    }
+
+    setupCleanup() {
+        // Clean up when leaving main room
+        window.addEventListener('beforeunload', () => {
+            document.body.style.overflow = '';
+        });
+    }
+}
+
+// Initialize room main manager when this script loads
+const roomMainManager = new RoomMainManager();
+
+// Expose globally for debugging
+window.roomMainManager = roomMainManager;
+
+// Register with WhimsicalFrog module system if available
+if (window.WhimsicalFrog && typeof WhimsicalFrog.ready === 'function') {
+    WhimsicalFrog.ready(wf => {
+        wf.addModule('RoomMainManager', roomMainManager);
+    });
+}
+
+console.log('Room Main Manager loaded and initialized');
+
+
+// --- End of js/room-main.js --- 
+
 // --- Start of js/global-item-modal.js --- 
 
 /**
@@ -2678,15 +2992,14 @@ class RoomModalManager {
         this.currentRoomNumber = null;
         this.roomCache = new Map();
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.init());
-        } else {
-            this.init();
-        }
+        // Always initialize immediately
+        this.init();
     }
 
     init() {
         console.log('🚪 RoomModalManager initializing...');
+        // Expose manager globally for click handlers
+        window.roomModalManager = this;
         this.createModalStructure();
         this.setupEventListeners();
         this.preloadRoomContent();
@@ -2697,31 +3010,32 @@ class RoomModalManager {
             console.log('🚪 Using existing modal overlay found in DOM.');
             this.overlay = document.getElementById('roomModalOverlay');
             this.content = this.overlay.querySelector('.room-modal-container');
+            this.overlay.classList.add('z-room-modals');
             return;
         }
 
         console.log('🚪 Creating new modal overlay structure.');
         this.overlay = document.createElement('div');
         this.overlay.id = 'roomModalOverlay';
-        this.overlay.className = 'room-modal-overlay';
+        this.overlay.className = 'room-modal-overlay z-room-modals';
 
         this.content = document.createElement('div');
         this.content.className = 'room-modal-container';
 
         const header = document.createElement('div');
-        header.className = 'room-modal-header';
+        header.className = 'room-modal-header z-room-modal-header';
 
         const backButtonContainer = document.createElement('div');
         backButtonContainer.className = 'back-button-container';
 
         const backButton = document.createElement('button');
-        backButton.className = 'room-modal-button';
+        backButton.className = 'room-modal-button z-room-buttons';
         backButton.innerHTML = '← Back';
         backButton.onclick = () => this.hide();
         backButtonContainer.appendChild(backButton);
 
         const titleOverlay = document.createElement('div');
-        titleOverlay.className = 'room-title-overlay';
+        titleOverlay.className = 'room-title-overlay z-room-modal-header';
         titleOverlay.id = 'roomTitleOverlay';
 
         const roomTitle = document.createElement('h1');
@@ -2772,6 +3086,7 @@ class RoomModalManager {
             }
         });
 
+        // Enable overlay click hiding for consistent modal behavior
         if (this.overlay) {
             this.overlay.addEventListener('click', (event) => {
                 if (event.target === this.overlay) {
@@ -2779,6 +3094,13 @@ class RoomModalManager {
                 }
             });
         }
+
+        // ESC key support for consistent modal behavior
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && this.overlay && this.overlay.classList.contains('show')) {
+                this.hide();
+            }
+        });
     }
 
     show(roomNumber) {
@@ -2817,6 +3139,8 @@ class RoomModalManager {
 
         console.log('🚪 Hiding room modal.');
         this.overlay.classList.remove('show');
+        // Hide overlay completely to allow underlying interactions
+        this.overlay.style.display = 'none';
         document.body.classList.remove('modal-open', 'room-modal-open');
         this.restoreLegacyModalElements();
 
@@ -2987,7 +3311,7 @@ iframe.srcdoc = htmlDoc;
         }
 
         try {
-            const data = await apiGet(`/api/load_room_content.php?room_number=${roomNumber}&modal=1`);
+            const data = await apiGet(`/api/load_room_content.php?room_number=${roomNumber}&modal=1&v=${Date.now()}`);
 
             if (data.success) {
                 this.roomCache.set(String(roomNumber), {
@@ -3011,6 +3335,12 @@ iframe.srcdoc = htmlDoc;
         if (legacyModal) legacyModal.style.display = 'none';
     }
 
+    // Clear cache for testing
+    clearCache() {
+        this.roomCache.clear();
+        console.log('🚪 Room cache cleared');
+    }
+
     restoreLegacyModalElements() {
         const legacyModal = document.getElementById('room-container');
         if (legacyModal) legacyModal.style.display = ''; // Restore original display
@@ -3018,17 +3348,158 @@ iframe.srcdoc = htmlDoc;
 }
 
 // Initialize the modal manager
-WhimsicalFrog.ready(wf => {
-    wf.addModule('RoomModalManager', new RoomModalManager());
-});
+// Instantiate RoomModalManager to set up modal overlay and event listeners
+const roomModalManager = new RoomModalManager();
+// Expose globally for direct access
+window.roomModalManager = roomModalManager;
+// Optionally register with WhimsicalFrog for module system
+if (window.WhimsicalFrog && typeof WhimsicalFrog.registerModule === 'function' && typeof WhimsicalFrog.ready === 'function') {
+    WhimsicalFrog.ready(wf => {
+        wf.addModule('RoomModalManager', roomModalManager);
+    });
+}
 
 
 // --- End of js/room-modal-manager.js --- 
 
 // --- Start of js/cart-system.js --- 
 
-// Auto-generated barrel after split
-export * from './cart-system/index.js';
+/**
+ * Cart System
+ * Centralized cart management system
+ */
+
+console.log('Loading cart system...');
+
+// Cart state
+const cartState = {
+    items: [],
+    total: 0,
+    count: 0,
+    initialized: false
+};
+
+// Cart methods (placeholder - would be implemented based on requirements)
+const cartMethods = {
+    addItem: function(item) {
+        console.log('Cart: Adding item', item);
+        // Implementation would go here
+    },
+    removeItem: function(sku) {
+        console.log('Cart: Removing item', sku);
+        // Implementation would go here
+    },
+    updateItem: function(sku, quantity) {
+        console.log('Cart: Updating item', sku, quantity);
+        // Implementation would go here
+    },
+    clearCart: function() {
+        console.log('Cart: Clearing cart');
+        // Implementation would go here
+    },
+    getItems: function() {
+        return cartState.items;
+    },
+    getTotal: function() {
+        return cartState.total;
+    },
+    getCount: function() {
+        return cartState.count;
+    },
+    getState: function() {
+        return cartState;
+    },
+    loadCart: function() {
+        console.log('Cart: Loading cart from storage');
+        // Implementation would go here
+    },
+    updateCartDisplay: function() {
+        console.log('Cart: Updating cart display');
+        // Implementation would go here
+    },
+    setNotifications: function(enabled) {
+        console.log('Cart: Setting notifications', enabled);
+    },
+    showCurrentCartStatus: function() {
+        console.log('Cart: Showing current cart status');
+    },
+    showCartStatusToast: function() {
+        console.log('Cart: Showing cart status toast');
+    },
+    renderCart: function() {
+        console.log('Cart: Rendering cart');
+    },
+    checkout: function() {
+        console.log('Cart: Starting checkout');
+    },
+    createPaymentMethodModal: function() {
+        console.log('Cart: Creating payment method modal');
+    },
+    proceedToCheckout: function() {
+        console.log('Cart: Proceeding to checkout');
+    },
+    submitCheckout: function(paymentMethod, shippingMethod) {
+        console.log('Cart: Submitting checkout', paymentMethod, shippingMethod);
+    },
+    loadProfileAddress: function() {
+        console.log('Cart: Loading profile address');
+    },
+    toggleAddressFields: function() {
+        console.log('Cart: Toggling address fields');
+    }
+};
+
+// Initialize cart system
+function initializeCart() {
+    console.log('[Cart] Initializing cart system...');
+
+    // Load cart from localStorage
+    cartMethods.loadCart();
+
+    // Register global functions
+    registerGlobalFunctions();
+
+    // Update cart display
+    cartMethods.updateCartDisplay();
+
+    cartState.initialized = true;
+    console.log('[Cart] Cart system initialized');
+}
+
+// Register global functions
+function registerGlobalFunctions() {
+    // Main cart object
+    window.cart = {
+        addItem: (item) => cartMethods.addItem(item),
+        removeItem: (sku) => cartMethods.removeItem(sku),
+        updateItem: (sku, quantity) => cartMethods.updateItem(sku, quantity),
+        clearCart: () => cartMethods.clearCart(),
+        getItems: () => cartMethods.getItems(),
+        getTotal: () => cartMethods.getTotal(),
+        getCount: () => cartMethods.getCount(),
+        getState: () => cartMethods.getState()
+    };
+
+    // Global cart functions
+    window.addToCart = (item) => cartMethods.addItem(item);
+    window.removeFromCart = (sku) => cartMethods.removeItem(sku);
+    window.updateCartItem = (sku, quantity) => cartMethods.updateItem(sku, quantity);
+    window.clearCart = () => cartMethods.clearCart();
+    window.getCartItems = () => cartMethods.getItems();
+    window.getCartTotal = () => cartMethods.getTotal();
+    window.getCartCount = () => cartMethods.getCount();
+
+    console.log('[Cart] Global functions registered');
+}
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCart);
+} else {
+    initializeCart();
+}
+
+console.log('Cart system loaded');
 
 
 // --- End of js/cart-system.js --- 
@@ -3127,8 +3598,9 @@ export * from './cart-system/index.js';
         const imageUrl = `/images/${filename}`;
         const overlay = document.querySelector('.room-modal-overlay');
         if (overlay) {
+          // Set CSS variable for background image to work with room-modal.css
           overlay.style.setProperty('--dynamic-bg-url', `url('${imageUrl}')`);
-          this.WF.log(`[MainApplication] Modal background loaded for ${roomType}`);
+          this.WF.log(`[MainApplication] Modal background loaded for ${roomType}: ${imageUrl}`);
         }
       }
     } catch (err) {

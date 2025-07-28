@@ -3,6 +3,10 @@
 // Include the configuration file
 require_once 'api/config.php';
 
+// Require admin authentication for inventory management
+require_once 'includes/auth_helper.php';
+AuthHelper::requireAdmin();
+
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');

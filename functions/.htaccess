@@ -1,0 +1,20 @@
+# Security hardening for the /functions directory
+# -----------------------------------------------------------------------------
+# 1. Disable directory listing so visitors cannot browse file structure.
+Options -Indexes
+
+# 2. Protect this very file from outside access.
+<Files .htaccess>
+  Require all denied
+</Files>
+
+# 3. Block access to common sensitive file types
+<FilesMatch "\.(?:bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist|md|json|yml?|env)$">
+  Require all denied
+</FilesMatch>
+
+# 4. Functions directory contains admin processing scripts
+#    These should have their own authentication checks
+#    Allow access but rely on PHP-level authentication
+
+# End /functions/.htaccess

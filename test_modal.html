@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Modal Test</title>
+    <link href="css/bundle.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-door {
+            display: inline-block;
+            margin: 10px;
+            padding: 20px;
+            background: #87ac3a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-door:hover {
+            background: #6b8e23;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Room Modal Test</h1>
+        
+        <div class="status" id="status">
+            Loading...
+        </div>
+        
+        <h2>Test Doors</h2>
+        <div class="door-area test-door" data-room="1" data-category="Main Room">
+            Room 1 - Main Room
+        </div>
+        <div class="door-area test-door" data-room="2" data-category="Window Wraps">
+            Room 2 - Window Wraps
+        </div>
+        <div class="door-area test-door" data-room="3" data-category="Window Wraps">
+            Room 3 - Window Wraps
+        </div>
+        <div class="door-area test-door" data-room="4" data-category="Window Wraps">
+            Room 4 - Window Wraps
+        </div>
+        <div class="door-area test-door" data-room="5" data-category="Window Wraps">
+            Room 5 - Window Wraps
+        </div>
+        
+        <h2>Debug Info</h2>
+        <div id="debug"></div>
+    </div>
+
+    <script src="js/bundle.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const status = document.getElementById('status');
+            const debug = document.getElementById('debug');
+            
+            // Check if RoomModalManager is available
+            setTimeout(() => {
+                if (window.roomModalManager) {
+                    status.innerHTML = '✅ RoomModalManager loaded successfully';
+                    status.style.background = '#d4edda';
+                    status.style.color = '#155724';
+                } else {
+                    status.innerHTML = '❌ RoomModalManager not found';
+                    status.style.background = '#f8d7da';
+                    status.style.color = '#721c24';
+                }
+                
+                // Debug info
+                debug.innerHTML = `
+                    <p><strong>Window objects:</strong></p>
+                    <ul>
+                        <li>window.roomModalManager: ${typeof window.roomModalManager}</li>
+                        <li>window.WhimsicalFrog: ${typeof window.WhimsicalFrog}</li>
+                        <li>Door elements found: ${document.querySelectorAll('.door-area').length}</li>
+                    </ul>
+                `;
+            }, 1000);
+            
+            // Add click listeners for testing
+            document.querySelectorAll('.door-area').forEach(door => {
+                door.addEventListener('click', function() {
+                    console.log('Door clicked:', this.dataset.room);
+                    if (window.roomModalManager) {
+                        console.log('Calling roomModalManager.show()');
+                        window.roomModalManager.show(this.dataset.room);
+                    } else {
+                        console.error('RoomModalManager not available');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -38,15 +38,43 @@ export async function checkAndDisplaySalePrice(item, priceEl, unitPriceEl = null
   }
 }
 
-export function addSaleBadgeToCard(card, discount) {
+// Cache for badge content to avoid repeated API calls
+let saleBadgeCache = null;
+
+async function getSaleBadgeText() {
+  if (saleBadgeCache) return saleBadgeCache;
+
+  try {
+    const response = await fetch('/api/badge_content_manager.php?action=get_all&badge_type=sale');
+    const data = await response.json();
+
+    if (data.success && data.badges && data.badges.length > 0) {
+      // Get a weighted random badge text
+      const badges = data.badges.filter(b => b.active).sort((a, b) => b.weight - a.weight);
+      if (badges.length > 0) {
+        saleBadgeCache = badges[0].content; // Use highest weighted badge
+        return saleBadgeCache;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to fetch dynamic sale badge text:', error);
+  }
+
+  // Fallback to default
+  return 'SALE';
+}
+
+export async function addSaleBadgeToCard(card, discount) {
   if (!card) return;
   const pct = parseFloat(discount);
   if (isNaN(pct) || pct <= 0) return;
   const existing = card.querySelector('.sale-badge');
   if (existing) existing.remove();
+
+  const saleText = await getSaleBadgeText();
   const badge = document.createElement('div');
   badge.className = 'sale-badge';
-  badge.innerHTML = `<span class="sale-text">SALE</span><span class="sale-percentage">${Math.round(pct)}% OFF</span>`;
+  badge.innerHTML = `<span class="sale-text">${saleText}</span><span class="sale-percentage">${Math.round(pct)}% OFF</span>`;
   card.appendChild(badge);
 }
 
@@ -56,7 +84,7 @@ if (window.location.search.includes('page=shop')) {
     document.querySelectorAll('[data-sku]').forEach(async card => {
       const sku = card.getAttribute('data-sku');
       const sale = await checkItemSale(sku);
-      if (sale.isOnSale) addSaleBadgeToCard(card, sale.discountPercentage);
+      if (sale.isOnSale) await addSaleBadgeToCard(card, sale.discountPercentage);
     });
   });
 }

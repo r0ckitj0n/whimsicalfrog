@@ -8,6 +8,10 @@ ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
+// Require admin authentication for inventory management
+require_once 'includes/auth_helper.php';
+AuthHelper::requireAdmin();
+
 // Set up error logging to file instead of displaying
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/inventory_errors.log');

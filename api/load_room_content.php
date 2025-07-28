@@ -71,7 +71,10 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
     $items = [];
     if ($catId) {
         $stmt = $pdo->prepare(
-            "SELECT i.*, img.image_path, img.is_primary, img.alt_text
+            "SELECT i.*,
+                    COALESCE(img.image_path, i.imageUrl) as image_path,
+                    img.is_primary,
+                    img.alt_text
              FROM items i
              LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
              WHERE i.category = ? ORDER BY i.sku ASC"
@@ -91,24 +94,16 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
 
     ob_start(); ?>
     <div id="modalRoomPage" class="modal-room-page" data-room="<?php echo $roomNumber; ?>">
-        <?php
-            $bgFileName = "background_{$roomType}.webp";
-            $bgPath = file_exists(__DIR__ . '/../images/backgrounds/' . $bgFileName)
-                ? '/images/backgrounds/' . $bgFileName
-                : '/images/backgrounds/background_home.webp';
-      ?>
-      <div class="room-modal-iframe-container" style="background-image: url('<?php echo htmlspecialchars($bgPath, ENT_QUOTES, 'UTF-8'); ?>'); background-size: cover; background-position: center;">
+      <div class="room-modal-iframe-container">
         <div class="room-overlay-wrapper room-modal-content-wrapper">
-          <div id="debug-items-count">Items: <?php echo count($items); ?></div>
+          <!-- Room content loaded -->
           <?php foreach ($items as $i => $it):
             $idx = $i + 1;
             $c = $coords[$i] ?? ['top'=>0,'left'=>0,'width'=>80,'height'=>80];
           ?>
             <div class="room-product-icon area-<?php echo $idx; ?>"
-                 style="position:absolute; top:<?php echo $c['top']; ?>px;
-                        left:<?php echo $c['left']; ?>px;
-                        width:<?php echo $c['width']; ?>px;
-                        height:<?php echo $c['height']; ?>px;">
+                 style="position: absolute !important; top: <?php echo $c['top']; ?>px !important; left: <?php echo $c['left']; ?>px !important; width: <?php echo $c['width']; ?>px !important; height: <?php echo $c['height']; ?>px !important;"
+                 data-debug-position="top:<?php echo $c['top']; ?> left:<?php echo $c['left']; ?> w:<?php echo $c['width']; ?> h:<?php echo $c['height']; ?>">
               <picture>
                 <source srcset="<?php echo getImageUrl($it['image_path'],'items'); ?>" type="image/webp">
                 <img src="<?php echo getImageUrl($it['image_path'],'items','png'); ?>"
@@ -119,6 +114,134 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
           <?php endforeach; ?>
         </div>
       </div>
+
+      <script>
+        // Room coordinate scaling for modal iframe
+        document.addEventListener('DOMContentLoaded', function() {
+            const originalImageWidth = 1280;
+            const originalImageHeight = 896;
+
+
+
+            // Set background image for room wrapper
+            async function loadRoomBackground() {
+                const roomWrapper = document.querySelector('.room-overlay-wrapper');
+                const modalPage = document.getElementById('modalRoomPage');
+                if (!roomWrapper || !modalPage) return;
+
+                const roomNumber = modalPage.getAttribute('data-room');
+                const roomType = `room${roomNumber}`;
+
+                try {
+                    const response = await fetch(`/api/get_background.php?room_type=${roomType}`);
+                    const data = await response.json();
+
+                    if (data.success && data.background) {
+                        const bg = data.background;
+                        const supportsWebP = document.documentElement.classList.contains('webp');
+                        let filename = supportsWebP && bg.webp_filename ? bg.webp_filename : bg.image_filename;
+
+                        // Ensure filename includes backgrounds/ prefix
+                        if (!filename.startsWith('backgrounds/')) {
+                            filename = `backgrounds/${filename}`;
+                        }
+
+                        const imageUrl = `/images/${filename}`;
+                        roomWrapper.style.backgroundImage = `url('${imageUrl}')`;
+                        roomWrapper.style.backgroundSize = 'cover';
+                        roomWrapper.style.backgroundPosition = 'center';
+                        roomWrapper.style.backgroundRepeat = 'no-repeat';
+
+                        console.log(`[Room Modal Iframe] Background loaded: ${imageUrl}`);
+                    }
+                } catch (err) {
+                    console.error('[Room Modal Iframe] Error loading background:', err);
+                }
+            }
+
+            function scaleRoomCoordinates() {
+                const roomWrapper = document.querySelector('.room-overlay-wrapper');
+                if (!roomWrapper) return;
+
+                const wrapperRect = roomWrapper.getBoundingClientRect();
+                if (wrapperRect.width === 0 || wrapperRect.height === 0) return;
+
+                // Calculate scale factor using CSS "background-size: cover" algorithm
+                const scaleX = wrapperRect.width / originalImageWidth;
+                const scaleY = wrapperRect.height / originalImageHeight;
+                const scale = Math.max(scaleX, scaleY); // Use larger scale for "cover" behavior
+
+                // Calculate offset for "background-position: center center"
+                const scaledImageWidth = originalImageWidth * scale;
+                const scaledImageHeight = originalImageHeight * scale;
+                const offsetX = (wrapperRect.width - scaledImageWidth) / 2;
+                const offsetY = (wrapperRect.height - scaledImageHeight) / 2;
+
+                // Get all product icons and scale their coordinates
+                const productIcons = document.querySelectorAll('.room-product-icon');
+                productIcons.forEach(icon => {
+                    // Get original coordinates from data attributes if available, otherwise from inline styles
+                    let originalTop, originalLeft, originalWidth, originalHeight;
+
+                    if (icon.dataset.originalTop) {
+                        // Use stored original coordinates
+                        originalTop = parseFloat(icon.dataset.originalTop);
+                        originalLeft = parseFloat(icon.dataset.originalLeft);
+                        originalWidth = parseFloat(icon.dataset.originalWidth);
+                        originalHeight = parseFloat(icon.dataset.originalHeight);
+                    } else {
+                        // Store original coordinates from inline styles
+                        originalTop = parseFloat(icon.style.top) || 0;
+                        originalLeft = parseFloat(icon.style.left) || 0;
+                        originalWidth = parseFloat(icon.style.width) || 80;
+                        originalHeight = parseFloat(icon.style.height) || 80;
+
+
+
+                        // Store for future scaling operations
+                        icon.dataset.originalTop = originalTop;
+                        icon.dataset.originalLeft = originalLeft;
+                        icon.dataset.originalWidth = originalWidth;
+                        icon.dataset.originalHeight = originalHeight;
+                    }
+
+                    // Apply scaling
+                    const scaledTop = Math.round((originalTop * scale) + offsetY);
+                    const scaledLeft = Math.round((originalLeft * scale) + offsetX);
+                    const scaledWidth = Math.round(originalWidth * scale);
+                    const scaledHeight = Math.round(originalHeight * scale);
+
+                    // Apply scaled coordinates with !important to maintain CSS specificity
+                    icon.style.setProperty('top', scaledTop + 'px', 'important');
+                    icon.style.setProperty('left', scaledLeft + 'px', 'important');
+                    icon.style.setProperty('width', scaledWidth + 'px', 'important');
+                    icon.style.setProperty('height', scaledHeight + 'px', 'important');
+                });
+
+                console.log(`[Room Modal] Scaled ${productIcons.length} product icons with scale factor: ${scale.toFixed(3)}`);
+                console.log(`[Room Modal] Wrapper dimensions: ${wrapperRect.width}x${wrapperRect.height}`);
+            }
+
+
+
+            // Load background and then scale coordinates
+            loadRoomBackground().then(() => {
+                // Wait for content to be fully loaded and sized
+                setTimeout(() => {
+                    scaleRoomCoordinates();
+                    // Double-check scaling after a bit more time
+                    setTimeout(scaleRoomCoordinates, 500);
+                }, 300);
+            });
+
+            // Re-scale on window resize
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(scaleRoomCoordinates, 100);
+            });
+        });
+      </script>
     </div>
     <?php return ob_get_clean();
 }
@@ -148,14 +271,29 @@ function loadRoomCoordinates($roomType, $pdo)
  */
 function getRoomMetadata($roomNumber, $pdo)
 {
+    // Get room settings
     $stmt = $pdo->prepare("SELECT room_name, description FROM room_settings WHERE room_number = ?");
     $stmt->execute([$roomNumber]);
     $rs = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    // Get primary category for this room
+    $stmt = $pdo->prepare("
+        SELECT c.name as category_name
+        FROM room_category_assignments rca
+        JOIN categories c ON rca.category_id = c.id
+        WHERE rca.room_number = ? AND rca.is_primary = 1
+        LIMIT 1
+    ");
+    $stmt->execute([$roomNumber]);
+    $categoryData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $categoryName = $categoryData ? $categoryData['category_name'] : '';
+
     return [
         'room_number' => $roomNumber,
         'room_name'   => $rs['room_name'] ?? '',
         'description' => $rs['description'] ?? '',
-        'category'    => $rs['room_name'] ?? ''
+        'category'    => $categoryName,
+        'room_type'   => "room{$roomNumber}"
     ];
 }
 
@@ -167,8 +305,18 @@ function getImageUrl($path, $dir, $ext = 'webp')
     if (empty($path)) {
         return '';
     }
-    // Build path within images directory
+
+    // Clean the path and remove leading slash
     $cleanPath = ltrim($path, '/');
+
+    // If path already contains the full images directory structure, use it as-is
+    if (strpos($cleanPath, 'images/' . $dir . '/') === 0) {
+        $extension = ($ext === 'png') ? 'png' : 'webp';
+        $fileName = preg_replace('/\.[^\.]+$/', '.' . $extension, $cleanPath);
+        return '/' . $fileName;
+    }
+
+    // Otherwise, build the full path
     $extension = ($ext === 'png') ? 'png' : 'webp';
     $fileName = preg_replace('/\.[^\.]+$/', '.' . $extension, $cleanPath);
     $imageDir = rtrim('/images/' . trim($dir, '/'), '/');

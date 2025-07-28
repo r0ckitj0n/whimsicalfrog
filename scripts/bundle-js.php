@@ -36,6 +36,7 @@ $filesToBundle = [
     'js/room-event-manager.js',
     'js/room-functions.js',
     'js/room-helper.js',
+    'js/room-main.js', // Room main page manager
     'js/global-item-modal.js',
     'js/detailed-item-modal.js',
     'js/room-modal-manager.js', // The main modal manager

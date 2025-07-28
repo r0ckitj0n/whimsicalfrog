@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Emergency CSS Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .emergency-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 3px solid #059669;
+            border-radius: 8px;
+            background: #ecfdf5;
+        }
+        
+        .emergency-section h3 {
+            color: #059669;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+        
+        .status.warning {
+            background: #fefcbf;
+            color: #744210;
+            border: 1px solid #f6e05e;
+        }
+        
+        .status.info {
+            background: #bee3f8;
+            color: #2a4365;
+            border: 1px solid #90cdf4;
+        }
+        
+        .test-button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-button:hover {
+            background: #047857;
+            transform: translateY(-1px);
+        }
+        
+        .iframe-container {
+            border: 3px solid #059669;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 500px;
+        }
+        
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+            margin: 15px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .fix-checklist {
+            background: #ecfdf5;
+            border: 2px solid #059669;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .fix-item {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 6px;
+            background: white;
+            border-left: 4px solid #e2e8f0;
+        }
+        
+        .fix-item.fixed {
+            background: #c6f6d5;
+            border-left-color: #059669;
+        }
+        
+        .fix-item.broken {
+            background: #fed7d7;
+            border-left-color: #742a2a;
+        }
+        
+        .fix-icon {
+            margin-right: 15px;
+            font-size: 20px;
+        }
+        
+        .fix-text {
+            flex: 1;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 Emergency CSS Injection Test</h1>
+        <p style="text-align: center; color: #718096; margin-bottom: 30px;">
+            <strong>Testing direct CSS injection in shop.php to bypass bundle issues</strong>
+        </p>
+
+        <div class="fix-checklist">
+            <h3>🚨 Emergency Fixes Status</h3>
+            <div class="fix-item" id="fix-1">
+                <span class="fix-icon">❓</span>
+                <span class="fix-text">1. Background Image Tiling (Direct CSS Injection)</span>
+            </div>
+            <div class="fix-item" id="fix-2">
+                <span class="fix-icon">❓</span>
+                <span class="fix-text">2. Full Viewport Width (Direct CSS Injection)</span>
+            </div>
+            <div class="fix-item" id="fix-3">
+                <span class="fix-icon">❓</span>
+                <span class="fix-text">3. Custom Scrollbar (Direct CSS Injection)</span>
+            </div>
+        </div>
+
+        <div class="emergency-section">
+            <h3>🚨 Emergency CSS Injection Test</h3>
+            <p>Testing if the direct CSS injection in shop.php resolves the regression issues.</p>
+            <button class="test-button" onclick="testEmergencyCSS()">Test Emergency CSS</button>
+            <div id="emergency-results"></div>
+            <div id="shop-iframe-container"></div>
+        </div>
+
+        <div class="emergency-section">
+            <h3>📊 Emergency CSS Analysis</h3>
+            <div id="emergency-analysis">
+                <div class="status info">Click the test button above to see emergency CSS analysis.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let emergencyResults = {
+            backgroundTiling: null,
+            fullWidth: null,
+            customScrollbar: null
+        };
+
+        async function testEmergencyCSS() {
+            const resultsDiv = document.getElementById('emergency-results');
+            const iframeContainer = document.getElementById('shop-iframe-container');
+            const analysisDiv = document.getElementById('emergency-analysis');
+            
+            resultsDiv.innerHTML = '<div class="status warning">Testing emergency CSS injection...</div>';
+            
+            try {
+                // Create iframe to load shop page with emergency CSS
+                const iframe = document.createElement('iframe');
+                iframe.src = `/?page=shop&emergency_css=1&v=${Date.now()}`;
+                
+                iframeContainer.innerHTML = '<div class="iframe-container"></div>';
+                iframeContainer.querySelector('.iframe-container').appendChild(iframe);
+                
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            const iframeWindow = iframe.contentWindow;
+                            
+                            let emergencyReport = '<h4>🚨 Emergency CSS Injection Report</h4>';
+                            emergencyReport += '<div class="code-block">';
+                            
+                            // Check if emergency CSS is loaded
+                            const emergencyStyle = iframeDoc.querySelector('#shop-page-critical-css');
+                            emergencyReport += `Emergency CSS Element: ${emergencyStyle ? 'FOUND ✅' : 'NOT FOUND ❌'}\n`;
+                            
+                            if (emergencyStyle) {
+                                emergencyReport += `Emergency CSS Length: ${emergencyStyle.textContent.length} characters\n`;
+                            }
+                            
+                            // Check debug marker
+                            const body = iframeDoc.body;
+                            const bodyStyles = iframeWindow.getComputedStyle(body, '::before');
+                            const debugMarker = bodyStyles.getPropertyValue('content');
+                            emergencyReport += `Debug Marker: ${debugMarker}\n\n`;
+                            
+                            // Test 1: Background Tiling Issue
+                            const mainContent = iframeDoc.querySelector('main.page-content');
+                            const mainStyles = mainContent ? iframeWindow.getComputedStyle(mainContent) : null;
+                            const backgroundSize = mainStyles ? mainStyles.backgroundSize : 'not found';
+                            const backgroundRepeat = mainStyles ? mainStyles.backgroundRepeat : 'not found';
+                            const backgroundPosition = mainStyles ? mainStyles.backgroundPosition : 'not found';
+                            
+                            emergencyResults.backgroundTiling = (backgroundSize === 'cover' && backgroundRepeat === 'no-repeat');
+                            
+                            emergencyReport += `BACKGROUND TILING TEST:\n`;
+                            emergencyReport += `Background Size: ${backgroundSize}\n`;
+                            emergencyReport += `Background Repeat: ${backgroundRepeat}\n`;
+                            emergencyReport += `Background Position: ${backgroundPosition}\n`;
+                            emergencyReport += `Status: ${emergencyResults.backgroundTiling ? 'FIXED ✅' : 'BROKEN ❌'}\n\n`;
+                            
+                            // Test 2: Full Width and Centering
+                            const shopPage = iframeDoc.querySelector('#shopPage');
+                            const shopStyles = shopPage ? iframeWindow.getComputedStyle(shopPage) : null;
+                            const shopWidth = shopStyles ? shopStyles.width : '0px';
+                            const shopPosition = shopStyles ? shopStyles.position : 'not found';
+                            const shopLeft = shopStyles ? shopStyles.left : 'not found';
+                            const shopMarginLeft = shopStyles ? shopStyles.marginLeft : 'not found';
+                            const viewportWidth = iframeWindow.innerWidth;
+                            
+                            const isFullWidth = shopStyles && (parseInt(shopWidth) >= viewportWidth * 0.95);
+                            const hasBreakout = shopPosition === 'relative' && shopLeft.includes('%');
+                            emergencyResults.fullWidth = isFullWidth && hasBreakout;
+                            
+                            emergencyReport += `FULL WIDTH TEST:\n`;
+                            emergencyReport += `Shop Page Width: ${shopWidth}\n`;
+                            emergencyReport += `Shop Position: ${shopPosition}\n`;
+                            emergencyReport += `Shop Left: ${shopLeft}\n`;
+                            emergencyReport += `Shop Margin Left: ${shopMarginLeft}\n`;
+                            emergencyReport += `Viewport Width: ${viewportWidth}px\n`;
+                            emergencyReport += `Status: ${emergencyResults.fullWidth ? 'FIXED ✅' : 'BROKEN ❌'}\n\n`;
+                            
+                            // Test 3: Custom Scrollbar
+                            const bodyStyles2 = iframeWindow.getComputedStyle(body);
+                            const scrollbarWidth = bodyStyles2.getPropertyValue('scrollbar-width');
+                            const scrollbarColor = bodyStyles2.getPropertyValue('scrollbar-color');
+                            
+                            const hasCustomScrollbar = (scrollbarWidth === 'thin' || 
+                                                     scrollbarColor.includes('#87ac3a') || 
+                                                     scrollbarColor.includes('135, 172, 58'));
+                            emergencyResults.customScrollbar = hasCustomScrollbar;
+                            
+                            emergencyReport += `CUSTOM SCROLLBAR TEST:\n`;
+                            emergencyReport += `Scrollbar Width: ${scrollbarWidth}\n`;
+                            emergencyReport += `Scrollbar Color: ${scrollbarColor}\n`;
+                            emergencyReport += `Status: ${emergencyResults.customScrollbar ? 'FIXED ✅' : 'BROKEN ❌'}\n`;
+                            
+                            emergencyReport += '</div>';
+                            
+                            // Update UI
+                            updateFixChecklist();
+                            analysisDiv.innerHTML = emergencyReport;
+                            
+                            // Overall status
+                            const fixedIssues = Object.values(emergencyResults).filter(result => result === true).length;
+                            const totalIssues = Object.keys(emergencyResults).length;
+                            
+                            let status = '';
+                            if (fixedIssues === totalIssues) {
+                                status = '<div class="status success">🎉 ALL ISSUES RESOLVED WITH EMERGENCY CSS INJECTION!</div>';
+                            } else if (fixedIssues >= 2) {
+                                status = '<div class="status warning">⚠️ Most issues resolved with emergency CSS</div>';
+                            } else {
+                                status = '<div class="status error">❌ Emergency CSS injection failed to resolve issues</div>';
+                            }
+                            
+                            status += `<div class="status info">Fixed: ${fixedIssues}/${totalIssues} issues with emergency CSS</div>`;
+                            resultsDiv.innerHTML = status;
+                            
+                        } catch (error) {
+                            resultsDiv.innerHTML = `<div class="status error">❌ Error testing emergency CSS: ${error.message}</div>`;
+                        }
+                    }, 2000);
+                };
+                
+                iframe.onerror = function() {
+                    resultsDiv.innerHTML = '<div class="status error">❌ Failed to load shop page for emergency CSS test</div>';
+                };
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function updateFixChecklist() {
+            const fixes = [
+                { id: 'fix-1', result: emergencyResults.backgroundTiling },
+                { id: 'fix-2', result: emergencyResults.fullWidth },
+                { id: 'fix-3', result: emergencyResults.customScrollbar }
+            ];
+            
+            fixes.forEach(fix => {
+                const element = document.getElementById(fix.id);
+                const icon = element.querySelector('.fix-icon');
+                
+                if (fix.result === true) {
+                    element.className = 'fix-item fixed';
+                    icon.textContent = '✅';
+                } else if (fix.result === false) {
+                    element.className = 'fix-item broken';
+                    icon.textContent = '❌';
+                } else {
+                    element.className = 'fix-item';
+                    icon.textContent = '❓';
+                }
+            });
+        }
+
+        // Auto-run emergency test on page load
+        window.addEventListener('load', function() {
+            setTimeout(testEmergencyCSS, 500);
+        });
+    </script>
+</body>
+</html>

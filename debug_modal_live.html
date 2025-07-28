@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Modal Debug Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 400px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 10000;
+            max-height: 80vh;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .debug-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .debug-section h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .status-good { color: green; font-weight: bold; }
+        .status-bad { color: red; font-weight: bold; }
+        .status-warn { color: orange; font-weight: bold; }
+        .test-btn {
+            background: #87ac3a;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 2px;
+        }
+        .test-btn:hover { background: #6b8e23; }
+        .close-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Modal Debug Tool</h1>
+    <p>This tool will help debug the actual modal behavior. Open the room main page in another tab and use this tool to analyze the modal.</p>
+    
+    <button class="test-btn" onclick="openRoomMain()">Open Room Main Page</button>
+    <button class="test-btn" onclick="startDebugging()">Start Modal Debugging</button>
+    <button class="test-btn" onclick="analyzeCurrentModal()">Analyze Current Modal</button>
+
+    <div id="debugPanel" class="debug-panel" style="display: none;">
+        <button class="close-btn" onclick="closeDebugPanel()">×</button>
+        <h3>Modal Debug Results</h3>
+        <div id="debugContent"></div>
+    </div>
+
+    <script>
+        function openRoomMain() {
+            window.open('/?page=room_main', '_blank');
+        }
+
+        function closeDebugPanel() {
+            document.getElementById('debugPanel').style.display = 'none';
+        }
+
+        function startDebugging() {
+            const panel = document.getElementById('debugPanel');
+            const content = document.getElementById('debugContent');
+            panel.style.display = 'block';
+            
+            content.innerHTML = `
+                <div class="debug-section">
+                    <h4>Instructions</h4>
+                    <p>1. Open the room main page in another tab</p>
+                    <p>2. Click on a room door to open the modal</p>
+                    <p>3. Come back to this tab and click "Analyze Current Modal"</p>
+                    <p>4. The analysis will inspect the modal in the other tab</p>
+                </div>
+            `;
+        }
+
+        async function analyzeCurrentModal() {
+            const content = document.getElementById('debugContent');
+            content.innerHTML = '<div class="debug-section"><h4>Analyzing...</h4><p>Checking for modal elements...</p></div>';
+
+            try {
+                // Try to find the modal in any open window
+                let modalWindow = null;
+                let modalFound = false;
+
+                // Check if we can access other windows (same origin)
+                try {
+                    // This is a simplified approach - in practice, we'd need the user to run this from the same page
+                    const overlay = document.querySelector('.room-modal-overlay');
+                    const iframe = document.getElementById('roomModalFrame');
+                    
+                    if (overlay || iframe) {
+                        modalFound = true;
+                        await analyzeModalElements(overlay, iframe);
+                    } else {
+                        // Provide instructions for manual analysis
+                        content.innerHTML = `
+                            <div class="debug-section">
+                                <h4 class="status-warn">Manual Analysis Required</h4>
+                                <p>Please run this JavaScript code in the browser console on the room main page:</p>
+                                <pre>${getAnalysisScript()}</pre>
+                                <p>Copy the output and paste it here for analysis.</p>
+                                <textarea id="manualResults" rows="10" cols="50" placeholder="Paste console output here..."></textarea>
+                                <br><button class="test-btn" onclick="parseManualResults()">Parse Results</button>
+                            </div>
+                        `;
+                    }
+                } catch (err) {
+                    content.innerHTML = `
+                        <div class="debug-section">
+                            <h4 class="status-bad">Analysis Error</h4>
+                            <p>Cannot access modal elements. Please run the analysis script manually.</p>
+                            <pre>${getAnalysisScript()}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="debug-section">
+                        <h4 class="status-bad">Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function getAnalysisScript() {
+            return `
+// Modal Analysis Script - Run this in the console on the room main page after opening a modal
+(function() {
+    console.log('=== MODAL ANALYSIS START ===');
+    
+    const overlay = document.querySelector('.room-modal-overlay');
+    const iframe = document.getElementById('roomModalFrame');
+    
+    console.log('Modal Overlay Found:', !!overlay);
+    console.log('Modal Iframe Found:', !!iframe);
+    
+    if (overlay) {
+        const overlayStyle = getComputedStyle(overlay);
+        console.log('Overlay Display:', overlayStyle.display);
+        console.log('Overlay Opacity:', overlayStyle.opacity);
+        console.log('Overlay Background:', overlayStyle.backgroundImage);
+        console.log('Overlay Z-Index:', overlayStyle.zIndex);
+    }
+    
+    if (iframe) {
+        console.log('Iframe Src:', iframe.src);
+        console.log('Iframe SrcDoc Length:', iframe.srcdoc ? iframe.srcdoc.length : 'none');
+        
+        try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const productIcons = iframeDoc.querySelectorAll('.room-product-icon');
+            console.log('Product Icons Found:', productIcons.length);
+            
+            productIcons.forEach((icon, index) => {
+                const rect = icon.getBoundingClientRect();
+                const style = getComputedStyle(icon);
+                console.log(\`Icon \${index + 1}:\`, {
+                    className: icon.className,
+                    inlineStyle: icon.getAttribute('style'),
+                    computedTop: style.top,
+                    computedLeft: style.left,
+                    computedPosition: style.position,
+                    boundingRect: {
+                        top: rect.top,
+                        left: rect.left,
+                        width: rect.width,
+                        height: rect.height
+                    },
+                    visible: rect.width > 0 && rect.height > 0
+                });
+            });
+            
+            // Check for overlapping
+            const positions = Array.from(productIcons).map(icon => {
+                const rect = icon.getBoundingClientRect();
+                return { top: rect.top, left: rect.left };
+            });
+            
+            let overlapping = false;
+            for (let i = 0; i < positions.length; i++) {
+                for (let j = i + 1; j < positions.length; j++) {
+                    if (Math.abs(positions[i].top - positions[j].top) < 10 && 
+                        Math.abs(positions[i].left - positions[j].left) < 10) {
+                        overlapping = true;
+                        console.log(\`Icons \${i+1} and \${j+1} are overlapping!\`);
+                    }
+                }
+            }
+            console.log('Icons Overlapping:', overlapping);
+            
+        } catch (err) {
+            console.log('Cannot access iframe content:', err.message);
+        }
+    }
+    
+    console.log('=== MODAL ANALYSIS END ===');
+})();
+            `.trim();
+        }
+
+        function parseManualResults() {
+            const results = document.getElementById('manualResults').value;
+            const content = document.getElementById('debugContent');
+            
+            // Simple parsing of the console output
+            const analysis = {
+                overlayFound: results.includes('Modal Overlay Found: true'),
+                iframeFound: results.includes('Modal Iframe Found: true'),
+                iconsOverlapping: results.includes('Icons Overlapping: true'),
+                iconCount: (results.match(/Product Icons Found: (\d+)/) || [null, '0'])[1],
+                backgroundImage: results.includes('background') ? 'Found' : 'Not found'
+            };
+            
+            content.innerHTML = `
+                <div class="debug-section">
+                    <h4>Analysis Results</h4>
+                    <p><strong>Modal Overlay:</strong> <span class="${analysis.overlayFound ? 'status-good' : 'status-bad'}">${analysis.overlayFound ? 'Found' : 'Not Found'}</span></p>
+                    <p><strong>Modal Iframe:</strong> <span class="${analysis.iframeFound ? 'status-good' : 'status-bad'}">${analysis.iframeFound ? 'Found' : 'Not Found'}</span></p>
+                    <p><strong>Product Icons:</strong> ${analysis.iconCount} found</p>
+                    <p><strong>Icons Overlapping:</strong> <span class="${analysis.iconsOverlapping ? 'status-bad' : 'status-good'}">${analysis.iconsOverlapping ? 'YES' : 'NO'}</span></p>
+                    <p><strong>Background Image:</strong> ${analysis.backgroundImage}</p>
+                </div>
+                <div class="debug-section">
+                    <h4>Raw Results</h4>
+                    <pre>${results}</pre>
+                </div>
+            `;
+        }
+
+        async function analyzeModalElements(overlay, iframe) {
+            const content = document.getElementById('debugContent');
+            let analysis = '<div class="debug-section"><h4>Modal Analysis Results</h4>';
+            
+            // Analyze overlay
+            if (overlay) {
+                const overlayStyle = getComputedStyle(overlay);
+                analysis += \`
+                    <p><strong>Overlay Display:</strong> \${overlayStyle.display}</p>
+                    <p><strong>Overlay Opacity:</strong> \${overlayStyle.opacity}</p>
+                    <p><strong>Overlay Background:</strong> \${overlayStyle.backgroundImage}</p>
+                \`;
+            }
+            
+            // Analyze iframe
+            if (iframe) {
+                analysis += \`
+                    <p><strong>Iframe Source:</strong> \${iframe.src || 'srcdoc'}</p>
+                    <p><strong>Iframe Content Length:</strong> \${iframe.srcdoc ? iframe.srcdoc.length : 'none'}</p>
+                \`;
+            }
+            
+            analysis += '</div>';
+            content.innerHTML = analysis;
+        }
+    </script>
+</body>
+</html>`;

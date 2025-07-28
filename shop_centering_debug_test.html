@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Shop Page Centering Debug</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .debug-banner {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .status {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .test-button {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: background 0.3s ease;
+            font-size: 1.1rem;
+        }
+        
+        .test-button:hover {
+            background: #c82333;
+        }
+        
+        .debug-steps {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .debug-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .debug-steps li {
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .checklist li:before {
+            content: "🔍 ";
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .test-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 Shop Page Centering Debug</h1>
+        
+        <div class="debug-banner">
+            🚨 Debugging Card Centering & Count Issues
+        </div>
+
+        <!-- Current Issues -->
+        <div class="test-section">
+            <h2>🚨 Current Issues Identified</h2>
+            <div class="status error">
+                <strong>PROBLEMS:</strong> Cards not centered and only 3 per row instead of 5-6
+            </div>
+            
+            <h3>Issues to Investigate:</h3>
+            <ul>
+                <li><strong>Centering Problem:</strong> Cards not centered as a group within viewport</li>
+                <li><strong>Card Count:</strong> Only 3 cards per row on large screens instead of 5-6</li>
+                <li><strong>CSS Override:</strong> Tailwind classes may still be taking precedence</li>
+                <li><strong>Card Width:</strong> Cards may be too wide for optimal layout</li>
+            </ul>
+        </div>
+
+        <!-- Debug Steps -->
+        <div class="test-section">
+            <h2>🔧 Debug Process</h2>
+            <div class="status warning">
+                <strong>ACTION REQUIRED:</strong> Follow these steps to diagnose the issue
+            </div>
+            
+            <div class="debug-steps">
+                <h3>Browser Developer Tools Investigation:</h3>
+                <ol>
+                    <li><strong>Open Shop Page:</strong> Click the test button below</li>
+                    <li><strong>Open DevTools:</strong> Press F12 or right-click → Inspect</li>
+                    <li><strong>Inspect #productsGrid:</strong> Find the products grid container</li>
+                    <li><strong>Check Computed Styles:</strong> Look for display property</li>
+                    <li><strong>Verify CSS Override:</strong> Confirm flexbox styles are applied</li>
+                    <li><strong>Check Card Widths:</strong> Measure actual card dimensions</li>
+                    <li><strong>Test Responsive:</strong> Resize browser window</li>
+                </ol>
+            </div>
+            
+            <a href="http://localhost:8080/?page=shop" target="_blank" class="test-button">🛒 Open Shop Page for Debug</a>
+        </div>
+
+        <!-- Expected CSS Implementation -->
+        <div class="test-section">
+            <h2>⚙️ Expected CSS Implementation</h2>
+            <div class="status success">
+                <strong>IMPLEMENTED:</strong> High-specificity flexbox override added to bundle.css
+            </div>
+            
+            <div class="code-block">
+/* Products Grid - Force Flexbox with Maximum Specificity */
+#shopPage #productsGrid.grid.grid-cols-1.sm\:grid-cols-2.md\:grid-cols-3.lg\:grid-cols-4,
+#shopPage div#productsGrid.grid,
+div#productsGrid.grid.grid-cols-1,
+#shopPage #productsGrid,
+#productsGrid.grid,
+#productsGrid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    gap: 1.25rem !important;
+    grid-template-columns: none !important;
+}
+
+/* Product Cards - Optimized for 5-6 Cards Per Row */
+#shopPage .product-card {
+    width: 200px !important;
+    max-width: 200px !important;
+    min-width: 180px !important;
+    flex: 0 0 200px !important;
+    margin: 0 !important;
+}
+            </div>
+        </div>
+
+        <!-- Debugging Checklist -->
+        <div class="test-section">
+            <h2>✅ Debugging Checklist</h2>
+            <div class="status warning">
+                <strong>VERIFY:</strong> Check each item in browser developer tools
+            </div>
+            
+            <h3>CSS Properties to Verify:</h3>
+            <ul class="checklist">
+                <li>productsGrid has display: flex (not grid)</li>
+                <li>productsGrid has justify-content: center</li>
+                <li>productsGrid has flex-wrap: wrap</li>
+                <li>Product cards have width: 200px</li>
+                <li>Product cards have flex: 0 0 200px</li>
+                <li>No grid-template-columns property active</li>
+                <li>Cards are centered as a group in viewport</li>
+                <li>5-6 cards visible on screens 1200px+ wide</li>
+            </ul>
+        </div>
+
+        <!-- Expected Behavior -->
+        <div class="test-section">
+            <h2>🎯 Expected Behavior</h2>
+            <div class="status success">
+                <strong>TARGET:</strong> Cards centered with 5-6 per row on large screens
+            </div>
+            
+            <h3>What Should Happen:</h3>
+            <ul>
+                <li><strong>Large Screens (1200px+):</strong> 5-6 cards per row</li>
+                <li><strong>Card Centering:</strong> Cards centered as a group with equal margins</li>
+                <li><strong>Natural Wrapping:</strong> Cards wrap to new rows when space runs out</li>
+                <li><strong>Consistent Sizing:</strong> All cards maintain 200px width</li>
+                <li><strong>Responsive:</strong> Fewer cards per row on smaller screens</li>
+            </ul>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="test-section">
+            <h2>🛠️ Troubleshooting</h2>
+            <div class="status error">
+                <strong>IF ISSUES PERSIST:</strong> Additional steps to resolve problems
+            </div>
+            
+            <h3>If Cards Still Not Centered:</h3>
+            <ul>
+                <li>Check if Tailwind CSS is loading after our custom CSS</li>
+                <li>Verify CSS bundle timestamp is recent</li>
+                <li>Clear browser cache and hard refresh (Ctrl+F5)</li>
+                <li>Check for JavaScript that might be modifying styles</li>
+                <li>Inspect parent container constraints</li>
+            </ul>
+            
+            <h3>If Only 3 Cards Per Row:</h3>
+            <ul>
+                <li>Verify card width is 200px, not larger</li>
+                <li>Check if container width is constrained</li>
+                <li>Ensure gap spacing isn't too large</li>
+                <li>Confirm flexbox is active, not grid</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

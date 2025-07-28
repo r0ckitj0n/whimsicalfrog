@@ -28,6 +28,15 @@
   --error: #ef4444;
   --info: #3b82f6;
   
+  /* Header Colors - Based on backup styling */
+  --header-bg-light: #f8fafc;
+  --header-bg-accent: #e6f4d7;
+  --header-text-primary: #87ac3a;
+  --header-nav-bg-start: rgba(0,0,0,0.85);
+  --header-nav-bg-mid: rgba(0,0,0,0.55);
+  --header-nav-bg-end: rgba(0,0,0,0.01);
+  --header-shadow: 0 2px 8px rgba(0,0,0,0.04);
+
   /* Typography */
   --font-primary: 'Merienda', cursive;
   --font-secondary: 'Inter', sans-serif;
@@ -93,6 +102,7 @@
   --z-content-overlay: 10;
   --z-dropdown: 100;
   --z-navigation: 200;
+  --z-header: 1000;
   --z-modal-backdrop: 300;
   --z-modal: 400;
   --z-notification: 500;
@@ -103,6 +113,7 @@
   --z-room-modals: 2400;
   --z-room-modal-header: 2450;
   --z-room-buttons: 55;
+  --z-door-areas: 50;
 
   /* Layout Breakpoints (for JS usage) */
   --breakpoint-sm: 640px;
@@ -313,9 +324,11 @@
 /* Z-index utility classes */
 .z-popup { z-index: var(--z-popup); }
 .z-image-viewer { z-index: var(--z-image-viewer); }
+.z-content-overlay { z-index: var(--z-content-overlay); }
 .z-room-modals { z-index: var(--z-room-modals); }
 .z-room-modal-header { z-index: var(--z-room-modal-header); }
 .z-room-buttons { z-index: var(--z-room-buttons); }
+.z-door-areas { z-index: var(--z-door-areas); }
 
 /* Patterns: .u-*, .clearfix, .sr-only, etc. */
 /* Auto-generated Tailwind utilities */
@@ -395,6 +408,442 @@
 /* --- Start of css/components.css --- */
 
 /* Admin Styles - Centralized CSS for admin interface components */
+
+/* ===== UNIVERSAL PAGE HEADER ===== */
+/* Consistent header with fade effect used across all pages except rooms 1-5 */
+
+.site-header.universal-page-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.4) 0%,     /* Darker transparent at top */
+        rgba(0, 0, 0, 0.2) 50%,    /* Medium transparency in middle */
+        rgba(0, 0, 0, 0.1) 100%    /* Lighter transparency at bottom */
+    );
+    color: var(--brand-primary, #87ac3a);
+    transition: all 0.3s ease-in-out;
+}
+
+.site-header.universal-page-header .header-container {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.site-header.universal-page-header .header-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 0;
+    position: relative;
+    z-index: 1001;
+}
+
+/* Left Section: Logo and Navigation */
+.site-header.universal-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    justify-self: start;
+    padding-left: 20px;
+    z-index: 1002;
+    position: relative;
+}
+
+.site-header.universal-page-header .logo-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--brand-primary, #87ac3a);
+    transition: opacity 0.3s ease;
+}
+
+.site-header.universal-page-header .logo-link:hover {
+    opacity: 0.9;
+}
+
+.site-header.universal-page-header .header-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.site-header.universal-page-header .logo-text-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.site-header.universal-page-header .logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--brand-primary, #87ac3a);
+    line-height: 1.2;
+}
+
+.site-header.universal-page-header .logo-tagline {
+    font-size: 0.875rem;
+    color: var(--brand-primary, #87ac3a);
+    font-weight: 400;
+}
+
+/* Navigation Links (Left-justified) */
+.site-header.universal-page-header .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .nav-link {
+    color: var(--brand-primary, #87ac3a);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1003;
+}
+
+.site-header.universal-page-header .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.site-header.universal-page-header .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+}
+
+/* Center Section: Search (Centered) */
+.site-header.universal-page-header .header-center {
+    justify-self: center;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    justify-content: center;
+    z-index: 1002;
+    position: relative;
+}
+
+.site-header.universal-page-header .search-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+.site-header.universal-page-header .search-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.site-header.universal-page-header .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: var(--brand-primary, #87ac3a);
+    z-index: 1003;
+}
+
+.site-header.universal-page-header .search-bar {
+    width: 100%;
+    padding: 12px 16px 12px 44px;
+    border: 2px solid var(--brand-primary, #87ac3a);
+    border-radius: 25px;
+    background: transparent;
+    color: var(--brand-primary, #87ac3a);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .search-bar:focus {
+    border-color: var(--brand-primary, #87ac3a);
+    background: transparent;
+    box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.2);
+}
+
+.site-header.universal-page-header .search-bar::placeholder {
+    color: var(--brand-primary, #87ac3a);
+}
+
+/* Right Section: User Menu and Cart */
+.site-header.universal-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-self: end;
+    padding-right: 20px;
+    z-index: 1002;
+    position: relative;
+}
+
+.site-header.universal-page-header .auth-links,
+.site-header.universal-page-header .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .welcome-message {
+    color: var(--brand-primary, #87ac3a);
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .header-right .nav-link {
+    color: var(--brand-primary, #87ac3a);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .header-right .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.site-header.universal-page-header .cart-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--brand-primary, #87ac3a);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .cart-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.site-header.universal-page-header .cart-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.site-header.universal-page-header .cart-count {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--brand-primary, #87ac3a);
+}
+
+.site-header.universal-page-header .cart-total {
+    font-size: 0.9rem;
+    color: var(--brand-primary, #87ac3a);
+}
+
+/* Mobile Menu Toggle */
+.site-header.universal-page-header .mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--brand-primary, #87ac3a);
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .mobile-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.site-header.universal-page-header .mobile-menu-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Page Content Positioning - 10px below header */
+.page-content,
+.main-content,
+.content-wrapper {
+    margin-top: calc(80px + 10px); /* Header height + 10px spacing */
+    padding-top: 10px;
+}
+
+/* Responsive Design - Keep horizontal layout until mobile */
+@media (max-width: 900px) {
+    .site-header.universal-page-header .header-left {
+        padding-left: 15px;
+    }
+
+    .site-header.universal-page-header .header-right {
+        padding-right: 15px;
+    }
+
+    .site-header.universal-page-header .header-center {
+        max-width: 250px;
+    }
+
+    .site-header.universal-page-header .nav-links {
+        gap: 15px;
+    }
+
+    .site-header.universal-page-header .nav-link {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .site-header.universal-page-header .mobile-menu-toggle {
+        display: block;
+    }
+
+    .site-header.universal-page-header .nav-links {
+        display: none;
+    }
+
+    .site-header.universal-page-header .header-content {
+        grid-template-columns: auto 1fr auto;
+        min-height: 60px;
+    }
+
+    .site-header.universal-page-header .header-left {
+        padding-left: 10px;
+    }
+
+    .site-header.universal-page-header .header-right {
+        padding-right: 10px;
+    }
+
+    .site-header.universal-page-header .header-center {
+        max-width: 200px;
+    }
+
+    .site-header.universal-page-header .logo-text {
+        font-size: 1.25rem;
+    }
+
+    .site-header.universal-page-header .logo-tagline {
+        font-size: 0.75rem;
+    }
+
+    .page-content,
+    .main-content,
+    .content-wrapper {
+        margin-top: calc(80px + 10px);
+    }
+}
+
+@media (max-width: 480px) {
+    .site-header.universal-page-header .header-left {
+        gap: 15px;
+        padding-left: 8px;
+    }
+
+    .site-header.universal-page-header .header-right {
+        gap: 10px;
+        padding-right: 8px;
+    }
+
+    .site-header.universal-page-header .header-center {
+        max-width: 150px;
+    }
+
+    .site-header.universal-page-header .logo-text {
+        font-size: 1.1rem;
+    }
+
+    .site-header.universal-page-header .search-bar {
+        padding: 10px 14px 10px 40px;
+        font-size: 0.9rem;
+    }
+
+    .site-header.universal-page-header .cart-text {
+        display: none; /* Hide "items" text on very small screens */
+    }
+}
+
+/* Mobile Menu Styles */
+.site-header.universal-page-header .mobile-menu {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.8) 50%,
+        rgba(0, 0, 0, 0.7) 100%
+    );
+    transition: all 0.3s ease-in-out;
+    z-index: 1004;
+}
+
+.site-header.universal-page-header .mobile-menu.active {
+    display: block;
+}
+
+.site-header.universal-page-header .mobile-nav-links {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.site-header.universal-page-header .mobile-nav-link {
+    color: var(--header-text-primary, #87ac3a);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: var(--text-xl, 1.25rem);
+    padding: 12px 16px;
+    transition: opacity 0.3s ease;
+    display: block;
+}
+
+.site-header.universal-page-header .mobile-nav-link:hover,
+.site-header.universal-page-header .mobile-nav-link.active {
+    opacity: 0.8;
+}
+
+.site-header.universal-page-header .mobile-auth-section {
+    color: var(--brand-primary, #87ac3a);
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.site-header.universal-page-header .mobile-search {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.site-header.universal-page-header .mobile-search .search-bar {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--brand-primary, #87ac3a);
+    border-radius: 25px;
+    background: transparent;
+    color: var(--brand-primary, #87ac3a);
+    font-size: 1rem;
+}
 
 /* ==============================================
    ADMIN SETTINGS SECTION HEADERS
@@ -1562,22 +2011,22 @@ body:has(.admin-modal-overlay:not(.hidden)) .admin-tab-navigation {
 }
 
 .btn-small.btn-primary {
-    background: #2563eb;
+    background: var(--brand-primary, #87ac3a);
     color: white;
 }
 
 .btn-small.btn-primary:hover {
-    background: #1d4ed8;
+    background: var(--brand-secondary, #6b8e23);
     transform: translateY(-1px);
 }
 
 .btn-small.btn-secondary {
-    background: #6b7280;
+    background: var(--brand-primary, #87ac3a);
     color: white;
 }
 
 .btn-small.btn-secondary:hover {
-    background: #374151;
+    background: var(--brand-secondary, #6b8e23);
     transform: translateY(-1px);
 }
 
@@ -5023,9 +5472,9 @@ mark {
 
 /* Info button styling */
 .btn-info {
-  background: #06b6d4;
+  background: var(--brand-primary, #87ac3a);
   color: white;
-  border: 1px solid #06b6d4;
+  border: 1px solid var(--brand-primary, #87ac3a);
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 500;
@@ -5033,8 +5482,8 @@ mark {
 }
 
 .btn-info:hover {
-  background: #0891b2;
-  border-color: #0891b2;
+  background: var(--brand-secondary, #6b8e23);
+  border-color: var(--brand-secondary, #6b8e23);
   transform: translateY(-1px);
 }
 
@@ -5086,13 +5535,13 @@ mark {
 }
 
 .receipt-message-controls .btn-ai {
-  background: #3b82f6;
+  background: var(--brand-primary, #87ac3a);
   color: white;
-  border-color: #3b82f6;
+  border-color: var(--brand-primary, #87ac3a);
 }
 
 .receipt-message-controls .btn-ai:hover {
-  background: #2563eb;
+  background: var(--brand-secondary, #6b8e23);
 }
 
 .receipt-message-controls .btn-delete {
@@ -9179,12 +9628,14 @@ body.modal-open #itemPopup.visible {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+
     z-index: var(--z-room-modals, 2400); /* Use centralized z-index */
     display: none;
     align-items: center;
     justify-content: center;
     padding: 20px;
     padding-top: 90px;
+    padding-bottom: 40px; /* Add extra bottom padding so modal doesn't touch screen edge */
     overflow: hidden;
     pointer-events: auto;
     opacity: 0;
@@ -9249,8 +9700,13 @@ body.modal-open #itemPopup.visible {
     top: 0;
     left: 0;
     right: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     z-index: var(--z-room-modal-header, 2450); /* Use centralized z-index */
     pointer-events: none;
+    /* Ensure header is constrained to modal container edges */
+    overflow: hidden;
 }
 
 /* Back button positioning - simple top-left */
@@ -9668,9 +10124,10 @@ body.modal-open #itemPopup.visible {
         width: min(95vw, min(95vh * 1.43, 1000px));
         aspect-ratio: 1280 / 896;
     }
-    
+
     .room-modal-overlay {
         padding: 10px;
+        padding-bottom: 30px; /* Maintain bottom padding on tablets */
     }
 }
 
@@ -9712,9 +10169,10 @@ body.modal-open #itemPopup.visible {
         aspect-ratio: 1280 / 896;
         border-radius: 16px;
     }
-    
+
     .room-modal-overlay {
         padding: 5px;
+        padding-bottom: 20px; /* Maintain bottom padding on mobile */
     }
     
     .room-title-overlay {
@@ -12813,8 +13271,8 @@ body:has(#cartPage) {
 .room-modal-content .modal-footer .btn-primary {
     flex: 2;
     padding: 10px 16px;
-    background: #059669;
-    border: 1px solid #059669;
+    background: var(--brand-primary, #87ac3a);
+    border: 1px solid var(--brand-primary, #87ac3a);
     color: white;
     border-radius: 8px;
     font-size: 0.9rem;
@@ -12824,8 +13282,8 @@ body:has(#cartPage) {
 }
 
 .room-modal-content .modal-footer .btn-primary:hover {
-    background: #047857;
-    border-color: #047857;
+    background: var(--brand-secondary, #6b8e23);
+    border-color: var(--brand-secondary, #6b8e23);
 }
 /* --- chunk: chunk-43.css --- */
 /* auto-chunk */
@@ -15495,21 +15953,21 @@ body:has(#cartPage) {
     margin: 0;
 }
 
-/* Themed admin modal headers based on section-theme classes */
+/* Themed admin modal headers - Use brand primary green for consistency */
 .admin-modal-content.content-section .admin-modal-header {
-    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #6b8e23));
 }
 
 .admin-modal-content.visual-section .admin-modal-header {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #6b8e23));
 }
 
 .admin-modal-content.business-section .admin-modal-header {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #6b8e23));
 }
 
 .admin-modal-content.technical-section .admin-modal-header {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #6b8e23));
 }
 
 .admin-modal-header .modal-title {
@@ -15981,8 +16439,8 @@ body:has(#cartPage) {
 .room-modal-content .modal-footer .btn-primary {
     flex: 2;
     padding: 10px 16px;
-    background: #059669;
-    border: 1px solid #059669;
+    background: var(--brand-primary, #87ac3a);
+    border: 1px solid var(--brand-primary, #87ac3a);
     color: white;
     border-radius: 8px;
     font-size: 0.9rem;
@@ -15992,8 +16450,8 @@ body:has(#cartPage) {
 }
 
 .room-modal-content .modal-footer .btn-primary:hover {
-    background: #047857;
-    border-color: #047857;
+    background: var(--brand-secondary, #6b8e23);
+    border-color: var(--brand-secondary, #6b8e23);
 }
 
 /* ==============================================
@@ -18235,6 +18693,94 @@ input[type="checkbox"].color-checkbox:checked {
     flex-direction: column;
 }
 
+/* ==============================================
+   POS (POINT OF SALE) SYSTEM STYLES
+   ============================================== */
+
+/* POS Items Grid */
+.pos-items-grid {
+    flex: 1;
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 5%);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.5rem;
+}
+
+/* POS Item Cards */
+.pos-items-grid .item-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 200px;
+}
+
+.pos-items-grid .item-card:hover {
+    border-color: var(--brand-primary, #87ac3a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+}
+
+.pos-items-grid .item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.pos-items-grid .item-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.pos-items-grid .item-sku {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-family: Monaco, Menlo, monospace;
+    margin-bottom: 0.5rem;
+}
+
+.pos-items-grid .item-price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--brand-primary, #87ac3a);
+}
+
+/* No Items Message */
+.no-items-message {
+    text-align: center;
+    color: #6b7280;
+    font-size: 1rem;
+    padding: 2rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    border: 2px dashed #d1d5db;
+}
+
 
 
 /* --- End of css/components.css --- */
@@ -18304,44 +18850,7 @@ input[type="checkbox"].color-checkbox:checked {
     display: block; /* Remove any extra space below the image */
 }
 
-.header-container {
-    width: 100%;
-    margin: 0;
-    padding: 0 !important; /* Ensure no horizontal padding at any breakpoint */
-}
-
-/* Header Layout */
-.header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-
-/* Each section alignment within grid */
-.header-left {
-    justify-self: start;
-}
-
-.header-center {
-    justify-self: center;
-    display: flex;
-}
-
-.header-right {
-    justify-self: end;
-}
-
-/* Center the middle column contents */
-
-
-
-
-/* Ensure header-left sticks to far left */
-.header-left {
-    justify-self: start;
-}
+/* Header styles moved to components.css for centralized management */
 
 .header-left {
     flex: none;
@@ -18468,42 +18977,9 @@ input[type="checkbox"].color-checkbox:checked {
     transition: all 0.2s ease;
 }
 
-/* More specific selectors to ensure green styling */
-.header-center .search-container .search-input-container .search-bar,
-.header-center .search-container .search-input-container input[type="search"],
-input.search-bar,
-input[type="search"].search-bar {
-    background: transparent;
-    border: 2px solid #87ac3a;
-    color: #87ac3a;
-    background-color: transparent;
-}
+/* Search styling consolidated in components.css */
 
-.header-center .search-container .search-input-container .search-bar::placeholder,
-.header-center .search-container .search-input-container input[type="search"]::placeholder,
-input.search-bar::placeholder,
-input[type="search"].search-bar::placeholder {
-    color: rgb(135 172 58 / 80%);
-}
-
-/* Override any Tailwind or other framework styles */
-.search-bar {
-    background: transparent;
-    background-color: transparent;
-    border: 2px solid #87ac3a;
-    border-color: #87ac3a;
-    color: #87ac3a;
-}
-
-/* Ultra-specific overrides to beat any framework */
-html body .site-header .header-container .header-content .header-center .search-container .search-input-container .search-bar,
-html body .site-header .header-container .header-content .header-center .search-container .search-input-container input[type="search"] {
-    background: transparent;
-    background-color: transparent;
-    border: 2px solid #87ac3a;
-    border-color: #87ac3a;
-    color: #87ac3a;
-}
+/* Search styling handled by components.css */
 
 /* Header Search Input - Green styling with transparent background */
 #headerSearchInput,
@@ -18547,10 +19023,7 @@ html body input#headerSearchInput:focus {
     background-color: rgb(135 172 58 / 5%);
 }
 
-html body .site-header .header-container .header-content .header-center .search-container .search-input-container .search-bar::placeholder,
-html body .site-header .header-container .header-content .header-center .search-container .search-input-container input[type="search"]::placeholder {
-    color: rgb(135 172 58 / 80%);
-}
+/* Search placeholder styling handled by components.css */
 
 .search-bar:focus {
     outline: none;
@@ -20249,7 +20722,7 @@ button.category_btn_color.active,
 /* Room Background Classes - Centralized */
 .room-bg-main {
 
-    background-size: contain;
+    background-size: cover; /* Use cover for consistent coordinate scaling */
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -20288,7 +20761,7 @@ button.category_btn_color.active,
     height: 100%;
     position: relative;
     overflow: hidden;
-    background-size: contain;
+    background-size: cover; /* Use cover for consistent coordinate scaling */
     background-position: center;
     background-repeat: no-repeat;
 
@@ -20537,7 +21010,7 @@ html, body {
     width: 100vw;
     height: 100vh;
     background-color: transparent;
-    background-image: none;
+    background-image: var(--room-bg-url, url('/images/backgrounds/background_room_main.webp'));
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -22725,7 +23198,7 @@ button.brand-button * {
     width: 100%;
     padding-top: 70%; /* 1280x896 aspect ratio (896/1280 * 100) - ESSENTIAL */
     position: relative;
-    background-size: contain;
+    background-size: cover; /* Use cover for consistent coordinate scaling */
     background-position: center;
     background-repeat: no-repeat;
     border-radius: 15px;
@@ -22902,6 +23375,113 @@ button.brand-button * {
    SHOP PAGE STYLES - High specificity to override Tailwind CSS
    ========================================================================== */
 
+/* CRITICAL FIX: Shop Page Container - Full Viewport Width Breakout - Maximum Specificity */
+body.shop-page #shopPage,
+html.shop-page #shopPage,
+.shop-page #shopPage,
+#shopPage {
+    /* Break out of parent container constraints to use full viewport width */
+    position: relative !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    width: 100vw !important;
+    max-width: none !important;
+
+    /* Minimal edge padding for content */
+    padding: 0 20px !important;
+    margin-top: 10px !important;
+    box-sizing: border-box !important;
+}
+
+/* CRITICAL FIX: Background Tiling Issue - Maximum Specificity */
+body.shop-page main.page-content,
+html.shop-page main.page-content,
+.shop-page main.page-content,
+main.page-content {
+    padding: 0 !important; /* Remove all padding from main container */
+    margin-top: calc(80px + 10px) !important; /* Maintain header spacing */
+    /* Fix background tiling issue - Apply to main page content */
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    min-height: calc(100vh - 90px) !important;
+    background-attachment: fixed !important;
+}
+
+/* Shop Page Content Spacing - Ensure 10px from header to filter buttons */
+#shopPage {
+    padding-top: 10px !important; /* Exactly 10px from header */
+}
+
+/* Navigation Bar - Room Main Image + Category Filters Inline */
+#shopPage .navigation-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-bottom: 25px !important;
+    margin-top: 0 !important;
+    position: relative !important;
+}
+
+/* Room Main Navigation - Left Side */
+#shopPage .room-main-nav-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 2 !important;
+}
+
+/* Category Navigation - Centered */
+#shopPage .category-navigation {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex: 1 !important;
+    max-width: 100% !important;
+}
+
+/* Legacy selector for backward compatibility */
+#shopPage .flex.flex-wrap.justify-center {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 25px; /* Spacing between filters and cards */
+    margin-top: 0 !important; /* Remove any top margin to maintain 10px spacing */
+}
+
+/* Products Grid - CSS Grid Layout for Equal Heights - FLEXBOX OVERRIDE REMOVED */
+/* This section was causing conflicts with the CSS Grid layout below */
+/* Flexbox rules removed to allow CSS Grid with align-items: stretch to work properly */
+
+/* Product Cards - CSS Grid Compatible Styles */
+/* Flexbox-specific width and sizing rules removed to allow CSS Grid to work */
+/* Card heights will now be equal within each row using CSS Grid align-items: stretch */
+
+#shopPage .product-card,
+#shopPage div.product-card,
+.product-card {
+    /* Basic card styling - let CSS Grid handle sizing */
+    box-sizing: border-box !important;
+    margin: 0 !important;
+
+    /* Ensure cards can stretch to equal heights */
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+/* Product Card Content Padding */
+#shopPage .product-card .flex.flex-col {
+    padding: 1rem !important; /* Comfortable padding around all card content */
+}
+
 /* Shop title - ensure white text overrides Tailwind and other styles */
 #shopPage h1.shop_title_color,
 h1.shop_title_color.text-3xl,
@@ -22928,6 +23508,49 @@ button.category_btn_color.category-btn.active,
     color: var(--brand-primary, #87ac3a);
 }
 
+/* Category Filter Buttons - Height Matching Room Main Image */
+#shopPage .category-btn,
+#shopPage button.category-btn {
+    height: 75px !important; /* Reduced to 75px for better proportional balance */
+    min-height: 75px !important;
+    padding: 15px 20px !important; /* Adjusted padding for 75px height */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    border-radius: 50px !important; /* Maintain rounded-full appearance */
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+}
+
+/* Category Button Background and Color Classes */
+.category_btn_bg,
+#shopPage .category_btn_bg {
+    background-color: var(--brand-primary, #87ac3a) !important;
+}
+
+.category_btn_color,
+#shopPage .category_btn_color {
+    color: white !important;
+}
+
+.category_btn_hover_bg:hover,
+#shopPage .category_btn_hover_bg:hover {
+    background-color: var(--brand-primary-hover, #6b8e23) !important;
+}
+
+/* Active category button styling */
+.category-btn.active,
+#shopPage .category-btn.active {
+    background-color: white !important;
+    color: var(--brand-primary, #87ac3a) !important;
+    border: 2px solid var(--brand-primary, #87ac3a) !important;
+}
+
 /* Product category display with brand color border */
 .product-card .text-xs.text-gray-500,
 #shopPage .product-card .text-xs {
@@ -22936,7 +23559,650 @@ button.category_btn_color.category-btn.active,
     padding: 2px 6px;
     display: inline-block;
     font-size: 0.75rem;
-    background-color: rgb(135 172 58 / 10%);
+}
+
+/* Enhanced text wrapping for product descriptions */
+#shopPage .product-card p.text-gray-600,
+#shopPage .product-card .text-gray-600 {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    hyphens: auto !important;
+    text-align: left !important;
+    padding: 0 8px !important;
+}
+
+/* Enhanced text wrapping for product titles */
+#shopPage .product-card h3,
+#shopPage .product-card .font-bold {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    line-height: 1.3 !important;
+}
+
+/* Ensure product images display properly with size constraints */
+#shopPage .product-card img,
+#shopPage div[id^="image-container-"] img {
+    max-width: 150px !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: cover !important;
+    border-radius: 4px !important;
+    margin: 0 auto !important;
+    display: block !important;
+}
+
+/* Ensure image containers maintain proper dimensions */
+#shopPage div[id^="image-container-"] {
+    height: 128px !important; /* h-32 equivalent */
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    background-color: #f3f4f6 !important; /* bg-gray-200 equivalent */
+    border-radius: 6px !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Ensure product cards maintain consistent dimensions */
+#shopPage .bg-white.rounded-lg.p-4.shadow-lg {
+    min-height: 500px !important;
+    max-height: 550px !important;
+    width: 100% !important;
+    max-width: 300px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Room Main Header Image - Fixed Transparent Background and Size */
+
+/* Remove all backgrounds from navigation image links - High Specificity Override */
+.nav-link.nav-image-link,
+.header-left .nav-link.nav-image-link,
+.nav-links .nav-link.nav-image-link,
+.site-header .nav-link.nav-image-link,
+.header-right .nav-link.nav-image-link {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.nav-link.nav-image-link:hover,
+.header-left .nav-link.nav-image-link:hover,
+.nav-links .nav-link.nav-image-link:hover,
+.site-header .nav-link.nav-image-link:hover,
+.header-right .nav-link.nav-image-link:hover,
+.nav-link.nav-image-link:focus,
+.nav-link.nav-image-link:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transform: none !important;
+}
+
+/* Make room_main image 50% larger with transparent background */
+.nav-rooms-image,
+.nav-link.nav-image-link img,
+.nav-link.nav-image-link picture img,
+.nav-link.nav-image-link picture,
+.nav-image-link img,
+.nav-image-link picture img {
+    width: 54px !important; /* 50% larger than original 36px */
+    height: 54px !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.3s ease !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
+.nav-rooms-image:hover,
+.nav-link.nav-image-link:hover img,
+.nav-link.nav-image-link:hover picture img,
+.nav-link.nav-image-link:hover picture,
+.nav-image-link:hover img,
+.nav-image-link:hover picture img {
+    opacity: 1 !important;
+}
+
+/* Ensure picture element has no background */
+.nav-link.nav-image-link picture,
+.nav-image-link picture {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+/* Additional override to ensure image links never get nav-link background styles */
+.nav-link.nav-image-link,
+.nav-link.nav-image-link:hover,
+.nav-link.nav-image-link:focus,
+.nav-link.nav-image-link:active,
+.nav-link.nav-image-link.active {
+    background-color: transparent !important;
+    background: transparent !important;
+    background-image: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    text-shadow: none !important;
+}
+
+/* Ultra-high specificity override for navigation image links */
+.site-header .nav-links .nav-link.nav-image-link,
+.site-header .nav-links .nav-link.nav-image-link:hover,
+.site-header .nav-links .nav-link.nav-image-link:focus,
+.site-header .nav-links .nav-link.nav-image-link:active,
+.header-left .nav-links .nav-link.nav-image-link,
+.header-left .nav-links .nav-link.nav-image-link:hover {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    text-shadow: none !important;
+}
+
+/* Ensure page content below header has proper spacing */
+.page-content {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Shop Page Add to Cart Button Styling - REMOVED DUPLICATE */
+/* This styling has been moved to the enhanced version below to avoid conflicts */
+
+/* Shop Page Card Height Standardization - Enhanced CSS Grid Implementation */
+#shopPage #productsGrid {
+    display: grid !important;
+    gap: 1rem !important; /* Reduced from 1.5rem for better spacing */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 300px)) !important;
+    justify-content: center !important;
+    align-items: stretch !important; /* This makes all cards in a row the same height */
+    width: 100% !important;
+    max-width: none !important; /* FIXED: Remove max-width constraint for full viewport utilization */
+    margin: 0 auto !important; /* Center the grid */
+    padding: 0 30px !important; /* Increased padding for better edge spacing */
+
+    /* Override any Tailwind grid classes */
+    grid-template-rows: none !important;
+    grid-auto-rows: 1fr !important; /* Ensure all rows have equal height */
+}
+
+/* Enhanced Product Card Layout - Flexbox Structure */
+#shopPage .product-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important; /* Fill the grid cell height */
+    min-height: 450px !important;
+    max-width: 320px !important;
+    width: 100% !important;
+    justify-self: center !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Product Image Container - Fixed Height */
+#shopPage .product-image-container {
+    flex-shrink: 0 !important; /* Don't shrink */
+}
+
+/* Product Content - Flexible Area */
+#shopPage .product-content {
+    flex: 1 !important; /* Expand to fill available space */
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 15px !important;
+}
+
+/* Product Description - Expandable */
+#shopPage .product-description {
+    flex: 1 !important; /* Take up remaining space in content area */
+    margin-bottom: 10px !important;
+}
+
+/* Product Info - Fixed Bottom Section */
+#shopPage .product-info {
+    flex-shrink: 0 !important; /* Don't shrink */
+    margin-bottom: 15px !important;
+}
+
+/* Product Button - Always at Bottom */
+#shopPage .product-button {
+    flex-shrink: 0 !important; /* Don't shrink */
+    margin-top: auto !important; /* Push to bottom */
+}
+
+/* Product Title Styling - Enhanced Specificity */
+#shopPage .product-card .product-title,
+#shopPage .product-title,
+#shopPage .product-card h3,
+#shopPage .product-card .text-lg,
+.product-card .product-title,
+.product-card h3 {
+    font-size: 1.125rem !important; /* 18px */
+    font-weight: 700 !important; /* Bold */
+    color: #16a34a !important; /* Green-600 */
+    margin-bottom: 12px !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    display: block !important;
+}
+
+/* Product Description Styling - Enhanced Specificity */
+#shopPage .product-card .description-text,
+#shopPage .description-text,
+#shopPage .product-card .text-sm,
+#shopPage .product-card p,
+.product-card .description-text,
+.product-card p {
+    font-size: 0.875rem !important; /* 14px */
+    color: #6b7280 !important; /* Gray-500 */
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    text-align: left !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+/* Product Price - Large and Prominent - Enhanced Specificity */
+#shopPage .product-card .product-price,
+#shopPage .product-price,
+#shopPage .product-card .text-xl,
+#shopPage .product-card .font-bold,
+.product-card .product-price,
+.product-card .price {
+    font-size: 1.5rem !important; /* 24px - Large and prominent */
+    font-weight: 800 !important; /* Extra bold */
+    color: #15803d !important; /* Green-700 - Darker for better contrast */
+    text-align: center !important;
+    margin-bottom: 12px !important;
+    padding: 8px 0 !important;
+    border-bottom: 2px solid #f3f4f6 !important; /* Light separator */
+    letter-spacing: 0.025em !important; /* Slight letter spacing for readability */
+    display: block !important;
+}
+
+/* Product Stock - Color Coded Based on Levels */
+#shopPage .product-stock,
+#shopPage .product-card .stock,
+.product-card .product-stock,
+.product-card .stock {
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important; /* Semi-bold */
+    text-align: center !important;
+    margin-bottom: 8px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    background-color: #f9fafb !important; /* Light background */
+}
+
+/* Product Category and SKU Styling */
+#shopPage .product-category,
+#shopPage .product-sku,
+#shopPage .product-card .category,
+#shopPage .product-card .sku,
+.product-card .product-category,
+.product-card .product-sku,
+.product-card .category,
+.product-card .sku {
+    font-size: 0.75rem !important; /* 12px */
+    color: #9ca3af !important; /* Gray-400 */
+    text-align: center !important;
+    margin: 4px 0 !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Stock Level Color Coding */
+/* Normal Stock (10+ items) - Green */
+#shopPage .product-stock[data-stock]:not([data-stock="0"]):not([data-stock="1"]):not([data-stock="2"]):not([data-stock="3"]):not([data-stock="4"]):not([data-stock="5"]):not([data-stock="6"]):not([data-stock="7"]):not([data-stock="8"]):not([data-stock="9"]) {
+    color: #16a34a !important; /* Green-600 */
+    background-color: #f0fdf4 !important; /* Green-50 */
+    border: 1px solid #bbf7d0 !important; /* Green-200 */
+}
+
+/* Low Stock (5-9 items) - Yellow/Orange */
+#shopPage .product-stock[data-stock="5"],
+#shopPage .product-stock[data-stock="6"],
+#shopPage .product-stock[data-stock="7"],
+#shopPage .product-stock[data-stock="8"],
+#shopPage .product-stock[data-stock="9"] {
+    color: #d97706 !important; /* Amber-600 */
+    background-color: #fffbeb !important; /* Amber-50 */
+    border: 1px solid #fed7aa !important; /* Amber-200 */
+}
+
+/* Very Low Stock (1-4 items) - Red */
+#shopPage .product-stock[data-stock="1"],
+#shopPage .product-stock[data-stock="2"],
+#shopPage .product-stock[data-stock="3"],
+#shopPage .product-stock[data-stock="4"] {
+    color: #dc2626 !important; /* Red-600 */
+    background-color: #fef2f2 !important; /* Red-50 */
+    border: 1px solid #fecaca !important; /* Red-200 */
+}
+
+/* Out of Stock (0 items) - Dark Red */
+#shopPage .product-stock[data-stock="0"] {
+    color: #991b1b !important; /* Red-800 */
+    background-color: #fef2f2 !important; /* Red-50 */
+    border: 1px solid #f87171 !important; /* Red-400 */
+    font-weight: 700 !important; /* Bold for emphasis */
+}
+
+/* Product Category Styling */
+#shopPage .product-category {
+    font-size: 0.75rem !important; /* 12px */
+    color: #6b7280 !important; /* Gray-500 */
+    text-align: center !important;
+    margin-bottom: 6px !important;
+    padding: 3px 8px !important;
+    background-color: #f9fafb !important; /* Light gray background */
+    border: 1px solid #87ac3a !important; /* Brand color border */
+    border-radius: 4px !important;
+    display: inline-block !important;
+    width: fit-content !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    font-weight: 500 !important;
+}
+
+/* Product SKU Styling */
+#shopPage .product-sku {
+    font-size: 0.75rem !important; /* 12px */
+    color: #9ca3af !important; /* Gray-400 - Lighter for less emphasis */
+    text-align: center !important;
+    margin-bottom: 0 !important;
+    font-family: 'Courier New', monospace !important; /* Monospace for SKU */
+    font-weight: 400 !important;
+    letter-spacing: 0.05em !important; /* Slight spacing for readability */
+    opacity: 0.8 !important;
+}
+
+/* Add to Cart Button - Enhanced Styling */
+#shopPage .add-to-cart-btn,
+#shopPage .product-card button,
+#shopPage button[data-sku],
+.product-card .add-to-cart-btn,
+.product-card button {
+    width: 100% !important;
+    background-color: #87ac3a !important; /* Brand color */
+    color: white !important;
+    border: none !important;
+    padding: 12px 16px !important; /* Increased padding for better touch targets */
+    border-radius: 6px !important; /* Slightly rounded corners */
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important; /* Semi-bold */
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-transform: none !important; /* Preserve custom button text casing */
+    letter-spacing: 0.025em !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow */
+}
+
+#shopPage .add-to-cart-btn:hover,
+#shopPage .product-card button:hover,
+#shopPage button[data-sku]:hover,
+.product-card .add-to-cart-btn:hover,
+.product-card button:hover {
+    background-color: #6b8e23 !important; /* Darker green on hover */
+    transform: translateY(-1px) !important; /* Slight lift effect */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow on hover */
+}
+
+#shopPage .add-to-cart-btn:active,
+#shopPage .product-card button:active,
+#shopPage button[data-sku]:active,
+.product-card .add-to-cart-btn:active,
+.product-card button:active {
+    transform: translateY(0) !important; /* Reset on click */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive Adjustments for Product Cards */
+
+/* Mobile Adjustments */
+@media (max-width: 640px) {
+    #shopPage .product-title {
+        font-size: 1rem !important; /* Slightly smaller on mobile */
+        margin-bottom: 10px !important;
+    }
+
+    #shopPage .product-price {
+        font-size: 1.25rem !important; /* Smaller but still prominent */
+        margin-bottom: 10px !important;
+    }
+
+    #shopPage .description-text {
+        font-size: 0.8125rem !important; /* 13px */
+        line-height: 1.3 !important;
+    }
+
+    #shopPage .add-to-cart-btn {
+        padding: 10px 12px !important;
+        font-size: 0.8125rem !important; /* 13px */
+    }
+}
+
+/* Tablet Adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+    #shopPage .product-title {
+        font-size: 1.0625rem !important; /* 17px */
+    }
+
+    #shopPage .product-price {
+        font-size: 1.375rem !important; /* 22px */
+    }
+}
+
+/* Large Screen Adjustments */
+@media (min-width: 1400px) {
+    #shopPage .product-title {
+        font-size: 1.1875rem !important; /* 19px */
+    }
+
+    #shopPage .product-price {
+        font-size: 1.625rem !important; /* 26px */
+    }
+
+    #shopPage .description-text {
+        font-size: 0.9375rem !important; /* 15px */
+    }
+}
+
+/* Card content structure for equal heights */
+#shopPage .product-card .card-content {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    flex: 1 !important;
+}
+
+#shopPage .product-card .card-description {
+    flex: 1 !important; /* This will expand to fill available space */
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
+    padding: 0 8px !important;
+}
+
+#shopPage .product-card .card-footer {
+    margin-top: auto !important; /* Push footer to bottom */
+}
+
+/* Responsive grid adjustments for equal card heights */
+@media (max-width: 640px) {
+    #shopPage #productsGrid {
+        grid-template-columns: minmax(250px, 1fr) !important; /* 1 card per row on mobile, maintain 250px min */
+        padding: 0 20px !important; /* Better mobile padding */
+        gap: 1rem !important;
+        max-width: 100% !important;
+    }
+
+    #shopPage .product-card {
+        min-height: 480px !important;
+        max-width: 100% !important;
+        min-width: 250px !important; /* Ensure minimum width on mobile */
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    #shopPage #productsGrid {
+        grid-template-columns: repeat(2, minmax(250px, 1fr)) !important; /* 2 cards per row on tablet */
+        gap: 1rem !important; /* Consistent gap */
+        padding: 0 25px !important;
+        max-width: none !important; /* FIXED: Remove max-width constraint for full viewport utilization */
+    }
+
+    #shopPage .product-card {
+        min-height: 500px !important;
+        min-width: 250px !important; /* Ensure minimum width on tablet */
+    }
+}
+
+@media (min-width: 1025px) {
+    #shopPage #productsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 300px)) !important; /* 3-4+ cards per row on desktop */
+        gap: 1rem !important; /* Consistent gap */
+        padding: 0 30px !important;
+        max-width: none !important; /* FIXED: Remove max-width constraint for full viewport utilization */
+    }
+
+    #shopPage .product-card {
+        min-height: 520px !important;
+        min-width: 250px !important; /* Ensure minimum width on desktop */
+    }
+}
+
+@media (min-width: 1400px) {
+    #shopPage #productsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 300px)) !important; /* Maintain consistent sizing */
+        max-width: none !important; /* FIXED: Remove max-width constraint for full viewport utilization */
+        margin: 0 auto !important;
+        gap: 1.25rem !important; /* Slightly larger gap for ultra-wide */
+        padding: 0 40px !important;
+    }
+
+    #shopPage .product-card {
+        min-height: 540px !important; /* Increased height for ultra-wide */
+        max-width: 300px !important;
+        min-width: 250px !important; /* Ensure minimum width on ultra-wide */
+    }
+}
+
+/* Ensure card content fills available height */
+#shopPage .product-card .flex.flex-col {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}
+
+/* Room Main Navigation Image - Inline with Category Filters */
+.room-main-nav-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.room-main-nav-link {
+    display: inline-block !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.room-main-nav-image {
+    height: 75px !important; /* Updated to 75px to match filter buttons */
+    width: auto !important; /* Maintain aspect ratio */
+    opacity: 0.8 !important;
+    transition: opacity 0.3s ease !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    object-fit: contain !important;
+    display: inline-block !important;
+}
+
+.room-main-nav-link:hover .room-main-nav-image {
+    opacity: 1 !important;
+}
+
+/* Responsive positioning for inline navigation */
+@media (max-width: 768px) {
+    /* Stack navigation vertically on mobile */
+    #shopPage .navigation-bar {
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    #shopPage .room-main-nav-container {
+        position: static !important;
+        transform: none !important;
+        order: -1 !important; /* Show room main image above category buttons */
+    }
+
+    #shopPage .category-navigation {
+        width: 100% !important;
+    }
+
+    .room-main-nav-image {
+        height: 60px !important; /* Proportionally smaller on mobile (75px * 0.8) */
+        width: auto !important; /* Maintain aspect ratio */
+    }
+
+    /* Category buttons smaller on mobile to match room main image */
+    #shopPage .category-btn,
+    #shopPage button.category-btn {
+        height: 60px !important; /* Match mobile room main image height */
+        min-height: 80px !important;
+        padding: 16px 20px !important;
+        font-size: 0.8125rem !important; /* 13px */
+    }
+}
+
+@media (min-width: 769px) {
+    /* Ensure proper spacing on larger screens */
+    #shopPage .navigation-bar {
+        padding: 0 60px !important; /* Add padding to prevent overlap with room main image */
+    }
 }
 
 /* ==========================================================================
@@ -22955,6 +24221,203 @@ button.category_btn_color.category-btn.active,
 .search-input + div svg {
     color: var(--brand-primary, #87ac3a);
 }
+
+/* ==========================================================================
+   CRITICAL FIX: GLOBAL SCROLLBAR STYLING - MAXIMUM SPECIFICITY
+   ========================================================================== */
+
+/* Force scrollbar styling on all elements - Maximum Specificity */
+body.shop-page,
+body.shop-page *,
+html.shop-page,
+html.shop-page *,
+.shop-page,
+.shop-page * {
+    scrollbar-width: thin !important;
+    scrollbar-color: #87ac3a rgba(135, 172, 58, 0.3) !important;
+}
+
+/* Webkit scrollbar styling - Maximum Specificity */
+body.shop-page::-webkit-scrollbar,
+body.shop-page *::-webkit-scrollbar,
+html.shop-page::-webkit-scrollbar,
+html.shop-page *::-webkit-scrollbar,
+.shop-page::-webkit-scrollbar,
+.shop-page *::-webkit-scrollbar {
+    width: 16px !important;
+    background: rgba(135, 172, 58, 0.1) !important;
+}
+
+body.shop-page::-webkit-scrollbar-thumb,
+body.shop-page *::-webkit-scrollbar-thumb,
+html.shop-page::-webkit-scrollbar-thumb,
+html.shop-page *::-webkit-scrollbar-thumb,
+.shop-page::-webkit-scrollbar-thumb,
+.shop-page *::-webkit-scrollbar-thumb {
+    background: #87ac3a !important;
+    border-radius: 8px !important;
+    transition: background-color 0.3s ease !important;
+}
+
+body.shop-page::-webkit-scrollbar-thumb:hover,
+body.shop-page *::-webkit-scrollbar-thumb:hover,
+html.shop-page::-webkit-scrollbar-thumb:hover,
+html.shop-page *::-webkit-scrollbar-thumb:hover,
+.shop-page::-webkit-scrollbar-thumb:hover,
+.shop-page *::-webkit-scrollbar-thumb:hover {
+    background: #6b8e23 !important;
+}
+
+/* Ensure shop page maintains full-width layout */
+body.shop-page #shopPage,
+.shop-page #shopPage {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+body.shop-page #productsGrid,
+.shop-page #productsGrid {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+/* ==========================================================================
+   SHOP PAGE LAYOUT FIXES - COMPREHENSIVE SOLUTION
+   ========================================================================== */
+
+
+
+
+
+/* Fix 3: Enhanced Product Card Styling - Comprehensive Selectors */
+
+/* Product Title Styling - Enhanced Specificity */
+#shopPage .product-card .product-title,
+#shopPage .product-title,
+#shopPage .product-card h3,
+#shopPage .product-card .text-lg,
+.product-card .product-title,
+.product-card h3 {
+    font-size: 1.125rem !important; /* 18px */
+    font-weight: 700 !important; /* Bold */
+    color: #16a34a !important; /* Green-600 */
+    margin-bottom: 12px !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    display: block !important;
+}
+
+/* Product Description Styling - Enhanced Specificity */
+#shopPage .product-card .description-text,
+#shopPage .description-text,
+#shopPage .product-card .text-sm,
+#shopPage .product-card p,
+.product-card .description-text,
+.product-card p {
+    font-size: 0.875rem !important; /* 14px */
+    color: #6b7280 !important; /* Gray-500 */
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    text-align: left !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+/* Product Price - Large and Prominent - Enhanced Specificity */
+#shopPage .product-card .product-price,
+#shopPage .product-price,
+#shopPage .product-card .text-xl,
+#shopPage .product-card .font-bold,
+.product-card .product-price,
+.product-card .price {
+    font-size: 1.5rem !important; /* 24px - Large and prominent */
+    font-weight: 800 !important; /* Extra bold */
+    color: #15803d !important; /* Green-700 - Darker for better contrast */
+    text-align: center !important;
+    margin-bottom: 12px !important;
+    padding: 8px 0 !important;
+    border-bottom: 2px solid #f3f4f6 !important; /* Light separator */
+    letter-spacing: 0.025em !important; /* Slight letter spacing for readability */
+    display: block !important;
+}
+
+/* Product Stock - Color Coded Based on Levels */
+#shopPage .product-stock,
+#shopPage .product-card .stock,
+.product-card .product-stock,
+.product-card .stock {
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important; /* Semi-bold */
+    text-align: center !important;
+    margin-bottom: 8px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    background-color: #f9fafb !important; /* Light background */
+}
+
+/* Product Category and SKU Styling */
+#shopPage .product-category,
+#shopPage .product-sku,
+#shopPage .product-card .category,
+#shopPage .product-card .sku,
+.product-card .product-category,
+.product-card .product-sku,
+.product-card .category,
+.product-card .sku {
+    font-size: 0.75rem !important; /* 12px */
+    color: #9ca3af !important; /* Gray-400 */
+    text-align: center !important;
+    margin: 4px 0 !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Add to Cart Button - Enhanced Styling */
+#shopPage .add-to-cart-btn,
+#shopPage .product-card button,
+#shopPage button[data-sku],
+.product-card .add-to-cart-btn,
+.product-card button {
+    width: 100% !important;
+    background-color: #87ac3a !important; /* Brand color */
+    color: white !important;
+    border: none !important;
+    padding: 12px 16px !important; /* Increased padding for better touch targets */
+    border-radius: 6px !important; /* Slightly rounded corners */
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important; /* Semi-bold */
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-transform: none !important; /* Preserve custom button text casing */
+    letter-spacing: 0.025em !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow */
+}
+
+#shopPage .add-to-cart-btn:hover,
+#shopPage .product-card button:hover,
+#shopPage button[data-sku]:hover,
+.product-card .add-to-cart-btn:hover,
+.product-card button:hover {
+    background-color: #6b8e23 !important; /* Darker green on hover */
+    transform: translateY(-1px) !important; /* Slight lift effect */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow on hover */
+}
+
+#shopPage .add-to-cart-btn:active,
+#shopPage .product-card button:active,
+#shopPage button[data-sku]:active,
+.product-card .add-to-cart-btn:active,
+.product-card button:active {
+    transform: translateY(0) !important; /* Reset on click */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+
 
 
 /* --- End of css/pages.css --- */
@@ -23055,6 +24518,7 @@ button.category_btn_color.category-btn.active,
 
 
 
+.no-webp .room-bg-room4 { background-image: var(--bg-png); }
 .no-webp .room-bg-room5 { background-image: var(--bg-png); }
 .no-webp .room-bg-room6 { background-image: var(--bg-png); }
 .no-webp .room-bg-main { background-image: var(--bg-png); }
@@ -23066,7 +24530,7 @@ button.category_btn_color.category-btn.active,
     position: relative;
     overflow: visible; /* Allow background overflow */
     background: transparent;
-    z-index: 0; /* Background layer */
+    z-index: var(--z-base); /* Background layer */
     transform-origin: top center;
 
     /* Aspect ratio managed by parent container */
@@ -23081,7 +24545,7 @@ button.category_btn_color.category-btn.active,
     background-size: cover; /* Fully fill container */
     background-position: center;
     background-repeat: no-repeat;
-    z-index: 0; /* Background layer */
+    z-index: var(--z-base); /* Background layer */
 
     /* Aspect ratio managed by parent container */
     /* aspect-ratio: 1280 / 896; */
@@ -23111,12 +24575,36 @@ html, body {
     /* aspect-ratio: 1280 / 896; */
 }
 
+/* Room overlay wrapper for modal iframe */
+.room-overlay-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+/* Modal room page container */
+.modal-room-page {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Room modal iframe container */
+.room-modal-iframe-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
 /* Room Product Icon Styles - Centralized */
 .room-product-icon {
+    /* Default dimensions as fallback only */
     --icon-width: 80px;
     --icon-height: 80px;
-    width: var(--icon-width);
-    height: var(--icon-height);
 
     position: absolute;
     cursor: pointer;
@@ -23127,6 +24615,15 @@ html, body {
     box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
     border: 3px solid white;
     background-color: white;
+}
+
+/* Only apply default dimensions if no inline styles are set */
+.room-product-icon:not([style*="width"]) {
+    width: var(--icon-width);
+}
+
+.room-product-icon:not([style*="height"]) {
+    height: var(--icon-height);
 }
 
 .room-product-icon:hover {
@@ -23322,9 +24819,745 @@ html, body {
     .room-title-overlay .room-description {
         font-size: 0.8rem;
     }
-} 
+}
+
+/* Direct Content Area Styles (alternative to iframe) */
+.room-modal-content-area {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Room Modal Frame Styles (for iframe version) */
+.room-modal-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
 
 /* --- End of css/room-iframe.css --- */
+
+/* --- Start of legacy_bigfiles/css/room-modal.css --- */
+
+/* Room Modal Styles - WhimsicalFrog */
+
+/* Updated to use centralized z-index system and fix styling issues */
+
+/* Hide legacy modal elements when room modal is active */
+body.modal-open #productModal,
+body.modal-open #productModal .modal-content,
+body.modal-open #productModal #modalContent,
+body.modal-open .modal:not(.room-modal-overlay, #detailedItemModal),
+body.modal-open .modal-content:not(.room-modal-container),
+body.modal-open .modal-overlay:not(.room-modal-overlay, #detailedItemModal),
+body.modal-open #quantityModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1; /* Force behind room modal */
+    transform: scale(0); /* Additional hiding */
+}
+
+/* Hide detailed item modal ONLY when room modal is active, not when the detailed modal itself is open */
+body.modal-open:has(.room-modal-overlay.show) #detailedItemModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1; /* Force behind room modal */
+    transform: scale(0); /* Additional hiding */
+}
+
+/* Fallback for browsers that don't support :has() - use a specific class for room modal state */
+body.room-modal-open #detailedItemModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1; /* Force behind room modal */
+    transform: scale(0); /* Additional hiding */
+}
+
+/* Allow item popup to work within room modal - it has its own z-index management */
+body.modal-open #itemPopup.in-room-modal {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 2147483647;
+    transform: scale(1);
+}
+
+/* Allow item popup to work within detailed item modal - ensure it's visible */
+body.modal-open #itemPopup.show,
+body.modal-open #itemPopup.visible {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 2147483647;
+    transform: scale(1);
+}
+
+/* Room Modal Overlay */
+/* When a product popup is active, hide the dimming layer so only the popup is visible */
+.room-modal-overlay.popup-active {
+    background-image: none !important;
+    background: transparent !important;
+}
+.room-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)), var(--dynamic-bg-url);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: var(--z-room-modals, 2400); /* Use centralized z-index */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    padding-top: 90px;
+    overflow: hidden;
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-sizing: border-box;
+}
+
+.room-modal-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+/* Room Modal Container - Fixed aspect ratio to match room images (1280:896 = 1.43:1) */
+.room-modal-container {
+    position: relative;
+    background: rgb(255 255 255 / 5%);
+    border-radius: var(--room-modal-border-radius, 32px);
+    box-shadow: 0 25px 50px rgb(0 0 0 / 40%);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgb(255 255 255 / 10%);
+    overflow: hidden;
+    
+    /* Maintain exact 1280:896 aspect ratio */
+    aspect-ratio: 1280 / 896;
+    width: min(95vw, min(95vh * 1.43, 1280px));
+    height: auto; /* Let aspect-ratio control height */
+    
+    /* Fallback for browsers without aspect-ratio support */
+    max-width: 1280px;
+    max-height: 896px;
+    
+    /* Ensure proper scaling */
+    transform: scale(0.9);
+    margin-bottom: 20px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Show state with proper scaling */
+.room-modal-overlay.show .room-modal-container {
+    transform: scale(1);
+}
+
+/* Room Modal Frame - Fill container exactly */
+.room-modal-frame,
+.room-modal-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: var(--room-modal-border-radius, 32px);
+    background: transparent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    overflow: hidden;
+    display: block;
+}
+
+/* Room Modal Header - Use centralized z-index */
+.room-modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-room-modal-header, 2450); /* Use centralized z-index */
+    pointer-events: none;
+}
+
+/* Back button positioning - simple top-left */
+.back-button-container {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    pointer-events: auto;
+    z-index: var(--z-room-buttons, 55); /* Use centralized z-index */
+}
+
+/* Room Title/Description Overlay Styles - Ensure proper loading in modal context */
+.room-title-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    max-width: 300px;
+    padding: 15px;
+    background: var(--brand-primary, #87ac3a);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
+    border: none;
+    backdrop-filter: blur(10px);
+    text-align: right;
+    z-index: var(--z-room-buttons, 55);
+    pointer-events: auto;
+    transition: all 0.3s ease;
+}
+
+.room-title-overlay:hover {
+    background: var(--brand-primary-dark, #6b8e23);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 20%);
+}
+
+.room-title-overlay h1 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    color: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+}
+
+.room-title-overlay .room-description {
+    margin: 0;
+    font-size: 0.9rem;
+    color: white;
+    line-height: 1.4;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+}
+
+/* Room Modal Buttons - Remove unwanted borders */
+.room-modal-button {
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: none; /* Remove all borders */
+    padding: 12px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.room-modal-button:hover {
+    background: var(--brand-primary-hover, #6b8e23);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgb(0 0 0 / 30%);
+}
+
+.room-modal-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+}
+
+/* Enhanced styling for back button specifically - Remove border */
+.back-button-container .room-modal-button {
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: none; /* Explicitly remove border */
+    outline: none; /* Remove outline too */
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+}
+
+.back-button-container .room-modal-button:hover {
+    background: var(--brand-primary-hover, #6b8e23);
+    border: none; /* Ensure no border on hover */
+    outline: none;
+}
+
+.back-button-container .room-modal-button:focus {
+    border: none; /* Remove focus border */
+    outline: none;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%), 0 0 0 2px rgb(135 172 58 / 30%);
+}
+
+/* Room Modal Loading States */
+.room-modal-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    z-index: 10;
+}
+
+.room-modal-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgb(135 172 58 / 10%);
+    border-top: 4px solid var(--brand-primary, #87ac3a);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.room-modal-loading-text {
+    color: var(--brand-primary, #87ac3a);
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
+}
+
+/* Room Modal Close Button - Use centralized z-index */
+.room-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgb(0 0 0 / 70%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+    z-index: var(--z-room-modal-header, 2450); /* Use centralized z-index */
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+}
+
+.room-modal-close:hover {
+    background: rgb(0 0 0 / 90%);
+    transform: scale(1.1);
+}
+
+/* Room Modal Title */
+.room-modal-title {
+    background: var(--primary-color, #87ac3a);
+    color: white;
+    padding: 15px 20px;
+    border-radius: var(--radius-2xl); /* Using centralized border radius */
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 30%);
+    backdrop-filter: blur(10px);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Room Modal Iframe Styles */
+.room-modal-iframe-body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    border-radius: var(--room-modal-border-radius);
+}
+
+.room-modal-iframe-page {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--room-modal-border-radius);
+}
+
+/* Modal Z-Index Classes */
+.detailed-item-modal {
+    z-index: var(--z-detailed-item-modal);
+}
+
+.image-zoom-modal {
+    z-index: var(--z-image-zoom-modal);
+}
+
+.quantity-modal {
+    z-index: var(--z-quantity-modal);
+}
+
+.config-form-container {
+    display: none;
+}
+
+/* Room Modal Loading States */
+.room-modal-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgb(255 255 255 / 95%);
+    padding: 20px;
+    border-radius: var(--radius-2xl); /* Using centralized border radius */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 30%);
+}
+
+.room-modal-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color, #87ac3a);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.room-modal-loading-text {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Room Modal Error States */
+.room-modal-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid #fecaca;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 30%);
+}
+
+.room-modal-error-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.room-modal-error-message {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Item Icons with White Background */
+.item-icon {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 12px;
+    box-shadow: none !important;
+    z-index: 20;
+    pointer-events: auto;
+}
+
+.item-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+}
+
+.item-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Room Modal Buttons */
+.room-modal-button {
+    background: var(--primary-color, #87ac3a);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.room-modal-button:hover {
+    background: var(--primary-hover, #6b8e23);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgb(0 0 0 / 30%);
+}
+
+.room-modal-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+}
+
+/* Enhanced styling for back button specifically */
+.back-button-container .room-modal-button {
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: none !important;
+}
+
+.back-button-container .room-modal-button:hover {
+    background: var(--brand-primary-hover, #6b8e23);
+    border: none !important;
+}
+
+/* Room Product Icons in Modal - Use centralized z-index */
+.room-product-icon {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: var(--z-room-elements, 15); /* Use centralized z-index */
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+
+.room-product-icon:hover {
+    transform: scale(1.05);
+    background: rgb(255 255 255 / 95%);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+    z-index: calc(var(--z-room-elements, 15) + 5); /* Slightly higher on hover */
+}
+
+.room-product-icon img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+    max-width: 100%;
+    display: block;
+}
+
+/* Out of stock styling */
+.room-product-icon.out-of-stock {
+    opacity: 0.6;
+    background: rgb(240 240 240 / 90%);
+    border-color: #ccc;
+}
+
+/* Enhanced Responsive Design - Maintain 1280:896 aspect ratio */
+@media (width <= 1400px) {
+    .room-modal-container {
+        width: min(90vw, min(90vh * 1.43, 1200px));
+        aspect-ratio: 1280 / 896;
+    }
+    
+    .back-button-container {
+        top: 0.75rem;
+        left: 0.75rem;
+    }
+    
+    .room-title-overlay {
+        top: 0.75rem;
+        right: 0.75rem;
+        max-width: 280px;
+        padding: 12px;
+    }
+    
+    .room-modal-button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (width <= 1024px) {
+    .room-modal-container {
+        width: min(95vw, min(95vh * 1.43, 1000px));
+        aspect-ratio: 1280 / 896;
+    }
+    
+    .room-modal-overlay {
+        padding: 10px;
+    }
+}
+
+@media (width <= 768px) {
+    .room-modal-container {
+        width: min(98vw, min(98vh * 1.43, 800px));
+        aspect-ratio: 1280 / 896;
+    }
+    
+    .back-button-container {
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+    
+    .room-title-overlay {
+        top: 0.5rem;
+        right: 0.5rem;
+        max-width: 220px;
+        padding: 10px;
+    }
+    
+    .room-title-overlay h1 {
+        font-size: 1.25rem;
+    }
+    
+    .room-title-overlay .room-description {
+        font-size: 0.8rem;
+    }
+    
+    .room-modal-button {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (width <= 480px) {
+    .room-modal-container {
+        width: min(99vw, min(99vh * 1.43, 600px));
+        aspect-ratio: 1280 / 896;
+        border-radius: 16px;
+    }
+    
+    .room-modal-overlay {
+        padding: 5px;
+    }
+    
+    .room-title-overlay {
+        max-width: 180px;
+        padding: 8px;
+    }
+    
+    .room-title-overlay h1 {
+        font-size: 1.1rem;
+    }
+    
+    .room-title-overlay .room-description {
+        font-size: 0.75rem;
+    }
+}
+
+/* Fallback for browsers without aspect-ratio support */
+@supports not (aspect-ratio: 1280 / 896) {
+    .room-modal-container {
+        width: min(95vw, 1280px);
+        height: calc(min(95vw, 1280px) * 896 / 1280);
+        max-height: 896px;
+    }
+    
+    @media (width <= 1400px) {
+        .room-modal-container {
+            width: min(90vw, 1200px);
+            height: calc(min(90vw, 1200px) * 896 / 1280);
+        }
+    }
+    
+    @media (width <= 1024px) {
+        .room-modal-container {
+            width: min(95vw, 1000px);
+            height: calc(min(95vw, 1000px) * 896 / 1280);
+        }
+    }
+    
+    @media (width <= 768px) {
+        .room-modal-container {
+            width: min(98vw, 800px);
+            height: calc(min(98vw, 800px) * 896 / 1280);
+        }
+    }
+    
+    @media (width <= 480px) {
+        .room-modal-container {
+            width: min(99vw, 600px);
+            height: calc(min(99vw, 600px) * 896 / 1280);
+        }
+    }
+}
+
+/* Room Modal Animation States */
+.room-modal-overlay.hide {
+    opacity: 0;
+}
+
+.room-modal-overlay.hide .room-modal-container {
+    transform: scale(0.95);
+}
+
+/* Room Modal Error States */
+.room-modal-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid #fecaca;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 30%);
+}
+
+.room-modal-error-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.room-modal-error-message {
+    font-size: 0.9rem;
+    line-height: 1.4;
+} 
+
+/* Ensure detailed item modal images display correctly */
+.detailed-item-modal-container img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+} 
+
+/* --- End of legacy_bigfiles/css/room-modal.css --- */
 
 /* --- Start of css/generated_css_live.css --- */
 
@@ -23735,6 +25968,15 @@ div[style*="position: absolute"], div[style*="position: absolute"] *,
   .product-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Shop page mobile optimizations */
+  #shopPage {
+    padding: 0 8px !important; /* Minimal padding on small screens */
+  }
+
+  #productsGrid {
+    gap: 0.75rem !important; /* Tighter spacing on small screens */
+  }
 }
 
 /* Medium devices (mobile landscape, up to 640px) */
@@ -23755,6 +25997,17 @@ div[style*="position: absolute"], div[style*="position: absolute"] *,
   .product-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
+
+  /* Shop page tablet optimizations */
+  #shopPage {
+    padding: 0 15px !important; /* Moderate padding on tablets */
+  }
+
+  /* Remove parent container padding on mobile/tablet */
+  .shop-page main.page-content {
+    padding: 0 !important;
+  }
+}
   .grid-2,
   .grid-3,
   .grid-4 {

@@ -20,6 +20,9 @@ $priorityFiles = [
     // Room iframe backgrounds
     'css/room-iframe.css',
 
+    // Room modal styles
+    'legacy_bigfiles/css/room-modal.css',
+
     // Overrides
     'css/generated_css_live.css',
 

@@ -1,5 +1,441 @@
 /* Admin Styles - Centralized CSS for admin interface components */
 
+/* ===== UNIVERSAL PAGE HEADER ===== */
+/* Consistent header with fade effect used across all pages except rooms 1-5 */
+
+.site-header.universal-page-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.4) 0%,     /* Darker transparent at top */
+        rgba(0, 0, 0, 0.2) 50%,    /* Medium transparency in middle */
+        rgba(0, 0, 0, 0.1) 100%    /* Lighter transparency at bottom */
+    );
+    color: var(--brand-primary, #87ac3a);
+    transition: all 0.3s ease-in-out;
+}
+
+.site-header.universal-page-header .header-container {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.site-header.universal-page-header .header-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    width: 100%;
+    min-height: 80px;
+    padding: 10px 0;
+    position: relative;
+    z-index: 1001;
+}
+
+/* Left Section: Logo and Navigation */
+.site-header.universal-page-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    justify-self: start;
+    padding-left: 20px;
+    z-index: 1002;
+    position: relative;
+}
+
+.site-header.universal-page-header .logo-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--brand-primary, #87ac3a);
+    transition: opacity 0.3s ease;
+}
+
+.site-header.universal-page-header .logo-link:hover {
+    opacity: 0.9;
+}
+
+.site-header.universal-page-header .header-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.site-header.universal-page-header .logo-text-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.site-header.universal-page-header .logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--brand-primary, #87ac3a);
+    line-height: 1.2;
+}
+
+.site-header.universal-page-header .logo-tagline {
+    font-size: 0.875rem;
+    color: var(--brand-primary, #87ac3a);
+    font-weight: 400;
+}
+
+/* Navigation Links (Left-justified) */
+.site-header.universal-page-header .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .nav-link {
+    color: var(--brand-primary, #87ac3a);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1003;
+}
+
+.site-header.universal-page-header .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.site-header.universal-page-header .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+}
+
+/* Center Section: Search (Centered) */
+.site-header.universal-page-header .header-center {
+    justify-self: center;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    justify-content: center;
+    z-index: 1002;
+    position: relative;
+}
+
+.site-header.universal-page-header .search-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+.site-header.universal-page-header .search-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.site-header.universal-page-header .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: var(--brand-primary, #87ac3a);
+    z-index: 1003;
+}
+
+.site-header.universal-page-header .search-bar {
+    width: 100%;
+    padding: 12px 16px 12px 44px;
+    border: 2px solid var(--brand-primary, #87ac3a);
+    border-radius: 25px;
+    background: transparent;
+    color: var(--brand-primary, #87ac3a);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .search-bar:focus {
+    border-color: var(--brand-primary, #87ac3a);
+    background: transparent;
+    box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.2);
+}
+
+.site-header.universal-page-header .search-bar::placeholder {
+    color: var(--brand-primary, #87ac3a);
+}
+
+/* Right Section: User Menu and Cart */
+.site-header.universal-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-self: end;
+    padding-right: 20px;
+    z-index: 1002;
+    position: relative;
+}
+
+.site-header.universal-page-header .auth-links,
+.site-header.universal-page-header .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .welcome-message {
+    color: var(--brand-primary, #87ac3a);
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .header-right .nav-link {
+    color: var(--brand-primary, #87ac3a);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .header-right .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.site-header.universal-page-header .cart-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--brand-primary, #87ac3a);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .cart-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.site-header.universal-page-header .cart-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.site-header.universal-page-header .cart-count {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--brand-primary, #87ac3a);
+}
+
+.site-header.universal-page-header .cart-total {
+    font-size: 0.9rem;
+    color: var(--brand-primary, #87ac3a);
+}
+
+/* Mobile Menu Toggle */
+.site-header.universal-page-header .mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--brand-primary, #87ac3a);
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    z-index: 1003;
+    position: relative;
+}
+
+.site-header.universal-page-header .mobile-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.site-header.universal-page-header .mobile-menu-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Page Content Positioning - 10px below header */
+.page-content,
+.main-content,
+.content-wrapper {
+    margin-top: calc(80px + 10px); /* Header height + 10px spacing */
+    padding-top: 10px;
+}
+
+/* Responsive Design - Keep horizontal layout until mobile */
+@media (max-width: 900px) {
+    .site-header.universal-page-header .header-left {
+        padding-left: 15px;
+    }
+
+    .site-header.universal-page-header .header-right {
+        padding-right: 15px;
+    }
+
+    .site-header.universal-page-header .header-center {
+        max-width: 250px;
+    }
+
+    .site-header.universal-page-header .nav-links {
+        gap: 15px;
+    }
+
+    .site-header.universal-page-header .nav-link {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .site-header.universal-page-header .mobile-menu-toggle {
+        display: block;
+    }
+
+    .site-header.universal-page-header .nav-links {
+        display: none;
+    }
+
+    .site-header.universal-page-header .header-content {
+        grid-template-columns: auto 1fr auto;
+        min-height: 60px;
+    }
+
+    .site-header.universal-page-header .header-left {
+        padding-left: 10px;
+    }
+
+    .site-header.universal-page-header .header-right {
+        padding-right: 10px;
+    }
+
+    .site-header.universal-page-header .header-center {
+        max-width: 200px;
+    }
+
+    .site-header.universal-page-header .logo-text {
+        font-size: 1.25rem;
+    }
+
+    .site-header.universal-page-header .logo-tagline {
+        font-size: 0.75rem;
+    }
+
+    .page-content,
+    .main-content,
+    .content-wrapper {
+        margin-top: calc(80px + 10px);
+    }
+}
+
+@media (max-width: 480px) {
+    .site-header.universal-page-header .header-left {
+        gap: 15px;
+        padding-left: 8px;
+    }
+
+    .site-header.universal-page-header .header-right {
+        gap: 10px;
+        padding-right: 8px;
+    }
+
+    .site-header.universal-page-header .header-center {
+        max-width: 150px;
+    }
+
+    .site-header.universal-page-header .logo-text {
+        font-size: 1.1rem;
+    }
+
+    .site-header.universal-page-header .search-bar {
+        padding: 10px 14px 10px 40px;
+        font-size: 0.9rem;
+    }
+
+    .site-header.universal-page-header .cart-text {
+        display: none; /* Hide "items" text on very small screens */
+    }
+}
+
+/* Mobile Menu Styles */
+.site-header.universal-page-header .mobile-menu {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.8) 50%,
+        rgba(0, 0, 0, 0.7) 100%
+    );
+    transition: all 0.3s ease-in-out;
+    z-index: 1004;
+}
+
+.site-header.universal-page-header .mobile-menu.active {
+    display: block;
+}
+
+.site-header.universal-page-header .mobile-nav-links {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.site-header.universal-page-header .mobile-nav-link {
+    color: var(--header-text-primary, #87ac3a);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: var(--text-xl, 1.25rem);
+    padding: 12px 16px;
+    transition: opacity 0.3s ease;
+    display: block;
+}
+
+.site-header.universal-page-header .mobile-nav-link:hover,
+.site-header.universal-page-header .mobile-nav-link.active {
+    opacity: 0.8;
+}
+
+.site-header.universal-page-header .mobile-auth-section {
+    color: var(--brand-primary, #87ac3a);
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.site-header.universal-page-header .mobile-search {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.site-header.universal-page-header .mobile-search .search-bar {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--brand-primary, #87ac3a);
+    border-radius: 25px;
+    background: transparent;
+    color: var(--brand-primary, #87ac3a);
+    font-size: 1rem;
+}
+
 /* ==============================================
    ADMIN SETTINGS SECTION HEADERS
    ============================================== */
@@ -1166,22 +1602,22 @@ body:has(.admin-modal-overlay:not(.hidden)) .admin-tab-navigation {
 }
 
 .btn-small.btn-primary {
-    background: #2563eb;
+    background: var(--brand-primary, #87ac3a);
     color: white;
 }
 
 .btn-small.btn-primary:hover {
-    background: #1d4ed8;
+    background: var(--brand-secondary, #6b8e23);
     transform: translateY(-1px);
 }
 
 .btn-small.btn-secondary {
-    background: #6b7280;
+    background: var(--brand-primary, #87ac3a);
     color: white;
 }
 
 .btn-small.btn-secondary:hover {
-    background: #374151;
+    background: var(--brand-secondary, #6b8e23);
     transform: translateY(-1px);
 }
 
@@ -4627,9 +5063,9 @@ mark {
 
 /* Info button styling */
 .btn-info {
-  background: #06b6d4;
+  background: var(--brand-primary, #87ac3a);
   color: white;
-  border: 1px solid #06b6d4;
+  border: 1px solid var(--brand-primary, #87ac3a);
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 500;
@@ -4637,8 +5073,8 @@ mark {
 }
 
 .btn-info:hover {
-  background: #0891b2;
-  border-color: #0891b2;
+  background: var(--brand-secondary, #6b8e23);
+  border-color: var(--brand-secondary, #6b8e23);
   transform: translateY(-1px);
 }
 
@@ -4690,13 +5126,13 @@ mark {
 }
 
 .receipt-message-controls .btn-ai {
-  background: #3b82f6;
+  background: var(--brand-primary, #87ac3a);
   color: white;
-  border-color: #3b82f6;
+  border-color: var(--brand-primary, #87ac3a);
 }
 
 .receipt-message-controls .btn-ai:hover {
-  background: #2563eb;
+  background: var(--brand-secondary, #6b8e23);
 }
 
 .receipt-message-controls .btn-delete {
@@ -8783,12 +9219,14 @@ body.modal-open #itemPopup.visible {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+
     z-index: var(--z-room-modals, 2400); /* Use centralized z-index */
     display: none;
     align-items: center;
     justify-content: center;
     padding: 20px;
     padding-top: 90px;
+    padding-bottom: 40px; /* Add extra bottom padding so modal doesn't touch screen edge */
     overflow: hidden;
     pointer-events: auto;
     opacity: 0;
@@ -8853,8 +9291,13 @@ body.modal-open #itemPopup.visible {
     top: 0;
     left: 0;
     right: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     z-index: var(--z-room-modal-header, 2450); /* Use centralized z-index */
     pointer-events: none;
+    /* Ensure header is constrained to modal container edges */
+    overflow: hidden;
 }
 
 /* Back button positioning - simple top-left */
@@ -9272,9 +9715,10 @@ body.modal-open #itemPopup.visible {
         width: min(95vw, min(95vh * 1.43, 1000px));
         aspect-ratio: 1280 / 896;
     }
-    
+
     .room-modal-overlay {
         padding: 10px;
+        padding-bottom: 30px; /* Maintain bottom padding on tablets */
     }
 }
 
@@ -9316,9 +9760,10 @@ body.modal-open #itemPopup.visible {
         aspect-ratio: 1280 / 896;
         border-radius: 16px;
     }
-    
+
     .room-modal-overlay {
         padding: 5px;
+        padding-bottom: 20px; /* Maintain bottom padding on mobile */
     }
     
     .room-title-overlay {
@@ -12417,8 +12862,8 @@ body:has(#cartPage) {
 .room-modal-content .modal-footer .btn-primary {
     flex: 2;
     padding: 10px 16px;
-    background: #059669;
-    border: 1px solid #059669;
+    background: var(--brand-primary, #87ac3a);
+    border: 1px solid var(--brand-primary, #87ac3a);
     color: white;
     border-radius: 8px;
     font-size: 0.9rem;
@@ -12428,8 +12873,8 @@ body:has(#cartPage) {
 }
 
 .room-modal-content .modal-footer .btn-primary:hover {
-    background: #047857;
-    border-color: #047857;
+    background: var(--brand-secondary, #6b8e23);
+    border-color: var(--brand-secondary, #6b8e23);
 }
 /* --- chunk: chunk-43.css --- */
 /* auto-chunk */
@@ -15099,21 +15544,21 @@ body:has(#cartPage) {
     margin: 0;
 }
 
-/* Themed admin modal headers based on section-theme classes */
+/* Themed admin modal headers - Use brand primary green for consistency */
 .admin-modal-content.content-section .admin-modal-header {
-    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #6b8e23));
 }
 
 .admin-modal-content.visual-section .admin-modal-header {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #6b8e23));
 }
 
 .admin-modal-content.business-section .admin-modal-header {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #6b8e23));
 }
 
 .admin-modal-content.technical-section .admin-modal-header {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #6b8e23));
 }
 
 .admin-modal-header .modal-title {
@@ -15585,8 +16030,8 @@ body:has(#cartPage) {
 .room-modal-content .modal-footer .btn-primary {
     flex: 2;
     padding: 10px 16px;
-    background: #059669;
-    border: 1px solid #059669;
+    background: var(--brand-primary, #87ac3a);
+    border: 1px solid var(--brand-primary, #87ac3a);
     color: white;
     border-radius: 8px;
     font-size: 0.9rem;
@@ -15596,8 +16041,8 @@ body:has(#cartPage) {
 }
 
 .room-modal-content .modal-footer .btn-primary:hover {
-    background: #047857;
-    border-color: #047857;
+    background: var(--brand-secondary, #6b8e23);
+    border-color: var(--brand-secondary, #6b8e23);
 }
 
 /* ==============================================
@@ -17837,5 +18282,93 @@ input[type="checkbox"].color-checkbox:checked {
     max-height: calc(100vh - 4rem);
     display: flex;
     flex-direction: column;
+}
+
+/* ==============================================
+   POS (POINT OF SALE) SYSTEM STYLES
+   ============================================== */
+
+/* POS Items Grid */
+.pos-items-grid {
+    flex: 1;
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 5%);
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.5rem;
+}
+
+/* POS Item Cards */
+.pos-items-grid .item-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 200px;
+}
+
+.pos-items-grid .item-card:hover {
+    border-color: var(--brand-primary, #87ac3a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+}
+
+.pos-items-grid .item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.pos-items-grid .item-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.pos-items-grid .item-sku {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-family: Monaco, Menlo, monospace;
+    margin-bottom: 0.5rem;
+}
+
+.pos-items-grid .item-price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--brand-primary, #87ac3a);
+}
+
+/* No Items Message */
+.no-items-message {
+    text-align: center;
+    color: #6b7280;
+    font-size: 1rem;
+    padding: 2rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    border: 2px dashed #d1d5db;
 }
 

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Debug Test</title>
+    <link href="css/bundle.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .test-door {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 20px;
+            background: #87ac3a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-door:hover {
+            background: #6b8e23;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JavaScript Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>Core System Status</h2>
+        <div id="coreStatus" class="status warning">Loading...</div>
+        <pre id="coreDetails"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>Modal System Status</h2>
+        <div id="modalStatus" class="status warning">Loading...</div>
+        <pre id="modalDetails"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Door Clicks</h2>
+        <div id="clickStatus" class="status warning">Click a door to test...</div>
+        <div>
+            <div class="door-area test-door" data-room="1" data-category="Main Room">Room 1</div>
+            <div class="door-area test-door" data-room="2" data-category="Window Wraps">Room 2</div>
+            <div class="door-area test-door" data-room="3" data-category="Window Wraps">Room 3</div>
+            <div class="door-area test-door" data-room="4" data-category="Window Wraps">Room 4</div>
+            <div class="door-area test-door" data-room="5" data-category="Window Wraps">Room 5</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <pre id="consoleOutput"></pre>
+    </div>
+
+    <script src="js/bundle.js"></script>
+    <script>
+        // Capture console output
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('consoleOutput');
+        let logs = [];
+        
+        function addLog(type, ...args) {
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            logs.push(`[${type.toUpperCase()}] ${message}`);
+            consoleOutput.textContent = logs.slice(-20).join('\n');
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog('log', ...args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('error', ...args);
+        };
+        
+        // Test core system
+        function testCoreSystem() {
+            const coreStatus = document.getElementById('coreStatus');
+            const coreDetails = document.getElementById('coreDetails');
+            
+            let status = 'success';
+            let details = [];
+            
+            // Check WhimsicalFrog
+            if (typeof window.WhimsicalFrog === 'undefined') {
+                status = 'error';
+                details.push('❌ WhimsicalFrog not defined');
+            } else {
+                details.push('✅ WhimsicalFrog defined');
+                details.push(`   - Type: ${typeof window.WhimsicalFrog}`);
+                details.push(`   - Ready method: ${typeof window.WhimsicalFrog.ready}`);
+                details.push(`   - Initialized: ${window.WhimsicalFrog.initialized}`);
+            }
+            
+            coreStatus.className = `status ${status}`;
+            coreStatus.textContent = status === 'success' ? 'Core System OK' : 'Core System Issues';
+            coreDetails.textContent = details.join('\n');
+        }
+        
+        // Test modal system
+        function testModalSystem() {
+            const modalStatus = document.getElementById('modalStatus');
+            const modalDetails = document.getElementById('modalDetails');
+            
+            let status = 'success';
+            let details = [];
+            
+            // Check RoomModalManager
+            if (typeof window.roomModalManager === 'undefined') {
+                status = 'error';
+                details.push('❌ roomModalManager not defined');
+            } else {
+                details.push('✅ roomModalManager defined');
+                details.push(`   - Type: ${typeof window.roomModalManager}`);
+                details.push(`   - Show method: ${typeof window.roomModalManager.show}`);
+            }
+            
+            modalStatus.className = `status ${status}`;
+            modalStatus.textContent = status === 'success' ? 'Modal System OK' : 'Modal System Issues';
+            modalDetails.textContent = details.join('\n');
+        }
+        
+        // Test door clicks
+        function setupDoorTests() {
+            const clickStatus = document.getElementById('clickStatus');
+            
+            document.querySelectorAll('.door-area').forEach((door, index) => {
+                door.addEventListener('click', function() {
+                    const roomNumber = this.dataset.room;
+                    clickStatus.textContent = `Testing Room ${roomNumber}...`;
+                    clickStatus.className = 'status warning';
+                    
+                    try {
+                        if (window.roomModalManager && typeof window.roomModalManager.show === 'function') {
+                            console.log(`Testing door click for room ${roomNumber}`);
+                            window.roomModalManager.show(roomNumber);
+                            clickStatus.textContent = `✅ Room ${roomNumber} modal triggered successfully`;
+                            clickStatus.className = 'status success';
+                        } else {
+                            throw new Error('roomModalManager.show not available');
+                        }
+                    } catch (error) {
+                        console.error('Door click error:', error);
+                        clickStatus.textContent = `❌ Room ${roomNumber} failed: ${error.message}`;
+                        clickStatus.className = 'status error';
+                    }
+                });
+            });
+        }
+        
+        // Run tests when ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, running tests...');
+            
+            setTimeout(() => {
+                testCoreSystem();
+                testModalSystem();
+                setupDoorTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

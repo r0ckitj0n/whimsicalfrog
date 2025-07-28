@@ -16,10 +16,10 @@ function renderGlobalPopup()
                     <span id="popupSaleText">SALE</span>
                 </span>
             </div>
-            
+
             <!- Limited Stock Badge ->
             <div id="popupStockBadge" class="popup-stock-badge hidden">
-                <span class="stock-badge">LIMITED STOCK</span>
+                <span class="stock-badge" id="popupStockText">LIMITED STOCK</span>
             </div>
             
             <!- Product Image ->

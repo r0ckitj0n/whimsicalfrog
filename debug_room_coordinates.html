@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Coordinate Debugging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .test-section h2 {
+            color: #87ac3a;
+            margin-top: 0;
+        }
+        .coordinate-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .test-button {
+            background: #87ac3a;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #6d8a2e;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🐸 Room Coordinate System Debugging</h1>
+        
+        <div class="test-section">
+            <h2>📊 API Response Verification</h2>
+            <p>Testing the coordinate data format from the database:</p>
+            <button class="test-button" onclick="testAPI()">Test Room 1 API</button>
+            <div id="apiResult" class="coordinate-data"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Coordinate Scaling Test</h2>
+            <p>Original image dimensions: <strong>1280x896 pixels</strong></p>
+            <p>Test the room modal scaling system:</p>
+            <button class="test-button" onclick="openRoomModal()">Open Room 1 Modal</button>
+            <button class="test-button" onclick="testScaling()">Test Scaling Calculations</button>
+            <div id="scalingResult" class="coordinate-data"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Expected vs Actual Coordinates</h2>
+            <p>Database coordinates for Room 1:</p>
+            <div class="coordinate-data">
+Area 1: top=332, left=104, width=121, height=137
+Area 2: top=345, left=289, width=92, height=122  
+Area 3: top=347, left=385, width=83, height=122
+Area 4: top=344, left=474, width=90, height=125
+            </div>
+            <p><strong>These coordinates should scale proportionally with the background image in the modal.</strong></p>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Manual Testing Steps</h2>
+            <ol>
+                <li>Click "Test Room 1 API" to verify database format</li>
+                <li>Click "Open Room 1 Modal" to test the modal system</li>
+                <li>Verify that product icons appear at distinct positions (not stacked)</li>
+                <li>Verify that background image fills the modal properly</li>
+                <li>Resize the browser window and check that icons reposition correctly</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🏠 Navigation Test</h2>
+            <p>Test the header navigation fix:</p>
+            <a href="http://localhost:8080/?page=shop" target="_blank" class="test-button">Test Shop Page Header</a>
+            <a href="http://localhost:8080/?page=room_main" target="_blank" class="test-button">Test Room Main Header</a>
+            <p><strong>Verify:</strong> No "Rooms" link appears in the header navigation</p>
+        </div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('/api/get_room_coordinates.php?room_type=room1');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = JSON.stringify(data, null, 2);
+                
+                if (data.success && data.coordinates && data.coordinates.length > 0) {
+                    resultDiv.className = 'coordinate-data';
+                    resultDiv.innerHTML += '\n\n✅ API Response Format: CORRECT';
+                } else {
+                    resultDiv.className = 'coordinate-data status error';
+                    resultDiv.innerHTML += '\n\n❌ API Response Format: INCORRECT';
+                }
+            } catch (error) {
+                resultDiv.className = 'coordinate-data status error';
+                resultDiv.innerHTML = '❌ API Error: ' + error.message;
+            }
+        }
+
+        function openRoomModal() {
+            // Open the room main page in a new tab
+            window.open('http://localhost:8080/?page=room_main', '_blank');
+            
+            // Show instructions
+            const resultDiv = document.getElementById('scalingResult');
+            resultDiv.innerHTML = `
+🎯 Room Modal Opened in New Tab
+
+Instructions:
+1. Click on any room door (Living Room, Bedroom, etc.)
+2. Verify the modal opens with background image
+3. Check that product icons appear at distinct positions
+4. Icons should NOT be stacked or overlapping
+5. Background should fill the modal completely
+6. Try resizing the browser window to test responsive scaling
+
+Expected Behavior:
+- 4 product icons for Room 1 at different positions
+- Icons scale proportionally with background image
+- No overlapping or stacking issues
+            `;
+        }
+
+        function testScaling() {
+            const resultDiv = document.getElementById('scalingResult');
+            
+            // Simulate scaling calculations
+            const originalWidth = 1280;
+            const originalHeight = 896;
+            const containerWidth = 800;  // Example container size
+            const containerHeight = 600;
+            
+            const containerAspectRatio = containerWidth / containerHeight;
+            const imageAspectRatio = originalWidth / originalHeight;
+            
+            let renderedImageWidth, renderedImageHeight;
+            let offsetX = 0, offsetY = 0;
+            
+            if (containerAspectRatio > imageAspectRatio) {
+                renderedImageHeight = containerHeight;
+                renderedImageWidth = renderedImageHeight * imageAspectRatio;
+                offsetX = (containerWidth - renderedImageWidth) / 2;
+            } else {
+                renderedImageWidth = containerWidth;
+                renderedImageHeight = renderedImageWidth / imageAspectRatio;
+                offsetY = (containerHeight - renderedImageHeight) / 2;
+            }
+            
+            const scaleX = renderedImageWidth / originalWidth;
+            const scaleY = renderedImageHeight / originalHeight;
+            
+            resultDiv.innerHTML = `
+🧮 Scaling Calculation Example:
+
+Original Image: ${originalWidth}x${originalHeight}
+Container: ${containerWidth}x${containerHeight}
+Rendered Image: ${Math.round(renderedImageWidth)}x${Math.round(renderedImageHeight)}
+Offset: ${Math.round(offsetX)}, ${Math.round(offsetY)}
+Scale Factors: ${scaleX.toFixed(3)}x${scaleY.toFixed(3)}
+
+Example Coordinate Transformation:
+Original: top=332, left=104
+Scaled: top=${Math.round(332 * scaleY + offsetY)}, left=${Math.round(104 * scaleX + offsetX)}
+            `;
+        }
+    </script>
+</body>
+</html>

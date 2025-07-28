@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐛 Debug JavaScript Injection</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .debug-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 3px solid #dc2626;
+            border-radius: 8px;
+            background: #fef2f2;
+        }
+        
+        .debug-section h3 {
+            color: #dc2626;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+        
+        .status.warning {
+            background: #fefcbf;
+            color: #744210;
+            border: 1px solid #f6e05e;
+        }
+        
+        .status.info {
+            background: #bee3f8;
+            color: #2a4365;
+            border: 1px solid #90cdf4;
+        }
+        
+        .test-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-button:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+        }
+        
+        .iframe-container {
+            border: 3px solid #dc2626;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 400px;
+        }
+        
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 Debug JavaScript Injection</h1>
+        <p style="text-align: center; color: #718096; margin-bottom: 30px;">
+            <strong>Debugging why JavaScript style injection is not working</strong>
+        </p>
+
+        <div class="debug-section">
+            <h3>🐛 JavaScript Execution Debug</h3>
+            <p>Testing if our JavaScript style injection is executing and identifying any errors.</p>
+            <button class="test-button" onclick="debugJavaScriptInjection()">Debug JavaScript Injection</button>
+            <div id="debug-results"></div>
+            <div id="shop-iframe-container"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📊 Detailed Debug Report</h3>
+            <div id="detailed-debug">
+                <div class="status info">Click the debug button above to see detailed analysis.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function debugJavaScriptInjection() {
+            const resultsDiv = document.getElementById('debug-results');
+            const iframeContainer = document.getElementById('shop-iframe-container');
+            const detailedDiv = document.getElementById('detailed-debug');
+            
+            resultsDiv.innerHTML = '<div class="status warning">Debugging JavaScript injection...</div>';
+            
+            try {
+                // Create iframe to load shop page
+                const iframe = document.createElement('iframe');
+                iframe.src = `/?page=shop&debug_js=1&v=${Date.now()}`;
+                
+                iframeContainer.innerHTML = '<div class="iframe-container"></div>';
+                iframeContainer.querySelector('.iframe-container').appendChild(iframe);
+                
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            const iframeWindow = iframe.contentWindow;
+                            
+                            let debugReport = '<h4>🐛 JavaScript Injection Debug Report</h4>';
+                            debugReport += '<div class="code-block">';
+                            
+                            // Check if JavaScript injector script is present
+                            const jsInjector = iframeDoc.querySelector('#shop-page-style-injector');
+                            debugReport += `JavaScript Injector Script: ${jsInjector ? 'FOUND ✅' : 'NOT FOUND ❌'}\n`;
+                            
+                            if (jsInjector) {
+                                debugReport += `Script Content Length: ${jsInjector.textContent.length} characters\n`;
+                                debugReport += `Script Type: ${jsInjector.type || 'text/javascript'}\n`;
+                            }
+                            
+                            // Check if JavaScript injection indicator is present
+                            const jsIndicator = iframeDoc.querySelector('#js-injection-indicator');
+                            debugReport += `JS Injection Indicator: ${jsIndicator ? 'FOUND ✅' : 'NOT FOUND ❌'}\n`;
+                            
+                            if (jsIndicator) {
+                                debugReport += `Indicator Display: ${iframeWindow.getComputedStyle(jsIndicator).display}\n`;
+                                debugReport += `Indicator Content: "${jsIndicator.textContent}"\n`;
+                            }
+                            
+                            debugReport += `\n${'='.repeat(50)}\n\n`;
+                            
+                            // Check console logs by injecting a console capture script
+                            debugReport += `CONSOLE LOG CAPTURE:\n`;
+                            
+                            // Inject console capture into the iframe
+                            const consoleCapture = iframeDoc.createElement('script');
+                            consoleCapture.textContent = `
+                                window.debugLogs = [];
+                                const originalLog = console.log;
+                                const originalError = console.error;
+                                const originalWarn = console.warn;
+                                
+                                console.log = function(...args) {
+                                    window.debugLogs.push({type: 'log', message: args.join(' ')});
+                                    originalLog.apply(console, args);
+                                };
+                                
+                                console.error = function(...args) {
+                                    window.debugLogs.push({type: 'error', message: args.join(' ')});
+                                    originalError.apply(console, args);
+                                };
+                                
+                                console.warn = function(...args) {
+                                    window.debugLogs.push({type: 'warn', message: args.join(' ')});
+                                    originalWarn.apply(console, args);
+                                };
+                                
+                                // Re-run our style injection to capture logs
+                                if (window.applyUltimateStyles) {
+                                    console.log('🔄 Re-running style injection for debug...');
+                                    window.applyUltimateStyles();
+                                } else {
+                                    console.error('❌ applyUltimateStyles function not found!');
+                                }
+                            `;
+                            iframeDoc.head.appendChild(consoleCapture);
+                            
+                            // Wait for console capture to run
+                            setTimeout(() => {
+                                const logs = iframeWindow.debugLogs || [];
+                                if (logs.length > 0) {
+                                    logs.forEach(log => {
+                                        const prefix = log.type === 'error' ? '❌' : log.type === 'warn' ? '⚠️' : '📝';
+                                        debugReport += `${prefix} ${log.message}\n`;
+                                    });
+                                } else {
+                                    debugReport += `No console logs captured\n`;
+                                }
+                                
+                                debugReport += `\n${'='.repeat(50)}\n\n`;
+                                
+                                // Check element targeting
+                                debugReport += `ELEMENT TARGETING CHECK:\n`;
+                                
+                                const mainContent = iframeDoc.querySelector('main.page-content');
+                                debugReport += `main.page-content: ${mainContent ? 'FOUND ✅' : 'NOT FOUND ❌'}\n`;
+                                if (mainContent) {
+                                    debugReport += `  Classes: "${mainContent.className}"\n`;
+                                    debugReport += `  Tag: ${mainContent.tagName}\n`;
+                                    debugReport += `  ID: ${mainContent.id || 'none'}\n`;
+                                }
+                                
+                                const shopPage = iframeDoc.querySelector('#shopPage');
+                                debugReport += `#shopPage: ${shopPage ? 'FOUND ✅' : 'NOT FOUND ❌'}\n`;
+                                if (shopPage) {
+                                    debugReport += `  Classes: "${shopPage.className}"\n`;
+                                    debugReport += `  Tag: ${shopPage.tagName}\n`;
+                                    debugReport += `  Parent: ${shopPage.parentElement ? shopPage.parentElement.tagName : 'none'}\n`;
+                                }
+                                
+                                const body = iframeDoc.body;
+                                debugReport += `body: ${body ? 'FOUND ✅' : 'NOT FOUND ❌'}\n`;
+                                if (body) {
+                                    debugReport += `  Classes: "${body.className}"\n`;
+                                    debugReport += `  Has shop-page class: ${body.classList.contains('shop-page') ? 'YES ✅' : 'NO ❌'}\n`;
+                                }
+                                
+                                debugReport += `\n${'='.repeat(50)}\n\n`;
+                                
+                                // Check if styles are actually applied
+                                debugReport += `STYLE APPLICATION CHECK:\n`;
+                                
+                                if (mainContent) {
+                                    const mainStyles = iframeWindow.getComputedStyle(mainContent);
+                                    debugReport += `main.page-content computed styles:\n`;
+                                    debugReport += `  background-size: ${mainStyles.backgroundSize}\n`;
+                                    debugReport += `  background-repeat: ${mainStyles.backgroundRepeat}\n`;
+                                    debugReport += `  padding: ${mainStyles.padding}\n`;
+                                    debugReport += `  margin-top: ${mainStyles.marginTop}\n`;
+                                    
+                                    // Check inline styles
+                                    debugReport += `main.page-content inline styles:\n`;
+                                    debugReport += `  style attribute: "${mainContent.getAttribute('style') || 'none'}"\n`;
+                                }
+                                
+                                if (shopPage) {
+                                    const shopStyles = iframeWindow.getComputedStyle(shopPage);
+                                    debugReport += `#shopPage computed styles:\n`;
+                                    debugReport += `  position: ${shopStyles.position}\n`;
+                                    debugReport += `  left: ${shopStyles.left}\n`;
+                                    debugReport += `  width: ${shopStyles.width}\n`;
+                                    debugReport += `  margin-left: ${shopStyles.marginLeft}\n`;
+                                    
+                                    // Check inline styles
+                                    debugReport += `#shopPage inline styles:\n`;
+                                    debugReport += `  style attribute: "${shopPage.getAttribute('style') || 'none'}"\n`;
+                                }
+                                
+                                debugReport += '</div>';
+                                
+                                // Determine overall status
+                                let status = '';
+                                if (!jsInjector) {
+                                    status = '<div class="status error">🚨 JavaScript injector script not found in DOM</div>';
+                                } else if (!jsIndicator) {
+                                    status = '<div class="status error">🚨 JavaScript injection not executing</div>';
+                                } else if (!mainContent || !shopPage) {
+                                    status = '<div class="status error">🚨 Target elements not found</div>';
+                                } else {
+                                    status = '<div class="status warning">⚠️ JavaScript injection present but styles not applying</div>';
+                                }
+                                
+                                resultsDiv.innerHTML = status;
+                                detailedDiv.innerHTML = debugReport;
+                                
+                            }, 2000);
+                            
+                        } catch (error) {
+                            resultsDiv.innerHTML = `<div class="status error">❌ Error debugging JavaScript injection: ${error.message}</div>`;
+                        }
+                    }, 2000);
+                };
+                
+                iframe.onerror = function() {
+                    resultsDiv.innerHTML = '<div class="status error">❌ Failed to load shop page for debugging</div>';
+                };
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run debug on page load
+        window.addEventListener('load', function() {
+            setTimeout(debugJavaScriptInjection, 500);
+        });
+    </script>
+</body>
+</html>

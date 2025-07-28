@@ -1,0 +1,26 @@
+# Security hardening for the /api directory
+# -----------------------------------------------------------------------------
+# 1. Disable directory listing so visitors cannot browse file structure.
+Options -Indexes
+
+# 2. Protect this very file from outside access.
+<Files .htaccess>
+  Require all denied
+</Files>
+
+# 3. Block access to common sensitive file types
+<FilesMatch "\.(?:bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist|md|json|yml?|env)$">
+  Require all denied
+</FilesMatch>
+
+# 4. API endpoints should be accessible but have their own authentication
+#    Allow access to PHP files but rely on PHP-level authentication
+
+# 5. Set security headers for API responses
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# End /api/.htaccess

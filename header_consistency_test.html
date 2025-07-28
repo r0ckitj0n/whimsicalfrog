@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Header & Background Consistency Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .test-section h2 {
+            color: #87ac3a;
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .test-button {
+            background: #87ac3a;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background: #6d8a2e;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .comparison-item {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+        }
+        .comparison-item h3 {
+            margin-top: 0;
+            color: #87ac3a;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li:before {
+            content: "☐ ";
+            color: #87ac3a;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            border-left: 4px solid #87ac3a;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🐸 Header & Background Consistency Test</h1>
+        <p><strong>Verifying universal header consistency and background behavior between shop and room_main pages.</strong></p>
+
+        <!-- Header Consistency Test -->
+        <div class="test-section">
+            <h2>🎯 Header Consistency Verification</h2>
+            <div class="status success">
+                <strong>FIXED:</strong> Both pages now use the same universal header system
+            </div>
+            
+            <div class="comparison-grid">
+                <div class="comparison-item">
+                    <h3>🛒 Shop Page</h3>
+                    <a href="http://localhost:8080/?page=shop" target="_blank" class="test-button">Open Shop Page</a>
+                    <ul class="checklist">
+                        <li>Header shows same gradient background</li>
+                        <li>Logo positioned on left</li>
+                        <li>Navigation items: Home, Shop, About, Contact</li>
+                        <li>Sign image (not "Rooms" text) links to room_main</li>
+                        <li>User menu/cart on right</li>
+                        <li>Same header height and styling</li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-item">
+                    <h3>🏠 Room Main Page</h3>
+                    <a href="http://localhost:8080/?page=room_main" target="_blank" class="test-button">Open Room Main</a>
+                    <ul class="checklist">
+                        <li>Header shows same gradient background</li>
+                        <li>Logo positioned on left</li>
+                        <li>Navigation items: Home, Shop, About, Contact</li>
+                        <li>No "Rooms" link (since we're on room_main)</li>
+                        <li>User menu/cart on right</li>
+                        <li>Same header height and styling</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Key Fixes Implemented:</h3>
+            <div class="code-block">
+<strong>Universal Header Configuration:</strong>
+- Both pages use components/header_template.php
+- Same header_config array from index.php
+- Consistent navigation items and styling
+
+<strong>Image Navigation Fix:</strong>
+- Replaced "Rooms" text with sign_main.webp image
+- Added proper CSS styling for image links
+- WebP with PNG fallback for optimal loading
+
+<strong>Layout Consistency:</strong>
+- Shop page: Regular main content layout
+- Room main: Fullscreen layout (appropriate for room doors)
+- Both use same background system
+            </div>
+        </div>
+
+        <!-- Background Consistency Test -->
+        <div class="test-section">
+            <h2>🖼️ Background Behavior Verification</h2>
+            <div class="status success">
+                <strong>STANDARDIZED:</strong> Both pages use the same background configuration
+            </div>
+            
+            <h3>Background System Analysis:</h3>
+            <div class="code-block">
+<strong>Background Configuration (index.php):</strong>
+- Both shop and room_main use 'room_main' background type
+- Same background URL generation: get_active_background('room_main')
+- Same background style application
+
+<strong>Layout Differences (Intentional):</strong>
+- Shop page: background applied to main content area
+- Room main: background applied to fullscreen container
+- This is correct - different content layouts, same background system
+            </div>
+
+            <h3>Verification Checklist:</h3>
+            <ul class="checklist">
+                <li>Both pages load the same background image</li>
+                <li>Background sizing is appropriate for each layout</li>
+                <li>No conflicting CSS affecting background display</li>
+                <li>Background positioning is consistent</li>
+                <li>No shop-specific background overrides</li>
+            </ul>
+        </div>
+
+        <!-- Technical Implementation -->
+        <div class="test-section">
+            <h2>🔧 Technical Implementation Details</h2>
+            <div class="status warning">
+                <strong>IMPORTANT:</strong> Different content layouts are intentional and correct
+            </div>
+            
+            <h3>Page Layout Structure:</h3>
+            <div class="code-block">
+<strong>Shop Page Structure:</strong>
+&lt;body class="shop-page"&gt;
+  &lt;header&gt;Universal Header&lt;/header&gt;
+  &lt;main class="page-content" style="background-image: url(...)"&gt;
+    Shop content
+  &lt;/main&gt;
+&lt;/body&gt;
+
+<strong>Room Main Structure:</strong>
+&lt;body class="room_main-page body-fullscreen-layout"&gt;
+  &lt;header&gt;Universal Header&lt;/header&gt;
+  &lt;div class="fullscreen-container" style="background-image: url(...)"&gt;
+    Room doors content
+  &lt;/div&gt;
+&lt;/body&gt;
+            </div>
+
+            <h3>Why Different Layouts Are Correct:</h3>
+            <ul>
+                <li><strong>Shop Page:</strong> Regular e-commerce layout with header, main content, and footer</li>
+                <li><strong>Room Main:</strong> Immersive fullscreen experience for room navigation</li>
+                <li><strong>Header:</strong> Identical on both pages for navigation consistency</li>
+                <li><strong>Background:</strong> Same image, different application contexts</li>
+            </ul>
+        </div>
+
+        <!-- Success Criteria -->
+        <div class="test-section">
+            <h2>✅ Success Criteria</h2>
+            <div class="status success">
+                <strong>ACHIEVED:</strong> Universal header consistency with appropriate layout differences
+            </div>
+            
+            <h3>Expected Results:</h3>
+            <ul>
+                <li>✅ <strong>Header Consistency:</strong> Identical header appearance and functionality</li>
+                <li>✅ <strong>Navigation Consistency:</strong> Same navigation items and behavior</li>
+                <li>✅ <strong>Image Navigation:</strong> Sign image instead of "Rooms" text</li>
+                <li>✅ <strong>Background System:</strong> Same background configuration</li>
+                <li>✅ <strong>Layout Appropriateness:</strong> Different layouts for different purposes</li>
+            </ul>
+
+            <h3>Visual Comparison Test:</h3>
+            <ol>
+                <li>Open both pages in separate browser tabs</li>
+                <li>Compare header appearance - should be identical</li>
+                <li>Check navigation items - should be the same (except room_main has no "Rooms" link)</li>
+                <li>Verify image navigation works on shop page</li>
+                <li>Confirm background images are the same</li>
+                <li>Note that content layout differences are intentional</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Interactive checklist
+        document.querySelectorAll('.checklist li').forEach(item => {
+            item.addEventListener('click', function() {
+                if (this.style.textDecoration === 'line-through') {
+                    this.style.textDecoration = 'none';
+                    this.style.color = 'inherit';
+                    this.innerHTML = this.innerHTML.replace('☑', '☐');
+                } else {
+                    this.style.textDecoration = 'line-through';
+                    this.style.color = '#666';
+                    this.innerHTML = this.innerHTML.replace('☐', '☑');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

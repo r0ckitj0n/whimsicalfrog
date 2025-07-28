@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Corrected Solution Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 3px solid #059669;
+            border-radius: 8px;
+            background: #ecfdf5;
+        }
+        
+        .test-section h3 {
+            color: #059669;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+        
+        .status.warning {
+            background: #fefcbf;
+            color: #744210;
+            border: 1px solid #f6e05e;
+        }
+        
+        .status.info {
+            background: #bee3f8;
+            color: #2a4365;
+            border: 1px solid #90cdf4;
+        }
+        
+        .test-button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-button:hover {
+            background: #047857;
+            transform: translateY(-1px);
+        }
+        
+        .iframe-container {
+            border: 3px solid #059669;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 500px;
+        }
+        
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .fix-checklist {
+            background: #ecfdf5;
+            border: 2px solid #059669;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .fix-item {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 6px;
+            background: white;
+            border-left: 4px solid #e2e8f0;
+        }
+        
+        .fix-item.fixed {
+            background: #c6f6d5;
+            border-left-color: #059669;
+        }
+        
+        .fix-item.broken {
+            background: #fed7d7;
+            border-left-color: #742a2a;
+        }
+        
+        .fix-icon {
+            margin-right: 15px;
+            font-size: 20px;
+        }
+        
+        .fix-text {
+            flex: 1;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Corrected Solution Test</h1>
+        <p style="text-align: center; color: #718096; margin-bottom: 30px;">
+            <strong>Testing the corrected CSS selectors and inline style approach</strong>
+        </p>
+
+        <div class="fix-checklist">
+            <h3>✅ Corrected Solution Status</h3>
+            <div class="fix-item" id="fix-1">
+                <span class="fix-icon">❓</span>
+                <span class="fix-text">1. Background Image Tiling (Corrected Selectors + Inline)</span>
+            </div>
+            <div class="fix-item" id="fix-2">
+                <span class="fix-icon">❓</span>
+                <span class="fix-text">2. Full Viewport Width (Corrected Selectors + Inline)</span>
+            </div>
+            <div class="fix-item" id="fix-3">
+                <span class="fix-icon">❓</span>
+                <span class="fix-text">3. Custom Scrollbar (Corrected Selectors + JS)</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ Corrected Solution Test</h3>
+            <p>Testing the corrected CSS selectors targeting main#mainContent and section#shopPage with inline styles.</p>
+            <button class="test-button" onclick="testCorrectedSolution()">Test Corrected Solution</button>
+            <div id="corrected-results"></div>
+            <div id="shop-iframe-container"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Technical Analysis</h3>
+            <div id="technical-analysis">
+                <div class="status info">Click the test button above to see technical analysis.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let correctedResults = {
+            backgroundTiling: null,
+            fullWidth: null,
+            customScrollbar: null
+        };
+
+        async function testCorrectedSolution() {
+            const resultsDiv = document.getElementById('corrected-results');
+            const iframeContainer = document.getElementById('shop-iframe-container');
+            const analysisDiv = document.getElementById('technical-analysis');
+            
+            resultsDiv.innerHTML = '<div class="status warning">Testing corrected solution...</div>';
+            
+            try {
+                // Create iframe to load shop page with corrected solution
+                const iframe = document.createElement('iframe');
+                iframe.src = `/?page=shop&corrected_test=1&v=${Date.now()}`;
+                
+                iframeContainer.innerHTML = '<div class="iframe-container"></div>';
+                iframeContainer.querySelector('.iframe-container').appendChild(iframe);
+                
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            const iframeWindow = iframe.contentWindow;
+                            
+                            let correctedReport = '<h4>✅ Corrected Solution Analysis</h4>';
+                            correctedReport += '<div class="code-block">';
+                            
+                            // Check DOM structure
+                            const mainContent = iframeDoc.querySelector('main#mainContent');
+                            const shopPage = iframeDoc.querySelector('#shopPage');
+                            const body = iframeDoc.body;
+                            
+                            correctedReport += `DOM STRUCTURE CHECK:\n`;
+                            correctedReport += `main#mainContent: ${mainContent ? 'FOUND ✅' : 'NOT FOUND ❌'}\n`;
+                            correctedReport += `#shopPage: ${shopPage ? 'FOUND ✅' : 'NOT FOUND ❌'}\n`;
+                            correctedReport += `body.shop-page: ${body.classList.contains('shop-page') ? 'YES ✅' : 'NO ❌'}\n\n`;
+                            
+                            if (mainContent) {
+                                correctedReport += `MAIN#MAINCONTENT ANALYSIS:\n`;
+                                correctedReport += `Classes: "${mainContent.className}"\n`;
+                                correctedReport += `Inline Style: "${mainContent.getAttribute('style') || 'none'}"\n`;
+                                
+                                const mainStyles = iframeWindow.getComputedStyle(mainContent);
+                                correctedReport += `Computed background-size: ${mainStyles.backgroundSize}\n`;
+                                correctedReport += `Computed background-repeat: ${mainStyles.backgroundRepeat}\n`;
+                                correctedReport += `Computed background-position: ${mainStyles.backgroundPosition}\n`;
+                                correctedReport += `Computed padding: ${mainStyles.padding}\n`;
+                                correctedReport += `Computed margin-top: ${mainStyles.marginTop}\n\n`;
+                                
+                                correctedResults.backgroundTiling = (mainStyles.backgroundSize === 'cover' && mainStyles.backgroundRepeat === 'no-repeat');
+                            }
+                            
+                            if (shopPage) {
+                                correctedReport += `#SHOPPAGE ANALYSIS:\n`;
+                                correctedReport += `Classes: "${shopPage.className}"\n`;
+                                correctedReport += `Inline Style: "${shopPage.getAttribute('style') || 'none'}"\n`;
+                                
+                                const shopStyles = iframeWindow.getComputedStyle(shopPage);
+                                correctedReport += `Computed position: ${shopStyles.position}\n`;
+                                correctedReport += `Computed left: ${shopStyles.left}\n`;
+                                correctedReport += `Computed width: ${shopStyles.width}\n`;
+                                correctedReport += `Computed margin-left: ${shopStyles.marginLeft}\n`;
+                                correctedReport += `Computed max-width: ${shopStyles.maxWidth}\n\n`;
+                                
+                                const viewportWidth = iframeWindow.innerWidth;
+                                const isFullWidth = parseInt(shopStyles.width) >= viewportWidth * 0.95;
+                                const hasBreakout = shopStyles.position === 'relative' && shopStyles.left.includes('%');
+                                correctedResults.fullWidth = isFullWidth && hasBreakout;
+                            }
+                            
+                            // Check scrollbar
+                            const bodyStyles = iframeWindow.getComputedStyle(body);
+                            correctedReport += `SCROLLBAR ANALYSIS:\n`;
+                            correctedReport += `Scrollbar Width: ${bodyStyles.getPropertyValue('scrollbar-width')}\n`;
+                            correctedReport += `Scrollbar Color: ${bodyStyles.getPropertyValue('scrollbar-color')}\n\n`;
+                            
+                            const hasCustomScrollbar = (bodyStyles.getPropertyValue('scrollbar-width') === 'thin' || 
+                                                     bodyStyles.getPropertyValue('scrollbar-color').includes('#87ac3a'));
+                            correctedResults.customScrollbar = hasCustomScrollbar;
+                            
+                            correctedReport += `SOLUTION STATUS:\n`;
+                            correctedReport += `Background Fix: ${correctedResults.backgroundTiling ? 'WORKING ✅' : 'BROKEN ❌'}\n`;
+                            correctedReport += `Full Width Fix: ${correctedResults.fullWidth ? 'WORKING ✅' : 'BROKEN ❌'}\n`;
+                            correctedReport += `Scrollbar Fix: ${correctedResults.customScrollbar ? 'WORKING ✅' : 'BROKEN ❌'}\n`;
+                            
+                            correctedReport += '</div>';
+                            
+                            // Update UI
+                            updateFixChecklist();
+                            analysisDiv.innerHTML = correctedReport;
+                            
+                            // Overall status
+                            const fixedIssues = Object.values(correctedResults).filter(result => result === true).length;
+                            const totalIssues = Object.keys(correctedResults).length;
+                            
+                            let status = '';
+                            if (fixedIssues === totalIssues) {
+                                status = '<div class="status success">🎉 ALL ISSUES RESOLVED WITH CORRECTED SOLUTION!</div>';
+                            } else if (fixedIssues >= 2) {
+                                status = '<div class="status warning">⚠️ Most issues resolved with corrected solution</div>';
+                            } else {
+                                status = '<div class="status error">❌ Corrected solution needs further refinement</div>';
+                            }
+                            
+                            status += `<div class="status info">Fixed: ${fixedIssues}/${totalIssues} issues with corrected solution</div>`;
+                            resultsDiv.innerHTML = status;
+                            
+                        } catch (error) {
+                            resultsDiv.innerHTML = `<div class="status error">❌ Error testing corrected solution: ${error.message}</div>`;
+                        }
+                    }, 3000);
+                };
+                
+                iframe.onerror = function() {
+                    resultsDiv.innerHTML = '<div class="status error">❌ Failed to load shop page for corrected solution test</div>';
+                };
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function updateFixChecklist() {
+            const fixes = [
+                { id: 'fix-1', result: correctedResults.backgroundTiling },
+                { id: 'fix-2', result: correctedResults.fullWidth },
+                { id: 'fix-3', result: correctedResults.customScrollbar }
+            ];
+            
+            fixes.forEach(fix => {
+                const element = document.getElementById(fix.id);
+                const icon = element.querySelector('.fix-icon');
+                
+                if (fix.result === true) {
+                    element.className = 'fix-item fixed';
+                    icon.textContent = '✅';
+                } else if (fix.result === false) {
+                    element.className = 'fix-item broken';
+                    icon.textContent = '❌';
+                } else {
+                    element.className = 'fix-item';
+                    icon.textContent = '❓';
+                }
+            });
+        }
+
+        // Auto-run corrected solution test on page load
+        window.addEventListener('load', function() {
+            setTimeout(testCorrectedSolution, 500);
+        });
+    </script>
+</body>
+</html>

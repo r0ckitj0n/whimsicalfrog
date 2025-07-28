@@ -28,6 +28,12 @@ try {
         case 'download_log':
             downloadLog($pdo);
             break;
+        case 'get_status':
+            getLoggingStatus($pdo);
+            break;
+        case 'download':
+            downloadAllLogs();
+            break;
         case 'cleanup_old_logs':
             $result = cleanupOldLogs($pdo);
             echo json_encode(['success' => true, 'cleanup_result' => $result]);
@@ -604,4 +610,100 @@ function cleanupOldLogs($pdo)
 
     return $results;
 }
-?> 
+
+function getLoggingStatus($pdo) {
+    try {
+        // Get file logging status
+        $logsDir = __DIR__ . '/../logs';
+        $fileLogging = [
+            'enabled' => is_dir($logsDir),
+            'directory' => $logsDir,
+            'total_size' => '0 MB'
+        ];
+
+        if (is_dir($logsDir)) {
+            $totalSize = 0;
+            $files = glob($logsDir . '/*');
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    $totalSize += filesize($file);
+                }
+            }
+            $fileLogging['total_size'] = round($totalSize / (1024 * 1024), 2) . ' MB';
+        }
+
+        // Get database logging status
+        $databaseLogging = [
+            'enabled' => true,
+            'primary' => true,
+            'error_logs' => 0,
+            'analytics_logs' => 0,
+            'admin_activity_logs' => 0,
+            'email_logs' => 0
+        ];
+
+        // Get record counts
+        $tables = ['error_logs', 'analytics_logs', 'admin_activity_logs', 'email_logs'];
+        foreach ($tables as $table) {
+            try {
+                $stmt = $pdo->query("SELECT COUNT(*) as count FROM {$table}");
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $databaseLogging[$table] = (int)$result['count'];
+            } catch (Exception $e) {
+                $databaseLogging[$table] = 0;
+            }
+        }
+
+        // Get configuration status
+        $status = [
+            'file_logging' => $fileLogging,
+            'database_logging' => $databaseLogging,
+            'seo_logging' => true,
+            'admin_logging' => true,
+            'security_logging' => true,
+            'retention_days' => 90
+        ];
+
+        echo json_encode(['success' => true, 'status' => $status]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+}
+
+function downloadAllLogs() {
+    try {
+        $logsDir = __DIR__ . '/../logs';
+        $zipFile = tempnam(sys_get_temp_dir(), 'whimsical_logs_') . '.zip';
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipFile, ZipArchive::CREATE) !== TRUE) {
+            throw new Exception('Cannot create zip file');
+        }
+
+        // Add log files
+        if (is_dir($logsDir)) {
+            $files = glob($logsDir . '/*.log*');
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    $zip->addFile($file, basename($file));
+                }
+            }
+        }
+
+        $zip->close();
+
+        // Send file
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="whimsical_logs_' . date('Y-m-d_H-i-s') . '.zip"');
+        header('Content-Length: ' . filesize($zipFile));
+
+        readfile($zipFile);
+        unlink($zipFile);
+        exit;
+
+    } catch (Exception $e) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+}
+?>

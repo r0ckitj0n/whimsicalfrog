@@ -61,44 +61,7 @@
     display: block; /* Remove any extra space below the image */
 }
 
-.header-container {
-    width: 100%;
-    margin: 0;
-    padding: 0 !important; /* Ensure no horizontal padding at any breakpoint */
-}
-
-/* Header Layout */
-.header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-
-/* Each section alignment within grid */
-.header-left {
-    justify-self: start;
-}
-
-.header-center {
-    justify-self: center;
-    display: flex;
-}
-
-.header-right {
-    justify-self: end;
-}
-
-/* Center the middle column contents */
-
-
-
-
-/* Ensure header-left sticks to far left */
-.header-left {
-    justify-self: start;
-}
+/* Header styles moved to components.css for centralized management */
 
 .header-left {
     flex: none;
@@ -225,42 +188,9 @@
     transition: all 0.2s ease;
 }
 
-/* More specific selectors to ensure green styling */
-.header-center .search-container .search-input-container .search-bar,
-.header-center .search-container .search-input-container input[type="search"],
-input.search-bar,
-input[type="search"].search-bar {
-    background: transparent;
-    border: 2px solid #87ac3a;
-    color: #87ac3a;
-    background-color: transparent;
-}
+/* Search styling consolidated in components.css */
 
-.header-center .search-container .search-input-container .search-bar::placeholder,
-.header-center .search-container .search-input-container input[type="search"]::placeholder,
-input.search-bar::placeholder,
-input[type="search"].search-bar::placeholder {
-    color: rgb(135 172 58 / 80%);
-}
-
-/* Override any Tailwind or other framework styles */
-.search-bar {
-    background: transparent;
-    background-color: transparent;
-    border: 2px solid #87ac3a;
-    border-color: #87ac3a;
-    color: #87ac3a;
-}
-
-/* Ultra-specific overrides to beat any framework */
-html body .site-header .header-container .header-content .header-center .search-container .search-input-container .search-bar,
-html body .site-header .header-container .header-content .header-center .search-container .search-input-container input[type="search"] {
-    background: transparent;
-    background-color: transparent;
-    border: 2px solid #87ac3a;
-    border-color: #87ac3a;
-    color: #87ac3a;
-}
+/* Search styling handled by components.css */
 
 /* Header Search Input - Green styling with transparent background */
 #headerSearchInput,
@@ -304,10 +234,7 @@ html body input#headerSearchInput:focus {
     background-color: rgb(135 172 58 / 5%);
 }
 
-html body .site-header .header-container .header-content .header-center .search-container .search-input-container .search-bar::placeholder,
-html body .site-header .header-container .header-content .header-center .search-container .search-input-container input[type="search"]::placeholder {
-    color: rgb(135 172 58 / 80%);
-}
+/* Search placeholder styling handled by components.css */
 
 .search-bar:focus {
     outline: none;
@@ -2006,7 +1933,7 @@ button.category_btn_color.active,
 /* Room Background Classes - Centralized */
 .room-bg-main {
 
-    background-size: contain;
+    background-size: cover; /* Use cover for consistent coordinate scaling */
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -2045,7 +1972,7 @@ button.category_btn_color.active,
     height: 100%;
     position: relative;
     overflow: hidden;
-    background-size: contain;
+    background-size: cover; /* Use cover for consistent coordinate scaling */
     background-position: center;
     background-repeat: no-repeat;
 
@@ -2294,7 +2221,7 @@ html, body {
     width: 100vw;
     height: 100vh;
     background-color: transparent;
-    background-image: none;
+    background-image: var(--room-bg-url, url('/images/backgrounds/background_room_main.webp'));
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -4482,7 +4409,7 @@ button.brand-button * {
     width: 100%;
     padding-top: 70%; /* 1280x896 aspect ratio (896/1280 * 100) - ESSENTIAL */
     position: relative;
-    background-size: contain;
+    background-size: cover; /* Use cover for consistent coordinate scaling */
     background-position: center;
     background-repeat: no-repeat;
     border-radius: 15px;
@@ -4659,6 +4586,113 @@ button.brand-button * {
    SHOP PAGE STYLES - High specificity to override Tailwind CSS
    ========================================================================== */
 
+/* CRITICAL FIX: Shop Page Container - Full Viewport Width Breakout - Maximum Specificity */
+body.shop-page #shopPage,
+html.shop-page #shopPage,
+.shop-page #shopPage,
+#shopPage {
+    /* Break out of parent container constraints to use full viewport width */
+    position: relative !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    width: 100vw !important;
+    max-width: none !important;
+
+    /* Minimal edge padding for content */
+    padding: 0 20px !important;
+    margin-top: 10px !important;
+    box-sizing: border-box !important;
+}
+
+/* CRITICAL FIX: Background Tiling Issue - Maximum Specificity */
+body.shop-page main.page-content,
+html.shop-page main.page-content,
+.shop-page main.page-content,
+main.page-content {
+    padding: 0 !important; /* Remove all padding from main container */
+    margin-top: calc(80px + 10px) !important; /* Maintain header spacing */
+    /* Fix background tiling issue - Apply to main page content */
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    min-height: calc(100vh - 90px) !important;
+    background-attachment: fixed !important;
+}
+
+/* Shop Page Content Spacing - Ensure 10px from header to filter buttons */
+#shopPage {
+    padding-top: 10px !important; /* Exactly 10px from header */
+}
+
+/* Navigation Bar - Room Main Image + Category Filters Inline */
+#shopPage .navigation-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-bottom: 25px !important;
+    margin-top: 0 !important;
+    position: relative !important;
+}
+
+/* Room Main Navigation - Left Side */
+#shopPage .room-main-nav-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 2 !important;
+}
+
+/* Category Navigation - Centered */
+#shopPage .category-navigation {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex: 1 !important;
+    max-width: 100% !important;
+}
+
+/* Legacy selector for backward compatibility */
+#shopPage .flex.flex-wrap.justify-center {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 25px; /* Spacing between filters and cards */
+    margin-top: 0 !important; /* Remove any top margin to maintain 10px spacing */
+}
+
+/* Products Grid - CSS Grid Layout for Equal Heights - FLEXBOX OVERRIDE REMOVED */
+/* This section was causing conflicts with the CSS Grid layout below */
+/* Flexbox rules removed to allow CSS Grid with align-items: stretch to work properly */
+
+/* Product Cards - CSS Grid Compatible Styles */
+/* Flexbox-specific width and sizing rules removed to allow CSS Grid to work */
+/* Card heights will now be equal within each row using CSS Grid align-items: stretch */
+
+#shopPage .product-card,
+#shopPage div.product-card,
+.product-card {
+    /* Basic card styling - let CSS Grid handle sizing */
+    box-sizing: border-box !important;
+    margin: 0 !important;
+
+    /* Ensure cards can stretch to equal heights */
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+/* Product Card Content Padding */
+#shopPage .product-card .flex.flex-col {
+    padding: 1rem !important; /* Comfortable padding around all card content */
+}
+
 /* Shop title - ensure white text overrides Tailwind and other styles */
 #shopPage h1.shop_title_color,
 h1.shop_title_color.text-3xl,
@@ -4685,6 +4719,49 @@ button.category_btn_color.category-btn.active,
     color: var(--brand-primary, #87ac3a);
 }
 
+/* Category Filter Buttons - Height Matching Room Main Image */
+#shopPage .category-btn,
+#shopPage button.category-btn {
+    height: 75px !important; /* Reduced to 75px for better proportional balance */
+    min-height: 75px !important;
+    padding: 15px 20px !important; /* Adjusted padding for 75px height */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    border-radius: 50px !important; /* Maintain rounded-full appearance */
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+}
+
+/* Category Button Background and Color Classes */
+.category_btn_bg,
+#shopPage .category_btn_bg {
+    background-color: var(--brand-primary, #87ac3a) !important;
+}
+
+.category_btn_color,
+#shopPage .category_btn_color {
+    color: white !important;
+}
+
+.category_btn_hover_bg:hover,
+#shopPage .category_btn_hover_bg:hover {
+    background-color: var(--brand-primary-hover, #6b8e23) !important;
+}
+
+/* Active category button styling */
+.category-btn.active,
+#shopPage .category-btn.active {
+    background-color: white !important;
+    color: var(--brand-primary, #87ac3a) !important;
+    border: 2px solid var(--brand-primary, #87ac3a) !important;
+}
+
 /* Product category display with brand color border */
 .product-card .text-xs.text-gray-500,
 #shopPage .product-card .text-xs {
@@ -4693,7 +4770,650 @@ button.category_btn_color.category-btn.active,
     padding: 2px 6px;
     display: inline-block;
     font-size: 0.75rem;
-    background-color: rgb(135 172 58 / 10%);
+}
+
+/* Enhanced text wrapping for product descriptions */
+#shopPage .product-card p.text-gray-600,
+#shopPage .product-card .text-gray-600 {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    hyphens: auto !important;
+    text-align: left !important;
+    padding: 0 8px !important;
+}
+
+/* Enhanced text wrapping for product titles */
+#shopPage .product-card h3,
+#shopPage .product-card .font-bold {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    line-height: 1.3 !important;
+}
+
+/* Ensure product images display properly with size constraints */
+#shopPage .product-card img,
+#shopPage div[id^="image-container-"] img {
+    max-width: 150px !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: cover !important;
+    border-radius: 4px !important;
+    margin: 0 auto !important;
+    display: block !important;
+}
+
+/* Ensure image containers maintain proper dimensions */
+#shopPage div[id^="image-container-"] {
+    height: 128px !important; /* h-32 equivalent */
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    background-color: #f3f4f6 !important; /* bg-gray-200 equivalent */
+    border-radius: 6px !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Ensure product cards maintain consistent dimensions */
+#shopPage .bg-white.rounded-lg.p-4.shadow-lg {
+    min-height: 500px !important;
+    max-height: 550px !important;
+    width: 100% !important;
+    max-width: 300px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Room Main Header Image - Fixed Transparent Background and Size */
+
+/* Remove all backgrounds from navigation image links - High Specificity Override */
+.nav-link.nav-image-link,
+.header-left .nav-link.nav-image-link,
+.nav-links .nav-link.nav-image-link,
+.site-header .nav-link.nav-image-link,
+.header-right .nav-link.nav-image-link {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.nav-link.nav-image-link:hover,
+.header-left .nav-link.nav-image-link:hover,
+.nav-links .nav-link.nav-image-link:hover,
+.site-header .nav-link.nav-image-link:hover,
+.header-right .nav-link.nav-image-link:hover,
+.nav-link.nav-image-link:focus,
+.nav-link.nav-image-link:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transform: none !important;
+}
+
+/* Make room_main image 50% larger with transparent background */
+.nav-rooms-image,
+.nav-link.nav-image-link img,
+.nav-link.nav-image-link picture img,
+.nav-link.nav-image-link picture,
+.nav-image-link img,
+.nav-image-link picture img {
+    width: 54px !important; /* 50% larger than original 36px */
+    height: 54px !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.3s ease !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
+.nav-rooms-image:hover,
+.nav-link.nav-image-link:hover img,
+.nav-link.nav-image-link:hover picture img,
+.nav-link.nav-image-link:hover picture,
+.nav-image-link:hover img,
+.nav-image-link:hover picture img {
+    opacity: 1 !important;
+}
+
+/* Ensure picture element has no background */
+.nav-link.nav-image-link picture,
+.nav-image-link picture {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+/* Additional override to ensure image links never get nav-link background styles */
+.nav-link.nav-image-link,
+.nav-link.nav-image-link:hover,
+.nav-link.nav-image-link:focus,
+.nav-link.nav-image-link:active,
+.nav-link.nav-image-link.active {
+    background-color: transparent !important;
+    background: transparent !important;
+    background-image: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    text-shadow: none !important;
+}
+
+/* Ultra-high specificity override for navigation image links */
+.site-header .nav-links .nav-link.nav-image-link,
+.site-header .nav-links .nav-link.nav-image-link:hover,
+.site-header .nav-links .nav-link.nav-image-link:focus,
+.site-header .nav-links .nav-link.nav-image-link:active,
+.header-left .nav-links .nav-link.nav-image-link,
+.header-left .nav-links .nav-link.nav-image-link:hover {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    text-shadow: none !important;
+}
+
+/* Ensure page content below header has proper spacing */
+.page-content {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Shop Page Add to Cart Button Styling - REMOVED DUPLICATE */
+/* This styling has been moved to the enhanced version below to avoid conflicts */
+
+/* Shop Page Card Height Standardization - Enhanced CSS Grid Implementation */
+#shopPage #productsGrid {
+    display: grid !important;
+    gap: 1rem !important; /* Reduced from 1.5rem for better spacing */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 300px)) !important;
+    justify-content: center !important;
+    align-items: stretch !important; /* This makes all cards in a row the same height */
+    width: 100% !important;
+    max-width: none !important; /* FIXED: Remove max-width constraint for full viewport utilization */
+    margin: 0 auto !important; /* Center the grid */
+    padding: 0 30px !important; /* Increased padding for better edge spacing */
+
+    /* Override any Tailwind grid classes */
+    grid-template-rows: none !important;
+    grid-auto-rows: 1fr !important; /* Ensure all rows have equal height */
+}
+
+/* Enhanced Product Card Layout - Flexbox Structure */
+#shopPage .product-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important; /* Fill the grid cell height */
+    min-height: 450px !important;
+    max-width: 320px !important;
+    width: 100% !important;
+    justify-self: center !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Product Image Container - Fixed Height */
+#shopPage .product-image-container {
+    flex-shrink: 0 !important; /* Don't shrink */
+}
+
+/* Product Content - Flexible Area */
+#shopPage .product-content {
+    flex: 1 !important; /* Expand to fill available space */
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 15px !important;
+}
+
+/* Product Description - Expandable */
+#shopPage .product-description {
+    flex: 1 !important; /* Take up remaining space in content area */
+    margin-bottom: 10px !important;
+}
+
+/* Product Info - Fixed Bottom Section */
+#shopPage .product-info {
+    flex-shrink: 0 !important; /* Don't shrink */
+    margin-bottom: 15px !important;
+}
+
+/* Product Button - Always at Bottom */
+#shopPage .product-button {
+    flex-shrink: 0 !important; /* Don't shrink */
+    margin-top: auto !important; /* Push to bottom */
+}
+
+/* Product Title Styling - Enhanced Specificity */
+#shopPage .product-card .product-title,
+#shopPage .product-title,
+#shopPage .product-card h3,
+#shopPage .product-card .text-lg,
+.product-card .product-title,
+.product-card h3 {
+    font-size: 1.125rem !important; /* 18px */
+    font-weight: 700 !important; /* Bold */
+    color: #16a34a !important; /* Green-600 */
+    margin-bottom: 12px !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    display: block !important;
+}
+
+/* Product Description Styling - Enhanced Specificity */
+#shopPage .product-card .description-text,
+#shopPage .description-text,
+#shopPage .product-card .text-sm,
+#shopPage .product-card p,
+.product-card .description-text,
+.product-card p {
+    font-size: 0.875rem !important; /* 14px */
+    color: #6b7280 !important; /* Gray-500 */
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    text-align: left !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+/* Product Price - Large and Prominent - Enhanced Specificity */
+#shopPage .product-card .product-price,
+#shopPage .product-price,
+#shopPage .product-card .text-xl,
+#shopPage .product-card .font-bold,
+.product-card .product-price,
+.product-card .price {
+    font-size: 1.5rem !important; /* 24px - Large and prominent */
+    font-weight: 800 !important; /* Extra bold */
+    color: #15803d !important; /* Green-700 - Darker for better contrast */
+    text-align: center !important;
+    margin-bottom: 12px !important;
+    padding: 8px 0 !important;
+    border-bottom: 2px solid #f3f4f6 !important; /* Light separator */
+    letter-spacing: 0.025em !important; /* Slight letter spacing for readability */
+    display: block !important;
+}
+
+/* Product Stock - Color Coded Based on Levels */
+#shopPage .product-stock,
+#shopPage .product-card .stock,
+.product-card .product-stock,
+.product-card .stock {
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important; /* Semi-bold */
+    text-align: center !important;
+    margin-bottom: 8px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    background-color: #f9fafb !important; /* Light background */
+}
+
+/* Product Category and SKU Styling */
+#shopPage .product-category,
+#shopPage .product-sku,
+#shopPage .product-card .category,
+#shopPage .product-card .sku,
+.product-card .product-category,
+.product-card .product-sku,
+.product-card .category,
+.product-card .sku {
+    font-size: 0.75rem !important; /* 12px */
+    color: #9ca3af !important; /* Gray-400 */
+    text-align: center !important;
+    margin: 4px 0 !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Stock Level Color Coding */
+/* Normal Stock (10+ items) - Green */
+#shopPage .product-stock[data-stock]:not([data-stock="0"]):not([data-stock="1"]):not([data-stock="2"]):not([data-stock="3"]):not([data-stock="4"]):not([data-stock="5"]):not([data-stock="6"]):not([data-stock="7"]):not([data-stock="8"]):not([data-stock="9"]) {
+    color: #16a34a !important; /* Green-600 */
+    background-color: #f0fdf4 !important; /* Green-50 */
+    border: 1px solid #bbf7d0 !important; /* Green-200 */
+}
+
+/* Low Stock (5-9 items) - Yellow/Orange */
+#shopPage .product-stock[data-stock="5"],
+#shopPage .product-stock[data-stock="6"],
+#shopPage .product-stock[data-stock="7"],
+#shopPage .product-stock[data-stock="8"],
+#shopPage .product-stock[data-stock="9"] {
+    color: #d97706 !important; /* Amber-600 */
+    background-color: #fffbeb !important; /* Amber-50 */
+    border: 1px solid #fed7aa !important; /* Amber-200 */
+}
+
+/* Very Low Stock (1-4 items) - Red */
+#shopPage .product-stock[data-stock="1"],
+#shopPage .product-stock[data-stock="2"],
+#shopPage .product-stock[data-stock="3"],
+#shopPage .product-stock[data-stock="4"] {
+    color: #dc2626 !important; /* Red-600 */
+    background-color: #fef2f2 !important; /* Red-50 */
+    border: 1px solid #fecaca !important; /* Red-200 */
+}
+
+/* Out of Stock (0 items) - Dark Red */
+#shopPage .product-stock[data-stock="0"] {
+    color: #991b1b !important; /* Red-800 */
+    background-color: #fef2f2 !important; /* Red-50 */
+    border: 1px solid #f87171 !important; /* Red-400 */
+    font-weight: 700 !important; /* Bold for emphasis */
+}
+
+/* Product Category Styling */
+#shopPage .product-category {
+    font-size: 0.75rem !important; /* 12px */
+    color: #6b7280 !important; /* Gray-500 */
+    text-align: center !important;
+    margin-bottom: 6px !important;
+    padding: 3px 8px !important;
+    background-color: #f9fafb !important; /* Light gray background */
+    border: 1px solid #87ac3a !important; /* Brand color border */
+    border-radius: 4px !important;
+    display: inline-block !important;
+    width: fit-content !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    font-weight: 500 !important;
+}
+
+/* Product SKU Styling */
+#shopPage .product-sku {
+    font-size: 0.75rem !important; /* 12px */
+    color: #9ca3af !important; /* Gray-400 - Lighter for less emphasis */
+    text-align: center !important;
+    margin-bottom: 0 !important;
+    font-family: 'Courier New', monospace !important; /* Monospace for SKU */
+    font-weight: 400 !important;
+    letter-spacing: 0.05em !important; /* Slight spacing for readability */
+    opacity: 0.8 !important;
+}
+
+/* Add to Cart Button - Enhanced Styling */
+#shopPage .add-to-cart-btn,
+#shopPage .product-card button,
+#shopPage button[data-sku],
+.product-card .add-to-cart-btn,
+.product-card button {
+    width: 100% !important;
+    background-color: #87ac3a !important; /* Brand color */
+    color: white !important;
+    border: none !important;
+    padding: 12px 16px !important; /* Increased padding for better touch targets */
+    border-radius: 6px !important; /* Slightly rounded corners */
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important; /* Semi-bold */
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-transform: none !important; /* Preserve custom button text casing */
+    letter-spacing: 0.025em !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow */
+}
+
+#shopPage .add-to-cart-btn:hover,
+#shopPage .product-card button:hover,
+#shopPage button[data-sku]:hover,
+.product-card .add-to-cart-btn:hover,
+.product-card button:hover {
+    background-color: #6b8e23 !important; /* Darker green on hover */
+    transform: translateY(-1px) !important; /* Slight lift effect */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow on hover */
+}
+
+#shopPage .add-to-cart-btn:active,
+#shopPage .product-card button:active,
+#shopPage button[data-sku]:active,
+.product-card .add-to-cart-btn:active,
+.product-card button:active {
+    transform: translateY(0) !important; /* Reset on click */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive Adjustments for Product Cards */
+
+/* Mobile Adjustments */
+@media (max-width: 640px) {
+    #shopPage .product-title {
+        font-size: 1rem !important; /* Slightly smaller on mobile */
+        margin-bottom: 10px !important;
+    }
+
+    #shopPage .product-price {
+        font-size: 1.25rem !important; /* Smaller but still prominent */
+        margin-bottom: 10px !important;
+    }
+
+    #shopPage .description-text {
+        font-size: 0.8125rem !important; /* 13px */
+        line-height: 1.3 !important;
+    }
+
+    #shopPage .add-to-cart-btn {
+        padding: 10px 12px !important;
+        font-size: 0.8125rem !important; /* 13px */
+    }
+}
+
+/* Tablet Adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+    #shopPage .product-title {
+        font-size: 1.0625rem !important; /* 17px */
+    }
+
+    #shopPage .product-price {
+        font-size: 1.375rem !important; /* 22px */
+    }
+}
+
+/* Large Screen Adjustments */
+@media (min-width: 1400px) {
+    #shopPage .product-title {
+        font-size: 1.1875rem !important; /* 19px */
+    }
+
+    #shopPage .product-price {
+        font-size: 1.625rem !important; /* 26px */
+    }
+
+    #shopPage .description-text {
+        font-size: 0.9375rem !important; /* 15px */
+    }
+}
+
+/* Card content structure for equal heights */
+#shopPage .product-card .card-content {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    flex: 1 !important;
+}
+
+#shopPage .product-card .card-description {
+    flex: 1 !important; /* This will expand to fill available space */
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
+    padding: 0 8px !important;
+}
+
+#shopPage .product-card .card-footer {
+    margin-top: auto !important; /* Push footer to bottom */
+}
+
+/* Responsive grid adjustments for equal card heights */
+@media (max-width: 640px) {
+    #shopPage #productsGrid {
+        grid-template-columns: minmax(250px, 1fr) !important; /* 1 card per row on mobile, maintain 250px min */
+        padding: 0 20px !important; /* Better mobile padding */
+        gap: 1rem !important;
+        max-width: 100% !important;
+    }
+
+    #shopPage .product-card {
+        min-height: 480px !important;
+        max-width: 100% !important;
+        min-width: 250px !important; /* Ensure minimum width on mobile */
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    #shopPage #productsGrid {
+        grid-template-columns: repeat(2, minmax(250px, 1fr)) !important; /* 2 cards per row on tablet */
+        gap: 1rem !important; /* Consistent gap */
+        padding: 0 25px !important;
+        max-width: none !important; /* FIXED: Remove max-width constraint for full viewport utilization */
+    }
+
+    #shopPage .product-card {
+        min-height: 500px !important;
+        min-width: 250px !important; /* Ensure minimum width on tablet */
+    }
+}
+
+@media (min-width: 1025px) {
+    #shopPage #productsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 300px)) !important; /* 3-4+ cards per row on desktop */
+        gap: 1rem !important; /* Consistent gap */
+        padding: 0 30px !important;
+        max-width: none !important; /* FIXED: Remove max-width constraint for full viewport utilization */
+    }
+
+    #shopPage .product-card {
+        min-height: 520px !important;
+        min-width: 250px !important; /* Ensure minimum width on desktop */
+    }
+}
+
+@media (min-width: 1400px) {
+    #shopPage #productsGrid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 300px)) !important; /* Maintain consistent sizing */
+        max-width: none !important; /* FIXED: Remove max-width constraint for full viewport utilization */
+        margin: 0 auto !important;
+        gap: 1.25rem !important; /* Slightly larger gap for ultra-wide */
+        padding: 0 40px !important;
+    }
+
+    #shopPage .product-card {
+        min-height: 540px !important; /* Increased height for ultra-wide */
+        max-width: 300px !important;
+        min-width: 250px !important; /* Ensure minimum width on ultra-wide */
+    }
+}
+
+/* Ensure card content fills available height */
+#shopPage .product-card .flex.flex-col {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}
+
+/* Room Main Navigation Image - Inline with Category Filters */
+.room-main-nav-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.room-main-nav-link {
+    display: inline-block !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.room-main-nav-image {
+    height: 75px !important; /* Updated to 75px to match filter buttons */
+    width: auto !important; /* Maintain aspect ratio */
+    opacity: 0.8 !important;
+    transition: opacity 0.3s ease !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    object-fit: contain !important;
+    display: inline-block !important;
+}
+
+.room-main-nav-link:hover .room-main-nav-image {
+    opacity: 1 !important;
+}
+
+/* Responsive positioning for inline navigation */
+@media (max-width: 768px) {
+    /* Stack navigation vertically on mobile */
+    #shopPage .navigation-bar {
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    #shopPage .room-main-nav-container {
+        position: static !important;
+        transform: none !important;
+        order: -1 !important; /* Show room main image above category buttons */
+    }
+
+    #shopPage .category-navigation {
+        width: 100% !important;
+    }
+
+    .room-main-nav-image {
+        height: 60px !important; /* Proportionally smaller on mobile (75px * 0.8) */
+        width: auto !important; /* Maintain aspect ratio */
+    }
+
+    /* Category buttons smaller on mobile to match room main image */
+    #shopPage .category-btn,
+    #shopPage button.category-btn {
+        height: 60px !important; /* Match mobile room main image height */
+        min-height: 80px !important;
+        padding: 16px 20px !important;
+        font-size: 0.8125rem !important; /* 13px */
+    }
+}
+
+@media (min-width: 769px) {
+    /* Ensure proper spacing on larger screens */
+    #shopPage .navigation-bar {
+        padding: 0 60px !important; /* Add padding to prevent overlap with room main image */
+    }
 }
 
 /* ==========================================================================
@@ -4712,3 +5432,200 @@ button.category_btn_color.category-btn.active,
 .search-input + div svg {
     color: var(--brand-primary, #87ac3a);
 }
+
+/* ==========================================================================
+   CRITICAL FIX: GLOBAL SCROLLBAR STYLING - MAXIMUM SPECIFICITY
+   ========================================================================== */
+
+/* Force scrollbar styling on all elements - Maximum Specificity */
+body.shop-page,
+body.shop-page *,
+html.shop-page,
+html.shop-page *,
+.shop-page,
+.shop-page * {
+    scrollbar-width: thin !important;
+    scrollbar-color: #87ac3a rgba(135, 172, 58, 0.3) !important;
+}
+
+/* Webkit scrollbar styling - Maximum Specificity */
+body.shop-page::-webkit-scrollbar,
+body.shop-page *::-webkit-scrollbar,
+html.shop-page::-webkit-scrollbar,
+html.shop-page *::-webkit-scrollbar,
+.shop-page::-webkit-scrollbar,
+.shop-page *::-webkit-scrollbar {
+    width: 16px !important;
+    background: rgba(135, 172, 58, 0.1) !important;
+}
+
+body.shop-page::-webkit-scrollbar-thumb,
+body.shop-page *::-webkit-scrollbar-thumb,
+html.shop-page::-webkit-scrollbar-thumb,
+html.shop-page *::-webkit-scrollbar-thumb,
+.shop-page::-webkit-scrollbar-thumb,
+.shop-page *::-webkit-scrollbar-thumb {
+    background: #87ac3a !important;
+    border-radius: 8px !important;
+    transition: background-color 0.3s ease !important;
+}
+
+body.shop-page::-webkit-scrollbar-thumb:hover,
+body.shop-page *::-webkit-scrollbar-thumb:hover,
+html.shop-page::-webkit-scrollbar-thumb:hover,
+html.shop-page *::-webkit-scrollbar-thumb:hover,
+.shop-page::-webkit-scrollbar-thumb:hover,
+.shop-page *::-webkit-scrollbar-thumb:hover {
+    background: #6b8e23 !important;
+}
+
+/* Ensure shop page maintains full-width layout */
+body.shop-page #shopPage,
+.shop-page #shopPage {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+body.shop-page #productsGrid,
+.shop-page #productsGrid {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+/* ==========================================================================
+   SHOP PAGE LAYOUT FIXES - COMPREHENSIVE SOLUTION
+   ========================================================================== */
+
+
+
+
+
+/* Fix 3: Enhanced Product Card Styling - Comprehensive Selectors */
+
+/* Product Title Styling - Enhanced Specificity */
+#shopPage .product-card .product-title,
+#shopPage .product-title,
+#shopPage .product-card h3,
+#shopPage .product-card .text-lg,
+.product-card .product-title,
+.product-card h3 {
+    font-size: 1.125rem !important; /* 18px */
+    font-weight: 700 !important; /* Bold */
+    color: #16a34a !important; /* Green-600 */
+    margin-bottom: 12px !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    display: block !important;
+}
+
+/* Product Description Styling - Enhanced Specificity */
+#shopPage .product-card .description-text,
+#shopPage .description-text,
+#shopPage .product-card .text-sm,
+#shopPage .product-card p,
+.product-card .description-text,
+.product-card p {
+    font-size: 0.875rem !important; /* 14px */
+    color: #6b7280 !important; /* Gray-500 */
+    line-height: 1.4 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    text-align: left !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+/* Product Price - Large and Prominent - Enhanced Specificity */
+#shopPage .product-card .product-price,
+#shopPage .product-price,
+#shopPage .product-card .text-xl,
+#shopPage .product-card .font-bold,
+.product-card .product-price,
+.product-card .price {
+    font-size: 1.5rem !important; /* 24px - Large and prominent */
+    font-weight: 800 !important; /* Extra bold */
+    color: #15803d !important; /* Green-700 - Darker for better contrast */
+    text-align: center !important;
+    margin-bottom: 12px !important;
+    padding: 8px 0 !important;
+    border-bottom: 2px solid #f3f4f6 !important; /* Light separator */
+    letter-spacing: 0.025em !important; /* Slight letter spacing for readability */
+    display: block !important;
+}
+
+/* Product Stock - Color Coded Based on Levels */
+#shopPage .product-stock,
+#shopPage .product-card .stock,
+.product-card .product-stock,
+.product-card .stock {
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important; /* Semi-bold */
+    text-align: center !important;
+    margin-bottom: 8px !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    background-color: #f9fafb !important; /* Light background */
+}
+
+/* Product Category and SKU Styling */
+#shopPage .product-category,
+#shopPage .product-sku,
+#shopPage .product-card .category,
+#shopPage .product-card .sku,
+.product-card .product-category,
+.product-card .product-sku,
+.product-card .category,
+.product-card .sku {
+    font-size: 0.75rem !important; /* 12px */
+    color: #9ca3af !important; /* Gray-400 */
+    text-align: center !important;
+    margin: 4px 0 !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Add to Cart Button - Enhanced Styling */
+#shopPage .add-to-cart-btn,
+#shopPage .product-card button,
+#shopPage button[data-sku],
+.product-card .add-to-cart-btn,
+.product-card button {
+    width: 100% !important;
+    background-color: #87ac3a !important; /* Brand color */
+    color: white !important;
+    border: none !important;
+    padding: 12px 16px !important; /* Increased padding for better touch targets */
+    border-radius: 6px !important; /* Slightly rounded corners */
+    font-size: 0.875rem !important; /* 14px */
+    font-weight: 600 !important; /* Semi-bold */
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-transform: none !important; /* Preserve custom button text casing */
+    letter-spacing: 0.025em !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow */
+}
+
+#shopPage .add-to-cart-btn:hover,
+#shopPage .product-card button:hover,
+#shopPage button[data-sku]:hover,
+.product-card .add-to-cart-btn:hover,
+.product-card button:hover {
+    background-color: #6b8e23 !important; /* Darker green on hover */
+    transform: translateY(-1px) !important; /* Slight lift effect */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow on hover */
+}
+
+#shopPage .add-to-cart-btn:active,
+#shopPage .product-card button:active,
+#shopPage button[data-sku]:active,
+.product-card .add-to-cart-btn:active,
+.product-card button:active {
+    transform: translateY(0) !important; /* Reset on click */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+

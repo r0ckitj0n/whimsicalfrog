@@ -87,13 +87,27 @@
         if (!filename.startsWith('backgrounds/')) {
           filename = `backgrounds/${filename}`;
         }
-        const imageUrl = `/images/${filename}`;
+        const imageUrl = `/images/${filename}?v=${Date.now()}`;
+
+        // Set background on modal overlay (this provides the backdrop)
         const overlay = document.querySelector('.room-modal-overlay');
+
         if (overlay) {
-          // Set overlay background image directly with gradient overlay
-          overlay.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${imageUrl}')`;
-          this.WF.log(`[MainApplication] Modal background loaded for ${roomType}`);
+          // Set CSS variable for background image to work with room-modal.css
+          overlay.style.setProperty('--dynamic-bg-url', `url('${imageUrl}')`);
+          // Also set the background directly as a fallback to ensure it works
+          overlay.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('${imageUrl}')`;
+          overlay.style.backgroundSize = 'cover';
+          overlay.style.backgroundPosition = 'center';
+          overlay.style.backgroundRepeat = 'no-repeat';
+          this.WF.log(`[MainApplication] Modal overlay background loaded for ${roomType}: ${imageUrl}`);
+        } else {
+          this.WF.log('[MainApplication] Modal overlay not found when setting background', 'warn');
         }
+
+        // The iframe content will handle its own background loading via the embedded script
+      } else {
+        this.WF.log(`[MainApplication] No background data found for ${roomType}`, 'warn');
       }
     } catch (err) {
       this.WF.log(`[MainApplication] Error loading modal background for ${roomType}: ${err.message}`, 'error');
@@ -102,9 +116,11 @@
 
   resetToPageBackground() {
     const overlay = document.querySelector('.room-modal-overlay');
+
     if (overlay) {
       overlay.style.removeProperty('--dynamic-bg-url');
-      this.WF.log('[MainApplication] Modal background reset to page background.');
+      overlay.style.removeProperty('background-image');
+      this.WF.log('[MainApplication] Modal overlay background reset.');
     }
   }
 };

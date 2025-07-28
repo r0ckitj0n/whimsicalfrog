@@ -1,0 +1,80 @@
+[ ] NAME:Current Task List DESCRIPTION:Root task for conversation __NEW_AGENT__
+-[x] NAME:Fix missing CSS z-index variable for door areas DESCRIPTION:Add --z-door-areas variable to css/core/variables.css and ensure it has an appropriate value that allows door clicks to work properly
+-[x] NAME:Verify room modal manager JavaScript is loading correctly DESCRIPTION:Check that room-modal-manager.js is being loaded and the click event listeners are properly set up for door elements with data-room attributes
+-[x] NAME:Test modal functionality with all 5 doors DESCRIPTION:Verify that clicking each of the 5 sign_door images triggers the correct modal with proper room content, coordinates, and items
+-[x] NAME:Ensure room background remains visible behind modals DESCRIPTION:Check that the room_main background is properly visible when modals are open and not being hidden by modal overlays
+-[x] NAME:Verify database queries for room coordinates and items DESCRIPTION:Test that room_map coordinates and room items are being properly fetched from the database and displayed in the modals
+-[x] NAME:Immediate Testing & Diagnosis DESCRIPTION:Test room_main.php in browser, check console for errors, verify JavaScript/CSS loading, confirm door element functionality
+-[x] NAME:Systematic Code Audit & Repair DESCRIPTION:Examine JavaScript event flow, verify RoomModalManager instantiation, check CSS z-index conflicts, validate modal HTML structure, test API endpoints
+-[x] NAME:Integration Testing DESCRIPTION:Test all 5 door clicks individually, verify room backgrounds, confirm coordinates/items loading, test modal closing
+-[x] NAME:Comprehensive Validation DESCRIPTION:Validate each fix in browser, provide evidence of fixes, ensure centralized CSS/JS/z-index management
+-[x] NAME:Fix JavaScript Errors DESCRIPTION:Resolve WhimsicalFrog undefined reference and export syntax error in bundle.js
+-[x] NAME:Verify Modal Functionality DESCRIPTION:Test that clicking each of the 5 door images opens their respective room modals
+-[x] NAME:Coordinate System Conversion DESCRIPTION:Change room map coordinate system from percentage-based to pixel-based coordinates
+-[x] NAME:Scaling Consistency DESCRIPTION:Ensure room background, modal container, and coordinates use consistent scaling
+-[x] NAME:Admin System Testing DESCRIPTION:Test admin login and all admin page functionality with provided credentials
+-[x] NAME:Fix Missing Page Header Elements on room_main.php DESCRIPTION:Restore shopping cart, login link, and search field to room_main page header by locating existing implementations and integrating them properly
+-[x] NAME:Fix Room Modal Background and Items Issues DESCRIPTION:Resolve CSS background-size issues for modal backgrounds and investigate why items aren't displaying in rooms 1-5 despite database configuration
+-[x] NAME:Fix Page Header Layout Problems DESCRIPTION:Center search input and properly align right header section to match left header alignment
+-[x] NAME:Standardize Modal Behavior DESCRIPTION:Make all modals follow global standards: close on outside click, consistent X button styling, proper hover states using Configuration Manager as reference
+-[x] NAME:Fix Email History Modal Scrollbar DESCRIPTION:Add scrollbar for content overflow in email history modal
+-[x] NAME:Clarify Fix Sample Email Button DESCRIPTION:Investigate and clarify purpose of Fix Sample Email button that only shows success message
+-[x] NAME:Fix POS Page Item Display DESCRIPTION:Investigate database connection and item loading issues preventing items from displaying on POS page
+-[x] NAME:Fix Badge System Dynamic Content DESCRIPTION:Replace hardcoded 'hot deal' and 'exclusive' badges with dynamic content from badge database table
+-[x] NAME:Fix Modal Header Styling DESCRIPTION:Apply primary brand green color to modal header title/description div backgrounds
+-[x] NAME:Add Room Modal Bottom Padding DESCRIPTION:Add small padding to bottom of room modals so they don't touch screen edge
+-[x] NAME:Configure Logging System DESCRIPTION:Move file logs to /logs directory, ensure database primary logging, configure comprehensive logging for SEO/retail admin
+-[x] NAME:Reorganize File Structure DESCRIPTION:Move admin pages to /admin folder, organize room_config_manager.php, ensure proper access controls
+-[x] NAME:Fix Room Modal Background Scaling DESCRIPTION:Fix the background scaling issues in room modals 1-5 where background is smaller than the modal container
+-[x] NAME:Fix Item Display in Room Modals DESCRIPTION:Items should display primary images instead of text in room modals
+-[x] NAME:Create Universal Page Header DESCRIPTION:Create consistent page header with fade effect (darker top to lighter bottom) used across all pages except rooms 1-5
+-[x] NAME:Fix Page Content Positioning DESCRIPTION:Ensure all page content loads 10px below the bottom of the page header
+-[x] NAME:Fix Room Modal Header Constraints DESCRIPTION:Properly constrain room modal page header to the edges of the room modal
+-[x] NAME:Fix Room Modal Z-Index Issues DESCRIPTION:Fix room modals popping up under the room_main page header
+-[x] NAME:Fix Page Header Layout DESCRIPTION:Center search field with Shop/Login/Cart items left-justified, not centered
+-[x] NAME:Standardize Button Styling DESCRIPTION:Ensure all buttons follow site standard: primary brand color background with white text
+-[x] NAME:Fix Login Functionality DESCRIPTION:Fix login button functionality and login screen appearance
+-[x] NAME:Audit Current Header Implementations DESCRIPTION:Identify all pages that are NOT using the universal header component and catalog their current header implementations
+-[x] NAME:Convert Room Main Page Header DESCRIPTION:Update room_main.php to use the universal header component while preserving all existing functionality
+-[x] NAME:Convert Other Non-Standard Headers DESCRIPTION:Update any other pages found to use non-standard headers to use the universal header component
+-[x] NAME:Test Header Functionality DESCRIPTION:Verify that search, cart, user menu, navigation, and room modal system all work properly with the universal header
+-[x] NAME:Validate Visual Consistency DESCRIPTION:Ensure all pages have identical header appearance and functionality according to the universal design system
+-[x] NAME:Analyze Backup Header Styling DESCRIPTION:Examine the header styling in backups/WhimsicalFrog 2025-07-07/ to identify specific CSS properties, colors, spacing, typography, and layout
+-[x] NAME:Extract Key Visual Elements DESCRIPTION:Document the specific styling values (colors, fonts, spacing, gradients) from the backup header implementation
+-[x] NAME:Update CSS Variables DESCRIPTION:Modify css/core/variables.css to incorporate backup styling values while preserving centralized architecture
+-[x] NAME:Update Header Component CSS DESCRIPTION:Modify css/components.css universal header styles to match backup appearance using updated variables
+-[x] NAME:Test Header Appearance DESCRIPTION:Verify header appearance and functionality across all pages (shop, room_main, admin, login) to ensure visual consistency
+-[x] NAME:Validate Responsive Design DESCRIPTION:Test mobile and desktop layouts to ensure responsive design is maintained with new styling
+-[x] NAME:Debug Background Display Issue DESCRIPTION:Investigate why the CSS variable --dynamic-bg-url is not being set or applied to the room modal overlay background
+-[x] NAME:Debug Coordinate Scaling Problem DESCRIPTION:Fix the room coordinate scaling so product items are positioned correctly and sized appropriately within the modal container
+-[x] NAME:Test Modal Functionality DESCRIPTION:Verify that both background and item positioning work correctly across different screen sizes
+-[x] NAME:Debug Background Loading Issues DESCRIPTION:Investigate why the modal is showing wrong background image and fix the background loading mechanism
+-[x] NAME:Debug Coordinate Scaling Problems DESCRIPTION:Fix the oversized/missing product icons and coordinate scaling logic
+-[x] NAME:Check Database Integrity DESCRIPTION:Verify room coordinates, background data, and content loading are working correctly
+-[x] NAME:Test and Validate Fixes DESCRIPTION:Ensure all modal functionality works correctly across different screen sizes
+-[x] NAME:Debug Background Loading Implementation DESCRIPTION:Investigate why the modal is still showing cartoon frog instead of room background despite the fixes
+-[x] NAME:Fix Product Icon Visibility DESCRIPTION:Determine why product icons are not visible in the modal and fix positioning/sizing
+-[x] NAME:Verify Modal CSS Styling DESCRIPTION:Check modal container, borders, transparency, and overall visual styling
+-[x] NAME:Test Responsive Behavior DESCRIPTION:Ensure modal works correctly across different screen sizes and maintains proper aspect ratio
+-[x] NAME:Diagnose Positioning Failure Root Cause DESCRIPTION:Examine browser console output, test page behavior, and computed CSS values to identify why inline positioning styles are not being respected
+-[x] NAME:Verify Coordinate Data Flow DESCRIPTION:Confirm API response, HTML generation, and iframe loading are working correctly from database to display
+-[x] NAME:Test Modal Interaction and Document Behavior DESCRIPTION:Test room modal opening, inspect iframe content, and document exact visual behavior and console errors
+-[x] NAME:Implement Targeted Fix DESCRIPTION:Based on diagnosis, implement specific solution to resolve positioning without additional debugging code
+-[x] NAME:Test Live Modal Behavior DESCRIPTION:Open room main page and click room door to trigger modal, document exact visual behavior
+-[x] NAME:Inspect Iframe Content with Dev Tools DESCRIPTION:Use browser developer tools to examine product icon elements, inline styles, computed CSS, and console output
+-[x] NAME:Identify Technical Barrier DESCRIPTION:Determine specific reason why positioning fixes are not taking effect in live modal environment
+-[x] NAME:Implement Definitive Solution DESCRIPTION:Apply targeted fix based on live testing findings to resolve positioning issue permanently
+-[x] NAME:Live Modal Testing DESCRIPTION:Open room main page, click room door, and document exact visual behavior of product icons and background
+-[x] NAME:Browser Dev Tools Inspection DESCRIPTION:Use developer tools to inspect iframe content, computed CSS values, and background image loading
+-[x] NAME:Document Observed vs Expected DESCRIPTION:Create detailed comparison of what is actually happening vs what should happen
+-[x] NAME:Implement Targeted Fixes DESCRIPTION:Apply specific fixes based on actual observed behavior, not theoretical analysis
+-[/] NAME:Verify Solutions Work DESCRIPTION:Test fixes in live environment and confirm both product positioning and background display are resolved
+-[x] NAME:Investigate Iframe Necessity DESCRIPTION:Examine why iframe was implemented and if it's actually required for room modal functionality
+-[x] NAME:Create Non-Iframe Modal Version DESCRIPTION:Implement direct content loading version of room modal without iframe complexity
+-[x] NAME:Compare Implementation Approaches DESCRIPTION:Document differences between iframe vs direct loading for CSS, JS, positioning, and performance
+-[/] NAME:Replace with Working Solution DESCRIPTION:If direct loading works, replace iframe approach with simpler method
+-[x] NAME:Locate June 30th Backup DESCRIPTION:Find and examine the June 30th backup that had working room modal functionality
+-[ ] NAME:Analyze Working Implementation DESCRIPTION:Study how room modals worked in the June 30th version - positioning, backgrounds, loading approach
+-[ ] NAME:Setup Side-by-Side Comparison DESCRIPTION:Install June 30th backup as separate working installation for direct comparison testing
+-[ ] NAME:Identify Root Cause DESCRIPTION:Compare working vs current implementation to find what specific changes broke the functionality
+-[ ] NAME:Port Working Solution DESCRIPTION:Apply the working approach from June 30th to current codebase while maintaining code quality

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Page Inspector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .inspector-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        .measurement {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            border-left: 4px solid #007bff;
+        }
+        .constraint {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .good {
+            border-left-color: #28a745;
+            background: #f8fff9;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .debug-section h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Live Shop Page Inspector</h1>
+    <p>This tool inspects the actual computed styles on the live shop page to identify what's preventing full viewport width utilization.</p>
+    
+    <div class="inspector-container">
+        <h2>Real-Time Analysis</h2>
+        <div id="analysis-results">
+            <div class="info">Loading shop page and analyzing constraints...</div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Manual Debug Commands</h3>
+            <button onclick="runDeepAnalysis()">🔬 Run Deep Analysis</button>
+            <button onclick="testDifferentSizes()">📏 Test Different Viewport Sizes</button>
+            <button onclick="identifyConstraints()">🚫 Identify All Constraints</button>
+        </div>
+    </div>
+
+    <div class="inspector-container">
+        <h2>Live Shop Page</h2>
+        <iframe id="shopFrame" src="http://localhost:8000/?page=shop"></iframe>
+    </div>
+
+    <script>
+        let iframe, iframeDoc, iframeWindow;
+        
+        function initializeInspector() {
+            iframe = document.getElementById('shopFrame');
+            
+            iframe.onload = function() {
+                try {
+                    iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    iframeWindow = iframe.contentWindow;
+                    runInitialAnalysis();
+                } catch (error) {
+                    document.getElementById('analysis-results').innerHTML = `
+                        <div class="error">❌ Cannot access iframe content: ${error.message}</div>
+                    `;
+                }
+            };
+        }
+        
+        function runInitialAnalysis() {
+            const resultsDiv = document.getElementById('analysis-results');
+            
+            // Get all key elements
+            const mainElement = iframeDoc.getElementById('mainContent');
+            const shopPage = iframeDoc.getElementById('shopPage');
+            const productsGrid = iframeDoc.getElementById('productsGrid');
+            
+            if (!mainElement || !shopPage || !productsGrid) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Missing elements: 
+                        Main: ${mainElement ? '✅' : '❌'}, 
+                        Shop: ${shopPage ? '✅' : '❌'}, 
+                        Grid: ${productsGrid ? '✅' : '❌'}
+                    </div>
+                `;
+                return;
+            }
+            
+            // Get viewport and measurements
+            const viewportWidth = iframeWindow.innerWidth;
+            const mainWidth = mainElement.offsetWidth;
+            const shopWidth = shopPage.offsetWidth;
+            const gridWidth = productsGrid.offsetWidth;
+            
+            // Get computed styles
+            const mainStyles = iframeWindow.getComputedStyle(mainElement);
+            const shopStyles = iframeWindow.getComputedStyle(shopPage);
+            const gridStyles = iframeWindow.getComputedStyle(productsGrid);
+            
+            // Calculate utilization percentages
+            const mainUtil = (mainWidth / viewportWidth * 100).toFixed(1);
+            const shopUtil = (shopWidth / viewportWidth * 100).toFixed(1);
+            const gridUtil = (gridWidth / viewportWidth * 100).toFixed(1);
+            
+            // Identify constraints
+            const constraints = [];
+            const mainPaddingLeft = parseFloat(mainStyles.paddingLeft) || 0;
+            const mainPaddingRight = parseFloat(mainStyles.paddingRight) || 0;
+            const totalMainPadding = mainPaddingLeft + mainPaddingRight;
+            
+            if (totalMainPadding > 5) {
+                constraints.push(`Main element has ${totalMainPadding}px total padding`);
+            }
+            
+            if (mainStyles.maxWidth !== 'none' && !mainStyles.maxWidth.includes('100%')) {
+                constraints.push(`Main element max-width: ${mainStyles.maxWidth}`);
+            }
+            
+            if (gridStyles.maxWidth !== 'none' && !gridStyles.maxWidth.includes('100%')) {
+                constraints.push(`Grid element max-width: ${gridStyles.maxWidth}`);
+            }
+            
+            if (shopStyles.maxWidth !== 'none' && !shopStyles.maxWidth.includes('100%')) {
+                constraints.push(`Shop element max-width: ${shopStyles.maxWidth}`);
+            }
+            
+            // Check for container constraints
+            let parent = mainElement.parentElement;
+            while (parent && parent !== iframeDoc.body) {
+                const parentStyles = iframeWindow.getComputedStyle(parent);
+                const parentMaxWidth = parentStyles.maxWidth;
+                const parentWidth = parent.offsetWidth;
+                
+                if (parentMaxWidth !== 'none' && !parentMaxWidth.includes('100%')) {
+                    constraints.push(`Parent container (${parent.tagName}) max-width: ${parentMaxWidth}`);
+                }
+                
+                if (parentWidth < viewportWidth * 0.95) {
+                    constraints.push(`Parent container (${parent.tagName}) width: ${parentWidth}px (${(parentWidth/viewportWidth*100).toFixed(1)}%)`);
+                }
+                
+                parent = parent.parentElement;
+            }
+            
+            // Determine overall status
+            const isFullWidth = gridUtil >= 90;
+            let statusHTML = '';
+            
+            if (isFullWidth) {
+                statusHTML = '<div class="success">🎉 SUCCESS: Shop page is using full viewport width!</div>';
+            } else {
+                statusHTML = '<div class="error">❌ ISSUE: Shop page is NOT using full viewport width</div>';
+            }
+            
+            // Build results HTML
+            let resultsHTML = statusHTML + `
+                <div class="debug-section">
+                    <h3>📊 Width Utilization</h3>
+                    <div class="measurement ${mainUtil >= 95 ? 'good' : 'constraint'}">
+                        🖥️ Viewport: ${viewportWidth}px
+                    </div>
+                    <div class="measurement ${mainUtil >= 95 ? 'good' : 'constraint'}">
+                        📦 Main Container: ${mainWidth}px (${mainUtil}% of viewport)
+                    </div>
+                    <div class="measurement ${shopUtil >= 95 ? 'good' : 'constraint'}">
+                        🏪 Shop Page: ${shopWidth}px (${shopUtil}% of viewport)
+                    </div>
+                    <div class="measurement ${gridUtil >= 90 ? 'good' : 'constraint'}">
+                        🎯 Products Grid: ${gridWidth}px (${gridUtil}% of viewport)
+                    </div>
+                </div>
+                
+                <div class="debug-section">
+                    <h3>🔍 CSS Properties Analysis</h3>
+                    <div class="measurement">Main Padding: ${mainStyles.padding}</div>
+                    <div class="measurement">Main Max-Width: ${mainStyles.maxWidth}</div>
+                    <div class="measurement">Main Width: ${mainStyles.width}</div>
+                    <div class="measurement">Main Box-Sizing: ${mainStyles.boxSizing}</div>
+                    <div class="measurement">Shop Position: ${shopStyles.position}</div>
+                    <div class="measurement">Shop Left: ${shopStyles.left}</div>
+                    <div class="measurement">Shop Margin-Left: ${shopStyles.marginLeft}</div>
+                    <div class="measurement">Grid Display: ${gridStyles.display}</div>
+                    <div class="measurement">Grid Max-Width: ${gridStyles.maxWidth}</div>
+                    <div class="measurement">Grid Grid-Template-Columns: ${gridStyles.gridTemplateColumns}</div>
+                </div>
+            `;
+            
+            if (constraints.length > 0) {
+                resultsHTML += `
+                    <div class="debug-section">
+                        <h3>🚫 Identified Constraints</h3>
+                        ${constraints.map(c => `<div class="measurement constraint">⚠️ ${c}</div>`).join('')}
+                    </div>
+                `;
+            } else {
+                resultsHTML += `
+                    <div class="debug-section">
+                        <h3>✅ No Obvious Constraints Found</h3>
+                        <div class="measurement good">All checked elements appear to have full-width settings</div>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = resultsHTML;
+        }
+        
+        function runDeepAnalysis() {
+            console.log('🔬 Running deep analysis...');
+            runInitialAnalysis();
+        }
+        
+        function testDifferentSizes() {
+            console.log('📏 Testing different viewport sizes...');
+            // This would require resizing the iframe, which is complex
+            alert('Check the browser developer tools to test different viewport sizes');
+        }
+        
+        function identifyConstraints() {
+            console.log('🚫 Identifying all constraints...');
+            runInitialAnalysis();
+        }
+        
+        // Initialize when page loads
+        window.onload = initializeInspector;
+        
+        // Re-run analysis every 5 seconds
+        setInterval(() => {
+            if (iframeDoc && iframeWindow) {
+                runInitialAnalysis();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

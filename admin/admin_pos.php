@@ -152,7 +152,10 @@ document.addEventListener('fullscreenchange', function() {
 });
 
 // Initialize the POS system
-document.addEventListener('DOMContentLoaded', function() {showAllItems();
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('POS System initializing...');
+    console.log('All items loaded:', allItems.length);
+    showAllItems();
     
     // Setup SKU search
     const skuSearch = document.getElementById('skuSearch');
@@ -196,19 +199,30 @@ document.addEventListener('DOMContentLoaded', function() {showAllItems();
 
 // Show all items in the grid
 function showAllItems() {
+    console.log('showAllItems() called');
     const grid = document.getElementById('itemsGrid');
-    
+
     if (!grid) {
         console.error('itemsGrid element not found');
         return;
     }
-    
+
+    console.log('Grid found, clearing and adding', allItems.length, 'items');
     grid.innerHTML = '';
-    
-    allItems.forEach((item) => {
+
+    if (allItems.length === 0) {
+        grid.innerHTML = '<div class="no-items-message">No items available for sale</div>';
+        return;
+    }
+
+    allItems.forEach((item, index) => {
+        console.log(`Creating card for item ${index + 1}:`, item);
         const itemCard = createItemCard(item);
         grid.appendChild(itemCard);
-    });}
+    });
+
+    console.log('All item cards added to grid');
+}
 
 // Simple test cart display function
 function simpleCartDisplay() {const cartItems = document.getElementById('cartItems');

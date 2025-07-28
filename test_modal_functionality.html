@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Functionality Test</title>
+    <link href="css/bundle.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .door-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .test-door {
+            background: #87ac3a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        .test-door:hover {
+            background: #6b8e23;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .modal-test-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-test-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Modal Functionality Test</h1>
+        
+        <div class="test-section">
+            <h2>System Status</h2>
+            <div id="systemStatus" class="status warning">Checking...</div>
+            <div id="systemDetails"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test Room Doors</h2>
+            <p>Click each door to test modal functionality:</p>
+            <div class="door-grid">
+                <div class="door-area test-door" data-room="1" data-category="Main Room">
+                    <strong>Room 1</strong><br>Main Room
+                </div>
+                <div class="door-area test-door" data-room="2" data-category="Window Wraps">
+                    <strong>Room 2</strong><br>Window Wraps
+                </div>
+                <div class="door-area test-door" data-room="3" data-category="Window Wraps">
+                    <strong>Room 3</strong><br>Window Wraps
+                </div>
+                <div class="door-area test-door" data-room="4" data-category="Window Wraps">
+                    <strong>Room 4</strong><br>Window Wraps
+                </div>
+                <div class="door-area test-door" data-room="5" data-category="Window Wraps">
+                    <strong>Room 5</strong><br>Window Wraps
+                </div>
+            </div>
+            <div id="clickResults" class="status info">Click a door to test...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>API Test</h2>
+            <button id="testApiBtn" class="test-door" style="display: inline-block; margin: 10px;">Test API Endpoints</button>
+            <div id="apiResults" class="status info">Click button to test API...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Console Log</h2>
+            <div id="consoleLog" class="log"></div>
+        </div>
+    </div>
+
+    <!-- Test modal overlay -->
+    <div id="testModalOverlay" class="modal-test-overlay">
+        <div class="modal-test-content">
+            <h3>Test Modal</h3>
+            <p id="testModalContent">Modal content will appear here...</p>
+            <button onclick="closeTestModal()">Close</button>
+        </div>
+    </div>
+
+    <script src="js/bundle.js"></script>
+    <script>
+        // Console logging
+        const consoleLog = document.getElementById('consoleLog');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addToLog(type, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            consoleLog.textContent += `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', ...args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', ...args);
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToLog('warn', ...args);
+        };
+        
+        // System status check
+        function checkSystemStatus() {
+            const statusEl = document.getElementById('systemStatus');
+            const detailsEl = document.getElementById('systemDetails');
+            
+            let issues = [];
+            let details = [];
+            
+            // Check WhimsicalFrog
+            if (typeof window.WhimsicalFrog === 'undefined') {
+                issues.push('WhimsicalFrog not defined');
+            } else {
+                details.push(`✅ WhimsicalFrog: ${typeof window.WhimsicalFrog}`);
+                details.push(`   - Ready: ${typeof window.WhimsicalFrog.ready}`);
+                details.push(`   - Initialized: ${window.WhimsicalFrog.initialized}`);
+            }
+            
+            // Check RoomModalManager
+            if (typeof window.roomModalManager === 'undefined') {
+                issues.push('roomModalManager not defined');
+            } else {
+                details.push(`✅ roomModalManager: ${typeof window.roomModalManager}`);
+                details.push(`   - Show method: ${typeof window.roomModalManager.show}`);
+            }
+            
+            // Check door elements
+            const doors = document.querySelectorAll('.door-area');
+            details.push(`✅ Door elements found: ${doors.length}`);
+            
+            if (issues.length === 0) {
+                statusEl.className = 'status success';
+                statusEl.textContent = 'All systems operational';
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = `Issues found: ${issues.join(', ')}`;
+            }
+            
+            detailsEl.innerHTML = '<pre>' + details.join('\n') + '</pre>';
+        }
+        
+        // Test door clicks
+        function setupDoorTests() {
+            const resultsEl = document.getElementById('clickResults');
+            
+            document.querySelectorAll('.door-area').forEach(door => {
+                door.addEventListener('click', function() {
+                    const roomNumber = this.dataset.room;
+                    const category = this.dataset.category;
+                    
+                    console.log(`Testing door click: Room ${roomNumber} (${category})`);
+                    resultsEl.className = 'status warning';
+                    resultsEl.textContent = `Testing Room ${roomNumber}...`;
+                    
+                    try {
+                        if (window.roomModalManager && typeof window.roomModalManager.show === 'function') {
+                            console.log('Calling roomModalManager.show()');
+                            window.roomModalManager.show(roomNumber);
+                            
+                            // Check if modal was created
+                            setTimeout(() => {
+                                const modal = document.querySelector('.room-modal-overlay');
+                                if (modal) {
+                                    resultsEl.className = 'status success';
+                                    resultsEl.textContent = `✅ Room ${roomNumber} modal opened successfully`;
+                                } else {
+                                    resultsEl.className = 'status warning';
+                                    resultsEl.textContent = `⚠️ Room ${roomNumber} modal triggered but not visible`;
+                                }
+                            }, 1000);
+                        } else {
+                            throw new Error('roomModalManager.show not available');
+                        }
+                    } catch (error) {
+                        console.error('Door click error:', error);
+                        resultsEl.className = 'status error';
+                        resultsEl.textContent = `❌ Room ${roomNumber} failed: ${error.message}`;
+                    }
+                });
+            });
+        }
+        
+        // Test API endpoints
+        function testApiEndpoints() {
+            const resultsEl = document.getElementById('apiResults');
+            resultsEl.className = 'status warning';
+            resultsEl.textContent = 'Testing API endpoints...';
+            
+            console.log('Testing API endpoints...');
+            
+            // Test room content API
+            fetch('/api/load_room_content.php?room_number=1&modal=1')
+                .then(response => response.text())
+                .then(data => {
+                    console.log('API Response length:', data.length);
+                    if (data.length > 100) {
+                        resultsEl.className = 'status success';
+                        resultsEl.textContent = '✅ API endpoints responding correctly';
+                    } else {
+                        resultsEl.className = 'status warning';
+                        resultsEl.textContent = '⚠️ API responding but with minimal content';
+                    }
+                })
+                .catch(error => {
+                    console.error('API test error:', error);
+                    resultsEl.className = 'status error';
+                    resultsEl.textContent = `❌ API test failed: ${error.message}`;
+                });
+        }
+        
+        // Test modal functions
+        function showTestModal(content) {
+            document.getElementById('testModalContent').textContent = content;
+            document.getElementById('testModalOverlay').style.display = 'flex';
+        }
+        
+        function closeTestModal() {
+            document.getElementById('testModalOverlay').style.display = 'none';
+        }
+        
+        // Initialize tests
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Modal functionality test page loaded');
+            
+            setTimeout(() => {
+                checkSystemStatus();
+                setupDoorTests();
+                
+                // Setup API test button
+                document.getElementById('testApiBtn').addEventListener('click', testApiEndpoints);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

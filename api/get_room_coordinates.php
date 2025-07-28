@@ -36,18 +36,6 @@ try {
         exit;
     }
 
-    // Check if room_maps table exists first
-    $tableCheck = $pdo->query("SHOW TABLES LIKE 'room_maps'");
-    if ($tableCheck->rowCount() == 0) {
-        // Table doesn't exist, return empty coordinates
-        echo json_encode([
-            'success' => true,
-            'coordinates' => [],
-            'message' => 'Room maps table not initialized - database required'
-        ]);
-        exit;
-    }
-
     // Get the active map for the specified room type
     $stmt = $pdo->prepare("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE");
     $stmt->execute([$roomType]);
@@ -70,15 +58,16 @@ try {
         ]);
     }
 
-} catch (PDOException $e) {
+} catch (Exception $e) {
     // Log error but don't expose sensitive database info
     error_log("Room coordinates API error: " . $e->getMessage());
 
-    // Return graceful fallback
+    // Return error for debugging
     echo json_encode([
-        'success' => true,
-        'coordinates' => [],
-        'message' => 'No active room map found in database'
+        'success' => false,
+        'message' => 'Database error: ' . $e->getMessage(),
+        'debug_room_type' => $roomType ?? 'not set',
+        'debug_room_number' => $roomNumber ?? 'not set'
     ]);
 }
 ?> 

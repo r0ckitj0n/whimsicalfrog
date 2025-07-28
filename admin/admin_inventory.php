@@ -10,7 +10,7 @@ require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/logger.php';
 
 // Get database instance
-$pdo = Database::getInstance()->getConnection();
+$pdo = Database::getInstance();
 
 // Initialize data processing
 $editItem = null;
@@ -127,6 +127,11 @@ $messageType = $_GET['type'] ?? '';
 
 
 <div class="admin-content-container">
+    <div class="admin-content-header">
+        <h1 class="admin-content-title inventory-title">📦 Inventory Management</h1>
+        <p class="admin-content-subtitle">Manage your product inventory, stock levels, and pricing</p>
+    </div>
+
     <div class="admin-filter-section">
         <form method="GET" action="" class="admin-filter-form">
             <input type="hidden" name="page" value="admin">
@@ -157,7 +162,7 @@ $messageType = $_GET['type'] ?? '';
     <?php endif; ?>
 
     <div class="admin-table-section">
-        <table id="inventoryTable" class="admin-data-table">
+        <table id="inventoryTable" class="inventory-table admin-data-table">
             <thead>
                 <tr>
                     <th>Image</th><th>Images</th><th>Name</th><th>Category</th><th>SKU</th><th>Stock</th>

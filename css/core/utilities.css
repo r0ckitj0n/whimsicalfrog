@@ -7,6 +7,7 @@
 .z-room-modals { z-index: var(--z-room-modals); }
 .z-room-modal-header { z-index: var(--z-room-modal-header); }
 .z-room-buttons { z-index: var(--z-room-buttons); }
+.z-door-areas { z-index: var(--z-door-areas); }
 
 /* Patterns: .u-*, .clearfix, .sr-only, etc. */
 /* Auto-generated Tailwind utilities */

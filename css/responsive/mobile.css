@@ -8,6 +8,15 @@
   .product-grid {
     grid-template-columns: 1fr;
   }
+
+  /* Shop page mobile optimizations */
+  #shopPage {
+    padding: 0 8px !important; /* Minimal padding on small screens */
+  }
+
+  #productsGrid {
+    gap: 0.75rem !important; /* Tighter spacing on small screens */
+  }
 }
 
 /* Medium devices (mobile landscape, up to 640px) */
@@ -28,6 +37,17 @@
   .product-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
+
+  /* Shop page tablet optimizations */
+  #shopPage {
+    padding: 0 15px !important; /* Moderate padding on tablets */
+  }
+
+  /* Remove parent container padding on mobile/tablet */
+  .shop-page main.page-content {
+    padding: 0 !important;
+  }
+}
   .grid-2,
   .grid-3,
   .grid-4 {

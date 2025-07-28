@@ -2,6 +2,10 @@
 // Include the configuration file
 require_once 'api/config.php';
 
+// Require admin authentication for order management
+require_once 'includes/auth_helper.php';
+AuthHelper::requireAdmin();
+
 // Set appropriate headers
 header('Content-Type: application/json');
 

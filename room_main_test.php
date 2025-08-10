@@ -27,31 +27,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Main Test - WhimsicalFrog</title>
     <link href="css/bundle.css" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-        .test-header {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 9999;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-        }
-        .test-header.success {
-            background: rgba(0,128,0,0.8);
-        }
-        .test-header.error {
-            background: rgba(128,0,0,0.8);
-        }
-    </style>
+
 </head>
 <body>
     <div class="test-header" id="testStatus">
@@ -84,7 +60,7 @@ try {
         <?php endif; ?>
     </section>
 
-    <script src="js/bundle.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const testStatus = document.getElementById('testStatus');

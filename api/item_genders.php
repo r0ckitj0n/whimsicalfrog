@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Start session for authentication
-session_start();
+
 
 // Authentication check
 $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);

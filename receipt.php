@@ -4,6 +4,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 require_once 'api/config.php';
+require_once __DIR__ . '/api/business_settings_helper.php';
 
 $orderId = $_GET['orderId'] ?? '';
 if ($orderId === '') {
@@ -197,36 +198,55 @@ function getReceiptMessage($pdo, $order, $orderItems)
 
 $total = number_format($order['total'] ?? 0, 2);
 $pending = ($order['paymentStatus'] === 'Pending');
+
+// Business info (centralized)
+$businessName     = BusinessSettings::getBusinessName();
+$businessDomain   = BusinessSettings::getBusinessDomain();
+$businessPhone    = BusinessSettings::get('business_phone', '');
+$businessAddress  = BusinessSettings::get('business_address', '');
+$businessUrl      = BusinessSettings::getSiteUrl('');
+$businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & Personalized Gifts');
 ?>
 
 
-<!- Simple Receipt Header with Company Info ->
+<!-- Simple Receipt Header with Company Info -->
 <div class="receipt-container card-standard">
-    <!- Company Header ->
+    <!-- Company Header -->
     <div class="text-center">
         <div class="flex justify-center items-center">
-            <img src="images/logos/logo_whimsicalfrog.webp" alt="Whimsical Frog Crafts Logo" class="header-logo" 
+            <img src="images/logos/logo_whimsicalfrog.webp" alt="<?php echo htmlspecialchars($businessName); ?> Logo" class="header-logo" 
                  onerror="this.onerror=null; this.src='images/logos/logo_whimsicalfrog.png';">
             <div>
-                <h1 class="text-brand-primary">Whimsical Frog Crafts</h1>
-                <p class="text-brand-secondary">Custom Crafts & Personalized Gifts</p>
+                <h1 class="text-brand-primary"><?php echo htmlspecialchars($businessName); ?></h1>
+                <p class="text-brand-secondary"><?php echo htmlspecialchars($businessTagline); ?></p>
             </div>
         </div>
         <div class="text-sm text-brand-secondary">
-            <p>123 Crafty Lane, Artisan Valley, CA 90210</p>
-            <p>(555) 123-4567 | whimsicalfrog.us</p>
-            <p class="text-brand-primary">whimsicalfrog.us</p>
+            <?php if (!empty($businessAddress)): ?>
+                <p><?php echo htmlspecialchars($businessAddress); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($businessPhone) || !empty($businessDomain)): ?>
+                <p>
+                    <?php if (!empty($businessPhone)): ?>
+                        <a href="tel:<?php echo preg_replace('/[^0-9+]/', '', $businessPhone); ?>" class="link-brand"><?php echo htmlspecialchars($businessPhone); ?></a>
+                    <?php endif; ?>
+                    <?php if (!empty($businessPhone) && !empty($businessDomain)): ?> | <?php endif; ?>
+                    <?php if (!empty($businessDomain)): ?>
+                        <a href="<?php echo htmlspecialchars($businessUrl); ?>" target="_blank" rel="noopener" class="link-brand"><?php echo htmlspecialchars($businessDomain ?: $businessUrl); ?></a>
+                    <?php endif; ?>
+                </p>
+            <?php endif; ?>
         </div>
     </div>
 
-    <!- Order Info ->
+    <!-- Order Info -->
     <div class="text-center">
         <h2 class="text-brand-primary">Order Receipt</h2>
         <p class="text-sm text-brand-secondary">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong></p>
         <p class="text-sm text-brand-secondary">Date: <?= date('M d, Y', strtotime($order['date'] ?? 'now')) ?></p>
     </div>
 
-    <!- Items Table ->
+    <!-- Items Table -->
     <table class="w-full text-sm">
         <thead>
             <tr class="bg-brand-light">
@@ -254,7 +274,7 @@ $pending = ($order['paymentStatus'] === 'Pending');
 
     <?php if ($pending): ?>
         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 text-sm" role="alert">
-            <p class="font-bold">Thank you for choosing Whimsical&nbsp;Frog&nbsp;Crafts!</p>
+            <p class="font-bold">Thank you for choosing <?php echo htmlspecialchars($businessName); ?>!</p>
             <p>Your order is reserved and will be shipped as soon as we receive your payment&nbsp;🙂</p>
             <p class="">Remit payment to:<br><strong>Lisa&nbsp;Lemley</strong><br>1524&nbsp;Red&nbsp;Oak&nbsp;Flats&nbsp;Rd<br>Dahlonega,&nbsp;GA&nbsp;30533</p>
             <p class="">Please include your order&nbsp;ID on the memo line. As soon as we record your payment we'll send a confirmation e-mail and get your items on their way.</p>
@@ -266,7 +286,7 @@ $pending = ($order['paymentStatus'] === 'Pending');
         </div>
     <?php endif; ?>
 
-    <!- Sales Verbiage Section ->
+    <!-- Sales Verbiage Section -->
     <?php if (!empty($salesVerbiage)): ?>
         <div class="border-t space-y-3">
             <?php if (!empty($salesVerbiage['receipt_thank_you_message'])): ?>
@@ -296,6 +316,6 @@ $pending = ($order['paymentStatus'] === 'Pending');
     <?php endif; ?>
 
     <div class="text-center">
-        <button id="printBtn" onclick="window.print();" class="btn-brand">Print Receipt</button>
+                <button id="printBtn" class="btn-brand js-print-button">Print Receipt</button>
     </div>
 </div> 

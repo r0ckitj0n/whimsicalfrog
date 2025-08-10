@@ -7,7 +7,7 @@ ob_clean();
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
 // Start session first to access session data
-session_start();
+
 
 // Include database configuration first
 require_once __DIR__ . '/../includes/functions.php';

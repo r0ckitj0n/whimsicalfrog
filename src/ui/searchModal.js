@@ -127,9 +127,19 @@ class SearchModal {
     }
   }
 
-  open() { this.modal.classList.remove('hidden'); document.body.classList.add('modal-open'); }
-  close() { this.modal.classList.add('hidden'); document.body.classList.remove('modal-open'); }
-  isOpen() { return !this.modal.classList.contains('hidden'); }
+  open() {
+    // Show modal and apply standardized scroll lock
+    this.modal.classList.remove('hidden');
+    this.modal.classList.add('show');
+    WFModals?.lockScroll?.();
+  }
+  close() {
+    // Hide modal and remove scroll lock only if no other modals are open
+    this.modal.classList.add('hidden');
+    this.modal.classList.remove('show');
+    WFModals?.unlockScrollIfNoneOpen?.();
+  }
+  isOpen() { return !this.modal.classList.contains('hidden') && this.modal.classList.contains('show'); }
 }
 
 // Auto-init where header search exists

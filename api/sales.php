@@ -1,6 +1,15 @@
 <?php
 require_once 'config.php';
-session_start();
+require_once __DIR__ . '/../includes/database.php';
+
+// Database connection globals for Database class
+global $host, $db, $user, $pass, $port, $socket;
+$host = 'localhost';
+$db = 'whimsicalfrog';
+$user = 'root';
+$pass = 'Palz2516';
+$port = 3306;
+$socket = '';
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);

@@ -1,0 +1,108 @@
+/* CRITICAL MISSING ROOM CSS - Extracted from backups/room.css */
+/* Room modal styles and product interaction enhancements */
+
+/* ==============================================
+   ROOM HEADER & SEO
+   ============================================== */
+
+.room-header.seo-only {
+    display: none;
+}
+
+.item-icon {
+    cursor: pointer;
+}
+
+/* ==============================================
+   REUSABLE ROOM MODAL STYLES
+   ============================================== */
+
+.room-modal-header {
+    margin-bottom: 15px;
+}
+
+.room-modal-title {
+    font-size: 1.1rem;
+}
+
+.room-modal-image-container {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.room-modal-product-image {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.room-modal-product-info {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.room-modal-product-name {
+    font-size: 1rem;
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.room-modal-product-price {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin: 0;
+    color: #87ac3a;
+}
+
+.room-modal-order-summary {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.room-modal-summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.room-modal-summary-total-price {
+    color: var(--primary-color, #87ac3a);
+}
+
+.room-modal-summary-details {
+    display: flex;
+    justify-content: center;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.room-modal-footer {
+    display: flex;
+    gap: 10px;
+}
+
+.room-modal-footer .btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.room-modal-footer .btn-secondary {
+    border: 1px solid #ddd;
+    background: #f8f9fa;
+}
+
+.room-modal-footer .btn-primary {
+    background: #87ac3a;
+    color: white;
+    border: none;
+    font-weight: bold;
+}

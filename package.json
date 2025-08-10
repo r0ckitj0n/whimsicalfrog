@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "touch hot && vite --port 5176",
+    "stop": "rm hot",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -16,5 +17,9 @@
     "recast": "^0.23.11",
     "vite": "^7.0.6",
     "vite-plugin-full-reload": "^1.2.0"
+  },
+  "dependencies": {
+    "sortablejs": "^1.15.0",
+    "chart.js": "^4.5.0"
   }
 }

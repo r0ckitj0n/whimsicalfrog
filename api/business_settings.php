@@ -14,6 +14,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
+/**
+ * Ensure About Page settings exist with defaults
+ */
+function ensureAboutSettings($pdo)
+{
+    try {
+        $stmt = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
+            VALUES 
+            ('site', 'about_page_title', 'Our Story', 'Title shown at the top of the About page', 'text', 'About Page Title'),
+            ('site', 'about_page_content', '<p>Once upon a time in a cozy little workshop, Calvin &amp; Lisa Lemley began crafting whimsical treasures for friends and family. What started as a weekend habit of chasing ideas and laughter soon grew into WhimsicalFrog&mdash;a tiny brand with a big heart.</p><p>Every piece we make is a small celebration of play and everyday magic: things that delight kids, spark curiosity, and make grown‑ups smile. We believe in craftsmanship, kindness, and creating goods that feel like they were made just for you.</p><p>Thank you for visiting our little corner of the pond. We hope our creations bring a splash of joy to your day!</p>', 'Main content of the About page (HTML)', 'html', 'About Page Content (HTML)')
+            ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
+        $stmt->execute();
+
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+}
+
+/**
+ * Ensure Contact Page settings exist with defaults
+ */
+function ensureContactSettings($pdo)
+{
+    try {
+        $stmt = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
+            VALUES 
+            ('site', 'contact_page_title', 'Contact Us', 'Title shown at the top of the Contact page', 'text', 'Contact Page Title'),
+            ('site', 'contact_page_intro', '<p>Have a question or special request? Send us a message and we\'ll get back to you soon.</p>', 'Introductory HTML content displayed above the contact form', 'html', 'Contact Page Intro (HTML)'),
+            ('business_info', 'business_owner', '', 'Owner or proprietor name', 'text', 'Business Owner'),
+            ('business_info', 'business_address', '123 Craft Lane, Creative City, CC 12345', 'Business address', 'text', 'Business Address'),
+            ('business_info', 'business_phone', '', 'Primary business phone number (displayed and used for tel: link)', 'text', 'Business Phone'),
+            ('business_info', 'business_hours', '', 'Business hours (multi-line text supported)', 'text', 'Business Hours')
+            ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
+        $stmt->execute();
+
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+}
+
 try {
     try {
         $pdo = Database::getInstance();
@@ -70,6 +114,14 @@ try {
                     'error' => 'Failed to load sales verbiage: ' . $e->getMessage()
                 ], 500);
             }
+            break;
+
+        case 'ensure_contact_settings':
+            ensureContactSettings($pdo);
+            break;
+
+        case 'ensure_about_settings':
+            ensureAboutSettings($pdo);
             break;
 
         default:

@@ -8,7 +8,10 @@
  */
 
 // Start session first before any headers
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 
 // Include the configuration and auth files
 require_once __DIR__ . '/../api/config.php';

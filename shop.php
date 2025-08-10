@@ -1,7 +1,8 @@
 <?php
 // Shop page section
 if (!defined('INCLUDED_FROM_INDEX')) {
-    header('Location: /?page=shop');
+    // Redirect to home if accessed directly
+    header('Location: /');
     exit;
 }
 ?>
@@ -24,17 +25,12 @@ if (!isset($GLOBALS['marketingHelper'])) {
     $GLOBALS['marketingHelper'] = new MarketingHelper();
 }
 
-// Categories are already loaded in index.php and available in $categories
-// Now order them by room number instead of alphabetically
+// Categories are already loaded in index.php via shop_data_loader.php and
+// are ordered by display_order. No additional ordering required.
 $orderedCategories = [];
 if (!empty($categories)) {
-    try {
-        // Get database connection
-        require_once __DIR__ . '/api/config.php';
-        $pdo = Database::getInstance();
-
-        // Get categories ordered by room number
-        $stmt = $pdo->prepare("
+    /* Legacy room-ordering query removed */
+/*
             SELECT c.name as category_name, rca.room_number, rca.display_order
             FROM room_category_assignments rca 
             JOIN categories c ON rca.category_id = c.id 
@@ -59,15 +55,7 @@ if (!empty($categories)) {
             }
         }
 
-        // Use ordered categories if we successfully built the array
-        if (!empty($orderedCategories)) {
-            $categories = $orderedCategories;
-        }
-
-    } catch (Exception $e) {
-        // If there's an error, just use the original categories order
-        error_log("Error ordering categories by room: " . $e->getMessage());
-    }
+*/
 }
 ?>
 
@@ -79,12 +67,12 @@ if (!empty($categories)) {
     <div class="navigation-bar">
         <?php
         // Only show room main navigation image on non-room_main pages
-        $current_page = $_GET['page'] ?? 'landing';
-        if ($current_page !== 'room_main'):
+        // The global $page variable is used here, defined in index.php
+        if ($page !== 'room_main'):
         ?>
         <!-- Left Column: Room Main Navigation Image (left-aligned within column) -->
         <div class="room-main-nav-container">
-            <a href="/?page=room_main" class="room-main-nav-link" title="Go to Main Room">
+            <a href="/room_main" class="room-main-nav-link" title="Go to Main Room">
                 <picture>
                     <source srcset="images/signs/sign_main.webp" type="image/webp">
                     <img src="images/signs/sign_main.png" alt="Rooms" class="room-main-nav-image">
@@ -101,10 +89,10 @@ if (!empty($categories)) {
                 All Products
             </button>
             <!-- Then individual categories in order -->
-            <?php foreach (array_keys($categories) as $category): ?>
+            <?php foreach ($categories as $slug => $catData): ?>
                 <button class="category-btn category_btn_bg category_btn_color category_btn_hover_bg rounded-full border-none transition-colors"
-                        data-category="<?php echo htmlspecialchars($category); ?>">
-                    <?php echo htmlspecialchars($category); ?>
+                        data-category="<?php echo htmlspecialchars($slug); ?>">
+                    <?php echo htmlspecialchars($catData['label']); ?>
                 </button>
             <?php endforeach; ?>
         </div>
@@ -124,9 +112,13 @@ if (!empty($categories)) {
             echo '<div class="text-center p-8"><h2 class="text-brand-primary">No categories found. Database connection issue?</h2></div>';
             return;
         }
+        
+
 
         // Display all products with proper text wrapping and images
-        foreach ($categories as $category => $products):
+        foreach ($categories as $slug => $catData):
+            $categoryLabel = $catData['label'];
+            $products = $catData['products'];
             foreach ($products as $product):
                 // Skip products without required fields
                 if (!isset($product['productName']) || !isset($product['price'])) {
@@ -151,7 +143,7 @@ if (!empty($categories)) {
                 // Simple formatting
                 $formattedPrice = '$' . number_format((float)$price, 2);
                 ?>
-        <div class="product-card" data-category="<?php echo htmlspecialchars($category); ?>">
+        <div class="product-card" data-category="<?php echo htmlspecialchars($slug); ?>">
             <!-- Product Image -->
             <div class="product-image-container">
                 <div class="product-image-container" id="image-container-<?php echo $sku; ?>">
@@ -198,7 +190,7 @@ if (!empty($categories)) {
                 <div class="product-meta">
                     <!-- Category -->
                     <div class="product-category">
-                        <?php echo htmlspecialchars($category); ?>
+                        <?php echo htmlspecialchars($categoryLabel); ?>
                     </div>
 
                     <!-- SKU -->

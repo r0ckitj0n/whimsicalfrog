@@ -2,67 +2,12 @@
 // Admin settings page - Authentication is now handled by index.php
 // All CSS moved to button-styles.css for centralized management
 ?>
-<script src="js/admin-modal-manager.js?v=<?php echo filemtime('js/admin-modal-manager.js'); ?>"></script>
-<script>
-// Ensure all modals are hidden on initial load
-window.addEventListener('DOMContentLoaded', function () {
-  // Enhanced modal close handling
-  document.querySelectorAll('.admin-modal-overlay').forEach(function(overlay){
+
     // Ensure starts hidden unless explicitly opened later
-    overlay.classList.add('hidden');
-    // Click outside modal content closes it
-    overlay.addEventListener('click', function(e){ if(e.target === overlay){ overlay.classList.add('hidden'); }});
-  });
-  // Ensure only one modal visible at a time using MutationObserver
-  const modalObserver = new MutationObserver(function(mutations){
-    mutations.forEach(function(m){
-      if(m.type==='attributes' && m.attributeName==='class'){
-        const el = m.target;
-        if(el.classList.contains('admin-modal-overlay') && !el.classList.contains('hidden')){
-          document.querySelectorAll('.admin-modal-overlay').forEach(function(other){
-            if(other!==el){ other.classList.add('hidden'); }
-          });
-        }
-      }
-    });
-  });
-  document.querySelectorAll('.admin-modal-overlay').forEach(function(el){
-    modalObserver.observe(el,{attributes:true,attributeFilter:['class']});
-  });
-
-  // ESC key closes any open modal
-  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ document.querySelectorAll('.admin-modal-overlay:not(.hidden)').forEach(function(o){ o.classList.add('hidden'); }); }});
-
-  document.querySelectorAll('.admin-modal-overlay').forEach(function (el) {
-    el.classList.add('hidden');
-  });
-});
-</script>
 
 
-<style>
-.admin-modal-overlay{align-items:center;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;background:rgba(0,0,0,.5);} /* base overlay */
-.admin-modal-overlay:not(.show){display:none!important;}
-.admin-modal-overlay.show{display:flex!important;}
-.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;margin-top:1rem;}
-.settings-section{background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:1rem;display:flex;flex-direction:column;height:100%;}
-.settings-section .section-content{display:flex;flex-direction:column;gap:.5rem;margin-top:1rem;}
-.admin-settings-button{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;font-size:.875rem;}
 
-/* Logging Status Modal Styles */
-.logging-status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:20px;}
-.status-section{background:#f8f9fa;border-radius:8px;padding:15px;border:1px solid #e9ecef;}
-.status-section h3{margin:0 0 15px 0;color:#495057;font-size:1.1rem;font-weight:600;}
-.status-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e9ecef;}
-.status-item:last-child{border-bottom:none;}
-.status-label{font-weight:500;color:#6c757d;}
-.status-value{font-weight:600;}
-.status-enabled{color:#28a745;}
-.status-disabled{color:#dc3545;}
-.modal-actions{display:flex;gap:10px;justify-content:center;padding-top:20px;border-top:1px solid #e9ecef;}
-.loading-spinner{text-align:center;padding:20px;color:#666;}
-.error-message{color:#dc3545;text-align:center;padding:20px;}
-</style>
+
 <div class="settings-page">
     <div class="settings-grid">
     
@@ -73,42 +18,42 @@ window.addEventListener('DOMContentLoaded', function () {
         <p class="section-description">Organize products, categories, and room content</p>
       </div>
       <div class="section-content">
-        <button id="dashboardConfigBtn" onclick="openDashboardConfigModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="dashboardConfigBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
           </svg>
           <span class="button-text">Dashboard Configuration</span>
         </button>
         
-        <button id="categoriesBtn" onclick="openCategoriesModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="categoriesBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
           </svg>
           <span class="button-text">Categories</span>
         </button>
         
-        <button id="globalColorSizeBtn" onclick="openGlobalColorSizeModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="globalColorSizeBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4 4 4 0 004-4V5z"></path>
           </svg>
           <span class="button-text">Gender, Size & Color Management</span>
         </button>
         
-        <button id="roomsBtn" onclick="openRoomSettingsModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="roomsBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
           </svg>
           <span class="button-text">Room Settings</span>
         </button>
         
-        <button id="roomCategoryBtn" onclick="openRoomCategoryManagerModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="roomCategoryBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
           <span class="button-text">Room-Category Links</span>
         </button>
         
-        <button id="templateManagerBtn" onclick="openTemplateManagerModal()" class="btn btn-primary btn-block admin-settings-button"
+        <button id="templateManagerBtn"  class="btn btn-primary btn-block admin-settings-button"
                 title="Manage your templates for colors, sizes, and costs. For people who love spreadsheets so much they want them embedded in their website administration panel.">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -125,28 +70,28 @@ window.addEventListener('DOMContentLoaded', function () {
         <p class="section-description">Customize appearance and interactive elements</p>
       </div>
       <div class="section-content">
-        <button id="cssRulesBtn" onclick="openCSSRulesModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="cssRulesBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
           </svg>
           <span class="button-text">CSS Rules</span>
         </button>
         
-        <button id="backgroundManagerBtn" onclick="openBackgroundManagerModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="backgroundManagerBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
           <span class="button-text">Background Manager</span>
         </button>
         
-        <button id="roomMapperBtn" onclick="openRoomMapperModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="roomMapperBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
           </svg>
           <span class="button-text">Room Mapper</span>
         </button>
         
-        <button id="areaItemMapperBtn" onclick="openAreaItemMapperModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="areaItemMapperBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
           </svg>
@@ -164,35 +109,35 @@ window.addEventListener('DOMContentLoaded', function () {
       <div class="section-content">
 
         
-        <button id="marketingAnalyticsBtn" onclick="openMarketingAnalyticsModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="marketingAnalyticsBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <span class="button-text">Marketing Analytics</span>
         </button>
         
-        <button id="businessReportsBtn" onclick="openBusinessReportsModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="businessReportsBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
           <span class="button-text">Business Reports</span>
         </button>
         
-        <button id="salesAdminBtn" onclick="openSalesAdminModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="salesAdminBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
           </svg>
           <span class="button-text">Sales Administration</span>
         </button>
         
-        <button id="cartButtonTextBtn" onclick="openCartButtonTextModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="cartButtonTextBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0L12 13m0 0l2.5 5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"></path>
           </svg>
           <span class="button-text">Cart Button Text</span>
         </button>
         
-        <button id="squareSettingsBtn" onclick="openSquareSettingsModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="squareSettingsBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
           </svg>
@@ -208,35 +153,35 @@ window.addEventListener('DOMContentLoaded', function () {
         <p class="section-description">Email configuration and customer messaging</p>
       </div>
       <div class="section-content">
-        <button id="emailConfigBtn" onclick="openEmailConfigModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="emailConfigBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
           <span class="button-text">Email Configuration</span>
         </button>
         
-        <button id="emailHistoryBtn" onclick="openEmailHistoryModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="emailHistoryBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <span class="button-text">Email History</span>
         </button>
         
-        <button onclick="fixSampleEmail()" class="btn btn-primary btn-block admin-settings-button" id="fixSampleEmailBtn">
+        <button  class="btn btn-primary btn-block admin-settings-button" id="fixSampleEmailBtn">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
           </svg>
           <span class="button-text">Fix Sample Email</span>
         </button>
 
-        <button onclick="openLoggingStatusModal()" class="btn btn-primary btn-block admin-settings-button" id="loggingStatusBtn">
+        <button  class="btn btn-primary btn-block admin-settings-button" id="loggingStatusBtn">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
           <span class="button-text">Logging Status</span>
         </button>
         
-        <button id="receiptSettingsBtn" onclick="openReceiptSettingsModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="receiptSettingsBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -252,28 +197,28 @@ window.addEventListener('DOMContentLoaded', function () {
         <p class="section-description">System management and technical configuration</p>
       </div>
       <div class="section-content">
-        <button id="systemConfigBtn" onclick="openSystemConfigModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="systemConfigBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
           </svg>
           <span class="button-text">System Reference</span>
         </button>
         
-        <button id="databaseTablesBtn" onclick="openDatabaseTablesModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="databaseTablesBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
           <span class="button-text">Database Tables</span>
         </button>
         
-        <button id="fileExplorerBtn" onclick="openFileExplorerModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="fileExplorerBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
           </svg>
           <span class="button-text">File Explorer</span>
         </button>
         
-        <button onclick="openWebsiteLogsModal()" id="website-logs-btn" class="btn btn-primary btn-block admin-settings-button">
+        <button  id="website-logs-btn" class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -289,35 +234,35 @@ window.addEventListener('DOMContentLoaded', function () {
         <p class="section-description">Artificial intelligence configuration and automation settings</p>
       </div>
       <div class="section-content">
-        <button id="aiSettingsBtn" onclick="openAISettingsModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="aiSettingsBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
           <span class="button-text">AI Settings</span>
         </button>
         
-        <button onclick="openHelpHintsModal()" id="help-hints-btn" class="btn btn-primary btn-block admin-settings-button">
+        <button  id="help-hints-btn" class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <span class="button-text">Help Hints Management</span>
         </button>
         
-        <button id="databaseMaintenanceBtn" onclick="openDatabaseMaintenanceModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="databaseMaintenanceBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
           </svg>
           <span class="button-text">Database Maintenance</span>
         </button>
         
-        <button id="documentationBtn" onclick="openDocumentationHubModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="documentationBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
           </svg>
           <span class="button-text">Documentation Hub</span>
         </button>
         
-        <button id="systemCleanupBtn" onclick="openSystemCleanupModal()" class="btn btn-primary btn-block admin-settings-button">
+        <button id="systemCleanupBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
           </svg>
@@ -332,11 +277,11 @@ window.addEventListener('DOMContentLoaded', function () {
 
 
 <!-- Room Mapper Modal -->
-<div id="roomMapperModal" class="admin-modal-overlay hidden" onclick="closeRoomMapperModal()">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
+<div id="roomMapperModal" class="admin-modal-overlay hidden">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
-            <button onclick="closeRoomMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
         <div class="">
@@ -352,22 +297,22 @@ window.addEventListener('DOMContentLoaded', function () {
                             <!-- Dynamic room options will be populated by JavaScript -->
                         </select>
                     </div>
-                    <button onclick="toggleMapperGrid()" class="bg-gray-500 text-white rounded text-sm">Grid</button>
-                    <button onclick="clearMapperAreas()" class="bg-red-500 text-white rounded text-sm">Clear</button>
+                    <button  class="bg-gray-500 text-white rounded text-sm">Grid</button>
+                    <button  class="bg-red-500 text-white rounded text-sm">Clear</button>
                 </div>
                 
                 <div class="flex flex-wrap gap-2 text-sm">
                     <div class="flex items-center">
                         <input type="text" id="mapNameInput" placeholder="Map name..." class="border border-gray-300 rounded text-sm" />
-                        <button onclick="saveRoomMap()" class="btn btn-primary btn-sm">Save</button>
+                        <button  class="btn btn-primary btn-sm">Save</button>
                     </div>
                     <div class="flex items-center">
                         <select id="savedMapsSelect" class="border border-gray-300 rounded text-sm">
                             <option value="">Select saved map...</option>
                         </select>
-                        <button onclick="loadSavedMap()" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">Load</button>
-                        <button onclick="applySavedMap()" class="bg-purple-500 hover:bg-purple-600 text-white rounded text-sm">Apply</button>
-                        <button onclick="deleteSavedMap()" class="bg-red-500 hover:bg-red-600 text-white rounded text-sm">Delete</button>
+                        <button  class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">Load</button>
+                        <button  class="bg-purple-500 hover:bg-purple-600 text-white rounded text-sm">Apply</button>
+                        <button  class="bg-red-500 hover:bg-red-600 text-white rounded text-sm">Delete</button>
                     </div>
                     
                     <!-- Map Preview Legend -->
@@ -393,7 +338,7 @@ window.addEventListener('DOMContentLoaded', function () {
                 <!-- History Section -->
                 <div class="border-t">
                     <div class="flex items-center gap-2">
-                        <button onclick="toggleHistoryView()" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded text-xs">
+                        <button  class="bg-indigo-500 hover:bg-indigo-600 text-white rounded text-xs">
                             <span id="historyToggleText">📜 History</span>
                         </button>
                         <span class="text-xs text-gray-600">View previous versions</span>
@@ -429,407 +374,6 @@ window.addEventListener('DOMContentLoaded', function () {
 
 <!-- Second CSS block removed - styles moved to button-styles.css -->
 
-<script>
-let mapperIsDrawing = false;
-let mapperStartX, mapperStartY;
-let mapperCurrentArea = null;
-let mapperAreaCount = 0;
-const mapperOriginalImageWidth = 1280;
-const mapperOriginalImageHeight = 896;
-
-
-
-function openSystemConfigModal() {
-    const modal = document.getElementById('systemConfigModal');
-    modal.classList.remove('hidden');
-    modal.style.display = 'block';
-    loadSystemConfiguration();
-}
-
-async function loadSystemConfiguration() {
-    const loadingDiv = document.getElementById('systemConfigLoading');
-    const contentDiv = document.getElementById('systemConfigContent');
-    
-    // Show loading state
-    loadingDiv.style.display = 'block';
-    
-    try {
-        const response = await fetch('/api/get_system_config.php');
-        const result = await response.json();
-        
-        if (result.success) {
-            const data = result.data;
-            
-            // Hide loading and populate content
-            loadingDiv.style.display = 'none';
-            contentDiv.innerHTML = generateSystemConfigHTML(data);
-        } else {
-            throw new Error(result.error || 'Failed to load system configuration');
-        }
-    } catch (error) {
-        console.error('Error loading system configuration:', error);
-        loadingDiv.innerHTML = `
-            <div class="modal-loading">
-                <div class="text-red-500">⚠️</div>
-                <p class="text-red-600">Failed to load system configuration</p>
-                <p class="text-sm text-gray-500">${error.message}</p>
-                <button onclick="loadSystemConfiguration()" class="bg-orange-500 text-white rounded hover:bg-orange-600">
-                    Retry
-                </button>
-            </div>
-        `;
-    }
-}
-
-function generateSystemConfigHTML(data) {
-    const lastOrderDate = data.statistics.last_order_date ? 
-        new Date(data.statistics.last_order_date).toLocaleDateString() : 'No orders yet';
-    
-    return `
-        <!-- Current System Architecture -->
-        <div class="bg-green-50 border-l-4 border-green-400">
-            <h4 class="font-semibold text-green-800 flex items-center">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"></path>
-                </svg>
-                Current System Architecture (Live Data)
-            </h4>
-            <div class="space-y-3 text-sm">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <h5 class="font-semibold text-green-700">🎯 Primary Identifier</h5>
-                        <p class="text-green-600"><strong>${data.system_info.primary_identifier}</strong> - Human-readable codes</p>
-                        <p class="text-xs text-green-600">Format: ${data.system_info.sku_format}</p>
-                        <p class="text-xs text-green-600">Examples: ${data.sample_skus.slice(0, 3).join(', ')}</p>
-                    </div>
-                    <div>
-                        <h5 class="font-semibold text-green-700">🏷️ Main Entity</h5>
-                        <p class="text-green-600"><strong>${data.system_info.main_entity}</strong></p>
-                        <p class="text-xs text-green-600">All inventory and shop items</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Comprehensive SKU Methodology Documentation -->
-        <div class="bg-blue-50 border-l-4 border-blue-400">
-            <h4 class="font-semibold text-blue-800 flex items-center">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd"></path>
-                </svg>
-                📖 Complete SKU & ID Methodology Documentation
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div class="space-y-3">
-                    <div class="bg-white rounded border">
-                        <h5 class="font-semibold text-blue-700">🏷️ SKU System Overview</h5>
-                        <div class="text-xs text-blue-600 space-y-1">
-                            <p>• <strong>Primary Format:</strong> WF-[CATEGORY]-[NUMBER]</p>
-                            <p>• <strong>Enhanced Format:</strong> WF-[CAT]-[GENDER]-[SIZE]-[COLOR]-[NUM]</p>
-                            <p>• <strong>Database:</strong> SKU-only system (no legacy IDs)</p>
-                            <p>• <strong>Generation:</strong> Automatic via API with sequential numbering</p>
-                            <p>• <strong>Usage:</strong> Primary key across all tables</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white rounded border">
-                        <h5 class="font-semibold text-blue-700">🔄 Migration History</h5>
-                        <div class="text-xs text-blue-600 space-y-1">
-                            <p>✅ <strong>Phase 1:</strong> Eliminated dual itemId/SKU system</p>
-                            <p>✅ <strong>Phase 2:</strong> Migrated "products" → "items" terminology</p>
-                            <p>✅ <strong>Phase 3:</strong> Fixed order ID generation (sequence-based)</p>
-                            <p>✅ <strong>Phase 4:</strong> Implemented global color/size management</p>
-                            <p>✅ <strong>Current:</strong> Pure SKU-only architecture</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="space-y-3">
-                    <div class="bg-white rounded border">
-                        <h5 class="font-semibold text-blue-700">🛠️ API Endpoints</h5>
-                        <div class="text-xs text-blue-600 space-y-1">
-                            <p>• <code>/api/next_sku.php</code> - Generate new SKUs</p>
-                            <p>• <code>/api/get_items.php</code> - Retrieve items by SKU</p>
-                            <p>• <code>/api/get_item_images.php</code> - Item images</p>
-                            <p>• <code>/api/add-order.php</code> - Create orders (fixed)</p>
-                            <p>• <code>/api/update-inventory-field.php</code> - SKU updates</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white rounded border">
-                        <h5 class="font-semibold text-blue-700">📊 Current Statistics</h5>
-                        <div class="text-xs text-blue-600 space-y-1">
-                            <p>• <strong>Items:</strong> ${data.statistics.total_items} (${data.statistics.total_images} images)</p>
-                            <p>• <strong>Orders:</strong> ${data.statistics.total_orders} (${data.statistics.total_order_items} items)</p>
-                            <p>• <strong>Categories:</strong> ${data.statistics.categories_count} active</p>
-                            <p>• <strong>Last Order:</strong> ${data.statistics.last_order_date ? new Date(data.statistics.last_order_date).toLocaleDateString() : 'None'}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SKU Categories -->
-        <div class="bg-yellow-50 border-l-4 border-yellow-400">
-            <h4 class="font-semibold text-yellow-800 flex items-center">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
-                </svg>
-                Active Categories & SKU Codes
-            </h4>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                ${Object.entries(data.category_codes).map(([category, code]) => {
-                    const isActive = data.categories.includes(category);
-                    return `
-                        <div class="text-center ${isActive ? 'bg-yellow-100' : 'bg-gray-100'} rounded">
-                            <div class="font-semibold ${isActive ? 'text-yellow-700' : 'text-gray-500'}">${code}</div>
-                            <div class="text-xs ${isActive ? 'text-yellow-600' : 'text-gray-400'}">${category}</div>
-                            ${isActive ? '<div class="text-xs text-green-600">✅ Active</div>' : '<div class="text-xs text-gray-400">Inactive</div>'}
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
-
-
-
-        <!-- ID Number Legend -->
-        <div class="bg-orange-50 border-l-4 border-orange-400">
-            <h4 class="font-semibold text-orange-800 flex items-center">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                </svg>
-                ID Number Legend & Formats
-            </h4>
-            <div class="space-y-4">
-                <!-- Customer IDs -->
-                <div class="bg-white rounded-lg border border-orange-200">
-                    <h5 class="font-semibold text-orange-700 flex items-center text-sm">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                        </svg>
-                        Customer IDs
-                    </h5>
-                    <div class="text-xs text-orange-600 space-y-1">
-                        <p><strong>Format:</strong> [MonthLetter][Day][SequenceNumber]</p>
-                        ${data.id_formats.recent_customers.length > 0 ? 
-                            `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_customers.map(c => 
-                                `<code class="bg-orange-100 py-0\.5 rounded">${c.id}</code> (${c.username || 'No username'})`
-                            ).join(', ')}</p>` : 
-                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0\.5 rounded">F14004</code></p>`
-                        }
-                        <div class="text-xs text-orange-500">
-                            <p>• <strong>F</strong> = June (A=Jan, B=Feb, C=Mar, D=Apr, E=May, F=Jun, G=Jul, H=Aug, I=Sep, J=Oct, K=Nov, L=Dec)</p>
-                            <p>• <strong>14</strong> = 14th day of the month</p>
-                            <p>• <strong>004</strong> = 4th customer registered</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order IDs - Updated with Sequence Fix -->
-                <div class="bg-white rounded-lg border border-orange-200">
-                    <h5 class="font-semibold text-orange-700 flex items-center text-sm">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM8 15v-3h4v3H8z" clip-rule="evenodd"></path>
-                        </svg>
-                        Order IDs - Sequence-Based System ✅
-                    </h5>
-                    <div class="text-xs text-orange-600 space-y-1">
-                        <p><strong>Format:</strong> [CustomerNum][MonthLetter][Day][ShippingCode][SequenceNum]</p>
-                        ${data.id_formats.recent_orders.length > 0 ? 
-                            `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_orders.map(o => 
-                                `<code class="bg-orange-100 py-0\.5 rounded">${o}</code>`
-                            ).join(', ')}</p>` : 
-                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0\.5 rounded">01F30P75</code></p>`
-                        }
-                        <div class="text-xs text-orange-500">
-                            <p>• <strong>01</strong> = Last 2 digits of customer number</p>
-                            <p>• <strong>F30</strong> = June 30th (order date)</p>
-                            <p>• <strong>P</strong> = Pickup (P=Pickup, L=Local, U=USPS, F=FedEx, X=UPS)</p>
-                            <p>• <strong>75</strong> = Sequential number (eliminates duplicates)</p>
-                        </div>
-                        
-                        <!-- Recent Fix Notice -->
-                        <div class="bg-green-50 rounded">
-                            <p class="font-medium text-green-700">🔧 Recent Fix Applied:</p>
-                            <p class="text-xs text-green-600">• Replaced random number with sequence-based system</p>
-                            <p class="text-xs text-green-600">• Eliminates "Duplicate entry" constraint violations</p>
-                            <p class="text-xs text-green-600">• Sequential: 17F30P75 → 17F30P76 → 17F30P77</p>
-                            <p class="text-xs text-green-600">• Robust for concurrent checkout processing</p>
-                        </div>
-                        
-                        <!-- Shipping Codes -->
-                        <div class="bg-blue-50 rounded">
-                            <p class="font-medium text-blue-700">📦 Shipping Method Codes:</p>
-                            <p class="text-xs text-blue-600">• <strong>P</strong> = Customer Pickup • <strong>L</strong> = Local Delivery</p>
-                            <p class="text-xs text-blue-600">• <strong>U</strong> = USPS • <strong>F</strong> = FedEx • <strong>X</strong> = UPS</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product/Inventory IDs (SKUs) - Enhanced Documentation -->
-                <div class="bg-white rounded-lg border border-orange-200">
-                    <h5 class="font-semibold text-orange-700 flex items-center text-sm">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
-                        </svg>
-                        Product & Inventory IDs (SKUs) - Complete System
-                    </h5>
-                    <div class="text-xs text-orange-600 space-y-1">
-                        <p><strong>Primary Format:</strong> ${data.system_info.sku_format}</p>
-                        ${data.sample_skus.length > 0 ? 
-                            `<p><strong>Current Examples:</strong> ${data.sample_skus.slice(0, 5).map(sku => 
-                                `<code class="bg-orange-100 py-0\.5 rounded">${sku}</code>`
-                            ).join(', ')}</p>` : 
-                            `<p><strong>Examples:</strong> <code class="bg-orange-100 py-0\.5 rounded">WF-TS-001</code>, <code class="bg-orange-100 py-0\.5 rounded">WF-TU-002</code></p>`
-                        }
-                        
-                        <!-- Enhanced SKU Format -->
-                        <div class="bg-orange-50 rounded">
-                            <p class="font-medium text-orange-700">Enhanced SKU Format (Optional):</p>
-                            <p><strong>WF-[CATEGORY]-[GENDER]-[SIZE]-[COLOR]-[NUMBER]</strong></p>
-                            <p class="text-xs">Example: <code class="bg-orange-100 py-0\.5 rounded">WF-TS-M-L-BLK-001</code> = WhimsicalFrog T-Shirt, Men's Large, Black, #001</p>
-                        </div>
-                        
-                        <!-- Category Codes -->
-                        <div class="text-xs text-orange-500">
-                            <p class="font-medium">Category Codes:</p>
-                            ${Object.entries(data.category_codes).map(([category, code]) => 
-                                `<p>• <strong>${code}</strong> = ${category}</p>`
-                            ).join('')}
-                        </div>
-                        
-                        <!-- SKU Generation -->
-                        <div class="bg-green-50 rounded">
-                            <p class="font-medium text-green-700">🔄 Auto-Generation:</p>
-                            <p class="text-xs text-green-600">• SKUs are automatically generated with sequential numbering</p>
-                            <p class="text-xs text-green-600">• API: <code>/api/next_sku.php?cat=[CATEGORY]</code></p>
-                            <p class="text-xs text-green-600">• Enhanced: <code>&gender=M&size=L&color=Black&enhanced=true</code></p>
-                        </div>
-                        
-                        <!-- Database Integration -->
-                        <div class="bg-blue-50 rounded">
-                            <p class="font-medium text-blue-700">🗄️ Database Integration:</p>
-                            <p class="text-xs text-blue-600">• Primary table: <code>items</code> (SKU as primary key)</p>
-                            <p class="text-xs text-blue-600">• Images: <code>item_images</code> (linked via SKU)</p>
-                            <p class="text-xs text-blue-600">• Orders: <code>order_items</code> (references SKU)</p>
-                            <p class="text-xs text-blue-600">• Migration complete: No legacy ID columns</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order Item IDs -->
-                <div class="bg-white rounded-lg border border-orange-200">
-                    <h5 class="font-semibold text-orange-700 flex items-center text-sm">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"></path>
-                        </svg>
-                        Order Item IDs
-                    </h5>
-                    <div class="text-xs text-orange-600 space-y-1">
-                        <p><strong>Format:</strong> OI[SequentialNumber]</p>
-                        ${data.id_formats.recent_order_items.length > 0 ? 
-                            `<p><strong>Recent Examples:</strong> ${data.id_formats.recent_order_items.map(oi => 
-                                `<code class="bg-orange-100 py-0\.5 rounded">${oi}</code>`
-                            ).join(', ')}</p>` : 
-                            `<p><strong>Example:</strong> <code class="bg-orange-100 py-0\.5 rounded">OI001</code></p>`
-                        }
-                        <div class="text-xs text-orange-500">
-                            <p>• <strong>OI</strong> = Order Item prefix</p>
-                            <p>• <strong>001</strong> = Sequential 3-digit number (001, 002, 003, etc.)</p>
-                            <p class="italic">Simple, clean, and easy to reference!</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    `;
-}
-
-function closeSystemConfigModal() {
-    document.getElementById('systemConfigModal').style.display = 'none';
-}
-
-window.openDatabaseMaintenanceModal = function openDatabaseMaintenanceModal() {
-    console.log('openDatabaseMaintenanceModal called');
-    const modal = document.getElementById('databaseMaintenanceModal');
-    if (!modal) {
-        console.error('databaseMaintenanceModal element not found!');
-        if (window.showError) {
-            window.showError('Database Maintenance modal not found. Please refresh the page.');
-        } else {
-            alert('Database Maintenance modal not found. Please refresh the page.');
-        }
-        return;
-    }
-    console.log('Opening database maintenance modal...');
-    console.log('Modal before changes:', modal.style.display, modal.classList.contains('hidden'));
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-    console.log('Modal after changes:', modal.style.display, modal.classList.contains('hidden'));
-    console.log('Modal computed style:', window.getComputedStyle(modal).display, window.getComputedStyle(modal).visibility);
-    console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
-    console.log('Modal position:', modal.getBoundingClientRect());
-    // Hide loading and show connection tab by default
-    document.getElementById('databaseMaintenanceLoading').style.display = 'none';
-    switchDatabaseTab(document.querySelector('[data-tab="connection"]'), 'connection');
-    // Also load the current configuration immediately
-    loadCurrentDatabaseConfig();
-}
-
-async function loadDatabaseInformation() {
-    const loadingDiv = document.getElementById('databaseMaintenanceLoading');
-    const contentDiv = document.getElementById('databaseMaintenanceContent');
-    
-    // Show loading state
-    loadingDiv.style.display = 'block';
-    
-    try {
-        const response = await fetch('/api/get_database_info.php');
-        const result = await response.json();
-        
-        if (result.success) {
-            const data = result.data;
-            
-            // Hide loading and populate content
-            loadingDiv.style.display = 'none';
-            contentDiv.innerHTML = generateDatabaseMaintenanceHTML(data);
-        } else {
-            throw new Error(result.error || 'Failed to load database information');
-        }
-    } catch (error) {
-        console.error('Error loading database information:', error);
-        loadingDiv.innerHTML = `
-            <div class="modal-loading">
-                <div class="text-red-500">⚠️</div>
-                <p class="text-red-600">Failed to load database information</p>
-                <p class="text-sm text-gray-500">${error.message}</p>
-                <button onclick="loadDatabaseInformation()" class="bg-red-500 text-white rounded hover:bg-red-600">
-                    Retry
-                </button>
-            </div>
-        `;
-    }
-}
-
-function generateDatabaseMaintenanceHTML(data) {
-    return `
-        <!-- Database Schema -->
-        <div class="bg-purple-50 border-l-4 border-purple-400">
-            <h4 class="font-semibold text-purple-800 flex items-center">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"></path>
-                </svg>
-                Database Tables & Structure (${data.total_active} Active + ${data.total_backup} Backup)
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                ${Object.entries(data.organized || {}).map(([category, tables]) => {
-                    const categoryLabels = {
-                        'core_ecommerce': '🛒 Core E-commerce',
-                        'user_management': '👥 User Management', 
-                        'inventory_cost': '💰 Inventory & Cost',
-                        'product_categories': '🏷️ Product Categories',
                         'room_management': '🏠 Room Management',
                         'email_system': '📧 Email System',
                         'business_config': '⚙️ Business Config',
@@ -848,7 +392,7 @@ function generateDatabaseMaintenanceHTML(data) {
                             <ul class="space-y-1">
                                 ${Object.entries(tables).map(([table, info]) => 
                                     `<li>
-                                        <button onclick="viewTable('${table}')" 
+                                        <button data-action="view-table" data-table="${table}" 
                                                 class="text-left w-full hover:bg-purple-100 rounded py-0\.5 transition-colors">
                                             <code class="bg-transparent border border-purple-200 py-0\.5 rounded text-xs">${table}</code> 
                                             <span class="text-xs text-gray-500">(${info.row_count} rows, ${info.field_count} fields)</span>
@@ -863,14 +407,14 @@ function generateDatabaseMaintenanceHTML(data) {
             
             <!-- Backup Tables (Collapsible) -->
             <div class="">
-                <button onclick="toggleDatabaseBackupTables()" class="text-xs text-purple-600 hover:text-purple-800 flex items-center">
+                <button data-action="toggle-backup-tables" class="text-xs text-purple-600 hover:text-purple-800 flex items-center">
                     <span id="databaseBackupToggleIcon">▶</span>
                     <span class="">Show Backup Tables (${data.total_backup})</span>
                 </button>
                 <div id="databaseBackupTablesContainer" class="hidden bg-gray-100 rounded">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                         ${data.backup_tables.map(table => 
-                            `<button onclick="viewTable('${table}')" 
+                            `<button data-action="view-table" data-table="${table}" 
                                      class="text-left hover:bg-gray-200 rounded py-0\.5 transition-colors">
                                 <code class="bg-gray-200 py-0\.5 rounded">${table}</code>
                             </button>`
@@ -912,7 +456,7 @@ function switchDatabaseTab(tabElement, tabName) {
             loadDatabaseStats();
             break;
         case 'ssl':
-            setupSSLHandlers();
+            // setupSSLHandlers migrated to Vite JS (initSSLHandlers)
             break;
         case 'query':
             initializeQueryConsole();
@@ -1007,138 +551,11 @@ async function testDatabaseConnection() {
     }
 }
 
-async function updateDatabaseConfig() {
-    const resultDiv = document.getElementById('credentialsUpdateResult');
-    const button = event.target;
-    
-    // Get update values
-    const updateData = {
-        host: document.getElementById('newHost').value,
-        database: document.getElementById('newDatabase').value,
-        username: document.getElementById('newUsername').value,
-        password: document.getElementById('newPassword').value,
-        environment: document.getElementById('environmentSelect').value,
-        ssl_enabled: document.getElementById('sslEnabled')?.checked || false,
-        ssl_cert: document.getElementById('sslCertPath')?.value || ''
-    };
-    
-    // Validate required fields
-    if (!updateData.host || !updateData.database || !updateData.username) {
-        showResult(resultDiv, false, 'Please fill in all required fields');
-        return;
-    }
-    
-    // Confirm action
-    if (!confirm(`Are you sure you want to update database credentials for ${updateData.environment} environment(s)? A backup will be created automatically.`)) {
-        return;
-    }
-    
-    // Show loading state
-    button.disabled = true;
-    button.textContent = '💾 Updating...';
-    resultDiv.className = 'px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm';
-    resultDiv.innerHTML = '⏳ Updating configuration...';
-    resultDiv.classList.remove('hidden');
-    
-    try {
-        const response = await fetch('/api/database_maintenance.php?action=update_config&admin_token=whimsical_admin_2024', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updateData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showResult(resultDiv, true, `
-                <div class="font-medium text-green-800">✅ Configuration Updated!</div>
-                <div class="text-xs text-green-700">Backup created: ${result.backup_created}</div>
-                <div class="text-xs text-yellow-700">⚠️ Please refresh the page to use new settings</div>
-            `);
-            
-            // Refresh current config display
-            setTimeout(() => {
-                loadCurrentDatabaseConfig();
-            }, 2000);
-        } else {
-            showResult(resultDiv, false, `Update failed: ${result.message}`);
-        }
-    } catch (error) {
-        showResult(resultDiv, false, `Network error: ${error.message}`);
-    } finally {
-        button.disabled = false;
-        button.textContent = '💾 Update Credentials';
-    }
-}
+// migrated: updateDatabaseConfig now lives in js/admin-settings.js
 
-function setupSSLHandlers() {
-    const sslCheckbox = document.getElementById('sslEnabled');
-    const sslOptions = document.getElementById('sslOptions');
-    
-    if (sslCheckbox && sslOptions) {
-        sslCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                sslOptions.classList.remove('hidden');
-            } else {
-                sslOptions.classList.add('hidden');
-            }
-        });
-    }
-}
+// migrated: setupSSLHandlers now lives in js/admin-settings.js (initSSLHandlers)
 
-async function testSSLConnection() {
-    const resultDiv = document.getElementById('sslTestResult');
-    const button = event.target;
-    
-    const sslData = {
-        host: document.getElementById('testHost')?.value || document.getElementById('newHost')?.value,
-        database: document.getElementById('testDatabase')?.value || document.getElementById('newDatabase')?.value,
-        username: document.getElementById('testUsername')?.value || document.getElementById('newUsername')?.value,
-        password: document.getElementById('testPassword')?.value || document.getElementById('newPassword')?.value,
-        ssl_enabled: true,
-        ssl_cert: document.getElementById('sslCertPath').value
-    };
-    
-    if (!sslData.ssl_cert) {
-        showResult(resultDiv, false, 'Please specify SSL certificate path');
-        return;
-    }
-    
-    // Show loading state
-    button.disabled = true;
-    button.textContent = '🔄 Testing SSL...';
-    resultDiv.className = 'px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm';
-    resultDiv.innerHTML = '⏳ Testing SSL connection...';
-    resultDiv.classList.remove('hidden');
-    
-    try {
-        const response = await fetch('/api/database_maintenance.php?action=test_connection&admin_token=whimsical_admin_2024', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(sslData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showResult(resultDiv, true, `
-                <div class="font-medium text-green-800">🔒 SSL Connection Successful!</div>
-                <div class="text-xs space-y-1 text-green-700">
-                    <div>SSL Certificate: Valid</div>
-                    <div>Encryption: Active</div>
-                    <div>MySQL Version: ${result.info.mysql_version}</div>
-                </div>
-            `);
-        } else {
-            showResult(resultDiv, false, `SSL connection failed: ${result.message}`);
-        }
-    } catch (error) {
-        showResult(resultDiv, false, `SSL test error: ${error.message}`);
-    } finally {
-        button.disabled = false;
-        button.textContent = '🔒 Test SSL Connection';
-    }
-}
+// migrated: testSSLConnection now lives in js/admin-settings.js
 
 async function loadDatabaseStats() {
     const statsDiv = document.getElementById('databaseStats');
@@ -2307,7 +1724,7 @@ function showMaintenanceNotification(title, message, type = 'info', confirmCallb
     const isConfirm = confirmCallback !== null;
     
     modal.innerHTML = `
-        <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+        <div class="admin-modal-content content-section" >
             <div class="">
                 <!-- Header -->
                 <div class="flex items-center justify-between">
@@ -4537,7 +3954,7 @@ async function removeAreaMapping(mappingId) {
 
 <!-- Room-Category Manager Modal -->
 <div id="roomCategoryManagerModal" class="admin-modal-overlay hidden" onclick="closeRoomCategoryManagerModal()">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠📦 Room-Category Assignments</h2>
             <button onclick="closeRoomCategoryManagerModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -4617,7 +4034,7 @@ async function removeAreaMapping(mappingId) {
 
 <!-- Background Manager Modal -->
 <div id="backgroundManagerModal" class="admin-modal-overlay hidden" onclick="closeBackgroundManagerModal()">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🖼️ Background Manager</h2>
             <button onclick="closeBackgroundManagerModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -4700,7 +4117,7 @@ async function removeAreaMapping(mappingId) {
 
 <!-- AI Settings Modal -->
 <div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 sm:p-4 hidden" onclick="closeAISettingsModal()">
-    <div class="bg-white shadow-xl rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col" onclick="event.stopPropagation()">
+    <div class="bg-white shadow-xl rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
         <!-- Fixed Header -->
         <div class="flex justify-between items-center border-b bg-white rounded-t-lg flex-shrink-0">
             <h2 class="text-xl font-bold text-gray-800">🤖 AI Settings</h2>
@@ -5764,7 +5181,7 @@ function manageContentToneOptions() {
 function showContentToneModal() {
     const modalHtml = `
         <div id="contentToneModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeContentToneModal()">
-            <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+            <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div class="flex justify-between items-center border-b">
                     <h3 class="text-lg font-semibold text-gray-800">Manage Content Tone Options</h3>
                     <button onclick="closeContentToneModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
@@ -6024,7 +5441,7 @@ function manageBrandVoiceOptions() {
 function showBrandVoiceModal() {
     const modalHtml = `
         <div id="brandVoiceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeBrandVoiceModal()">
-            <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+            <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div class="flex justify-between items-center border-b">
                     <h3 class="text-lg font-semibold text-gray-800">Manage Brand Voice Options</h3>
                     <button onclick="closeBrandVoiceModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
@@ -7180,7 +6597,7 @@ window.openLoggingStatusModal = function openLoggingStatusModal() {
 function createLoggingStatusModal() {
     const modalHtml = `
         <div id="loggingStatusModal" class="admin-modal-overlay hidden" onclick="closeLoggingStatusModal()">
-            <div class="admin-modal-content technical-section" onclick="event.stopPropagation()">
+            <div class="admin-modal-content technical-section">
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">📊 Logging System Status</h2>
                     <button onclick="closeLoggingStatusModal()" class="modal-close">&times;</button>
@@ -7489,7 +6906,7 @@ function escapeHtml(text) {
 
 <!-- Room Settings Modal -->
 <div id="roomSettingsModal" class="admin-modal-overlay hidden" onclick="closeRoomSettingsModal()">
-    <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠 Room Settings</h2>
             <button onclick="closeRoomSettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -7860,7 +7277,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Email History Modal -->
 <div id="emailHistoryModal" class="admin-modal-overlay hidden"  onclick="closeEmailHistoryModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="">
             <div class="flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Email History</h3>
@@ -7959,7 +7376,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Email Edit/Resend Modal -->
 <div id="emailEditModal" class="admin-modal-overlay hidden" onclick="closeEmailEditModal()">
-    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div class="">
             <div class="flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Edit & Resend Email</h3>
@@ -8012,7 +7429,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Email Configuration Modal -->
 <div id="emailConfigModal" class="admin-modal-overlay hidden"  onclick="closeEmailConfigModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="">
             <div class="flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Email Configuration</h3>
@@ -8114,7 +7531,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Custom Notification Modal -->
 <div id="customNotificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" class="hidden" onclick="event.target === event.currentTarget && closeCustomNotification()">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full" onclick="event.stopPropagation()">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div class="">
             <div class="flex items-center">
                 <div id="notificationIcon" class="text-2xl"></div>
@@ -8135,7 +7552,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Room-Category Visual Mapper Modal -->
 <div id="roomCategoryMapperModal" class="admin-modal-overlay hidden" onclick="closeRoomCategoryMapperModal()">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🗺️ Room-Category Visual Mapper</h2>
             <button onclick="closeRoomCategoryMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -8167,7 +7584,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Area-Item Mapper Modal -->
 <div id="areaItemMapperModal" class="admin-modal-overlay hidden" onclick="closeAreaItemMapperModal()">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🎯 Area-Item Mapper</h2>
             <button onclick="closeAreaItemMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -8261,7 +7678,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- System Configuration Modal -->
 <div id="systemConfigModal" class="admin-modal-overlay hidden" onclick="closeSystemConfigModal()">
-    <div class="admin-modal-content system-config-modal" onclick="event.stopPropagation()">
+    <div class="admin-modal-content system-config-modal">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">⚙️ System Reference</h2>
@@ -8285,7 +7702,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Database Maintenance Modal -->
 <div id="databaseMaintenanceModal" class="admin-modal-overlay hidden"  onclick="closeDatabaseMaintenanceModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
@@ -8393,7 +7810,7 @@ function showRoomSettingsSuccess(message) {
                         </div>
                         
                         <div class="flex space-x-3">
-                            <button onclick="updateDatabaseConfig()" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded-md font-medium">
+                            <button data-action="update-db-config" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded-md font-medium">
                                 💾 Update Credentials
                             </button>
                             <div id="credentialsUpdateResult" class="hidden"></div>
@@ -8403,13 +7820,13 @@ function showRoomSettingsSuccess(message) {
                             <h5 class="font-semibold text-indigo-800">🔄 Database Centralization</h5>
                             <p class="text-sm text-indigo-700">Convert all files to use centralized database connections for improved security and maintainability.</p>
                             <div class="flex space-x-3">
-                                <button onclick="scanDatabaseConnections()" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">
+                                <button data-action="scan-db" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">
                                     📊 Scan Files
                                 </button>
-                                <button onclick="convertDatabaseConnections()" class="bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium">
+                                <button data-action="convert-db" class="bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium">
                                     🔄 Convert All
                                 </button>
-                                <button onclick="openConversionTool()" class="bg-gray-600 hover:bg-gray-700 text-white rounded text-sm font-medium">
+                                <button data-action="open-conversion-tool" class="bg-gray-600 hover:bg-gray-700 text-white rounded text-sm font-medium">
                                     🛠️ Conversion Tool
                                 </button>
                             </div>
@@ -8445,7 +7862,7 @@ function showRoomSettingsSuccess(message) {
                         </div>
                         
                         <div class="">
-                            <button onclick="testSSLConnection()" class="bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium">
+                            <button data-action="test-ssl" class="bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium">
                                 🔒 Test SSL Connection
                             </button>
                             <div id="sslTestResult" class="hidden"></div>
@@ -8802,7 +8219,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Database Tool Results Modal -->
 <div id="databaseToolResultsModal" class="admin-modal-overlay hidden"  onclick="closeDatabaseToolResultsModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
@@ -8831,7 +8248,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Table View Modal -->
 <div id="tableViewModal" class="admin-modal-overlay hidden" onclick="closeTableViewModal()">
-    <div class="relative top-10 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
+    <div class="relative top-10 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
         <div class="">
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
@@ -8853,7 +8270,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- File Explorer Modal -->
 <div id="fileExplorerModal" class="admin-modal-overlay hidden" onclick="closeFileExplorerModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📁 File Explorer</h2>
@@ -8963,7 +8380,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Database Restore Modal -->
 <div id="databaseRestoreModal" class="admin-modal-overlay hidden"  onclick="closeDatabaseRestoreModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
@@ -9171,7 +8588,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Backup Website Modal -->
 <div id="backupModal" class="admin-modal-overlay hidden" onclick="closeBackupModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">💾 Create Website Backup</h2>
@@ -9323,7 +8740,7 @@ function showRoomSettingsSuccess(message) {
 
 <!-- Database Backup Modal -->
 <div id="databaseBackupModal" class="admin-modal-overlay hidden" onclick="closeDatabaseBackupModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">🗄️ Backup Website Database</h2>
@@ -11779,7 +11196,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- CSS Rules Modal (Fullscreen) -->
 <div id="cssRulesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeCSSRulesModal()">
-    <div class="bg-white w-full h-full flex flex-col" onclick="event.stopPropagation()">
+    <div class="bg-white w-full h-full flex flex-col">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600 text-white">
             <div class="flex items-center">
@@ -11886,7 +11303,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Template Manager Modal -->
 <div id="templateManagerModal" class="admin-modal-overlay hidden" onclick="closeTemplateManagerModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📋 Template Manager</h2>
@@ -12108,7 +11525,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Email Template Edit Modal -->
 <div id="emailTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeEmailTemplateEditModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Email Template Editor</h2>
             <button onclick="closeEmailTemplateEditModal()" class="modal-close">&times;</button>
@@ -12172,7 +11589,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Email Template Preview Modal -->
 <div id="emailTemplatePreviewModal" class="admin-modal-overlay hidden" onclick="closeEmailTemplatePreviewModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Email Template Preview</h2>
             <button onclick="closeEmailTemplatePreviewModal()" class="modal-close">&times;</button>
@@ -12198,7 +11615,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Template Assignment Modal -->
 <div id="templateAssignmentModal" class="admin-modal-overlay hidden" onclick="closeTemplateAssignmentModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Change Template Assignment</h2>
             <button onclick="closeTemplateAssignmentModal()" class="modal-close">&times;</button>
@@ -12981,7 +12398,7 @@ function showColorTemplateEditModal(template = null) {
 function createColorTemplateEditModal() {
     const modalHTML = `
         <div id="colorTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeColorTemplateEditModal()">
-            <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+            <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 id="colorTemplateEditTitle" class="modal-title">Edit Color Template</h2>
                     <button onclick="closeColorTemplateEditModal()" class="modal-close">&times;</button>
@@ -13241,7 +12658,7 @@ function showSizeTemplateEditModal(template = null) {
 function createSizeTemplateEditModal() {
     const modalHTML = `
         <div id="sizeTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeSizeTemplateEditModal()">
-            <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+            <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 id="sizeTemplateEditTitle" class="modal-title">Edit Size Template</h2>
                     <button onclick="closeSizeTemplateEditModal()" class="modal-close">&times;</button>
@@ -13440,7 +12857,7 @@ async function saveSizeTemplate(event) {
 
 <!-- Marketing Analytics Modal -->
 <div id="marketingAnalyticsModal" class="admin-modal-overlay hidden" onclick="closeMarketingAnalyticsModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📈 Marketing Analytics Dashboard</h2>
@@ -13989,7 +13406,7 @@ async function saveSizeTemplate(event) {
 
 <!-- Business Reports Modal -->
 <div id="businessReportsModal" class="admin-modal-overlay hidden" onclick="closeBusinessReportsModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📊 Business Reports Dashboard</h2>
@@ -16288,6 +15705,20 @@ async function loadUIComponents() {
 
 async function loadGeneralConfig() {
     try {
+        // Ensure Contact settings exist (idempotent)
+        try {
+            await fetch('/api/business_settings.php?action=ensure_contact_settings');
+        } catch (e) {
+            console.warn('ensure_contact_settings failed (non-fatal):', e);
+        }
+
+        // Ensure About settings exist (idempotent)
+        try {
+            await fetch('/api/business_settings.php?action=ensure_about_settings');
+        } catch (e) {
+            console.warn('ensure_about_settings failed (non-fatal):', e);
+        }
+
         const response = await fetch('/api/business_settings.php?action=get_all_settings');
         const data = await response.json();
         
@@ -16391,7 +15822,7 @@ function generateSettingField(setting) {
                 <div>
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" id="${fieldId}" ${setting.setting_value === 'true' ? 'checked' : ''} 
-                               class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                               class="rounded border-gray-300 text-teal-600 focus:ring-teal-500" data-setting-type="boolean">
                         <span class="text-sm font-medium text-gray-700">${setting.display_name}</span>
                     </label>
                     <p class="text-xs text-gray-500">${setting.description}</p>
@@ -16405,10 +15836,10 @@ function generateSettingField(setting) {
                     <label class="block text-sm font-medium text-gray-700">${setting.display_name}</label>
                     <div class="flex items-center space-x-2">
                         <input type="color" id="${fieldId}" value="${setting.setting_value}" 
-                               class="h-8 w-16 rounded border border-gray-300">
+                               class="h-8 w-16 rounded border border-gray-300" data-setting-type="color">
                         <input type="text" value="${setting.setting_value}" 
-                               class="flex-1 border border-gray-300 rounded text-sm"
-                               onchange="document.getElementById('${fieldId}').value = this.value">
+                                class="flex-1 border border-gray-300 rounded text-sm"
+                                onchange="document.getElementById('${fieldId}').value = this.value">
                     </div>
                     <p class="text-xs text-gray-500">${setting.description}</p>
                 </div>
@@ -16420,7 +15851,7 @@ function generateSettingField(setting) {
                 <div>
                     <label class="block text-sm font-medium text-gray-700">${setting.display_name}</label>
                     <input type="number" id="${fieldId}" value="${setting.setting_value}" step="0.01"
-                           class="w-full border border-gray-300 rounded text-sm">
+                           class="w-full border border-gray-300 rounded text-sm" data-setting-type="number">
                     <p class="text-xs text-gray-500">${setting.description}</p>
                 </div>
             `;
@@ -16442,8 +15873,21 @@ function generateSettingField(setting) {
                 <div>
                     <label class="block text-sm font-medium text-gray-700">${setting.display_name}</label>
                     <textarea id="${fieldId}" rows="2" 
-                              class="w-full border border-gray-300 rounded text-sm"
+                              class="w-full border border-gray-300 rounded text-sm" data-setting-type="json"
                               placeholder="Enter comma-separated values">${displayValue}</textarea>
+                    <p class="text-xs text-gray-500">${setting.description}</p>
+                </div>
+            `;
+            break;
+
+        case 'html':
+            fieldHtml = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">${setting.display_name}</label>
+                    <textarea id="${fieldId}" rows="6"
+                              class="w-full border border-gray-300 rounded text-sm font-mono"
+                              data-setting-type="html"
+                              placeholder="Enter HTML content">${setting.setting_value}</textarea>
                     <p class="text-xs text-gray-500">${setting.description}</p>
                 </div>
             `;
@@ -16455,7 +15899,7 @@ function generateSettingField(setting) {
                     <label class="block text-sm font-medium text-gray-700">${setting.display_name}</label>
                     <input type="${setting.setting_type === 'email' ? 'email' : setting.setting_type === 'url' ? 'url' : 'text'}" 
                            id="${fieldId}" value="${setting.setting_value}" 
-                           class="w-full border border-gray-300 rounded text-sm">
+                           class="w-full border border-gray-300 rounded text-sm" data-setting-type="${setting.setting_type}">
                     <p class="text-xs text-gray-500">${setting.description}</p>
                 </div>
             `;
@@ -16475,18 +15919,22 @@ async function saveAllBusinessSettings() {
         document.querySelectorAll('[id^="setting_"]').forEach(field => {
             const key = field.id.replace('setting_', '');
             let value;
+            const fieldType = field.dataset.settingType || '';
             
             if (field.type === 'checkbox') {
                 value = field.checked ? 'true' : 'false';
             } else if (field.tagName === 'TEXTAREA') {
-                // Handle JSON fields - convert comma-separated to JSON array if needed
-                const textValue = field.value.trim();
-                if (textValue.includes(',') && !textValue.startsWith('[')) {
-                    // Convert comma-separated to JSON array
-                    const items = textValue.split(',').map(item => item.trim()).filter(item => item);
-                    value = JSON.stringify(items);
+                if (fieldType === 'json') {
+                    const textValue = field.value.trim();
+                    if (textValue.includes(',') && !textValue.startsWith('[')) {
+                        const items = textValue.split(',').map(item => item.trim()).filter(item => item);
+                        value = JSON.stringify(items);
+                    } else {
+                        value = textValue;
+                    }
                 } else {
-                    value = textValue;
+                    // Preserve HTML and whitespace for 'html' and other textarea types
+                    value = field.value;
                 }
             } else {
                 value = field.value;
@@ -16737,7 +16185,7 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Cart Button Text Modal -->
 <div id="cartButtonTextModal" class="admin-modal-overlay hidden" onclick="closeCartButtonTextModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">🛒 Cart Button Text Variations</h2>
             <button onclick="closeCartButtonTextModal()" class="modal-close">&times;</button>
@@ -16796,7 +16244,7 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Sales Admin Modal -->
 <div id="salesAdminModal" class="admin-modal-overlay hidden" onclick="closeSalesAdminModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <div class="admin-modal-header section-header" >
             <h2 class="modal-title">💰 Sales Administration</h2>
             <button onclick="closeSalesAdminModal()" class="modal-close">&times;</button>
@@ -16821,7 +16269,7 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Create/Edit Sale Modal -->
 <div id="createSaleModal" class="admin-modal-overlay hidden" onclick="closeCreateSaleModal()">
-    <div class="admin-modal-content content-section" onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section">
         <div class="admin-modal-header section-header" >
             <h2 id="createSaleModalTitle" class="modal-title">🎯 Create New Sale</h2>
             <button onclick="closeCreateSaleModal()" class="modal-close">&times;</button>
@@ -16926,7 +16374,7 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Dashboard Configuration Modal -->
 <div id="dashboardConfigModal" class="admin-modal-overlay dashboard-modal" class="hidden" onclick="closeDashboardConfigModal()">
-    <div class="admin-modal-content dashboard-config-modal" onclick="event.stopPropagation()">
+    <div class="admin-modal-content dashboard-config-modal">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <div class="flex items-center justify-between w-full">
@@ -16986,7 +16434,7 @@ async function saveCartButtonTexts(texts) {
 
 <!-- Categories Modal -->
 <div id="categoriesModal" class="admin-modal-overlay hidden" onclick="closeCategoriesModal()">
-    <div class="admin-modal-content categories-modal" onclick="event.stopPropagation()">
+    <div class="admin-modal-content categories-modal">
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📂 Category Management</h2>
             <button onclick="closeCategoriesModal()" class="modal-close">&times;</button>
@@ -18608,7 +18056,7 @@ async function toggleGlobalTooltips() {
 
 <!-- Help Hints Management Modal -->
 <div id="helpHintsModal" class="admin-modal-overlay hidden"  onclick="closeHelpHintsModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <!-- Modal Header -->
         <div class="flex justify-between items-center border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
             <div>
@@ -19137,7 +18585,7 @@ async function toggleGlobalTooltips() {
 
 <!-- Documentation Hub Modal -->
 <div id="documentationHubModal" class="modal-overlay" class="hidden">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2>📚 Documentation Hub</h2>
             <button onclick="closeDocumentationHubModal()" class="modal-close-btn">×</button>
@@ -19214,7 +18662,7 @@ async function toggleGlobalTooltips() {
 
 <!-- Square Settings Modal -->
 <div id="squareSettingsModal" class="modal-overlay" class="hidden" onclick="closeSquareSettingsModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2>Square Integration Settings</h2>
             <button onclick="closeSquareSettingsModal()" class="close-button">×</button>
@@ -19474,7 +18922,7 @@ function updateConnectionStatus(isConnected, lastSync) {
 
 <!-- Receipt Settings Modal -->
 <div id="receiptSettingsModal" class="modal-overlay" class="hidden" onclick="closeReceiptSettingsModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Receipt Message Settings</h2>
             <button onclick="closeReceiptSettingsModal()" class="modal-close">×</button>
@@ -19903,7 +19351,7 @@ function openGlobalColorSizeModal() {
 function createGlobalColorSizeModal() {
     const modalHtml = `
         <div id="globalColorSizeModal" class="admin-modal-overlay hidden" onclick="closeGlobalColorSizeModal()">
-            <div class="admin-modal-content" onclick="event.stopPropagation()">
+            <div class="admin-modal-content">
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">👥 Gender, Size & Color Management</h2>
                     <button onclick="closeGlobalColorSizeModal()" class="modal-close">&times;</button>
@@ -21647,7 +21095,7 @@ async function saveTemplateAssignment() {
 
 <!-- System Documentation Modal -->
 <div id="systemDocumentationModal" class="admin-modal-overlay hidden" onclick="closeSystemDocumentationModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📚 System Documentation</h2>
             <button onclick="closeSystemDocumentationModal()" class="modal-close">&times;</button>
@@ -21708,7 +21156,7 @@ function showCleanupConfirmation(title, question, description, safetyLevel, safe
     
     const confirmationHtml = `
         <div id="cleanupConfirmationModal" class="admin-modal-overlay hidden" onclick="closeCleanupConfirmation()">
-            <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+            <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">${title}</h2>
                     <button onclick="closeCleanupConfirmation()" class="modal-close">&times;</button>
@@ -21765,7 +21213,7 @@ async function confirmCleanupAction() {
 function showStartOverConfirmation() {
     const confirmationHtml = `
         <div id="startOverConfirmationModal" class="admin-modal-overlay hidden" onclick="closeStartOverConfirmation()">
-            <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+            <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header bg-red-50">
                     <h2 class="modal-title text-red-800">⚠️ DANGER: Start Over</h2>
                     <button onclick="closeStartOverConfirmation()" class="modal-close">&times;</button>
@@ -21968,7 +21416,7 @@ function showDatabaseOptimizationResults(data) {
     
     let resultsHtml = `
         <div id="optimizationResultsModal" class="admin-modal-overlay hidden" onclick="closeOptimizationResults()">
-            <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+            <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">⚡ Database Optimization Results</h2>
                     <button onclick="closeOptimizationResults()" class="modal-close">&times;</button>
@@ -22100,7 +21548,7 @@ function showCleanupResults(title, data) {
         
         let resultsHtml = `
         <div id="cleanupResultsModal" class="admin-modal-overlay hidden" onclick="closeCleanupResults()">
-            <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+            <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">${title}</h2>
                     <button onclick="closeCleanupResults()" class="modal-close">&times;</button>
@@ -24538,7 +23986,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- System Cleanup Modal -->
 <div id="systemCleanupModal" class="admin-modal-overlay hidden" onclick="closeSystemCleanupModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">🧹 System Cleanup</h2>
             <button onclick="closeSystemCleanupModal()" class="modal-close">&times;</button>
@@ -24580,7 +24028,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Start Over Confirmation Modal -->
 <div id="startOverConfirmModal" class="admin-modal-overlay hidden" onclick="closeStartOverConfirmModal()">
-    <div class="admin-modal-content content-section"  onclick="event.stopPropagation()">
+    <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">⚠️ START OVER - DANGER ZONE</h2>
             <button onclick="closeStartOverConfirmModal()" class="modal-close">&times;</button>

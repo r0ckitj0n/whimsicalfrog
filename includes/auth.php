@@ -112,7 +112,7 @@ function requireAuth($redirectTo = null)
         if ($redirectTo) {
             $_SESSION['redirect_after_login'] = $redirectTo;
         }
-        header('Location: /?page=login');
+        header('Location: /login');
         exit;
     }
 }
@@ -131,7 +131,7 @@ function requireAdmin($apiResponse = false)
             echo json_encode(['error' => 'Authentication required']);
             exit;
         } else {
-            header('Location: /?page=login');
+            header('Location: /login');
             exit;
         }
     }
@@ -143,7 +143,7 @@ function requireAdmin($apiResponse = false)
             echo json_encode(['error' => 'Admin privileges required']);
             exit;
         } else {
-            header('Location: /?page=room_main');
+            header('Location: /room/main');
             exit;
         }
     }
@@ -222,6 +222,10 @@ function checkApiAuth($requireAdmin = false, $adminToken = 'whimsical_admin_2024
  */
 function loginUser($userData)
 {
+    // Ensure session is active before using it
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     $_SESSION['user'] = [
         'userId' => $userData['id'] ?? $userData['userId'],
         'username' => $userData['username'],

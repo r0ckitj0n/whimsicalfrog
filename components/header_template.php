@@ -67,10 +67,20 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 if (function_exists('isLoggedIn') && function_exists('getUsername')) {
     $is_logged_in = isLoggedIn();
     $username = $is_logged_in ? getUsername() : null;
+    // Determine admin role using centralized helper if available
+    if (function_exists('isAdmin')) {
+        $is_admin = isAdmin();
+    } else {
+        // Fallback to session-based role check
+        $is_admin = isset($_SESSION['user']) && is_array($_SESSION['user']) &&
+                    isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
+    }
 } else {
     // Fallback to session-based detection
     $is_logged_in = isset($_SESSION['user_id']) || isset($_SESSION['user']);
     $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
+    $is_admin = isset($_SESSION['user']) && is_array($_SESSION['user']) &&
+                isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
 }
 ?>
 
@@ -167,17 +177,20 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
                 <?php if ($config['show_user_menu']): ?>
                     <?php if ($is_logged_in): ?>
                         <span class="welcome-message">
-                            <a href="/?page=account_settings" class="nav-link"><?php echo htmlspecialchars($username); ?></a>
+                            <a href="/account_settings" class="nav-link"><?php echo htmlspecialchars($username); ?></a>
                         </span>
+                        <?php if (!empty($is_admin)): ?>
+                            <a href="/admin/settings" class="nav-link">Settings</a>
+                        <?php endif; ?>
                         <a href="/logout.php" class="nav-link">Logout</a>
                     <?php else: ?>
-                        <a href="/?page=login" class="nav-link">Login</a>
+                        <a href="/login" class="nav-link" data-action="open-login-modal">Login</a>
                     <?php endif; ?>
                 <?php endif; ?>
 
                 <!-- Cart Link -->
                 <?php if ($config['show_cart']): ?>
-                    <a href="/?page=cart" class="cart-link" aria-label="Shopping cart with <?php echo $cart_count; ?> items">
+                    <a href="/cart" class="cart-link" aria-label="Shopping cart with <?php echo $cart_count; ?> items">
                         <div class="flex items-center space-x-1 md:space-x-2">
                             <span id="cartCount" class="text-sm font-medium whitespace-nowrap"><?php echo $cart_count; ?> items</span>
                             <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +213,7 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
             </div>
         </div>
 
-        <!- Mobile Menu ->
+        <!-- Mobile Menu -->
         <div class="mobile-menu" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
             <div class="mobile-nav-links">
                 <?php foreach ($config['navigation_items'] as $item): ?>
@@ -217,10 +230,13 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
                 <?php if ($config['show_user_menu']): ?>
                     <div class="mobile-auth-section">
                         <?php if ($is_logged_in): ?>
+                            <?php if (!empty($is_admin)): ?>
+                                <a href="/admin/settings" class="mobile-nav-link">Settings</a>
+                            <?php endif; ?>
                             <a href="/profile" class="mobile-nav-link">Profile</a>
-                            <a href="/logout" class="mobile-nav-link">Logout</a>
+                            <a href="/logout.php" class="mobile-nav-link">Logout</a>
                         <?php else: ?>
-                            <a href="/login" class="mobile-nav-link">Login</a>
+                            <a href="/login" class="mobile-nav-link" data-action="open-login-modal">Login</a>
                             <a href="/register" class="mobile-nav-link">Register</a>
                         <?php endif; ?>
                     </div>
@@ -242,65 +258,6 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
     </div>
 </header>
 
-<script>
-// Mobile menu toggle functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-    const mobileMenu = document.querySelector('.mobile-menu');
-    
-    if (mobileMenuToggle && mobileMenu) {
-        mobileMenuToggle.addEventListener('click', function() {
-            const isExpanded = mobileMenuToggle.getAttribute('aria-expanded') === 'true';
-            
-            mobileMenuToggle.setAttribute('aria-expanded', !isExpanded);
-            mobileMenu.classList.toggle('active');
-            
-            // Update icon
-            const icon = mobileMenuToggle.querySelector('svg path');
-            if (icon) {
-                if (isExpanded) {
-                    icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger
-                } else {
-                    icon.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // X
-                }
-            }
-        });
-        
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!mobileMenuToggle.contains(event.target) && !mobileMenu.contains(event.target)) {
-                mobileMenuToggle.setAttribute('aria-expanded', 'false');
-                mobileMenu.classList.remove('active');
-                
-                const icon = mobileMenuToggle.querySelector('svg path');
-                if (icon) {
-                    icon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger
-                }
-            }
-        });
-        
-        // Close mobile menu on escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && mobileMenu.classList.contains('active')) {
-                mobileMenuToggle.setAttribute('aria-expanded', 'false');
-                mobileMenu.classList.remove('active');
-                mobileMenuToggle.focus();
-            }
-        });
-    }
-    
-    // Search functionality enhancement
-    const searchForms = document.querySelectorAll('form[role="search"]');
-    searchForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const input = form.querySelector('input[name="q"]');
-            if (input && input.value.trim() === '') {
-                e.preventDefault();
-                input.focus();
-            }
-        });
-    });
-});
-</script>
+
 
  

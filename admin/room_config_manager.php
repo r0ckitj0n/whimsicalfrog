@@ -18,9 +18,7 @@ Auth::requireAdmin();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Configuration Manager - WhimsicalFrog Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="../css/admin-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
-    <link href="../css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
+
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
@@ -186,7 +184,7 @@ Auth::requireAdmin();
         </div>
     </div>
 
-    <script src="../js/admin-common.js?v=<?php echo time(); ?>"></script>
+
     <script>
     // Room configuration management functionality
     let currentRoomConfig = {};

@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Check authentication with fallback token support
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    
 }
 
 // Check if user is admin or has valid admin token

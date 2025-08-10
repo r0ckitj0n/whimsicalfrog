@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/email_config.php';
+require_once __DIR__ . '/business_settings_helper.php';
 
 // Enable CORS and JSON response
 header('Access-Control-Allow-Origin: *');
@@ -49,7 +50,8 @@ try {
     $receiptHTML = generateReceiptEmailContent($orderData);
 
     // Send email using existing email configuration
-    $subject = 'Receipt for Order #' . $orderData['orderId'] . ' - WhimsicalFrog';
+    $businessName = BusinessSettings::getBusinessName();
+    $subject = 'Receipt for Order #' . $orderData['orderId'] . ' - ' . $businessName;
 
     // Use the existing email configuration
     $headers = [
@@ -129,6 +131,10 @@ try {
 function generateReceiptEmailContent($orderData)
 {
     $timestamp = date('F j, Y \a\t g:i A T', strtotime($orderData['timestamp']));
+    // Business info for template
+    $businessName   = BusinessSettings::getBusinessName();
+    $businessDomain = BusinessSettings::getBusinessDomain();
+    $businessUrl    = BusinessSettings::getSiteUrl('');
 
     $itemsHTML = '';
     foreach ($orderData['items'] as $item) {
@@ -159,7 +165,7 @@ function generateReceiptEmailContent($orderData)
             
             <!- Header ->
             <div class="email-header">
-                <h1 class="email-header-title">WHIMSICALFROG</h1>
+                <h1 class="email-header-title">' . htmlspecialchars($businessName) . '</h1>
                 <p class="email-header-subtitle">Receipt for Your Purchase</p>
             </div>
             
@@ -221,14 +227,14 @@ function generateReceiptEmailContent($orderData)
             <!- Footer ->
             <div class="email-footer">
                 <p class="email-footer-title">Thank you for your business!</p>
-                <p class="email-footer-text">Visit us online at WhimsicalFrog.com</p>
+                <p class="email-footer-text">Visit us online at <a href="' . htmlspecialchars($businessUrl) . '" target="_blank" rel="noopener">' . htmlspecialchars($businessDomain ?: $businessUrl) . '</a></p>
             </div>
             
         </div>
         
         <!- Footer text ->
         <div class="email-footer-disclaimer">
-            <p>This email was sent from the WhimsicalFrog Point of Sale system.</p>
+            <p>This email was sent from the ' . htmlspecialchars($businessName) . ' Point of Sale system.</p>
         </div>
     </body>
     </html>';

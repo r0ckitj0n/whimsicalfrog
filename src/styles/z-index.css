@@ -9,6 +9,7 @@
 
 :root {
   /* -- Base & Content Layers -- */
+  --z-index-behind: -1;
   --z-index-base: 1;
   --z-index-content-back: 5;
   --z-index-content-mid: 10;
@@ -29,6 +30,10 @@
   --z-index-modal-base: 410;
   --z-index-modal-content: 420;
   --z-index-modal-front: 430;
+
+  /* -- Room & Special Modals -- */
+  --z-index-room-modal: 2400;
+  --z-index-room-modal-header: 2450;
 
   /* -- Global Notifications & Highest Level -- */
   --z-index-global-notification: 500;

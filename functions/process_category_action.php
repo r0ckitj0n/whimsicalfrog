@@ -2,7 +2,7 @@
 
 // Handle AJAX requests for category create/delete/update
 require_once __DIR__ . '/api/config.php';
-session_start();
+
 header('Content-Type: text/plain');
 
 // Admin authentication with fallback to admin token

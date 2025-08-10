@@ -1,0 +1,168 @@
+/* Room Modal Header Complete Styling */
+/* Restored from legacy system for Vite compatibility */
+
+.room-modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-room-modal-header, 2450);
+    pointer-events: none;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Back button positioning - simple top-left */
+.back-button-container {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    pointer-events: auto;
+    z-index: var(--z-room-buttons, 55);
+}
+
+/* Room Modal Back Button */
+.room-modal-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brand-primary, #87ac3a);
+    color: var(--white, #ffffff);
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: var(--radius-lg, 12px);
+    backdrop-filter: var(--backdrop-blur-sm, blur(4px));
+    box-shadow: var(--shadow-md, 0 4px 8px rgba(0,0,0,0.1));
+    min-width: 120px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    text-decoration: none;
+}
+
+.room-modal-back-btn:hover {
+    background: var(--brand-secondary, #6d8a2e);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg, 0 8px 16px rgba(0,0,0,0.15));
+}
+
+.room-modal-back-btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md, 0 4px 8px rgba(0,0,0,0.1));
+}
+
+/* Room Modal Close Button */
+.room-modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-room-buttons, 55);
+    pointer-events: auto;
+    transition: all 0.2s ease;
+}
+
+.room-modal-close-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.1);
+}
+
+/* Room Title/Description Overlay - Position on RIGHT side */
+.room-title-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 4rem; /* Leave space for close button */
+    max-width: 300px;
+    padding: 15px;
+    background: var(--brand-primary, #87ac3a);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
+    border: none;
+    backdrop-filter: blur(10px);
+    text-align: right;
+    z-index: var(--z-room-buttons, 55);
+    pointer-events: auto;
+    color: var(--white, #ffffff);
+}
+
+/* Ensure title overlay appears in modal body, not modal header */
+.room-modal-body .room-title-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 1rem; /* No need to leave space for close button in body */
+    z-index: var(--z-room-buttons, 55);
+}
+
+.room-title-overlay h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.room-title-overlay p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Product Icons in Room Modal */
+.room-product-icon {
+    position: absolute;
+    /* Use CSS custom properties for initial positioning */
+    top: var(--icon-top, 0px);
+    left: var(--icon-left, 0px);
+    width: var(--icon-width, 80px);
+    height: var(--icon-height, 80px);
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* Store original coordinates for JavaScript scaling */
+    --original-top: var(--icon-top, 0px);
+    --original-left: var(--icon-left, 0px);
+    --original-width: var(--icon-width, 80px);
+    --original-height: var(--icon-height, 80px);
+}
+
+.room-product-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    z-index: 15;
+}
+
+.room-product-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Room Overlay Wrapper Background */
+.room-overlay-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-image: var(--room-bg-image, none);
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    min-height: 500px;
+}

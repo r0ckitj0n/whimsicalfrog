@@ -4,7 +4,7 @@
  * Browser-based database management tool
  */
 
-session_start();
+
 
 // Simple authentication
 $password = 'Palz2516Admin';

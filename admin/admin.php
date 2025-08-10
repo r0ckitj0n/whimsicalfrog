@@ -51,9 +51,12 @@ $adminRole = $userData['role'] ?? 'Administrator';
 
     <!- Navigation Tabs ->
     <?php
-    $section = $_GET['section'] ?? '';
+    // The $adminSection variable is now passed from index.php
+    // Default to 'dashboard' if it's empty or not set.
+    $currentSection = $adminSection ?: 'dashboard';
+
 $tabs = [
-    '' => ['Dashboard', 'admin-tab-dashboard'],
+    'dashboard' => ['Dashboard', 'admin-tab-dashboard'],
     'customers' => ['Customers', 'admin-tab-customers'],
     'inventory' => ['Inventory', 'admin-tab-inventory'],
     'orders' => ['Orders', 'admin-tab-orders'],
@@ -70,7 +73,7 @@ $tabs = [
                 <?php
             // Map tab keys to tooltip IDs
             $tooltipIds = [
-                '' => 'adminDashboardTab',
+                'dashboard' => 'adminDashboardTab',
                 'customers' => 'adminCustomersTab',
                 'inventory' => 'adminInventoryTab',
                 'orders' => 'adminOrdersTab',
@@ -80,10 +83,11 @@ $tabs = [
                 'settings' => 'adminSettingsTab'
             ];
                 $tooltipId = $tooltipIds[$key] ?? '';
+                $url = ($key === 'dashboard') ? '/admin' : "/admin/{$key}";
                 ?>
-                <a href="/?page=admin<?= $key ? '&section=' . $key : '' ?>"
+                <a href="<?= $url ?>"
                    id="<?= $tooltipId ?>"
-                   class="admin-nav-tab <?= $cssClass ?> <?= ($section === $key || ($key === '' && !$section)) ? 'active' : '' ?>">
+                   class="admin-nav-tab <?= $cssClass ?> <?= ($currentSection === $key) ? 'active' : '' ?>">
                     <?= $label ?>
                 </a>
             <?php endforeach; ?>
@@ -94,7 +98,7 @@ $tabs = [
     <!- Dynamic Section Content ->
     <div id="admin-section-content">
         <?php
-        switch ($section) {
+        switch ($currentSection) {
             case 'customers':
                 include 'admin_customers.php';
                 break;
@@ -120,6 +124,7 @@ $tabs = [
             case 'categories':
                 include 'admin_categories.php';
                 break;
+            case 'dashboard':
             default:
                 include 'admin_dashboard.php';
                 break;

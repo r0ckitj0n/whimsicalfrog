@@ -50,12 +50,22 @@ $footerData = [
         'Returns' => '/?page=returns'
     ]
 ];
+
+// Convert legacy querystring links (/?page=xyz) to clean paths (/xyz)
+foreach ($footerData['links'] as $text => $url) {
+    if (strpos($url, '/?page=') === 0) {
+        $slug = substr($url, strlen('/?page='));
+        // Remove any query parameters after slug
+        $slug = strtok($slug, '&');
+        $footerData['links'][$text] = '/' . $slug;
+    }
+}
+
 ?>
 
-<!- Footer CSS (Include this in your head section) ->
-<link rel="stylesheet" href="/css/footer-styles.css">
+<!-- Footer CSS managed by Vite (main.css). Legacy link removed. -->
 
-<!- Main Footer ->
+<!-- Main Footer -->
 <footer class="site-footer footer-theme-<?php echo $footerConfig['theme']; ?>">
     <div class="footer-container">
         
@@ -101,26 +111,34 @@ $footerData = [
                 <?php if ($footerConfig['show_contact']): ?>
                 <h3 class="footer-heading">Contact Us</h3>
                 <div class="footer-contact">
+                    <?php if (!empty($footerData['contact']['address'])): ?>
                     <div class="footer-contact-item">
                         <span class="footer-contact-icon">📍</span>
                         <span><?php echo $footerData['contact']['address']; ?></span>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($footerData['contact']['phone'])): ?>
                     <div class="footer-contact-item">
                         <span class="footer-contact-icon">📞</span>
                         <a href="tel:<?php echo str_replace(['(', ')', ' ', '-'], '', $footerData['contact']['phone']); ?>" class="footer-contact-link">
                             <?php echo $footerData['contact']['phone']; ?>
                         </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($footerData['contact']['email'])): ?>
                     <div class="footer-contact-item">
                         <span class="footer-contact-icon">✉️</span>
                         <a href="mailto:<?php echo $footerData['contact']['email']; ?>" class="footer-contact-link">
                             <?php echo $footerData['contact']['email']; ?>
                         </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($footerData['contact']['hours'])): ?>
                     <div class="footer-contact-item">
                         <span class="footer-contact-icon">🕒</span>
                         <span><?php echo $footerData['contact']['hours']; ?></span>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
                 
@@ -170,18 +188,22 @@ $footerData = [
                 <h3 class="footer-heading">Get In Touch</h3>
                 <?php if ($footerConfig['show_contact']): ?>
                 <div class="footer-contact">
+                    <?php if (!empty($footerData['contact']['phone'])): ?>
                     <div class="footer-contact-item">
                         <span class="footer-contact-icon">📞</span>
                         <a href="tel:<?php echo str_replace(['(', ')', ' ', '-'], '', $footerData['contact']['phone']); ?>" class="footer-contact-link">
                             <?php echo $footerData['contact']['phone']; ?>
                         </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($footerData['contact']['email'])): ?>
                     <div class="footer-contact-item">
                         <span class="footer-contact-icon">✉️</span>
                         <a href="mailto:<?php echo $footerData['contact']['email']; ?>" class="footer-contact-link">
                             <?php echo $footerData['contact']['email']; ?>
                         </a>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
                 
@@ -216,18 +238,22 @@ $footerData = [
                 
                 <?php if ($footerConfig['show_contact']): ?>
                 <div class="footer-contact footer-mt-medium">
+                    <?php if (!empty($footerData['contact']['phone'])): ?>
                     <div class="footer-contact-item">
                         <span class="footer-contact-icon">📞</span>
                         <a href="tel:<?php echo str_replace(['(', ')', ' ', '-'], '', $footerData['contact']['phone']); ?>" class="footer-contact-link">
                             <?php echo $footerData['contact']['phone']; ?>
                         </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if (!empty($footerData['contact']['email'])): ?>
                     <div class="footer-contact-item">
                         <span class="footer-contact-icon">✉️</span>
                         <a href="mailto:<?php echo $footerData['contact']['email']; ?>" class="footer-contact-link">
                             <?php echo $footerData['contact']['email']; ?>
                         </a>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </div>

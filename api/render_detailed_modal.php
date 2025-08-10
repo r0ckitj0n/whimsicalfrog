@@ -28,6 +28,11 @@ try {
 
     $item = $input['item'];
     $images = $input['images'];
+    
+    // Debug: Log received data to see what fields are present
+    error_log('MODAL DEBUG - Received item data: ' . json_encode($item));
+    error_log('MODAL DEBUG - Item stockLevel: ' . ($item['stockLevel'] ?? 'NOT SET'));
+    error_log('MODAL DEBUG - Item fields: ' . implode(', ', array_keys($item)));
 
     // Include the detailed item modal component
     require_once __DIR__ . '/../components/detailed_item_modal.php';

@@ -51,7 +51,7 @@ export async function loadDynamicBackground() {
     const supportsWebP = document.documentElement.classList.contains('webp');
     const filename = supportsWebP && webp_filename ? webp_filename : image_filename;
 
-    let imageUrl = `images/backgrounds/${filename}`;
+    let imageUrl = `/images/backgrounds/${filename}`;
     if (!imageUrl.includes('/backgrounds/') && !filename.startsWith('backgrounds/')) {
       imageUrl = `images/${filename}`;
     }

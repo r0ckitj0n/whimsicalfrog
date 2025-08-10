@@ -8,23 +8,17 @@
  */
 
 
-require_once __DIR__ . '/data_processor.php';
-// Include all centralized helpers
-require_once __DIR__ . '/database.php';
-require_once __DIR__ . '/response.php';
-require_once __DIR__ . '/logger.php';
-require_once __DIR__ . '/database_logger.php';
-require_once __DIR__ . '/error_logger.php';
-require_once __DIR__ . '/session.php';
-require_once __DIR__ . '/http_client.php';
-require_once __DIR__ . '/file_helper.php';
-require_once __DIR__ . '/email_helper.php';
-require_once __DIR__ . '/stock_manager.php';
-require_once __DIR__ . '/auth_helper.php';
-require_once __DIR__ . '/admin_logger.php';
-require_once __DIR__ . '/logging_config.php';
 
-// Initialize comprehensive logging system
+
+// TEMPORARILY DISABLED: Include required logging classes
+// require_once __DIR__ . '/logging_config.php';
+// require_once __DIR__ . '/logger.php';
+// require_once __DIR__ . '/database_logger.php';
+// require_once __DIR__ . '/error_logger.php';
+// require_once __DIR__ . '/admin_logger.php';
+
+// TEMPORARILY DISABLED: Initialize comprehensive logging system
+/*
 try {
     // Initialize logging configuration
     $loggingConfig = LoggingConfig::initializeLogging();
@@ -34,7 +28,7 @@ try {
     Logger::init($fileConfig['files']['application'], $fileConfig['levels']);
 
     // Initialize database logging (primary logging method)
-    DatabaseLogger::init();
+    DatabaseLogger::getInstance();
     ErrorLogger::init();
     AdminLogger::init();
 
@@ -51,6 +45,7 @@ try {
 } catch (Exception $e) {
     error_log("Failed to initialize logging system: " . $e->getMessage());
 }
+*/
 
 /**
  * Generates an HTML <img> tag with WebP support and fallback to the original image format.
@@ -342,21 +337,30 @@ function get_active_background($roomType)
         $background = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($background) {
-            // Prioritize WebP if a filename is present
+                        // Prefer WebP, otherwise fallback to original extension
             $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
-            // Ensure filename is prefixed with 'background_'
+
+            // Build a list of candidate paths to try, keeping the original name first
+            $candidates = [];
+            $candidates[] = '/images/backgrounds/' . $imageFile;
+            $candidates[] = '/images/' . $imageFile;
+
+            // If not already prefixed, also try with the legacy "background_" prefix
             if (strpos($imageFile, 'background_') !== 0) {
-                $imageFile = 'background_' . $imageFile;
-            }
-            // Determine subdirectory prefix based on project structure
-            $prefix = '/images/';
-
-            // If backgrounds are organized into a backgrounds subfolder, prefer that path
-            if (file_exists(__DIR__ . '/../images/backgrounds/' . $imageFile)) {
-                $prefix = '/images/backgrounds/';
+                $prefixed = 'background_' . $imageFile;
+                $candidates[] = '/images/backgrounds/' . $prefixed;
+                $candidates[] = '/images/' . $prefixed;
             }
 
-            return $prefix . $imageFile;
+            // Return the first candidate that actually exists on disk
+            foreach ($candidates as $relPath) {
+                if (file_exists(__DIR__ . '/..' . $relPath)) {
+                    return $relPath;
+                }
+            }
+
+            // If nothing is found, fall back to first candidate (may 404 but avoids crash)
+            return $candidates[0];
         }
     } catch (Exception $e) {
         error_log('Error fetching active background: ' . $e->getMessage());

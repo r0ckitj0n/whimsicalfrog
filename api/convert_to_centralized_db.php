@@ -10,7 +10,7 @@ require_once __DIR__ . '/../includes/functions.php';
 
 // Security check
 if (!isset($_SESSION)) {
-    session_start();
+    
 }
 
 $isAdmin = false;

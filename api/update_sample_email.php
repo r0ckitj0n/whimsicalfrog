@@ -4,7 +4,7 @@ ob_start();
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
 // Start session to verify admin access
-session_start();
+
 
 // Check if user is admin
 require_once __DIR__ . '/../includes/auth.php';

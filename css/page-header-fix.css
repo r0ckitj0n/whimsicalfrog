@@ -1,0 +1,130 @@
+/* Page Header Z-Index and Gradient Fix - enhanced gradient */
+/* Applied to all pages using the universal page header */
+
+.site-header, .site-header.universal-page-header {
+    /* Ensure header is on top of all content */
+    z-index: var(--z-index-page-header, 9999) !important;
+    
+    /* Consistent black-to-transparent gradient */
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.95) 0%,      /* Almost pure black at very top */
+        rgba(0, 0, 0, 0.85) 25%,     /* Dark fade */
+        rgba(0, 0, 0, 0.4) 70%,     /* More transparent */
+        rgba(0, 0, 0, 0) 100% ) !important;
+    
+    /* Ensure smooth transition and proper positioning */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    
+    /* Remove any bottom border or line */
+    border-bottom: none !important;
+    box-shadow: none !important;
+}
+
+/* Full-height gradient overlay */
+.site-header.universal-page-header::before,
+.site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,0.9) 20%,
+        rgba(0,0,0,0.6) 60%,
+        rgba(0,0,0,0) 100%
+    );
+    pointer-events: none;
+    z-index: -1; /* behind header content but inside header */
+}
+
+/* Ensure header content has proper contrast on gradient */
+.site-header.universal-page-header,
+.site-header.universal-page-header * {
+    color: white !important;
+}
+
+/* Specific fixes for header elements */
+.site-header.universal-page-header .logo-text {
+    color: white !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.site-header.universal-page-header .logo-tagline {
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.site-header.universal-page-header .nav-link {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.site-header.universal-page-header .nav-link:hover {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Search bar styling on gradient background */
+.site-header.universal-page-header .search-bar {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #333 !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.site-header.universal-page-header .search-bar::placeholder {
+    color: rgba(51, 51, 51, 0.6) !important;
+}
+
+/* Cart and user elements */
+.site-header.universal-page-header .cart-link,
+.site-header.universal-page-header .welcome-message {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile menu toggle */
+.site-header.universal-page-header .mobile-menu-toggle {
+    color: white !important;
+}
+
+/* Z-index variable definition */
+:root {
+    --header-height: 110px; /* reserve space for fixed header, matches actual header height */
+    --z-index-page-header: 9999;
+}
+
+/* Ensure body content doesn't overlap with fixed header */
+body:has(.site-header.universal-page-header) {
+    padding-top: var(--header-height, 80px);
+}
+
+/* Room main page specific adjustments */
+.room-bg-landing body,
+.room-bg-room1 body,
+.room-bg-room2 body,
+.room-bg-room3 body,
+.room-bg-room4 body,
+.room-bg-room5 body {
+    padding-top: 0; /* Room pages handle their own spacing */
+}
+
+/* Ensure gradient doesn't interfere with page content */
+.site-header.universal-page-header::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0) 100%
+    );
+    pointer-events: none;
+}

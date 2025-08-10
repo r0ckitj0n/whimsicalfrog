@@ -9,43 +9,51 @@
 
 class DatabaseLogger
 {
-    private static $pdo = null;
-    private static $userId = null;
-    private static $sessionId = null;
-    private static $ipAddress = null;
-    private static $userAgent = null;
+    private static $instance = null;
+    private $pdo = null;
+    private $userId = null;
+    private $sessionId = null;
+    private $ipAddress = null;
+    private $userAgent = null;
 
-    /**
-     * Initialize the database logger
-     */
-    public static function init()
+    private function __construct()
     {
         try {
-            self::$pdo = Database::getInstance();
-            self::$sessionId = session_id();
-            self::$ipAddress = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-            self::$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+            $this->pdo = Database::getInstance();
+            $this->sessionId = session_id();
+            $this->ipAddress = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $this->userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
 
-            // Get current user if available
             if (isset($_SESSION['user']['id'])) {
-                self::$userId = $_SESSION['user']['id'];
+                $this->userId = $_SESSION['user']['id'];
             }
 
-            // Create log tables if they don't exist
-            self::createLogTables();
-
+            $this->createLogTables();
         } catch (Exception $e) {
-            // If database logging fails, fall back to file logging
             error_log("DatabaseLogger init failed: " . $e->getMessage());
+            $this->pdo = null; // Ensure pdo is null on failure
         }
     }
+
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * The init method is now deprecated. Use getInstance() instead.
+     */
+    public static function init() { /* deprecated */ }
 
     /**
      * Create log tables if they don't exist
      */
-    private static function createLogTables()
+    private function createLogTables()
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
@@ -159,7 +167,7 @@ class DatabaseLogger
 
         foreach ($tables as $tableName => $sql) {
             try {
-                self::$pdo->exec($sql);
+                $this->pdo->exec($sql);
             } catch (Exception $e) {
                 error_log("Failed to create table $tableName: " . $e->getMessage());
             }
@@ -169,25 +177,25 @@ class DatabaseLogger
     /**
      * Log page view and user activity
      */
-    public static function logPageView($pageUrl, $eventData = [])
+    public function logPageView($pageUrl, $eventData = [])
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
         try {
-            $stmt = self::$pdo->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO analytics_logs (user_id, session_id, page_url, event_type, event_data, user_agent, ip_address)
                 VALUES (?, ?, ?, 'page_view', ?, ?, ?)
             ");
 
             $stmt->execute([
-                self::$userId,
-                self::$sessionId,
+                $this->userId,
+                $this->sessionId,
                 $pageUrl,
                 json_encode($eventData),
-                self::$userAgent,
-                self::$ipAddress
+                $this->userAgent,
+                $this->ipAddress
             ]);
         } catch (Exception $e) {
             error_log("Failed to log page view: " . $e->getMessage());
@@ -197,27 +205,27 @@ class DatabaseLogger
     /**
      * Log user activity (login, logout, registration, etc.)
      */
-    public static function logUserActivity($activityType, $description, $targetType = null, $targetId = null, $userId = null)
+    public function logUserActivity($activityType, $description, $targetType = null, $targetId = null, $userId = null)
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
         try {
-            $stmt = self::$pdo->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO user_activity_logs (user_id, session_id, activity_type, activity_description, target_type, target_id, ip_address, user_agent)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
-                $userId ?: self::$userId,
-                self::$sessionId,
+                $userId ?: $this->userId,
+                $this->sessionId,
                 $activityType,
                 $description,
                 $targetType,
                 $targetId,
-                self::$ipAddress,
-                self::$userAgent
+                $this->ipAddress,
+                $this->userAgent
             ]);
         } catch (Exception $e) {
             error_log("Failed to log user activity: " . $e->getMessage());
@@ -227,25 +235,25 @@ class DatabaseLogger
     /**
      * Log admin actions
      */
-    public static function logAdminActivity($actionType, $description, $targetType = null, $targetId = null, $adminUserId = null)
+    public function logAdminActivity($actionType, $description, $targetType = null, $targetId = null, $adminUserId = null)
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
         try {
-            $stmt = self::$pdo->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO admin_activity_logs (admin_user_id, action_type, action_description, target_type, target_id, ip_address)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
-                $adminUserId ?: self::$userId,
+                $adminUserId ?: $this->userId,
                 $actionType,
                 $description,
                 $targetType,
                 $targetId,
-                self::$ipAddress
+                $this->ipAddress
             ]);
         } catch (Exception $e) {
             error_log("Failed to log admin activity: " . $e->getMessage());
@@ -255,14 +263,14 @@ class DatabaseLogger
     /**
      * Log application errors
      */
-    public static function logError($level, $message, $file = null, $line = null, $stackTrace = null)
+    public function logError($level, $message, $file = null, $line = null, $stackTrace = null)
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
         try {
-            $stmt = self::$pdo->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO error_logs (error_type, message, file_path, line_number, ip_address, user_agent, user_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
@@ -272,9 +280,9 @@ class DatabaseLogger
                 $message,
                 $file,
                 $line,
-                self::$ipAddress,
-                self::$userAgent,
-                self::$userId
+                $this->ipAddress,
+                $this->userAgent,
+                $this->userId
             ]);
         } catch (Exception $e) {
             error_log("Failed to log error: " . $e->getMessage());
@@ -284,21 +292,21 @@ class DatabaseLogger
     /**
      * Log order activities
      */
-    public static function logOrderActivity($orderId, $action, $message, $previousStatus = null, $newStatus = null, $userId = null, $adminUserId = null)
+    public function logOrderActivity($orderId, $action, $message, $previousStatus = null, $newStatus = null, $userId = null, $adminUserId = null)
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
         try {
-            $stmt = self::$pdo->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO order_logs (order_id, user_id, action, log_message, previous_status, new_status, admin_user_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
                 $orderId,
-                $userId ?: self::$userId,
+                $userId ?: $this->userId,
                 $action,
                 $message,
                 $previousStatus,
@@ -313,14 +321,14 @@ class DatabaseLogger
     /**
      * Log inventory changes
      */
-    public static function logInventoryChange($itemSku, $actionType, $description, $oldQuantity = null, $newQuantity = null, $oldPrice = null, $newPrice = null, $userId = null)
+    public function logInventoryChange($itemSku, $actionType, $description, $oldQuantity = null, $newQuantity = null, $oldPrice = null, $newPrice = null, $userId = null)
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
         try {
-            $stmt = self::$pdo->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO inventory_logs (item_sku, action_type, change_description, old_quantity, new_quantity, old_price, new_price, user_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
@@ -333,7 +341,7 @@ class DatabaseLogger
                 $newQuantity,
                 $oldPrice,
                 $newPrice,
-                $userId ?: self::$userId
+                $userId ?: $this->userId
             ]);
         } catch (Exception $e) {
             error_log("Failed to log inventory change: " . $e->getMessage());
@@ -343,14 +351,14 @@ class DatabaseLogger
     /**
      * Log email sending
      */
-    public static function logEmail($toEmail, $fromEmail, $subject, $emailType, $status = 'sent', $errorMessage = null)
+    public function logEmail($toEmail, $fromEmail, $subject, $emailType, $status = 'sent', $errorMessage = null)
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
         try {
-            $stmt = self::$pdo->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO email_logs (to_email, from_email, subject, email_type, status, error_message)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
@@ -373,24 +381,24 @@ class DatabaseLogger
      */
     public static function logAnalyticsEvent($eventType, $eventData = [])
     {
-        if (!self::$pdo) {
+        if (!$this->pdo) {
             return;
         }
 
         try {
-            $stmt = self::$pdo->prepare("
+            $stmt = $this->pdo->prepare("
                 INSERT INTO analytics_logs (user_id, session_id, page_url, event_type, event_data, user_agent, ip_address)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
-                self::$userId,
-                self::$sessionId,
+                $this->userId,
+                $this->sessionId,
                 $_SERVER['REQUEST_URI'] ?? 'unknown',
                 $eventType,
                 json_encode($eventData),
-                self::$userAgent,
-                self::$ipAddress
+                $this->userAgent,
+                $this->ipAddress
             ]);
         } catch (Exception $e) {
             error_log("Failed to log analytics event: " . $e->getMessage());
@@ -401,7 +409,7 @@ class DatabaseLogger
 // Auto-initialize if database is available
 if (class_exists('Database')) {
     try {
-        DatabaseLogger::init();
+        DatabaseLogger::getInstance()->logError('INFO', 'DatabaseLogger initialized');
     } catch (Exception $e) {
         // Fail silently if database is not available
     }
@@ -427,7 +435,7 @@ function whimsicalfrog_error_handler($severity, $message, $file, $line)
             break;
     }
 
-    DatabaseLogger::logError($errorLevel, $message, $file, $line);
+    DatabaseLogger::getInstance()->logError($errorLevel, $message, $file, $line);
 
     // Don't prevent normal error handling
     return false;
@@ -436,16 +444,11 @@ function whimsicalfrog_error_handler($severity, $message, $file, $line)
 // Global exception handler
 function whimsicalfrog_exception_handler($exception)
 {
-    DatabaseLogger::logError(
-        'CRITICAL',
-        $exception->getMessage(),
-        $exception->getFile(),
-        $exception->getLine(),
-        $exception->getTraceAsString()
-    );
+    $logger = DatabaseLogger::getInstance();
+    $logger->logError('ERROR', 'Uncaught exception: ' . $exception->getMessage() . ' in ' . $exception->getFile() . ' on line ' . $exception->getLine());
 }
 
 // Set error and exception handlers
 set_error_handler('whimsicalfrog_error_handler');
 set_exception_handler('whimsicalfrog_exception_handler');
-?> 
+?>

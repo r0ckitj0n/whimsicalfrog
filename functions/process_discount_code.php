@@ -1,6 +1,6 @@
 <?php
 
-session_start();
+
 
 // Set error reporting for debugging
 ini_set('display_errors', 1);

@@ -10,7 +10,7 @@ require_once 'ai_providers.php';
 header('Content-Type: application/json');
 
 // Check if user is admin
-session_start();
+
 
 // Security Check: Ensure user is logged in and is an Admin
 $isLoggedIn = isset($_SESSION['user']);

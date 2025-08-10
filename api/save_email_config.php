@@ -71,7 +71,7 @@ function handleTestEmail()
     // Log the test email
     try {
         require_once 'email_logger.php';
-        session_start();
+        
         $createdBy = $_SESSION['user']['userId'] ?? $_SESSION['user']['username'] ?? 'admin';
 
         if ($success) {

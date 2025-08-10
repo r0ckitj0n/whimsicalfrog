@@ -1,7 +1,7 @@
 <?php
 // Admin Inventory Management Section
-ob_start();
-error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
+
+
 
 // Authentication check handled by index.php before including this file
 
@@ -122,8 +122,7 @@ $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 
 ?>
-<!- Load CSS utilities for comprehensive styling ->
-<link rel="stylesheet" href="css/button-styles.css">
+
 
 
 <div class="admin-content-container">
@@ -133,9 +132,7 @@ $messageType = $_GET['type'] ?? '';
     </div>
 
     <div class="admin-filter-section">
-        <form method="GET" action="" class="admin-filter-form">
-            <input type="hidden" name="page" value="admin">
-            <input type="hidden" name="section" value="inventory">
+        <form method="GET" action="/admin/inventory" class="admin-filter-form">
             <input type="text" name="search" placeholder="Search..." class="admin-form-input" value="<?= htmlspecialchars($filters['search'] ?? ''); ?>">
             <select name="category" class="admin-form-select">
                 <option value="">All Categories</option>
@@ -150,8 +147,8 @@ $messageType = $_GET['type'] ?? '';
                 <option value="in" <?= ($filters['stock'] === 'in') ? 'selected' : ''; ?>>In Stock</option>
             </select>
             <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
-            <button type="button" onclick="refreshCategoryDropdown().then(() => showSuccess( 'Categories refreshed!'))" class="btn btn-secondary admin-filter-button" title="Refresh Categories">🔄</button>
-            <a href="?page=admin&section=inventory&add=1" class="btn btn-primary admin-filter-button">Add New Item</a>
+            <button type="button" data-action="refresh-categories" class="btn btn-secondary admin-filter-button" title="Refresh Categories">🔄</button>
+            <a href="/admin/inventory?add=1" class="btn btn-primary admin-filter-button">Add New Item</a>
         </form>
     </div>
     
@@ -194,9 +191,9 @@ $messageType = $_GET['type'] ?? '';
                         <td class="editable" data-field="retailPrice">$<?= number_format(floatval($item['retailPrice'] ?? 0), 2) ?></td>
                         <td>
                             <div class="flex space-x-2">
-                                <a href="?page=admin&section=inventory&view=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="text-blue-600 hover:text-blue-800" title="View Item">👁️</a>
-                                <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="text-green-600 hover:text-green-800" title="Edit Item">✏️</a>
-                                <button class="text-red-600 hover:text-red-800 delete-item" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" title="Delete Item">🗑️</button>
+                                <a href="/admin/inventory?view=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="text-blue-600 hover:text-blue-800" title="View Item">👁️</a>
+                                <a href="/admin/inventory?edit=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="text-green-600 hover:text-green-800" title="Edit Item">✏️</a>
+                                <button data-action="delete-item" class="text-red-600 hover:text-red-800" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" title="Delete Item">🗑️</button>
                             </div>
                         </td>
                     </tr>
@@ -211,16 +208,15 @@ $messageType = $_GET['type'] ?? '';
             <?php for ($p = 1; $p <= $totalPages; $p++): ?>
                 <?php
                     // Preserve existing filters in pagination links
-                    $query = http_build_query([
-                        'page' => 'admin',
-                        'section' => 'inventory',
+                    $queryParams = [
                         'pageNum' => $p,
                         'search' => $filters['search'] ?? '',
                         'category' => $filters['category'] ?? '',
                         'stock' => $filters['stock'] ?? ''
-                    ]);
+                    ];
+                    $queryString = http_build_query(array_filter($queryParams));
                 ?>
-                <a href="?<?= $query ?>"
+                <a href="/admin/inventory?<?= $queryString ?>"
                    class="px-3 py-1 rounded text-sm <?= ($p == $currentPage) ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' ?>">
                     <?= $p ?>
                 </a>
@@ -232,12 +228,12 @@ $messageType = $_GET['type'] ?? '';
 <?php if ($modalMode === 'view' && $editItem): ?>
 <div class="modal-outer" id="inventoryModalOuter">
     <!- Navigation Arrows ->
-    <button id="prevItemBtn" onclick="navigateToItem('prev')" class="nav-arrow left" title="Previous item">
+    <button id="prevItemBtn" data-action="navigate-item" data-direction="prev" class="nav-arrow left" title="Previous item">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
         </svg>
     </button>
-    <button id="nextItemBtn" onclick="navigateToItem('next')" class="nav-arrow right" title="Next item">
+    <button id="nextItemBtn" data-action="navigate-item" data-direction="next" class="nav-arrow right" title="Next item">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
         </svg>
@@ -246,7 +242,7 @@ $messageType = $_GET['type'] ?? '';
     <div class="modal-content-wrapper">
         <div class="flex justify-between items-center">
             <h2 class="text-lg font-bold text-green-700">View Item: <?= htmlspecialchars($editItem['name'] ?? 'N/A') ?></h2>
-            <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
+            <a href="/admin/inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
         <div class="modal-form-container gap-5">
@@ -418,12 +414,12 @@ $messageType = $_GET['type'] ?? '';
 <div class="modal-outer" id="inventoryModalOuter">
     <!- Navigation Arrows (only show for edit mode, not add mode) ->
     <?php if ($modalMode === 'edit'): ?>
-    <button id="prevItemBtn" onclick="navigateToItem('prev')" class="nav-arrow left" title="Previous item">
+    <button id="prevItemBtn" data-action="navigate-item" data-direction="prev" class="nav-arrow left" title="Previous item">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
         </svg>
     </button>
-    <button id="nextItemBtn" onclick="navigateToItem('next')" class="nav-arrow right" title="Next item">
+    <button id="nextItemBtn" data-action="navigate-item" data-direction="next" class="nav-arrow right" title="Next item">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
         </svg>
@@ -433,7 +429,7 @@ $messageType = $_GET['type'] ?? '';
     <div class="modal-content-wrapper">
         <div class="flex justify-between items-center">
             <h2 class="text-lg font-bold text-green-700"><?= $modalMode === 'add' ? 'Add New Inventory Item' : 'Edit Item (' . htmlspecialchars($editItem['name'] ?? 'N/A') . ')' ?></h2>
-            <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
+            <a href="/admin/inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
         <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col overflow-y-auto" onsubmit="return validateGenderSizeColorRequirements(event)">
@@ -556,7 +552,7 @@ $messageType = $_GET['type'] ?? '';
                             <div id="currentImagesContainer" class="current-images-section">
                                 <div class="flex justify-between items-center">
                                     <div class="text-sm text-gray-600">Current Images:</div>
-                                    <button type="button" id="processExistingImagesBtn" onclick="processExistingImagesWithAI()" class="bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors"  data-tooltip="Let AI automatically crop all existing images to their edges and convert them to WebP format. Because apparently manually cropping photos is too much work for you.">
+                                    <button type="button" id="processExistingImagesBtn" data-action="process-images-ai" class="bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors"  data-tooltip="Let AI automatically crop all existing images to their edges and convert them to WebP format. Because apparently manually cropping photos is too much work for you.">
                                         🎨 AI Process All
                                     </button>
                                 </div>
@@ -567,18 +563,18 @@ $messageType = $_GET['type'] ?? '';
                             
                             <!- Multi-Image Upload Section - Only show in edit/add mode ->
                             <div class="multi-image-upload-section" >
-                                <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden">
+                                <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden" data-action="multi-image-upload">
                                 <?php if ($modalMode === 'add'): ?>
-                                <input type="file" id="aiAnalysisUpload" accept="image/*" class="hidden">
+                                <input type="file" id="aiAnalysisUpload" accept="image/*" class="hidden" data-action="ai-upload">
                                 <?php endif; ?>
                                 <div class="upload-controls">
                                     <div class="flex gap-2 flex-wrap">
                                         <?php if ($modalMode === 'add'): ?>
-                                        <button type="button" onclick="document.getElementById('aiAnalysisUpload').click()" class="bg-purple-500 text-white rounded hover:bg-purple-600 text-sm">
+                                        <button type="button" data-action="trigger-upload" data-target="aiAnalysisUpload" class="bg-purple-500 text-white rounded hover:bg-purple-600 text-sm">
                                             🤖 Upload Photo for AI Analysis
                                         </button>
                                         <?php endif; ?>
-                                        <button type="button" onclick="document.getElementById('multiImageUpload').click()" class="bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                                        <button type="button" data-action="trigger-upload" data-target="multiImageUpload" class="bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                                             📁 Upload Images
                                         </button>
                                     </div>
@@ -622,13 +618,13 @@ $messageType = $_GET['type'] ?? '';
                                             </div>
                                         </div>
                                         <div class="flex space-x-2">
-                                            <button type="button" onclick="analyzeStructure()" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium">
+                                            <button type="button" data-action="analyze-structure" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium">
                                                 🔍 Analyze Current Structure
                                             </button>
-                                            <button type="button" onclick="showRestructureModal()" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium">
+                                            <button type="button" data-action="show-restructure-modal" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium">
                                                 🎯 Restructure System
                                             </button>
-                                            <button type="button" onclick="showNewStructureView()" class="bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
+                                            <button type="button" data-action="show-new-structure-view" class="bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
                                                 👀 View New Structure
                                             </button>
                                         </div>
@@ -654,7 +650,7 @@ $messageType = $_GET['type'] ?? '';
                                 </h3>
                                 
                                 <div class="button-with-badge w-full">
-                                    <button type="button" onclick="useSuggestedCost()" class="w-full bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" 
+                                    <button type="button" data-action="use-suggested-cost" class="w-full bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" 
                                             id="get-suggested-cost-btn" data-tooltip="Let AI analyze your item and suggest cost breakdown including materials, labor, energy, and equipment. Because apparently calculating costs is rocket science now.">
                                         🧮 Get Suggested Cost
                                     </button>
@@ -670,7 +666,7 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                                 
                                 <div class="">
-                                    <button type="button" onclick="applyCostSuggestionToCost()" class="w-full bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                                    <button type="button" data-action="apply-cost-suggestion" class="w-full bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
                                             id="apply-suggested-cost-btn" data-tooltip="Take the AI-suggested cost and put it in your cost field. For when you trust robots more than your own business judgment.">
                                         💰 Apply to Cost Field
                                     </button>
@@ -680,7 +676,7 @@ $messageType = $_GET['type'] ?? '';
                                 <div class="bg-blue-50 border border-blue-200 rounded-lg">
                                     <div class="flex items-center justify-between">
                                         <h4 class="font-medium text-blue-800 text-sm">📋 Cost Templates</h4>
-                                        <button type="button" onclick="toggleTemplateSection()" class="text-blue-600 hover:text-blue-800 text-xs">
+                                        <button type="button" data-action="toggle-template-section" class="text-blue-600 hover:text-blue-800 text-xs">
                                             <span id="templateToggleText">Show Templates</span>
                                         </button>
                                     </div>
@@ -691,7 +687,7 @@ $messageType = $_GET['type'] ?? '';
                                             <select id="templateSelect" class="flex-1 border border-blue-300 rounded text-xs">
                                                 <option value="">Choose a template...</option>
                                             </select>
-                                            <button type="button" onclick="loadTemplate()" class="bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                                            <button type="button" data-action="load-template" class="bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
                                                 Load
                                             </button>
                                         </div>
@@ -699,7 +695,7 @@ $messageType = $_GET['type'] ?? '';
                                         <!- Save Template ->
                                         <div class="flex gap-2">
                                             <input type="text" id="templateName" placeholder="Template name..." class="flex-1 border border-blue-300 rounded text-xs">
-                                            <button type="button" onclick="saveAsTemplate()" class="bg-green-600 text-white rounded text-xs hover:bg-green-700">
+                                            <button type="button" data-action="save-as-template" class="bg-green-600 text-white rounded text-xs hover:bg-green-700">
                                                 Save as Template
                                             </button>
                                         </div>
@@ -716,7 +712,7 @@ $messageType = $_GET['type'] ?? '';
                                     <div class="" id="<?= $costType; ?>List" >
                                         <!- Cost items will be rendered here by JavaScript ->
                                     </div>
-                                    <button type="button" class="add-cost-btn" onclick="addCostItem('<?= $costType; ?>')" 
+                                    <button type="button" class="add-cost-btn" data-action="add-cost-item" data-cost-type="<?= $costType; ?>" 
                                             id="add-<?= $costType; ?>-btn" data-tooltip="<?php
                                                 $tooltips = [
                                                     'materials' => 'Add raw materials and supplies to your cost breakdown. Wood, fabric, glue, tears of frustration - whatever goes into making your product.',
@@ -751,7 +747,7 @@ $messageType = $_GET['type'] ?? '';
                                 </h3>
                                 
                                 <div class="button-with-badge w-full">
-                                    <button type="button" onclick="useSuggestedPrice()" class="w-full bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium"
+                                    <button type="button" data-action="use-suggested-price" class="w-full bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium"
                                             id="get-suggested-price-btn" data-tooltip="Let AI analyze your item and suggest optimal pricing based on cost analysis, market research, and competitive analysis. Because apparently setting prices is too complicated for humans now.">
                                         🎯 Get Suggested Price
                                     </button>
@@ -769,7 +765,7 @@ $messageType = $_GET['type'] ?? '';
                                         </div>
                                     </div>
                                     
-                                    <button type="button" onclick="applyPriceSuggestion()" class="w-full bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                                    <button type="button" data-action="apply-price-suggestion" class="w-full bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
                                             id="apply-suggested-price-btn" data-tooltip="Take the AI-suggested price and put it in your price field. Let the robots do your pricing - what could go wrong?">
                                         Apply to Retail Price
                                     </button>
@@ -830,7 +826,7 @@ $messageType = $_GET['type'] ?? '';
                                 <h4 class="text-md font-semibold text-gray-700 flex items-center">
                                     <span class="">👥</span> Gender Options
                                 </h4>
-                                <button type="button" onclick="addItemGender()" class="text-white rounded text-sm transition-colors"  onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                <button type="button" data-action="add-item-gender" class="text-white rounded text-sm transition-colors">
                                     + Add Gender
                                 </button>
                             </div>
@@ -845,7 +841,7 @@ $messageType = $_GET['type'] ?? '';
                                 <h4 class="text-md font-semibold text-gray-700 flex items-center">
                                     <span class="">📏</span> Size Options
                                 </h4>
-                                <button type="button" onclick="addItemSize()" class="text-white rounded text-sm transition-colors"  onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                                <button type="button" data-action="add-item-size" class="text-white rounded text-sm transition-colors">
                                     + Add Size
                                 </button>
                             </div>
@@ -861,10 +857,10 @@ $messageType = $_GET['type'] ?? '';
                                     <span class="">🎨</span> Color Options
                                 </h4>
                                 <div class="flex space-x-2">
-                                    <button type="button" onclick="matchImageToColor()" class="bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
+                                    <button type="button" data-action="match-image-to-color" class="bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
                                         🖼️ Match Image
                                     </button>
-                                    <button type="button" onclick="addItemColor()" class="text-white rounded text-xs" >
+                                    <button type="button" data-action="add-item-color" class="text-white rounded text-xs" >
                                         + Add Color
                                     </button>
                                 </div>
@@ -901,7 +897,7 @@ $messageType = $_GET['type'] ?? '';
     <div class="cost-modal-content">
         <div class="flex justify-between items-center">
             <h3 id="costFormTitle" class="text-md font-semibold text-gray-700">Edit Cost Item</h3>
-            <button type="button" class="text-gray-500 hover:text-gray-700 text-2xl leading-none" onclick="closeCostModal()">&times;</button>
+            <button type="button" class="text-gray-500 hover:text-gray-700 text-2xl leading-none" data-action="close-cost-modal">&times;</button>
         </div>
         <form id="costForm" class="space-y-3">
             <input type="hidden" id="costItemId" value="">
@@ -921,7 +917,7 @@ $messageType = $_GET['type'] ?? '';
             <div class="flex justify-between items-center">
                 <button type="button" id="deleteCostItem" class="py-1\.5 bg-red-500 text-white rounded hover:bg-red-600 text-sm hidden">Delete</button>
                 <div class="flex space-x-2">
-                    <button type="button" class="py-1\.5 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm" onclick="closeCostModal()">Cancel</button>
+                    <button type="button" class="py-1\.5 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm" data-action="close-cost-modal">Cancel</button>
                     <button type="submit" class="brand-button py-1\.5 rounded text-sm">Save</button>
                 </div>
             </div>
@@ -952,7 +948,7 @@ $messageType = $_GET['type'] ?? '';
                 <h2 class="text-xl font-bold text-white">🎯 Marketing Manager</h2>
                 <span class="text-green-100 text-sm font-medium bg-green-800 bg-opacity-30 rounded">Currently editing: <span id="currentEditingSku"></span></span>
             </div>
-            <button onclick="closeMarketingManager()" class="modal-close">&times;</button>
+            <button data-action="close-marketing-manager" class="modal-close">&times;</button>
         </div>
         
         <!- Tab Navigation ->
@@ -962,11 +958,21 @@ $messageType = $_GET['type'] ?? '';
                     <!- Primary image will be loaded here ->
                 </div>
                 <div class="flex space-x-4 overflow-x-auto">
-                    <button id="contentTab" class="css-category-tab active" onclick="showMarketingManagerTab('content')">📝 Content</button>
-                    <button id="audienceTab" class="css-category-tab" onclick="showMarketingManagerTab('audience')">👥 Target Audience</button>
-                    <button id="sellingTab" class="css-category-tab" onclick="showMarketingManagerTab('selling')">⭐ Selling Points</button>
-                    <button id="seoTab" class="css-category-tab" onclick="showMarketingManagerTab('seo')">🔍 SEO & Keywords</button>
-                    <button id="conversionTab" class="css-category-tab" onclick="showMarketingManagerTab('conversion')">💰 Conversion</button>
+                    <button id="contentTab" data-action="show-marketing-tab" class="css-category-tab active" data-tab="content">
+                        📝 Content
+                    </button>
+                    <button id="audienceTab" data-action="show-marketing-tab" class="css-category-tab" data-tab="audience">
+                        👥 Target Audience
+                    </button>
+                    <button id="sellingTab" data-action="show-marketing-tab" class="css-category-tab" data-tab="selling">
+                        ⭐ Selling Points
+                    </button>
+                    <button id="seoTab" data-action="show-marketing-tab" class="css-category-tab" data-tab="seo">
+                        🔍 SEO & Keywords
+                    </button>
+                    <button id="conversionTab" data-action="show-marketing-tab" class="css-category-tab" data-tab="conversion">
+                        💰 Conversion
+                    </button>
                 </div>
             </div>
         </div>
@@ -989,12 +995,12 @@ $messageType = $_GET['type'] ?? '';
         <!- Footer ->
         <div class="modal-footer">
             <div class="flex space-x-3">
-                <button onclick="applyMarketingToItem()" 
+                <button data-action="apply-marketing-to-item" 
                         class="text-sm font-medium text-white rounded-md transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                         >
                     📝 Apply to Item
                 </button>
-                <button onclick="closeMarketingManager()" 
+                <button data-action="close-marketing-manager" 
                         class="text-sm font-medium text-white rounded-md transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                         >
                     ✓ Close
@@ -1010,7 +1016,7 @@ $messageType = $_GET['type'] ?? '';
         <!- Fixed Header ->
         <div class="admin-modal-header" >
             <h2 class="modal-title">🤖 AI Content Comparison & Selection</h2>
-            <button onclick="closeAIComparisonModal()" class="modal-close">&times;</button>
+            <button data-action="close-ai-comparison-modal" class="modal-close">&times;</button>
         </div>
         
         <!- AI Analysis Progress Section (Collapsible) ->
@@ -1063,10 +1069,10 @@ $messageType = $_GET['type'] ?? '';
                     <span id="statusText"></span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="applySelectedChanges()" id="applyChangesBtn" class="bg-green-600 hover:bg-green-700 text-white rounded font-medium hidden">
+                    <button data-action="apply-selected-changes" id="applyChangesBtn" class="bg-green-600 hover:bg-green-700 text-white rounded font-medium hidden">
                         Apply Selected Changes
                     </button>
-                    <button onclick="closeAIComparisonModal()" class="modal-button btn btn-secondary">
+                    <button data-action="close-ai-comparison-modal" class="modal-button btn btn-secondary">
                         Close
                     </button>
                 </div>
@@ -1081,7 +1087,7 @@ $messageType = $_GET['type'] ?? '';
         <h2 class="text-md font-bold text-red-600">Delete Cost Item</h2>
         <p class="text-sm text-gray-600" id="deleteCostConfirmText">Are you sure you want to delete this cost item? This action cannot be undone.</p>
         <div class="flex justify-end space-x-2">
-            <button type="button" class="py-1\.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" onclick="closeCostDeleteModal()">Cancel</button>
+            <button type="button" class="py-1\.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" data-action="close-cost-delete-modal">Cancel</button>
             <button type="button" id="confirmCostDeleteBtn" class="py-1\.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
                 <span class="button-text">Delete</span>
                 <span class="loading-spinner hidden">⏳</span>
@@ -1089,775 +1095,6 @@ $messageType = $_GET['type'] ?? '';
         </div>
     </div>
 </div>
-
-
-<script>
-// Initialize variables
-var modalMode = <?= json_encode($modalMode ?? '') ?>;
-        var currentItemSku = <?= json_encode(isset($editItem['sku']) ? $editItem['sku'] : '') ?>;
-var costBreakdown = <?= ($modalMode === 'edit' && isset($editCostBreakdown) && $editCostBreakdown) ? json_encode($editCostBreakdown) : 'null' ?>;
-
-    // Initialize global categories array
-    window.inventoryCategories = <?= json_encode($categories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?> || [];
-    
-    // AI Analysis functionality for new items
-    document.addEventListener('DOMContentLoaded', function() {
-        const aiUpload = document.getElementById('aiAnalysisUpload');
-        if (aiUpload) {
-            aiUpload.addEventListener('change', handleAIAnalysisUpload);
-        }
-    });
-    
-    async function handleAIAnalysisUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        // Show loading state
-        const aiMessage = document.getElementById('aiCategoryMessage');
-        if (aiMessage) {
-            aiMessage.innerHTML = '🔄 Analyzing image with AI... This may take a moment.';
-            aiMessage.className = 'mt-1 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800';
-        }
-        
-        try {
-            const formData = new FormData();
-            formData.append('image', file);
-            
-            const response = await fetch('/api/ai_item_analysis.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (result.success && result.analysis) {
-                // Populate form fields with AI analysis
-                const analysis = result.analysis;
-                
-                // Set SKU
-                const skuField = document.getElementById('skuEdit');
-                if (skuField) skuField.value = analysis.suggested_sku || '';
-                
-                // Set title/name
-                const nameField = document.getElementById('name');
-                if (nameField) nameField.value = analysis.title || '';
-                
-                // Set description
-                const descField = document.getElementById('description');
-                if (descField) descField.value = analysis.description || '';
-                
-                // Set category and show the dropdown
-                const categoryField = document.getElementById('categoryEdit');
-                if (categoryField) {
-                    // Add new category option if it doesn't exist
-                    const categoryExists = Array.from(categoryField.options).some(option => option.value === analysis.category);
-                    if (!categoryExists && analysis.category) {
-                        const newOption = document.createElement('option');
-                        newOption.value = analysis.category;
-                        newOption.textContent = analysis.category;
-                        categoryField.appendChild(newOption);
-                    }
-                    
-                    categoryField.value = analysis.category || '';
-                    categoryField.style.display = 'block';
-                }
-                
-                // Update AI message with success
-                if (aiMessage) {
-                    aiMessage.innerHTML = `✅ AI Analysis Complete! Category: <strong>${analysis.category}</strong>, Confidence: ${analysis.confidence}. You can now edit any details before saving.`;
-                    aiMessage.className = 'mt-1 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-800';
-                }
-                
-                // Show edit item modal with pre-filled data
-                showSuccess( 'AI analysis complete! Review and edit the generated details.');
-                
-            } else {
-                throw new Error(result.error || 'AI analysis failed');
-            }
-            
-        } catch (error) {
-            console.error('AI analysis error:', error);
-            if (aiMessage) {
-                aiMessage.innerHTML = `❌ AI analysis failed: ${error.message}. Please fill in the details manually.`;
-                aiMessage.className = 'mt-1 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800';
-            }
-            showError( 'AI analysis failed: ' + error.message);
-        }
-    }
-
-// Initialize items list for navigation
-var allItems = <?= json_encode(array_values($items)) ?>;
-var currentItemIndex = -1;
-
-// Find current item index if we're in view/edit mode
-if (currentItemSku && allItems.length > 0) {
-    currentItemIndex = allItems.findIndex(item => item.sku === currentItemSku);
-}
-
-// Helper function to check if current AI model supports images
-async function checkAIImageSupport() {
-    try {
-        const response = await fetch('/api/get_ai_model_capabilities.php?action=get_current');
-        const data = await response.json();
-        return data.success && data.supports_images;
-    } catch (error) {
-        console.error('Error checking AI image support:', error);
-        return false;
-    }
-}
-
-// Navigation functions
-function navigateToItem(direction) {
-    if (allItems.length === 0) return;
-    
-    let newIndex = currentItemIndex;
-    
-    if (direction === 'prev') {
-        newIndex = currentItemIndex > 0 ? currentItemIndex - 1 : allItems.length - 1;
-    } else if (direction === 'next') {
-        newIndex = currentItemIndex < allItems.length - 1 ? currentItemIndex + 1 : 0;
-    }
-    
-    if (newIndex !== currentItemIndex && newIndex >= 0 && newIndex < allItems.length) {
-        const targetItem = allItems[newIndex];
-        const currentMode = modalMode === 'view' ? 'view' : 'edit';
-        let newUrl = `?page=admin&section=inventory&${currentMode}=${encodeURIComponent(targetItem.sku)}`;
-        
-        // Preserve any existing search/filter parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('search')) newUrl += `&search=${encodeURIComponent(urlParams.get('search'))}`;
-        if (urlParams.get('category')) newUrl += `&category=${encodeURIComponent(urlParams.get('category'))}`;
-        if (urlParams.get('stock')) newUrl += `&stock=${encodeURIComponent(urlParams.get('stock'))}`;
-        
-        window.location.href = newUrl;
-    }
-}
-
-// Update navigation button states
-function updateNavigationButtons() {
-    const prevBtn = document.getElementById('prevItemBtn');
-    const nextBtn = document.getElementById('nextItemBtn');
-    
-    if (prevBtn && nextBtn && allItems.length > 0) {
-        // Always enable buttons for circular navigation
-        prevBtn.style.display = 'block';
-        nextBtn.style.display = 'block';
-        
-        // Add item counter to buttons for better UX
-        const itemCounter = `${currentItemIndex + 1} of ${allItems.length}`;
-        const currentItem = allItems[currentItemIndex];
-        const prevIndex = currentItemIndex > 0 ? currentItemIndex - 1 : allItems.length - 1;
-        const nextIndex = currentItemIndex < allItems.length - 1 ? currentItemIndex + 1 : 0;
-        const prevItem = allItems[prevIndex];
-        const nextItem = allItems[nextIndex];
-        
-        prevBtn.title = `Previous: ${prevItem?.name || 'Unknown'} (${itemCounter})`;
-        nextBtn.title = `Next: ${nextItem?.name || 'Unknown'} (${itemCounter})`;
-    }
-}
-
-// Keyboard navigation
-document.addEventListener('keydown', function(e) {
-    // Only activate in modal mode and when not typing in input fields
-    if ((modalMode === 'view' || modalMode === 'edit') && 
-        !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
-        
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-            e.preventDefault();
-            navigateToItem('prev');
-        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            navigateToItem('next');
-        }
-    }
-});
-
-// Define image management functions first
-function setPrimaryImage(sku, imageId) {fetch('/api/set_primary_image.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            sku: sku,
-            imageId: imageId
-        })
-    })
-    .then(response => {return response.text(); // Get as text first to see what we're getting
-    })
-    .then(text => {try {
-            const data = JSON.parse(text);
-            if (data.success) {
-                showSuccess( 'Primary image updated');
-                loadCurrentImages(sku);
-            } else {
-                showError( data.error || 'Failed to set primary image');
-            }
-        } catch (e) {
-            console.error('Failed to parse JSON:', e);
-            showError( 'Server returned invalid response: ' + text.substring(0, 100));
-        }
-    })
-    .catch(error => {
-        console.error('Error setting primary image:', error);
-        showError( 'Failed to set primary image');
-    });
-}
-
-function deleteItemImage(imageId, sku) {// Show custom confirmation modal
-    showImageDeleteConfirmation(imageId, sku);
-}
-
-function showImageDeleteConfirmation(imageId, sku) {
-    // Create modal overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.id = 'imageDeleteModal';
-    
-    // Create modal content
-    overlay.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-sm">
-            <div class="flex items-center">
-                <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                    </svg>
-                </div>
-                <div class="">
-                    <h3 class="text-lg font-medium text-gray-900">Delete Image</h3>
-                    <p class="text-sm text-gray-500">This action cannot be undone.</p>
-                </div>
-            </div>
-                            <p class="text-gray-700">Are you sure you want to delete this image? It will be permanently removed from the item.</p>
-            <div class="flex justify-end space-x-3">
-                <button type="button" onclick="closeImageDeleteModal()" class="text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-                    Cancel
-                </button>
-                <button type="button" onclick="confirmImageDelete(${imageId}, '${sku}')" class="text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                    Delete Image
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(overlay);
-    
-    // Close on overlay click
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            closeImageDeleteModal();
-        }
-    });
-    
-    // Close on escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeImageDeleteModal();
-        }
-    });
-}
-
-function closeImageDeleteModal() {
-    const modal = document.getElementById('imageDeleteModal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-function confirmImageDelete(imageId, sku) {// Close the modal
-    closeImageDeleteModal();
-    
-    // Proceed with deletion
-    fetch('/api/delete_item_image.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-            imageId: imageId
-        })
-    })
-    .then(response => {return response.text(); // Get as text first to see what we're getting
-    })
-    .then(text => {try {
-            const data = JSON.parse(text);
-            if (data.success) {
-                showSuccess( 'Image deleted');
-                loadCurrentImages(sku);
-            } else {
-                showError( data.error || 'Failed to delete image');
-            }
-        } catch (e) {
-            console.error('Failed to parse JSON:', e);
-            showError( 'Server returned invalid response: ' + text.substring(0, 100));
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting image:', error);
-        showError( 'Failed to delete image');
-    });
-}
-
-// Make functions globally accessible immediately
-window.setPrimaryImage = setPrimaryImage;
-window.deleteItemImage = deleteItemImage;
-
-// Debug function availability// Add event delegation for image action buttons
-document.addEventListener('click', function(e) {
-    if (e.target.dataset.action === 'set-primary') {
-        e.preventDefault();
-        const sku = e.target.dataset.sku;
-        const imageId = e.target.dataset.imageId;setPrimaryImage(sku, imageId);
-    } else if (e.target.dataset.action === 'delete-image') {
-        e.preventDefault();
-        const sku = e.target.dataset.sku;
-        const imageId = e.target.dataset.imageId;deleteItemImage(imageId, sku);
-    }
-});
-
-// Using global notification system - no custom showToast needed
-
-// Styled confirmation dialog
-function showStyledConfirm(title, message, confirmText = 'Confirm', cancelText = 'Cancel') {
-    return new Promise((resolve) => {
-        // Remove any existing confirmation modal
-        const existingModal = document.getElementById('styled-confirm-modal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-        
-        // Create the modal
-        const modal = document.createElement('div');
-        modal.id = 'styled-confirm-modal';
-        modal.className = 'modal-overlay';
-        modal.style.zIndex = '999999';
-        
-        modal.innerHTML = `
-            <div class="modal-content" >
-                <div class="modal-header">
-                    <h3 >${title}</h3>
-                </div>
-                <div class="modal-body">
-                    <p >${message}</p>
-                    <div >
-                        <button id="styled-confirm-cancel" class="btn btn-secondary" >
-                            ${cancelText}
-                        </button>
-                        <button id="styled-confirm-ok" class="btn btn-primary" >
-                            ${confirmText}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Add event listeners
-        document.getElementById('styled-confirm-cancel').addEventListener('click', () => {
-            modal.remove();
-            resolve(false);
-        });
-        
-        document.getElementById('styled-confirm-ok').addEventListener('click', () => {
-            modal.remove();
-            resolve(true);
-        });
-        
-        // Close on overlay click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-                resolve(false);
-            }
-        });
-        
-        // Show the modal
-        setTimeout(() => {
-            modal.classList.add('show');
-        }, 10);
-    });
-}
-
-function addCostItem(type) {
-    document.getElementById('costForm').reset();
-    document.getElementById('costItemId').value = '';
-    document.getElementById('costItemType').value = type;
-    document.getElementById('costFormTitle').textContent = `Add ${type.charAt(0).toUpperCase() + type.slice(1)} Cost`;
-
-    const materialNameField = document.getElementById('materialNameField');
-    const genericDescriptionField = document.getElementById('genericDescriptionField');
-
-    if (type === 'materials') {
-        materialNameField.style.display = 'block';
-        genericDescriptionField.style.display = 'none';
-    } else {
-        materialNameField.style.display = 'none';
-        genericDescriptionField.style.display = 'block';
-    }
-    document.getElementById('deleteCostItem').classList.add('hidden');
-    document.getElementById('costFormModal').classList.add('show');
-}
-
-function editCostItem(type, id) {
-    if (!costBreakdown || !costBreakdown[type]) {
-        showError( 'Cost breakdown data not available.');
-        return;
-    }
-    const item_cost = costBreakdown[type].find(i => String(i.id) === String(id));
-    if (!item_cost) {
-        showError( 'Cost item not found.');
-        return;
-    }
-    document.getElementById('costForm').reset();
-    document.getElementById('costItemId').value = item_cost.id;
-    document.getElementById('costItemType').value = type;
-    document.getElementById('costItemCost').value = item_cost.cost;
-    document.getElementById('costFormTitle').textContent = `Edit ${type.charAt(0).toUpperCase() + type.slice(1)} Cost`;
-
-    const materialNameField = document.getElementById('materialNameField');
-    const genericDescriptionField = document.getElementById('genericDescriptionField');
-
-    if (type === 'materials') {
-        materialNameField.style.display = 'block';
-        genericDescriptionField.style.display = 'none';
-        document.getElementById('costItemName').value = item_cost.name || '';
-    } else {
-        materialNameField.style.display = 'none';
-        genericDescriptionField.style.display = 'block';
-        document.getElementById('costItemDescription').value = item_cost.description || '';
-    }
-    document.getElementById('deleteCostItem').classList.remove('hidden');
-    document.getElementById('costFormModal').classList.add('show');
-}
-
-function saveCostItem() { // Called by costForm submit
-    const id = document.getElementById('costItemId').value;
-    const type = document.getElementById('costItemType').value;
-    const cost = document.getElementById('costItemCost').value;
-    const name = (type === 'materials') ? document.getElementById('costItemName').value : '';
-    const description = (type !== 'materials') ? document.getElementById('costItemDescription').value : '';
-    
-    const payload = { 
-        costType: type, cost: parseFloat(cost), 
-        name: name, description: description, 
-                        inventoryId: currentItemSku 
-    };
-    if (id) payload.id = id;
-
-    fetch('/functions/process_cost_breakdown.php', {
-        method: id ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccess( data.message);
-            closeCostModal();
-            refreshCostBreakdown();
-        } else {
-            showError( data.error || `Failed to save ${type} cost`);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showError( `Failed to save ${type} cost`);
-    });
-}
-
-function deleteCurrentCostItem() { // Called by delete button in costFormModal
-    const id = document.getElementById('costItemId').value;
-    const type = document.getElementById('costItemType').value;
-    if (!id || !type) {
-        showError( 'No item selected for deletion.');
-        return;
-    }
-    
-    // Show pretty confirmation modal instead of ugly browser confirm
-    const itemName = (type === 'materials') ? 
-        document.getElementById('costItemName').value : 
-        document.getElementById('costItemDescription').value;
-    
-    const typeDisplay = type.slice(0, -1); // Remove 's' from end
-    document.getElementById('deleteCostConfirmText').textContent = 
-        `Are you sure you want to delete the ${typeDisplay} "${itemName}"? This action cannot be undone.`;
-    
-    // Store the deletion details for the confirm button
-    window.pendingCostDeletion = { id, type };
-    
-    // Show the modal
-    document.getElementById('deleteCostConfirmModal').classList.add('show');
-}
-
-function confirmCostDeletion() {
-    if (!window.pendingCostDeletion) return;
-    
-    const { id, type } = window.pendingCostDeletion;
-    const confirmBtn = document.getElementById('confirmCostDeleteBtn');
-    const btnText = confirmBtn.querySelector('.button-text');
-    const spinner = confirmBtn.querySelector('.loading-spinner');
-    
-    // Show loading state
-    btnText.classList.add('hidden');
-    spinner.classList.remove('hidden');
-    confirmBtn.disabled = true;
-
-            const url = `/functions/process_cost_breakdown.php?id=${id}&costType=${type}&inventoryId=${currentItemSku}`;
-
-    fetch(url, {
-        method: 'DELETE',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccess( data.message);
-            closeCostDeleteModal();
-            closeCostModal();
-            refreshCostBreakdown();
-        } else {
-            showError( data.error || `Failed to delete ${type} cost`);
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting cost item:', error);
-        showError( `Failed to delete ${type} cost. Check console for details.`);
-    })
-    .finally(() => {
-        // Reset button state
-        btnText.classList.remove('hidden');
-        spinner.classList.add('hidden');
-        confirmBtn.disabled = false;
-        window.pendingCostDeletion = null;
-    });
-}
-
-function closeCostDeleteModal() {
-    document.getElementById('deleteCostConfirmModal').classList.remove('show');
-    window.pendingCostDeletion = null;
-}
-
-
-let isRefreshingCostBreakdown = false; // Prevent multiple simultaneous calls
-
-function refreshCostBreakdown(useExistingData = false) {
-            if (!currentItemSku || isRefreshingCostBreakdown) return;
-    
-    if (useExistingData && costBreakdown) {
-        renderCostBreakdown(costBreakdown);
-        return;
-    }
-    
-    isRefreshingCostBreakdown = true;
-            fetch(`/functions/process_cost_breakdown.php?inventoryId=${currentItemSku}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            costBreakdown = data.data; 
-            renderCostBreakdown(costBreakdown);
-        } else {
-            showError( data.error || 'Failed to load cost breakdown');
-        }
-    })
-    .catch(error => { 
-        console.error('Error:', error); 
-        showError( 'Failed to load cost breakdown'); 
-    })
-    .finally(() => {
-        isRefreshingCostBreakdown = false;
-    });
-}
-
-function renderCostBreakdown(data) {if (!data) {['materials', 'labor', 'energy', 'equipment'].forEach(type => renderCostList(type, []));
-        updateTotalsDisplay({ materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 });
-        return;
-    }['materials', 'labor', 'energy', 'equipment'].forEach(type => renderCostList(type, data[type] || []));
-    updateTotalsDisplay(data.totals || { materialTotal: 0, laborTotal: 0, energyTotal: 0, equipmentTotal: 0, suggestedCost: 0 });
-}
-
-function renderCostList(type, items) {const listElement = document.getElementById(`${type}List`);
-    const viewListElement = document.getElementById(`view_${type}List`);if (listElement) {
-        listElement.innerHTML = ''; 
-        if (!items || items.length === 0) {
-            listElement.innerHTML = '<p class="text-gray-500 text-xs italic">No items added yet.</p>';
-        } else {
-            items.forEach(item_cost => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'cost-item';
-                const nameText = (type === 'materials' ? item_cost.name : item_cost.description) || 'N/A';
-                itemDiv.innerHTML = `
-                    <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
-                    <div class="cost-item-actions">
-                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
-                        <button type="button" class="delete-cost-btn" data-id="${item_cost.id}" data-type="${type}" title="Delete this cost item">×</button>
-                    </div>`;
-                listElement.appendChild(itemDiv);
-            });
-        }
-    }
-    
-    if (viewListElement) {
-        viewListElement.innerHTML = ''; 
-        if (!items || items.length === 0) {
-            viewListElement.innerHTML = '<p class="text-gray-500 text-xs italic">No items added.</p>';
-        } else {
-            items.forEach(item_cost => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'cost-item';
-                const nameText = (type === 'materials' ? item_cost.name : item_cost.description) || 'N/A';
-                itemDiv.innerHTML = `
-                    <span class="cost-item-name" title="${htmlspecialchars(nameText)}">${htmlspecialchars(nameText)}</span>
-                    <div class="cost-item-actions">
-                        <span class="cost-item-value">$${parseFloat(item_cost.cost).toFixed(2)}</span>
-                    </div>`;
-                viewListElement.appendChild(itemDiv);
-            });
-        }
-    }
-}
-
-function htmlspecialchars(str) {
-    if (str === null || str === undefined) return '';
-    if (typeof str !== 'string') str = String(str);
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return str.replace(/[&<>\"\']/g, function(m) { return map[m]; });
-}
-
-function updateTotalsDisplay(totals) {
-    try {
-        document.getElementById('materialsTotalDisplay').textContent = '$' + parseFloat(totals.materialTotal || 0).toFixed(2);
-        document.getElementById('laborTotalDisplay').textContent = '$' + parseFloat(totals.laborTotal || 0).toFixed(2);
-        document.getElementById('energyTotalDisplay').textContent = '$' + parseFloat(totals.energyTotal || 0).toFixed(2);
-        document.getElementById('equipmentTotalDisplay').textContent = '$' + parseFloat(totals.equipmentTotal || 0).toFixed(2);
-        document.getElementById('suggestedCostDisplay').textContent = '$' + parseFloat(totals.suggestedCost || 0).toFixed(2);
-    } catch(e) {}
-}
-
-function showCostSuggestionChoiceDialog(suggestionData) {
-    // Get current cost breakdown values for comparison
-    const currentCosts = getCurrentCostBreakdown();
-    const hasExistingCosts = checkForExistingCosts();
-    
-    // Create the modal overlay
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'costSuggestionChoiceModal';
-    
-    modal.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="bg-gradient-to-r from-blue-600 to-green-600 flex-shrink-0">
-                <h2 class="text-xl font-bold text-white flex items-center">
-                    🧮 AI Cost Suggestion - Side by Side Comparison
-                </h2>
-            </div>
-            
-            <div class="overflow-y-auto flex-1 custom-scrollbar" >
-                <!- AI Analysis Summary ->
-                <div class="bg-blue-50 rounded-lg border border-blue-200">
-                    <h3 class="font-semibold text-gray-800 flex items-center">
-                        <span class="">🤖</span> AI Analysis
-                    </h3>
-                    <p class="text-sm text-gray-700">${suggestionData.reasoning}</p>
-                    <div class="text-xs text-blue-600">
-                        <strong>Confidence:</strong> ${suggestionData.confidence} • 
-                        <strong>Total Suggested Cost:</strong> $${parseFloat(suggestionData.suggestedCost).toFixed(2)}
-                    </div>
-                </div>
-                
-                <!- Side by Side Comparison ->
-                <div class="">
-                    <h3 class="font-semibold text-gray-800">💰 Cost Breakdown Comparison</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!- Current Values Column ->
-                        <div class="bg-gray-50 rounded-lg border border-gray-200">
-                            <h4 class="font-semibold text-gray-700 text-center">📊 Current Values</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center bg-white rounded border">
-                                    <span class="text-sm font-medium text-gray-600">Materials:</span>
-                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.materials || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center bg-white rounded border">
-                                    <span class="text-sm font-medium text-gray-600">Labor:</span>
-                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.labor || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center bg-white rounded border">
-                                    <span class="text-sm font-medium text-gray-600">Energy:</span>
-                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.energy || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center bg-white rounded border">
-                                    <span class="text-sm font-medium text-gray-600">Equipment:</span>
-                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.equipment || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center bg-gray-100 rounded border-2 border-gray-300">
-                                    <span class="font-semibold text-gray-700">Total:</span>
-                                    <span class="text-lg font-bold text-gray-800">$${parseFloat(currentCosts.total || 0).toFixed(2)}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!- AI Suggested Values Column ->
-                        <div class="bg-green-50 rounded-lg border border-green-200">
-                            <h4 class="font-semibold text-green-700 text-center">🤖 AI Suggested Values</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
-                                    <span class="text-sm font-medium text-green-600">Materials:</span>
-                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.materials || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
-                                    <span class="text-sm font-medium text-green-600">Labor:</span>
-                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.labor || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
-                                    <span class="text-sm font-medium text-green-600">Energy:</span>
-                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.energy || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
-                                    <span class="text-sm font-medium text-green-600">Equipment:</span>
-                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.equipment || 0).toFixed(2)}</span>
-                                </div>
-                                <div class="flex justify-between items-center bg-green-100 rounded border-2 border-green-300">
-                                    <span class="font-semibold text-green-700">Total:</span>
-                                    <span class="text-lg font-bold text-green-800">$${parseFloat(suggestionData.suggestedCost).toFixed(2)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!- Individual Field Selection ->
-                <div class="">
-                    <h3 class="font-semibold text-gray-800">🎯 Choose Which Values to Apply</h3>
-                    <div class="bg-yellow-50 rounded-lg border border-yellow-200">
-                        <p class="text-sm text-yellow-800">
-                            <span class="font-semibold">💡 Pro Tip:</span> Select individual fields below to apply only the AI suggestions you want to keep. 
-                            Unselected fields will retain their current values.
-                        </p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-3">
-                            <label class="flex items-center bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                                <input type="checkbox" id="applyMaterials" class="text-green-600 focus:ring-green-500" 
-                                       ${Math.abs(parseFloat(currentCosts.materials || 0) - parseFloat(suggestionData.breakdown.materials || 0)) > 0.01 ? 'checked' : ''}>
-                                <div class="flex-1">
-                                    <div class="font-medium text-gray-800">Materials Cost</div>
-                                    <div class="text-sm text-gray-600">
-                                        ${parseFloat(currentCosts.materials || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.materials || 0).toFixed(2)}
-                                        <span class="text-xs ${parseFloat(suggestionData.breakdown.materials || 0) > parseFloat(currentCosts.materials || 0) ? 'text-red-600' : 'text-green-600'}">
-                                            (${parseFloat(suggestionData.breakdown.materials || 0) > parseFloat(currentCosts.materials || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.materials || 0) - parseFloat(currentCosts.materials || 0)).toFixed(2)})
-                                        </span>
-                                    </div>
-                                </div>
-                            </label>
-                            
                             <label class="flex items-center bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
                                 <input type="checkbox" id="applyLabor" class="text-green-600 focus:ring-green-500"
                                        ${Math.abs(parseFloat(currentCosts.labor || 0) - parseFloat(suggestionData.breakdown.labor || 0)) > 0.01 ? 'checked' : ''}>
@@ -1909,16 +1146,16 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                 <div class="bg-gray-50 rounded-lg border border-gray-200">
                     <h4 class="font-medium text-gray-800">⚡ Quick Select Options</h4>
                     <div class="flex flex-wrap gap-2">
-                        <button onclick="selectAllCostFields(true)" class="bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
+                        <button data-action="select-all-cost-fields" data-select="true" class="bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
                             ✅ Select All
                         </button>
-                        <button onclick="selectAllCostFields(false)" class="bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors">
+                        <button data-action="select-all-cost-fields" data-select="false" class="bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors">
                             ❌ Select None
                         </button>
-                        <button onclick="selectOnlyHigherValues()" class="bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
+                        <button data-action="select-only-higher-values" class="bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
                             📈 Only Higher Values
                         </button>
-                        <button onclick="selectOnlyLowerValues()" class="bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
+                        <button data-action="select-only-lower-values" class="bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
                             📉 Only Lower Values
                         </button>
                     </div>
@@ -1927,7 +1164,7 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                 <!- Action Buttons ->
                 <div class="flex flex-col gap-3">
                     <!- Primary Action: Apply Total to Cost Field ->
-                    <button onclick="applySuggestedCostToCostField(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                    <button data-action="apply-suggested-cost-to-field" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                             class="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-semibold shadow-lg transition-all duration-200">
                         💰 Use Total Cost ($${parseFloat(suggestionData.suggestedCost).toFixed(2)}) in Cost Price Field
                     </button>
@@ -1936,18 +1173,18 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                     <div class="border-t border-gray-200">
                         <p class="text-sm text-gray-600 text-center">Or manage detailed cost breakdown:</p>
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <button onclick="replaceAllCostValues(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                            <button data-action="replace-all-cost-values" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                                     class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white rounded-lg font-medium shadow transition-all duration-200 text-sm">
                                 🔄 Replace Current Cost Breakdown
                             </button>
                             
                             <div class="flex flex-col sm:flex-row gap-2">
-                                <button onclick="applySelectedCostFields(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                                <button data-action="apply-selected-cost-fields" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                                         class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-lg font-medium shadow transition-all duration-200 text-sm">
                                     ➕ Add Selected to Breakdown
                                 </button>
                                 
-                                <button onclick="closeCostSuggestionChoiceDialog()" 
+                                <button data-action="close-cost-suggestion-choice-dialog" 
                                         class="flex-1 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all duration-200 text-sm">
                                     ❌ Cancel
                                 </button>
@@ -2496,12 +1733,12 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                 
                 <!- Action Buttons ->
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <button onclick="applySelectedPriceChoice(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                    <button data-action="apply-selected-price-choice" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                             class="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-semibold shadow-lg transition-all duration-200">
                         🎯 Apply Selected Choice
                     </button>
                     
-                    <button onclick="closePriceSuggestionChoiceDialog()" 
+                    <button data-action="close-price-suggestion-choice-dialog" 
                             class="flex-1 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all duration-200">
                         ❌ Cancel
                     </button>
@@ -10427,899 +9664,7 @@ async function checkAndShowStructureAnalysis() {
 
 </script>
 
-<script>
-// ===== NEW SIZE-COLOR COMBINATIONS INTERFACE =====
 
-// Load size-color combinations in an intuitive format
-async function loadSizeColorCombinations() {if (!currentItemSku) {const combinationsLoading = document.getElementById('combinationsLoading');
-        if (combinationsLoading) {
-            combinationsLoading.textContent = 'No SKU available';
-        }
-        return;
-    }
-    
-    // Show loading state
-    const combinationsLoading = document.getElementById('combinationsLoading');
-    if (combinationsLoading) {
-        combinationsLoading.textContent = 'Loading combinations...';
-        combinationsLoading.style.display = 'block';
-    }
-    
-    try {
-        console.log('Making API call to:', '/api/redesign_size_color_system.php?action=propose_new_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');
-        const response = await fetch('/api/redesign_size_color_system.php?action=propose_new_structure&item_sku=' + encodeURIComponent(currentItemSku) + '&admin_token=whimsical_admin_2024');const data = await response.json();if (data.success) {
-            renderSizeColorCombinations(data);
-            updateStockSummary(data);
-        } else {
-            console.error('Error loading combinations:', data.message);
-            renderSizeColorCombinations({ proposedSizes: [], totalCombinations: 0 });
-        }
-    } catch (error) {
-        console.error('Error fetching combinations:', error);
-        renderSizeColorCombinations({ proposedSizes: [], totalCombinations: 0 });
-    }
-}
-
-// Render size-color combinations in an intuitive interface
-function renderSizeColorCombinations(data) {
-    const combinationsContainer = document.getElementById('sizeColorCombinations');
-    const combinationsLoading = document.getElementById('combinationsLoading');
-    
-    if (combinationsLoading) {
-        combinationsLoading.style.display = 'none';
-    }
-    
-    if (!combinationsContainer) return;
-    
-    if (!data.proposedSizes || data.proposedSizes.length === 0) {
-        combinationsContainer.innerHTML = '<div class="text-center text-gray-500">' +
-            '<div class=""><span class="text-4xl">📦</span></div>' +
-            '<p class="text-lg">No size-color combinations found</p>' +
-            '<p class="text-sm">Click "Add Combination" to create your first size-color combination, or use "Legacy Mode" to manage colors and sizes separately.</p>' +
-            '</div>';
-        return;
-    }
-    
-    let html = '';
-    
-    data.proposedSizes.forEach(function(size) {
-        const sizeTotal = size.colors.reduce(function(sum, color) { return sum + parseInt(color.stock_level || 0); }, 0);
-        
-        // Build HTML using string concatenation to avoid template literal issues
-        var sizeHtml = '<div class="size-group border border-gray-200 rounded-lg bg-white">';
-        sizeHtml += '<div class="flex items-center justify-between">';
-        sizeHtml += '<div class="flex items-center space-x-3">';
-        sizeHtml += '<div class="size-badge bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">' + (size.code || 'No code').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
-        sizeHtml += '<h4 class="text-lg font-semibold text-gray-800">' + (size.name || 'No name').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</h4>';
-        if (parseFloat(size.price_adjustment) > 0) {
-            sizeHtml += '<span class="text-green-600 text-sm font-medium">+$' + size.price_adjustment + '</span>';
-        }
-        sizeHtml += '</div>';
-        sizeHtml += '<div class="flex items-center space-x-3">';
-        sizeHtml += '<div class="text-sm text-gray-600"><span class="font-medium">' + sizeTotal + '</span> total stock</div>';
-        sizeHtml += '<button type="button" onclick="deleteSize(\'' + String(size.id || '').replace(/'/g, '\\\'') + '\', \'' + String(size.name || '').replace(/'/g, '\\\'') + '\')" class="text-red-600 hover:text-red-800 transition-colors" title="Delete this entire size and all its color combinations">🗑️ Delete Size</button>';
-        sizeHtml += '</div>';
-        sizeHtml += '</div>';
-        
-        sizeHtml += '<div class="colors-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">';
-        size.colors.forEach(function(color) {
-            sizeHtml += '<div class="color-combination flex items-center justify-between bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">';
-            sizeHtml += '<div class="flex items-center space-x-3">';
-            sizeHtml += '<div class="color-swatch w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"  title="' + (color.color_name || 'No name').replace(/"/g, '&quot;') + '"></div>';
-            sizeHtml += '<div>';
-            sizeHtml += '<div class="font-medium text-gray-800 text-sm">' + (color.color_name || 'No name').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
-            sizeHtml += '<div class="text-xs text-gray-500">' + (color.color_code || 'No code').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
-            sizeHtml += '</div></div>';
-            sizeHtml += '<div class="flex items-center space-x-2">';
-            sizeHtml += '<div class="inline-stock-editor cursor-pointer bg-white border border-gray-200 rounded text-sm hover:border-blue-400 transition-colors" data-type="color" data-id="' + color.id + '" data-field="stock_level" data-value="' + color.stock_level + '" onclick="editInlineStock(this)" title="Click to edit stock level">' + color.stock_level + '</div>';
-            sizeHtml += '<button type="button" onclick="deleteCombination(\'' + String(color.id || '').replace(/'/g, '\\\'') + '\')" class="text-red-600 hover:text-red-800 transition-colors" title="Delete this combination">Delete</button>';
-            sizeHtml += '</div></div>';
-        });
-        sizeHtml += '</div>';
-        
-        sizeHtml += '<div class="flex justify-end">';
-        sizeHtml += '<button type="button" onclick="addColorToSize(\'' + (size.code || '').replace(/'/g, '\\\'') + '\')" class="text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">+ Add Color to ' + (size.name || 'Size').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</button>';
-        sizeHtml += '</div></div>';
-        
-        html += sizeHtml;
-    });
-    
-    combinationsContainer.innerHTML = html;
-}
-
-// Update stock summary
-function updateStockSummary(data) {
-    const stockSummaryText = document.getElementById('stockSummaryText');
-    if (!stockSummaryText) return;
-    
-    const totalStock = data.proposedSizes.reduce(function(sum, size) {
-        return sum + size.colors.reduce(function(sizeSum, color) { return sizeSum + parseInt(color.stock_level || 0); }, 0);
-    }, 0);
-    
-    const totalSizes = data.proposedSizes.length;
-    const totalCombinations = data.totalCombinations || 0;
-    
-    // Get current item stock level for comparison
-    const stockField = document.getElementById('stockLevel');
-    const currentItemStock = stockField ? parseInt(stockField.value || 0) : 0;
-    
-    const isInSync = totalStock === currentItemStock;
-    const syncClass = isInSync ? 'text-green-700' : 'text-yellow-700';
-    const syncIcon = isInSync ? '✅' : '⚠️';
-    
-    stockSummaryText.innerHTML = '<div class="flex items-center justify-between">' +
-        '<div>' +
-        '<span class="font-medium">' + totalSizes + '</span> sizes × ' +
-        '<span class="font-medium">' + totalCombinations + '</span> combinations = ' +
-        '<span class="font-bold">' + totalStock + '</span> total stock' +
-        '</div>' +
-        '<div class="' + syncClass + '">' +
-        syncIcon + ' ' + (isInSync ? 'In sync' : 'Item shows ' + currentItemStock) +
-        '</div>' +
-        '</div>';
-}
-
-// Show legacy management sections
-function showLegacyManagement() {
-    const legacyColorSection = document.getElementById('legacyColorSection');
-    const legacySizeSection = document.getElementById('legacySizeSection');
-    
-    if (legacyColorSection) {
-        legacyColorSection.classList.remove('hidden');
-    }
-    if (legacySizeSection) {
-        legacySizeSection.classList.remove('hidden');
-    }
-    
-    // Load the legacy data
-    loadItemColors();
-    loadItemSizes();
-}
-
-// Toggle legacy color section
-function toggleLegacyColors() {
-    const legacyColorSection = document.getElementById('legacyColorSection');
-    if (legacyColorSection) {
-        legacyColorSection.classList.toggle('hidden');
-    }
-}
-
-// Toggle legacy size section
-function toggleLegacySizes() {
-    const legacySizeSection = document.getElementById('legacySizeSection');
-    if (legacySizeSection) {
-        legacySizeSection.classList.toggle('hidden');
-    }
-}
-
-// Simple Gender Management
-async function addItemGender() {
-    const genderOptions = ['Unisex', 'Men', 'Women', 'Boys', 'Girls', 'Baby'];
-    const selectedGender = prompt('Select gender:\n' + genderOptions.map((g, i) => `${i+1}. ${g}`).join('\n') + '\n\nEnter number (1-6):');
-    
-    if (!selectedGender || selectedGender < 1 || selectedGender > 6) {
-        return;
-    }
-    
-    const genderName = genderOptions[selectedGender - 1];
-    
-    try {
-        const response = await fetch('/api/item_genders.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                action: 'add',
-                item_sku: currentItemSku,
-                gender: genderName
-            })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Gender added successfully!');
-            loadItemGenders();
-        } else {
-            showError('Failed to add gender: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error adding gender:', error);
-        showError('Failed to add gender: ' + error.message);
-    }
-}
-
-// Simple Size Management
-async function addItemSize() {
-    // Get category to show relevant sizes
-    const category = document.getElementById('categoryEdit')?.value || '';
-    let sizeOptions = [];
-    
-    if (category === 'T-Shirts') {
-        sizeOptions = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
-    } else if (category === 'Tumblers') {
-        sizeOptions = ['12oz', '16oz', '20oz', '30oz'];
-    } else {
-        sizeOptions = ['Small', 'Medium', 'Large', 'Extra Large'];
-    }
-    
-    const selectedSize = prompt('Select size:\n' + sizeOptions.map((s, i) => `${i+1}. ${s}`).join('\n') + '\n\nEnter number:');
-    
-    if (!selectedSize || selectedSize < 1 || selectedSize > sizeOptions.length) {
-        return;
-    }
-    
-    const sizeName = sizeOptions[selectedSize - 1];
-    const stockLevel = prompt('Enter stock level for this size:', '10');
-    
-    if (!stockLevel || isNaN(stockLevel)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/item_sizes.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                action: 'add',
-                item_sku: currentItemSku,
-                size_name: sizeName,
-                stock_level: parseInt(stockLevel),
-                display_order: 1
-            })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Size added successfully!');
-            loadItemSizes();
-        } else {
-            showError('Failed to add size: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error adding size:', error);
-        showError('Failed to add size: ' + error.message);
-    }
-}
-
-// Simple Color Management
-async function addItemColor() {
-    const colorName = prompt('Enter color name:', '');
-    if (!colorName) return;
-    
-    const hexCode = prompt('Enter hex color code (optional):', '');
-    const stockLevel = prompt('Enter stock level for this color:', '10');
-    
-    if (!stockLevel || isNaN(stockLevel)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/item_colors.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                action: 'add',
-                item_sku: currentItemSku,
-                color_name: colorName,
-                hex_code: hexCode || '',
-                stock_level: parseInt(stockLevel),
-                display_order: 1
-            })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Color added successfully!');
-            loadItemColors();
-        } else {
-            showError('Failed to add color: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error adding color:', error);
-        showError('Failed to add color: ' + error.message);
-    }
-}
-
-// Image to Color Matching Modal (restored from original)
-function matchImageToColor() {
-    showImageColorModal();
-}
-
-function showImageColorModal() {
-    const modalHTML = `
-        <div id="imageColorModal" class="modal-overlay">
-            <div class="modal-content" >
-                <div class="modal-header">
-                    <h2>Match Images to Colors</h2>
-                    <button type="button" class="modal-close" onclick="closeImageColorModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!- Left: Images ->
-                        <div>
-                            <h3 class="font-semibold">Item Images</h3>
-                            <div id="imageColorImageGrid" class="space-y-2">
-                                <div class="text-center text-gray-500">Loading images...</div>
-                            </div>
-                        </div>
-                        
-                        <!- Right: Color Selection ->
-                        <div>
-                            <h3 class="font-semibold">Select Color</h3>
-                            <div id="imageColorColorSelection" class="space-y-2">
-                                <div class="text-center text-gray-500">Loading colors...</div>
-                            </div>
-                            
-                            <div class="">
-                                <label for="newColorName" class="block text-sm font-medium text-gray-700">Or add new color:</label>
-                                <input type="text" id="newColorName" placeholder="Color name" class="w-full border border-gray-300 rounded-md">
-                                <input type="color" id="newColorHex" class="w-full border border-gray-300 rounded-md">
-                                <button type="button" onclick="addNewColorFromModal()" class="w-full bg-green-600 text-white rounded hover:bg-green-700">
-                                    Add New Color
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" onclick="closeImageColorModal()" class="modal-button btn btn-secondary">Close</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    loadImageColorModalData();
-}
-
-function closeImageColorModal() {
-    const modal = document.getElementById('imageColorModal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-async function loadImageColorModalData() {
-    // Load images
-    try {
-        const response = await fetch(`/api/get_item_images.php?sku=${currentItemSku}`);
-        const data = await response.json();
-        
-        const imageGrid = document.getElementById('imageColorImageGrid');
-        if (data.success && data.images.length > 0) {
-            imageGrid.innerHTML = data.images.map(img => `
-                <div class="image-color-item border rounded cursor-pointer hover:bg-gray-50" onclick="selectImageForColor('${img.image_path}')">
-                    <img src="/images/items/${img.image_path}" alt="Image" class="w-full h-20 object-cover rounded">
-                    <div class="text-sm text-gray-600">${img.image_path}</div>
-                </div>
-            `).join('');
-        } else {
-            imageGrid.innerHTML = '<div class="text-center text-gray-500">No images found</div>';
-        }
-    } catch (error) {
-        console.error('Error loading images:', error);
-    }
-    
-    // Load existing colors
-    loadColorsForImageModal();
-}
-
-async function loadColorsForImageModal() {
-    try {
-        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
-        const data = await response.json();
-        
-        const colorSelection = document.getElementById('imageColorColorSelection');
-        if (data.success && data.colors.length > 0) {
-            colorSelection.innerHTML = data.colors.map(color => `
-                <div class="color-option border rounded cursor-pointer hover:bg-gray-50" onclick="assignImageToColor('${color.id}')">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded border" ></div>
-                        <div>
-                            <div class="font-medium">${color.color_name}</div>
-                            <div class="text-sm text-gray-500">${color.hex_code || 'No hex code'}</div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            colorSelection.innerHTML = '<div class="text-center text-gray-500">No colors found. Add colors first.</div>';
-        }
-    } catch (error) {
-        console.error('Error loading colors:', error);
-    }
-}
-
-let selectedImagePath = null;
-
-function selectImageForColor(imagePath) {
-    selectedImagePath = imagePath;
-    // Highlight selected image
-    document.querySelectorAll('.image-color-item').forEach(item => {
-        item.classList.remove('bg-blue-100', 'border-blue-500');
-    });
-    event.currentTarget.classList.add('bg-blue-100', 'border-blue-500');
-}
-
-async function assignImageToColor(colorId) {
-    if (!selectedImagePath) {
-        showError('Please select an image first');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/item_colors.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                action: 'update_color',
-                color_id: colorId,
-                image_path: selectedImagePath
-            })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Image assigned to color successfully!');
-            loadItemColors();
-        } else {
-            showError('Failed to assign image: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error assigning image to color:', error);
-        showError('Failed to assign image: ' + error.message);
-    }
-}
-
-async function addNewColorFromModal() {
-    const colorName = document.getElementById('newColorName').value;
-    const colorHex = document.getElementById('newColorHex').value;
-    
-    if (!colorName) {
-        showError('Please enter a color name');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/item_colors.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                action: 'add',
-                item_sku: currentItemSku,
-                color_name: colorName,
-                hex_code: colorHex,
-                stock_level: 10,
-                display_order: 1,
-                image_path: selectedImagePath
-            })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Color added successfully!');
-            document.getElementById('newColorName').value = '';
-            document.getElementById('newColorHex').value = '#000000';
-            loadColorsForImageModal();
-            loadItemColors();
-        } else {
-            showError('Failed to add color: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error adding color:', error);
-        showError('Failed to add color: ' + error.message);
-    }
-}
-
-// Load functions for the new simple interface
-async function loadItemGenders() {
-    const gendersList = document.getElementById('gendersList');
-    if (!gendersList) return;
-    
-    gendersList.innerHTML = '<div class="text-center text-gray-500 text-sm">Loading genders...</div>';
-    
-    try {
-        const response = await fetch(`/api/item_genders.php?action=get_all&item_sku=${currentItemSku}`, {
-            credentials: 'same-origin'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.genders.length > 0) {
-            gendersList.innerHTML = data.genders.map(gender => `
-                <div class="flex justify-between items-center bg-gray-50 rounded">
-                    <span class="font-medium">👥 ${gender.gender}</span>
-                    <button onclick="deleteItemGender('${gender.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
-                </div>
-            `).join('');
-        } else {
-            gendersList.innerHTML = '<div class="text-center text-gray-500 text-sm">No genders assigned</div>';
-        }
-    } catch (error) {
-        console.error('Error loading genders:', error);
-        gendersList.innerHTML = '<div class="text-center text-red-500 text-sm">Error loading genders</div>';
-    }
-}
-
-async function loadItemSizes() {
-    const sizesList = document.getElementById('sizesList');
-    if (!sizesList) return;
-    
-    sizesList.innerHTML = '<div class="text-center text-gray-500 text-sm">Loading sizes...</div>';
-    
-    try {
-        const response = await fetch(`/api/item_sizes.php?action=get_all&item_sku=${currentItemSku}`, {
-            credentials: 'same-origin'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.sizes.length > 0) {
-            sizesList.innerHTML = data.sizes.map(size => `
-                <div class="flex justify-between items-center bg-gray-50 rounded">
-                    <div>
-                        <span class="font-medium">📏 ${size.size_name}</span>
-                        <span class="text-sm text-gray-600">- Stock: ${size.stock_level}</span>
-                    </div>
-                    <button onclick="deleteItemSize('${size.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
-                </div>
-            `).join('');
-        } else {
-            sizesList.innerHTML = '<div class="text-center text-gray-500 text-sm">No sizes assigned</div>';
-        }
-    } catch (error) {
-        console.error('Error loading sizes:', error);
-        sizesList.innerHTML = '<div class="text-center text-red-500 text-sm">Error loading sizes</div>';
-    }
-}
-
-async function loadItemColors() {
-    const colorsList = document.getElementById('colorsList');
-    if (!colorsList) return;
-    
-    colorsList.innerHTML = '<div class="text-center text-gray-500 text-sm">Loading colors...</div>';
-    
-    try {
-        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`, {
-            credentials: 'same-origin'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.colors.length > 0) {
-            colorsList.innerHTML = data.colors.map(color => `
-                <div class="flex justify-between items-center bg-gray-50 rounded">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-6 h-6 rounded border" ></div>
-                        <div>
-                            <span class="font-medium">🎨 ${color.color_name}</span>
-                            <span class="text-sm text-gray-600">- Stock: ${color.stock_level}</span>
-                        </div>
-                    </div>
-                    <button onclick="deleteItemColor('${color.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
-                </div>
-            `).join('');
-        } else {
-            colorsList.innerHTML = '<div class="text-center text-gray-500 text-sm">No colors assigned</div>';
-        }
-    } catch (error) {
-        console.error('Error loading colors:', error);
-        colorsList.innerHTML = '<div class="text-center text-red-500 text-sm">Error loading colors</div>';
-    }
-}
-
-// Delete functions
-async function deleteItemGender(genderId) {
-    if (!confirm('Are you sure you want to remove this gender option?')) return;
-    
-    try {
-        const response = await fetch('/api/item_genders.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ action: 'delete', gender_id: genderId })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Gender removed successfully!');
-            loadItemGenders();
-        } else {
-            showError('Failed to remove gender: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error removing gender:', error);
-        showError('Failed to remove gender: ' + error.message);
-    }
-}
-
-async function deleteItemSize(sizeId) {
-    if (!confirm('Are you sure you want to remove this size option?')) return;
-    
-    try {
-        const response = await fetch('/api/item_sizes.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ action: 'delete', size_id: sizeId })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Size removed successfully!');
-            loadItemSizes();
-        } else {
-            showError('Failed to remove size: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error removing size:', error);
-        showError('Failed to remove size: ' + error.message);
-    }
-}
-
-async function deleteItemColor(colorId) {
-    if (!confirm('Are you sure you want to remove this color option?')) return;
-    
-    try {
-        const response = await fetch('/api/item_colors.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ action: 'delete_color', color_id: colorId })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showSuccess('Color removed successfully!');
-            loadItemColors();
-        } else {
-            showError('Failed to remove color: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error removing color:', error);
-        showError('Failed to remove color: ' + error.message);
-    }
-}
-
-// Initialize the new simple interface
-function initializeGenderSizeColorInterface() {
-    if (currentItemSku) {
-        loadItemGenders();
-        loadItemSizes();
-        loadItemColors();
-    }
-}
-
-// Validation function for gender, size, color requirements
-async function validateGenderSizeColorRequirements(event) {
-    const statusField = document.getElementById('statusEdit');
-    if (!statusField || statusField.value !== 'live') {
-        return true; // No validation needed for draft items
-    }
-    
-    if (!currentItemSku) {
-        return true; // New items don't need validation yet
-    }
-    
-    try {
-        // Check if item has required gender, size, and color assignments
-        const [genderResponse, sizeResponse, colorResponse] = await Promise.all([
-            fetch(`/api/item_genders.php?action=get_all&item_sku=${currentItemSku}`, { credentials: 'same-origin' }),
-            fetch(`/api/item_sizes.php?action=get_all&item_sku=${currentItemSku}`, { credentials: 'same-origin' }),
-            fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`, { credentials: 'same-origin' })
-        ]);
-        
-        const [genderData, sizeData, colorData] = await Promise.all([
-            genderResponse.json(),
-            sizeResponse.json(),
-            colorResponse.json()
-        ]);
-        
-        const missingRequirements = [];
-        
-        if (!genderData.success || !genderData.genders || genderData.genders.length === 0) {
-            missingRequirements.push('Gender');
-        }
-        
-        if (!sizeData.success || !sizeData.sizes || sizeData.sizes.length === 0) {
-            missingRequirements.push('Size');
-        }
-        
-        if (!colorData.success || !colorData.colors || colorData.colors.length === 0) {
-            missingRequirements.push('Color');
-        }
-        
-        if (missingRequirements.length > 0) {
-            event.preventDefault();
-            
-            const requirements = missingRequirements.join(', ');
-            const message = `⚠️ Cannot set item to "Live" status!\n\nMissing requirements: ${requirements}\n\nPlease add at least one ${requirements.toLowerCase()} option before publishing this item.`;
-            
-            showError(message);
-            
-            // Auto-change status back to draft
-            statusField.value = 'draft';
-            
-            return false;
-        }
-        
-        return true; // All requirements met
-        
-    } catch (error) {
-        console.error('Error validating requirements:', error);
-        showError('Error checking publication requirements. Please try again.');
-        event.preventDefault();
-        return false;
-    }
-}
-
-// ==============================================
-// STEP BADGES SYSTEM - First Time User Guide
-// ==============================================
-
-// Track first-time edit state
-let isFirstTimeEdit = false;
-let stepBadgesShown = false;
-
-// Check if this is a new item edit (first time after creation)
-function checkFirstTimeEdit() {
-    // Check URL parameters for edit mode after add
-    const urlParams = new URLSearchParams(window.location.search);
-    const editParam = urlParams.get('edit');
-    const wasJustAdded = sessionStorage.getItem('justAddedItem');
-    
-    // If we're in edit mode and the item was just added, show badges
-    if (editParam && wasJustAdded === editParam && modalMode === 'edit') {
-        isFirstTimeEdit = true;return true;
-    }
-    
-    return false;
-}
-
-// Show step badges for first-time users
-function showStepBadges() {
-    if (stepBadgesShown || !isFirstTimeEdit) return;// Show all three step badges
-    const badge1 = document.getElementById('step-badge-1');
-    const badge2 = document.getElementById('step-badge-2'); 
-    const badge3 = document.getElementById('step-badge-3');
-    
-    if (badge1) {
-        badge1.classList.remove('hidden');
-        setTimeout(() => badge1.classList.add('pulse'), 100);
-    }
-    
-    if (badge2) {
-        badge2.classList.remove('hidden');
-        setTimeout(() => badge2.classList.add('pulse'), 200);
-    }
-    
-    if (badge3) {
-        badge3.classList.remove('hidden');
-        setTimeout(() => badge3.classList.add('pulse'), 300);
-    }
-    
-    stepBadgesShown = true;
-    
-    // Auto-hide badges after 15 seconds
-    setTimeout(hideStepBadges, 15000);
-}
-
-// Hide step badges
-function hideStepBadges() {const badges = [
-        document.getElementById('step-badge-1'),
-        document.getElementById('step-badge-2'),
-        document.getElementById('step-badge-3')
-    ];
-    
-    badges.forEach(badge => {
-        if (badge) {
-            badge.classList.remove('pulse');
-            badge.classList.add('hidden');
-        }
-    });
-    
-    // Clear first-time edit state
-    isFirstTimeEdit = false;
-    stepBadgesShown = false;
-    
-    // Clear session storage to prevent showing again
-    sessionStorage.removeItem('justAddedItem');
-}
-
-// Hide badges when any of the target buttons are clicked
-function addStepBadgeEventListeners() {
-    // Marketing Manager button
-    const marketingBtn = document.getElementById('open-marketing-manager-btn');
-    if (marketingBtn) {
-        marketingBtn.addEventListener('click', function() {
-            const badge1 = document.getElementById('step-badge-1');
-            if (badge1 && !badge1.classList.contains('hidden')) {
-                badge1.classList.remove('pulse');
-                badge1.classList.add('hidden');}
-        });
-    }
-    
-    // Get Suggested Cost button
-    const costBtn = document.getElementById('get-suggested-cost-btn');
-    if (costBtn) {
-        costBtn.addEventListener('click', function() {
-            const badge2 = document.getElementById('step-badge-2');
-            if (badge2 && !badge2.classList.contains('hidden')) {
-                badge2.classList.remove('pulse');
-                badge2.classList.add('hidden');}
-        });
-    }
-    
-    // Get Suggested Price button  
-    const priceBtn = document.getElementById('get-suggested-price-btn');
-    if (priceBtn) {
-        priceBtn.addEventListener('click', function() {
-            const badge3 = document.getElementById('step-badge-3');
-            if (badge3 && !badge3.classList.contains('hidden')) {
-                badge3.classList.remove('pulse');
-                badge3.classList.add('hidden');}
-        });
-    }
-    
-    // Also hide all badges if user clicks anywhere else in the modal
-    const modal = document.querySelector('.admin-modal-content');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            // Don't hide if clicking on the step badge buttons themselves
-            if (!e.target.closest('.button-with-badge')) {
-                const anyBadgeVisible = document.querySelector('.step-badge:not(.hidden)');
-                if (anyBadgeVisible) {
-                    setTimeout(hideStepBadges, 5000); // Hide after 5 seconds of other interaction
-                }
-            }
-        });
-    }
-}
-
-// Initialize step badges system
-function initializeStepBadges() {
-    // Check if this is first-time edit
-    if (checkFirstTimeEdit()) {// Add event listeners
-        addStepBadgeEventListeners();
-        
-        // Show badges after modal is fully loaded
-        setTimeout(() => {
-            showStepBadges();
-        }, 1000);
-    }
-}
-
-// Set flag when new item is added (call this from the add item success handler)
-function markItemAsJustAdded(itemSku) {
-    sessionStorage.setItem('justAddedItem', itemSku);}
-
-// Initialize step badges when modal loads
-if (modalMode === 'edit') {
-    // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeStepBadges);
-    } else {
-        initializeStepBadges();
-    }
-}
-
-</script>
-
-<!- Modal positioning loaded by unified system ->
 
 <?php
 $output = ob_get_clean();

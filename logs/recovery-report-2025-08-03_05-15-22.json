@@ -1,0 +1,35 @@
+{
+    "timestamp": "2025-08-03 05:15:22",
+    "css_recovery": {
+        "original_size": 759049,
+        "recovered_size": 624715,
+        "final_size": 1360382,
+        "files_processed": [
+            "admin-styles.css",
+            "global-modals.css",
+            "room-iframe.css",
+            "room-main.css",
+            "room-modal.css",
+            "room-popups.css",
+            "room-styles.css",
+            "components.css",
+            "utilities.css",
+            "pages.css",
+            "modals.css",
+            "room.css",
+            "backgrounds.css",
+            "admin.css",
+            "standard-classes.css"
+        ],
+        "missing_patterns_found": 0,
+        "backup_created": "main.css.pre-recovery-2025-08-03_05-15-22.backup"
+    },
+    "js_recovery": {
+        "files_recovered": [
+            "cart-system.js",
+            "global-popup.js",
+            "main.js"
+        ]
+    },
+    "missing_patterns": []
+}

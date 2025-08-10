@@ -41,6 +41,11 @@ function getImageUrl($imagePath, $directory, $extension = 'webp')
 function renderDetailedItemModal($item, $images = [])
 {
     ob_start();
+    
+    // Debug: Log what data we're receiving
+    error_log('MODAL COMPONENT - Item data keys: ' . implode(', ', array_keys($item)));
+    error_log('MODAL COMPONENT - stockLevel value: ' . ($item['stockLevel'] ?? 'NOT SET'));
+    error_log('MODAL COMPONENT - Full item: ' . json_encode($item));
 
     // Helper function to check if data exists and is not empty
     function hasData($value)
@@ -58,8 +63,8 @@ function renderDetailedItemModal($item, $images = [])
     $sellingPoints = getSellingPoints($item['sku'] ?? '');
 
     ?>
-    <div id="detailedItemModal" class="detailed-item-modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4" data-action="closeDetailedModalOnOverlay">
-        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] overflow-hidden relative detailed-item-modal-container">
+    <div id="detailedItemModal" class="detailed-item-modal fixed inset-0 hidden flex items-center justify-center" data-action="closeDetailedModalOnOverlay">
+        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full overflow-hidden relative detailed-item-modal-container" style="max-height: 95vh; margin: auto;">
             <!- Modal Header ->
             <div class="modal-header">
                 <div>
@@ -81,31 +86,21 @@ function renderDetailedItemModal($item, $images = [])
                                     <!- Badges will be dynamically inserted here ->
                                 </div>
                                 
-                                <div class="aspect-square bg-white rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                                     <?php if (!empty($images)): ?>
                                         <img id="detailedMainImage" 
                                              src="<?php echo htmlspecialchars(getImageUrl($images[0]['image_path'] ?? '', 'items')); ?>" 
                                              alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
-                                             class="w-full h-full object-contain cursor-pointer"
-                                             data-action="openImageViewer"
-                                             data-params='{"src":"<?php echo htmlspecialchars(getImageUrl($images[0]['image_path'] ?? '', 'items')); ?>","name":"<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"}'
-                                             >
+                                             class="w-full h-full object-contain"
+                                             style="display: block;">
                                     <?php else: ?>
                                         <img id="detailedMainImage" 
                                              src="<?php echo htmlspecialchars(getImageUrl($item['sku'] ?? '', 'items')); ?>" 
                                              alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
-                                             class="w-full h-full object-contain cursor-pointer"
-                                             data-action="openImageViewer"
-                                             data-params='{"src":"<?php echo htmlspecialchars(getImageUrl($item['sku'] ?? '', 'items')); ?>","name":"<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"}'
-                                             >
+                                             class="w-full h-full object-contain"
+                                             style="display: block;"
+                                             onerror="this.src='/images/placeholder.png';">
                                     <?php endif; ?>
-                                    
-                                    <!- Zoom Icon Overlay ->
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center pointer-events-none">
-                                        <svg data-action="openImageViewer" data-params='{"src":"<?php echo htmlspecialchars(getImageUrl($images[0]['image_path'] ?? '', 'items')); ?>","name":"<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"}' class="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity cursor-pointer pointer-events-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
-                                        </svg>
-                                    </div>
                                 </div>
                             </div>
                             
@@ -167,21 +162,30 @@ function renderDetailedItemModal($item, $images = [])
                             </div>
                             
                             <!- Selling Points ->
-                            <?php if (!empty($sellingPoints) && count($sellingPoints) > 0): ?>
-                            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
-                                <h3 class="text-sm font-semibold text-green-800 mb-2">Why You'll Love This</h3>
-                                <div class="space-y-1">
-                                    <?php foreach (array_slice($sellingPoints, 0, 3) as $point): ?>
-                                    <div class="flex items-start space-x-2">
-                                        <svg class="w-4 h-4 text-green-600 mt-0\.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        <span class="text-xs text-green-700"><?php echo htmlspecialchars($point); ?></span>
-                                    </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                            <?php endif; ?>
+            <?php 
+            $sellingPoints = getSellingPoints($item['sku'] ?? '');
+            if (!empty($sellingPoints)): ?>
+            <div class="mb-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-200 shadow-sm">
+                <h3 class="text-lg font-bold text-gray-900 mb-2 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                    </svg>
+                    Why You'll Love This
+                </h3>
+                <div class="space-y-2">
+                    <?php foreach ($sellingPoints as $point): ?>
+                    <div class="flex items-center">
+                        <span class="selling-point-pill inline-flex items-center">
+                            <svg class="selling-point-icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="selling-point-text ml-2 text-sm font-medium"><?php echo htmlspecialchars($point); ?></span>
+                        </span>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
                             
                             <!- Description ->
                             <?php if (hasItemData($item, 'description')): ?>

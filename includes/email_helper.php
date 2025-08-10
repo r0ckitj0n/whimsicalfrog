@@ -26,6 +26,21 @@ class EmailHelper
     // configure function moved to constructor_manager.php for centralization
 
     /**
+     * Configure email settings at runtime.
+     * Accepts a partial config array and merges with defaults.
+     * Resets the internal mailer so new settings take effect on next send.
+     */
+    public static function configure($config)
+    {
+        if (!is_array($config)) {
+            return;
+        }
+        self::$config = array_merge(self::$config, $config);
+        // Reset mailer instance so changes apply
+        self::$mailer = null;
+    }
+
+    /**
      * Send email using configured method
      */
     public static function send($to, $subject, $body, $options = [])
@@ -43,7 +58,13 @@ class EmailHelper
         try {
             $result = false;
             if (self::$config['smtp_enabled']) {
-                $result = self::sendWithSMTP($to, $subject, $body, $options);
+                try {
+                    $result = self::sendWithSMTP($to, $subject, $body, $options);
+                } catch (Exception $smtpEx) {
+                    // Attempt graceful fallback to mail() if SMTP fails
+                    error_log('SMTP send failed, falling back to mail(): ' . $smtpEx->getMessage());
+                    $result = self::sendWithMail($to, $subject, $body, $options);
+                }
             } else {
                 $result = self::sendWithMail($to, $subject, $body, $options);
             }

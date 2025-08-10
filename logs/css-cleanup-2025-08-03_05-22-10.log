@@ -1,0 +1,576 @@
+[2025-08-03 05:22:10] === CSS Syntax Cleanup Started ===
+[2025-08-03 05:22:10] Original CSS size: 1,360,421 bytes
+[2025-08-03 05:22:10] ✅ Created backup: main.css.pre-cleanup-2025-08-03_05-22-10.backup
+[2025-08-03 05:22:10] Step 1: Converting Tailwind utility classes to proper CSS...
+[2025-08-03 05:22:10]   ✅ Fixed pattern: /block;/ (236 occurrences)
+[2025-08-03 05:22:11]   ✅ Fixed pattern: /inline;/ (2 occurrences)
+[2025-08-03 05:22:11]   ✅ Fixed pattern: /flex;/ (1000 occurrences)
+[2025-08-03 05:22:11]   ✅ Fixed pattern: /grid;/ (130 occurrences)
+[2025-08-03 05:22:11]   ✅ Fixed pattern: /hidden;/ (276 occurrences)
+[2025-08-03 05:22:11] Step 2: Removing empty rulesets...
+[2025-08-03 05:22:11]   ✅ Removed 10 empty rulesets
+[2025-08-03 05:22:11] Step 3: Fixing standalone properties...
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-left { text-align: left; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-right { text-align: right; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-4 { margin-top: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-4 { margin-bottom: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .ml-4 { margin-left: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mr-4 { margin-right: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pt-4 { padding-top: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pb-4 { padding-bottom: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pl-4 { padding-left: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pr-4 { padding-right: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .block { display: display: block; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inline-block { display: inline-display: block; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .flex { display: display: flex; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .w-full { width: 100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .h-full { height: 100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-small { max-width: 500px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-medium { max-width: 600px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header { display: display: flex; align-items: center; gap: 0.5rem; color: white; margin: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header-warning { background: #FF9800; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header-success { background: #4CAF50; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-body { padding: 2rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-body-scroll { padding: 0; max-height: 500px; overflow-y: auto; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-title { margin: 0; color: white; display: display: flex; align-items: center; gap: 0.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-icon { font-size: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .space-y-6 > * + * { margin-top: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border { border: 1px solid #e5e7eb; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .rounded-lg { border-radius: 0.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-6 { padding: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-white { background-color: white; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-xl { font-size: 1.25rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .font-bold { font-weight: 700; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-4 { margin-bottom: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .grid { display: display: grid; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .gap-3 { gap: 0.75rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .gap-4 { gap: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: code { background-color: #f3f4f6; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.875rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-yellow-50 { background-color: #fefce8; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-blue-50 { background-color: #eff6ff; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-green-50 { background-color: #f0fdf4; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border-yellow-200 { border-color: #fde047; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border-blue-200 { border-color: #bfdbfe; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border-green-200 { border-color: #bbf7d0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-yellow-800 { color: #92400e; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-blue-800 { color: #1e40af; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-green-800 { color: #166534; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-yellow-700 { color: #a16207; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-blue-700 { color: #1d4ed8; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-green-700 { color: #15803d; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .section { margin-bottom: 2rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .priority-high { color: #dc2626; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .priority-medium { color: #d97706; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .priority-low { color: #059669; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .grid { display: display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-1::after { content: var(--step-badge-text-step1, "Step 1"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-2::after { content: var(--step-badge-text-step2, "Step 2"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-3::after { content: var(--step-badge-text-step3, "Step 3"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.customers { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.orders { background: linear-gradient(135deg, #f59e0b, #d97706); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.sales { background: linear-gradient(135deg, #10b981, #059669); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.items { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.payments { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.pending { background: linear-gradient(135deg, #ef4444, #dc2626); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.email { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.discount { background: linear-gradient(135deg, #f59e0b, #d97706); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.social { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.analytics { background: linear-gradient(135deg, #10b981, #059669); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-facebook { background: linear-gradient(135deg, #1877f2, #0d47a1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-instagram { background: linear-gradient(135deg, #e1306c, #c13584); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-twitter { background: linear-gradient(135deg, #1da1f2, #0277bd); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-linkedin { background: linear-gradient(135deg, #0077b5, #004182); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-room4 { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-room5 { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-room6 { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-main { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-left { text-align: left; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-right { text-align: right; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-4 { margin-top: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-4 { margin-bottom: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .ml-4 { margin-left: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mr-4 { margin-right: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pt-4 { padding-top: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pb-4 { padding-bottom: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pl-4 { padding-left: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pr-4 { padding-right: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .block { display: display: block; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inline-block { display: inline-display: block; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .flex { display: display: flex; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .w-full { width: 100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .h-full { height: 100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-small { max-width: 500px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-medium { max-width: 600px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header { display: display: flex; align-items: center; gap: 0.5rem; color: white; margin: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header-warning { background: #FF9800; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header-success { background: #4CAF50; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-body { padding: 2rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-body-scroll { padding: 0; max-height: 500px; overflow-y: auto; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-title { margin: 0; color: white; display: display: flex; align-items: center; gap: 0.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-icon { font-size: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .space-y-6 > * + * { margin-top: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border { border: 1px solid #e5e7eb; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .rounded-lg { border-radius: 0.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-6 { padding: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-white { background-color: white; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-xl { font-size: 1.25rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .font-bold { font-weight: 700; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-4 { margin-bottom: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .grid { display: display: grid; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .gap-3 { gap: 0.75rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .gap-4 { gap: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: code { background-color: #f3f4f6; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.875rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-yellow-50 { background-color: #fefce8; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-blue-50 { background-color: #eff6ff; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-green-50 { background-color: #f0fdf4; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border-yellow-200 { border-color: #fde047; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border-blue-200 { border-color: #bfdbfe; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border-green-200 { border-color: #bbf7d0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-yellow-800 { color: #92400e; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-blue-800 { color: #1e40af; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-green-800 { color: #166534; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-yellow-700 { color: #a16207; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-blue-700 { color: #1d4ed8; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-green-700 { color: #15803d; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .section { margin-bottom: 2rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .priority-high { color: #dc2626; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .priority-medium { color: #d97706; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .priority-low { color: #059669; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .grid { display: display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(1), .inventory-table td:nth-child(1) { width: 60px; } /* Image */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(2), .inventory-table td:nth-child(2) { width: 70px; } /* Images */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(3), .inventory-table td:nth-child(3) { width: 180px; } /* Name */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(4), .inventory-table td:nth-child(4) { width: 120px; } /* Category */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(5), .inventory-table td:nth-child(5) { width: 100px; } /* SKU */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(6), .inventory-table td:nth-child(6) { width: 80px; } /* Stock */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(7), .inventory-table td:nth-child(7) { width: 90px; } /* Reorder Point */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(8), .inventory-table td:nth-child(8) { width: 90px; } /* Cost Price */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(9), .inventory-table td:nth-child(9) { width: 90px; } /* Retail Price */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inventory-table th:nth-child(10), .inventory-table td:nth-child(10) { width: 120px; } /* Actions */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .modal-form-container::-webkit-scrollbar { width: 8px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .modal-form-container::-webkit-scrollbar-track { background: #f7fafc; border-radius: 4px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .modal-form-container::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .modal-form-container::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-text-left { text-align: left; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-text-center { text-align: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-text-right { text-align: right; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-mb-small { margin-bottom: 10px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-mb-medium { margin-bottom: 20px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-mb-large { margin-bottom: 30px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-mt-small { margin-top: 10px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-mt-medium { margin-top: 20px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-mt-large { margin-top: 30px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-text-primary { color: var(--footer-text-color); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-text-muted { color: var(--footer-copyright-color); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .footer-text-accent { color: var(--footer-link-color); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-1::after { content: var(--step-badge-text-step1, "Step 1"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-2::after { content: var(--step-badge-text-step2, "Step 2"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-3::after { content: var(--step-badge-text-step3, "Step 3"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.customers { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.orders { background: linear-gradient(135deg, #f59e0b, #d97706); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.sales { background: linear-gradient(135deg, #10b981, #059669); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.items { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.payments { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.pending { background: linear-gradient(135deg, #ef4444, #dc2626); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.email { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.discount { background: linear-gradient(135deg, #f59e0b, #d97706); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.social { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.analytics { background: linear-gradient(135deg, #10b981, #059669); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-facebook { background: linear-gradient(135deg, #1877f2, #0d47a1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-instagram { background: linear-gradient(135deg, #e1306c, #c13584); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-twitter { background: linear-gradient(135deg, #1da1f2, #0277bd); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-linkedin { background: linear-gradient(135deg, #0077b5, #004182); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-1::after { content: var(--step-badge-text-step1, "Step 1"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-2::after { content: var(--step-badge-text-step2, "Step 2"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .step-badge-3::after { content: var(--step-badge-text-step3, "Step 3"); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.customers { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.orders { background: linear-gradient(135deg, #f59e0b, #d97706); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.sales { background: linear-gradient(135deg, #10b981, #059669); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.items { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.payments { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .stat-icon.pending { background: linear-gradient(135deg, #ef4444, #dc2626); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.email { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.discount { background: linear-gradient(135deg, #f59e0b, #d97706); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.social { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .tool-icon.analytics { background: linear-gradient(135deg, #10b981, #059669); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-facebook { background: linear-gradient(135deg, #1877f2, #0d47a1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-instagram { background: linear-gradient(135deg, #e1306c, #c13584); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-twitter { background: linear-gradient(135deg, #1da1f2, #0277bd); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .platform-icon.platform-linkedin { background: linear-gradient(135deg, #0077b5, #004182); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header-cash { background: #4CAF50; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header-credit-card { background: #2196F3; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header-debit-card { background: #FF9800; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pos-modal-header-check { background: #9C27B0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .nowrap { white-space: nowrap; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-center { text-align: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-left { text-align: left; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-right { text-align: right; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .container { width: 100%; max-width: var(--breakpoint-lg); margin-left: auto; margin-right: auto; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .flex-grow { flex-grow: 1; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .max-w-full { max-width: 100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-auto { margin-left: auto; margin-right: auto; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-0 { margin: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-1 { margin: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-2 { margin: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-3 { margin: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-4 { margin: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-5 { margin: var(--space-5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-6 { margin: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-0 { margin-bottom: var(--space-0); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-1 { margin-bottom: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-2 { margin-bottom: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-3 { margin-bottom: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-4 { margin-bottom: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-6 { margin-bottom: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mb-8 { margin-bottom: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .ml-1 { margin-left: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .ml-2 { margin-left: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .ml-3 { margin-left: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .ml-4 { margin-left: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .ml-6 { margin-left: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mr-1 { margin-right: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mr-2 { margin-right: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mr-3 { margin-right: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mr-4 { margin-right: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-0\.5 { margin-top: var(--space-0); } /* Note: 0.5 is equivalent to 0 */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-1 { margin-top: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-2 { margin-top: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-3 { margin-top: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-4 { margin-top: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-6 { margin-top: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-8 { margin-top: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mt-10 { margin-top: var(--space-10); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-4 { margin-left: var(--space-4); margin-right: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-4 { margin-top: var(--space-4); margin-bottom: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-0 { padding: var(--space-0); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-1 { padding: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-2 { padding: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-3 { padding: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-4 { padding: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-5 { padding: var(--space-5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-6 { padding: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-8 { padding: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pb-2 { padding-bottom: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pb-3 { padding-bottom: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pb-4 { padding-bottom: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pb-6 { padding-bottom: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pl-3 { padding-left: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pl-4 { padding-left: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pl-10 { padding-left: var(--space-10); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pr-2 { padding-right: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pr-3 { padding-right: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pr-4 { padding-right: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pr-8 { padding-right: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pt-1 { padding-top: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pt-2 { padding-top: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pt-3 { padding-top: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pt-4 { padding-top: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pt-6 { padding-top: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-1 { padding-left: var(--space-1); padding-right: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-2 { padding-left: var(--space-2); padding-right: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-3 { padding-left: var(--space-3); padding-right: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-4 { padding-left: var(--space-4); padding-right: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-5 { padding-left: var(--space-5); padding-right: var(--space-5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-6 { padding-left: var(--space-6); padding-right: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-0\.5 { padding-top: var(--space-0); padding-bottom: var(--space-0); } /* Note: 0.5 is equivalent to 0 */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-1 { padding-top: var(--space-1); padding-bottom: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-1\.5 { padding-top: var(--space-1); padding-bottom: var(--space-1); } /* Note: 1.5 is equivalent to 1 */
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-2 { padding-top: var(--space-2); padding-bottom: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-3 { padding-top: var(--space-3); padding-bottom: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-4 { padding-top: var(--space-4); padding-bottom: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-6 { padding-top: var(--space-6); padding-bottom: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-8 { padding-top: var(--space-8); padding-bottom: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-12 { padding-top: var(--space-12); padding-bottom: var(--space-12); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: @media (min-width: 640px) { .sm\:px-6 { padding-left: var(--space-6); padding-right: var(--space-6); } }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: @media (min-width: 768px) { .md\:p-4 { padding: var(--space-4); } }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: @media (min-width: 1024px) { .lg\:px-8 { padding-left: var(--space-8); padding-right: var(--space-8); } }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: @media (min-width: 1024px) { .lg\:p-6 { padding: var(--space-6); } }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-8 { margin: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-10 { margin: var(--space-10); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-12 { margin: var(--space-12); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-16 { margin: var(--space-16); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .m-20 { margin: var(--space-20); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-0 { margin-left: 0; margin-right: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-1 { margin-left: var(--space-1); margin-right: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-2 { margin-left: var(--space-2); margin-right: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-3 { margin-left: var(--space-3); margin-right: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-4 { margin-left: var(--space-4); margin-right: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-5 { margin-left: var(--space-5); margin-right: var(--space-5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-6 { margin-left: var(--space-6); margin-right: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-8 { margin-left: var(--space-8); margin-right: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-10 { margin-left: var(--space-10); margin-right: var(--space-10); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-12 { margin-left: var(--space-12); margin-right: var(--space-12); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-16 { margin-left: var(--space-16); margin-right: var(--space-16); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .mx-20 { margin-left: var(--space-20); margin-right: var(--space-20); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-0 { margin-top: 0; margin-bottom: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-1 { margin-top: var(--space-1); margin-bottom: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-2 { margin-top: var(--space-2); margin-bottom: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-3 { margin-top: var(--space-3); margin-bottom: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-4 { margin-top: var(--space-4); margin-bottom: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-5 { margin-top: var(--space-5); margin-bottom: var(--space-5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-6 { margin-top: var(--space-6); margin-bottom: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-8 { margin-top: var(--space-8); margin-bottom: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-10 { margin-top: var(--space-10); margin-bottom: var(--space-10); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-12 { margin-top: var(--space-12); margin-bottom: var(--space-12); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-16 { margin-top: var(--space-16); margin-bottom: var(--space-16); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .my-20 { margin-top: var(--space-20); margin-bottom: var(--space-20); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-0 { padding: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-1 { padding: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-2 { padding: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-3 { padding: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-4 { padding: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-5 { padding: var(--space-5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-6 { padding: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-8 { padding: var(--space-8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-10 { padding: var(--space-10); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-12 { padding: var(--space-12); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-16 { padding: var(--space-16); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-20 { padding: var(--space-20); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-0 { padding-left: 0; padding-right: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-1 { padding-left: 8px; padding-right: 8px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-2 { padding-left: var(--space-2); padding-right: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-3 { padding-left: var(--space-3); padding-right: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-5 { padding-left: var(--space-5); padding-right: var(--space-5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .px-6 { padding-left: var(--space-6); padding-right: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-0 { padding-top: 0; padding-bottom: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-1 { padding-top: var(--space-1); padding-bottom: var(--space-1); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-2 { padding-top: var(--space-2); padding-bottom: var(--space-2); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-3 { padding-top: var(--space-3); padding-bottom: var(--space-3); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-4 { padding-top: var(--space-4); padding-bottom: var(--space-4); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-5 { padding-top: var(--space-5); padding-bottom: var(--space-5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .py-6 { padding-top: var(--space-6); padding-bottom: var(--space-6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-scrollbar-color-cbd5e0-f7fafc { scrollbar-color: #cbd5e0 #f7fafc; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-text-align-center { text-align: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-text-align-left { text-align: left; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-text-align-right { text-align: right; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-text-decoration-none { text-decoration: none; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-top-0 { top: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-top-10px { top: 10px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-top-20px { top: 20px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-top-2px { top: 2px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-top-50 { top: 50%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-top-6px { top: 6px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transform-translateY-50 { transform: translateY(-50%); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transition-background-0-3s { transition: background 0.3s; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transition-background-color-0-2s { transition: background-color 0.2s; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transition-border-color-0-3s { transition: border-color 0.3s; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transition-opacity-0-3s-ease { transition: opacity 0.3s ease; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-visibility-visible-important { visibility: visible; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-width-100 { width: 100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-width-16px { width: 16px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-width-40px { width: 40px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-align-items-center { align-items:center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-6b7280 { background-color: #6b7280; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-87ac3a { background-color: #87ac3a; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-87ac3a-important { background-color: #87ac3a; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-d32f2f { background-color: #d32f2f; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-dc2626 { background-color: #dc2626; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-e8f4e8 { background-color: #e8f4e8; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-f5f5f5 { background-color: #f5f5f5; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-f9f9f9 { background-color: #f9f9f9; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-fff3cd { background-color: #fff3cd; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-color-white { background-color: white; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-2196F3 { background: #2196F3; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-4CAF50 { background: #4CAF50; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-e3f2fd { background: #e3f2fd; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-f0f0f0 { background: #f0f0f0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-f8f9fa { background: #f8f9fa; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-FF9800 { background: #FF9800; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-linear-gradient-135deg-10b981-3b82f6 { background: linear-gradient(135deg, #10b981, #3b82f6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-linear-gradient-to-right-3b82f6-1d4ed8 { background: linear-gradient(to right, #3b82f6, #1d4ed8); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-linear-gradient-to-right-87ac3a-6b8e23 { background: linear-gradient(to right, #87ac3a, #6b8e23); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-rgba-0-0-0-0-5 { background: rgb(0 0 0 / 50%); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-white { background: white; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-f8f9fa { background:#f8f9fa; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-background-rgba-107-142-35-0-9 { background:rgb(107 142 35 / 90%); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-border-radius-20px { border-radius:20px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-border-radius-6px { border-radius:6px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-border-radius-8px { border-radius:8px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-border-top-2px-solid-333 { border-top: 2px solid #333; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-border-top-2px-solid-dc3545 { border-top: 2px solid #dc3545; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-box-shadow-0-1px-3px-bbb { box-shadow:0 1px 3px #bbb; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-box-shadow-0-2px-8px-rgba-0-0-0-0-1 { box-shadow:0 2px 8px rgb(0 0 0 / 10%); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-color-333 { color: #333; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-color-666 { color: #666; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-color-87ac3a { color: #87ac3a; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-color-d32f2f { color: #d32f2f; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-color-dc2626 { color: #dc2626; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-color-var-primary-color-87ac3a { color: var(--primary-color, #87ac3a); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-color-var-primary-color { color: var(--primary-color); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-color-6c757d { color:#6c757d; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-cursor-pointer { cursor: pointer; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-display-block { display: display: block; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-display-flex { display: display: flex; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-display-grid { display: display: grid; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-display-inline-block { display: inline-display: block; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-display-none { display: none; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-display-flex { display:display: flex; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-display-none { display:none; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-flex-direction-column { flex-direction:column; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-flex-1 { flex: 1; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-family-Arial-sans-serif { font-family: Arial, sans-serif; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-0-875rem { font-size: 0.875rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-0-8rem { font-size: 0.8rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-0-9rem { font-size: 0.9rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-1-1rem { font-size: 1.1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-1-4rem { font-size: 1.4rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-1-5rem { font-size: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-16px { font-size: 16px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-1rem { font-size: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-2rem { font-size: 2rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-2rem-important { font-size: 2rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-3rem { font-size: 3rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-0-8rem { font-size:0.8rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-0-9rem { font-size:0.9rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-2rem { font-size:2rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-size-3rem { font-size:3rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-weight-bold { font-weight: bold; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-weight-500 { font-weight:500; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-font-weight-bold { font-weight:bold; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-height-100 { height: 100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-height-150px { height: 150px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-height-192px { height: 192px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-height-100 { height:100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-height-40px { height:40px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-justify-content-center { justify-content:center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-list-style-none { list-style: none; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-bottom-0 { margin-bottom: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-bottom-1-5rem { margin-bottom: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-bottom-10px { margin-bottom: 10px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-bottom-15px { margin-bottom: 15px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-bottom-2rem { margin-bottom: 2rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-bottom-0-5rem { margin-bottom:0.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-top-0-5rem { margin-top: 0.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-top-30px { margin-top: 30px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-0 { margin: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-0-0-20px-0 { margin: 0 0 20px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-5px-0-0-0 { margin: 5px 0 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-height-100px { max-height: 100px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-height-200px { max-height: 200px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-height-600px { max-height: 600px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-height-70vh { max-height: 70vh; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-width-100 { max-width: 100%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-width-1100px { max-width: 1100px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-width-400px { max-width: 400px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-width-500px { max-width: 500px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-width-600px { max-width: 600px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-width-700px { max-width: 700px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-width-800px { max-width: 800px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-max-width-900px { max-width: 900px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-min-width-100px { min-width: 100px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-object-fit-cover { object-fit:cover; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-object-position-center { object-position: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-opacity-0-7 { opacity:0.7; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-padding-0 { padding: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-padding-10px { padding: 10px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-padding-2rem { padding: 2rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-padding-4px-0 { padding: 4px 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-padding-8px-0 { padding: 8px 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-padding-8px-16px { padding: 8px 16px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-padding-6px-12px { padding:6px 12px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-position-absolute { position: absolute; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-position-fixed { position: fixed; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-position-relative { position: relative; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transform-scale-0-6 { transform: scale(0.6); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transform-scale-0-5 { transform: scale(0.5); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transform-origin-center { transform-origin: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-top-15px { top: 15px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-left-15px { left: 15px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-right-15px { right: 15px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-width-1250px { width: 1250px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-flex-direction-column { flex-direction: column; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-gap-0 { gap: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-margin-bottom-0 { margin-bottom: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-padding-horizontal-0 { padding: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .u-transform-translateY-10px { transform: translateY(10px); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .fixed { position: fixed; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .inset-0 { inset: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .flex { display: display: flex; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .items-center { align-items: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .justify-center { justify-content: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .p-4 { padding: 1rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-black { background-color: #000; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-opacity-50 { opacity: 0.5; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .image-viewer-modal-closed { display: none !important; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .image-viewer-modal-open { display: flex !important; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-opacity-90 { opacity: 0.9; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pointer-events-none { pointer-events: none; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .pointer-events-auto { pointer-events: auto; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .h-6 { height: 1.5rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .rounded-full { border-radius: 9999px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border-2 { border-width: 2px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .border { border-width: 1px; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-gray-200 { background-color: #e5e7eb; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-gray-300 { background-color: #d1d5db; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-green-500 { background-color: #10b981; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-red-500 { background-color: #ef4444; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-blue-50 { background-color: #eff6ff; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .bg-red-50 { background-color: #fef2f2; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-gray-500 { color: #6b7280; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-gray-600 { color: #4b5563; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-gray-900 { color: #111827; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-green-700 { color: #047857; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-green-800 { color: #065f46; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-red-700 { color: #b91c1c; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-red-800 { color: #991b1b; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-blue-700 { color: #1d4ed8; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-blue-800 { color: #1e40af; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .space-x-3 > * + * { margin-left: 0.75rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .space-y-1 > * + * { margin-top: 0.25rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .space-y-3 > * + * { margin-top: 0.75rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .items-center { align-items: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .justify-center { justify-content: center; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .flex-shrink-0 { flex-shrink: 0; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .font-medium { font-weight: 500; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .duration-300 { transition-duration: 300ms; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .width_0 { width: 0%; }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-main { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-landing { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-room1 { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-room2 { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-room3 { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-room4 { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .no-webp .room-bg-room5 { background-image: var(--bg-png); }
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .admin-modal-overlay{align-items:center;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;background:rgba(0,0,0,.5);}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .admin-modal-overlay:not(.show){display:none!important;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .admin-modal-overlay.show{display:flex!important;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .settings-grid{display:display: grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;margin-top:1rem;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .settings-section{background:#fff;border:1px solid #e5e7eb;border-radius:.5rem;box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:1rem;display:display: flex;flex-direction:column;height:100%;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .settings-section .section-content{display:display: flex;flex-direction:column;gap:.5rem;margin-top:1rem;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .admin-settings-button{display:display: flex;align-items:center;gap:.5rem;padding:.5rem .75rem;font-size:.875rem;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .logging-status-grid{display:display: grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:20px;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .status-section{background:#f8f9fa;border-radius:8px;padding:15px;border:1px solid #e9ecef;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .status-section h3{margin:0 0 15px 0;color:#495057;font-size:1.1rem;font-weight:600;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .status-item{display:display: flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e9ecef;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .status-item:last-child{border-bottom:none;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .status-label{font-weight:500;color:#6c757d;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .status-value{font-weight:600;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .status-enabled{color:#28a745;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .status-disabled{color:#dc3545;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .modal-actions{display:display: flex;gap:10px;justify-content:center;padding-top:20px;border-top:1px solid #e9ecef;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .loading-spinner{text-align:center;padding:20px;color:#666;}
+[2025-08-03 05:22:11]   ✅ Removed standalone property: .error-message{color:#dc3545;text-align:center;padding:20px;}
+[2025-08-03 05:22:11] Step 4: Cleaning up excessive whitespace...
+[2025-08-03 05:22:11] === CLEANUP COMPLETED SUCCESSFULLY ===
+[2025-08-03 05:22:11] 📈 Cleanup Summary:
+[2025-08-03 05:22:11]   - Original size: 1,360,421 bytes
+[2025-08-03 05:22:11]   - Final size: 1,342,972 bytes
+[2025-08-03 05:22:11]   - Size reduction: 17,449 bytes
+[2025-08-03 05:22:11]   - Total fixes applied: 2208
+[2025-08-03 05:22:11] 💾 Files:
+[2025-08-03 05:22:11]   - Backup created: main.css.pre-cleanup-2025-08-03_05-22-10.backup
+[2025-08-03 05:22:11]   - Cleanup log: css-cleanup-2025-08-03_05-22-10.log

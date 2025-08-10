@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Check authentication with fallback token support like cleanup_system.php
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    
 }
 
 // Check if user is admin or has valid admin token

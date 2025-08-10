@@ -1,30 +1,30 @@
 import { resolve } from 'path';
-import { glob } from 'glob';
+import { globSync } from 'glob';
 import fullReload from 'vite-plugin-full-reload';
+import { defineConfig } from 'vite';
 
-// Find all top-level JS files in the js/ directory
-const entryPoints = glob.sync('js/*.js').reduce((acc, path) => {
-    const name = path.split('/').pop().replace('.js', '');
-    acc[name] = resolve(__dirname, path);
-    return acc;
-}, {});
 
-export default {
-    plugins: [
-        fullReload(['includes/**/*', 'sections/**/*', '*.php'])
-    ],
+
+export default defineConfig({
     root: __dirname,
+    plugins: [],
+    define: {
+        '__APP_ENV__': JSON.stringify('development'),
+    },
+    server: {
+        hmr: false,
+    },
     build: {
         outDir: 'dist',
         emptyOutDir: true,
         manifest: true,
         rollupOptions: {
-            input: entryPoints
+            input: {
+                app: resolve(__dirname, 'js/app.js'),
+                'admin-dashboard': resolve(__dirname, 'js/admin-dashboard.js'),
+                'admin-inventory': resolve(__dirname, 'js/admin-inventory.js'),
+            },
         }
     },
-    server: {
-        port: 5173,
-        open: false,
-        strictPort: true,
-    }
-};
+
+});

@@ -23,7 +23,9 @@ function renderGlobalPopup()
             </div>
             
             <!- Product Image ->
-            <img id="popupImage" class="popup-image" src="" alt="Product Image">
+            <div class="popup-image-container">
+                <img id="popupImage" class="popup-image" alt="Product Image" loading="lazy">
+            </div>
             
             <!- Product Info ->
             <div class="popup-info">

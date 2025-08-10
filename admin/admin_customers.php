@@ -159,7 +159,9 @@ function getSortUrl($column, $currentSort, $currentDir)
     $queryParams = $_GET;
     $queryParams['sort'] = $column;
     $queryParams['dir'] = $newDir;
-    return '?' . http_build_query($queryParams);
+    // Build query string but remove page, section, view, edit from it to avoid messy URLs
+    unset($queryParams['page'], $queryParams['section'], $queryParams['view'], $queryParams['edit']);
+    return '/admin/customers?' . http_build_query($queryParams);
 }
 
 // Helper function to get sort indicator
@@ -220,10 +222,12 @@ $messageType = $_GET['type'] ?? '';
 ?>
 
 <div class="admin-content-container">
+
+
+
+
     <div class="admin-filter-section">
-        <form method="GET" action="" class="admin-filter-form">
-            <input type="hidden" name="page" value="admin">
-            <input type="hidden" name="section" value="customers">
+        <form method="GET" action="/admin/customers" class="admin-filter-form">
             
             <input type="text" name="search" placeholder="Search customers..." 
                    class="admin-form-input" value="<?= htmlspecialchars($searchTerm) ?>">
@@ -327,7 +331,7 @@ $messageType = $_GET['type'] ?? '';
                                        class="text-blue-600 hover:text-blue-800" title="View Customer">👁️</a>
                                     <a href="?page=admin&section=customers&edit=<?= htmlspecialchars($customerId) ?>" 
                                        class="text-green-600 hover:text-green-800" title="Edit Customer">✏️</a>
-                                    <button onclick="confirmDelete('<?= $customerId ?>', '<?= htmlspecialchars(addslashes($firstName . ' ' . $lastName)) ?>')" 
+                                    <button data-action="confirm-delete" data-customer-id="<?= $customerId ?>" data-customer-name="<?= htmlspecialchars($firstName . ' ' . $lastName) ?>" 
                                             class="text-red-600 hover:text-red-800" title="Delete Customer">🗑️</button>
                                 </div>
                             </td>
@@ -347,7 +351,7 @@ $messageType = $_GET['type'] ?? '';
             Are you sure you want to delete this customer? This action cannot be undone.
         </p>
         <div class="delete-modal-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="button" class="btn btn-secondary" data-action="close-delete-modal">Cancel</button>
                             <form action="" method="POST" class="inline-block">
                 <input type="hidden" name="customer_id" id="delete_customer_id">
                 <button type="submit" name="delete_customer" class="btn btn-danger">Delete</button>
@@ -360,10 +364,10 @@ $messageType = $_GET['type'] ?? '';
 <!- Customer View/Edit Modal ->
 <div class="customer-modal" id="customerModalOuter">
     <!- Navigation Arrows ->
-    <button id="prevCustomerBtn" onclick="navigateToCustomer('prev')" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600" title="Previous customer">
+    <button id="prevCustomerBtn" data-action="navigate-customer" data-direction="prev" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600" title="Previous customer">
         <span class="text-xl">‹</span>
     </button>
-    <button id="nextCustomerBtn" onclick="navigateToCustomer('next')" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600" title="Next customer">
+    <button id="nextCustomerBtn" data-action="navigate-customer" data-direction="next" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600" title="Next customer">
         <span class="text-xl">›</span>
     </button>
     
@@ -695,98 +699,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            if (validationErrors.length > 0) {
-                showError(validationErrors.join('. '));
-                return;
-            }
-            
-            if (saveBtn && btnText && spinner) {
-                btnText.classList.add('hidden');
-                spinner.classList.remove('hidden');
-                saveBtn.disabled = true;
-            }
-            
-            const formData = new FormData(customerForm);
-
-            fetch('/functions/process_customer_update.php', {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => {
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    return response.json();
-                } else {
-                    return response.text().then(text => { 
-                        throw new Error("Server returned non-JSON response: " + text.substring(0, 200)); 
-                    });
-                }
-            })
-            .then(data => {
-                if (data.success) {
-                    showSuccess(data.message);
-                    
-                    let redirectUrl = '?page=admin&section=customers';
-                    if (data.customerId) {
-                        redirectUrl += '&highlight=' + data.customerId;
-                    }
-                    
-                    setTimeout(() => {
-                        window.location.href = redirectUrl;
-                    }, 500); 
-                } else {
-                    showError(data.error || 'Failed to save customer. Please check inputs.');
-                    if (saveBtn && btnText && spinner) {
-                        btnText.classList.remove('hidden');
-                        spinner.classList.add('hidden');
-                        saveBtn.disabled = false;
-                    }
-                    if (data.field_errors) {
-                        document.querySelectorAll('.field-error-highlight').forEach(el => 
-                            el.classList.remove('field-error-highlight'));
-                        data.field_errors.forEach(fieldName => {
-                            const fieldElement = document.getElementById(fieldName) || 
-                                document.querySelector(`[name="${fieldName}"]`);
-                            if (fieldElement) fieldElement.classList.add('field-error-highlight');
-                        });
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error saving customer:', error);
-                showError('An unexpected error occurred: ' + error.message);
-                if (saveBtn && btnText && spinner) {
-                    btnText.classList.remove('hidden');
-                    spinner.classList.add('hidden');
-                    saveBtn.disabled = false;
-                }
-            });
-        });
-    }
-
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-        if ((modalMode === 'view' || modalMode === 'edit') && 
-            !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
-            
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                navigateToCustomer('prev');
-            } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                e.preventDefault();
-                navigateToCustomer('next');
-            }
-        }
-    });
-
-    // Escape key handling
-    window.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            const mainModal = document.getElementById('customerModalOuter');
-            if (mainModal && mainModal.offsetParent !== null) { 
-                window.location.href = '?page=admin&section=customers';
-            } else if (document.getElementById('deleteConfirmModal')?.classList.contains('show')) {
                 closeModal();
             }
         }

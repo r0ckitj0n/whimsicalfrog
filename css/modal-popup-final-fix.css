@@ -1,0 +1,175 @@
+/* COMPREHENSIVE FIX FOR MODAL AND POPUP ISSUES */
+
+/* =================================
+   1. REMOVE RED BORDER AND BLACK SPACE FROM MODAL
+   ================================= */
+
+/* Override any debug borders */
+#roomModalOverlay[data-debug="true"],
+.detailed-item-modal,
+.detailed-item-modal-container {
+    border: none !important;
+}
+
+/* Ensure proper modal overlay styling */
+.detailed-item-modal,
+.detailed-item-modal.show {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    overflow: hidden !important; /* Prevent any overflow */
+}
+
+/* Modal container - ensure white background and no black space */
+.detailed-item-modal-container {
+    position: relative !important;
+    background: white !important;
+    border: none !important; /* Remove any borders */
+    border-radius: 8px !important;
+    width: 75vw !important;
+    max-width: 75vw !important;
+    max-height: 90vh !important;
+    margin: 0 !important; /* Remove all margins */
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Ensure modal content has white background */
+.detailed-item-modal .modal-content,
+.detailed-item-modal-container .modal-content,
+.detailed-item-modal .modal-body,
+.detailed-item-modal-container .modal-body {
+    background: white !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* Remove any black backgrounds from all child elements */
+.detailed-item-modal *,
+.detailed-item-modal-container * {
+    background-color: transparent;
+}
+
+/* Specifically set white background for content areas */
+.detailed-item-modal .space-y-4,
+.detailed-item-modal-container .space-y-4,
+.detailed-item-modal .flex,
+.detailed-item-modal-container .flex {
+    background: white !important;
+}
+
+/* Remove bottom margin that might cause black space */
+.detailed-item-modal .space-y-4:last-child,
+.detailed-item-modal-container .space-y-4:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 1rem !important;
+}
+
+/* =================================
+   2. CONSTRAIN HOVER POPUP SIZE TO FIT VIEWPORT
+   ================================= */
+
+/* Hover popup size constraints */
+.wf-item-hover-popup,
+.item-hover-popup {
+    max-width: min(400px, 80vw) !important; /* Max 400px or 80% of viewport width */
+    max-height: 70vh !important; /* Max 70% of viewport height */
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Popup content container */
+.wf-item-hover-popup .popup-content,
+.item-hover-popup .popup-content {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 100% !important;
+    padding: 12px !important;
+}
+
+/* Constrain popup image size */
+.wf-item-hover-popup img,
+.item-hover-popup img {
+    max-width: 100% !important;
+    max-height: 200px !important; /* Limit image height */
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    margin-bottom: 10px !important;
+}
+
+/* Popup title and description text */
+.wf-item-hover-popup h3,
+.item-hover-popup h3 {
+    font-size: 16px !important;
+    margin: 8px 0 !important;
+    line-height: 1.3 !important;
+}
+
+.wf-item-hover-popup p,
+.item-hover-popup p {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    margin: 6px 0 !important;
+    max-height: 100px !important; /* Limit description height */
+    overflow-y: auto !important;
+}
+
+/* Price display */
+.wf-item-hover-popup .price,
+.item-hover-popup .price {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    margin: 8px 0 !important;
+}
+
+/* Buttons in popup */
+.wf-item-hover-popup button,
+.item-hover-popup button {
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+    margin-top: 8px !important;
+}
+
+/* Ensure popup stays within viewport bounds */
+.wf-item-hover-popup[style*="position: fixed"],
+.item-hover-popup[style*="position: fixed"] {
+    /* These will be overridden by JavaScript positioning,
+       but provide fallback constraints */
+    max-width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 100px) !important; /* Account for header */
+}
+
+/* =================================
+   3. ADDITIONAL SAFEGUARDS
+   ================================= */
+
+/* Remove any debug backgrounds */
+#roomModalOverlay[data-debug="true"] {
+    background: rgba(0, 0, 0, 0.5) !important; /* Normal overlay, not red */
+}
+
+#roomModalOverlay[data-debug="true"] .room-modal-container {
+    border: none !important;
+    background: white !important; /* Normal white, not yellow */
+}
+
+/* Ensure no element can cause unwanted backgrounds */
+.detailed-item-modal::before,
+.detailed-item-modal::after,
+.detailed-item-modal-container::before,
+.detailed-item-modal-container::after {
+    display: none !important;
+}

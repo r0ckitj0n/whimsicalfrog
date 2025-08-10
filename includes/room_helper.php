@@ -100,7 +100,7 @@ class RoomHelper
             'description' => $this->roomSettings ? $this->roomSettings['description'] : "Browse our collection of {$this->roomCategoryName} at WhimsicalFrog",
             'category' => $this->roomCategoryName,
             'products' => $this->roomItems,
-            'canonical' => "/?page=room{$this->roomNumber}",
+            'canonical' => "/room/{$this->roomNumber}",
             'image' => "images/{$this->roomType}.webp"
         ];
     }
@@ -128,7 +128,7 @@ class RoomHelper
                 'description' => "Browse our collection of {$this->roomCategoryName} at WhimsicalFrog",
                 'category' => $this->roomCategoryName,
                 'products' => $this->roomItems,
-                'canonical' => "/?page=room{$this->roomNumber}",
+                'canonical' => "/room/{$this->roomNumber}",
                 'image' => "images/{$this->roomType}.webp"
             ];
         }
@@ -225,19 +225,19 @@ class RoomHelper
     }
 
     /**
-     * Render required JavaScript
+     * Get room data as a JSON string for frontend consumption.
      */
-    public function renderJavaScript()
+    public function getRoomDataAsJson()
     {
         $coordinates = $this->getRoomCoordinates();
-        return sprintf(
-            '<script src="js/room-helper.js?v=%s" data-room-items=\'%s\' data-room-number="%s" data-room-type="%s" data-base-areas=\'%s\'></script>',
-            time(),
-            htmlspecialchars(json_encode($this->roomItems), ENT_QUOTES),
-            $this->roomNumber,
-            $this->roomType,
-            htmlspecialchars(json_encode($coordinates), ENT_QUOTES)
-        );
+        $roomData = [
+            'roomItems' => $this->roomItems,
+            'roomNumber' => $this->roomNumber,
+            'roomType' => $this->roomType,
+            'baseAreas' => $coordinates
+        ];
+
+        return json_encode($roomData);
     }
 
     /**
@@ -268,7 +268,7 @@ HTML;
         return "
         <div class=\"room-header-overlay\">
             <div class=\"back-button-container\">
-                <a href=\"/?page=room_main\" class=\"back-to-main-button\">
+                <a href=\"/room_main\" class=\"back-to-main-button\">
                     <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">
                         <path d=\"m12 19-7-7 7-7\"></path>
                         <path d=\"m19 12-7 7-7-7\"></path>

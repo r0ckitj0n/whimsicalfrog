@@ -11,7 +11,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 // Start session for authentication
-session_start();
+
 
 // Authentication check
 $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);

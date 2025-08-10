@@ -4,13 +4,39 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 // Handle OPTIONS preflight
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// Include centralized database class
+// Improved environment detection with multiple checks
+$isLocalhost = false;
+
+// Check 1: Check if running from command line
+if (PHP_SAPI === 'cli') {
+    $isLocalhost = true;
+} 
+// Check 2: Check server headers for localhost indicators
+else if (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
+    $isLocalhost = true;
+}
+
+// Optional override via environment variable (e.g., for Docker or specific server configs)
+if (isset($_SERVER['WHF_ENV'])) {
+    if ($_SERVER['WHF_ENV'] === 'prod') {
+        $isLocalhost = false;
+    } elseif ($_SERVER['WHF_ENV'] === 'local') {
+        $isLocalhost = true;
+    }
+}
+
+// Centralized includes for the entire application
+require_once __DIR__ . '/../includes/logging_config.php';
 require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/../includes/logger.php';
+
+require_once __DIR__ . '/../includes/error_logger.php';
+
 
 // Set error reporting for development
 ini_set('display_startup_errors', 1);
@@ -20,24 +46,25 @@ error_reporting(E_ALL);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/../logs/php_error.log');
 
-// Detect environment early so it can be referenced below without warnings
+// Improved environment detection with multiple checks
 $isLocalhost = false;
 
-// Check 1: CLI implies local
+// Check 1: Check if running from command line
 if (PHP_SAPI === 'cli') {
     $isLocalhost = true;
-}
-// Check 2: host headers contain localhost/127.0.0.1
-if (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
+} 
+// Check 2: Check server headers for localhost indicators
+else if (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) {
     $isLocalhost = true;
 }
-// Check 3: server name header
-if (isset($_SERVER['SERVER_NAME']) && (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false || strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false)) {
-    $isLocalhost = true;
-}
-// Environment variable overrides
+
+// Optional override via environment variable (e.g., for Docker or specific server configs)
 if (isset($_SERVER['WHF_ENV'])) {
-    $isLocalhost = $_SERVER['WHF_ENV'] === 'local' ? true : ($_SERVER['WHF_ENV'] === 'prod' ? false : $isLocalhost);
+    if ($_SERVER['WHF_ENV'] === 'prod') {
+        $isLocalhost = false;
+    } elseif ($_SERVER['WHF_ENV'] === 'local') {
+        $isLocalhost = true;
+    }
 }
 
 // For API endpoints, don't display HTML errors - only log them
@@ -60,63 +87,28 @@ function isAjaxRequest()
             strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
 }
 
-// Improved environment detection with multiple checks
-$isLocalhost = false;
-
-// Check 1: Check if running from command line
-if (PHP_SAPI === 'cli') {
-    $isLocalhost = true;
-}
-
-// Check 2: Check HTTP_HOST for localhost indicators
-if (isset($_SERVER['HTTP_HOST'])) {
-    if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
-        strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false) {
-        $isLocalhost = true;
-    }
-}
-
-// Check 3: Check SERVER_NAME for localhost indicators
-if (isset($_SERVER['SERVER_NAME'])) {
-    if (strpos($_SERVER['SERVER_NAME'], 'localhost') !== false ||
-        strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false) {
-        $isLocalhost = true;
-    }
-}
-
-// Optional override via environment variable (set WHF_ENV=prod on live server)
-if (isset($_SERVER['WHF_ENV']) && $_SERVER['WHF_ENV'] === 'prod') {
-    $isLocalhost = false;
-}
-// Likewise WHF_ENV=local can force local mode
-if (isset($_SERVER['WHF_ENV']) && $_SERVER['WHF_ENV'] === 'local') {
-    $isLocalhost = true;
-}
-
-// Force local environment for development if needed
-// Uncomment the line below to force local environment
-// $isLocalhost = true;
-
 // Database configuration based on environment
 if ($isLocalhost) {
     // Load local credentials from config/my.cnf
-    $host   = 'localhost';
+    $host   = '127.0.0.1';
     $db     = 'whimsicalfrog';
-    $user   = 'admin';
+    $user   = 'root';
     $pass   = 'Palz2516!';
-    $port   = null;
-    $socket = null;
+    $port   = 3306;
+    $socket = null; // Force TCP connection instead of socket
     $iniPath = __DIR__ . '/../config/my.cnf';
+
     if (file_exists($iniPath)) {
         $inClient = false;
         foreach (file($iniPath) as $line) {
             $line = trim($line);
+            // Corrected regex to find [client] section
             if (preg_match('/^\[client\]/i', $line)) {
                 $inClient = true;
                 continue;
             }
             if ($inClient) {
-                // stop at next section
+                // Stop at the next section
                 if (preg_match('/^\[.*\]/', $line)) {
                     break;
                 }
@@ -133,12 +125,15 @@ if ($isLocalhost) {
             }
         }
     }
+    
+    // Force TCP connection by nullifying socket after config file read
+    $socket = null;
 } else {
     // Production database credentials - updated with actual IONOS values
     $host = 'db5017975223.hosting-data.io'; // Real IONOS database host
     $db   = 'dbs14295502';                  // Real IONOS database name
     $user = 'dbu2826619';                   // Real IONOS database user
-    $pass = 'Palz2516!';                    // IONOS database password
+    $pass = 'Palz2516';                    // IONOS database password
 }
 
 // Common database settings
@@ -161,3 +156,7 @@ if ($isLocalhost && isset($_GET['debug']) && !isAjaxRequest()) {
     echo "Environment: " . ($isLocalhost ? "LOCAL" : "PRODUCTION") . "<br>";
     echo "Database: $host/$db<br>";
 }
+
+// Initialize loggers that depend on database credentials
+require_once __DIR__ . '/../includes/database_logger.php';
+require_once __DIR__ . '/../includes/admin_logger.php';

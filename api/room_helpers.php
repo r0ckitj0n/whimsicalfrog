@@ -91,7 +91,7 @@ function getRoomDoorsData()
             SELECT room_number, room_name, door_label, description, display_order
             FROM room_settings 
             WHERE is_active = 1 
-            AND room_number NOT IN ('A', 'B')
+            AND CAST(room_number AS CHAR) NOT IN ('A', 'B')
             ORDER BY display_order, room_number
         ");
         $stmt->execute();

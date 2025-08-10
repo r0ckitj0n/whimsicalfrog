@@ -109,7 +109,7 @@ try {
 
     // Start session and log user in automatically
     if (session_status() == PHP_SESSION_NONE) {
-        session_start();
+        
     }
 
     $_SESSION['user'] = [

@@ -164,9 +164,7 @@ function getPaymentStatusBadgeClass($status)
 
 <div class="admin-content-container">
     <div class="admin-filter-section">
-        <form method="GET" class="admin-filter-form">
-            <input type="hidden" name="page" value="admin">
-            <input type="hidden" name="section" value="orders">
+        <form method="GET" action="/admin/orders" class="admin-filter-form">
             
             <input type="date" name="filter_date" 
                    value="<?= htmlspecialchars($filters['date']) ?>" class="admin-form-input">
@@ -216,7 +214,7 @@ function getPaymentStatusBadgeClass($status)
             </select>
             
             <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
-            <a href="/?page=admin&section=orders" class="btn btn-secondary admin-filter-button">Clear</a>
+            <a href="/admin/orders" class="btn btn-secondary admin-filter-button">Clear</a>
         </form>
     </div>
 
@@ -288,11 +286,11 @@ function getPaymentStatusBadgeClass($status)
                     <td class="font-bold">$<?= number_format($order['total'] ?? 0, 2) ?></td>
                     <td>
                         <div class="flex space-x-2">
-                            <a href="?page=admin&section=orders&view=<?= $order['id'] ?>" 
+                            <a href="/admin/orders?view=<?= $order['id'] ?>" 
                                class="text-blue-600 hover:text-blue-800" title="View Order">👁️</a>
-                            <a href="?page=admin&section=orders&edit=<?= $order['id'] ?>" 
+                            <a href="/admin/orders?edit=<?= $order['id'] ?>" 
                                class="text-green-600 hover:text-green-800" title="Edit Order">✏️</a>
-                            <button onclick="confirmDelete('<?= htmlspecialchars($order['id']) ?>')" 
+                            <button data-action="confirm-delete" data-order-id="<?= htmlspecialchars($order['id']) ?>"
                                     class="text-red-600 hover:text-red-800" title="Delete Order">🗑️</button>
                         </div>
                     </td>
@@ -330,7 +328,7 @@ function getPaymentStatusBadgeClass($status)
 <div class="modal-overlay order-modal hidden" id="orderModal">
     <!- Navigation Arrows ->
     <?php if ($prevOrderId): ?>
-    <a href="?page=admin&section=orders&<?= $modalState['mode'] ?>=<?= $prevOrderId ?>" 
+    <a href="/admin/orders?<?= $modalState['mode'] ?>=<?= $prevOrderId ?>" 
        class="nav-arrow nav-arrow-left">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -339,7 +337,7 @@ function getPaymentStatusBadgeClass($status)
     <?php endif; ?>
     
     <?php if ($nextOrderId): ?>
-    <a href="?page=admin&section=orders&<?= $modalState['mode'] ?>=<?= $nextOrderId ?>" 
+    <a href="/admin/orders?<?= $modalState['mode'] ?>=<?= $nextOrderId ?>" 
        class="nav-arrow nav-arrow-right">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -353,7 +351,7 @@ function getPaymentStatusBadgeClass($status)
             <h2 class="modal-title">
                 <?= $modalState['mode'] === 'view' ? 'View' : 'Edit' ?> Order: <?= htmlspecialchars($orderId) ?>
             </h2>
-            <a href="?page=admin&section=orders" class="modal-close">
+            <a href="/admin/orders" class="modal-close">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -454,8 +452,8 @@ function getPaymentStatusBadgeClass($status)
                         <div class="form-section-header">
                             <h3 class="form-section-title">Order Items</h3>
                             <?php if ($modalState['mode'] === 'edit'): ?>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="showAddItemModal()">
-                                ➕ Add Item
+                            <button type="button" class="btn btn-primary btn-sm" data-action="show-add-item-modal">
+                                Add Item
                             </button>
                             <?php endif; ?>
                         </div>
@@ -471,7 +469,7 @@ function getPaymentStatusBadgeClass($status)
                                                class="quantity-input" 
                                                value="<?= $item['quantity'] ?>" 
                                                min="1" 
-                                               onchange="updateItemQuantity(<?= $item['id'] ?>, this.value)">
+                                               data-item-id="<?= $item['id'] ?>">
                                         <?php else: ?>
                                         <?= $item['quantity'] ?>
                                         <?php endif; ?>
@@ -482,12 +480,10 @@ function getPaymentStatusBadgeClass($status)
                                         $<?= number_format($item['price'] * $item['quantity'], 2) ?>
                                     </div>
                                     <?php if ($modalState['mode'] === 'edit'): ?>
-                                    <button type="button" 
-                                            class="btn btn-danger btn-sm" 
-                                            onclick="removeItemFromOrder(<?= $item['id'] ?>)"
-                                            title="Remove item">
-                                        🗑️
-                                    </button>
+                                    <button type="button" class="text-red-500 hover:text-red-700 text-xs"
+                                                    data-action="remove-item-from-order" data-item-id="<?= $item['id'] ?>">
+                                                Remove
+                                            </button>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -503,10 +499,10 @@ function getPaymentStatusBadgeClass($status)
                             <h3 class="form-section-title">Shipping Address</h3>
                             <?php if ($modalState['mode'] === 'edit'): ?>
                             <div class="address-actions">
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="showAddressSelector()">
+                                <button type="button" class="btn btn-secondary btn-sm" data-action="show-address-selector">
                                     📍 Select Address
                                 </button>
-                                <button type="button" class="btn btn-primary btn-sm" onclick="showAddAddressModal()">
+                                <button type="button" class="btn btn-primary btn-sm" data-action="show-add-address-modal">
                                     ➕ Add New
                                 </button>
                             </div>
@@ -517,10 +513,10 @@ function getPaymentStatusBadgeClass($status)
                         </div>
                         <?php if ($modalState['mode'] === 'edit'): ?>
                         <div class="form-group">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="editCurrentAddress()">
+                            <button type="button" class="btn btn-secondary btn-sm" data-action="edit-current-address">
                                 ✏️ Edit Current Address
                             </button>
-                            <button type="button" class="btn btn-primary btn-sm" onclick="impersonateCustomer('<?= $orderData['userId'] ?>')">
+                            <button type="button" class="btn btn-primary btn-sm" data-action="impersonate-customer" data-user-id="<?= $orderData['userId'] ?>">
                                 👤 Shop as Customer
                             </button>
                         </div>
@@ -547,9 +543,9 @@ function getPaymentStatusBadgeClass($status)
         <!- Modal Footer ->
         <?php if ($modalState['mode'] === 'edit'): ?>
         <div class="modal-footer">
-            <button type="button" onclick="window.location.href='?page=admin&section=orders'" class="btn btn-secondary">
+            <a href="?page=admin&section=orders" class="btn btn-secondary">
                 Cancel
-            </button>
+            </a>
             <button type="submit" form="orderForm" class="btn btn-primary">
                 Save Changes
             </button>
@@ -571,8 +567,8 @@ function getPaymentStatusBadgeClass($status)
             <p class="text-sm text-gray-600">Order ID: <span id="deleteOrderId" class="font-mono"></span></p>
         </div>
         <div class="modal-footer">
-            <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary">Cancel</button>
-            <button type="button" onclick="deleteOrder()" class="btn btn-danger">Delete Order</button>
+            <button type="button" data-action="close-delete-modal" class="btn btn-secondary">Cancel</button>
+            <button type="button" data-action="delete-order" class="btn btn-danger">Delete Order</button>
         </div>
     </div>
 </div>
@@ -584,291 +580,19 @@ function getPaymentStatusBadgeClass($status)
 </div>
 <?php endif; ?>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-submit form when filters change
-    const filterInputs = document.querySelectorAll('.filter-form-orders input, .filter-form-orders select');
-    filterInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            const form = this.closest('.filter-form-orders');
-            // Add small delay to allow user to make multiple selections
-            setTimeout(() => form.submit(), 100);
-        });
-    });
+<script type="application/json" id="order-page-data">
+    <?php
+    echo json_encode([
+        'orderData' => $orderData ?? null,
+        'allItems' => $allItems->fetchAll(PDO::FETCH_ASSOC),
+        'modalMode' => $modalState['mode'],
+        'currentOrderId' => $orderId ?? null
+    ]);
+    ?>
+</script>
 
-    // Toast notification auto-hide
-    const toast = document.getElementById('toast');
-    if (toast) {
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 4000);
-    }
+<!-- Include the dedicated JavaScript for this page -->
 
-    // Order form submission
-    const orderForm = document.getElementById('orderForm');
-    if (orderForm) {
-        orderForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            formData.append('action', 'updateOrder');
-            formData.append('orderId', '<?= $orderId ?? '' ?>');
-            
-            try {
-                const response = await fetch('api/update-order.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    window.location.href = '?page=admin&section=orders&message=' + 
-                        encodeURIComponent('Order updated successfully') + '&type=success';
-                } else {
-                    showError(data.error || 'Failed to update order');
-                }
-            } catch (error) {
-                showError('Network error occurred');
-            }
-        });
-    }
-
-    // Inline editing functionality
-    document.querySelectorAll('.editable-field').forEach(field => {
-        field.addEventListener('click', function() {
-            if (this.classList.contains('editing')) return;
-            
-            const orderId = this.dataset.orderId;
-            const fieldName = this.dataset.field;
-            const fieldType = this.dataset.type;
-            
-            let currentValue;
-            if (fieldName === 'order_status' || fieldName === 'paymentStatus') {
-                const badge = this.querySelector('span');
-                currentValue = badge ? badge.textContent.trim() : this.textContent.trim();
-            } else {
-                currentValue = this.textContent.trim();
-            }
-            
-            const originalHTML = this.innerHTML;
-            this.classList.add('editing');
-            
-            if (fieldType === 'select') {
-                const select = document.createElement('select');
-                select.className = 'form-select-inline';
-                
-                let options = [];
-                switch (fieldName) {
-                    case 'order_status':
-                        options = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
-                        break;
-                    case 'paymentMethod':
-                        options = ['Credit Card', 'Cash', 'Check', 'PayPal', 'Venmo', 'Other'];
-                        break;
-                    case 'shippingMethod':
-                        options = ['Customer Pickup', 'Local Delivery', 'USPS', 'FedEx', 'UPS'];
-                        break;
-                    case 'paymentStatus':
-                        options = ['Pending', 'Received', 'Refunded', 'Failed'];
-                        break;
-                }
-                
-                options.forEach(option => {
-                    const optionElement = document.createElement('option');
-                    optionElement.value = option;
-                    optionElement.textContent = option;
-                    if (option === currentValue) optionElement.selected = true;
-                    select.appendChild(optionElement);
-                });
-                
-                this.innerHTML = '';
-                this.appendChild(select);
-                select.focus();
-                
-                const saveValue = async (newValue) => {
-                    if (newValue === currentValue) {
-                        this.classList.remove('editing');
-                        this.innerHTML = originalHTML;
-                        return;
-                    }
-                    
-                    try {
-                        const response = await fetch('api/fulfill_order.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: `action=updateField&orderId=${orderId}&field=${fieldName}&value=${encodeURIComponent(newValue)}`
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            this.classList.remove('editing');
-                            
-                            if (fieldName === 'order_status') {
-                                this.innerHTML = `<span class="status-badge ${getStatusBadgeClass(newValue)}">${newValue}</span>`;
-                            } else if (fieldName === 'paymentStatus') {
-                                this.innerHTML = `<span class="payment-status-badge ${getPaymentStatusBadgeClass(newValue)}">${newValue}</span>`;
-                            } else {
-                                this.textContent = newValue;
-                            }
-                            
-                            showSuccess(data.message);
-                        } else {
-                            showError(data.error || 'Update failed');
-                            this.classList.remove('editing');
-                            this.innerHTML = originalHTML;
-                        }
-                    } catch (error) {
-                        showError('Network error occurred');
-                        this.classList.remove('editing');
-                        this.innerHTML = originalHTML;
-                    }
-                };
-                
-                select.addEventListener('change', () => saveValue(select.value));
-                select.addEventListener('blur', () => saveValue(select.value));
-                
-            } else if (fieldType === 'date') {
-                const input = document.createElement('input');
-                input.type = 'date';
-                input.className = 'form-input-inline';
-                input.value = currentValue;
-                
-                this.innerHTML = '';
-                this.appendChild(input);
-                input.focus();
-                
-                const saveValue = async (newValue) => {
-                    if (newValue === currentValue) {
-                        this.classList.remove('editing');
-                        this.textContent = currentValue || '';
-                        return;
-                    }
-                    
-                    try {
-                        const response = await fetch('api/fulfill_order.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: `action=updateField&orderId=${orderId}&field=${fieldName}&value=${encodeURIComponent(newValue)}`
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            this.classList.remove('editing');
-                            this.textContent = newValue || '';
-                            showSuccess(data.message);
-                        } else {
-                            showError(data.error || 'Update failed');
-                            this.classList.remove('editing');
-                            this.innerHTML = originalHTML;
-                        }
-                    } catch (error) {
-                        showError('Network error occurred');
-                        this.classList.remove('editing');
-                        this.innerHTML = originalHTML;
-                    }
-                };
-                
-                input.addEventListener('change', () => saveValue(input.value));
-                input.addEventListener('blur', () => saveValue(input.value));
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') {
-                        this.classList.remove('editing');
-                        this.innerHTML = originalHTML;
-                    }
-                });
-            }
-        });
-    });
-});
-
-// Helper functions for badge classes (simplified)
-function getStatusBadgeClass(status) {
-    const classes = {
-        'pending': 'badge-status-pending',
-        'processing': 'badge-status-processing',
-        'shipped': 'badge-status-shipped',
-        'delivered': 'badge-status-delivered',
-        'cancelled': 'badge-status-cancelled'
-    };
-    return classes[status.toLowerCase()] || 'badge-status-default';
-}
-
-function getPaymentStatusBadgeClass(status) {
-    const classes = {
-        'pending': 'badge-payment-pending',
-        'received': 'badge-payment-received',
-        'processing': 'badge-payment-processing',
-        'refunded': 'badge-payment-refunded',
-        'failed': 'badge-payment-failed'
-    };
-    return classes[status.toLowerCase()] || 'badge-payment-default';
-}
-
-// Delete confirmation modal
-let deleteOrderIdToDelete = null;
-
-function confirmDelete(orderId) {
-    deleteOrderIdToDelete = orderId;
-    document.getElementById('deleteOrderId').textContent = orderId;
-    document.getElementById('deleteModal').style.display = 'flex';
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-    deleteOrderIdToDelete = null;
-}
-
-async function deleteOrder() {
-    if (!deleteOrderIdToDelete) return;
-    
-    try {
-        const response = await fetch('api/delete-order.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `orderId=${deleteOrderIdToDelete}&admin_token=whimsical_admin_2024`
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            window.location.href = '?page=admin&section=orders&message=' + 
-                encodeURIComponent('Order deleted successfully') + '&type=success';
-        } else {
-            showError(data.error || 'Failed to delete order');
-            closeDeleteModal();
-        }
-    } catch (error) {
-        showError('Network error occurred');
-        closeDeleteModal();
-    }
-}
-
-// Notification functions
-// Use unified notification system
-function showSuccess(message) {
-    if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {
-        return window.wfNotifications.success(message, {
-            title: 'Success',
-            duration: 3000
-        });
-    } else if (typeof window.showSuccess === 'function') {
-        return window.showSuccess(message);
-    } else {
-        showNotification(message, 'success');
-    }
-}
-
-function showError(message) {
-    if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {
-        return window.wfNotifications.error(message, {
-            title: 'Error',
-            duration: 5000
-        });
-    } else if (typeof window.showError === 'function') {
         return window.showError(message);
     } else {
         showNotification(message, 'error');
@@ -963,7 +687,7 @@ async function showAddItemModal() {
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Add Item to Order</h3>
-                <button type="button" onclick="this.closest('.modal-overlay').remove()" class="modal-close">×</button>
+                <button type="button" data-action="close-modal" class="modal-close">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -993,7 +717,7 @@ async function showAddItemModal() {
                     itemsList.innerHTML = '<div >No items found</div>';
                 } else {
                     itemsList.innerHTML = data.items.map(item => `
-                        <div class="item-card-small" onclick="addItemToOrder('${item.sku}', '${item.name.replace(/'/g, "\\'")}', ${item.retailPrice})" >
+                        <div class="item-card-small" data-action="add-item-to-order" data-sku="${item.sku}" data-name="${item.name.replace(/'/g, "\\'")}" data-price="${item.retailPrice}">
                             <div class="item-info">
                                 <div class="item-name" >${item.name}</div>
                                 <div class="item-sku" >${item.sku}</div>

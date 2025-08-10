@@ -1,0 +1,130 @@
+/* COMPREHENSIVE FIX FOR QUANTITY BUTTON HORIZONTAL SCROLLBAR */
+
+/* 1. Force modal container to hide horizontal overflow */
+.detailed-item-modal,
+.detailed-item-modal-container,
+.modal-container.detailed-item-modal-container {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-width: 75vw !important;
+    width: 75vw !important;
+}
+
+/* 2. Force modal content and body to not overflow */
+.detailed-item-modal .modal-content,
+.detailed-item-modal-container .modal-content,
+.detailed-item-modal .modal-body,
+.detailed-item-modal-container .modal-body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 3. Target the quantity row container specifically */
+.detailed-item-modal .flex:has(button[data-action="adjustDetailedQuantity"]),
+.detailed-item-modal-container .flex:has(button[data-action="adjustDetailedQuantity"]),
+.detailed-item-modal .quantity-selector,
+.detailed-item-modal-container .quantity-selector {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 1px !important;
+    max-width: 70px !important;
+    overflow: hidden !important;
+    flex-wrap: nowrap !important;
+}
+
+/* 4. Make quantity buttons absolutely tiny */
+button[data-action="adjustDetailedQuantity"],
+.detailed-item-modal button[data-action="adjustDetailedQuantity"],
+.detailed-item-modal-container button[data-action="adjustDetailedQuantity"],
+.modal-body button[data-action="adjustDetailedQuantity"] {
+    /* Tiny size */
+    width: 12px !important;
+    min-width: 12px !important;
+    max-width: 12px !important;
+    height: 12px !important;
+    
+    /* No padding or margin AT ALL */
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    
+    /* Ensure no Tailwind spacing */
+    --tw-space-x-reverse: 0 !important;
+    --tw-space-y-reverse: 0 !important;
+    
+    /* Layout */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    border: 1px solid #ccc !important;
+    background: white !important;
+    cursor: pointer !important;
+    font-size: 8px !important;
+    line-height: 1 !important;
+}
+
+/* 5. Make SVG icons inside buttons tiny */
+button[data-action="adjustDetailedQuantity"] svg,
+.detailed-item-modal button[data-action="adjustDetailedQuantity"] svg,
+.detailed-item-modal-container button[data-action="adjustDetailedQuantity"] svg {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+    flex-shrink: 0 !important;
+}
+
+/* 6. Make quantity input tiny */
+input#detailedQuantity,
+.detailed-item-modal input#detailedQuantity,
+.detailed-item-modal-container input#detailedQuantity,
+.modal-body input#detailedQuantity {
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+    height: 12px !important;
+    padding: 0 1px !important;
+    margin: 0 !important;
+    text-align: center !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    border: 1px solid #ccc !important;
+}
+
+/* 7. Remove any min-width from parent containers */
+.detailed-item-modal .space-y-4,
+.detailed-item-modal-container .space-y-4,
+.detailed-item-modal .flex,
+.detailed-item-modal-container .flex {
+    min-width: 0 !important;
+}
+
+/* 8. Ensure no element can cause horizontal overflow */
+.detailed-item-modal *,
+.detailed-item-modal-container * {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+}
+
+/* 9. Hide horizontal scrollbar completely as last resort */
+.detailed-item-modal::-webkit-scrollbar-x,
+.detailed-item-modal-container::-webkit-scrollbar-x {
+    display: none !important;
+}
+
+.detailed-item-modal,
+.detailed-item-modal-container {
+    scrollbar-width: thin !important;
+    scrollbar-gutter: stable !important;
+}

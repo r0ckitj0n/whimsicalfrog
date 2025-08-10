@@ -221,7 +221,7 @@ try {
 
             // Start session if not already started
             if (session_status() == PHP_SESSION_NONE) {
-                session_start();
+                
             }
 
             // Store original admin user data
@@ -250,7 +250,7 @@ try {
 
         case 'stop_impersonation':
             if (session_status() == PHP_SESSION_NONE) {
-                session_start();
+                
             }
 
             if (isset($_SESSION['original_admin'])) {

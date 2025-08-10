@@ -4,7 +4,7 @@ ob_start();
 ob_clean();
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
-session_start();
+
 
 header('Content-Type: application/json');
 

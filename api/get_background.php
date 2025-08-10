@@ -14,11 +14,14 @@ require_once __DIR__ . '/room_helpers.php';
 
 // Get active background for a room
 
-// Database connection
+// Database connection globals for Database class
+global $host, $db, $user, $pass, $port, $socket;
 $host = 'localhost';
-$dbname = 'whimsicalfrog';
-$username = 'root';
-$password = 'Palz2516';
+$db = 'whimsicalfrog';
+$user = 'root';
+$pass = 'Palz2516';
+$port = 3306;
+$socket = '';
 
 /**
  * Generate dynamic fallback backgrounds based on room data

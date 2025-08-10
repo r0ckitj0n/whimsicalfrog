@@ -1,0 +1,47 @@
+/* CRITICAL MISSING PAGES CSS - Extracted from backups/pages.css */
+/* Unified dynamic background CSS and room system styles */
+
+/* ==============================================
+   UNIFIED DYNAMIC BACKGROUND CSS
+   ============================================== */
+
+.bg-container {
+    background-image: var(--dynamic-bg-url);
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+/* Fullscreen mode: background covers entire viewport */
+.bg-container.mode-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: var(--z-base);
+}
+
+/* ==============================================
+   ROOM SYSTEM CSS
+   ============================================== */
+
+/* Room container styles */
+.room-container {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+/* Room iframe for isolated content */
+#room-iframe {
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+
+/* Room content area */
+.room-content {
+    padding: 1rem;
+}

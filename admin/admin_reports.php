@@ -138,21 +138,19 @@ try {
     Logger::error('Admin Reports Database Error: ' . $e->getMessage());
 }
 
-// Prepare JSON data for charts
+// Prepare data for charts (will be JSON encoded later)
 $chartData = [
-    'labels' => json_encode(array_keys($ordersByDate)),
-    'orders' => json_encode(array_column($ordersByDate, 'count')),
-    'revenue' => json_encode(array_column($ordersByDate, 'revenue')),
-    'paymentLabels' => json_encode(array_keys($paymentStats['method'])),
-    'paymentCounts' => json_encode(array_values($paymentStats['method']))
+    'labels' => array_keys($ordersByDate),
+    'orders' => array_values(array_column($ordersByDate, 'count')),
+    'revenue' => array_values(array_column($ordersByDate, 'revenue')),
+    'paymentLabels' => array_keys($paymentStats['method']),
+    'paymentCounts' => array_values($paymentStats['method'])
 ];
 ?>
 
 <div class="admin-content-container">
     <div class="admin-filter-section">
-        <form action="" method="GET" class="admin-filter-form">
-            <input type="hidden" name="page" value="admin">
-            <input type="hidden" name="section" value="reports">
+        <form action="/admin/reports" method="GET" class="admin-filter-form">
             
             <input type="date" name="start_date" id="start_date" 
                    value="<?= htmlspecialchars($startDate) ?>" class="admin-form-input">
@@ -161,7 +159,7 @@ $chartData = [
                    value="<?= htmlspecialchars($endDate) ?>" class="admin-form-input">
             
             <button type="submit" class="btn btn-primary admin-filter-button">Apply Filter</button>
-            <a href="?page=admin&section=reports" class="btn btn-secondary admin-filter-button">Clear</a>
+            <a href="/admin/reports" class="btn btn-secondary admin-filter-button">Clear</a>
         </form>
     </div>
 
@@ -300,7 +298,7 @@ $chartData = [
 
     <!- Print Action ->
     <div class="report-actions">
-        <button type="button" class="btn btn-secondary" onclick="window.print()">
+                <button type="button" class="btn btn-secondary js-print-button">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -311,81 +309,8 @@ $chartData = [
     </div>
 </div>
 
-<!- Chart.js Integration ->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Sales Performance Chart
-    const salesCtx = document.getElementById('salesChart').getContext('2d');
-    new Chart(salesCtx, {
-        type: 'line',
-        data: {
-            labels: <?= $chartData['labels'] ?>,
-            datasets: [
-                {
-                    label: 'Orders',
-                    data: <?= $chartData['orders'] ?>,
-                    backgroundColor: 'rgba(135, 172, 58, 0.2)',
-                    borderColor: 'rgba(135, 172, 58, 1)',
-                    borderWidth: 2,
-                    tension: 0.1,
-                    yAxisID: 'y'
-                },
-                {
-                    label: 'Revenue ($)',
-                    data: <?= $chartData['revenue'] ?>,
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    borderWidth: 2,
-                    tension: 0.1,
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    position: 'left',
-                    title: { display: true, text: 'Orders' }
-                },
-                y1: {
-                    beginAtZero: true,
-                    position: 'right',
-                    title: { display: true, text: 'Revenue ($)' },
-                    grid: { drawOnChartArea: false }
-                }
-            }
-        }
-    });
-
-    // Payment Method Distribution Chart
-    const paymentCtx = document.getElementById('paymentMethodChart').getContext('2d');
-    new Chart(paymentCtx, {
-        type: 'doughnut',
-        data: {
-            labels: <?= $chartData['paymentLabels'] ?>,
-            datasets: [{
-                data: <?= $chartData['paymentCounts'] ?>,
-                backgroundColor: [
-                    'rgba(135, 172, 58, 0.8)',   // WhimsicalFrog Green
-                    'rgba(75, 85, 99, 0.8)',     // Gray
-                    'rgba(16, 185, 129, 0.8)',   // Emerald
-                    'rgba(245, 158, 11, 0.8)',   // Amber
-                    'rgba(239, 68, 68, 0.8)',    // Red
-                    'rgba(99, 102, 241, 0.8)'    // Indigo
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
-    });
-});
+<!-- Pass data to JS -->
+<script type="application/json" id="reports-data">
+    <?= json_encode($chartData) ?>
 </script>
+

@@ -1,0 +1,317 @@
+/* CRITICAL MISSING MODAL CSS - Extracted from legacy_bigfiles/css/global-modals.css */
+/* This contains the comprehensive modal system from the June 30 pre-refactor state */
+
+/* ==============================================
+   MODAL OVERLAY SYSTEM - Advanced Classes
+   ============================================== */
+
+/* Standard Modal Overlay with backdrop blur */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 50%);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    visibility: visible;
+    transition: all 0.3s ease;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Admin Modal Overlay (for larger admin modals) */
+.admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 60%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 1;
+    visibility: visible;
+    transition: all 0.3s ease;
+}
+
+.admin-modal-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Full Screen Modal Overlay (for settings modals) */
+.fullscreen-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 1;
+    visibility: visible;
+    transition: all 0.3s ease;
+}
+
+.fullscreen-modal-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ==============================================
+   MODAL CONTENT CONTAINERS
+   ============================================== */
+
+/* Standard Modal Content */
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 10px 10px -5px rgb(0 0 0 / 4%);
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Admin Modal Content (larger) */
+.admin-modal-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 10px 10px -5px rgb(0 0 0 / 4%);
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Fullscreen Modal Content */
+.fullscreen-modal-content {
+    background: white;
+    border-radius: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* ==============================================
+   MODAL HEADER, BODY, FOOTER
+   ============================================== */
+
+.modal-header {
+    padding: 1.5rem 2rem 0 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #6b7280;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.modal-body {
+    padding: 0 2rem 1rem 2rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 1rem 2rem 1.5rem 2rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* ==============================================
+   CONFIRMATION MODAL STYLES
+   ============================================== */
+
+.confirmation-modal {
+    max-width: 400px;
+}
+
+.confirmation-modal .modal-body {
+    text-align: center;
+    padding: 2rem;
+}
+
+.confirmation-modal-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem auto;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.confirmation-modal-icon.warning {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.confirmation-modal-icon.danger {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.confirmation-modal-icon.success {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.confirmation-modal-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.confirmation-modal-message {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.confirmation-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.confirmation-modal-button {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirmation-modal-button.cancel {
+    background: #f9fafb;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.confirmation-modal-button.cancel:hover {
+    background: #f3f4f6;
+}
+
+.confirmation-modal-button.confirm {
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+}
+
+.confirmation-modal-button.confirm:hover {
+    background: #6b8e23;
+}
+
+.confirmation-modal-button.confirm:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(135 172 58 / 50%);
+}
+
+/* ==============================================
+   RESPONSIVE MODAL STYLES
+   ============================================== */
+
+@media (max-width: 640px) {
+    .modal-content,
+    .admin-modal-content {
+        margin: 1rem;
+        max-width: calc(100vw - 2rem);
+        max-height: calc(100vh - 2rem);
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .confirmation-modal-buttons {
+        flex-direction: column;
+    }
+    
+    .confirmation-modal-button {
+        width: 100%;
+    }
+}
+
+/* ==============================================
+   LOADING AND ANIMATION STATES
+   ============================================== */
+
+.modal-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+}
+
+.modal-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid var(--brand-primary, #87ac3a);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Modal slide-in animation */
+.modal-content,
+.admin-modal-content {
+    animation: modal-slide-in 0.3s ease-out;
+}
+
+@keyframes modal-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

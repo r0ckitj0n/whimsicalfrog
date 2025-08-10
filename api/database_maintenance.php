@@ -8,7 +8,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 // Start session first
-session_start();
+
 
 // Admin authentication check
 $isAdmin = false;

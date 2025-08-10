@@ -158,7 +158,7 @@ if (empty($dashboardConfig)) {
                                 </div>
                                 <?php endforeach; ?>
                                 <div class="text-center">
-                                    <a href="/?page=admin&section=orders" class="text-blue-600 hover:text-blue-800 text-sm">View All Orders →</a>
+                                    <a href="/admin/orders" class="text-blue-600 hover:text-blue-800 text-sm">View All Orders →</a>
                                 </div>
                             <?php else: ?>
                                 <div class="text-center text-gray-500">
@@ -185,7 +185,7 @@ if (empty($dashboardConfig)) {
                                 </div>
                                 <?php endforeach; ?>
                                 <div class="text-center">
-                                    <a href="/?page=admin&section=inventory" class="text-red-600 hover:text-red-800 text-sm">Manage Inventory →</a>
+                                    <a href="/admin/inventory" class="text-red-600 hover:text-red-800 text-sm">Manage Inventory →</a>
                                 </div>
                             <?php else: ?>
                                 <div class="text-center text-gray-500">
@@ -227,7 +227,7 @@ if (empty($dashboardConfig)) {
                                 <?php endforeach; ?>
                             <?php endif; ?>
                             <div class="text-center">
-                                <a href="/?page=admin&section=inventory" class="text-blue-600 hover:text-blue-800 text-sm">Manage Inventory →</a>
+                                <a href="/admin/inventory" class="text-blue-600 hover:text-blue-800 text-sm">Manage Inventory →</a>
                             </div>
                         </div>
                         
@@ -256,7 +256,7 @@ if (empty($dashboardConfig)) {
                                 <?php endforeach; ?>
                             <?php endif; ?>
                             <div class="text-center">
-                                <a href="/?page=admin&section=customers" class="text-green-600 hover:text-green-800 text-sm">Manage Customers →</a>
+                                <a href="/admin/customers" class="text-green-600 hover:text-green-800 text-sm">Manage Customers →</a>
                             </div>
                         </div>
                         
@@ -282,8 +282,8 @@ if (empty($dashboardConfig)) {
                             </div>
                             <div class="text-center space-y-2">
                                 <div class="flex gap-2 justify-center">
-                                    <a href="/?page=admin&section=marketing" class="bg-orange-600 hover:bg-orange-700 text-white text-xs rounded">📧 Email</a>
-                                    <a href="/?page=admin&section=marketing" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded">🏷️ Discounts</a>
+                                    <a href="/admin/marketing" class="bg-orange-600 hover:bg-orange-700 text-white text-xs rounded">📧 Email</a>
+                                    <a href="/admin/marketing" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded">🏷️ Discounts</a>
                                 </div>
                             </div>
                         </div>
@@ -355,9 +355,7 @@ if (empty($dashboardConfig)) {
                         <div class="space-y-4">
                             <!- Filter Section ->
                             <div class="bg-white border border-gray-200 rounded-lg">
-                                <form method="GET" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                                    <input type="hidden" name="page" value="admin">
-                                    <input type="hidden" name="section" value="">
+                                <form method="GET" action="/admin" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                                     
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700">Date</label>
@@ -459,7 +457,7 @@ if (empty($dashboardConfig)) {
                                                     <td class="text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
                                                     <td class="text-gray-600"><?= htmlspecialchars(date('g:i A', strtotime($order['date'] ?? 'now'))) ?></td>
                                                     <td class="text-center">
-                                                        <button onclick="openOrderDetailsModal(<?= htmlspecialchars($order['id'] ?? '') ?>)"
+                                                        <button data-action="open-order-details" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>"
                                                                 class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-none"
                                                                 title="Click to view order details">
                                                             <?php
@@ -531,115 +529,7 @@ if (empty($dashboardConfig)) {
 
                         
 
-                        <script>
-                        // Open order details modal function
-                        async function openOrderDetailsModal(orderId) {try {
-                                // Show the modal
-                                const modal = document.getElementById('orderDetailsModal');
-                                if (modal) {
-                                    // Fetch order details
-                                    const response = await fetch(`api/get_order.php?id=${orderId}`);
-                                    const result = await response.json();
-                                    
-                                    if (result.success && result.order) {
-                                        // Update modal content with order data
-                                        updateOrderModalContent(result.order, result.items || []);
-                                        modal.style.display = 'flex';
-                                        document.body.style.overflow = 'hidden';
-                                    } else {
-                                        console.error('Failed to load order details:', result.message);
-                                        if (window.showError) {
-                    window.showError('Failed to load order details');
-                } else {
-                    alert('Failed to load order details');
-                }
-                                    }
-                                } else {
-                                    console.error('Order details modal not found');
-                                }
-                            } catch (error) {
-                                console.error('Error opening order details modal:', error);
-                                if (window.showError) {
-                    window.showError('Error loading order details');
-                } else {
-                    alert('Error loading order details');
-                }
-                            }
-                        }
-                        
-                        // Function to update order modal content
-                        function updateOrderModalContent(order, items) {
-                            // Update basic order information
-                            document.getElementById('modal-order-id').textContent = order.id;
-                            document.getElementById('modal-customer').textContent = order.username || 'N/A';
-                            document.getElementById('modal-date').textContent = new Date(order.date).toLocaleDateString();
-                            document.getElementById('modal-total').textContent = `$${parseFloat(order.total || 0).toFixed(2)}`;
-                            document.getElementById('modal-status').textContent = order.order_status || 'Pending';
-                            document.getElementById('modal-payment-method').textContent = order.paymentMethod || 'N/A';
-                            document.getElementById('modal-payment-status').textContent = order.paymentStatus || 'Pending';
-                            document.getElementById('modal-shipping-method').textContent = order.shippingMethod || 'N/A';
-                            
-                            // Update order items
-                            const itemsContainer = document.getElementById('modal-order-items');
-                            itemsContainer.innerHTML = '';
-                            
-                            if (items && items.length > 0) {
-                                items.forEach(item => {
-                                    const itemCard = document.createElement('div');
-                                    itemCard.className = 'order-item-card';
-                                    itemCard.innerHTML = `
-                                        <div class="order-item-details">
-                                            <div class="order-item-name">${item.item_name || item.sku}</div>
-                                            <div class="order-item-sku">SKU: ${item.sku}</div>
-                                            <div class="order-item-price">$${parseFloat(item.price || 0).toFixed(2)} × ${item.quantity}</div>
-                                        </div>
-                                        <div class="order-item-total">
-                                            $${(parseFloat(item.price || 0) * parseInt(item.quantity || 0)).toFixed(2)}
-                                        </div>
-                                    `;
-                                    itemsContainer.appendChild(itemCard);
-                                });
-                            } else {
-                                itemsContainer.innerHTML = '<div class="text-gray-500 text-center">No items found</div>';
-                            }
-                            
-                            // Update address if available
-                            const addressElement = document.getElementById('modal-address');
-                            if (order.addressLine1 || order.city) {
-                                let address = '';
-                                if (order.addressLine1) address += order.addressLine1;
-                                if (order.addressLine2) address += '\n' + order.addressLine2;
-                                if (order.city) address += '\n' + order.city;
-                                if (order.state) address += ', ' + order.state;
-                                if (order.zipCode) address += ' ' + order.zipCode;
-                                addressElement.textContent = address;
-                            } else {
-                                addressElement.textContent = 'No address provided';
-                            }
-                            
-                            // Update notes
-                            document.getElementById('modal-notes').textContent = order.note || 'No notes';
-                            document.getElementById('modal-payment-notes').textContent = order.paynote || 'No payment notes';
-                        }
-                        
-                        // Close order details modal
-                        function closeOrderDetailsModal() {
-                            const modal = document.getElementById('orderDetailsModal');
-                            if (modal) {
-                                modal.style.display = 'none';
-                                document.body.style.overflow = '';
-                            }
-                        }
-                        
-                        // Initialize inline editing for order fulfillment
-                        document.addEventListener('DOMContentLoaded', function() {
-                            // Force hide any hanging progress indicators when section loads
-                            hideAutoSaveIndicator();
-// hideAutoSaveIndicator function moved to ui-manager.js for centralization
-                            const editableFields = document.querySelectorAll('.order-field-update');
-                            editableFields.forEach(field => {
-                                field.addEventListener('change', async function() {
-                                    const orderId = this.dataset.orderId;
+
                                     const fieldName = this.dataset.field;
                                     const newValue = this.value;
                                     
@@ -691,7 +581,7 @@ if (empty($dashboardConfig)) {
                                 <!- Modal Header ->
                                 <div class="modal-header">
                                     <h2 class="modal-title">Order Details: <span id="modal-order-id">#0000</span></h2>
-                                    <button onclick="closeOrderDetailsModal()" class="modal-close">
+                                    <button data-action="close-order-details" class="modal-close">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                         </svg>
@@ -824,193 +714,14 @@ if (empty($dashboardConfig)) {
         <div class="text-6xl">📊</div>
         <h3 class="text-xl font-semibold text-gray-800">Welcome to Your Dashboard</h3>
         <p class="text-gray-600">Configure your dashboard to see the information that matters most to you.</p>
-        <button onclick="openDashboardConfig()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+        <button data-action="open-dashboard-config" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
             ⚙️ Configure Dashboard
         </button>
     </div>
     <?php endif; ?>
 </div>
 
-<script>
-function refreshDashboard() {
-    window.location.reload();
-}
 
-function openDashboardConfig() {
-    // Navigate to settings and open dashboard config modal
-    window.location.href = '/?page=admin&section=settings#dashboard_config';
-}
-
-// Check if we need to open dashboard config modal
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('open') === 'dashboard_config') {
-        // Remove the parameter and open the modal
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.delete('open');
-        window.history.replaceState({}, '', newUrl);
-        
-        // Navigate to settings and open dashboard config
-        window.location.href = '/?page=admin&section=settings#dashboard_config';
-    }
-    
-    // Initialize draggable functionality
-    initializeDraggableSections();
-});
-
-// Draggable sections functionality
-function initializeDraggableSections() {
-    const sections = document.querySelectorAll('.draggable-section');
-    const grid = document.getElementById('dashboardGrid');
-    
-    let draggedElement = null;
-    let placeholder = null;
-    
-    sections.forEach(section => {
-        const dragHandle = section.querySelector('.drag-handle');
-        
-        dragHandle.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            draggedElement = section;
-            
-            // Create placeholder
-            placeholder = document.createElement('div');
-            placeholder.className = 'dashboard-section bg-gray-100 border-2 border-dashed border-gray-300 opacity-50';
-            placeholder.style.height = section.offsetHeight + 'px';
-            placeholder.textContent = 'Drop here';
-            placeholder.style.display = 'flex';
-            placeholder.style.alignItems = 'center';
-            placeholder.style.justifyContent = 'center';
-            placeholder.style.color = '#9ca3af';
-            
-            section.classList.add('dragging');
-            section.style.position = 'fixed';
-            section.style.pointerEvents = 'none';
-            section.style.zIndex = '1000';
-            section.style.width = section.offsetWidth + 'px';
-            
-            // Insert placeholder
-            section.parentNode.insertBefore(placeholder, section.nextSibling);
-            
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-        });
-    });
-    
-    function handleMouseMove(e) {
-        if (!draggedElement) return;
-        
-        draggedElement.style.left = (e.clientX - draggedElement.offsetWidth / 2) + 'px';
-        draggedElement.style.top = (e.clientY - 20) + 'px';
-        
-        // Find drop target
-        const elementsBelow = document.elementsFromPoint(e.clientX, e.clientY);
-        const dropTarget = elementsBelow.find(el => 
-            el.classList.contains('draggable-section') && el !== draggedElement
-        );
-        
-        // Remove previous drag-over classes
-        sections.forEach(s => s.classList.remove('drag-over'));
-        
-        if (dropTarget) {
-            dropTarget.classList.add('drag-over');
-            
-            // Determine if we should insert before or after
-            const rect = dropTarget.getBoundingClientRect();
-            const midY = rect.top + rect.height / 2;
-            
-            if (e.clientY < midY) {
-                dropTarget.parentNode.insertBefore(placeholder, dropTarget);
-            } else {
-                dropTarget.parentNode.insertBefore(placeholder, dropTarget.nextSibling);
-            }
-        }
-    }
-    
-    function handleMouseUp(e) {
-        if (!draggedElement) return;
-        
-        // Reset styles
-        draggedElement.classList.remove('dragging');
-        draggedElement.style.position = '';
-        draggedElement.style.pointerEvents = '';
-        draggedElement.style.zIndex = '';
-        draggedElement.style.width = '';
-        draggedElement.style.left = '';
-        draggedElement.style.top = '';
-        
-        // Remove drag-over classes
-        sections.forEach(s => s.classList.remove('drag-over'));
-        
-        // Replace placeholder with dragged element
-        if (placeholder && placeholder.parentNode) {
-            placeholder.parentNode.insertBefore(draggedElement, placeholder);
-            placeholder.remove();
-            
-            // Save new order
-            saveDashboardOrder();
-        }
-        
-        // Cleanup
-        draggedElement = null;
-        placeholder = null;
-        
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    }
-}
-
-async function saveDashboardOrder() {
-    try {
-        const sections = Array.from(document.querySelectorAll('.draggable-section'));
-        const newOrder = sections.map((section, index) => ({
-            section_key: section.dataset.sectionKey,
-            display_order: index + 1
-        }));
-        
-        const response = await fetch('/api/dashboard_sections.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'reorder_sections',
-                sections: newOrder,
-                admin_token: 'whimsical_admin_2024'
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to save order');
-        }
-        
-        // Show success indicator
-        showOrderSaveSuccess();
-        
-    } catch (error) {
-        console.error('Error saving dashboard order:', error);
-        // Reload page to reset order
-        location.reload();
-    }
-}
-
-function showOrderSaveSuccess() {
-    const indicator = document.createElement('div');
-    indicator.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-    indicator.textContent = '✅ Dashboard order saved';
-    document.body.appendChild(indicator);
-    
-    setTimeout(() => {
-        indicator.remove();
-    }, 2000);
-}
-</script>
 
 
 

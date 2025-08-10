@@ -1,0 +1,124 @@
+/* FINAL AGGRESSIVE MODAL VISIBILITY FIX */
+/* Complete override of all potential modal conflicts */
+
+/* Reset any transforms that could create stacking contexts */
+html, body {
+    transform: none !important;
+    will-change: auto !important;
+    perspective: none !important;
+    backface-visibility: visible !important;
+}
+
+/* Force modal to be at absolute top of stacking order */
+#roomModalOverlay {
+    /* Position and stacking */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 2147483647 !important; /* Maximum possible z-index */
+    
+    /* Display and visibility */
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    
+    /* Layout */
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* Background */
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    
+    /* Reset transforms */
+    transform: none !important;
+    will-change: auto !important;
+    contain: none !important;
+    isolation: auto !important;
+}
+
+/* Ensure modal content is properly contained and visible */
+#roomModalOverlay .room-modal-container {
+    /* Position and stacking */
+    position: relative !important;
+    z-index: 2147483647 !important;
+    
+    /* Display and visibility */
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    
+    /* Layout and styling */
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+    max-width: min(90vw, 900px) !important;
+    max-height: 85vh !important;
+    min-width: 300px !important;
+    min-height: 200px !important;
+    overflow: auto !important;
+    
+    /* Reset transforms */
+    transform: none !important;
+    will-change: auto !important;
+    contain: none !important;
+}
+
+/* Force all modal children to be visible */
+#roomModalOverlay *,
+#roomModalOverlay .room-modal-header,
+#roomModalOverlay .room-modal-body,
+#roomModalOverlay .room-modal-close-btn,
+#roomModalOverlay .room-modal-back-btn {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: block !important;
+    position: relative !important;
+    z-index: inherit !important;
+}
+
+/* Button specific overrides */
+#roomModalOverlay .room-modal-close-btn,
+#roomModalOverlay .room-modal-back-btn {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    background: #f0f0f0 !important;
+    border: 1px solid #ccc !important;
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    color: #333 !important;
+}
+
+/* Override any competing modal overlays */
+.room-modal-overlay:not(#roomModalOverlay) {
+    display: none !important;
+}
+
+/* Debug styles removed - no more red borders */
+#roomModalOverlay[data-debug="true"] {
+    /* Debug mode disabled - no borders */
+    border: none !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+#roomModalOverlay[data-debug="true"] .room-modal-container {
+    border: none !important;
+    background: white !important;
+}
+
+/* Force repaint animation */
+@keyframes forceRepaint {
+    0% { opacity: 0.99; }
+    100% { opacity: 1; }
+}
+
+#roomModalOverlay {
+    animation: forceRepaint 0.1s ease-in-out !important;
+}

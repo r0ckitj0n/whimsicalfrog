@@ -1,0 +1,67 @@
+/* Modal Responsive Design Enhancements */
+/* Added as part of systematic accessibility fixes */
+
+.room-modal-overlay {
+    /* Base modal styles handled by JS */
+}
+
+.room-modal-content {
+    /* Desktop base styles handled by JS */
+}
+
+/* Tablet responsive design */
+@media (max-width: 768px) {
+    .room-modal-content {
+        max-width: 95% !important;
+        max-height: 90% !important;
+        margin: 10px !important;
+        border-radius: 4px !important;
+    }
+    
+    .room-modal-body {
+        padding: 15px !important;
+        font-size: 16px;
+    }
+    
+    .room-modal-header {
+        padding: 15px !important;
+    }
+}
+
+/* Mobile responsive design */
+@media (max-width: 480px) {
+    .room-modal-content {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+    
+    .room-modal-body {
+        padding: 10px !important;
+        font-size: 18px;
+        min-height: calc(100vh - 120px) !important;
+    }
+    
+    .room-modal-header {
+        padding: 10px !important;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .room-modal-close-btn,
+    .room-modal-back-btn {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 20px !important;
+        /* Larger touch targets for mobile */
+    }
+}
+
+/* High DPI / Retina displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .room-modal-overlay {
+        background: rgba(0, 0, 0, 0.85);
+    }
+}

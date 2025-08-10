@@ -1,5 +1,5 @@
 <?php
-session_start();
+
 
 // Get the raw POST data
 $json = file_get_contents('php://input');

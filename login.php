@@ -26,7 +26,7 @@
         </form>
         <p class="login-register-link">
             Don't have an account?
-            <a href="/?page=register" class="login-link">
+            <a href="/register" class="login-link">
                 Create one here
             </a>
         </p>

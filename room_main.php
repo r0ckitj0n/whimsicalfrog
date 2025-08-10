@@ -6,7 +6,8 @@
 
 // Redirect to index.php if accessed directly
 if (!defined('INCLUDED_FROM_INDEX')) {
-    header('Location: /?page=room_main');
+    // Redirect to home if accessed directly
+    header('Location: /');
     exit;
 }
 
@@ -57,7 +58,7 @@ $backgroundMain = get_active_background('room_main') ?: '/images/backgrounds/bac
 
 
 
-<!- Room main styles now managed by global CSS system (css/room-main.css) ->
+<!-- Room main styles now managed by global CSS system (css/room-main.css) -->
 
 <section id="mainRoomPage" class="main-room-section" data-bg-url="<?php echo htmlspecialchars($backgroundMain, ENT_QUOTES, 'UTF-8'); ?>">
 
@@ -74,14 +75,19 @@ try {
     if (empty($roomDoors)) {
         echo '<div class="no-doors-message">No rooms are currently available.</div>';
     } else {
-        $areaIndex = 1;
         foreach ($roomDoors as $door):
             $roomNumber = htmlspecialchars($door['room_number']);
+            
+            // Skip Main Room (room 0) since we're already on the main room page
+            if ($roomNumber == '0') {
+                continue;
+            }
+            
             $roomName = htmlspecialchars($door['room_name']);
             $doorLabel = htmlspecialchars($door['door_label']);
             ?>
-    <!- <?php echo $roomName; ?> Door ->
-    <div class="door-area area-<?php echo $areaIndex; ?>" data-room="<?php echo $roomNumber; ?>" data-category="<?php echo $doorLabel; ?>">
+    <!-- <?php echo $roomName; ?> Door -->
+        <div class="door-area area-<?php echo $roomNumber; ?>" data-url="/room/<?php echo $roomNumber; ?>" data-category="<?php echo $doorLabel; ?>" data-room="<?php echo $roomNumber; ?>">
         <picture class="door-picture">
             <source srcset="images/signs/sign_door_room<?php echo $roomNumber; ?>.webp" type="image/webp">
             <img src="images/signs/sign_door_room<?php echo $roomNumber; ?>.png" alt="<?php echo $doorLabel; ?>" class="door-sign">
@@ -90,7 +96,6 @@ try {
     </div>
     
     <?php
-                    $areaIndex++;
         endforeach;
     } // End of else block
 } catch (Exception $e) {

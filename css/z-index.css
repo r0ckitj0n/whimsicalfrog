@@ -1,0 +1,137 @@
+/*
+ * =============================================================================
+ * Z-Index Hierarchy - Single Source of Truth
+ * =============================================================================
+ * This file defines the z-index stacking order for the entire application.
+ * Use these variables instead of hardcoded z-index values to ensure
+ * predictable and conflict-free layering of components.
+ */
+
+:root {
+    /* -- Base & Content Layers -- */;
+    --z-index-behind: -1;
+    --z-index-base: 1;
+    --z-index-content-back: 5;
+    --z-index-content-mid: 10;
+    --z-index-content-front: 15;
+    /* -- Floating UI & Page-Level Components -- */;
+    --z-index-floating-ui: 20;
+    --z-index-page-header: 100;
+    --z-index-page-footer: 90;
+    /* -- Overlays & Dropdowns -- */;
+    --z-index-dropdown: 200;
+    --z-index-tooltip: 250;
+    --z-index-overlay-backdrop: 300;
+    --z-index-overlay: 350;
+    /* -- Modals & Popups -- */;
+    --z-index-modal-back: 400;
+    --z-index-modal-base: 410;
+    --z-index-modal: 420;
+    --z-index-modal-content: 420;
+    --z-index-modal-front: 430;
+    /* -- Room & Special Modals -- */;
+    --z-index-room-modal: 2400;
+    --z-index-room-modal-header: 2450;
+    /* -- Detailed Item & Other Modals -- */
+    --z-detailed-item-modal: 2600;
+    --z-image-zoom-modal: 2610;
+    --z-quantity-modal: 2620;
+    /* -- Specific Application Layers -- */;
+    --z-door-areas: 50;
+    --z-notification: 600;
+    --z-base: 1;
+    --z-base-elevated: 10;
+    --z-content-overlay: 100;
+    --z-content-overlay-hover: 110;
+    /* -- Global Notifications & Highest Level -- */;
+    --z-index-global-notification: 500;
+    --z-index-toast: 9999;
+    --z-index-god-mode: 9999;
+    /* -- Standard z-index stack from CSS variables -- */;
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    --z-toast: 1080;
+}/* =============================================================================
+ * Z-Index Utility Classes
+ * =============================================================================
+ */
+
+/* Common z-index utility classes */
+.z-index-9999 {
+    z-index: var(--z-index-toast, 9999);
+}.z-index-1100 {
+    z-index: 1100;
+}.z-index-1000 {
+    z-index: 1000;
+}.z-index-modal {
+    z-index: var(--z-index-modal, 2000);
+}.z-behind {
+    z-index: var(--z-index-behind);
+}.z-base {
+    z-index: var(--z-base);
+}.z-elevated {
+    z-index: var(--z-base-elevated);
+}.z-overlay {
+    z-index: var(--z-index-overlay);
+}.z-modal {
+    z-index: var(--z-modal);
+}.z-dropdown {
+    z-index: var(--z-dropdown);
+}.z-tooltip {
+    z-index: var(--z-tooltip);
+}.z-toast {
+    z-index: var(--z-toast);
+}/* =============================================================================
+ * Component-Specific Z-Index Applications
+ * =============================================================================
+ */
+
+/* Modal system z-index applications */
+.modal-overlay {
+    z-index: var(--z-modal);
+}.modal-backdrop {
+    z-index: var(--z-base); /* Background layer */;
+}.modal-content {
+    z-index: var(--z-content-overlay);
+}.admin-modal-overlay {
+    z-index: var(--z-modal);
+}/* Room system z-index applications */
+.room-background {
+    z-index: var(--z-base); /* Lower than header z-index (2800) */;
+}.room-iframe {
+    z-index: var(--z-base); /* Lower than header z-index (2800) */;
+}.door-area {
+    z-index: var(--z-door-areas); /* Use centralized z-index */;
+}.room-notification {
+    z-index: var(--z-notification);
+}/* Room modal specific z-index */
+.room-modal-behind {
+    z-index: var(--z-index-behind);
+}.room-modal-god-mode {
+    z-index: var(--z-index-god-mode);
+}.room-modal-base {
+    z-index: var(--z-index-modal);
+}.room-modal-overlay {
+    z-index: var(--z-index-overlay);
+}.room-modal-content {
+    z-index: var(--z-index-content);
+}/* Content overlay system */
+.content-overlay {
+    z-index: var(--z-content-overlay);
+}.content-overlay-hover {
+    z-index: var(--z-content-overlay-hover);
+}/* Fixed positioning elements */
+.fixed-header {
+    z-index: var(--z-fixed);
+}.sticky-nav {
+    z-index: var(--z-sticky);
+}/* Notification system */
+.notification-toast {
+    z-index: var(--z-toast);
+}.global-notification {
+    z-index: var(--z-index-global-notification);
+}

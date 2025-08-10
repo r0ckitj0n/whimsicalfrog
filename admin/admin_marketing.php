@@ -182,11 +182,9 @@ function generateId($prefix, $length = 3)
 }
 ?>
 
-<div class="admin-content-container">
+<div class="admin-content-container admin-marketing-page">
     <div class="admin-filter-section">
-        <form class="admin-filter-form" method="get" action="">
-            <input type="hidden" name="page" value="admin">
-            <input type="hidden" name="section" value="marketing">
+        <form class="admin-filter-form" method="get" action="/admin/marketing">
             
             <input type="date" id="mFrom" name="start_date" class="admin-form-input" 
                    value="<?= htmlspecialchars($startInput) ?>">
@@ -343,7 +341,7 @@ function generateId($prefix, $length = 3)
                     <h3 class="card-title">Marketing Tools</h3>
                 </div>
                 <div class="marketing-tools-grid">
-                    <button onclick="showMarketingTool('email-campaigns')" class="tool-card">
+                                        <button data-tool="email-campaigns" class="tool-card">
                         <div class="tool-icon email">📧</div>
                         <div class="tool-content">
                             <h4 class="tool-title">Email Campaigns</h4>
@@ -351,7 +349,7 @@ function generateId($prefix, $length = 3)
                         </div>
                     </button>
                     
-                    <button onclick="showMarketingTool('discount-codes')" class="tool-card">
+                                        <button data-tool="discount-codes" class="tool-card">
                         <div class="tool-icon discount">🏷️</div>
                         <div class="tool-content">
                             <h4 class="tool-title">Discount Codes</h4>
@@ -359,7 +357,7 @@ function generateId($prefix, $length = 3)
                         </div>
                     </button>
                     
-                    <button onclick="showMarketingTool('social-media')" class="tool-card">
+                                        <button data-tool="social-media" class="tool-card">
                         <div class="tool-icon social">📱</div>
                         <div class="tool-content">
                             <h4 class="tool-title">Social Media</h4>
@@ -367,7 +365,7 @@ function generateId($prefix, $length = 3)
                         </div>
                     </button>
                     
-                    <a href="/?page=admin&section=reports" class="tool-card">
+                    <a href="/admin/reports" class="tool-card">
                         <div class="tool-icon analytics">📈</div>
                         <div class="tool-content">
                             <h4 class="tool-title">Analytics</h4>
@@ -386,7 +384,7 @@ function generateId($prefix, $length = 3)
             <div class="admin-card">
                 <div class="section-header">
                     <h2 class="section-title">Email Campaigns</h2>
-                    <button class="btn btn-primary" onclick="toggleNewCampaignForm()">
+                                        <button class="btn btn-primary" data-toggle-form="new-campaign-form">
                         ➕ New Campaign
                     </button>
                 </div>
@@ -441,7 +439,7 @@ function generateId($prefix, $length = 3)
                         </div>
                         
                         <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="toggleNewCampaignForm()">Cancel</button>
+                                                        <button type="button" class="btn btn-secondary" data-toggle-form="new-campaign-form">Cancel</button>
                             <button type="submit" class="btn btn-primary">Create Campaign</button>
                         </div>
                     </form>
@@ -510,7 +508,7 @@ function generateId($prefix, $length = 3)
             <div class="admin-card">
                 <div class="section-header">
                     <h2 class="section-title">Discount Codes</h2>
-                    <button class="btn btn-primary" onclick="toggleNewDiscountForm()">
+                                        <button class="btn btn-primary" data-toggle-form="new-discount-form">
                         ➕ New Discount Code
                     </button>
                 </div>
@@ -527,7 +525,7 @@ function generateId($prefix, $length = 3)
                                 <label for="discount-code" class="form-label">Discount Code</label>
                                 <div class="input-group">
                                     <input type="text" id="discount-code" name="code" class="form-input" required>
-                                    <button type="button" class="btn btn-secondary" onclick="generateDiscountCode()">Generate</button>
+                                                                        <button type="button" class="btn btn-secondary" id="generateDiscountBtn">Generate</button>
                                 </div>
                             </div>
                             
@@ -568,7 +566,7 @@ function generateId($prefix, $length = 3)
                         </div>
                         
                         <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="toggleNewDiscountForm()">Cancel</button>
+                                                        <button type="button" class="btn btn-secondary" data-toggle-form="new-discount-form">Cancel</button>
                             <button type="submit" class="btn btn-primary">Create Discount Code</button>
                         </div>
                     </form>
@@ -640,7 +638,7 @@ function generateId($prefix, $length = 3)
             <div class="admin-card">
                 <div class="section-header">
                     <h2 class="section-title">Social Media Management</h2>
-                    <button class="btn btn-primary" onclick="toggleNewPostForm()">
+                                        <button class="btn btn-primary" data-toggle-form="new-post-form">
                         ➕ New Post
                     </button>
                 </div>
@@ -736,7 +734,7 @@ function generateId($prefix, $length = 3)
         <div class="setup-notice">
             <h3 class="setup-title">Marketing Setup Required</h3>
             <p class="setup-description">Some marketing features require database setup. Click below to initialize missing tables.</p>
-            <button class="btn btn-primary" onclick="initializeMarketingTables()">
+                        <button id="initMarketingTablesBtn" class="btn btn-primary">
                 🚀 Setup Marketing Tables
             </button>
         </div>
@@ -745,92 +743,23 @@ function generateId($prefix, $length = 3)
     </div>
 </div>
 
-<!- JavaScript ->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Chart Data
-const chartData = <?= json_encode($chartData) ?>;
+<?php
+// Prepare chart data for JavaScript
+$js_chart_data = json_encode([
+    'sales' => [
+        'labels' => $chartData['monthLabels'],
+        'values' => $chartData['salesData']
+    ],
+    'payments' => [
+        'labels' => $chartData['paymentMethodLabels'],
+        'values' => $chartData['paymentMethodCounts']
+    ]
+]);
+?>
 
-// Initialize Charts
-document.addEventListener('DOMContentLoaded', function() {
-    // Sales Chart
-    const salesCtx = document.getElementById('salesChart');
-    if (salesCtx) {
-        new Chart(salesCtx, {
-            type: 'line',
-            data: {
-                labels: chartData.monthLabels,
-                datasets: [{
-                    label: 'Sales ($)',
-                    data: chartData.salesData,
-                    borderColor: 'var(-primary-color, #87ac3a)',
-                    backgroundColor: 'rgba(135, 172, 58, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Payment Methods Chart
-    const paymentCtx = document.getElementById('paymentMethodChart');
-    if (paymentCtx) {
-        new Chart(paymentCtx, {
-            type: 'doughnut',
-            data: {
-                labels: chartData.paymentMethodLabels,
-                datasets: [{
-                    data: chartData.paymentMethodCounts,
-                    backgroundColor: [
-                        '#87ac3a',
-                        '#a3cc4a',
-                        '#6b8e23',
-                        '#9bb83a',
-                        '#7ea32d'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-    }
-});
-
-// Marketing Tool Functions
-function showMarketingTool(tool) {
-    // Hide all sections via CSS class
-    document.querySelectorAll('.marketing-tool-section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    
-    // Show selected section
-    const section = document.getElementById(tool + '-section');
+<!-- Data for JavaScript modules -->
+<script type="application/json" id="marketingChartData">
+    <?php echo $js_chart_data; ?>
     if (section) {
         section.classList.remove('hidden');
         section.scrollIntoView({ behavior: 'smooth' });

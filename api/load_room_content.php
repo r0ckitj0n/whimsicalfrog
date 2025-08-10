@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit;
 }
 
-$roomNumber = $_GET['room_number'] ?? 'A';
+$roomNumber = $_GET['room'] ?? $_GET['room_number'] ?? 'A';
 $isModal = isset($_GET['modal']);
 
 if (!isValidRoom($roomNumber)) {
@@ -72,6 +72,8 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
     if ($catId) {
         $stmt = $pdo->prepare(
             "SELECT i.*,
+                    i.stockLevel,
+                    i.retailPrice,
                     COALESCE(img.image_path, i.imageUrl) as image_path,
                     img.is_primary,
                     img.alt_text
@@ -90,19 +92,74 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
 
     // load coordinates
     $cd = loadRoomCoordinates($roomType, $pdo);
-    $coords = $cd['coordinates'] ?? [];
+    $coordsRaw = $cd['coordinates'] ?? [];
+    // Normalize coordinates to a zero-based numeric array in original order
+    $coords = array_values($coordsRaw);
 
     ob_start(); ?>
     <div id="modalRoomPage" class="modal-room-page" data-room="<?php echo $roomNumber; ?>">
+      
+      <!-- Modal Header with Title and Description -->
+      <?php if (!empty($rs['room_name']) || !empty($rs['description'])): ?>
+      <div class="room-title-overlay" style="display:none!important;">
+        <?php if (!empty($rs['room_name'])): ?>
+          <h3><?php echo htmlspecialchars($rs['room_name']); ?></h3>
+        <?php endif; ?>
+        <?php if (!empty($rs['description'])): ?>
+          <p><?php echo htmlspecialchars($rs['description']); ?></p>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
+      
       <div class="room-modal-iframe-container">
         <div class="room-overlay-wrapper room-modal-content-wrapper">
           <!-- Room content loaded -->
+          
+          <?php 
+          // Debug output for development
+          $itemCount = count($items);
+          $coordCount = count($coords);
+          echo "<!-- DEBUG: Room $roomNumber - Category: '$categoryName' - Items: $itemCount - Coords: $coordCount -->\n";
+          
+          if (empty($items)) {
+              echo "<!-- DEBUG: No items found for category '$categoryName' in room $roomNumber -->\n";
+          }
+          ?>
+          
           <?php foreach ($items as $i => $it):
             $idx = $i + 1;
-            $c = $coords[$i] ?? ['top'=>0,'left'=>0,'width'=>80,'height'=>80];
+            $coordIdx = $coordCount ? ($i % $coordCount) : 0;
+            $cRaw = $coords[$coordIdx] ?? [];
+            // Allow coordinate arrays to be either associative or numeric index based
+            if (isset($cRaw[0], $cRaw[1])) {
+                // numeric indexed array [top,left,width,height]
+                $cRaw = [
+                    'top' => $cRaw[0],
+                    'left'=> $cRaw[1],
+                    'width'=> $cRaw[2] ?? 80,
+                    'height'=> $cRaw[3] ?? 80,
+                ];
+            }
+            $top = $cRaw['top'] ?? $cRaw['Top'] ?? $cRaw['y'] ?? $cRaw['Y'] ?? 0;
+            $left = $cRaw['left'] ?? $cRaw['Left'] ?? $cRaw['x'] ?? $cRaw['X'] ?? 0;
+            $width = $cRaw['width'] ?? $cRaw['Width'] ?? $cRaw['w'] ?? $cRaw['W'] ?? 80;
+            $height = $cRaw['height'] ?? $cRaw['Height'] ?? $cRaw['h'] ?? $cRaw['H'] ?? 80;
+            $c = ['top'=>$top,'left'=>$left,'width'=>$width,'height'=>$height];
           ?>
-            <div class="room-product-icon area-<?php echo $idx; ?>"
-                 style="position: absolute !important; top: <?php echo $c['top']; ?>px !important; left: <?php echo $c['left']; ?>px !important; width: <?php echo $c['width']; ?>px !important; height: <?php echo $c['height']; ?>px !important;"
+            <div class="room-product-icon positioned area-<?php echo $idx; ?>"
+                 data-sku="<?php echo htmlspecialchars($it['sku']); ?>"
+                 data-name="<?php echo htmlspecialchars($it['name']); ?>"
+                 data-price="<?php echo htmlspecialchars($it['retailPrice'] ?? $it['price'] ?? '0', ENT_QUOTES); ?>"
+                 data-stock-level="<?php echo htmlspecialchars($it['stockLevel'] ?? $it['stock_level'] ?? '0', ENT_QUOTES); ?>"
+                 data-category="<?php echo htmlspecialchars($it['category'] ?? ''); ?>"
+                 data-image="<?php echo getImageUrl($it['image_path'],'items','png'); ?>"
+                 data-description="<?php echo htmlspecialchars($it['description'] ?? '', ENT_QUOTES); ?>"
+                 data-marketing-label="<?php echo htmlspecialchars($it['marketingLabel'] ?? '', ENT_QUOTES); ?>"
+                  data-original-top="<?php echo $c['top']; ?>"
+                  data-original-left="<?php echo $c['left']; ?>"
+                  data-original-width="<?php echo $c['width']; ?>"
+                  data-original-height="<?php echo $c['height']; ?>"
+                 style="position: absolute; top: <?php echo $c['top']; ?>px; left: <?php echo $c['left']; ?>px; width: <?php echo $c['width']; ?>px; height: <?php echo $c['height']; ?>px; --icon-top: <?php echo $c['top']; ?>px; --icon-left: <?php echo $c['left']; ?>px; --icon-width: <?php echo $c['width']; ?>px; --icon-height: <?php echo $c['height']; ?>px; background: rgba(255, 255, 255, 0.9); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 8px; backdrop-filter: blur(2px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);"
                  data-debug-position="top:<?php echo $c['top']; ?> left:<?php echo $c['left']; ?> w:<?php echo $c['width']; ?> h:<?php echo $c['height']; ?>">
               <picture>
                 <source srcset="<?php echo getImageUrl($it['image_path'],'items'); ?>" type="image/webp">
@@ -116,8 +173,18 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
       </div>
 
       <script>
+        // Set global room type variables for coordinate manager
+        const roomNumber = document.getElementById('modalRoomPage')?.getAttribute('data-room');
+        if (roomNumber) {
+            window.ROOM_TYPE = `room${roomNumber}`;
+            window.roomType = `room${roomNumber}`;
+            window.roomNumber = roomNumber;
+            console.log(`[Room Modal] Set global room variables: ROOM_TYPE=${window.ROOM_TYPE}, roomNumber=${window.roomNumber}`);
+        }
+        
         // Room coordinate scaling for modal iframe
-        document.addEventListener('DOMContentLoaded', function() {
+        // Use immediate execution since DOMContentLoaded has already fired in modal context
+        (function initializeModalRoom() {
             const originalImageWidth = 1280;
             const originalImageHeight = 896;
 
@@ -147,10 +214,7 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
                         }
 
                         const imageUrl = `/images/${filename}`;
-                        roomWrapper.style.backgroundImage = `url('${imageUrl}')`;
-                        roomWrapper.style.backgroundSize = 'cover';
-                        roomWrapper.style.backgroundPosition = 'center';
-                        roomWrapper.style.backgroundRepeat = 'no-repeat';
+                        roomWrapper.style.setProperty('--room-bg-image', `url('${imageUrl}')`);
 
                         console.log(`[Room Modal Iframe] Background loaded: ${imageUrl}`);
                     }
@@ -190,13 +254,14 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
                         originalWidth = parseFloat(icon.dataset.originalWidth);
                         originalHeight = parseFloat(icon.dataset.originalHeight);
                     } else {
-                        // Store original coordinates from inline styles
-                        originalTop = parseFloat(icon.style.top) || 0;
-                        originalLeft = parseFloat(icon.style.left) || 0;
-                        originalWidth = parseFloat(icon.style.width) || 80;
-                        originalHeight = parseFloat(icon.style.height) || 80;
+                        // Read original coordinates from CSS custom properties
+                        const computedStyle = getComputedStyle(icon);
+                        originalTop = parseFloat(computedStyle.getPropertyValue('--icon-top')) || 0;
+                        originalLeft = parseFloat(computedStyle.getPropertyValue('--icon-left')) || 0;
+                        originalWidth = parseFloat(computedStyle.getPropertyValue('--icon-width')) || 80;
+                        originalHeight = parseFloat(computedStyle.getPropertyValue('--icon-height')) || 80;
 
-
+                        console.log(`[Room Modal] Reading coordinates for icon: top=${originalTop}, left=${originalLeft}, w=${originalWidth}, h=${originalHeight}`);
 
                         // Store for future scaling operations
                         icon.dataset.originalTop = originalTop;
@@ -240,10 +305,44 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(scaleRoomCoordinates, 100);
             });
-        });
+        })(); // End immediate execution
       </script>
     </div>
     <?php return ob_get_clean();
+}
+
+/**
+ * Get default room coordinates when database has no data
+ */
+function getDefaultRoomCoordinates($roomType)
+{
+    $defaultCoords = [
+        'room1' => [ // T-Shirts & Apparel - spread across room
+            ['top' => 200, 'left' => 150, 'width' => 80, 'height' => 80],
+            ['top' => 350, 'left' => 300, 'width' => 80, 'height' => 80],
+            ['top' => 180, 'left' => 450, 'width' => 80, 'height' => 80],
+            ['top' => 400, 'left' => 600, 'width' => 80, 'height' => 80]
+        ],
+        'room2' => [ // Tumblers & Drinkware - positioned near kitchen area
+            ['top' => 250, 'left' => 200, 'width' => 80, 'height' => 80],
+            ['top' => 180, 'left' => 350, 'width' => 80, 'height' => 80],
+            ['top' => 320, 'left' => 480, 'width' => 80, 'height' => 80],
+            ['top' => 280, 'left' => 600, 'width' => 80, 'height' => 80]
+        ],
+        'room3' => [ // Custom Artwork - wall positions
+            ['top' => 100, 'left' => 200, 'width' => 100, 'height' => 80],
+            ['top' => 150, 'left' => 400, 'width' => 100, 'height' => 80],
+            ['top' => 200, 'left' => 600, 'width' => 100, 'height' => 80]
+        ],
+        'room4' => [ // Sublimation Items - center table area
+            ['top' => 300, 'left' => 400, 'width' => 80, 'height' => 80]
+        ],
+        'room5' => [ // Window Wraps - near window
+            ['top' => 242, 'left' => 261, 'width' => 108, 'height' => 47]
+        ]
+    ];
+    
+    return $defaultCoords[$roomType] ?? [];
 }
 
 /**
@@ -258,12 +357,24 @@ function loadRoomCoordinates($roomType, $pdo)
         $stmt->execute([$roomType]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
-            return ['coordinates' => json_decode($row['coordinates'], true)];
+            $coords = json_decode($row['coordinates'], true);
+            // Validate that coordinates look plausible (non-zero). If not, fall back to defaults.
+            if (!empty($coords)) {
+                // assume first coord exists
+                $first = $coords[0];
+                if ((int)($first['top'] ?? 0) !== 0 || (int)($first['left'] ?? 0) !== 0) {
+                    return ['coordinates' => $coords];
+                }
+            }
+            // otherwise continue to default
+            // do not return invalid coordinates; fallback to default below
         }
     } catch (Exception $e) {
         error_log('coords error: ' . $e->getMessage());
     }
-    return ['coordinates' => []];
+    
+    // Fallback coordinates when database has no data
+    return ['coordinates' => getDefaultRoomCoordinates($roomType)];
 }
 
 /**

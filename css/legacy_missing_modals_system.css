@@ -1,0 +1,97 @@
+/* CRITICAL MISSING MODALS SYSTEM CSS - Extracted from backups/modals.css */
+/* Generic modal overlay system and item popup styles */
+
+/* ==============================================
+   GENERIC MODAL OVERLAY SYSTEM
+   ============================================== */
+
+/* Modal overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: var(--z-modal);
+}
+
+/* Modal content */
+.modal-content {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: var(--modal-border-radius, 8px);
+    max-width: var(--modal-max-width, 500px);
+    width: 90%;
+}
+
+/* ==============================================
+   ROOM MODAL IFRAME CONTAINER
+   ============================================== */
+
+.modal-room-page {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: visible; /* Allow background overflow */
+    background: transparent;
+    z-index: var(--z-base); /* Background layer */
+    transform-origin: top center;
+}
+
+.room-modal-iframe-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background-size: cover; /* Fully fill container */
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: var(--z-base); /* Background layer */
+}
+
+.room-modal-content-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-content-overlay);
+}
+
+/* ==============================================
+   ITEM POPUP SYSTEM
+   ============================================== */
+
+.item-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgb(0 0 0 / 80%);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.popup-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 20px 40px rgb(0 0 0 / 30%);
+}
+
+.popup-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}

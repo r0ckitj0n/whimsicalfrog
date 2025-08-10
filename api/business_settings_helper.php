@@ -20,7 +20,7 @@ class BusinessSettings
             }
 
             try {
-                $pdo = Database::getInstance();
+                self::$pdo = Database::getInstance();
             } catch (Exception $e) {
                 error_log("Database connection failed: " . $e->getMessage());
                 throw $e;

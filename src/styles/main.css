@@ -1,32 +1,405 @@
+/* Center title and intro text inside the green contact card */
+body[data-page='contact'] .wf-contact-card h1,
+body[data-page='contact'] .wf-contact-card .content { text-align: center; }
+/* Center the single-column grid item that contains the form */
+body[data-page='contact'] .grid { justify-items: center; }
+/* Center input text per user request */
+body[data-page='contact'] .wf-contact-form input[type="text"],
+body[data-page='contact'] .wf-contact-form input[type="email"],
+body[data-page='contact'] .wf-contact-form input[type="tel"],
+body[data-page='contact'] .wf-contact-form input[type="subject"],
+body[data-page='contact'] .wf-contact-form textarea { text-align: center; }
+
+/* Remove container padding that causes off-center feel */
+body[data-page='contact'] .page-content.container { padding-left: 0; padding-right: 0; }
 /* Whimsical Frog - Main CSS Entry Point for Vite */
 
 /* 
   This file replaces the legacy bundle-css.php script.
-  It imports all necessary CSS files in the correct priority order.
-  Vite will process this file to create the single, unified stylesheet for the site.
+  It imports the existing main CSS file that contains all the site styles.
 */
 
-/* 1. Core & Variables */
-@import './z-index.css'; /* Z-Index is foundational */
-@import '../../css/core/variables.css';
+/* Z-Index utilities (foundational) */
+@import './z-index.css';
 
-/* 2. Utilities & Standard Classes */
-@import '../../css/core/utilities.css'; /* Core utilities */
-@import '../../css/utilities.css'; /* Main, larger utilities file */
-@import '../../css/standard-classes.css';
+/* Main site styles - this contains all the compiled CSS for the site */
+@import '../../css/main.css';
 
-/* 3. Base Components & Layout */
-@import '../../css/components.css';
+/* Room modal header fixes */
+@import '../../css/room-modal-header-fixes.css';
 
-/* 4. Page-Specific & Feature Styles */
-@import '../../css/backgrounds.css'; /* CRITICAL: For background images */
-@import '../../css/pages.css';
-@import '../../css/modals.css'; /* CRITICAL: For modal styles */
-@import '../../css/room-iframe.css';
+/* Room main header fixes */
+@import '../../css/room-main-header-fixes.css';
+@import '../../css/legacy_missing_room_main.css';
 
-/* 5. Generated & Overrides */
-@import '../../css/generated_css_live.css';
+/* Comprehensive quantity button fix to eliminate horizontal scrollbar */
+@import '../../css/qty-button-final-fix.css';
 
-/* 6. Responsive Styles (should come last) */
-@import '../../css/responsive/mobile.css';
+/* Modal fixes removed - fixed at source in PHP template */
 
+/* Popup visuals clean-up */
+
+
+/* Legacy styles will be selectively imported after cleanup */
+/* @import '../../css/legacy_master.css'; */
+
+
+/* Global: Prevent horizontal scrollbars and ensure safe scaling */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; height: auto; }
+/* Global modal scroll lock + stable gutters */
+html { scrollbar-gutter: stable; }
+body.modal-open,
+html.modal-open { overflow: hidden !important; }
+/* Support aliases used in some scripts */
+body.modal-open-overflow-hidden,
+html.modal-open-overflow-hidden { overflow: hidden !important; }
+body.modal-open-position-fixed { position: fixed; width: 100%; }
+/* Avoid globally forcing max-width on all containers; only prevent overflow-x */
+/* Landing: fullscreen container and clickable areas */
+body.mode-fullscreen #landingPage {
+  position: fixed;
+  inset: 0;
+  background: none;
+  z-index: var(--z-base, 1);
+  overflow: hidden;
+}
+body.mode-fullscreen .clickable-area {
+  position: absolute;
+  display: block;
+  cursor: pointer;
+}
+body.mode-fullscreen .clickable-area img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+/* Room Main: ensure dynamic background is applied */
+.main-room-section {
+  background-image: var(--dynamic-room-bg-url) !important;
+}
+.page-content, .site-wrapper { overflow-x: hidden; }
+.content, .prose { overflow-x: hidden; }
+
+/* Contact page: constrain page width and apply brand background only around content card */
+body[data-page='contact'] .page-content { width: min(100%, 1100px); margin: 0 auto; }
+/* Align the reveal-company wrapper to the same max width as page content */
+body[data-page='contact'] .wf-reveal-company-wrap { width: min(100%, 1100px); margin: 8px auto 6px auto; }
+/* Center the reveal button horizontally within its wrap */
+body[data-page='contact'] .wf-reveal-company-wrap { display: flex; justify-content: center; }
+body[data-page='contact'] .wf-contact-card {
+  background: var(--primary_color, #87ac3a);
+  color: #fff;
+  border-radius: 12px;
+  padding: clamp(12px, 2vw, 24px);
+  box-shadow: 0 15px 45px rgb(0 0 0 / 25%);
+  margin-left: auto; /* ensure card is centered */
+  margin-right: auto;
+  width: min(100%, 1100px);
+}
+body[data-page='contact'] .wf-contact-card h1,
+body[data-page='contact'] .wf-contact-card p,
+body[data-page='contact'] .wf-contact-card label { color: #fff; }
+body[data-page='contact'] .wf-contact-card .wf-reveal .wf-reveal-label { color: #fff; }
+/* Make reveal button pop on contact page (contrast against green background) */
+body[data-page='contact'] .wf-reveal .wf-reveal-btn {
+  background: #ffffff;
+  color: #111827;
+  border: 2px solid rgba(255,255,255,0.6);
+}
+body[data-page='contact'] .wf-reveal .wf-reveal-btn:hover { filter: none; box-shadow: 0 10px 24px rgb(0 0 0 / 25%); }
+
+/* Prominent single reveal button */
+body[data-page='contact'] .wf-reveal-company-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  color: var(--primary_color, #87ac3a);
+  border: 2px solid var(--primary_color, #87ac3a);
+  border-radius: 9999px; /* pill */
+  padding: 6px 12px; /* slimmer */
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(0,0,0,.16);
+  width: fit-content; /* shrink to text width */
+  white-space: nowrap;
+}
+body[data-page='contact'] .wf-reveal-company-btn::before { content: '🔒'; }
+body[data-page='contact'] .wf-reveal-company-btn:hover {
+  background: var(--primary_color, #87ac3a);
+  color: #ffffff;
+  box-shadow: 0 14px 36px rgba(0,0,0,.24);
+  filter: none;
+}
+body[data-page='contact'] .wf-reveal-company-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(135, 172, 58, .35), 0 12px 28px rgba(0,0,0,.16);
+}
+/* Contact page: branded submit button (orange bg, primary color text) */
+body[data-page='contact'] .wf-submit-btn {
+  background: var(--brand_orange, #BF5700); /* burnt orange fallback */
+  color: #ffffff; /* white text for accessibility */
+  border: 2px solid rgba(0,0,0,0.04);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .2s ease, filter .2s ease;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+body[data-page='contact'] .wf-submit-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(.98);
+  box-shadow: 0 14px 36px rgba(0,0,0,.24);
+}
+body[data-page='contact'] .wf-submit-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(191, 87, 0, .35);
+}
+body[data-page='contact'] .wf-submit-btn:disabled { opacity: .7; cursor: not-allowed; filter: grayscale(.1); }
+/* Contact form label + spacing adjustments */
+.wf-contact-form label { font-size: 0.9rem; margin-bottom: 0.25rem; display: inline-block; }
+.wf-contact-form .w-full { width: 100%; }
+/* left-align labels for better readability */
+.wf-contact-form label { text-align: left; width: auto; }
+
+/* --- About: Cloud-shaped background behind text (no rectangular card) --- */
+/* Remove Tailwind container constraints on About so the cloud can breathe */
+body.room-bg-main[data-page='about'] .page-content {
+  max-width: none !important;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: clamp(8px, 1.5vh, 16px); /* move content up */
+}
+/* Ensure centering even when room-bg-main is absent */
+body[data-page='about'] .page-content {
+  max-width: none !important;
+  padding-left: 0;
+  padding-right: 0;
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+}
+body[data-page='about'] .page-content .prose {
+  max-width: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center cloud card */
+}
+body[data-page='about'] .page-content { overflow: visible; }
+body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: auto !important; margin-right: auto !important; }
+.wf-cloud-card {
+  position: relative;
+  display: block;            /* allow margin auto centering */
+  width: auto;               /* grow to max-width */
+  max-width: min(2000px, 90vw);
+  margin: clamp(8px, 1.5vh, 16px) auto 0 auto; /* small top margin to pull up */
+  /* Responsive padding around text */
+  padding: clamp(44px, 7.5vw, 168px) clamp(48px, 8.5vw, 188px);
+  min-height: clamp(620px, 62vh, 1100px);
+  /* Cloud rendered via ::after to avoid cropping */
+  background: none;
+  box-shadow: none; /* avoid rectangular shadow */
+  overflow: visible;
+}
+.wf-cloud-card, .wf-cloud-card .content { overflow-wrap: anywhere; word-break: break-word; }
+.wf-cloud-card .content { position: relative; z-index: 1; max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
+.wf-cloud-card .content p { margin: 0.35em 0; line-height: 1.4; }
+.wf-cloud-card .content > p:first-of-type { margin-top: calc(1.4em * 2); }
+.wf-cloud-title { margin: 0 0 0.25rem 0; text-align: center; font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 700; color: #111; }
+.wf-cloud-card::before {
+  content: '';
+  position: absolute;
+  /* Keep within container to avoid horizontal overflow */
+  left: 5%;
+  right: 5%;
+  bottom: -10px;
+  height: 20px;
+  background: rgba(255,255,255,0.45);
+  filter: blur(14px);
+  border-radius: 999px; /* soft oval shadow under cloud */
+  z-index: -2; /* shadow behind cloud */
+}
+/* Cloud graphic layer (scaled bigger than content so it fully surrounds text) */
+.wf-cloud-card::after {
+  content: '';
+  position: absolute;
+  /* Center the cloud graphic and grow equally in all directions */
+  left: 50%;
+  top: 50%;
+  width: calc(100% + 16%);
+  height: calc(100% + 24%);
+  transform: translate(-50%, -50%);
+  background: url('../assets/cloud-bg.svg') center/100% 100% no-repeat;
+  z-index: -1;
+  pointer-events: none;
+}
+@media (max-width: 520px) {
+  .wf-cloud-card {
+    max-width: 96vw;
+    min-height: clamp(260px, 38vh, 560px);
+    padding: clamp(22px, 6.5vw, 68px) clamp(20px, 6vw, 60px);
+  }
+  .wf-cloud-card::after {
+    width: calc(100% + 6%);
+    height: calc(100% + 12%);
+  }
+}
+
+/* --- Contact: POS-style receipt block --- */
+.pos-receipt {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px 14px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+.pos-receipt .pos-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.pos-receipt .pos-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px dashed #d1d5db;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.pos-receipt .pos-line:last-child {
+  border-bottom: none;
+}
+.pos-receipt .pos-label { color: #6b7280; }
+.pos-receipt .pos-value { color: #111827; font-weight: 600; }
+
+/* --- Contact form width: 75% viewport --- */
+.wf-contact-form {
+  width: 100%;
+  max-width: 75vw;
+  margin: 0 auto; /* center the form container */
+}
+@media (min-width: 1024px) {
+  .wf-contact-form { max-width: 560px; }
+}
+@media (max-width: 640px) {
+  .wf-contact-form { max-width: 92vw; }
+}
+/* Compact inputs, larger textarea for contact form */
+.wf-contact-form input[type="text"],
+.wf-contact-form input[type="email"],
+.wf-contact-form input[type="tel"],
+.wf-contact-form input[type="subject"],
+.wf-contact-form input:not([type="submit"]),
+.wf-contact-form select {
+  height: 36px;
+  font-size: 0.95rem;
+  background: #fff;
+  color: #111;
+  border: 1px solid #d1d5db;
+}
+.wf-contact-form textarea {
+  min-height: 260px;
+  font-size: 1rem;
+  background: #fff;
+  color: #111;
+  border: 1px solid #d1d5db;
+}
+/* Slightly smaller text inputs */
+.wf-contact-form input[type="text"],
+.wf-contact-form input[type="email"],
+.wf-contact-form input[type="tel"],
+.wf-contact-form input[type="subject"],
+.wf-contact-form input:not([type="submit"]) { height: 32px; }
+/* Reduce vertical spacing between rows from space-y-4 */
+.wf-contact-form.space-y-4 > * + * { margin-top: 0.75rem; }
+/* Make contact intro copy white regardless of legacy utility classes */
+body[data-page='contact'] .content { color: #fff !important; }
+
+/* --- Reveal Company Info Modal (modal styles) --- */
+.wf-revealco-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:2147482000}
+.wf-revealco-overlay.show{opacity:1;pointer-events:auto}
+.wf-revealco-modal{width:100%;max-width:520px;margin:12px;padding:0}
+.wf-revealco-card{background:#fff;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.18);padding:18px 16px 16px;position:relative}
+.wf-revealco-close{position:absolute;top:8px;right:10px;border:none;background:transparent;color:#667085;font-size:20px;cursor:pointer}
+.wf-revealco-title{margin:0 0 10px 0;font-size:18px;line-height:1.2;color:#111827;font-weight:700}
+.wf-revealco-hint{margin:0 0 8px 0;color:#374151;font-size:14px}
+.wf-revealco-q{display:flex;align-items:center;gap:10px;margin:8px 0}
+.wf-revealco-qtext{font-weight:700;color:#111827}
+.wf-revealco-input{height:34px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font-size:14px}
+.wf-revealco-input:focus{outline:none;border-color:#87ac3a;box-shadow:0 0 0 3px rgba(135,172,58,.18)}
+.wf-revealco-actions{display:flex;gap:10px;margin-top:8px}
+.wf-revealco-card .wf-btn{height:36px;border-radius:10px;border:1px solid #d1d5db;background:#fff;font-weight:600;cursor:pointer;padding:0 12px}
+.wf-revealco-card .wf-btn-primary{background:#87ac3a;color:#fff;border-color:#87ac3a}
+.wf-revealco-card .wf-btn-primary:hover{background:#789a34}
+.wf-revealco-status{min-height:18px;color:#b91c1c;font-size:13px;margin-top:6px}
+.wf-revealco-details{display:grid;gap:10px}
+.wf-revealco-row{display:flex;gap:10px;align-items:center}
+.wf-revealco-label{min-width:86px;color:#6b7280;font-weight:600}
+.wf-revealco-link{color:#1f2937;text-decoration:underline}
+
+/* --- Reveal component (email/phone/address) --- */
+.wf-reveal-wrap {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.wf-reveal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.wf-reveal .wf-reveal-label {
+  min-width: 84px;
+  color: #374151; /* gray-700 */
+  font-weight: 600;
+}
+.wf-reveal .wf-reveal-btn {
+  display: inline-flex;
+  align-items: center;
+  background: var(--primary_color, #87ac3a);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  width: auto; /* override any global button 100% rules */
+  white-space: nowrap;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 20%);
+}
+.wf-reveal .wf-reveal-btn::before { content: '🔒'; margin-right: 8px; }
+.wf-reveal.is-challenging .wf-reveal-btn::before { content: '🧮'; }
+.wf-reveal .wf-reveal-btn:hover { filter: brightness(0.95); }
+.wf-reveal .wf-reveal-challenge {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+.wf-reveal.is-challenging .wf-reveal-challenge { display: inline-flex; }
+.wf-reveal .wf-reveal-input {
+  width: 70px;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+.wf-reveal .wf-reveal-submit {
+  background: #111827; /* gray-900 */
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.wf-reveal .wf-reveal-value { font-weight: 600; color: #111827; }
+.wf-reveal .wf-reveal-value { overflow-wrap: anywhere; word-break: break-word; }
+.wf-reveal .wf-reveal-link { color: var(--primary_color, #87ac3a); text-decoration: none; }
+.wf-reveal .wf-reveal-link:hover { text-decoration: underline; }

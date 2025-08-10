@@ -16,7 +16,7 @@ $action = $_GET['action'] ?? 'get';
 $adminOnlyActions = ['update', 'create', 'delete', 'list_all', 'set_global_enabled'];
 
 // Check if user is logged in and is admin (only for admin-only actions)
-session_start();
+
 $isAdmin = false;
 
 // Check session authentication first (standardized pattern)

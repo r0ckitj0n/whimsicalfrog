@@ -1,0 +1,206 @@
+/* ==============================================
+   DETAILED ITEM MODAL – VISIBILITY & LAYOUT FIXES
+   Keeps modal centred, prevents full-viewport stretch,
+   and removes accidental transforms on buttons
+   ============================================== */
+
+/* Ensure overlay stays flex-centred even if later CSS alters display */
+.detailed-item-modal.show {
+    /* remove default tailwind p-4 gap so container sits flush */
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Prevent container from stretching to entire viewport width */
+.detailed-item-modal-container {
+    margin: 20px auto !important;  /* small safe margin */
+    width: 75vw !important;   /* Exactly 75% of viewport width */
+    max-width: 75vw !important;   /* Exactly 75% of viewport width */
+    max-height: 90vh !important;
+    overflow-y: auto !important;  /* allow vertical scrolling if needed */
+    overflow-x: hidden !important;  /* prevent horizontal scrolling */
+}
+
+/* Remove any transforms or oversized layout on buttons rendered inside the modal */
+/* maintain original button transform; only adjust sizing */
+.detailed-item-modal .room-modal-button {
+    width: auto !important;
+    max-width: max-content !important;
+    transform: none !important;
+}
+
+/* Fix Add to Cart button width */
+.detailed-item-modal .wf-add-to-cart-btn,
+.detailed-item-modal button[data-action="addDetailedToCart"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Fix Additional Details button width */
+.detailed-item-modal #additionalInfoToggle {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure modal content doesn't overflow */
+.detailed-item-modal .modal-content,
+.detailed-item-modal-container .modal-content {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+}
+
+/* Prevent child elements from overflowing - but not override container width */
+.detailed-item-modal .modal-content * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Fix quantity selector to be more compact */
+.detailed-item-modal .quantity-selector {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    max-width: 100px !important;
+    width: auto !important;
+    flex-wrap: nowrap !important;
+}
+
+/* FINAL NUCLEAR FIX: Absolutely minimal quantity buttons */
+.detailed-item-modal button[data-action="adjustDetailedQuantity"],
+.detailed-item-modal button[data-action="decreaseQuantity"],
+.detailed-item-modal button[data-action="increaseQuantity"],
+.detailed-item-modal .quantity-selector button,
+.detailed-item-modal .flex button[data-action*="Quantity"],
+.detailed-item-modal-container button[data-action="adjustDetailedQuantity"],
+button[data-action="adjustDetailedQuantity"] {
+    /* Absolutely minimal sizing */
+    width: 14px !important;
+    min-width: 14px !important;
+    max-width: 14px !important;
+    height: 14px !important;
+    
+    /* Remove ALL padding and margin */
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    
+    /* Override Tailwind utility classes */
+    --tw-space-x-reverse: 0 !important;
+    --tw-space-y-reverse: 0 !important;
+    
+    /* Layout and appearance */
+    border: 1px solid #ccc !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* Target SVG icons inside buttons to make them smaller */
+.detailed-item-modal button[data-action="adjustDetailedQuantity"] svg,
+.detailed-item-modal .quantity-selector button svg {
+    width: 8px !important;
+    height: 8px !important;
+    flex-shrink: 0 !important;
+}
+
+/* NUCLEAR FIX: Completely eliminate horizontal scrollbar at container level */
+.detailed-item-modal-container,
+.detailed-item-modal {
+    max-width: 75vw !important;
+    width: 75vw !important;
+    margin: 0 auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Hide horizontal scrollbar but keep vertical */
+.detailed-item-modal-container::-webkit-scrollbar-x,
+.detailed-item-modal::-webkit-scrollbar-x {
+    display: none !important;
+}
+
+/* Force modal body to clip overflow */
+.detailed-item-modal .modal-body,
+.detailed-item-modal-container .modal-body {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Make quantity input field narrower - target correct ID */
+.detailed-item-modal input[name="quantity"],
+.detailed-item-modal input#detailedQuantity,
+.detailed-item-modal .quantity-selector input[type="number"],
+.detailed-item-modal input[type="number"],
+.detailed-item-modal-container input#detailedQuantity {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    text-align: center !important;
+    padding: 1px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 11px !important;
+}
+
+/* Ensure the quantity selector container doesn't cause overflow */
+.detailed-item-modal .flex:has(button[data-action="adjustDetailedQuantity"]) {
+    display: inline-flex !important;
+    gap: 2px !important;
+    max-width: 100px !important;
+    overflow: hidden !important;
+}
+
+/* ==============================================
+   SELLING POINTS – pill style using brand colors
+   Source of truth for styling (Vite-managed)
+   ============================================== */
+.detailed-item-modal .selling-point-pill {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--button-bg-primary, #87ac3a);
+    color: var(--brand-bg-text-color, #fff);
+    padding: 2px 8px;           /* minimal vertical height */
+    border-radius: 8px;         /* subtle pill */
+    line-height: 1.2;           /* tight line height */
+    max-width: 100%;
+}
+
+.detailed-item-modal .selling-point-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--brand-bg-text-color, #fff);
+    flex-shrink: 0;
+}
+
+.detailed-item-modal .selling-point-text {
+    color: var(--brand-bg-text-color, #fff);
+    font-size: 1rem;    /* larger than default */
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0;          /* remove default paragraph margins */
+    white-space: normal; /* wrap as needed */
+}

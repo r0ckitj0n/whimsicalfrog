@@ -1,40 +1,5 @@
 
-<!-- Database-driven CSS for room_template -->
-<style id="room_template-css">
-/* CSS will be loaded from database */
-</style>
 
-<!-- Room Template CSS Fix - Override any database CSS issues -->
-<link rel="stylesheet" href="css/room_template_fix.css?v=<?php echo time(); ?>">
-
-<script>
-    // Load CSS from database
-    async function loadRoom_templateCSS() {
-        try {
-            const response = await fetch('/api/css_generator.php?category=room_template');
-            const cssText = await response.text();
-            const styleElement = document.getElementById('room_template-css');
-            if (styleElement && cssText) {
-                styleElement.textContent = cssText;
-                console.log('✅ room_template CSS loaded from database');
-            }
-        } catch (error) {
-            console.error('❌ FATAL: Failed to load room_template CSS:', error);
-                // Show error to user - no fallback
-                const errorDiv = document.createElement('div');
-                errorDiv.innerHTML = `
-                    <div style="position: fixed; top: 20px; right: 20px; background: #dc2626; color: white; padding: 12px; border-radius: 8px; z-index: 9999; max-width: 300px;">
-                        <strong>room_template CSS Loading Error</strong><br>
-                        Database connection failed. Please refresh the page.
-                    </div>
-                `;
-                document.body.appendChild(errorDiv);
-        }
-    }
-    
-    // Load CSS when DOM is ready
-    document.addEventListener('DOMContentLoaded', loadRoom_templateCSS);
-</script>
 
 <?php
 
@@ -202,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <!-- Room Header with Dynamic Content and SEO Structure (Hidden, for SEO only) -->
-<header class="room-header" role="banner" style="display: none;">
+<header class="room-header seo-only" role="banner">
     <h1 id="roomTitle" class="room-title"><?php echo htmlspecialchars($seoData['title']); ?></h1>
     <p id="roomDescription" class="room-description"><?php echo htmlspecialchars($seoData['description']); ?></p>
 </header>
@@ -246,13 +211,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             $itemWithImage = $item;
                             $itemWithImage['primaryImageUrl'] = $primaryImageUrl;
                             ?>
-                            <div class="item-icon <?php echo $area_class . $outOfStockClass; ?>" 
+                                                        <div class="item-icon <?php echo $area_class . $outOfStockClass; ?>" 
                                  data-product-id="<?php echo htmlspecialchars($item['sku']); ?>"
                                  data-stock="<?php echo $stockLevel; ?>"
-                                 onmouseenter="showGlobalPopup(this, <?php echo htmlspecialchars(json_encode($itemWithImage)); ?>)"
-                                 onmouseleave="hideGlobalPopup()"
-                                 onclick="showItemDetailsModal('<?php echo htmlspecialchars($item['sku']); ?>')"
-                                 style="cursor: pointer;">
+                                 data-item-json="<?php echo htmlspecialchars(json_encode($itemWithImage)); ?>">
                                 <img src="<?php echo htmlspecialchars($primaryImageUrl); ?>" 
                                      alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>" 
                                      loading="lazy">
@@ -279,21 +241,20 @@ echo renderGlobalPopupCSS();
 <!-- Quantity Modal - Compact with Large Image -->
 <div id="quantityModal" class="modal-overlay hidden">
     <div class="room-modal-content">
-        <div class="modal-header" style="margin-bottom: 15px;">
-            <h3 class="modal-title" style="font-size: 1.1rem;">Add to Cart</h3>
+                <div class="modal-header room-modal-header">
+                        <h3 class="modal-title room-modal-title">Add to Cart</h3>
             <button id="closeQuantityModal" class="modal-close">&times;</button>
         </div>
         <div class="modal-body">
             <!-- Large Product Image -->
-            <div style="text-align: center; margin-bottom: 15px;">
-                <img id="modalProductImage" class="modal-product-image" src="" alt="" 
-                     style="width: 120px; height: 120px; object-fit: contain; border-radius: 8px; background: #f8f9fa;">
+            <div class="room-modal-image-container">
+                                <img id="modalProductImage" class="modal-product-image room-modal-product-image" src="" alt="">
             </div>
             
             <!-- Compact Product Info -->
-            <div style="text-align: center; margin-bottom: 15px;">
-                <h4 id="modalProductName" class="product-name" style="font-size: 1rem; margin: 0 0 5px 0; color: #333;">Product Name</h4>
-                <p id="modalProductPrice" class="product-price" style="font-size: 1.1rem; font-weight: bold; margin: 0; color: #87ac3a;">$0.00</p>
+            <div class="room-modal-product-info">
+                                <h4 id="modalProductName" class="product-name room-modal-product-name">Product Name</h4>
+                                <p id="modalProductPrice" class="product-price room-modal-product-price">$0.00</p>
             </div>
             
             <!-- Compact Quantity Selector -->
@@ -305,19 +266,19 @@ echo renderGlobalPopupCSS();
             </div>
             
             <!-- Compact Order Summary -->
-            <div class="order-summary" style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                <div class="summary-row total" style="display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; font-weight: bold;">
+                        <div class="order-summary room-modal-order-summary">
+                                <div class="summary-row total room-modal-summary-total">
                     <span>Total:</span>
-                    <span id="modalTotal" style="color: var(--primary-color, #87ac3a);">$0.00</span>
+                                        <span id="modalTotal" class="room-modal-summary-total-price">$0.00</span>
                 </div>
-                <div style="display: flex; justify-content: center; margin-top: 5px; font-size: 0.85rem; color: #666;">
+                                <div class="room-modal-summary-details">
                     <span id="modalUnitPrice">$0.00</span> × <span id="modalQuantity">1</span>
                 </div>
             </div>
         </div>
-        <div class="modal-footer" style="display: flex; gap: 10px;">
-            <button id="cancelQuantityModal" class="btn-secondary" style="flex: 1; padding: 10px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 6px; cursor: pointer;">Cancel</button>
-            <button id="confirmAddToCart" class="btn-primary" style="flex: 1; padding: 10px; background: #87ac3a; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Add to Cart</button>
+                <div class="modal-footer room-modal-footer">
+                        <button id="cancelQuantityModal" class="btn btn-secondary">Cancel</button>
+                        <button id="confirmAddToCart" class="btn btn-primary">Add to Cart</button>
         </div>
     </div>
 </div>
@@ -409,6 +370,10 @@ window.openQuantityModal = function(product) {
     
     // Show modal
     quantityModal.classList.remove('hidden');
+    // Centralized scroll lock when modal is shown (fallback path)
+    if (window.WFModals && typeof window.WFModals.lockScroll === 'function') {
+        window.WFModals.lockScroll();
+    }
 };
 
 // Function to update total calculation
@@ -464,6 +429,10 @@ window.showItemDetails = async function() {
             const detailedModal = document.getElementById('detailedItemModal');
             if (detailedModal) {
                 detailedModal.classList.remove('hidden');
+                // Centralized scroll lock when modal is shown (fallback path)
+                if (window.WFModals && typeof window.WFModals.lockScroll === 'function') {
+                    window.WFModals.lockScroll();
+                }
             }
         } else {
             console.error('Failed to load item details:', data.error);
@@ -537,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Load global popup system -->
-<script src="js/global-popup.js"></script>
+
 
 <script>
 // Show product details in large modal (like shop page)
@@ -584,12 +553,12 @@ async function generateDetailedModal(item, images) {
     
     return `
     <!-- Detailed Product Modal -->
-    <div id="detailedItemModal" class="modal-overlay" style="display: none;">
+        <div id="detailedItemModal" class="modal-overlay hidden">
         <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
             <!-- Modal Header -->
             <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
                 <h2 class="text-2xl font-bold text-gray-800">${item.name}</h2>
-                <button onclick="closeDetailedModal()" class="text-gray-500 hover:text-gray-700 text-3xl font-bold">
+                                <button class="detailed-modal-close-btn text-gray-500 hover:text-gray-700 text-3xl font-bold">
                     &times;
                 </button>
             </div>

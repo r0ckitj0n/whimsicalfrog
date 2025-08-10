@@ -1,0 +1,59 @@
+/* FIX FOR BLACK SPACE BELOW ITEM DETAILS MODAL */
+
+/* Ensure modal overlay fills viewport properly */
+.detailed-item-modal,
+.detailed-item-modal.show {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.5) !important; /* Semi-transparent overlay */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+}
+
+/* Ensure modal container is properly centered and sized */
+.detailed-item-modal-container {
+    position: relative !important;
+    background: white !important;
+    border-radius: 8px !important;
+    width: 75vw !important;
+    max-width: 75vw !important;
+    max-height: 90vh !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Ensure modal content area has proper background */
+.detailed-item-modal .modal-content,
+.detailed-item-modal-container .modal-content {
+    background: white !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* Ensure modal body has white background */
+.detailed-item-modal .modal-body,
+.detailed-item-modal-container .modal-body {
+    background: white !important;
+}
+
+/* Remove any black backgrounds from child elements */
+.detailed-item-modal *,
+.detailed-item-modal-container * {
+    background-color: inherit;
+}
+
+/* Specific fix for the modal footer/bottom area */
+.detailed-item-modal .space-y-4:last-child,
+.detailed-item-modal-container .space-y-4:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 1rem !important;
+    background: white !important;
+}

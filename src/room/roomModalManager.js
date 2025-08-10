@@ -43,29 +43,72 @@ export class RoomModalManager {
     this.content = document.createElement('div');
     this.content.className = 'room-modal-container';
 
-    // Header
+    // Header - positioned in top right corner with back button on left
     const header = document.createElement('div');
     header.className = 'room-modal-header';
+    header.style.cssText = `
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10000;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    `;
 
     const backBtnWrap = document.createElement('div');
     backBtnWrap.className = 'back-button-container';
     const backBtn = document.createElement('button');
     backBtn.className = 'room-modal-button';
-    backBtn.textContent = '← Back';
+    backBtn.textContent = '← Back to Main Room';
+    backBtn.style.cssText = `
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    `;
+    backBtn.onmouseover = () => backBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+    backBtn.onmouseout = () => backBtn.style.background = 'rgba(255, 255, 255, 0.1)';
     backBtn.onclick = () => this.hide();
     backBtnWrap.appendChild(backBtn);
 
     const titleOverlay = document.createElement('div');
     titleOverlay.className = 'room-title-overlay';
     titleOverlay.id = 'roomTitleOverlay';
+    titleOverlay.style.cssText = `
+      flex-grow: 1;
+      text-align: right;
+      margin-left: 20px;
+    `;
 
     const roomTitle = document.createElement('h1');
     roomTitle.id = 'roomTitle';
     roomTitle.textContent = 'Loading…';
+    roomTitle.style.cssText = `
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    `;
 
     const roomDesc = document.createElement('div');
     roomDesc.className = 'room-description';
     roomDesc.id = 'roomDescription';
+    roomDesc.style.cssText = `
+      margin: 5px 0 0 0;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.8);
+    `;
     titleOverlay.append(roomTitle, roomDesc);
 
     header.append(backBtnWrap, titleOverlay);
@@ -109,7 +152,13 @@ export class RoomModalManager {
     this.isLoading = true;
 
     this.overlay.style.display = 'flex';
-    document.body.classList.add('modal-open', 'room-modal-open');
+    document.body.classList.add('room-modal-open');
+    if (window.WFModals && typeof WFModals.lockScroll === 'function') {
+      WFModals.lockScroll();
+    } else {
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+    }
 
     this.loadRoom(roomNumber);
     setTimeout(() => {
@@ -120,7 +169,27 @@ export class RoomModalManager {
 
   hide() {
     this.overlay.classList.remove('show');
-    document.body.classList.remove('modal-open', 'room-modal-open');
+    // Always remove the specific room modal flag
+    document.body.classList.remove('room-modal-open');
+
+    // Only remove global scroll lock if no other modals are open
+    if (window.WFModals && typeof WFModals.unlockScrollIfNoneOpen === 'function') {
+      WFModals.unlockScrollIfNoneOpen();
+    } else {
+      const anyOpen = document.querySelector(
+        '.room-modal-overlay.show, ' +
+        '.wf-revealco-overlay.show, ' +
+        '#global-confirmation-modal.show, ' +
+        '.image-viewer-modal-open, ' +
+        '.confirmation-modal-overlay.show, ' +
+        '#searchModal.show, ' +
+        '.wf-login-overlay.show'
+      );
+      if (!anyOpen) {
+        document.body.classList.remove('modal-open');
+        document.documentElement.classList.remove('modal-open');
+      }
+    }
 
     setTimeout(() => {
       const iframe = document.getElementById('roomModalFrame');

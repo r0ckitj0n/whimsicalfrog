@@ -63,9 +63,23 @@ try {
     $stmt->execute($params);
     $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Map database field names to camelCase for JavaScript compatibility
+    $mappedInventory = array_map(function($item) {
+        // Map stock_level to stockLevel if it exists
+        if (isset($item['stock_level'])) {
+            $item['stockLevel'] = $item['stock_level'];
+            unset($item['stock_level']); // Remove the underscore version
+        }
+        
+        // Also ensure retailPrice and costPrice are properly mapped if needed
+        // (they might already be correct in the database)
+        
+        return $item;
+    }, $inventory);
+
     // Output inventory data directly as an array (not wrapped in a success/debug object)
     // This matches the format expected by the JavaScript in admin_inventory.php
-    echo json_encode($inventory);
+    echo json_encode($mappedInventory);
 
 } catch (PDOException $e) {
     // Handle database errors with detailed information

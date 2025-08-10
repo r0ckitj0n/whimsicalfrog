@@ -29,7 +29,8 @@ function getImageWithFallback($sku)
 function getPrimaryImageBySku($sku)
 {
     try {
-        $pdo = getDbConnection();
+        require_once __DIR__ . '/../api/config.php';
+        $pdo = Database::getInstance();
         if (!$pdo) {
             return false;
         }

@@ -1,0 +1,290 @@
+/* CRITICAL MISSING ROOM IFRAME CSS - Extracted from legacy_bigfiles/css/room-iframe.css */
+/* This contains essential room background classes with WebP/PNG fallbacks and modal room functionality */
+
+/* ==============================================
+   ROOM BACKGROUND CLASSES - Centralized with WebP/PNG Fallbacks
+   ============================================== */
+
+.room-bg-main {
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room1 {
+    --bg-webp: url('/images/backgrounds/background_room1.webp');
+    --bg-png: url('/images/backgrounds/background_room1.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room1 {
+    background-image: var(--bg-png);
+}
+
+.room-bg-room2 {
+    --bg-webp: url('/images/backgrounds/background_room2.webp');
+    --bg-png: url('/images/backgrounds/background_room2.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room2 {
+    background-image: var(--bg-png);
+}
+
+.room-bg-room3 {
+    --bg-webp: url('/images/backgrounds/background_room3.webp');
+    --bg-png: url('/images/backgrounds/background_room3.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room3 {
+    background-image: var(--bg-png);
+}
+
+.room-bg-room4 {
+    --bg-webp: url('/images/backgrounds/background_room4.webp');
+    --bg-png: url('/images/backgrounds/background_room4.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room4 {
+    background-image: var(--bg-png);
+}
+
+.room-bg-room5 {
+    --bg-webp: url('/images/backgrounds/background_room5.webp');
+    --bg-png: url('/images/backgrounds/background_room5.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room5 {
+    background-image: var(--bg-png);
+}
+
+.room-bg-room6 {
+    --bg-webp: url('/images/backgrounds/background_room6.webp');
+    --bg-png: url('/images/backgrounds/background_room6.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room6 {
+    background-image: var(--bg-png);
+}
+
+.room-bg-landing {
+    --bg-webp: url('/images/backgrounds/background_home.webp');
+    --bg-png: url('/images/backgrounds/background_home.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-landing {
+    background-image: var(--bg-png);
+}
+
+/* ==============================================
+   MODAL ROOM STYLES - Maintain Exact Aspect Ratio
+   ============================================== */
+
+/* Modal Room Styles - Maintain exact aspect ratio */
+.modal-room-page {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    /* Use exact aspect ratio */
+    aspect-ratio: 1280 / 896;
+}
+
+.room-modal-iframe-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* Maintain exact aspect ratio */
+    aspect-ratio: 1280 / 896;
+}
+
+.room-modal-content-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-content-overlay);
+    /* Ensure this also maintains aspect ratio */
+    aspect-ratio: 1280 / 896;
+}
+
+/* Ensure body and html have proper dimensions for room modals */
+.modal-open.room-modal-active html,
+.modal-open.room-modal-active body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* Maintain aspect ratio at root level */
+    aspect-ratio: 1280 / 896;
+}
+
+/* ==============================================
+   ROOM PRODUCT ICON SYSTEM
+   ============================================== */
+
+/* Room Product Icon Styles - Centralized */
+.room-product-icon {
+    --icon-width: 80px;
+    --icon-height: 80px;
+    width: var(--icon-width);
+    height: var(--icon-height);
+    position: absolute;
+    cursor: pointer;
+    z-index: var(--z-content-overlay);
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+}
+
+.room-product-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
+    z-index: var(--z-content-overlay-hover);
+}
+
+.room-product-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Room Product Icon Positioning */
+.room-product-icon.positioned {
+    top: var(--icon-top, 0);
+    left: var(--icon-left, 0);
+}
+
+/* Room Product Icon Size Variants */
+.room-product-icon.size-small {
+    --icon-width: 60px;
+    --icon-height: 60px;
+}
+
+.room-product-icon.size-medium {
+    --icon-width: 80px;
+    --icon-height: 80px;
+}
+
+.room-product-icon.size-large {
+    --icon-width: 100px;
+    --icon-height: 100px;
+}
+
+/* ==============================================
+   ROOM IFRAME BACKGROUND INTEGRATION  
+   ============================================== */
+
+/* Apply background images to fullscreen-container via body classes */
+.room-bg-main .fullscreen-container {
+    background-image: var(--dynamic-room-bg-url, none);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room1 .fullscreen-container {
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room2 .fullscreen-container {
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room3 .fullscreen-container {
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room4 .fullscreen-container {
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room5 .fullscreen-container {
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room6 .fullscreen-container {
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-landing .fullscreen-container {
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* PNG fallbacks for browsers without WebP support */
+.no-webp .room-bg-room1 .fullscreen-container {
+    background-image: var(--bg-png);
+}
+
+.no-webp .room-bg-room2 .fullscreen-container {
+    background-image: var(--bg-png);
+}
+
+.no-webp .room-bg-room3 .fullscreen-container {
+    background-image: var(--bg-png);
+}
+
+.no-webp .room-bg-room4 .fullscreen-container {
+    background-image: var(--bg-png);
+}
+
+.no-webp .room-bg-room5 .fullscreen-container {
+    background-image: var(--bg-png);
+}
+
+.no-webp .room-bg-room6 .fullscreen-container {
+    background-image: var(--bg-png);
+}
+
+.no-webp .room-bg-landing .fullscreen-container {
+    background-image: var(--bg-png);
+}

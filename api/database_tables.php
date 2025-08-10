@@ -24,7 +24,7 @@ ini_set('display_errors', 1);
 header('Content-Type: application/json');
 
 // Check authentication
-session_start();
+
 $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
 $isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
 

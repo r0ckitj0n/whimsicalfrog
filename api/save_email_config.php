@@ -312,21 +312,35 @@ function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled)
     <head>
         <meta charset='UTF-8'>
         <title>Test Email - WhimsicalFrog</title>
-        <link rel='stylesheet' href='https://whimsicalfrog.us/css/email-styles.css'>
+        <style>
+        body.email-body { margin:0; padding:0; background:#ffffff; color:#333; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; line-height:1.5; }
+        .m-0 { margin:0; }
+        .email-wrapper { max-width:600px; margin:0 auto; padding:16px; }
+        .email-header { background: {$brandPrimary}; color:#fff; padding:16px; text-align:center; }
+        .email-title { margin:0; font-size:20px; }
+        .u-margin-top-10px { margin-top:10px; }
+        .u-color-333 { color:#333; }
+        .u-color-666 { color:#666; }
+        .u-line-height-1-6 { line-height:1.6; }
+        .u-font-size-14px { font-size:14px; }
+        .u-margin-top-20px { margin-top:20px; }
+        .email-section { margin:16px 0; }
+        .email-section h3 { color: {$brandSecondary}; margin:0 0 8px; font-size:16px; }
+        </style>
     </head>
-    <body class='email-body' style='-brand-primary: {$brandPrimary}; -brand-secondary: {$brandSecondary};'>
+    <body class='email-body'>
         <div class='email-header'>
-            <h1 class='m-0'>WhimsicalFrog</h1>
+            <h1 class='email-title'>WhimsicalFrog</h1>
             <p class='u-margin-top-10px'>Email Configuration Test</p>
         </div>
         
         <div class='email-wrapper'>
-            <h2 class='u-color-87ac3a m-0'>Configuration Test Successful! ✅</h2>
+            <h2 class='u-color-333 m-0'>Configuration Test Successful! ✅</h2>
             
             <p>If you're reading this email, your email configuration is working correctly.</p>
             
             <div class='email-section'>
-                <h3 class='u-color-333 m-0'>Configuration Details:</h3>
+                <h3>Configuration Details:</h3>
                 <ul class='u-color-666 u-line-height-1-6'>
                     <li><strong>From Email:</strong> " . htmlspecialchars($fromEmail) . "</li>
                     <li><strong>From Name:</strong> " . htmlspecialchars($fromName) . "</li>

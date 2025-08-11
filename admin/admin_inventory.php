@@ -5,9 +5,15 @@
 
 // Authentication check handled by index.php before including this file
 
-// Include required files
-require_once __DIR__ . '/../includes/database.php';
-require_once __DIR__ . '/../includes/logger.php';
+// Bootstrap: if this file is accessed directly (not via index.php), load config
+// which defines DB credentials and includes the Database/Logger classes.
+if (!defined('INCLUDED_FROM_INDEX')) {
+    require_once __DIR__ . '/../api/config.php';
+} else {
+    // When included from index.php, config.php is already loaded.
+    require_once __DIR__ . '/../includes/database.php';
+    require_once __DIR__ . '/../includes/logger.php';
+}
 
 // Get database instance
 $pdo = Database::getInstance();
@@ -432,7 +438,7 @@ $messageType = $_GET['type'] ?? '';
             <a href="/admin/inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
-        <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col overflow-y-auto" onsubmit="return validateGenderSizeColorRequirements(event)">
+        <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col overflow-y-auto">
             <input type="hidden" name="action" value="<?= $modalMode === 'add' ? 'add' : 'update'; ?>">
             <?php if ($modalMode === 'edit' && isset($editItem['sku'])): ?>
                 <input type="hidden" name="itemSku" value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
@@ -502,7 +508,7 @@ $messageType = $_GET['type'] ?? '';
                         
                         <div class="flex justify-end">
                             <div class="button-with-badge">
-                                <button type="button" id="open-marketing-manager-btn" class="brand-button rounded text-sm"
+                                <button type="button" id="open-marketing-manager-btn" class="brand-button rounded text-sm" data-action="open-marketing-manager"
                                         data-tooltip="Let AI write your marketing copy because apparently describing your own products is too hard. Don't worry, the robots are better at it anyway.">
                                      🎯 Marketing Manager
                                 </button>
@@ -930,8 +936,8 @@ $messageType = $_GET['type'] ?? '';
         <h2 class="text-md font-bold text-gray-800">Confirm Delete</h2>
         <p class="text-sm text-gray-600">Are you sure you want to delete this item? This action cannot be undone.</p>
         <div class="flex justify-end space-x-2">
-            <button type="button" class="py-1\.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm close-modal-button">Cancel</button>
-            <button type="button" id="confirmDeleteBtn" class="py-1\.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Delete</button>
+            <button type="button" class="py-1\.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" data-action="close-delete-modal">Cancel</button>
+            <button type="button" class="py-1\.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm" data-action="confirm-delete-item">Delete</button>
         </div>
     </div>
 </div>
@@ -940,7 +946,7 @@ $messageType = $_GET['type'] ?? '';
 <div id="deleteCostConfirmModal" class="cost-modal">
 
 <!- Marketing Manager Modal ->
-<div id="marketingManagerModal" class="admin-modal-overlay" >
+<div id="marketingManagerModal" class="admin-modal-overlay hidden" >
     <div class="admin-modal-content">
         <!- Modal Header ->
         <div class="admin-modal-header" >
@@ -1985,9 +1991,9 @@ function displayPriceSuggestion(data) {
                         <div class="flex items-center space-x-2">
                             <div class="info-icon-container relative">
                                 <span class="info-icon cursor-help w-4 h-4 border border-blue-500 text-blue-500 bg-transparent rounded-full flex items-center justify-center text-xs font-bold hover:bg-blue-50" 
-                                      onclick="showPricingTooltipWithData(event, '${component.type}', ${JSON.stringify(component.explanation)})"
-                                      onmouseenter="showPricingTooltipWithData(event, '${component.type}', ${JSON.stringify(component.explanation)})"
-                                      onmouseleave="hidePricingTooltipDelayed()">i</span>
+                                      data-action="show-pricing-tooltip-with-data"
+                                      data-component-type="${component.type}"
+                                      data-explanation="${encodeURIComponent(String(component.explanation))}">i</span>
                             </div>
                             <span class="text-green-700">${component.label}</span>
                         </div>
@@ -2023,9 +2029,8 @@ function displayPriceSuggestion(data) {
                                     <div class="flex items-center space-x-2">
                                         <div class="info-icon-container relative">
                                             <span class="info-icon cursor-help w-4 h-4 border border-blue-500 text-blue-500 bg-transparent rounded-full flex items-center justify-center text-xs font-bold hover:bg-blue-50" 
-                                                  onclick="showPricingTooltip(event, '${cleanedItem.replace(/'/g, "\\'")}')"
-                                                  onmouseenter="showPricingTooltip(event, '${cleanedItem.replace(/'/g, "\\'")}')"
-                                                  onmouseleave="hidePricingTooltipDelayed()">i</span>
+                                                  data-action="show-pricing-tooltip-text"
+                                                  data-text="${encodeURIComponent(cleanedItem)}">i</span>
                                         </div>
                                         <span class="text-green-700">${cleanedItem}</span>
                                     </div>
@@ -2477,9 +2482,9 @@ function displayViewPriceSuggestion(data) {
                         <div class="flex items-center space-x-2">
                             <div class="info-icon-container relative">
                                 <span class="info-icon cursor-help w-4 h-4 border border-blue-500 text-blue-500 bg-transparent rounded-full flex items-center justify-center text-xs font-bold hover:bg-blue-50" 
-                                      onclick="showPricingTooltipWithData(event, '${component.type}', ${JSON.stringify(component.explanation)})"
-                                      onmouseenter="showPricingTooltipWithData(event, '${component.type}', ${JSON.stringify(component.explanation)})"
-                                      onmouseleave="hidePricingTooltipDelayed()">i</span>
+                                      data-action="show-pricing-tooltip-with-data"
+                                      data-component-type="${component.type}"
+                                      data-explanation="${encodeURIComponent(String(component.explanation))}">i</span>
                             </div>
                             <span class="text-green-700">${component.label}</span>
                         </div>
@@ -2515,9 +2520,8 @@ function displayViewPriceSuggestion(data) {
                                     <div class="flex items-center space-x-2">
                                         <div class="info-icon-container relative">
                                             <span class="info-icon cursor-help w-4 h-4 border border-blue-500 text-blue-500 bg-transparent rounded-full flex items-center justify-center text-xs font-bold hover:bg-blue-50" 
-                                                  onclick="showPricingTooltip(event, '${cleanedItem.replace(/'/g, "\\'")}')"
-                                                  onmouseenter="showPricingTooltip(event, '${cleanedItem.replace(/'/g, "\\'")}')"
-                                                  onmouseleave="hidePricingTooltipDelayed()">i</span>
+                                                  data-action="show-pricing-tooltip-text"
+                                                  data-text="${encodeURIComponent(cleanedItem)}">i</span>
                                         </div>
                                         <span class="text-green-700">${cleanedItem}</span>
                                     </div>
@@ -2654,7 +2658,7 @@ function loadExistingMarketingSuggestion(sku) {
 
 function displayMarketingSuggestionIndicator(suggestion) {
     // Find the marketing copy button
-    const marketingButton = document.querySelector('button[onclick="generateMarketingCopy(event)"]');
+    const marketingButton = document.querySelector('#open-marketing-manager-btn') || document.querySelector('[data-action="open-marketing-manager"]');
     if (!marketingButton) return;
     
     // Add indicator that previous suggestion exists
@@ -3034,7 +3038,7 @@ function showMarketingIntelligenceModal(data) {
                         </div>
                     </div>
                 </div>
-                <button type="button" onclick="closeMarketingIntelligenceModal()" class="text-gray-400 hover:text-gray-600">
+                <button type="button" class="text-gray-400 hover:text-gray-600" data-action="close-marketing-modal">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -3049,7 +3053,7 @@ function showMarketingIntelligenceModal(data) {
                         <h4 class="font-semibold text-gray-800 flex items-center">
                             <span class="">🏷️</span> AI-Enhanced Title
                         </h4>
-                        <div class="bg-white border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer" onclick="applyTitle('${data.title.replace(/'/g, "\\'")}')">
+                        <div class="bg-white border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer" data-action="apply-title" data-value="${data.title.replace(/\"/g, '&quot;').replace(/'/g, '&#39;')}">
                             <div class="font-medium text-gray-800">${data.title}</div>
                             <div class="text-xs text-blue-600">Click to apply to item name</div>
                         </div>
@@ -3059,7 +3063,7 @@ function showMarketingIntelligenceModal(data) {
                         <h4 class="font-semibold text-gray-800 flex items-center">
                             <span class="">📝</span> AI-Crafted Description
                         </h4>
-                        <div class="bg-white border border-green-200 rounded-lg hover:bg-green-50 cursor-pointer" onclick="applyDescription('${data.description.replace(/'/g, "\\'")}')">
+                        <div class="bg-white border border-green-200 rounded-lg hover:bg-green-50 cursor-pointer" data-action="apply-description" data-value="${data.description.replace(/\"/g, '&quot;').replace(/'/g, '&#39;')}">
                             <div class="text-gray-800 text-sm">${data.description}</div>
                             <div class="text-xs text-green-600">Click to apply to item description</div>
                         </div>
@@ -3091,16 +3095,16 @@ function showMarketingIntelligenceModal(data) {
             <!- Marketing Intelligence Tabs ->
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-8">
-                    <button onclick="showMarketingTab('selling')" class="marketing-tab-btn active border-b-2 border-purple-500 font-medium text-sm text-purple-600">
+                    <button data-action="show-marketing-tab" data-tab="selling" class="marketing-tab-btn active border-b-2 border-purple-500 font-medium text-sm text-purple-600">
                         💰 Selling Points
                     </button>
-                    <button onclick="showMarketingTab('competitive')" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                    <button data-action="show-marketing-tab" data-tab="competitive" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
                         ⚡ Competitive Edge
                     </button>
-                    <button onclick="showMarketingTab('conversion')" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                    <button data-action="show-marketing-tab" data-tab="conversion" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
                         🎯 Conversion
                     </button>
-                    <button onclick="showMarketingTab('channels')" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                    <button data-action="show-marketing-tab" data-tab="channels" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
                         📢 Channels
                     </button>
                 </nav>
@@ -3199,7 +3203,7 @@ function showMarketingIntelligenceModal(data) {
                 <div class="text-xs text-gray-500">
                     Analysis saved to database • All suggestions are AI-generated recommendations
                 </div>
-                <button type="button" onclick="closeMarketingIntelligenceModal()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium">
+                <button type="button" data-action="close-marketing-modal" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium">
                     Close Analysis
                 </button>
             </div>
@@ -3211,72 +3215,27 @@ function showMarketingIntelligenceModal(data) {
     // Close on overlay click
     overlay.addEventListener('click', function(e) {
         if (e.target === overlay) {
-            closeMarketingIntelligenceModal();
+            // Directly remove the modal overlay; handled via data-action elsewhere
+            overlay.remove();
         }
     });
     
     // Close on escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            closeMarketingIntelligenceModal();
+            const modal = document.getElementById('marketingIntelligenceModal');
+            if (modal) modal.remove();
         }
     });
 }
 
-function closeMarketingIntelligenceModal() {
-    const modal = document.getElementById('marketingIntelligenceModal');
-    if (modal) {
-        modal.remove();
-    }
-}
+// closeMarketingIntelligenceModal migrated to delegated handler in js/admin-inventory.js
 
-function showMarketingTab(tabName) {
-    // Hide all tab content
-    document.querySelectorAll('.marketing-tab-content').forEach(tab => {
-        tab.classList.add('hidden');
-    });
-    
-    // Remove active class from all buttons
-    document.querySelectorAll('.marketing-tab-btn').forEach(btn => {
-        btn.classList.remove('active', 'border-purple-500', 'text-purple-600');
-        btn.classList.add('border-transparent', 'text-gray-500');
-    });
-    
-    // Show selected tab
-    const selectedTab = document.getElementById(`tab-${tabName}`);
-    if (selectedTab) {
-        selectedTab.classList.remove('hidden');
-    }
-    
-    // Activate selected button
-    const selectedButton = event.target;
-    selectedButton.classList.add('active', 'border-purple-500', 'text-purple-600');
-    selectedButton.classList.remove('border-transparent', 'text-gray-500');
-}
+// showMarketingTab migrated to delegated handler in js/admin-inventory.js
 
-function applyTitle(title) {
-    const nameField = document.getElementById('name');
-    if (nameField) {
-        nameField.value = title;
-        nameField.style.backgroundColor = '#f3e8ff';
-        setTimeout(() => {
-            nameField.style.backgroundColor = '';
-        }, 2000);
-        showSuccess( 'Title applied! Remember to save your changes.');
-    }
-}
+// applyTitle migrated to delegated handler in js/admin-inventory.js
 
-function applyDescription(description) {
-    const descriptionField = document.getElementById('description');
-    if (descriptionField) {
-        descriptionField.value = description;
-        descriptionField.style.backgroundColor = '#f3e8ff';
-        setTimeout(() => {
-            descriptionField.style.backgroundColor = '';
-        }, 2000);
-        showSuccess( 'Description applied! Remember to save your changes.');
-    }
-}
+// applyDescription migrated to delegated handler in js/admin-inventory.js
 
 function closeCostModal() {
     document.getElementById('costFormModal').classList.remove('show');
@@ -3660,42 +3619,7 @@ document.addEventListener('DOMContentLoaded', function() {// Initialize navigati
         confirmCostDeleteBtn.addEventListener('click', confirmCostDeletion);
     }
     
-    const deleteConfirmModalElement = document.getElementById('deleteConfirmModal');
-    const confirmDeleteActualBtn = document.getElementById('confirmDeleteBtn');
-    let itemToDeleteSku = null;
-
-    document.querySelectorAll('.delete-item').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            itemToDeleteSku = this.dataset.sku;
-            if(deleteConfirmModalElement) deleteConfirmModalElement.classList.add('show');
-        });
-    });
-
-    if (confirmDeleteActualBtn && deleteConfirmModalElement) {
-        confirmDeleteActualBtn.addEventListener('click', function() {
-            if (!itemToDeleteSku) return;
-            fetch(`/functions/process_inventory_update.php?action=delete&sku=${itemToDeleteSku}`, {
-                method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showSuccess( data.message);
-                    // Redirect to refresh the list after successful deletion
-                    setTimeout(() => { window.location.href = '?page=admin&section=inventory'; }, 1000);
-                } else {
-                    showError( data.error || 'Failed to delete item.');
-                }
-            })
-            .catch(error => { console.error('Error:', error); showError( 'Failed to delete item.'); });
-            deleteConfirmModalElement.classList.remove('show');
-        });
-    }
-    
-    deleteConfirmModalElement?.querySelectorAll('.close-modal-button').forEach(btn => {
-        btn.addEventListener('click', () => deleteConfirmModalElement.classList.remove('show'));
-    });
+    // Delete confirmation handled via delegated events in js/admin-inventory.js
 
     window.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
@@ -3706,9 +3630,9 @@ document.addEventListener('DOMContentLoaded', function() {// Initialize navigati
             } else if (document.getElementById('costFormModal')?.classList.contains('show')) {
                  closeCostModal();
             } else if (document.getElementById('deleteCostConfirmModal')?.classList.contains('show')) {
-                closeCostDeleteModal();
-            } else if (deleteConfirmModalElement && deleteConfirmModalElement.classList.contains('show')) {
-                deleteConfirmModalElement.classList.remove('show');
+                 closeCostDeleteModal();
+            } else if (document.getElementById('deleteConfirmModal')?.classList.contains('show')) {
+                document.getElementById('deleteConfirmModal').classList.remove('show');
             }
         }
     });
@@ -4080,12 +4004,12 @@ function displayCurrentImages(images, isViewModal = false) {
             </div>
         </div>
         ${images.length > 3 ? `
-            <button type="button" class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-lg z-10 transition-all" onclick="moveCarousel('${carouselType}', -1)">
+            <button type="button" class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-lg z-10 transition-all" data-action="move-carousel" data-type="${carouselType}" data-direction="-1">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <button type="button" class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-lg z-10 transition-all" onclick="moveCarousel('${carouselType}', 1)">
+            <button type="button" class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-lg z-10 transition-all" data-action="move-carousel" data-type="${carouselType}" data-direction="1">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -4114,9 +4038,7 @@ function displayCurrentImages(images, isViewModal = false) {
             <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md h-full">
                 <div class="relative carousel-image-container" >
                     <img src="${image.image_path}" alt="${image.alt_text}" 
-                         class="w-full h-full object-contain bg-gray-50 carousel-image" 
-                                                     onerror="this.style.display='none'; this.parentElement.innerHTML = '<div class=\''u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px\''><div class=\''u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7\''>📷</div><div class=\''u-font-size-0-8rem u-font-weight-500\''>Image Not Found</div></div>';"
-                         >
+                         class="w-full h-full object-contain bg-gray-50 carousel-image">
                 </div>
                 <div class="bg-gray-50">
                     ${!isViewModal ? `<div class="text-xs text-gray-700 font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>` : ''}
@@ -4125,6 +4047,16 @@ function displayCurrentImages(images, isViewModal = false) {
                 </div>
             </div>
         `;
+        // Add programmatic error handling (no inline attributes)
+        const imgEl = imageDiv.querySelector('img.carousel-image');
+        if (imgEl) {
+            imgEl.addEventListener('error', () => {
+                imgEl.style.display = 'none';
+                if (imgEl.parentElement) {
+                    imgEl.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">Image Not Found</div></div>';
+                }
+            });
+        }
         track.appendChild(imageDiv);
     });
     
@@ -4197,11 +4129,23 @@ function loadThumbnailImage(sku, container) {
             console.log('Trying WebP path:', webpPath);
             console.log('Fallback PNG path:', originalPath);
             
-            container.innerHTML = `
-                <img src="${webpPath}" alt="thumb" 
-                     
-                     onerror="console.log('WebP failed, trying PNG'); this.src='${originalPath}'; this.onerror=function(){console.log('PNG also failed'); this.parentElement.innerHTML = '<div class=\''u-width-40px u-height-40px u-background-f0f0f0 u-border-radius-6px u-display-flex u-align-items-center u-justify-content-center u-font-size-12px u-color-999\''>No img</div>';}">
-            `;
+            // Create thumbnail image with programmatic error handling (no inline events)
+            const img = document.createElement('img');
+            img.src = webpPath;
+            img.alt = 'thumb';
+            const handlePngFallback = () => {
+                console.log('PNG also failed');
+                container.innerHTML = '<div class="u-width-40px u-height-40px u-background-f0f0f0 u-border-radius-6px u-display-flex u-align-items-center u-justify-content-center u-font-size-12px u-color-999">No img</div>';
+            };
+            function handleWebpError() {
+                console.log('WebP failed, trying PNG');
+                img.removeEventListener('error', handleWebpError);
+                img.addEventListener('error', handlePngFallback);
+                img.src = originalPath;
+            }
+            img.addEventListener('error', handleWebpError);
+            container.innerHTML = '';
+            container.appendChild(img);
         } else {
             console.log('No images found for', sku);
             container.innerHTML = '<div >No img</div>';
@@ -4676,13 +4620,19 @@ function addCostItemFromTemplate(costType, itemData) {
     editBtn.type = 'button';
     editBtn.className = 'cost-item-edit';
     editBtn.innerHTML = '✏️';
-    editBtn.onclick = () => editCostItem(costItem, costType);
+    // Use delegated handler via data-action instead of inline onclick
+    editBtn.setAttribute('data-action', 'open-cost-modal');
+    editBtn.setAttribute('data-category', costType);
+    editBtn.setAttribute('data-id', costItem);
     
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'cost-item-delete';
     deleteBtn.innerHTML = '🗑️';
-    deleteBtn.onclick = () => deleteCostItem(costItem);
+    // Use delegated handler via data-action instead of inline onclick
+    deleteBtn.setAttribute('data-action', 'delete-cost-item');
+    deleteBtn.setAttribute('data-category', costType);
+    deleteBtn.setAttribute('data-id', costItem);
     
     actionsDiv.appendChild(valueSpan);
     actionsDiv.appendChild(editBtn);
@@ -4837,7 +4787,7 @@ function checkAllMarketingFieldsForChanges() {
 
 // Update save button visibility based on changes
 function updateMarketingSaveButtonVisibility() {// Title save button
-    const titleSaveButton = document.querySelector('[onclick*="applyAndSaveMarketingTitle"]');
+    const titleSaveButton = document.querySelector('[data-action="apply-and-save-marketing-title"]')
     if (titleSaveButton) {
         if (hasTitleChanges) {
             titleSaveButton.style.display = '';
@@ -4849,7 +4799,7 @@ function updateMarketingSaveButtonVisibility() {// Title save button
     }
     
     // Description save button
-    const descriptionSaveButton = document.querySelector('[onclick*="applyAndSaveMarketingDescription"]');
+    const descriptionSaveButton = document.querySelector('[data-action="apply-and-save-marketing-description"]');
     if (descriptionSaveButton) {
         if (hasDescriptionChanges) {
             descriptionSaveButton.style.display = '';
@@ -4857,18 +4807,6 @@ function updateMarketingSaveButtonVisibility() {// Title save button
         } else {
             descriptionSaveButton.style.display = 'none';
             descriptionSaveButton.classList.remove('animate-pulse');
-        }
-    } else {
-        // Debug: Try alternative selector
-        const altDescButton = document.querySelector('button[onclick="applyAndSaveMarketingDescription()"]');
-        if (altDescButton) {
-            if (hasDescriptionChanges) {
-                altDescButton.style.display = '';
-                altDescButton.classList.add('animate-pulse');
-            } else {
-                altDescButton.style.display = 'none';
-                altDescButton.classList.remove('animate-pulse');
-            }
         }
     }
     
@@ -4950,7 +4888,7 @@ function addMarketingChangeListeners() {
 function checkForTitleDescriptionChanges(fieldId) {
     if (fieldId === 'marketingTitle') {
         const titleField = document.getElementById('marketingTitle');
-        const saveButton = titleField?.parentElement?.querySelector('button[onclick="applyAndSaveMarketingTitle()"]');
+        const saveButton = titleField?.parentElement?.querySelector('button[data-action="apply-and-save-marketing-title"]');
         const nameField = document.getElementById('name');
         
         if (titleField && saveButton && nameField) {
@@ -4967,7 +4905,7 @@ function checkForTitleDescriptionChanges(fieldId) {
     
     if (fieldId === 'marketingDescription') {
         const descField = document.getElementById('marketingDescription');
-        const saveButton = descField?.parentElement?.querySelector('button[onclick="applyAndSaveMarketingDescription()"]');
+        const saveButton = descField?.parentElement?.querySelector('button[data-action="apply-and-save-marketing-description"]');
         const itemDescField = document.getElementById('description');
         
         if (descField && saveButton && itemDescField) {
@@ -4995,7 +4933,7 @@ function applyAndSaveMarketingTitle() {
     updateInventoryField(currentItemSku, 'name', newTitle, 'Item title updated from Marketing Manager');
     
     // Hide the save button
-    const saveButton = titleField.parentElement.querySelector('button[onclick="applyAndSaveMarketingTitle()"]');
+    const saveButton = titleField.parentElement.querySelector('button[data-action="apply-and-save-marketing-title"]');
     if (saveButton) saveButton.style.display = 'none';
     
     showSuccess( '✅ Item title updated successfully');
@@ -5013,7 +4951,7 @@ function applyAndSaveMarketingDescription() {
     updateInventoryField(currentItemSku, 'description', newDesc, 'Item description updated from Marketing Manager');
     
     // Hide the save button
-    const saveButton = descField.parentElement.querySelector('button[onclick="applyAndSaveMarketingDescription()"]');
+    const saveButton = descField.parentElement.querySelector('button[data-action="apply-and-save-marketing-description"]');
     if (saveButton) saveButton.style.display = 'none';
     
     showSuccess( '✅ Item description updated successfully');
@@ -5234,7 +5172,7 @@ function loadContentTab(contentDiv) {
             '<div class="grid grid-cols-1 lg:grid-cols-4 gap-3 items-end">' +
                 '<div>' +
                     '<label class="block text-xs text-white">Brand Voice</label>' +
-                    '<select id="brandVoice" class="w-full border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'brand_voice\', this.value)">' +
+                    '<select id="brandVoice" class="w-full border border-purple-200 rounded bg-gray-50 text-sm" data-action="marketing-default-change" data-setting="brand_voice">' +
                         '<option value="">Select voice...</option>' +
                         '<option value="friendly">Friendly</option>' +
                         '<option value="professional">Professional</option>' +
@@ -5245,7 +5183,7 @@ function loadContentTab(contentDiv) {
                 '</div>' +
                 '<div>' +
                     '<label class="block text-xs text-white">Content Tone</label>' +
-                    '<select id="contentTone" class="w-full border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'content_tone\', this.value)">' +
+                    '<select id="contentTone" class="w-full border border-purple-200 rounded bg-gray-50 text-sm" data-action="marketing-default-change" data-setting="content_tone">' +
                         '<option value="">Select tone...</option>' +
                         '<option value="informative">Informative</option>' +
                         '<option value="persuasive">Persuasive</option>' +
@@ -5255,12 +5193,12 @@ function loadContentTab(contentDiv) {
                     '</select>' +
                 '</div>' +
                 '<div>' +
-                    '<button onclick="generateAllMarketingContent()" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium">' +
+                    '<button data-action="generate-all-marketing" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium">' +
                         '🧠 Generate AI' +
                     '</button>' +
                 '</div>' +
                 '<div>' +
-                    '<button onclick="generateFreshMarketingComparison()" class="w-full bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-medium">' +
+                    '<button data-action="generate-fresh-marketing" class="w-full bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-medium">' +
                         '🔥 Fresh Start' +
                     '</button>' +
                 '</div>' +
@@ -5274,7 +5212,7 @@ function loadContentTab(contentDiv) {
                 '<label class="block text-sm font-medium text-gray-800">📝 Item Title</label>' +
                                   '<textarea id="marketingTitle" class="w-full border border-blue-300 rounded-lg text-sm resize-none" rows="2" placeholder="Enter enhanced item title..."></textarea>' +
                 '<div class="flex justify-center">' +
-                    '<button onclick="applyAndSaveMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium" class="hidden">' +
+                    '<button data-action="apply-and-save-marketing-title" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium">' +
                         '📝 Apply & Save' +
                     '</button>' +
                 '</div>' +
@@ -5283,7 +5221,7 @@ function loadContentTab(contentDiv) {
                 '<label class="block text-sm font-medium text-gray-800">📄 Item Description</label>' +
                                   '<textarea id="marketingDescription" class="w-full border border-green-300 rounded-lg text-sm resize-none" rows="4" placeholder="Enter detailed item description..."></textarea>' +
                 '<div class="flex justify-center">' +
-                    '<button onclick="applyAndSaveMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium" class="hidden">' +
+                    '<button data-action="apply-and-save-marketing-description" class="bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium">' +
                         '📝 Apply & Save' +
                     '</button>' +
                 '</div>' +
@@ -5309,20 +5247,20 @@ function loadAudienceTab(contentDiv) {
         '<h3 class="text-lg font-semibold text-gray-800">Target Audience Management</h3>' +
         '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">' +
             '<div class="bg-orange-50 rounded-lg">' +
-                '<label class="block text-sm font-medium text-gray-700">Primary Target Audience</label>' +
-                '<textarea id="targetAudience" class="w-full border border-orange-200 rounded-lg" rows="3" placeholder="Describe your ideal customer..."></textarea>' +
-                '<button onclick="saveMarketingField(\'target_audience\')" class="text-orange-600 hover:text-orange-800 text-sm" class="hidden">Save</button>' +
-            '</div>' +
-            '<div class="bg-pink-50 rounded-lg">' +
-                '<label class="block text-sm font-medium text-gray-700">Demographics</label>' +
-                '<textarea id="demographics" class="w-full border border-pink-200 rounded-lg" rows="3" placeholder="Age, gender, income, location..."></textarea>' +
-                '<button onclick="saveMarketingField(\'demographic_targeting\')" class="text-pink-600 hover:text-pink-800 text-sm" class="hidden">Save</button>' +
-            '</div>' +
+            '<label class="block text-sm font-medium text-gray-700">Primary Target Audience</label>' +
+            '<textarea id="targetAudience" class="w-full border border-orange-200 rounded-lg" rows="3" placeholder="Describe your ideal customer..."></textarea>' +
+            '<button data-action="save-marketing-field" data-field="target_audience" class="text-orange-600 hover:text-orange-800 text-sm">Save</button>' +
+        '</div>' +
+        '<div class="bg-pink-50 rounded-lg">' +
+            '<label class="block text-sm font-medium text-gray-700">Demographics</label>' +
+            '<textarea id="demographics" class="w-full border border-pink-200 rounded-lg" rows="3" placeholder="Age, gender, income, location..."></textarea>' +
+            '<button data-action="save-marketing-field" data-field="demographic_targeting" class="text-pink-600 hover:text-pink-800 text-sm">Save</button>' +
+        '</div>' +
         '</div>' +
         '<div class="bg-indigo-50 rounded-lg">' +
             '<label class="block text-sm font-medium text-gray-700">Psychographic Profile</label>' +
             '<textarea id="psychographics" class="w-full border border-indigo-200 rounded-lg" rows="3" placeholder="Interests, values, lifestyle, personality traits..."></textarea>' +
-            '<button onclick="saveMarketingField(\'psychographic_profile\')" class="text-indigo-600 hover:text-indigo-800 text-sm" class="hidden">Save</button>' +
+            '<button data-action="save-marketing-field" data-field="psychographic_profile" class="text-indigo-600 hover:text-indigo-800 text-sm">Save</button>' +
         '</div>' +
     '</div>';
     
@@ -5346,35 +5284,35 @@ function loadSellingTab(contentDiv) {
                     <div class="bg-green-50 rounded-lg">
                         <div class="flex justify-between items-center">
                             <label class="block text-sm font-medium text-gray-700">Key Selling Points</label>
-                            <button onclick="addListItem('selling_points')" class="text-green-600 hover:text-green-800 text-sm">+ Add</button>
+                            <button data-action="add-list-item" data-field="selling_points" class="text-green-600 hover:text-green-800 text-sm">+ Add</button>
                         </div>
                         <div id="sellingPointsList" class="space-y-2 max-h-40 overflow-y-auto">
                             <!- Dynamic content ->
                         </div>
-                        <input type="text" id="newSellingPoint" placeholder="Enter new selling point..." class="w-full border border-green-200 rounded" onkeypress="if(event.key==='Enter') addListItem('selling_points')">
+                        <input type="text" id="newSellingPoint" placeholder="Enter new selling point..." class="w-full border border-green-200 rounded" data-add-enter-field="selling_points">
                     </div>
                     
                     <div class="bg-red-50 rounded-lg">
                         <div class="flex justify-between items-center">
                             <label class="block text-sm font-medium text-gray-700">Competitive Advantages</label>
-                            <button onclick="addListItem('competitive_advantages')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                            <button data-action="add-list-item" data-field="competitive_advantages" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
                         </div>
                         <div id="competitiveAdvantagesList" class="space-y-2 max-h-40 overflow-y-auto">
                             <!- Dynamic content ->
                         </div>
-                        <input type="text" id="newCompetitiveAdvantage" placeholder="What makes you better..." class="w-full border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('competitive_advantages')">
+                        <input type="text" id="newCompetitiveAdvantage" placeholder="What makes you better..." class="w-full border border-red-200 rounded" data-add-enter-field="competitive_advantages">
                     </div>
                 </div>
                 
                 <div class="bg-yellow-50 rounded-lg">
                     <div class="flex justify-between items-center">
                         <label class="block text-sm font-medium text-gray-700">Customer Benefits</label>
-                        <button onclick="addListItem('customer_benefits')" class="text-yellow-600 hover:text-yellow-800 text-sm">+ Add</button>
+                        <button data-action="add-list-item" data-field="customer_benefits" class="text-yellow-600 hover:text-yellow-800 text-sm">+ Add</button>
                     </div>
                     <div id="customerBenefitsList" class="space-y-2 max-h-40 overflow-y-auto">
                         <!- Dynamic content ->
                     </div>
-                    <input type="text" id="newCustomerBenefit" placeholder="What benefit does customer get..." class="w-full border border-yellow-200 rounded" onkeypress="if(event.key==='Enter') addListItem('customer_benefits')">
+                    <input type="text" id="newCustomerBenefit" placeholder="What benefit does customer get..." class="w-full border border-yellow-200 rounded" data-add-enter-field="customer_benefits">
                 </div>
             </div>
         </div>
@@ -5392,12 +5330,12 @@ function loadSEOTab(contentDiv) {
                 <div class="bg-blue-50 rounded-lg">
                     <div class="flex justify-between items-center">
                         <label class="block text-sm font-medium text-gray-700">SEO Keywords</label>
-                        <button onclick="addListItem('seo_keywords')" class="text-blue-600 hover:text-blue-800 text-sm">+ Add</button>
+                        <button data-action="add-list-item" data-field="seo_keywords" class="text-blue-600 hover:text-blue-800 text-sm">+ Add</button>
                     </div>
                     <div id="seoKeywordsList" class="space-y-2 max-h-40 overflow-y-auto">
                         <!- Dynamic content ->
                     </div>
-                    <input type="text" id="newSEOKeyword" placeholder="Enter keyword or phrase..." class="w-full border border-blue-200 rounded" onkeypress="if(event.key==='Enter') addListItem('seo_keywords')">
+                    <input type="text" id="newSEOKeyword" placeholder="Enter keyword or phrase..." class="w-full border border-blue-200 rounded" data-add-enter-field="seo_keywords">
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -5410,13 +5348,13 @@ function loadSEOTab(contentDiv) {
                             <option value="transactional">Transactional</option>
                             <option value="commercial">Commercial Investigation</option>
                         </select>
-                        <button onclick="saveMarketingField('search_intent')" class="text-purple-600 hover:text-purple-800 text-sm" class="hidden">Save</button>
+                        <button data-action="save-marketing-field" data-field="search_intent" class="text-purple-600 hover:text-purple-800 text-sm">Save</button>
                     </div>
                     
                     <div class="bg-green-50 rounded-lg">
                         <label class="block text-sm font-medium text-gray-700">Seasonal Relevance</label>
                         <textarea id="seasonalRelevance" class="w-full border border-green-200 rounded-lg" rows="3" placeholder="Christmas, summer, back-to-school, etc..."></textarea>
-                        <button onclick="saveMarketingField('seasonal_relevance')" class="text-green-600 hover:text-green-800 text-sm" class="hidden">Save</button>
+                        <button data-action="save-marketing-field" data-field="seasonal_relevance" class="text-green-600 hover:text-green-800 text-sm">Save</button>
                     </div>
                 </div>
             </div>
@@ -5441,35 +5379,35 @@ function loadConversionTab(contentDiv) {
                     <div class="bg-orange-50 rounded-lg">
                         <div class="flex justify-between items-center">
                             <label class="block text-sm font-medium text-gray-700">Call-to-Action Suggestions</label>
-                            <button onclick="addListItem('call_to_action_suggestions')" class="text-orange-600 hover:text-orange-800 text-sm">+ Add</button>
+                            <button data-action="add-list-item" data-field="call_to_action_suggestions" class="text-orange-600 hover:text-orange-800 text-sm">+ Add</button>
                         </div>
                         <div id="callToActionsList" class="space-y-2 max-h-40 overflow-y-auto">
                             <!- Dynamic content ->
                         </div>
-                        <input type="text" id="newCallToAction" placeholder="Get Yours Today, Buy Now, etc..." class="w-full border border-orange-200 rounded" onkeypress="if(event.key==='Enter') addListItem('call_to_action_suggestions')">
+                        <input type="text" id="newCallToAction" placeholder="Get Yours Today, Buy Now, etc..." class="w-full border border-orange-200 rounded" data-add-enter-field="call_to_action_suggestions">
                     </div>
                     
                     <div class="bg-red-50 rounded-lg">
                         <div class="flex justify-between items-center">
                             <label class="block text-sm font-medium text-gray-700">Urgency Factors</label>
-                            <button onclick="addListItem('urgency_factors')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                            <button data-action="add-list-item" data-field="urgency_factors" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
                         </div>
                         <div id="urgencyFactorsList" class="space-y-2 max-h-40 overflow-y-auto">
                             <!- Dynamic content ->
                         </div>
-                        <input type="text" id="newUrgencyFactor" placeholder="Limited time, while supplies last..." class="w-full border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('urgency_factors')">
+                        <input type="text" id="newUrgencyFactor" placeholder="Limited time, while supplies last..." class="w-full border border-red-200 rounded" data-add-enter-field="urgency_factors">
                     </div>
                 </div>
                 
                 <div class="bg-purple-50 rounded-lg">
                     <div class="flex justify-between items-center">
                         <label class="block text-sm font-medium text-gray-700">Conversion Triggers</label>
-                        <button onclick="addListItem('conversion_triggers')" class="text-purple-600 hover:text-purple-800 text-sm">+ Add</button>
+                        <button data-action="add-list-item" data-field="conversion_triggers" class="text-purple-600 hover:text-purple-800 text-sm">+ Add</button>
                     </div>
                     <div id="conversionTriggersList" class="space-y-2 max-h-40 overflow-y-auto">
                         <!- Dynamic content ->
                     </div>
-                    <input type="text" id="newConversionTrigger" placeholder="Free shipping, money-back guarantee..." class="w-full border border-purple-200 rounded" onkeypress="if(event.key==='Enter') addListItem('conversion_triggers')">
+                    <input type="text" id="newConversionTrigger" placeholder="Free shipping, money-back guarantee..." class="w-full border border-purple-200 rounded" data-add-enter-field="conversion_triggers">
                 </div>
             </div>
         </div>
@@ -5669,7 +5607,7 @@ function addListItemToUI(listId, item, fieldName) {
     itemDiv.className = 'flex justify-between items-center bg-white p-2 rounded border';
     itemDiv.innerHTML = `
         <span class="text-sm text-gray-700">${item}</span>
-        <button onclick="removeListItem('${fieldName}', '${item}')" class="text-red-500 hover:text-red-700 text-xs">Remove</button>
+        <button data-action="remove-list-item" data-field="${fieldName}" data-item="${encodeURIComponent(item)}" class="text-red-500 hover:text-red-700 text-xs">Remove</button>
     `;
     
     list.appendChild(itemDiv);
@@ -6412,46 +6350,7 @@ async function loadGlobalMarketingDefaults() {
     }
 }
 
-// Update global marketing default
-async function updateGlobalMarketingDefault(settingType, value) {
-    try {
-        const updateData = {
-            auto_apply_defaults: 'true'
-        };
-        
-        if (settingType === 'brand_voice') {
-            updateData.default_brand_voice = value;
-            // Also get current content tone to include in update
-            const contentToneField = document.getElementById('contentTone');
-            updateData.default_content_tone = contentToneField ? contentToneField.value : 'conversational';
-        } else if (settingType === 'content_tone') {
-            updateData.default_content_tone = value;
-            // Also get current brand voice to include in update
-            const brandVoiceField = document.getElementById('brandVoice');
-            updateData.default_brand_voice = brandVoiceField ? brandVoiceField.value : 'friendly';
-        }
-        
-        const response = await fetch('/api/website_config.php?action=update_marketing_defaults', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(updateData)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess( `Global ${settingType.replace('_', ' ')} updated successfully!`);
-        } else {
-            showError( data.error || 'Failed to update global setting');
-        }
-    } catch (error) {
-        console.error('Error updating global marketing default:', error);
-        showError( 'Failed to update global setting');
-    }
-}
+// migrated: updateGlobalMarketingDefault handled in AdminInventoryModule
 
 // AI Content Generation with Comparison Modal
 function generateAllMarketingContent() {if (!currentItemSku) {
@@ -6680,8 +6579,7 @@ function showComparisonResults(data) {
     if (!contentDiv) return;
     
     // Store the AI data globally
-    aiComparisonData = data;
-    selectedChanges = {};
+    window.aiComparisonData = data;
     
     // First, get current marketing data from database to compare againstfetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${currentItemSku}&_t=${Date.now()}`)
         .then(response => response.json())
@@ -6766,7 +6664,7 @@ function buildComparisonInterface(aiData, currentMarketingData) {
             <div class="bg-blue-50 border border-blue-200 rounded-lg">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <input type="checkbox" id="selectAllComparison" class="h-4 w-4 text-blue-600 border-gray-300 rounded" onchange="toggleSelectAll()">
+                        <input type="checkbox" id="selectAllComparison" class="h-4 w-4 text-blue-600 border-gray-300 rounded" data-action="toggle-select-all-comparison">
                         <label for="selectAllComparison" class="font-medium text-blue-800">Select All AI Suggestions</label>
                     </div>
                     <span class="text-sm text-blue-600">${availableFields.length} suggestions available</span>
@@ -6814,7 +6712,7 @@ function createComparisonCard(fieldKey, fieldLabel, currentValue, suggestedValue
             <div class="flex items-center justify-between">
                 <h4 class="font-medium text-gray-800">${fieldLabel}</h4>
                 <label class="flex items-center">
-                    <input type="checkbox" id="${cardId}-checkbox" class="" onchange="toggleComparison('${fieldKey}')">
+                    <input type="checkbox" id="${cardId}-checkbox" class="" data-action="toggle-comparison" data-field="${fieldKey}">
                     <span class="text-sm text-gray-600">Apply AI suggestion</span>
                 </label>
             </div>
@@ -6832,181 +6730,11 @@ function createComparisonCard(fieldKey, fieldLabel, currentValue, suggestedValue
     `;
 }
 
-function toggleSelectAll() {
-    const selectAllCheckbox = document.getElementById('selectAllComparison');
-    const isChecked = selectAllCheckbox.checked;
-    
-    // Get all available fields and toggle their checkboxes
-    if (window.availableComparisonFields) {
-        window.availableComparisonFields.forEach(fieldKey => {
-            const fieldCheckbox = document.getElementById(`comparison-${fieldKey}-checkbox`);
-            if (fieldCheckbox) {
-                fieldCheckbox.checked = isChecked;
-                // Trigger the individual toggle to update selectedChanges
-                toggleComparison(fieldKey);
-            }
-        });
-    }
-}
-
-function toggleComparison(fieldKey) {const checkbox = document.getElementById(`comparison-${fieldKey}-checkbox`);if (checkbox.checked) {
-        // Get the value from the correct location in the AI data
-        let value = null;
-        if (fieldKey === 'title') {
-            value = aiComparisonData.title;
-        } else if (fieldKey === 'description') {
-            value = aiComparisonData.description;
-        } else if (fieldKey === 'target_audience') {
-            value = aiComparisonData.targetAudience;
-        } else if (fieldKey === 'demographic_targeting' || fieldKey === 'psychographic_profile') {
-            value = aiComparisonData.marketingIntelligence?.[fieldKey];
-        }
-        
-        if (value) {
-            selectedChanges[fieldKey] = value;}
-    } else {
-        delete selectedChanges[fieldKey];}// Update select all checkbox state based on individual selections
-    updateSelectAllState();
-    
-    // Update apply button text
-    const applyBtn = document.getElementById('applyChangesBtn');
-    const selectedCount = Object.keys(selectedChanges).length;
-    if (applyBtn) {
-        applyBtn.textContent = selectedCount > 0 ? `Apply ${selectedCount} Selected Changes` : 'Apply Selected Changes';
-    }
-}
-
-function updateSelectAllState() {
-    const selectAllCheckbox = document.getElementById('selectAllComparison');
-    if (!selectAllCheckbox || !window.availableComparisonFields) return;
-    
-    const totalFields = window.availableComparisonFields.length;
-    const selectedCount = Object.keys(selectedChanges).length;
-    
-    if (selectedCount === 0) {
-        selectAllCheckbox.checked = false;
-        selectAllCheckbox.indeterminate = false;
-    } else if (selectedCount === totalFields) {
-        selectAllCheckbox.checked = true;
-        selectAllCheckbox.indeterminate = false;
-    } else {
-        selectAllCheckbox.checked = false;
-        selectAllCheckbox.indeterminate = true;
-    }
-}
-
-function applySelectedChanges() {console.log('selectedChanges keys length:', Object.keys(selectedChanges).length);
-    
-    if (Object.keys(selectedChanges).length === 0) {showWarning('Please select at least one change to apply');
-        return;
-    }
-    
-    if (!currentItemSku) {
-        console.error('No SKU available for saving changes');
-        showError('Unable to save changes - no item SKU available');
-        return;
-    }// Save all selected changes to the database
-    const savePromises = Object.entries(selectedChanges).map(([fieldKey, value]) => {return fetch('/api/marketing_manager.php?action=update_field', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                sku: currentItemSku,
-                field: fieldKey === 'title' ? 'suggested_title' : 
-                       fieldKey === 'description' ? 'suggested_description' : fieldKey,
-                value: value
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {} else {
-                console.error(`❌ Failed to save ${fieldKey}:`, data.error);
-                throw new Error(`Failed to save ${fieldKey}: ${data.error}`);
-            }
-            return { fieldKey, success: true };
-        })
-        .catch(error => {
-            console.error(`❌ Error saving ${fieldKey}:`, error);
-            return { fieldKey, success: false, error };
-        });
-    });
-    
-    // Wait for all database saves to complete
-    Promise.all(savePromises)
-        .then(results => {
-            const successCount = results.filter(r => r.success).length;
-            const failCount = results.length - successCount;if (successCount > 0) {
-                // Update main form fields for title and description only
-                // (Marketing Manager will load from database when opened)
-                updateMainFormFields();
-                
-                // Show success message
-                showSuccess(`${successCount} changes saved to database successfully!`);
-                
-                // If Marketing Manager modal is open, refresh its content from database
-                refreshMarketingManagerContent();
-                
-            } else {
-                showError('Failed to save changes to database');
-            }
-            
-            // Close AI comparison modal immediatelycloseAIComparisonModal();
-        })
-        .catch(error => {
-            console.error('Error in batch save operation:', error);
-            showError('Failed to save changes to database');
-        });
-    
-    function updateMainFormFields() {
-        // Only update title and description in main form
-        // Other fields exist only in Marketing Manager modal
-        Object.entries(selectedChanges).forEach(([fieldKey, value]) => {
-            let targetField = null;
-            
-            switch (fieldKey) {
-                case 'title':
-                    targetField = document.getElementById('name');
-                    break;
-                case 'description':
-                    targetField = document.getElementById('description');
-                    break;
-                // Don't update marketing-specific fields in main form
-                // They will be loaded from database when Marketing Manager opens
-            }
-            
-            if (targetField) {targetField.value = value;
-                targetField.style.backgroundColor = '#f0fdf4'; // Light green highlight
-                
-                // Remove highlight after delay
-                setTimeout(() => {
-                    targetField.style.backgroundColor = '';
-                }, 3000);
-            }
-        });
-    }
-    
-    function refreshMarketingManagerContent() {
-        // Check if Marketing Manager modal is open
-        const marketingModal = document.getElementById('marketingManagerModal');
-        if (marketingModal && !marketingModal.classList.contains('hidden')) {// Reload the current tab content to reflect database changes
-            const activeTab = document.querySelector('.admin-tab-button.active');
-            if (activeTab) {
-                const tabName = activeTab.textContent.includes('📝') ? 'content' :
-                              activeTab.textContent.includes('👥') ? 'audience' :
-                              activeTab.textContent.includes('⭐') ? 'selling' :
-                              activeTab.textContent.includes('🔍') ? 'seo' :
-                              activeTab.textContent.includes('💰') ? 'conversion' : 'content';loadMarketingTabContent(tabName);
-            }
-        }
-    }
-}
+// migrated: AI comparison selection handlers managed by AdminInventoryModule
 </script>
 <script>
 // AI Content Comparison Modal Functions (cleaned up)
-let aiComparisonData = {};
-let selectedChanges = {};
+window.aiComparisonData = {};
 let totalFields = 0;
 let processedFields = 0;
 
@@ -7158,7 +6886,7 @@ function renderColors(colors) {
                                       data-id="${color.id}" 
                                       data-field="stock_level" 
                                       data-value="${color.stock_level}"
-                                      onclick="editInlineStock(this)"
+                                      data-action="edit-inline-stock"
                                       title="Click to edit stock level">
                                     ${color.stock_level}
                                 </span>
@@ -7168,7 +6896,7 @@ function renderColors(colors) {
                         </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button type="button" onclick="deleteColor(${color.id})" class="bg-red-500 text-white rounded text-xs hover:bg-red-600">
+                    <button type="button" data-action="delete-color" data-id="${color.id}" class="bg-red-500 text-white rounded text-xs hover:bg-red-600">
                         Delete
                     </button>
                 </div>
@@ -7352,10 +7080,10 @@ function createColorModal() {
             <div class="modal-content" >
                 <div class="modal-header">
                     <h2 id="colorModalTitle">Add New Color</h2>
-                    <button type="button" class="modal-close" onclick="closeColorModal()">&times;</button>
+                    <button type="button" class="modal-close" data-action="close-color-modal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <form id="colorForm" onsubmit="saveColor(event)">
+                    <form id="colorForm">
                         <input type="hidden" id="colorId" name="colorId">
                         
                         <!- Two-column layout ->
@@ -7367,11 +7095,11 @@ function createColorModal() {
                                         Select Color *
                                         <span class="text-xs text-gray-500">(from predefined colors)</span>
                                     </label>
-                                    <select id="globalColorSelect" name="globalColorSelect" required class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2"  onchange="handleGlobalColorSelection()">
+                                    <select id="globalColorSelect" name="globalColorSelect" required class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2">
                                         <option value="">Choose a color...</option>
                                     </select>
                                     <div class="text-xs">
-                                        <a href="#" onclick="openGlobalColorsManagement()" class="text-blue-600 hover:text-blue-800">
+                                        <a href="#" data-action="open-global-colors-management" class="text-blue-600 hover:text-blue-800">
                                             ⚙️ Manage Global Colors in Settings
                                         </a>
                                     </div>
@@ -7445,10 +7173,10 @@ function createColorModal() {
                         
                         <!- Action Buttons ->
                         <div class="flex justify-end space-x-3 border-t border-gray-200">
-                            <button type="button" onclick="closeColorModal()" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
+                            <button type="button" data-action="close-color-modal" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" class="text-white rounded transition-colors"  onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                            <button type="submit" class="text-white rounded transition-colors bg-[#87ac3a] hover:bg-[#6b8e23]">
                                 Save Color
                             </button>
                         </div>
@@ -8008,7 +7736,7 @@ function renderSizes(sizes) {
                                       data-id="${size.id}" 
                                       data-field="stock_level" 
                                       data-value="${size.stock_level}"
-                                      onclick="editInlineStock(this)"
+                                      data-action="edit-inline-stock"
                                       title="Click to edit stock level">
                                     ${size.stock_level}
                                 </span>
@@ -8017,7 +7745,7 @@ function renderSizes(sizes) {
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <button type="button" onclick="deleteSize(${size.id})" class="bg-red-500 text-white rounded text-xs hover:bg-red-600">
+                        <button type="button" data-action="delete-size" data-id="${size.id}" class="bg-red-500 text-white rounded text-xs hover:bg-red-600">
                             Delete
                         </button>
                     </div>
@@ -8151,10 +7879,10 @@ function createSizeModal() {
             <div class="modal-content" >
                 <div class="modal-header">
                     <h2 id="sizeModalTitle" class="text-xl font-semibold text-gray-800">Add New Size</h2>
-                    <button type="button" onclick="closeSizeModal()" class="modal-close">&times;</button>
+                    <button type="button" data-action="close-size-modal" class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <form id="sizeForm" onsubmit="saveSize(event)">
+                    <form id="sizeForm">
                         <input type="hidden" id="sizeId" name="sizeId">
                         
                         <div class="">
@@ -8213,10 +7941,10 @@ function createSizeModal() {
                         </div>
                         
                         <div class="flex justify-end space-x-3 border-t border-gray-200">
-                            <button type="button" onclick="closeSizeModal()" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
+                            <button type="button" data-action="close-size-modal" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" class="text-white rounded transition-colors"  onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+                            <button type="submit" class="text-white rounded transition-colors bg-[#87ac3a] hover:bg-[#6b8e23]">
                                 Save Size
                             </button>
                         </div>
@@ -8377,621 +8105,6 @@ function initializeSizeManagement() {
     }
 }
 
-// Add to the existing DOMContentLoaded event listener
-const originalDOMContentLoaded = document.addEventListener;
-document.addEventListener('DOMContentLoaded', function() {
-    // Call existing color loading logic// Load colors when in edit mode and we have a valid SKU
-    if ((modalMode === 'edit' || modalMode === 'view') && currentItemSku) {setTimeout(initializeGenderSizeColorInterface, 200);
-    } else if (document.getElementById('sku') || document.getElementById('skuDisplay')) {
-        // Fallback: try to get SKU from form fields
-        const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
-        if (skuField && skuField.value) {
-            currentItemSku = skuField.value;setTimeout(initializeGenderSizeColorInterface, 200);
-        }
-    }
-});
-
-// Color Template Management Functions
-let colorTemplates = [];
-let sizeTemplates = [];
-
-// Open Color Template Modal
-async function openColorTemplateModal() {
-    if (!currentItemSku) {
-        showError('Please save the item first before applying templates');
-        return;
-    }
-    
-    // Create modal if it doesn't exist
-    if (!document.getElementById('colorTemplateModal')) {
-        createColorTemplateModal();
-    }
-    
-    // Load templates
-    await loadColorTemplates();
-    
-    // Show modal
-    const modal = document.getElementById('colorTemplateModal');
-    modal.classList.remove('hidden');
-}
-
-// Create Color Template Modal
-function createColorTemplateModal() {
-    const modalHTML = `
-        <div id="colorTemplateModal" class="modal-overlay hidden">
-            <div class="modal-content" >
-                <div class="modal-header">
-                    <h2 class="text-xl font-bold text-gray-800">🎨 Color Templates</h2>
-                    <button type="button" onclick="closeColorTemplateModal()" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="modal-body" >
-                    <!- Template Categories ->
-                    <div class="">
-                        <label class="block text-sm font-medium text-gray-700">Filter by Category:</label>
-                        <select id="colorTemplateCategory" onchange="filterColorTemplates()" class="w-full border border-gray-300 rounded">
-                            <option value="">All Categories</option>
-                        </select>
-                    </div>
-                    
-                    <!- Template List ->
-                    <div id="colorTemplatesList" class="space-y-3">
-                        <div class="text-center text-gray-500">Loading templates...</div>
-                    </div>
-                    
-                    <!- Application Options ->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg">
-                        <h3 class="font-medium text-blue-800">Application Options</h3>
-                        <div class="space-y-3">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="replaceExistingColors" class="">
-                                <span class="text-sm">Replace existing colors (clear current colors first)</span>
-                            </label>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Default Stock Level for New Colors:</label>
-                                <input type="number" id="defaultColorStock" value="0" min="0" class="w-32 border border-gray-300 rounded text-sm">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" onclick="closeColorTemplateModal()" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
-                        Cancel
-                    </button>
-                    <button type="button" onclick="applySelectedColorTemplate()" id="applyColorTemplateBtn" class="bg-purple-600 text-white rounded hover:bg-purple-700" disabled>
-                        Apply Template
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
-
-// Load Color Templates
-async function loadColorTemplates() {
-    try {
-        const response = await fetch('/api/color_templates.php?action=get_all');
-        const data = await response.json();
-        
-        if (data.success) {
-            colorTemplates = data.templates;
-            renderColorTemplates();
-            loadColorTemplateCategories();
-        } else {
-            showError('Error loading color templates: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error loading color templates:', error);
-        showError('Error loading color templates');
-    }
-}
-
-// Load Color Template Categories
-function loadColorTemplateCategories() {
-    const categorySelect = document.getElementById('colorTemplateCategory');
-    if (!categorySelect) return;
-    
-    const categories = [...new Set(colorTemplates.map(t => t.category))].sort();
-    
-    categorySelect.innerHTML = '<option value="">All Categories</option>';
-    categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categorySelect.appendChild(option);
-    });
-}
-
-// Filter Color Templates
-function filterColorTemplates() {
-    renderColorTemplates();
-}
-
-// Render Color Templates
-function renderColorTemplates() {
-    const container = document.getElementById('colorTemplatesList');
-    if (!container) return;
-    
-    const selectedCategory = document.getElementById('colorTemplateCategory')?.value || '';
-    const filteredTemplates = selectedCategory 
-        ? colorTemplates.filter(t => t.category === selectedCategory)
-        : colorTemplates;
-    
-    if (filteredTemplates.length === 0) {
-        container.innerHTML = '<div class="text-center text-gray-500">No templates found</div>';
-        return;
-    }
-    
-    container.innerHTML = filteredTemplates.map(template => `
-        <div class="template-item border border-gray-200 rounded-lg hover:border-purple-300 cursor-pointer" 
-             onclick="selectColorTemplate(${template.id})" data-template-id="${template.id}">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h4 class="font-medium text-gray-800">${template.template_name}</h4>
-                    <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
-                </div>
-                <div class="text-right">
-                    <span class="inline-block bg-blue-100 text-blue-800 text-xs rounded">${template.category}</span>
-                    <div class="text-xs text-gray-500">${template.color_count} colors</div>
-                </div>
-            </div>
-            <div class="template-preview" id="colorPreview${template.id}">
-                <div class="text-xs text-gray-500">Loading colors...</div>
-            </div>
-        </div>
-    `).join('');
-    
-    // Load color previews
-    filteredTemplates.forEach(template => {
-        loadColorTemplatePreview(template.id);
-    });
-}
-
-// Load Color Template Preview
-async function loadColorTemplatePreview(templateId) {
-    try {
-        const response = await fetch(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
-        const data = await response.json();
-        
-        if (data.success && data.template.colors) {
-            const previewContainer = document.getElementById(`colorPreview${templateId}`);
-            if (previewContainer) {
-                previewContainer.innerHTML = `
-                    <div class="flex flex-wrap gap-1">
-                        ${data.template.colors.map(color => `
-                            <div class="flex items-center space-x-1 text-xs">
-                                <div class="w-4 h-4 rounded border border-gray-300" ></div>
-                                <span>${color.color_name}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-        }
-    } catch (error) {
-        console.error('Error loading color template preview:', error);
-    }
-}
-
-// Select Color Template
-function selectColorTemplate(templateId) {
-    // Remove previous selection
-    document.querySelectorAll('.template-item').forEach(item => {
-        item.classList.remove('border-purple-500', 'bg-purple-50');
-    });
-    
-    // Add selection to clicked template
-    const templateItem = document.querySelector(`[data-template-id="${templateId}"]`);
-    if (templateItem) {
-        templateItem.classList.add('border-purple-500', 'bg-purple-50');
-    }
-    
-    // Enable apply button
-    const applyBtn = document.getElementById('applyColorTemplateBtn');
-    if (applyBtn) {
-        applyBtn.disabled = false;
-        applyBtn.setAttribute('data-template-id', templateId);
-    }
-}
-
-// Apply Selected Color Template
-async function applySelectedColorTemplate() {
-    const applyBtn = document.getElementById('applyColorTemplateBtn');
-    const templateId = applyBtn?.getAttribute('data-template-id');
-    
-    if (!templateId) {
-        showError('Please select a template first');
-        return;
-    }
-    
-    const replaceExisting = document.getElementById('replaceExistingColors')?.checked || false;
-    const defaultStock = parseInt(document.getElementById('defaultColorStock')?.value) || 0;
-    
-    try {
-        applyBtn.disabled = true;
-        applyBtn.textContent = 'Applying...';
-        
-        const response = await fetch('/api/color_templates.php?action=apply_to_item', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                template_id: parseInt(templateId),
-                item_sku: currentItemSku,
-                replace_existing: replaceExisting,
-                default_stock: defaultStock
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess(`Template applied successfully! Added ${data.colors_added} colors.`);
-            closeColorTemplateModal();
-            loadItemColors(); // Reload colors
-        } else {
-            showError('Error applying template: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error applying color template:', error);
-        showError('Error applying color template');
-    } finally {
-        applyBtn.disabled = false;
-        applyBtn.textContent = 'Apply Template';
-    }
-}
-
-// Close Color Template Modal
-function closeColorTemplateModal() {
-    const modal = document.getElementById('colorTemplateModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-// Size Template Management Functions
-
-// Open Size Template Modal
-async function openSizeTemplateModal() {
-    if (!currentItemSku) {
-        showError('Please save the item first before applying templates');
-        return;
-    }
-    
-    // Create modal if it doesn't exist
-    if (!document.getElementById('sizeTemplateModal')) {
-        createSizeTemplateModal();
-    }
-    
-    // Load templates
-    await loadSizeTemplates();
-    
-    // Show modal
-    const modal = document.getElementById('sizeTemplateModal');
-    modal.classList.remove('hidden');
-}
-
-// Create Size Template Modal
-function createSizeTemplateModal() {
-    const modalHTML = `
-        <div id="sizeTemplateModal" class="modal-overlay hidden">
-            <div class="modal-content" >
-                <div class="modal-header">
-                    <h2 class="text-xl font-bold text-gray-800">📏 Size Templates</h2>
-                    <button type="button" onclick="closeSizeTemplateModal()" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div class="modal-body" >
-                    <!- Template Categories ->
-                    <div class="">
-                        <label class="block text-sm font-medium text-gray-700">Filter by Category:</label>
-                        <select id="sizeTemplateCategory" onchange="filterSizeTemplates()" class="w-full border border-gray-300 rounded">
-                            <option value="">All Categories</option>
-                        </select>
-                    </div>
-                    
-                    <!- Template List ->
-                    <div id="sizeTemplatesList" class="space-y-3">
-                        <div class="text-center text-gray-500">Loading templates...</div>
-                    </div>
-                    
-                    <!- Application Options ->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg">
-                        <h3 class="font-medium text-blue-800">Application Options</h3>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Apply Mode:</label>
-                                <div class="space-y-2">
-                                    <label class="flex items-center">
-                                        <input type="radio" name="sizeApplyMode" value="general" class="" checked>
-                                        <span class="text-sm">General sizes (not color-specific)</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="radio" name="sizeApplyMode" value="color_specific" class="">
-                                        <span class="text-sm">Color-specific sizes</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="colorSelectionForSizes" class="hidden">
-                                <label class="block text-sm font-medium text-gray-700">Select Color:</label>
-                                <select id="sizeTemplateColorId" class="w-full border border-gray-300 rounded text-sm">
-                                    <option value="">Loading colors...</option>
-                                </select>
-                            </div>
-                            <label class="flex items-center">
-                                <input type="checkbox" id="replaceExistingSizes" class="">
-                                <span class="text-sm">Replace existing sizes</span>
-                            </label>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Default Stock Level for New Sizes:</label>
-                                <input type="number" id="defaultSizeStock" value="0" min="0" class="w-32 border border-gray-300 rounded text-sm">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" onclick="closeSizeTemplateModal()" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
-                        Cancel
-                    </button>
-                    <button type="button" onclick="applySelectedSizeTemplate()" id="applySizeTemplateBtn" class="bg-purple-600 text-white rounded hover:bg-purple-700" disabled>
-                        Apply Template
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Add event listeners for apply mode radio buttons
-    document.querySelectorAll('input[name="sizeApplyMode"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const colorSelection = document.getElementById('colorSelectionForSizes');
-            if (this.value === 'color_specific') {
-                colorSelection.classList.remove('hidden');
-                loadColorsForSizeTemplate();
-            } else {
-                colorSelection.classList.add('hidden');
-            }
-        });
-    });
-}
-
-// Load Size Templates
-async function loadSizeTemplates() {
-    try {
-        const response = await fetch('/api/size_templates.php?action=get_all');
-        const data = await response.json();
-        
-        if (data.success) {
-            sizeTemplates = data.templates;
-            renderSizeTemplates();
-            loadSizeTemplateCategories();
-        } else {
-            showError('Error loading size templates: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error loading size templates:', error);
-        showError('Error loading size templates');
-    }
-}
-
-// Load Size Template Categories
-function loadSizeTemplateCategories() {
-    const categorySelect = document.getElementById('sizeTemplateCategory');
-    if (!categorySelect) return;
-    
-    const categories = [...new Set(sizeTemplates.map(t => t.category))].sort();
-    
-    categorySelect.innerHTML = '<option value="">All Categories</option>';
-    categories.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categorySelect.appendChild(option);
-    });
-}
-
-// Filter Size Templates
-function filterSizeTemplates() {
-    renderSizeTemplates();
-}
-
-// Render Size Templates
-function renderSizeTemplates() {
-    const container = document.getElementById('sizeTemplatesList');
-    if (!container) return;
-    
-    const selectedCategory = document.getElementById('sizeTemplateCategory')?.value || '';
-    const filteredTemplates = selectedCategory 
-        ? sizeTemplates.filter(t => t.category === selectedCategory)
-        : sizeTemplates;
-    
-    if (filteredTemplates.length === 0) {
-        container.innerHTML = '<div class="text-center text-gray-500">No templates found</div>';
-        return;
-    }
-    
-    container.innerHTML = filteredTemplates.map(template => `
-        <div class="template-item border border-gray-200 rounded-lg hover:border-purple-300 cursor-pointer" 
-             onclick="selectSizeTemplate(${template.id})" data-template-id="${template.id}">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h4 class="font-medium text-gray-800">${template.template_name}</h4>
-                    <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
-                </div>
-                <div class="text-right">
-                    <span class="inline-block bg-blue-100 text-blue-800 text-xs rounded">${template.category}</span>
-                    <div class="text-xs text-gray-500">${template.size_count} sizes</div>
-                </div>
-            </div>
-            <div class="template-preview" id="sizePreview${template.id}">
-                <div class="text-xs text-gray-500">Loading sizes...</div>
-            </div>
-        </div>
-    `).join('');
-    
-    // Load size previews
-    filteredTemplates.forEach(template => {
-        loadSizeTemplatePreview(template.id);
-    });
-}
-
-// Load Size Template Preview
-async function loadSizeTemplatePreview(templateId) {
-    try {
-        const response = await fetch(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
-        const data = await response.json();
-        
-        if (data.success && data.template.sizes) {
-            const previewContainer = document.getElementById(`sizePreview${templateId}`);
-            if (previewContainer) {
-                previewContainer.innerHTML = `
-                    <div class="flex flex-wrap gap-2">
-                        ${data.template.sizes.map(size => `
-                            <span class="inline-block bg-gray-100 text-gray-700 text-xs rounded">
-                                ${size.size_name} (${size.size_code})${size.price_adjustment > 0 ? ' +$' + size.price_adjustment : size.price_adjustment < 0 ? ' $' + size.price_adjustment : ''}
-                            </span>
-                        `).join('')}
-                    </div>
-                `;
-            }
-        }
-    } catch (error) {
-        console.error('Error loading size template preview:', error);
-    }
-}
-
-// Select Size Template
-function selectSizeTemplate(templateId) {
-    // Remove previous selection
-    document.querySelectorAll('.template-item').forEach(item => {
-        item.classList.remove('border-purple-500', 'bg-purple-50');
-    });
-    
-    // Add selection to clicked template
-    const templateItem = document.querySelector(`[data-template-id="${templateId}"]`);
-    if (templateItem) {
-        templateItem.classList.add('border-purple-500', 'bg-purple-50');
-    }
-    
-    // Enable apply button
-    const applyBtn = document.getElementById('applySizeTemplateBtn');
-    if (applyBtn) {
-        applyBtn.disabled = false;
-        applyBtn.setAttribute('data-template-id', templateId);
-    }
-}
-
-// Load Colors for Size Template
-async function loadColorsForSizeTemplate() {
-    if (!currentItemSku) return;
-    
-    try {
-        const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
-        const data = await response.json();
-        
-        const colorSelect = document.getElementById('sizeTemplateColorId');
-        if (!colorSelect) return;
-        
-        colorSelect.innerHTML = '<option value="">Select a color...</option>';
-        
-        if (data.success && data.colors && data.colors.length > 0) {
-            data.colors.forEach(color => {
-                if (color.is_active == 1) {
-                    const option = document.createElement('option');
-                    option.value = color.id;
-                    option.textContent = color.color_name;
-                    colorSelect.appendChild(option);
-                }
-            });
-        } else {
-            colorSelect.innerHTML = '<option value="">No colors available - add colors first</option>';
-        }
-    } catch (error) {
-        console.error('Error loading colors for size template:', error);
-    }
-}
-
-// Apply Selected Size Template
-async function applySelectedSizeTemplate() {
-    const applyBtn = document.getElementById('applySizeTemplateBtn');
-    const templateId = applyBtn?.getAttribute('data-template-id');
-    
-    if (!templateId) {
-        showError('Please select a template first');
-        return;
-    }
-    
-    const applyMode = document.querySelector('input[name="sizeApplyMode"]:checked')?.value || 'general';
-    const replaceExisting = document.getElementById('replaceExistingSizes')?.checked || false;
-    const defaultStock = parseInt(document.getElementById('defaultSizeStock')?.value) || 0;
-    
-    let colorId = null;
-    if (applyMode === 'color_specific') {
-        colorId = document.getElementById('sizeTemplateColorId')?.value;
-        if (!colorId) {
-            showError('Please select a color for color-specific sizes');
-            return;
-        }
-    }
-    
-    try {
-        applyBtn.disabled = true;
-        applyBtn.textContent = 'Applying...';
-        
-        const response = await fetch('/api/size_templates.php?action=apply_to_item', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                template_id: parseInt(templateId),
-                item_sku: currentItemSku,
-                apply_mode: applyMode,
-                color_id: colorId ? parseInt(colorId) : null,
-                replace_existing: replaceExisting,
-                default_stock: defaultStock
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess(`Template applied successfully! Added ${data.sizes_added} sizes.`);
-            closeSizeTemplateModal();
-            loadItemSizes(); // Reload sizes
-        } else {
-            showError('Error applying template: ' + data.message);
-        }
-    } catch (error) {
-        console.error('Error applying size template:', error);
-        showError('Error applying size template');
-    } finally {
-        applyBtn.disabled = false;
-        applyBtn.textContent = 'Apply Template';
-    }
-}
-
-// Close Size Template Modal
-function closeSizeTemplateModal() {
-    const modal = document.getElementById('sizeTemplateModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-// ========== INLINE STOCK EDITING FUNCTIONS ==========
-
 // Helper function to get current size data
 async function getCurrentSizeData(sizeId) {
     try {
@@ -9006,136 +8119,6 @@ async function getCurrentSizeData(sizeId) {
         console.error('Error fetching size data:', error);
         return null;
     }
-}
-
-// Edit stock level inline
-function editInlineStock(element) {
-    // Prevent multiple editors
-    if (element.classList.contains('editing')) return;
-    
-    const currentValue = element.getAttribute('data-value');
-    const type = element.getAttribute('data-type'); // 'color' or 'size'
-    const id = element.getAttribute('data-id');
-    
-    // Create input element
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.min = '0';
-    input.value = currentValue;
-    input.className = 'inline-stock-input';
-    
-    // Store original element for restoration
-    const originalContent = element.innerHTML;
-    
-    // Replace content with input
-    element.innerHTML = '';
-    element.appendChild(input);
-    element.classList.add('editing');
-    
-    // Focus and select the input
-    input.focus();
-    input.select();
-    
-    // Save function
-    const saveStock = async () => {
-        const newValue = parseInt(input.value) || 0;
-        
-        // If value hasn't changed, just restore
-        if (newValue == currentValue) {
-            restoreElement();
-            return;
-        }
-        
-        try {
-            // Show loading state
-            input.disabled = true;
-            input.style.opacity = '0.6';
-            
-            // Determine API endpoint and data
-            let apiUrl, updateData;
-            if (type === 'color') {
-                apiUrl = '/api/item_colors.php?action=update_stock';
-                updateData = {
-                    color_id: parseInt(id),
-                    stock_level: newValue
-                };
-            } else if (type === 'size') {
-                apiUrl = '/api/item_sizes.php?action=update_stock';
-                updateData = {
-                    size_id: parseInt(id),
-                    stock_level: newValue
-                };
-            }
-            
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updateData)
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Update the element's data attribute
-                element.setAttribute('data-value', newValue);
-                
-                // Restore element with new value
-                element.classList.remove('editing');
-                element.innerHTML = newValue;
-                
-                // Update total stock field if provided
-                if (data.new_total_stock !== undefined) {
-                    const stockField = document.getElementById('stockLevel');
-                    if (stockField) {
-                        stockField.value = data.new_total_stock;
-                    }
-                }
-                
-                // Reload the appropriate list to update sync status
-                if (type === 'color') {
-                    loadItemColors();
-                } else {
-                    loadItemSizes();
-                }
-                
-                // Show success message
-                showSuccess(`${type.charAt(0).toUpperCase() + type.slice(1)} stock updated to ${newValue}`);
-                
-            } else {
-                throw new Error(data.message || 'Failed to update stock');
-            }
-            
-        } catch (error) {
-            console.error('Error updating stock:', error);
-            showError(`Error updating ${type} stock: ${error.message}`);
-            restoreElement();
-        }
-    };
-    
-    // Cancel function
-    const restoreElement = () => {
-        element.classList.remove('editing');
-        element.innerHTML = originalContent;
-    };
-    
-    // Event listeners
-    input.addEventListener('blur', saveStock);
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            saveStock();
-        } else if (e.key === 'Escape') {
-            e.preventDefault();
-            restoreElement();
-        }
-    });
-    
-    // Prevent event bubbling
-    input.addEventListener('click', (e) => {
-        e.stopPropagation();
-    });
 }
 
 // ========== STRUCTURE ANALYSIS & REDESIGN FUNCTIONS ==========
@@ -9244,7 +8227,7 @@ function createRestructureModal(proposal) {
             <div class="border-b border-gray-200 flex-shrink-0">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-gray-800">✅ Current Size/Color Structure</h2>
-                    <button type="button" onclick="closeRestructureModal()" class="text-gray-400 hover:text-gray-600">
+                    <button type="button" data-action="close-restructure-modal" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -9327,7 +8310,7 @@ function createRestructureModal(proposal) {
                         <span>✅ Structure is correct: Sizes → Colors → Stock</span>
                     </div>
                     <div class="flex gap-3">
-                        <button type="button" onclick="closeRestructureModal()" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
+                        <button type="button" data-action="close-restructure-modal" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
                             Close
                         </button>
                     </div>
@@ -9557,7 +8540,7 @@ function createStructureViewModal(data) {
             <div class="border-b border-gray-200 flex-shrink-0">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-gray-800">👀 Current Structure View</h2>
-                    <button type="button" onclick="closeStructureViewModal()" class="text-gray-400 hover:text-gray-600">
+                    <button type="button" data-action="close-structure-view-modal" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -9615,7 +8598,7 @@ function createStructureViewModal(data) {
             <!- Fixed Footer ->
             <div class="border-t border-gray-200 flex-shrink-0">
                 <div class="flex justify-center">
-                    <button type="button" onclick="closeStructureViewModal()" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                    <button type="button" data-action="close-structure-view-modal" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
                         Close
                     </button>
                 </div>

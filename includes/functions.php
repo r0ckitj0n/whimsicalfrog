@@ -85,10 +85,10 @@ function getImageTag($imagePath, $altText = '', $class = '', $style = '')
               . '</picture>';
     }
 
-    // Fallback with onerror handling
+    // Fallback: try WebP first, then swap to original on error via data-fallback-src handled by JS
     $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
     return '<img src="' . htmlspecialchars($webpPath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr
-          . ' onerror="this.onerror=null; this.src=\'' . htmlspecialchars($imagePath) . '\';">';
+          . ' data-fallback-src="' . htmlspecialchars($imagePath) . '">';
 }
 // sanitizeInput function moved to security_validator.php for centralization
 

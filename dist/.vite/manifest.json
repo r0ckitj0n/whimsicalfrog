@@ -3,87 +3,209 @@
     "file": "assets/auto-C8LTT2Eg.js",
     "name": "auto"
   },
-  "js/admin-categories.js": {
-    "file": "assets/admin-categories-DctmXD4Z.js",
-    "name": "admin-categories",
-    "src": "js/admin-categories.js",
-    "isDynamicEntry": true
+  "images/backgrounds/background_home.png": {
+    "file": "assets/background_home-BN2Fr02e.png",
+    "src": "images/backgrounds/background_home.png"
   },
-  "js/admin-customers.js": {
-    "file": "assets/admin-customers-C0oGqzp0.js",
-    "name": "admin-customers",
-    "src": "js/admin-customers.js",
-    "isDynamicEntry": true
+  "images/backgrounds/background_home.webp": {
+    "file": "assets/background_home-ygUgfduk.webp",
+    "src": "images/backgrounds/background_home.webp"
   },
-  "js/admin-dashboard.js": {
-    "file": "assets/admin-dashboard-CEuPNdqJ.js",
-    "name": "admin-dashboard",
-    "src": "js/admin-dashboard.js",
+  "images/backgrounds/background_room1.png": {
+    "file": "assets/background_room1-BRAgtr92.png",
+    "src": "images/backgrounds/background_room1.png"
+  },
+  "images/backgrounds/background_room1.webp": {
+    "file": "assets/background_room1-wpDwXBWB.webp",
+    "src": "images/backgrounds/background_room1.webp"
+  },
+  "images/backgrounds/background_room2.png": {
+    "file": "assets/background_room2-bZd0-sYF.png",
+    "src": "images/backgrounds/background_room2.png"
+  },
+  "images/backgrounds/background_room2.webp": {
+    "file": "assets/background_room2-BXdXijdr.webp",
+    "src": "images/backgrounds/background_room2.webp"
+  },
+  "images/backgrounds/background_room3.png": {
+    "file": "assets/background_room3-BI57Zz5G.png",
+    "src": "images/backgrounds/background_room3.png"
+  },
+  "images/backgrounds/background_room3.webp": {
+    "file": "assets/background_room3-BdYbvP-I.webp",
+    "src": "images/backgrounds/background_room3.webp"
+  },
+  "images/backgrounds/background_room4.png": {
+    "file": "assets/background_room4-B8BMTk5G.png",
+    "src": "images/backgrounds/background_room4.png"
+  },
+  "images/backgrounds/background_room4.webp": {
+    "file": "assets/background_room4-DT1MHV1f.webp",
+    "src": "images/backgrounds/background_room4.webp"
+  },
+  "images/backgrounds/background_room5.png": {
+    "file": "assets/background_room5-DsaKXC6J.png",
+    "src": "images/backgrounds/background_room5.png"
+  },
+  "images/backgrounds/background_room5.webp": {
+    "file": "assets/background_room5-YLYEOZt2.webp",
+    "src": "images/backgrounds/background_room5.webp"
+  },
+  "images/backgrounds/background_room_main.png": {
+    "file": "assets/background_room_main-Cjg0PIo1.png",
+    "src": "images/backgrounds/background_room_main.png"
+  },
+  "images/backgrounds/background_room_main.webp": {
+    "file": "assets/background_room_main-CD7UiX_S.webp",
+    "src": "images/backgrounds/background_room_main.webp"
+  },
+  "src/entries/admin-dashboard.js": {
+    "file": "assets/js/admin-dashboard.js-VQ1WXx75.js",
+    "name": "js/admin-dashboard.js",
+    "src": "src/entries/admin-dashboard.js",
     "isEntry": true,
     "isDynamicEntry": true
   },
-  "js/admin-inventory.js": {
-    "file": "assets/admin-inventory-B7HGoq5y.js",
-    "name": "admin-inventory",
-    "src": "js/admin-inventory.js",
+  "src/entries/admin-inventory.js": {
+    "file": "assets/js/admin-inventory.js-BvaIVksU.js",
+    "name": "js/admin-inventory.js",
+    "src": "src/entries/admin-inventory.js",
     "isEntry": true,
     "isDynamicEntry": true
   },
-  "js/admin-marketing.js": {
-    "file": "assets/admin-marketing-DOemP6rh.js",
-    "name": "admin-marketing",
-    "src": "js/admin-marketing.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "_auto-C8LTT2Eg.js"
-    ]
-  },
-  "js/admin-orders.js": {
-    "file": "assets/admin-orders-CKuoBxab.js",
-    "name": "admin-orders",
-    "src": "js/admin-orders.js",
-    "isDynamicEntry": true
-  },
-  "js/admin-pos.js": {
-    "file": "assets/admin-pos-DuYEvZ-S.js",
-    "name": "admin-pos",
-    "src": "js/admin-pos.js",
-    "isDynamicEntry": true
-  },
-  "js/admin-reports.js": {
-    "file": "assets/admin-reports-QEqgp-N2.js",
-    "name": "admin-reports",
-    "src": "js/admin-reports.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "_auto-C8LTT2Eg.js"
-    ]
-  },
-  "js/admin-settings.js": {
-    "file": "assets/admin-settings-BL9St725.js",
-    "name": "admin-settings",
-    "src": "js/admin-settings.js",
-    "isDynamicEntry": true
-  },
-  "js/app.js": {
-    "file": "assets/app-vZ9Xc5BL.js",
-    "name": "app",
-    "src": "js/app.js",
+  "src/entries/app.js": {
+    "file": "assets/js/app.js-mS2_MPhG.js",
+    "name": "js/app.js",
+    "src": "src/entries/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "js/admin-dashboard.js",
-      "js/admin-customers.js",
-      "js/admin-inventory.js",
-      "js/admin-orders.js",
-      "js/admin-pos.js",
-      "js/admin-reports.js",
-      "js/admin-marketing.js",
-      "js/admin-settings.js",
-      "js/admin-categories.js",
-      "js/admin-dashboard.js"
+      "src/js/pages/room-page.js",
+      "src/js/pages/cart-page.js",
+      "src/js/pages/register-page.js",
+      "src/js/pages/account-settings-page.js",
+      "src/js/pages/account-settings-page.js",
+      "src/entries/admin-dashboard.js",
+      "src/js/admin-customers.js",
+      "src/entries/admin-inventory.js",
+      "src/js/admin-orders.js",
+      "src/js/admin-pos.js",
+      "src/js/admin-reports.js",
+      "src/js/admin-marketing.js",
+      "src/js/admin-settings.js",
+      "src/js/admin-categories.js",
+      "src/js/admin-db-status.js",
+      "src/js/admin-db-web-manager.js",
+      "src/js/admin-room-config-manager.js",
+      "src/entries/admin-dashboard.js"
     ],
     "css": [
-      "assets/app-CNU7NDFe.css"
+      "assets/app-BwAN4HVV.css"
+    ],
+    "assets": [
+      "assets/background_room_main-CD7UiX_S.webp",
+      "assets/background_room_main-Cjg0PIo1.png",
+      "assets/background_home-ygUgfduk.webp",
+      "assets/background_home-BN2Fr02e.png",
+      "assets/background_room1-wpDwXBWB.webp",
+      "assets/background_room1-BRAgtr92.png",
+      "assets/background_room2-BXdXijdr.webp",
+      "assets/background_room2-bZd0-sYF.png",
+      "assets/background_room3-BdYbvP-I.webp",
+      "assets/background_room3-BI57Zz5G.png",
+      "assets/background_room4-DT1MHV1f.webp",
+      "assets/background_room4-B8BMTk5G.png",
+      "assets/background_room5-YLYEOZt2.webp",
+      "assets/background_room5-DsaKXC6J.png"
     ]
+  },
+  "src/js/admin-categories.js": {
+    "file": "assets/admin-categories-DctmXD4Z.js",
+    "name": "admin-categories",
+    "src": "src/js/admin-categories.js",
+    "isDynamicEntry": true
+  },
+  "src/js/admin-customers.js": {
+    "file": "assets/admin-customers-CVcZiYjm.js",
+    "name": "admin-customers",
+    "src": "src/js/admin-customers.js",
+    "isDynamicEntry": true
+  },
+  "src/js/admin-db-status.js": {
+    "file": "assets/admin-db-status-BDg83GDJ.js",
+    "name": "admin-db-status",
+    "src": "src/js/admin-db-status.js",
+    "isDynamicEntry": true
+  },
+  "src/js/admin-db-web-manager.js": {
+    "file": "assets/admin-db-web-manager-BHQar1Td.js",
+    "name": "admin-db-web-manager",
+    "src": "src/js/admin-db-web-manager.js",
+    "isDynamicEntry": true
+  },
+  "src/js/admin-marketing.js": {
+    "file": "assets/admin-marketing-DOemP6rh.js",
+    "name": "admin-marketing",
+    "src": "src/js/admin-marketing.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_auto-C8LTT2Eg.js"
+    ]
+  },
+  "src/js/admin-orders.js": {
+    "file": "assets/admin-orders-CKuoBxab.js",
+    "name": "admin-orders",
+    "src": "src/js/admin-orders.js",
+    "isDynamicEntry": true
+  },
+  "src/js/admin-pos.js": {
+    "file": "assets/admin-pos-DuYEvZ-S.js",
+    "name": "admin-pos",
+    "src": "src/js/admin-pos.js",
+    "isDynamicEntry": true
+  },
+  "src/js/admin-reports.js": {
+    "file": "assets/admin-reports-QEqgp-N2.js",
+    "name": "admin-reports",
+    "src": "src/js/admin-reports.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_auto-C8LTT2Eg.js"
+    ]
+  },
+  "src/js/admin-room-config-manager.js": {
+    "file": "assets/admin-room-config-manager-Wz8M00z8.js",
+    "name": "admin-room-config-manager",
+    "src": "src/js/admin-room-config-manager.js",
+    "isDynamicEntry": true
+  },
+  "src/js/admin-settings.js": {
+    "file": "assets/admin-settings-CcnsSfgv.js",
+    "name": "admin-settings",
+    "src": "src/js/admin-settings.js",
+    "isDynamicEntry": true
+  },
+  "src/js/pages/account-settings-page.js": {
+    "file": "assets/account-settings-page-CwsFN-9O.js",
+    "name": "account-settings-page",
+    "src": "src/js/pages/account-settings-page.js",
+    "isDynamicEntry": true
+  },
+  "src/js/pages/cart-page.js": {
+    "file": "assets/cart-page-C6VPkmrx.js",
+    "name": "cart-page",
+    "src": "src/js/pages/cart-page.js",
+    "isDynamicEntry": true
+  },
+  "src/js/pages/register-page.js": {
+    "file": "assets/register-page-rNc9KzKa.js",
+    "name": "register-page",
+    "src": "src/js/pages/register-page.js",
+    "isDynamicEntry": true
+  },
+  "src/js/pages/room-page.js": {
+    "file": "assets/room-page-BJ-FGt20.js",
+    "name": "room-page",
+    "src": "src/js/pages/room-page.js",
+    "isDynamicEntry": true
   }
 }

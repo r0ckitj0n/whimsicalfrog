@@ -136,7 +136,7 @@ The room modal visibility issue has been **completely resolved** through systema
 
 ### Files Modified/Created
 **Core Modal System:**
-- `/js/modules/room-modal-manager.js` - Enhanced with accessibility features
+- `src/modules/room-modal-manager.js` - Enhanced with accessibility features
 - `/css/modal-responsive.css` - New responsive design stylesheet
 
 **Documentation:**

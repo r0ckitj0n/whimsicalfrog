@@ -86,6 +86,16 @@ if ($page === 'admin') {
     if (isset($aliases[$key])) {
         $adminSection = $aliases[$key];
     }
+    // Support query param fallback when pretty URLs aren't available
+    // Example: /?page=admin&section=inventory
+    if (isset($_GET['section']) && is_string($_GET['section']) && $_GET['section'] !== '') {
+        $q = strtolower($_GET['section']);
+        if (isset($aliases[$q])) {
+            $adminSection = $aliases[$q];
+        } else {
+            $adminSection = $q;
+        }
+    }
     $page_path = __DIR__ . '/admin/admin.php';
 } else {
     $page_path = __DIR__ . '/' . $page . '.php';

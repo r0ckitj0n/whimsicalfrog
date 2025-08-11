@@ -20,16 +20,7 @@ try {
     error_log("Error loading room doors: " . $e->getMessage());
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Room Main Test - WhimsicalFrog</title>
-    <link href="css/bundle.css" rel="stylesheet">
-
-</head>
-<body>
+<?php include_once __DIR__ . '/partials/header.php'; ?>
     <div class="test-header" id="testStatus">
         Loading...
     </div>
@@ -118,5 +109,4 @@ try {
             }, 1000);
         });
     </script>
-</body>
-</html>
+<?php include_once __DIR__ . '/partials/footer.php'; ?>

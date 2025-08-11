@@ -124,6 +124,11 @@ button[data-action="adjustDetailedQuantity"] {
     flex-shrink: 0 !important;
 }
 
+/* Ensure the main image renders as a block element (replaces removed inline style) */
+.detailed-item-modal #detailedMainImage {
+    display: block !important;
+}
+
 /* NUCLEAR FIX: Completely eliminate horizontal scrollbar at container level */
 .detailed-item-modal-container,
 .detailed-item-modal {

@@ -117,9 +117,55 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
         <meta charset='UTF-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
         <title>Order Confirmation - WhimsicalFrog</title>
-        <link rel='stylesheet' href='https://whimsicalfrog.us/css/email-styles.css'>
+        <style>
+        /* Basic email styles (class-based, no inline attributes) */
+        body.email-body { margin:0; padding:0; background:#ffffff; color:#333; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; line-height:1.5; }
+        .email-wrapper { max-width:600px; margin:0 auto; padding:16px; }
+        .email-header { background: {$brandPrimary}; color:#fff; padding:16px; text-align:center; }
+        .email-title { margin:0; font-size:20px; }
+        .email-subtitle { margin:8px 0 0; font-size:14px; color:#eef; }
+        .email-section { margin:16px 0; }
+        .email-section-heading { font-size:16px; margin:0 0 8px; color: {$brandSecondary}; }
+        .email-summary-table, .email-order-table, .email-table { width:100%; border-collapse:collapse; }
+        .email-summary-table td, .email-order-table td, .email-order-table th, .email-table td, .email-table th { padding:8px; border-bottom:1px solid #eee; text-align:left; }
+        .email-table-cell-center { text-align:center; }
+        .email-table-cell-right { text-align:right; }
+        .email-table-header-cell { background:#f6f6f6; font-weight:bold; }
+        .email-table-row-alt { background:#f9f9f9; }
+        .email-cta-button { display:inline-block; background: {$brandPrimary}; color:#fff !important; text-decoration:none; padding:10px 14px; border-radius:4px; }
+        .email-secondary-cta { display:inline-block; color: {$brandPrimary}; text-decoration:none; padding:10px 14px; }
+        .email-footer { margin-top:24px; font-size:12px; color:#666; text-align:center; }
+        .email-footer-primary { margin:0 0 4px; }
+        .email-footer-secondary { margin:0; }
+        .email-badge-warning { background:#fff3cd; color:#856404; padding:2px 6px; border-radius:4px; }
+        .email-status-received { color:#2e7d32; font-weight:bold; }
+        .email-status-pending { color:#b26a00; font-weight:bold; }
+        /* Utilities */
+        .m-0 { margin:0; }
+        .u-margin-right-10px { margin-right:10px; }
+        .u-padding-4px-0 { padding:4px 0; }
+        .u-align-top { vertical-align:top; }
+        .u-color-333 { color:#333; }
+        .u-color-666 { color:#666; }
+        .u-line-height-1-6 { line-height:1.6; }
+        .u-font-weight-bold { font-weight:bold; }
+        .u-font-size-14px { font-size:14px; }
+        .u-margin-top-10px { margin-top:10px; }
+        .u-margin-top-20px { margin-top:20px; }
+        .email-admin-header, .email-header { background: {$brandPrimary}; color:#fff; }
+        .email-admin-summary-label { text-align:right; padding:8px; font-weight:bold; }
+        .email-admin-summary-value { text-align:right; padding:8px; }
+        .email-admin-notice { background:#fff8e1; border:1px solid #ffe082; padding:10px; border-radius:4px; margin:12px 0; }
+        .email-shipping-box { border:1px solid #eee; border-radius:4px; padding:12px; margin:12px 0; background:#fafafa; }
+        .email-admin-grid { display:block; }
+        @media screen and (min-width: 480px) {
+          .email-admin-grid { display:flex; gap:16px; }
+          .email-admin-grid .email-section { flex:1; }
+        }
+        blockquote { margin:12px 0; padding-left:12px; border-left:3px solid #eee; color:#555; }
+        </style>
     </head>
-    <body class='email-body' style='-brand-primary: {$brandPrimary}; -brand-secondary: {$brandSecondary};'>
+    <body class='email-body'>
         <div class='email-header'>
             <h1 class='email-title'>WhimsicalFrog</h1>
             <p class='email-subtitle'>Order Confirmation</p>
@@ -293,9 +339,55 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems)
         <meta charset='UTF-8'>
         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
         <title>New Order Alert - WhimsicalFrog Admin</title>
-        <link rel='stylesheet' href='https://whimsicalfrog.us/css/email-styles.css'>
+        <style>
+        /* Basic email styles (class-based, no inline attributes) */
+        body.email-body { margin:0; padding:0; background:#ffffff; color:#333; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; line-height:1.5; }
+        .email-wrapper { max-width:600px; margin:0 auto; padding:16px; }
+        .email-header { background: {$brandPrimary}; color:#fff; padding:16px; text-align:center; }
+        .email-title { margin:0; font-size:20px; }
+        .email-subtitle { margin:8px 0 0; font-size:14px; color:#eef; }
+        .email-section { margin:16px 0; }
+        .email-section-heading { font-size:16px; margin:0 0 8px; color: {$brandSecondary}; }
+        .email-summary-table, .email-order-table, .email-table { width:100%; border-collapse:collapse; }
+        .email-summary-table td, .email-order-table td, .email-order-table th, .email-table td, .email-table th { padding:8px; border-bottom:1px solid #eee; text-align:left; }
+        .email-table-cell-center { text-align:center; }
+        .email-table-cell-right { text-align:right; }
+        .email-table-header-cell { background:#f6f6f6; font-weight:bold; }
+        .email-table-row-alt { background:#f9f9f9; }
+        .email-cta-button { display:inline-block; background: {$brandPrimary}; color:#fff !important; text-decoration:none; padding:10px 14px; border-radius:4px; }
+        .email-secondary-cta { display:inline-block; color: {$brandPrimary}; text-decoration:none; padding:10px 14px; }
+        .email-footer { margin-top:24px; font-size:12px; color:#666; text-align:center; }
+        .email-footer-primary { margin:0 0 4px; }
+        .email-footer-secondary { margin:0; }
+        .email-badge-warning { background:#fff3cd; color:#856404; padding:2px 6px; border-radius:4px; }
+        .email-status-received { color:#2e7d32; font-weight:bold; }
+        .email-status-pending { color:#b26a00; font-weight:bold; }
+        /* Utilities */
+        .m-0 { margin:0; }
+        .u-margin-right-10px { margin-right:10px; }
+        .u-padding-4px-0 { padding:4px 0; }
+        .u-align-top { vertical-align:top; }
+        .u-color-333 { color:#333; }
+        .u-color-666 { color:#666; }
+        .u-line-height-1-6 { line-height:1.6; }
+        .u-font-weight-bold { font-weight:bold; }
+        .u-font-size-14px { font-size:14px; }
+        .u-margin-top-10px { margin-top:10px; }
+        .u-margin-top-20px { margin-top:20px; }
+        .email-admin-header, .email-header { background: {$brandPrimary}; color:#fff; }
+        .email-admin-summary-label { text-align:right; padding:8px; font-weight:bold; }
+        .email-admin-summary-value { text-align:right; padding:8px; }
+        .email-admin-notice { background:#fff8e1; border:1px solid #ffe082; padding:10px; border-radius:4px; margin:12px 0; }
+        .email-shipping-box { border:1px solid #eee; border-radius:4px; padding:12px; margin:12px 0; background:#fafafa; }
+        .email-admin-grid { display:block; }
+        @media screen and (min-width: 480px) {
+          .email-admin-grid { display:flex; gap:16px; }
+          .email-admin-grid .email-section { flex:1; }
+        }
+        blockquote { margin:12px 0; padding-left:12px; border-left:3px solid #eee; color:#555; }
+        </style>
     </head>
-    <body class='email-body' style='-brand-primary: {$brandPrimary}; -brand-secondary: {$brandSecondary};'>
+    <body class='email-body'>
         <div class='email-admin-header'>
             <h1 class='email-title'>🎉 NEW ORDER ALERT!</h1>
             <p class='email-subtitle'>WhimsicalFrog Admin Notification</p>

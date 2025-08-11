@@ -61,7 +61,7 @@ $businessHours = BusinessSettings::get('business_hours', '');
         <form id="wf-contact-form" class="space-y-4 wf-contact-form" novalidate>
           <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf); ?>" />
           <!-- Honeypot -->
-          <input type="text" name="website" value="" autocomplete="off" style="position:absolute;left:-9999px;visibility:hidden;height:0;width:0;" tabindex="-1" aria-hidden="true">
+          <input type="text" name="website" value="" autocomplete="off" class="wf-honeypot" tabindex="-1" aria-hidden="true">
 
           <div>
             <label for="name" class="block font-medium mb-1">Name</label>

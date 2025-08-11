@@ -4,9 +4,44 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>CSS Test - WhimsicalFrog</title>
-    <!-- Load CSS directly, bypassing Vite -->
-    <link rel="stylesheet" href="/css/z-index.css">
-    <link rel="stylesheet" href="/css/main.css">
+    <!-- Load assets via Vite: production manifest or dev server fallback -->
+    <script>
+      (function(){
+        const loadVite = async () => {
+          try {
+            const res = await fetch('/dist/.vite/manifest.json', { cache: 'no-store' });
+            if (res.ok) {
+              const manifest = await res.json();
+              const entry = manifest['js/app.js'];
+              if (entry) {
+                if (entry.css) entry.css.forEach(css => {
+                  const link = document.createElement('link');
+                  link.rel = 'stylesheet';
+                  link.href = '/dist/' + css;
+                  document.head.appendChild(link);
+                });
+                const s = document.createElement('script');
+                s.type = 'module';
+                s.src = '/dist/' + entry.file;
+                document.head.appendChild(s);
+                return;
+              }
+            }
+            throw new Error('No manifest entry');
+          } catch (e) {
+            const s1 = document.createElement('script');
+            s1.type = 'module';
+            s1.src = '/@vite/client';
+            document.head.appendChild(s1);
+            const s2 = document.createElement('script');
+            s2.type = 'module';
+            s2.src = '/js/app.js';
+            document.head.appendChild(s2);
+          }
+        };
+        loadVite();
+      })();
+    </script>
 </head>
 <body class="room-bg-landing">
     <header class="site-header universal-page-header" role="banner">

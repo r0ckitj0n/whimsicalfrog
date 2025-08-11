@@ -72,84 +72,9 @@ if (!isset($isLoggedIn) || !$isLoggedIn) {
     </div>
 </section>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const accountSettingsForm = document.getElementById('accountSettingsForm');
-    const errorMessage = document.getElementById('accountErrorMessage');
-    const successMessage = document.getElementById('accountSuccessMessage');
-    
-    accountSettingsForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        // Hide any previous messages
-        errorMessage.classList.add('hidden');
-        successMessage.classList.add('hidden');
-        
-        // Get form data
-        const formData = {
-            userId: <?php echo json_encode($userData['userId'] ?? ''); ?>,
-            email: document.getElementById('email').value,
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            currentPassword: document.getElementById('currentPassword').value,
-            newPassword: document.getElementById('newPassword').value
-        };
-        
-        try {
-            // Use direct SQL query through functions/functions/process_account_update.php instead of API endpoint
-            const response = await fetch('/functions/process_account_update.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to update account');
-            }
-            
-            // Show success message
-            successMessage.classList.remove('hidden');
-            
-            // Clear password fields
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newPassword').value = '';
-            
-            // Update session data
-            if (data.userData) {
-                // Update session storage
-                const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}');
-                const updatedUser = {
-                    ...currentUser,
-                    email: data.userData.email,
-                    firstName: data.userData.firstName,
-                    lastName: data.userData.lastName
-                };
-                sessionStorage.setItem('user', JSON.stringify(updatedUser));
-                
-                // Update PHP session
-                await fetch('/set_session.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(updatedUser)
-                });
-                
-                // Refresh page after a short delay to show updated info
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-            }
-        } catch (error) {
-            // Show error message
-            errorMessage.textContent = error.message;
-            errorMessage.classList.remove('hidden');
-        }
-    });
-});
+<!-- Page Data for account settings module -->
+<script type="application/json" id="account-settings-data">
+<?= json_encode([
+    'userId' => $userData['userId'] ?? null,
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
 </script>

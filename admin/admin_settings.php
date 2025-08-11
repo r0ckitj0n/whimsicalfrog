@@ -1617,7 +1617,7 @@ function showExportTools() {
             </label>
         </div>
         <div class="">
-            <button onclick="performExport()" class="bg-pink-600 hover:bg-pink-700 text-white rounded text-sm">
+            <button data-action="perform-export" class="bg-pink-600 hover:bg-pink-700 text-white rounded text-sm">
                 Export Selected Tables
             </button>
         </div>
@@ -1733,7 +1733,7 @@ function showMaintenanceNotification(title, message, type = 'info', confirmCallb
                         <h3 class="text-lg font-bold text-gray-900">${title}</h3>
                     </div>
                     ${!isConfirm ? `
-                        <button onclick="this.closest('.admin-modal-overlay').remove()" class="text-gray-400 hover:text-gray-600">
+                        <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
@@ -1749,16 +1749,16 @@ function showMaintenanceNotification(title, message, type = 'info', confirmCallb
                 <!-- Footer -->
                 <div class="flex justify-end space-x-3">
                     ${isConfirm ? `
-                        <button onclick="this.closest('.admin-modal-overlay').remove(); ${cancelCallback ? `(${cancelCallback})()` : ''}" 
+                        <button data-action="modal-cancel" ${cancelCallback ? `data-callback=\"${cancelCallback}\"` : ''} 
                                 class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium transition-colors">
                             Cancel
                         </button>
-                        <button onclick="this.closest('.admin-modal-overlay').remove(); (${confirmCallback})()" 
+                        <button data-action="modal-confirm" data-callback="${confirmCallback}" 
                                 class="bg-${config.color}-600 hover:bg-${config.color}-700 text-white rounded-md font-medium transition-colors">
                             Continue
                         </button>
                     ` : `
-                        <button onclick="this.closest('.admin-modal-overlay').remove()" 
+                        <button data-action="close-admin-modal" 
                                 class="bg-${config.color}-600 hover:bg-${config.color}-700 text-white rounded-md font-medium transition-colors">
                             Close
                         </button>
@@ -1854,11 +1854,11 @@ async function showMaintenanceConfirm(title, message, type = 'warning') {
                         ${message}
                     </div>
                     <div class="flex justify-end space-x-3">
-                        <button onclick="this.closest('.admin-modal-overlay').remove(); window.maintenanceConfirmResolve(false)" 
+                        <button data-action="maintenance-cancel"
                                 class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium transition-colors">
                             Cancel
                         </button>
-                        <button onclick="this.closest('.admin-modal-overlay').remove(); window.maintenanceConfirmResolve(true)" 
+                        <button data-action="maintenance-continue"
                                 class="bg-${config.color}-600 hover:bg-${config.color}-700 text-white rounded-md font-medium transition-colors">
                             Continue
                         </button>
@@ -1896,7 +1896,7 @@ function showImportTools() {
                     <div class="text-xs text-gray-600">
                         Upload a .sql file containing INSERT, UPDATE, or other data modification statements.
                     </div>
-                    <button onclick="importSQLFile()" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                    <button data-action="import-sql" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
                         Import SQL File
                     </button>
                 </div>
@@ -1940,7 +1940,7 @@ function showImportTools() {
                         CSV should have columns matching the target table structure. Data will be inserted as new records unless "Replace existing data" is checked.
                     </div>
                     
-                    <button onclick="importCSVFile()" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                    <button data-action="import-csv" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
                         Import CSV Data
                     </button>
                 </div>
@@ -1973,7 +1973,7 @@ function showImportTools() {
                         JSON should contain an array of objects with keys matching table column names.
                     </div>
                     
-                    <button onclick="importJSONFile()" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                    <button data-action="import-json" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
                         Import JSON Data
                     </button>
                 </div>
@@ -1999,7 +1999,7 @@ async function importSQLFile() {
     }
     
     // Show loading state
-    const button = document.querySelector('button[onclick="importSQLFile()"]');
+    const button = document.querySelector('button[data-action="import-sql"]');
     const originalText = button.textContent;
     button.disabled = true;
     button.textContent = 'Importing...';
@@ -2075,7 +2075,7 @@ async function importCSVFile() {
     }
     
     // Show loading state
-    const button = document.querySelector('button[onclick="importCSVFile()"]');
+    const button = document.querySelector('button[data-action="import-csv"]');
     const originalText = button.textContent;
     button.disabled = true;
     button.textContent = 'Importing...';
@@ -2153,7 +2153,7 @@ async function importJSONFile() {
     }
     
     // Show loading state
-    const button = document.querySelector('button[onclick="importJSONFile()"]');
+    const button = document.querySelector('button[data-action="import-json"]');
     const originalText = button.textContent;
     button.disabled = true;
     button.textContent = 'Importing...';
@@ -2941,19 +2941,19 @@ async function loadRoomHistory() {
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="restoreMap(${map.id}, '${map.map_name}', false)" 
+                        <button data-action="map-restore" data-map-id="${map.id}" data-map-name="${encodeURIComponent(map.map_name)}" data-apply="false"
                                 class="bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">
                             Restore as New
                         </button>
-                        <button onclick="restoreMap(${map.id}, '${map.map_name}', true)" 
+                        <button data-action="map-restore" data-map-id="${map.id}" data-map-name="${encodeURIComponent(map.map_name)}" data-apply="true"
                                 class="bg-purple-500 hover:bg-purple-600 text-white text-xs rounded">
                             Restore & Apply
                         </button>
-                        <button onclick="previewHistoricalMap(${map.id}, '${map.map_name}')" 
+                        <button data-action="map-preview" data-map-id="${map.id}" data-map-name="${encodeURIComponent(map.map_name)}"
                                 class="bg-gray-500 hover:bg-gray-600 text-white text-xs rounded">
                             Preview
                         </button>
-                        ${!map.is_active && map.map_name !== 'Original' ? `<button onclick="deleteHistoricalMap(${map.id}, '${map.map_name}')" 
+                        ${!map.is_active && map.map_name !== 'Original' ? `<button data-action="map-delete" data-map-id="${map.id}" data-map-name="${encodeURIComponent(map.map_name)}"
                                 class="bg-red-500 hover:bg-red-600 text-white text-xs rounded">
                             Delete
                         </button>` : ''}
@@ -3157,12 +3157,16 @@ window.onclick = function(event) {
 }
 
 // Room-Category Manager Functions
-function openRoomCategoryManagerModal() {
+function openRoomCategoryManagerModal(roomNumber = null) {
     const modal = document.getElementById('roomCategoryManagerModal');
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
     loadAvailableCategories();
     loadRoomCategorySummary();
+    if (roomNumber !== null) {
+        const sel = document.getElementById('roomCategorySelect');
+        if (sel) { sel.value = String(roomNumber); }
+    }
     loadRoomCategories();
     
     // Add event listener for room selection change
@@ -3281,8 +3285,8 @@ async function loadRoomCategories() {
                         ${assignment.category_description ? `<div class="text-xs text-gray-400">${assignment.category_description}</div>` : ''}
                     </div>
                     <div class="flex space-x-2">
-                        ${!assignment.is_primary ? `<button onclick="setPrimaryCategory(${roomNumber}, ${assignment.category_id})" class="text-orange-600 hover:text-orange-800 text-sm">Make Primary</button>` : ''}
-                        <button onclick="removeRoomCategory(${assignment.id})" class="text-red-600 hover:text-red-800 text-sm">Remove</button>
+                        ${!assignment.is_primary ? `<button data-action="set-primary-category" data-room="${roomNumber}" data-category-id="${assignment.category_id}" class="text-orange-600 hover:text-orange-800 text-sm">Make Primary</button>` : ''}
+                        <button data-action="remove-room-category" data-assignment-id="${assignment.id}" class="text-red-600 hover:text-red-800 text-sm">Remove</button>
                     </div>
                 `;
                 
@@ -3381,9 +3385,9 @@ async function setPrimaryCategory(roomNumber, categoryId) {
 }
 
 async function removeRoomCategory(assignmentId) {
-    // Get the category name from the button's parent element
-    const button = event.target;
-    const assignmentDiv = button.closest('.bg-white');
+    // Try to find the clicked button by assignment id
+    const button = document.querySelector(`[data-action="remove-room-category"][data-assignment-id="${assignmentId}"]`) || null;
+    const assignmentDiv = button ? button.closest('.bg-white') : null;
     const categoryNameElement = assignmentDiv ? assignmentDiv.querySelector('.font-medium') : null;
     const categoryName = categoryNameElement ? categoryNameElement.textContent.trim() : 'this category';
     
@@ -3470,7 +3474,7 @@ function displayRoomCategoryCards(summary) {
         const roomName = roomNames[roomNum];
         
         cardsHTML += `
-            <div class="bg-white border-2 border-teal-200 rounded-lg hover:shadow-lg transition-shadow cursor-pointer" onclick="openRoomCategoryManagerModal(${roomNum})">
+            <div class="bg-white border-2 border-teal-200 rounded-lg hover:shadow-lg transition-shadow cursor-pointer" data-action="open-room-category-manager" data-room="${roomNum}">
                 <div class="flex items-center justify-between">
                     <h4 class="font-bold text-gray-800">Room ${roomNum}</h4>
                     <span class="text-xs bg-teal-100 text-teal-800 rounded-full">${roomData ? roomData.total_categories : 0} categories</span>
@@ -3953,11 +3957,11 @@ async function removeAreaMapping(mappingId) {
 </script>
 
 <!-- Room-Category Manager Modal -->
-<div id="roomCategoryManagerModal" class="admin-modal-overlay hidden" onclick="closeRoomCategoryManagerModal()">
+<div id="roomCategoryManagerModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠📦 Room-Category Assignments</h2>
-            <button onclick="closeRoomCategoryManagerModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
         <div class="">
@@ -3990,7 +3994,7 @@ async function removeAreaMapping(mappingId) {
                                 <input type="checkbox" id="isPrimaryCategory" class="">
                                 <label for="isPrimaryCategory" class="text-sm text-gray-700">Set as primary category for this room</label>
                             </div>
-                            <button onclick="addRoomCategory()" class="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors flex items-center text-left">
+                            <button data-action="add-room-category" class="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors flex items-center text-left">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
@@ -4033,11 +4037,11 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- Background Manager Modal -->
-<div id="backgroundManagerModal" class="admin-modal-overlay hidden" onclick="closeBackgroundManagerModal()">
+<div id="backgroundManagerModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🖼️ Background Manager</h2>
-            <button onclick="closeBackgroundManagerModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
         <div class="">
@@ -4065,7 +4069,7 @@ async function removeAreaMapping(mappingId) {
                                 <input type="file" id="backgroundFile" accept="image/*" class="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                                 <p class="text-xs text-gray-500">Supported: JPG, PNG, WebP (Max 10MB)</p>
                             </div>
-                            <button onclick="uploadBackground()" class="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors flex items-center text-left">
+                            <button data-action="upload-background" class="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors flex items-center text-left">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                 </svg>
@@ -4116,12 +4120,12 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- AI Settings Modal -->
-<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 sm:p-4 hidden" onclick="closeAISettingsModal()">
+<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 sm:p-4 hidden" data-action="overlay-close">
     <div class="bg-white shadow-xl rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
         <!-- Fixed Header -->
         <div class="flex justify-between items-center border-b bg-white rounded-t-lg flex-shrink-0">
             <h2 class="text-xl font-bold text-gray-800">🤖 AI Settings</h2>
-            <button onclick="closeAISettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button data-action="ai-close-settings" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
         <!-- Scrollable Content -->
@@ -4148,13 +4152,13 @@ async function removeAreaMapping(mappingId) {
             
             <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <button onclick="testAIProvider()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center text-sm">
+                <button data-action="ai-test-provider" class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     Test Provider
                 </button>
-                <button onclick="saveAISettings()" class="bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors flex-1 flex items-center justify-center text-sm">
+                <button data-action="ai-save-settings" class="bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors flex-1 flex items-center justify-center text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
                     </svg>
@@ -4165,7 +4169,7 @@ async function removeAreaMapping(mappingId) {
     </div>
 </div> 
 
-<script>
+<!--
 // AI Settings Modal Functions
 let aiSettingsData = {};
 
@@ -4213,7 +4217,7 @@ function displayAISettings(settings) {
             
             <!-- AI Provider Selection -->
             <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border">
-                <div class="cursor-pointer" onclick="toggleSection('ai-provider-selection')">
+                <div class="cursor-pointer" data-action="ai-toggle-section" data-section="ai-provider-selection">
                     <h4 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
                         <span>🤖 AI Provider Selection</span>
                         <span id="ai-provider-selection-icon" class="text-gray-500 transition-transform duration-200">▼</span>
@@ -4222,35 +4226,35 @@ function displayAISettings(settings) {
                 <div id="ai-provider-selection-content" class="hidden">
                 <div class="space-y-2">
                     <label class="flex items-center space-x-3">
-                        <input type="radio" name="ai_provider" value="jons_ai" ${settings.ai_provider === 'jons_ai' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <input type="radio" name="ai_provider" value="jons_ai" ${settings.ai_provider === 'jons_ai' ? 'checked' : ''} class="text-purple-600">
                         <div>
                             <span class="font-medium">Jon's AI (Algorithm-based)</span>
                             <p class="text-sm text-gray-600">Fast, reliable, cost-free algorithm-based AI</p>
                         </div>
                     </label>
                     <label class="flex items-center space-x-3">
-                        <input type="radio" name="ai_provider" value="openai" ${settings.ai_provider === 'openai' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <input type="radio" name="ai_provider" value="openai" ${settings.ai_provider === 'openai' ? 'checked' : ''} class="text-purple-600">
                         <div>
                             <span class="font-medium">OpenAI (ChatGPT)</span>
                             <p class="text-sm text-gray-600">Advanced language model - requires API key</p>
                         </div>
                     </label>
                     <label class="flex items-center space-x-3">
-                        <input type="radio" name="ai_provider" value="anthropic" ${settings.ai_provider === 'anthropic' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <input type="radio" name="ai_provider" value="anthropic" ${settings.ai_provider === 'anthropic' ? 'checked' : ''} class="text-purple-600">
                         <div>
                             <span class="font-medium">Anthropic (Claude)</span>
                             <p class="text-sm text-gray-600">Helpful, harmless AI assistant - requires API key</p>
                         </div>
                     </label>
                     <label class="flex items-center space-x-3">
-                        <input type="radio" name="ai_provider" value="google" ${settings.ai_provider === 'google' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <input type="radio" name="ai_provider" value="google" ${settings.ai_provider === 'google' ? 'checked' : ''} class="text-purple-600">
                         <div>
                             <span class="font-medium">Google AI (Gemini)</span>
                             <p class="text-sm text-gray-600">Google's multimodal AI model - requires API key</p>
                         </div>
                     </label>
                     <label class="flex items-center space-x-3">
-                        <input type="radio" name="ai_provider" value="meta" ${settings.ai_provider === 'meta' ? 'checked' : ''} class="text-purple-600" onchange="toggleProviderSections()">
+                        <input type="radio" name="ai_provider" value="meta" ${settings.ai_provider === 'meta' ? 'checked' : ''} class="text-purple-600">
                         <div>
                             <span class="font-medium">Meta AI (Llama)</span>
                             <p class="text-sm text-gray-600">Open-source models via OpenRouter - requires API key</p>
@@ -4276,7 +4280,7 @@ function displayAISettings(settings) {
                         <select id="openai_model" class="w-full border border-gray-300 rounded-lg text-sm">
                             <option value="">Loading models...</option>
                         </select>
-                        <button onclick="refreshModels('openai')" class="text-xs text-blue-600 hover:underline">🔄 Refresh Models</button>
+                        <button data-action="ai-refresh-models" data-provider="openai" class="text-xs text-blue-600 hover:underline">🔄 Refresh Models</button>
                     </div>
                 </div>
             </div>
@@ -4297,7 +4301,7 @@ function displayAISettings(settings) {
                         <select id="anthropic_model" class="w-full border border-gray-300 rounded-lg text-sm">
                             <option value="">Loading models...</option>
                         </select>
-                        <button onclick="refreshModels('anthropic')" class="text-xs text-blue-600 hover:underline">🔄 Refresh Models</button>
+                        <button data-action="ai-refresh-models" data-provider="anthropic" class="text-xs text-blue-600 hover:underline">🔄 Refresh Models</button>
                     </div>
                 </div>
             </div>
@@ -4318,7 +4322,7 @@ function displayAISettings(settings) {
                         <select id="google_model" class="w-full border border-gray-300 rounded-lg text-sm">
                             <option value="">Loading models...</option>
                         </select>
-                        <button onclick="refreshModels('google')" class="text-xs text-blue-600 hover:underline">🔄 Refresh Models</button>
+                        <button data-action="ai-refresh-models" data-provider="google" class="text-xs text-blue-600 hover:underline">🔄 Refresh Models</button>
                     </div>
                 </div>
             </div>
@@ -4339,14 +4343,14 @@ function displayAISettings(settings) {
                         <select id="meta_model" class="w-full border border-gray-300 rounded-lg text-sm">
                             <option value="">Loading models...</option>
                         </select>
-                        <button onclick="refreshModels('meta')" class="text-xs text-blue-600 hover:underline">🔄 Refresh Models</button>
+                        <button data-action="ai-refresh-models" data-provider="meta" class="text-xs text-blue-600 hover:underline">🔄 Refresh Models</button>
                     </div>
                 </div>
             </div>
             
             <!-- AI Parameters -->
             <div class="bg-green-50 rounded-lg border border-green-200">
-                <div class="cursor-pointer" onclick="toggleSection('ai-parameters')">
+                <div class="cursor-pointer" data-action="ai-toggle-section" data-section="ai-parameters">
                     <h4 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
                         <span>⚙️ AI Parameters</span>
                         <span id="ai-parameters-icon" class="text-gray-500 transition-transform duration-200">▼</span>
@@ -4358,7 +4362,7 @@ function displayAISettings(settings) {
                         <label class="block text-sm font-medium text-gray-700">Temperature (Creativity)</label>
                         <div class="flex items-center space-x-2">
                             <input type="range" id="ai_temperature" min="0.1" max="1.0" step="0.1" value="${settings.ai_temperature || 0.7}" 
-                                   class="flex-1" oninput="document.getElementById('temp_value').textContent = this.value">
+                                   class="flex-1" data-value-target="temp_value">
                             <span id="temp_value" class="text-sm font-mono w-8">${settings.ai_temperature || 0.7}</span>
                         </div>
                         <p class="text-xs text-gray-500">Lower = more consistent, Higher = more creative</p>
@@ -4388,7 +4392,7 @@ function displayAISettings(settings) {
             
             <!-- Advanced AI Temperature & Configuration -->
             <div class="bg-purple-50 rounded-lg border border-purple-200">
-                <div class="cursor-pointer" onclick="toggleSection('advanced-ai-config')">
+                <div class="cursor-pointer" data-action="ai-toggle-section" data-section="advanced-ai-config">
                     <h4 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
                         <span>🎯 Advanced AI Configuration</span>
                         <span id="advanced-ai-config-icon" class="text-gray-500 transition-transform duration-200">▼</span>
@@ -4404,7 +4408,7 @@ function displayAISettings(settings) {
                                 <label class="block text-sm font-medium text-gray-700">Cost Temperature</label>
                                 <div class="flex items-center space-x-2">
                                     <input type="range" id="ai_cost_temperature" min="0.1" max="1.0" step="0.1" value="${settings.ai_cost_temperature || 0.7}" 
-                                           class="flex-1" oninput="document.getElementById('cost_temp_value').textContent = this.value">
+                                           class="flex-1" data-value-target="cost_temp_value">
                                     <span id="cost_temp_value" class="text-sm font-mono w-8">${settings.ai_cost_temperature || 0.7}</span>
                                 </div>
                                 <p class="text-xs text-gray-500">Controls AI creativity for cost suggestions</p>
@@ -4413,7 +4417,7 @@ function displayAISettings(settings) {
                                 <label class="block text-sm font-medium text-gray-700">Price Temperature</label>
                                 <div class="flex items-center space-x-2">
                                     <input type="range" id="ai_price_temperature" min="0.1" max="1.0" step="0.1" value="${settings.ai_price_temperature || 0.7}" 
-                                           class="flex-1" oninput="document.getElementById('price_temp_value').textContent = this.value">
+                                           class="flex-1" data-value-target="price_temp_value">
                                     <span id="price_temp_value" class="text-sm font-mono w-8">${settings.ai_price_temperature || 0.7}</span>
                                 </div>
                                 <p class="text-xs text-gray-500">Controls AI creativity for price suggestions</p>
@@ -4429,7 +4433,7 @@ function displayAISettings(settings) {
                                 <label class="block text-sm font-medium text-gray-700">Cost Base Multiplier</label>
                                 <div class="flex items-center space-x-2">
                                     <input type="range" id="ai_cost_multiplier_base" min="0.5" max="2.0" step="0.1" value="${settings.ai_cost_multiplier_base || 1.0}" 
-                                           class="flex-1" oninput="document.getElementById('cost_mult_value').textContent = this.value">
+                                           class="flex-1" data-value-target="cost_mult_value">
                                     <span id="cost_mult_value" class="text-sm font-mono w-8">${settings.ai_cost_multiplier_base || 1.0}</span>
                                 </div>
                                 <p class="text-xs text-gray-500">Base multiplier for all cost calculations</p>
@@ -4438,7 +4442,7 @@ function displayAISettings(settings) {
                                 <label class="block text-sm font-medium text-gray-700">Price Base Multiplier</label>
                                 <div class="flex items-center space-x-2">
                                     <input type="range" id="ai_price_multiplier_base" min="0.5" max="2.0" step="0.1" value="${settings.ai_price_multiplier_base || 1.0}" 
-                                           class="flex-1" oninput="document.getElementById('price_mult_value').textContent = this.value">
+                                           class="flex-1" data-value-target="price_mult_value">
                                     <span id="price_mult_value" class="text-sm font-mono w-8">${settings.ai_price_multiplier_base || 1.0}</span>
                                 </div>
                                 <p class="text-xs text-gray-500">Base multiplier for all price calculations</p>
@@ -4454,7 +4458,7 @@ function displayAISettings(settings) {
                                 <label class="block text-sm font-medium text-gray-700">Market Research Weight</label>
                                 <div class="flex items-center space-x-2">
                                     <input type="range" id="ai_market_research_weight" min="0.0" max="1.0" step="0.1" value="${settings.ai_market_research_weight || 0.3}" 
-                                           class="flex-1" oninput="document.getElementById('market_weight_value').textContent = this.value">
+                                           class="flex-1" data-value-target="market_weight_value">
                                     <span id="market_weight_value" class="text-sm font-mono w-8">${settings.ai_market_research_weight || 0.3}</span>
                                 </div>
                                 <p class="text-xs text-gray-500">Weight given to market research</p>
@@ -4463,7 +4467,7 @@ function displayAISettings(settings) {
                                 <label class="block text-sm font-medium text-gray-700">Cost-Plus Weight</label>
                                 <div class="flex items-center space-x-2">
                                     <input type="range" id="ai_cost_plus_weight" min="0.0" max="1.0" step="0.1" value="${settings.ai_cost_plus_weight || 0.4}" 
-                                           class="flex-1" oninput="document.getElementById('cost_plus_weight_value').textContent = this.value">
+                                           class="flex-1" data-value-target="cost_plus_weight_value">
                                     <span id="cost_plus_weight_value" class="text-sm font-mono w-8">${settings.ai_cost_plus_weight || 0.4}</span>
                                 </div>
                                 <p class="text-xs text-gray-500">Weight given to cost-plus pricing</p>
@@ -4472,7 +4476,7 @@ function displayAISettings(settings) {
                                 <label class="block text-sm font-medium text-gray-700">Value-Based Weight</label>
                                 <div class="flex items-center space-x-2">
                                     <input type="range" id="ai_value_based_weight" min="0.0" max="1.0" step="0.1" value="${settings.ai_value_based_weight || 0.3}" 
-                                           class="flex-1" oninput="document.getElementById('value_weight_value').textContent = this.value">
+                                           class="flex-1" data-value-target="value_weight_value">
                                     <span id="value_weight_value" class="text-sm font-mono w-8">${settings.ai_value_based_weight || 0.3}</span>
                                 </div>
                                 <p class="text-xs text-gray-500">Weight given to value-based pricing</p>
@@ -4496,7 +4500,7 @@ function displayAISettings(settings) {
             
             <!-- Content Preferences -->
             <div class="bg-orange-50 rounded-lg border border-orange-200">
-                <div class="cursor-pointer" onclick="toggleSection('content-preferences')">
+                <div class="cursor-pointer" data-action="ai-toggle-section" data-section="content-preferences">
                     <h4 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
                         <span>📝 Content Preferences</span>
                         <span id="content-preferences-icon" class="text-gray-500 transition-transform duration-200">▼</span>
@@ -4510,7 +4514,7 @@ function displayAISettings(settings) {
                             <option value="">Select brand voice...</option>
                         </select>
                         <p class="text-xs text-gray-500">Default brand voice for content generation</p>
-                        <button type="button" onclick="manageBrandVoiceOptions()" class="text-xs text-blue-600 hover:text-blue-800">
+                        <button type="button" data-action="ai-manage-brand-voice" class="text-xs text-blue-600 hover:text-blue-800">
                             Manage Options
                         </button>
                     </div>
@@ -4520,7 +4524,7 @@ function displayAISettings(settings) {
                             <option value="">Select content tone...</option>
                         </select>
                         <p class="text-xs text-gray-500">Default tone for generated content</p>
-                        <button type="button" onclick="manageContentToneOptions()" class="text-xs text-blue-600 hover:text-blue-800">
+                        <button type="button" data-action="ai-manage-content-tone" class="text-xs text-blue-600 hover:text-blue-800">
                             Manage Options
                         </button>
                     </div>
@@ -4612,12 +4616,12 @@ function createAISettingField(setting) {
                         <input type="number" id="setting_${setting.setting_key}" value="${setting.setting_value}" 
                                min="${min}" max="${max}" step="${step}"
                                class="w-16 border border-gray-300 rounded text-center text-sm"
-                               oninput="document.getElementById('range_${setting.setting_key}').value = this.value">
+                               data-target-id="range_${setting.setting_key}">
                     </div>
                     <input type="range" id="range_${setting.setting_key}" value="${setting.setting_value}" 
                            min="${min}" max="${max}" step="${step}"
                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                           oninput="document.getElementById('setting_${setting.setting_key}').value = this.value">
+                           data-target-id="setting_${setting.setting_key}">
                 </div>
             `;
             break;
@@ -5180,18 +5184,18 @@ function manageContentToneOptions() {
 
 function showContentToneModal() {
     const modalHtml = `
-        <div id="contentToneModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeContentToneModal()">
+        <div id="contentToneModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-action="overlay-close">
             <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div class="flex justify-between items-center border-b">
                     <h3 class="text-lg font-semibold text-gray-800">Manage Content Tone Options</h3>
-                    <button onclick="closeContentToneModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+                    <button data-action="content-tone-close" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
                 </div>
                 
                 <div class="flex-1 overflow-y-auto">
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
                             <p class="text-sm text-gray-600">Manage the content tone options available for AI content generation.</p>
-                            <button onclick="addContentToneOption()" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
+                            <button data-action="content-tone-add" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
                                 Add Option
                             </button>
                         </div>
@@ -5203,8 +5207,8 @@ function showContentToneModal() {
                 </div>
                 
                 <div class="border-t flex justify-end space-x-2">
-                    <button onclick="closeContentToneModal()" class="text-gray-600 hover:text-gray-800">Cancel</button>
-                    <button onclick="saveContentToneOptions()" class="btn btn-primary">Save Changes</button>
+                    <button data-action="content-tone-close" class="text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button data-action="content-tone-save" class="btn btn-primary">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -5240,13 +5244,13 @@ function displayContentToneOptions() {
         const optionHtml = `
             <div class="flex items-center space-x-3 bg-gray-50 rounded-lg">
                 <input type="text" value="${option.name}" 
-                       onchange="updateContentToneOption(${index}, 'name', this.value)"
+                       data-action="content-tone-change" data-index="${index}" data-field="name"
                        class="flex-1 border border-gray-300 rounded text-sm">
                 <input type="text" value="${option.description || ''}" 
-                       onchange="updateContentToneOption(${index}, 'description', this.value)"
+                       data-action="content-tone-change" data-index="${index}" data-field="description"
                        placeholder="Description (optional)"
                        class="flex-1 border border-gray-300 rounded text-sm">
-                <button onclick="removeContentToneOption(${index})" 
+                <button data-action="content-tone-remove" data-index="${index}"
                         class="text-red-500 hover:text-red-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -5440,18 +5444,18 @@ function manageBrandVoiceOptions() {
 
 function showBrandVoiceModal() {
     const modalHtml = `
-        <div id="brandVoiceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeBrandVoiceModal()">
+        <div id="brandVoiceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-action="overlay-close">
             <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div class="flex justify-between items-center border-b">
                     <h3 class="text-lg font-semibold text-gray-800">Manage Brand Voice Options</h3>
-                    <button onclick="closeBrandVoiceModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+                    <button data-action="brand-voice-close" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
                 </div>
                 
                 <div class="flex-1 overflow-y-auto">
                     <div class="space-y-4">
                         <div class="flex justify-between items-center">
                             <p class="text-sm text-gray-600">Manage the brand voice options available for AI content generation.</p>
-                            <button onclick="addBrandVoiceOption()" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
+                            <button data-action="brand-voice-add" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
                                 Add Option
                             </button>
                         </div>
@@ -5463,8 +5467,8 @@ function showBrandVoiceModal() {
                 </div>
                 
                 <div class="border-t flex justify-end space-x-2">
-                    <button onclick="closeBrandVoiceModal()" class="text-gray-600 hover:text-gray-800">Cancel</button>
-                    <button onclick="saveBrandVoiceOptions()" class="btn btn-primary">Save Changes</button>
+                    <button data-action="brand-voice-close" class="text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button data-action="brand-voice-save" class="btn btn-primary">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -5500,13 +5504,13 @@ function displayBrandVoiceOptions() {
         const optionHtml = `
             <div class="flex items-center space-x-3 bg-gray-50 rounded-lg">
                 <input type="text" value="${option.name}" 
-                       onchange="updateBrandVoiceOption(${index}, 'name', this.value)"
+                       data-action="brand-voice-change" data-index="${index}" data-field="name"
                        class="flex-1 border border-gray-300 rounded text-sm">
                 <input type="text" value="${option.description || ''}" 
-                       onchange="updateBrandVoiceOption(${index}, 'description', this.value)"
+                       data-action="brand-voice-change" data-index="${index}" data-field="description"
                        placeholder="Description (optional)"
                        class="flex-1 border border-gray-300 rounded text-sm">
-                <button onclick="removeBrandVoiceOption(${index})" 
+                <button data-action="brand-voice-remove" data-index="${index}"
                         class="text-red-500 hover:text-red-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -5603,7 +5607,7 @@ async function deleteBrandVoiceOptionFromDB(optionId) {
     }
 }
 
-</script>
+-->
 
 <script>
 // Background Manager Functions
@@ -5741,10 +5745,10 @@ async function loadBackgroundsForRoom(roomType) {
                 
                 // Build action buttons
                 const applyButton = !bg.is_active ? 
-                    `<button onclick="applyBackground('${roomType}', ${bg.id})" class="btn btn-primary btn-sm">Apply</button>` : '';
+                    `<button data-action="apply-background" data-room="${roomType}" data-background-id="${bg.id}" class="btn btn-primary btn-sm">Apply</button>` : '';
                 
                 const deleteButton = bg.background_name !== 'Original' ? 
-                    `<button onclick="deleteBackground(${bg.id}, '${bg.background_name}')" class="bg-red-500 hover:bg-red-600 text-white text-xs rounded">Delete</button>` : '';
+                    `<button data-action="delete-background" data-background-id="${bg.id}" data-background-name="${bg.background_name}" class="bg-red-500 hover:bg-red-600 text-white text-xs rounded">Delete</button>` : '';
                 
                 const createdDate = bg.created_at ? 
                     `<p class="text-xs text-gray-400">${new Date(bg.created_at).toLocaleDateString()}</p>` : '';
@@ -5765,7 +5769,7 @@ async function loadBackgroundsForRoom(roomType) {
                     </div>
                     <div class="flex space-x-2">
                         ${applyButton}
-                        <button onclick="previewBackground('${imageUrl}', '${bg.background_name}')" class="bg-gray-500 hover:bg-gray-600 text-white text-xs rounded">Preview</button>
+                        <button data-action="preview-background" data-image-url="${imageUrl}" data-background-name="${bg.background_name}" class="bg-gray-500 hover:bg-gray-600 text-white text-xs rounded">Preview</button>
                         ${deleteButton}
                     </div>
                 `;
@@ -5854,7 +5858,7 @@ function previewBackground(imageUrl, backgroundName) {
         <div class="bg-white rounded-lg max-w-4xl max-h-full overflow-auto">
             <div class="flex justify-between items-center">
                 <h3 class="text-lg font-bold">Preview: ${backgroundName}</h3>
-                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                <button data-action="close-preview" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
             <img src="${imageUrl}" alt="${backgroundName}" class="max-h-96 object-contain">
         </div>
@@ -6524,13 +6528,13 @@ function displayEmailHistory(emails, pagination) {
                 </td>
                 <td class="border border-gray-300 text-sm">
                     <div class="flex space-x-2">
-                        <button onclick="viewEmailDetails(${email.id})" class="bg-blue-500 text-white rounded text-xs hover:bg-blue-600" title="View Details">
+                        <button data-action="email-view" data-email-id="${email.id}" class="bg-blue-500 text-white rounded text-xs hover:bg-blue-600" title="View Details">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </button>
-                        <button onclick="editAndResendEmail(${email.id})" class="btn btn-primary btn-sm" title="Edit & Resend">
+                        <button data-action="email-edit-resend" data-email-id="${email.id}" class="btn btn-primary btn-sm" title="Edit & Resend">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                             </svg>
@@ -7262,7 +7266,7 @@ function showRoomSettingsSuccess(message) {
         <div class="bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
             <div class="flex justify-between items-start">
                 <span class="text-sm">${message}</span>
-                <button onclick="this.parentElement.parentElement.remove()" class="text-green-500 hover:text-green-700">&times;</button>
+                <button data-action="dismiss-notification" class="text-green-500 hover:text-green-700">&times;</button>
             </div>
         </div>
     `;
@@ -7276,12 +7280,12 @@ function showRoomSettingsSuccess(message) {
 </script>
 
 <!-- Email History Modal -->
-<div id="emailHistoryModal" class="admin-modal-overlay hidden"  onclick="closeEmailHistoryModal()">
+<div id="emailHistoryModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="">
             <div class="flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Email History</h3>
-                <button onclick="closeEmailHistoryModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <button data-action="email-history-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             
             <!-- Filter Controls -->
@@ -7314,7 +7318,7 @@ function showRoomSettingsSuccess(message) {
                         </select>
                     </div>
                     <div class="flex items-end">
-                        <button onclick="loadEmailHistory()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium">
+                        <button data-action="email-history-filter" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium">
                             Filter
                         </button>
                     </div>
@@ -7355,10 +7359,10 @@ function showRoomSettingsSuccess(message) {
                     Showing <span id="emailHistoryStart">0</span> to <span id="emailHistoryEnd">0</span> of <span id="emailHistoryTotal">0</span> results
                 </div>
                 <div class="flex space-x-2">
-                    <button onclick="loadEmailHistoryPage('prev')" id="emailHistoryPrevBtn" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" disabled>
+                    <button data-action="email-history-page" data-direction="prev" id="emailHistoryPrevBtn" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" disabled>
                         Previous
                     </button>
-                    <button onclick="loadEmailHistoryPage('next')" id="emailHistoryNextBtn" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" disabled>
+                    <button data-action="email-history-page" data-direction="next" id="emailHistoryNextBtn" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" disabled>
                         Next
                     </button>
                 </div>
@@ -7366,7 +7370,7 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Close Button -->
             <div class="flex justify-end border-t">
-                <button onclick="closeEmailHistoryModal()" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+                <button data-action="email-history-close" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
                     Close
                 </button>
             </div>
@@ -7375,12 +7379,12 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Email Edit/Resend Modal -->
-<div id="emailEditModal" class="admin-modal-overlay hidden" onclick="closeEmailEditModal()">
+<div id="emailEditModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div class="">
             <div class="flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Edit & Resend Email</h3>
-                <button onclick="closeEmailEditModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <button data-action="email-edit-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             
             <form id="emailEditForm" class="space-y-4">
@@ -7415,7 +7419,7 @@ function showRoomSettingsSuccess(message) {
                 </div>
                 
                 <div class="flex justify-end space-x-3 border-t">
-                    <button type="button" onclick="closeEmailEditModal()" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+                    <button type="button" data-action="email-edit-close" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
                         Cancel
                     </button>
                     <button type="submit" class="bg-green-500 text-white rounded-md hover:bg-green-600 font-medium">
@@ -7428,12 +7432,12 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Email Configuration Modal -->
-<div id="emailConfigModal" class="admin-modal-overlay hidden"  onclick="closeEmailConfigModal()">
+<div id="emailConfigModal" class="admin-modal-overlay hidden"  data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="">
             <div class="flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Email Configuration</h3>
-                <button onclick="closeEmailConfigModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <button data-action="email-config-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             
             <form id="emailConfigForm" class="space-y-4">
@@ -7503,7 +7507,7 @@ function showRoomSettingsSuccess(message) {
                     <h4 class="font-semibold text-gray-800">Test Configuration</h4>
                     <div class="flex gap-2">
                         <input type="email" id="testEmailAddress" class="flex-1 border border-gray-300 rounded-md" placeholder="Enter test email address">
-                        <button type="button" onclick="sendTestEmail()" class="bg-green-500 hover:bg-green-600 text-white rounded-md font-medium">
+                        <button type="button" data-action="email-send-test" class="bg-green-500 hover:bg-green-600 text-white rounded-md font-medium">
                             Send Test Email
                         </button>
                     </div>
@@ -7511,7 +7515,7 @@ function showRoomSettingsSuccess(message) {
 
                 <!-- Action Buttons -->
                 <div class="flex justify-end space-x-3 border-t">
-                    <button type="button" onclick="closeEmailConfigModal()" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 flex items-center text-left">
+                    <button type="button" data-action="email-config-close" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 flex items-center text-left">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -11517,18 +11521,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             <!-- Footer -->
             <div class="modal-footer">
-                <button onclick="closeTemplateManagerModal()" class="btn btn-secondary">Close</button>
+                <button data-action="template-manager-close" class="btn btn-secondary">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Email Template Edit Modal -->
-<div id="emailTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeEmailTemplateEditModal()">
+<div id="emailTemplateEditModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Email Template Editor</h2>
-            <button onclick="closeEmailTemplateEditModal()" class="modal-close">&times;</button>
+            <button data-action="email-template-edit-close" class="modal-close">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -11581,18 +11585,18 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         
         <div class="modal-footer">
-            <button type="button" onclick="closeEmailTemplateEditModal()" class="btn btn-secondary">Cancel</button>
-            <button type="button" onclick="saveEmailTemplate()" class="btn btn-primary">Save Template</button>
+            <button type="button" data-action="email-template-edit-close" class="btn btn-secondary">Cancel</button>
+            <button type="button" data-action="email-template-save" class="btn btn-primary">Save Template</button>
         </div>
     </div>
 </div>
 
 <!-- Email Template Preview Modal -->
-<div id="emailTemplatePreviewModal" class="admin-modal-overlay hidden" onclick="closeEmailTemplatePreviewModal()">
+<div id="emailTemplatePreviewModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Email Template Preview</h2>
-            <button onclick="closeEmailTemplatePreviewModal()" class="modal-close">&times;</button>
+            <button data-action="email-template-preview-close" class="modal-close">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -11608,7 +11612,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         
         <div class="modal-footer">
-            <button type="button" onclick="closeEmailTemplatePreviewModal()" class="btn btn-secondary">Close Preview</button>
+            <button type="button" data-action="email-template-preview-close" class="btn btn-secondary">Close Preview</button>
         </div>
     </div>
 </div>

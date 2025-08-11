@@ -64,7 +64,7 @@ function renderDetailedItemModal($item, $images = [])
 
     ?>
     <div id="detailedItemModal" class="detailed-item-modal fixed inset-0 hidden flex items-center justify-center" data-action="closeDetailedModalOnOverlay">
-        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full overflow-hidden relative detailed-item-modal-container" style="max-height: 95vh; margin: auto;">
+        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full overflow-hidden relative detailed-item-modal-container">
             <!- Modal Header ->
             <div class="modal-header">
                 <div>
@@ -87,22 +87,20 @@ function renderDetailedItemModal($item, $images = [])
                                 </div>
                                 
                                 <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                                    <?php if (!empty($images)): ?>
-                                        <img id="detailedMainImage" 
-                                             src="<?php echo htmlspecialchars(getImageUrl($images[0]['image_path'] ?? '', 'items')); ?>" 
-                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
-                                             class="w-full h-full object-contain"
-                                             style="display: block;">
-                                    <?php else: ?>
-                                        <img id="detailedMainImage" 
-                                             src="<?php echo htmlspecialchars(getImageUrl($item['sku'] ?? '', 'items')); ?>" 
-                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
-                                             class="w-full h-full object-contain"
-                                             style="display: block;"
-                                             onerror="this.src='/images/placeholder.png';">
-                                    <?php endif; ?>
-                                </div>
-                            </div>
+                                     <?php if (!empty($images)): ?>
+                                         <img id="detailedMainImage" 
+                                              src="<?php echo htmlspecialchars(getImageUrl($images[0]['image_path'] ?? '', 'items')); ?>" 
+                                              alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
+                                              class="w-full h-full object-contain">
+                                     <?php else: ?>
+                                         <img id="detailedMainImage" 
+                                              src="<?php echo htmlspecialchars(getImageUrl($item['sku'] ?? '', 'items')); ?>" 
+                                              alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
+                                              class="w-full h-full object-contain"
+                                              onerror="this.src='/images/placeholder.png';">
+                                     <?php endif; ?>
+                                 </div>
+                             </div>
                             
                             <!- Thumbnail Gallery ->
                             <?php if (count($images) > 1): ?>

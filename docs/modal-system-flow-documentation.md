@@ -6,10 +6,10 @@ This document provides comprehensive documentation of the room modal system oper
 ## System Architecture
 
 ### Core Components
-1. **RoomModalManager Class** (`/js/modules/room-modal-manager.js`)
+1. **RoomModalManager Class** (`src/modules/room-modal-manager.js`)
 2. **Room Main Page** (`/room_main.php`) 
 3. **Modal CSS** (`/css/main.css` + `/css/modal-responsive.css`)
-4. **WhimsicalFrog Core** (`/js/whimsical-frog-core-unified.js`)
+4. **WhimsicalFrog Core** (`src/js/whimsical-frog-core-unified.js`)
 
 ### Dependencies
 - PHP Backend API for room content loading

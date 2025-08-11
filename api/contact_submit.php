@@ -96,30 +96,36 @@ $businessName = BusinessSettings::getBusinessName();
 $cleanSubject = $subject !== '' ? $subject : 'New contact form submission';
 $adminSubject = '[' . $businessName . '] ' . $cleanSubject;
 
-// Build admin HTML body
+// Build admin HTML body (class-based styles, no inline style attributes)
 $bodyAdmin = "<!DOCTYPE html>
-<html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
-<style>
-  .hdr{background:$brandPrimary;color:#fff;padding:12px 16px;font-family:Arial,sans-serif}
-  .wrap{font-family:Arial,sans-serif;max-width:640px;margin:0 auto;border:1px solid #eee}
-  .sec{padding:16px}
-  .label{color:#555;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
-  .val{margin:4px 0 12px 0}
-  .msg{white-space:pre-wrap;line-height:1.45}
-</style>
-</head><body>
-  <div class='wrap'>
-    <div class='hdr'><strong>$businessName</strong> — New Contact Message</div>
-    <div class='sec'>
-      <div class='label'>From</div>
-      <div class='val'>" . htmlspecialchars($name) . " &lt;" . htmlspecialchars($email) . "&gt;</div>
-      <div class='label'>Subject</div>
-      <div class='val'>" . htmlspecialchars($cleanSubject) . "</div>
-      <div class='label'>Message</div>
-      <div class='msg'>" . nl2br(htmlspecialchars($message)) . "</div>
+<html>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Contact Message - " . htmlspecialchars($businessName) . "</title>
+  <style>
+    body.email-body { margin:0; padding:0; background:#ffffff; color:#333; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; line-height:1.5; }
+    .email-wrapper { max-width:600px; margin:0 auto; padding:16px; }
+    .email-header { background: " . $brandPrimary . "; color:#fff; padding:16px; text-align:center; }
+    .email-title { margin:0; font-size:20px; }
+    .email-section { margin:16px 0; }
+    blockquote { margin:12px 0; padding-left:12px; border-left:3px solid #eee; color:#555; }
+  </style>
+  </head>
+  <body class='email-body'>
+    <div class='email-header'>
+      <h1 class='email-title'>" . htmlspecialchars($businessName) . " — New Contact Message</h1>
     </div>
-  </div>
-</body></html>";
+    <div class='email-wrapper'>
+      <div class='email-section'>
+        <p><strong>From:</strong> " . htmlspecialchars($name) . " &lt;" . htmlspecialchars($email) . "&gt;</p>
+        <p><strong>Subject:</strong> " . htmlspecialchars($cleanSubject) . "</p>
+        <p><strong>Message:</strong></p>
+        <blockquote>" . nl2br(htmlspecialchars($message)) . "</blockquote>
+      </div>
+    </div>
+  </body>
+</html>";
 
 // Send to admin, set reply-to to the user
 try {
@@ -133,11 +139,36 @@ try {
 
 // Optional: send acknowledgement to user (best-effort; do not fail if this fails)
 $userSubject = 'Thanks for contacting ' . $businessName;
-$bodyUser = "<p>Hi " . htmlspecialchars($name) . ",</p>
-<p>Thanks for reaching out! We've received your message and will get back to you soon.</p>
-<p><strong>Your message:</strong></p>
-<blockquote style='border-left:3px solid $brandSecondary;padding-left:10px;margin:10px 0'>" . nl2br(htmlspecialchars($message)) . "</blockquote>
-<p>— $businessName</p>";
+$bodyUser = "<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Thanks for contacting " . htmlspecialchars($businessName) . "</title>
+  <style>
+    body.email-body { margin:0; padding:0; background:#ffffff; color:#333; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; line-height:1.5; }
+    .email-wrapper { max-width:600px; margin:0 auto; padding:16px; }
+    .email-header { background: " . $brandPrimary . "; color:#fff; padding:16px; text-align:center; }
+    .email-title { margin:0; font-size:20px; }
+    .email-section { margin:16px 0; }
+    blockquote { margin:12px 0; padding-left:12px; border-left:3px solid #eee; color:#555; }
+  </style>
+</head>
+<body class='email-body'>
+  <div class='email-header'>
+    <h1 class='email-title'>" . htmlspecialchars($businessName) . "</h1>
+  </div>
+  <div class='email-wrapper'>
+    <div class='email-section'>
+      <p>Hi " . htmlspecialchars($name) . ",</p>
+      <p>Thanks for reaching out! We've received your message and will get back to you soon.</p>
+      <p><strong>Your message:</strong></p>
+      <blockquote>" . nl2br(htmlspecialchars($message)) . "</blockquote>
+      <p>— " . htmlspecialchars($businessName) . "</p>
+    </div>
+  </div>
+</body>
+</html>";
 try {
     EmailHelper::send($email, $userSubject, $bodyUser, [
         'is_html' => true,

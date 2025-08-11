@@ -55,13 +55,12 @@ function renderImageCarousel($itemId, $images = [], $options = [])
     ob_start();
     ?>
     
-    <div class="image-carousel-container carousel-container carousel_container_height <?= $opts['className'] ?>" id="<?= $carouselId ?>">
+    <div class="image-carousel-container carousel-container carousel_container_height <?= $opts['className'] ?>" id="<?= $carouselId ?>" data-autoplay="<?= $opts['autoplay'] ? 'true' : 'false' ?>">
         <!- Main Image Display ->
         <div class="carousel-main-image position_relative height_100 overflow_hidden border_radius_normal bg_f8f9fa">
             <?php foreach ($allImages as $index => $image): ?>
-                <div class="carousel-slide <?= $index === 0 ? 'carousel-image-active' : 'carousel-image-inactive' ?>" 
-                     data-slide="<?= $index ?>"
-                     class="position_absolute top_0 left_0 width_100 height_100 transition_opacity_300">
+                <div class="carousel-slide <?= $index === 0 ? 'carousel-image-active' : 'carousel-image-inactive' ?> position_absolute top_0 left_0 width_100 height_100 transition_opacity_300" 
+                     data-slide="<?= $index ?>">
                     <img src="<?= htmlspecialchars($image['image_path']) ?>" 
                          alt="<?= htmlspecialchars($image['alt_text'] ?: 'Item image') ?>"
                          class="carousel-img width_100 height_100 object_fit_contain bg_white"
@@ -89,11 +88,10 @@ function renderImageCarousel($itemId, $images = [], $options = [])
             <!- Thumbnail Navigation ->
             <div class="carousel-thumbnails display_flex gap_8 margin_top_10 justify_center flex_wrap">
                 <?php foreach ($allImages as $index => $image): ?>
-                    <div class="carousel-thumbnail <?= $index === 0 ? 'carousel-thumbnail-active carousel_border_color_active' : 'carousel_border_color_inactive' ?>" 
+                    <div class="carousel-thumbnail <?= $index === 0 ? 'carousel-thumbnail-active carousel_border_color_active' : 'carousel_border_color_inactive' ?> width_60 height_60 border_2_solid overflow_hidden cursor_pointer transition_border_300 position_relative border_radius_small" 
                          data-slide="<?= $index ?>"
                          data-action="goToSlide"
-                         data-params='{"carouselId":"<?= $carouselId ?>","index":<?= $index ?>}'
-                         class="width_60 height_60 border_2_solid overflow_hidden cursor_pointer transition_border_300 position_relative border_radius_small">
+                         data-params='{"carouselId":"<?= $carouselId ?>","index":<?= $index ?>}'>
                         <img src="<?= htmlspecialchars($image['image_path']) ?>" 
                              alt="Thumbnail <?= $index + 1 ?>"
                              class="carousel-thumbnail-img width_100 height_100 object_fit_cover"
@@ -112,79 +110,15 @@ function renderImageCarousel($itemId, $images = [], $options = [])
             <!- Dot Indicators ->
             <div class="carousel-indicators display_flex gap_8 margin_top_10 justify_center">
                 <?php for ($i = 0; $i < $imageCount; $i++): ?>
-                    <button data-action="goToSlide" data-params='{"carouselId":"<?= $carouselId ?>","index":<?= $i ?>}' class="carousel-indicator <?= $i === 0 ? 'active carousel_indicator_bg_active' : 'carousel_indicator_bg_inactive' ?>" 
-                            data-slide="<?= $i ?>"
-                            class="border_radius_full border_none cursor_pointer transition_all_300 width_12 height_12">
+                    <button data-action="goToSlide" data-params='{"carouselId":"<?= $carouselId ?>","index":<?= $i ?>}' class="carousel-indicator <?= $i === 0 ? 'active carousel_indicator_bg_active' : 'carousel_indicator_bg_inactive' ?> border_radius_full border_none cursor_pointer transition_all_300 width_12 height_12" 
+                            data-slide="<?= $i ?>">
                     </button>
                 <?php endfor; ?>
             </div>
         <?php endif; ?>
     </div>
     
-    <script>
-    // Carousel functionality
-    window.carouselStates = window.carouselStates || {};
-    window.carouselStates['<?= $carouselId ?>'] = {
-        currentSlide: 0,
-        totalSlides: <?= $imageCount ?>,
-        autoplay: <?= $opts['autoplay'] ? 'true' : 'false' ?>,
-        autoplayInterval: null
-    };
-    
-    function changeSlide(carouselId, direction) {
-        const state = window.carouselStates[carouselId];
-        const newSlide = (state.currentSlide + direction + state.totalSlides) % state.totalSlides;
-        goToSlide(carouselId, newSlide);
-    }
-    
-    function goToSlide(carouselId, slideIndex) {
-        const state = window.carouselStates[carouselId];
-        const carousel = document.getElementById(carouselId);
-        
-        // Update slides using CSS classes instead of style manipulation
-        const slides = carousel.querySelectorAll('.carousel-slide');
-        slides.forEach((slide, index) => {
-            slide.classList.toggle('carousel-image-active', index === slideIndex);
-            slide.classList.toggle('carousel-image-inactive', index !== slideIndex);
-        });
-        
-        // Update thumbnails using CSS classes
-        const thumbnails = carousel.querySelectorAll('.carousel-thumbnail');
-        thumbnails.forEach((thumb, index) => {
-            thumb.classList.toggle('carousel-thumbnail-active', index === slideIndex);
-            thumb.classList.toggle('carousel_border_color_active', index === slideIndex);
-            thumb.classList.toggle('carousel_border_color_inactive', index !== slideIndex);
-        });
-        
-        // Update indicators using CSS classes
-        const indicators = carousel.querySelectorAll('.carousel-indicator');
-        indicators.forEach((indicator, index) => {
-            indicator.classList.toggle('active', index === slideIndex);
-            indicator.classList.toggle('carousel_indicator_bg_active', index === slideIndex);
-            indicator.classList.toggle('carousel_indicator_bg_inactive', index !== slideIndex);
-        });
-        
-        state.currentSlide = slideIndex;
-    }
-    
-    <?php if ($opts['autoplay'] && $imageCount > 1): ?>
-    // Start autoplay
-    window.carouselStates['<?= $carouselId ?>'].autoplayInterval = setInterval(() => {
-        changeSlide('<?= $carouselId ?>', 1);
-    }, 3000);
-    
-    // Pause autoplay on hover
-    document.getElementById('<?= $carouselId ?>').addEventListener('mouseenter', () => {
-        clearInterval(window.carouselStates['<?= $carouselId ?>'].autoplayInterval);
-    });
-    
-    document.getElementById('<?= $carouselId ?>').addEventListener('mouseleave', () => {
-        window.carouselStates['<?= $carouselId ?>'].autoplayInterval = setInterval(() => {
-            changeSlide('<?= $carouselId ?>', 1);
-        }, 3000);
-    });
-    <?php endif; ?>
-    </script>
+    <!-- Carousel JS moved to Vite module: src/modules/image-carousel.js -->
     
     <?php
     return ob_get_clean();

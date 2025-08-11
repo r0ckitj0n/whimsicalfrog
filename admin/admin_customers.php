@@ -575,7 +575,7 @@ $messageType = $_GET['type'] ?? '';
                 <a href="?page=admin&section=customers&edit=<?= htmlspecialchars($editCustomer['id'] ?? '') ?>" 
                    class="btn btn-primary">Edit Customer</a>
             <?php else: ?>
-                <button type="submit" id="saveCustomerBtn" class="btn btn-primary">
+                <button type="submit" id="saveCustomerBtn" class="btn btn-primary" data-action="submit-customer-form">
                     <span class="button-text">Save Changes</span>
                     <span class="loading-spinner hidden">⏳</span>
                 </button>
@@ -589,135 +589,11 @@ $messageType = $_GET['type'] ?? '';
 </div>
 <?php endif; ?>
 
-<!- JavaScript ->
-<script>
-// Initialize variables
-const modalMode = <?= json_encode($modalMode ?? '') ?>;
-const currentCustomerId = <?= json_encode($editCustomer['id'] ?? '') ?>;
-const allCustomers = <?= json_encode(array_values($customersData)) ?>;
-let currentCustomerIndex = allCustomers.findIndex(customer => customer.id === currentCustomerId);
-
-// Navigation functions
-function navigateToCustomer(direction) {
-    if (allCustomers.length === 0) return;
-    
-    let newIndex = currentCustomerIndex;
-    if (direction === 'prev') {
-        newIndex = currentCustomerIndex > 0 ? currentCustomerIndex - 1 : allCustomers.length - 1;
-    } else if (direction === 'next') {
-        newIndex = currentCustomerIndex < allCustomers.length - 1 ? currentCustomerIndex + 1 : 0;
-    }
-    
-    if (newIndex !== currentCustomerIndex && newIndex >= 0 && newIndex < allCustomers.length) {
-        const targetCustomer = allCustomers[newIndex];
-        const currentMode = modalMode === 'view' ? 'view' : 'edit';
-        let newUrl = `?page=admin&section=customers&${currentMode}=${encodeURIComponent(targetCustomer.id)}`;
-        
-        // Preserve search/filter parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('search')) newUrl += `&search=${encodeURIComponent(urlParams.get('search'))}`;
-        if (urlParams.get('role')) newUrl += `&role=${encodeURIComponent(urlParams.get('role'))}`;
-        
-        window.location.href = newUrl;
-    }
-}
-
-function updateCustomerNavigationButtons() {
-    const prevBtn = document.getElementById('prevCustomerBtn');
-    const nextBtn = document.getElementById('nextCustomerBtn');
-    
-    if (prevBtn && nextBtn && allCustomers.length > 0) {
-        prevBtn.style.display = 'block';
-        nextBtn.style.display = 'block';
-        
-        const customerCounter = `${currentCustomerIndex + 1} of ${allCustomers.length}`;
-        const prevIndex = currentCustomerIndex > 0 ? currentCustomerIndex - 1 : allCustomers.length - 1;
-        const nextIndex = currentCustomerIndex < allCustomers.length - 1 ? currentCustomerIndex + 1 : 0;
-        const prevCustomer = allCustomers[prevIndex];
-        const nextCustomer = allCustomers[nextIndex];
-        
-        const prevName = (prevCustomer?.firstName || '') + ' ' + (prevCustomer?.lastName || '');
-        const nextName = (nextCustomer?.firstName || '') + ' ' + (nextCustomer?.lastName || '');
-        
-        prevBtn.title = `Previous: ${prevName.trim() || 'Unknown'} (${customerCounter})`;
-        nextBtn.title = `Next: ${nextName.trim() || 'Unknown'} (${customerCounter})`;
-    }
-}
-
-// Delete confirmation
-function confirmDelete(customerId, customerName) {
-    document.getElementById('delete_customer_id').value = customerId;
-    document.getElementById('modal-message').innerText = 
-        `Are you sure you want to delete ${customerName}? This action cannot be undone.`;
-    document.getElementById('deleteConfirmModal').classList.add('show');
-}
-
-function closeModal() {
-    document.getElementById('deleteConfirmModal').classList.remove('show');
-}
-
-// Event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize navigation for modal mode
-    if (modalMode === 'view' || modalMode === 'edit') {
-        updateCustomerNavigationButtons();
-    }
-    
-    // Handle customer form submission
-    const customerForm = document.getElementById('customerForm');
-    if (customerForm) {
-        const saveBtn = customerForm.querySelector('#saveCustomerBtn');
-        const btnText = saveBtn?.querySelector('.button-text');
-        const spinner = saveBtn?.querySelector('.loading-spinner');
-
-        customerForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Clear previous errors
-            document.querySelectorAll('.field-error-highlight').forEach(el => 
-                el.classList.remove('field-error-highlight'));
-            
-            // Validate passwords
-            const newPassword = document.getElementById('newPassword');
-            const confirmPassword = document.getElementById('confirmPassword');
-            let validationErrors = [];
-            
-            if (newPassword && confirmPassword) {
-                const newPwd = newPassword.value.trim();
-                const confirmPwd = confirmPassword.value.trim();
-                
-                if (newPwd || confirmPwd) {
-                    if (newPwd.length < 6) {
-                        validationErrors.push('Password must be at least 6 characters long');
-                        newPassword.classList.add('field-error-highlight');
-                    }
-                    
-                    if (newPwd !== confirmPwd) {
-                        validationErrors.push('Password confirmation does not match');
-                        confirmPassword.classList.add('field-error-highlight');
-                    }
-                }
-            }
-            
-                closeModal();
-            }
-        }
-    });
-
-    // Row highlighting
-    const urlParams = new URLSearchParams(window.location.search);
-    const highlightId = urlParams.get('highlight');
-    if (highlightId) {
-        const rowToHighlight = document.querySelector(`tr[data-customer-id='${highlightId}']`);
-        if (rowToHighlight) {
-            rowToHighlight.classList.add('highlighted-row'); 
-            rowToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => {
-                rowToHighlight.classList.remove('highlighted-row');
-                const cleanUrl = window.location.pathname + '?page=admin&section=customers';
-                history.replaceState({path: cleanUrl}, '', cleanUrl);
-            }, 3000);
-        }
-    }
-});
+<!-- Page Data for admin-customers module (consumed by js/admin-customers.js) -->
+<script type="application/json" id="customer-page-data">
+<?= json_encode([
+    'customers' => array_values($customersData),
+    'currentCustomerId' => $editCustomer['id'] ?? null,
+    'modalMode' => $modalMode ?? null,
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
 </script>

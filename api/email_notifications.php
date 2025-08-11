@@ -180,8 +180,57 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
         // Inject shared CSS and CSS variable custom properties for dynamic brand colors
         $brandPrimary = BusinessSettings::getPrimaryColor();
         $brandSecondary = BusinessSettings::getSecondaryColor();
-        $htmlContent = preg_replace('/<head>/', "<head>\n    <link rel='stylesheet' href='https://whimsicalfrog.us/css/email-styles.css'>", $htmlContent);
-        $htmlContent = preg_replace('/<body([^>]*)>/', "<body$1 class='email-body' style=\"-brand-primary: {$brandPrimary}; -brand-secondary: {$brandSecondary};\">", $htmlContent);
+        $styleBlock = "<style>
+        body.email-body { margin:0; padding:0; background:#ffffff; color:#333; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; line-height:1.5; }
+        .email-wrapper { max-width:600px; margin:0 auto; padding:16px; }
+        .email-header { background: {$brandPrimary}; color:#fff; padding:16px; text-align:center; }
+        .email-title { margin:0; font-size:20px; }
+        .email-subtitle { margin:8px 0 0; font-size:14px; color:#eef; }
+        .email-section { margin:16px 0; }
+        .email-section-heading { font-size:16px; margin:0 0 8px; color: {$brandSecondary}; }
+        .email-summary-table, .email-order-table, .email-table { width:100%; border-collapse:collapse; }
+        .email-summary-table td, .email-order-table td, .email-order-table th, .email-table td, .email-table th { padding:8px; border-bottom:1px solid #eee; text-align:left; }
+        .email-table-cell-center { text-align:center; }
+        .email-table-cell-right { text-align:right; }
+        .email-table-header-cell { background:#f6f6f6; font-weight:bold; }
+        .email-table-row-alt { background:#f9f9f9; }
+        .email-cta-button { display:inline-block; background: {$brandPrimary}; color:#fff !important; text-decoration:none; padding:10px 14px; border-radius:4px; }
+        .email-secondary-cta { display:inline-block; color: {$brandPrimary}; text-decoration:none; padding:10px 14px; }
+        .email-footer { margin-top:24px; font-size:12px; color:#666; text-align:center; }
+        .email-footer-primary { margin:0 0 4px; }
+        .email-footer-secondary { margin:0; }
+        .email-badge-warning { background:#fff3cd; color:#856404; padding:2px 6px; border-radius:4px; }
+        .email-status-received { color:#2e7d32; font-weight:bold; }
+        .email-status-pending { color:#b26a00; font-weight:bold; }
+        .m-0 { margin:0; }
+        .u-margin-right-10px { margin-right:10px; }
+        .u-padding-4px-0 { padding:4px 0; }
+        .u-align-top { vertical-align:top; }
+        .u-color-333 { color:#333; }
+        .u-color-666 { color:#666; }
+        .u-line-height-1-6 { line-height:1.6; }
+        .u-font-weight-bold { font-weight:bold; }
+        .u-font-size-14px { font-size:14px; }
+        .u-margin-top-10px { margin-top:10px; }
+        .u-margin-top-20px { margin-top:20px; }
+        .email-admin-header, .email-header { background: {$brandPrimary}; color:#fff; }
+        .email-admin-summary-label { text-align:right; padding:8px; font-weight:bold; }
+        .email-admin-summary-value { text-align:right; padding:8px; }
+        .email-admin-notice { background:#fff8e1; border:1px solid #ffe082; padding:10px; border-radius:4px; margin:12px 0; }
+        .email-shipping-box { border:1px solid #eee; border-radius:4px; padding:12px; margin:12px 0; background:#fafafa; }
+        .email-admin-grid { display:block; }
+        @media screen and (min-width: 480px) {
+          .email-admin-grid { display:flex; gap:16px; }
+          .email-admin-grid .email-section { flex:1; }
+        }
+        blockquote { margin:12px 0; padding-left:12px; border-left:3px solid #eee; color:#555; }
+        </style>";
+        $htmlContent = preg_replace('/<head>/', "<head>\n    " . $styleBlock, $htmlContent);
+        // Ensure body has class email-body without overwriting other attributes
+        // Add class if none present
+        $htmlContent = preg_replace('/<body(?![^>]*\\bclass=)([^>]*)>/i', '<body$1 class="email-body">', $htmlContent);
+        // If class exists but does not include email-body, append it
+        $htmlContent = preg_replace('/<body([^>]*)class=(\"|\')(?![^\2]*\\bemail-body\\b)([^\2]*)(\2)([^>]*)>/i', '<body$1class=$2$3 email-body$2$5>', $htmlContent);
         $textContent = $template['text_content'] ?? '';
 
         foreach ($variables as $key => $value) {

@@ -25,12 +25,20 @@ npm install
 npm run dev
 ```
 
-The dev server runs on [http://localhost:5173](http://localhost:5173) and hot-reloads whenever you edit files under `src/` or `css/`.
+The dev server runs on [http://localhost:5176](http://localhost:5176) and hot-reloads whenever you edit files under `js/`, `src/`, or `css/`.
 
 To generate the production bundle used in `dist/`, run:
 
 ```bash
 npm run build
+```
+
+## Full Stack Dev Servers (PHP + Vite)
+
+To start both the PHP dev server (http://localhost:8080) and the Vite dev server (http://localhost:5176) together, run:
+
+```bash
+./scripts/restart_servers.sh
 ```
 
 Enjoy coding! 🐸

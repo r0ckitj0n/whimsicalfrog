@@ -1,12 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhimsicalFrog Database Status</title>
-    
-</head>
-<body>
+<?php include __DIR__ . '/../partials/header.php'; ?>
     <div class="">
         <div class="header">
             <h1>🐸 WhimsicalFrog Database Status</h1>
@@ -163,26 +155,4 @@
             <a href="#" data-action="runCommand" data-params='{"command":"generate-css"}' class="btn">🎨 Generate CSS</a>
         </div>
     </div>
-    
-    <script>
-        function runCommand(cmd) {
-            fetch(`db_api.php?action=${cmd}`)
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message || 'Command executed');
-                    if (data.success) {
-                        location.reload();
-                    }
-                })
-                .catch(error => {
-                    alert('Error: ' + error.message);
-                });
-        }
-        
-        // Auto-refresh every 30 seconds
-        setTimeout(() => {
-            location.reload();
-        }, 30000);
-    </script>
-</body>
-</html> 
+<?php include __DIR__ . '/../partials/footer.php'; ?>

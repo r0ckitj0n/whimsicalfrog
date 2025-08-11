@@ -12,22 +12,15 @@ require_once __DIR__ . '/../includes/functions.php';
 Auth::requireAdmin();
 
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Room Configuration Manager - WhimsicalFrog Admin</title>
-
-</head>
-<body class="bg-gray-100">
+<?php include __DIR__ . '/../partials/header.php'; ?>
+<div class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h1 class="text-3xl font-bold text-gray-800 mb-6">Room Configuration Manager</h1>
             
             <div id="messageContainer"></div>
             
-            <!- Room Selection ->
+            <!-- Room Selection -->
             <div class="mb-6">
                 <label for="roomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
                 <select id="roomSelect" class="form-input w-full" data-change-action="loadRoomConfig">
@@ -183,129 +176,5 @@ Auth::requireAdmin();
             </div>
         </div>
     </div>
-
-
-    <script>
-    // Room configuration management functionality
-    let currentRoomConfig = {};
-    
-    async function loadRoomConfig() {
-        const roomNumber = document.getElementById('roomSelect').value;
-        if (!roomNumber) {
-            document.getElementById('configFormContainer').style.display = 'none';
-            return;
-        }
-        
-        try {
-            const response = await fetch(`../api/room_config.php?action=get&room=${roomNumber}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                currentRoomConfig = data.config || {};
-                populateForm(currentRoomConfig);
-                document.getElementById('configFormContainer').style.display = 'block';
-                document.getElementById('roomNumber').value = roomNumber;
-            } else {
-                showMessage('Error loading room configuration: ' + data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error loading room config:', error);
-            showMessage('Failed to load room configuration', 'error');
-        }
-    }
-    
-    function populateForm(config) {
-        // Populate form fields with config values
-        Object.keys(config).forEach(key => {
-            const element = document.querySelector(`[name="${key}"]`);
-            if (element) {
-                if (element.type === 'checkbox') {
-                    element.checked = config[key];
-                } else {
-                    element.value = config[key];
-                }
-            }
-        });
-    }
-    
-    function resetForm() {
-        const form = document.getElementById('roomConfigForm');
-        form.reset();
-        
-        // Reset to default values
-        const defaults = {
-            show_delay: 50,
-            hide_delay: 150,
-            max_width: 450,
-            min_width: 280,
-            max_quantity: 999,
-            min_quantity: 1,
-            debounce_time: 50,
-            popup_animation: 'fade',
-            modal_animation: 'scale'
-        };
-        
-        populateForm(defaults);
-    }
-    
-    document.getElementById('roomConfigForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const config = {};
-        
-        // Convert FormData to object
-        for (let [key, value] of formData.entries()) {
-            config[key] = value;
-        }
-        
-        // Handle checkboxes separately
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            config[checkbox.name] = checkbox.checked;
-        });
-        
-        try {
-            const response = await fetch('../api/room_config.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'save',
-                    room: config.room_number,
-                    config: config
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                showMessage('Room configuration saved successfully!', 'success');
-                currentRoomConfig = config;
-            } else {
-                showMessage('Error saving configuration: ' + data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error saving room config:', error);
-            showMessage('Failed to save room configuration', 'error');
-        }
-    });
-    
-    function showMessage(message, type) {
-        const container = document.getElementById('messageContainer');
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-        
-        container.innerHTML = `
-            <div class="${alertClass}">
-                ${message}
-            </div>
-        `;
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            container.innerHTML = '';
-        }, 5000);
-    }
-    </script>
-</body>
-</html> 
+</div>
+<?php include __DIR__ . '/../partials/footer.php'; ?>

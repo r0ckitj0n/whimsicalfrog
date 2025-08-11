@@ -19,7 +19,7 @@
     "vite-plugin-full-reload": "^1.2.0"
   },
   "dependencies": {
-    "sortablejs": "^1.15.0",
-    "chart.js": "^4.5.0"
+    "chart.js": "^4.5.0",
+    "sortablejs": "^1.15.6"
   }
 }

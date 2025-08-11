@@ -20,9 +20,10 @@ export default defineConfig({
         manifest: true,
         rollupOptions: {
             input: {
-                app: resolve(__dirname, 'js/app.js'),
-                'admin-dashboard': resolve(__dirname, 'js/admin-dashboard.js'),
-                'admin-inventory': resolve(__dirname, 'js/admin-inventory.js'),
+                // Keep manifest keys stable while sourcing from src entries
+                'js/app.js': resolve(__dirname, 'src/entries/app.js'),
+                'js/admin-dashboard.js': resolve(__dirname, 'src/entries/admin-dashboard.js'),
+                'js/admin-inventory.js': resolve(__dirname, 'src/entries/admin-inventory.js'),
             },
         }
     },

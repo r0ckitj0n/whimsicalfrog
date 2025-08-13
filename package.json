@@ -14,6 +14,8 @@
     "lint:css:fix": "stylelint \"src/styles/**/*.css\" --fix",
     "guard:styles": "node scripts/disallow-inline-styles.mjs",
     "check:css:orphans": "node scripts/check-orphaned-css.mjs",
+    "check:css:orphans:write": "node scripts/check-orphaned-css.mjs --write",
+    "check:css:inventory": "node scripts/css-inventory.mjs",
     "prefix-unused": "node scripts/auto-prefix-unused.mjs --run-eslint",
     "prefix-unused:write": "node scripts/auto-prefix-unused.mjs --run-eslint --write",
     "prepare": "husky install"
@@ -26,6 +28,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2",
     "postcss": "^8.5.6",
+    "postcss-safe-parser": "^6.0.0",
     "autoprefixer": "^10.4.20",
     "postcss-nesting": "^12.1.5",
     "postcss-selector-parser": "^7.1.0",
